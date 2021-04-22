@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -83,12 +86,12 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -100,83 +103,83 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D TRFMFilFmt    E DS                  EXTNAME(FCLTYFM)
      D TRFNFilFmt    E DS                  EXTNAME(FCLTYFN) PREFIX(FN)
- 
+
       ** Midas LE API FCIP File Record
- 
+
      D FacScnPrim    E DS                  EXTNAME(LEFCPPPD)
       ** Midas LE API FCIP First Screen Format Definition File
- 
+
      D FacScnSeco    E DS                  EXTNAME(LEFCSPPD)
       ** Midas LE API FCIP Second Screen Format Definition File
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PACTN           S              1A
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSTS            S             24A
      D PCSTS           S             10A
      D TRANSDTL        S           5800A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -189,15 +192,15 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
      C
      C                   EVAL      DDACTN = PACTN
- 
+
       ** Process Facility input
- 
+
      C                   CALLB     'LEFCIPCVT'
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    TRFMFilFmt
      C                   PARM                    TRFNFilFmt
@@ -208,17 +211,17 @@
      C                   PARM                    FacScnPrim
       * Facility details in second screen format
      C                   PARM                    FacScnSeco
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
      C                   EVAL      TRANSDTL = FacScnPrim + FacScnSeco
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -230,52 +233,52 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Action Code
      C                   PARM                    PACTN
- 
+
       ** Midas LE Facility FM file record
      C                   PARM                    TRFMFilFmt
       ** Midas LE Facility FN file record
      C                   PARM                    TRFNFilFmt
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Data Replication Details Screen Format
      C                   PARM                    TRANSDTL
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANK
      C                   EVAL      DBKEY = POPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 900
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

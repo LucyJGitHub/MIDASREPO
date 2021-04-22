@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR979910           Date 07Jun12               *
-      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR979910           Date 07Jun12               *
+      *                 260405             Date 04Apr20               *
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -144,15 +145,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
       *             constant timestamp value constant for validation  *
       *             indicating that no change has occured yet.        *
       *             (Child:AR979911)                                  *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
-      *         - Applied for MD055446.                               *      
+      *         - Applied for MD055446.                               *
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
-      *             add check if account in REDEFD is valid.          *      
+      *             add check if account in REDEFD is valid.          *
       *  MD055212 - Remove the defaulting of values for DDBAC, DDBAD, *
       *             DDRAC, DDRAD to 'N'.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -2886,7 +2888,8 @@
      C                   ENDIF                                                                CRE030
       *                                                                                       BUG553
      C     X_RCCY        IFEQ      DDCCY                                                      BUG553
-     C     DRIB          IFEQ      *ZEROS                                                     BUG553
+     C*****DRIB*         IFEQ      *ZEROS                                              BUG553 CSD103
+     C     DRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDDRIB                                       BUG553
      C                   ELSE                                                                 BUG553
      C                   MOVE      DRIB          DDDRIB                                       BUG553
@@ -2894,7 +2897,8 @@
       *                                                                                       BUG553
       ** If not the same Ccy - Check Base Type is valid for other Ccy                         BUG553
      C                   ELSE                                                                 BUG553
-     C     DRIB          IFNE      *ZEROS                                                     BUG553
+     C*****DRIB*         IFNE      *ZEROS                                              BUG553 CSD103
+     C     DRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      DRIB          WWRIB             2                          BUG553
       *                                                                                       BUG553
       ** Get Base Rate Codes                                                                  BUG553
@@ -2932,7 +2936,8 @@
      C                   ENDIF                                                                BUG553
       *                                                                                       BUG553
      C     X_RCCY        IFEQ      DDCCY                                                      BUG553
-     C     CRIB          IFEQ      *ZEROS                                                     BUG553
+     C*****CRIB*         IFEQ      *ZEROS                                              BUG553 CSD103
+     C     CRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDCRIB                                       BUG553
      C                   ELSE                                                                 BUG553
      C                   MOVE      CRIB          DDCRIB                                       BUG553
@@ -2940,7 +2945,8 @@
       *                                                                                       BUG553
       ** If not the same Ccy - Check Base Type is valid for other Ccy                         BUG553
      C                   ELSE                                                                 BUG553
-     C     CRIB          IFNE      *ZEROS                                                     BUG553
+     C*****CRIB*         IFNE      *ZEROS                                              BUG553 CSD103
+     C     CRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      CRIB          WWRIB                                        BUG553
       *                                                                                       BUG553
       ** Get Base Rate Codes                                                                  BUG553

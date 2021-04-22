@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026333           Date 29Apr14               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD026333           Date 29Apr14               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
       *                 AR924684           Date 10Nov14               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD026333 - Beneficiary field on Settlement screen allows     *
       *             closed customer. Call AOCUSTR1 instead to return  *
       *             and validate BBCLST and or BBDTDL fields.         *
@@ -156,7 +159,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -175,46 +178,46 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      **COPY*FTCPYSRC,SFTVALCSLE                                                               257144
       /COPY FTCPYSRC,SFTVALCSLL                                                               257144
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** String for System Values Array                                                     MD027201
      D SysValBEN1      C                   CONST('BeneField1Expand')                        MD027201
                                                                                             MD027201
@@ -223,45 +226,45 @@
                                                                                             MD027201
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)
      D TranInSecB    E DS                  EXTNAME(FTOPY3PD)
      D TranInSecC    E DS                  EXTNAME(FTOPY1PD)                                  CFT032
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY2PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** Array of valid swift characters
      D SWCH            S              1    DIM(47) CTDATA PERRCD(47)
- 
+
       ** External data structure for customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Midas Counterparty NOSTROS
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** Midas BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       ** External data strcuture for Accounts Master Detail                                   CFT032
                                                                                               CFT032
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CFT032
@@ -285,9 +288,9 @@
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD026333
- 
+
      D/COPY FTCPYSRC,SFTADDRILE
- 
+
      D SBNCDS          DS           175
      D  DSBNC1Pos1             1      1                                         CFT004
      D  DSBNC1                 1     35
@@ -295,35 +298,35 @@
      D  DSBNC3                71    105
      D  DSBNC4               106    140
      D  DSBNC5               141    175
- 
+
      DCLSWTK           DS
      D SW                      1     12
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
      D C#RTCD          S              7
      D C#OPTN          S              7
      D C#CNUM          S             10
      D C#KYST          S              7
- 
+
      D ADLINE          S              1
      D ADSLON          S              1
      D ##CSID          S              1
- 
+
       ** IBAN character test arrays                                             CFT004
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)            CFT004
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)            CFT004
@@ -411,7 +414,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -429,8 +432,8 @@
      C                   Eval      AD#4 = 'N'
      C                   Eval      AD#5 = 'N'
      C                   Eval      AD#6 = 'N'
- 
- 
+
+
       * Validate
       *
      C                   Exsr      VBENFCY
@@ -441,7 +444,7 @@
      C                             AND IDx = 0                                                CSW215
      C                   EXSR      VAL59F                                                     CSW215
      C                   ENDIF                                                                CSW215
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKBnc1 = 'N' or
@@ -459,9 +462,9 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
- 
+
      C                   RETURN
       ******************************************************************
       /EJECT
@@ -470,7 +473,7 @@
       ******************************************************************
      C*
      C     VBENFCY       BEGSR
- 
+
      C                   Eval      DSBNC1 = SBNC1
      C                   Eval      DSBNC2 = SBNC2
      C                   Eval      DSBNC3 = SBNC3
@@ -478,7 +481,7 @@
      C                   Eval      DSBNC5 = SBNC5
      C                   Eval      @BNCT = *Blanks
      C                   Eval      WSBrca = SBRCA                                           BUG14771
- 
+
       *  Beneficiary is mandatory
      C                   If        SBNCDS = *Blanks
       * Send error to screen
@@ -487,7 +490,7 @@
      C***********        Movel     'DDBnc1'      FldNamXAr(Idx)                 CFT014
      C                   Movel     'SBNC1 '      FldNamXAr(Idx)                 CFt014
      C                   Movel     'MMA1052'     MsgIdXAr(Idx)
- 
+
      C                   Else
       *  ? not allowed
      C     '?'           Scan      SBNC1         Y#                3 0    90
@@ -500,10 +503,10 @@
      C                   Movel     'SBNC1 '      FldNamXAr(Idx)                 CFT014
      C                   Movel     'MMA1053'     MsgIdXAr(Idx)
      C                   End
- 
+
       * No error
      C                   If        OKBnc1 <> 'N'
- 
+
      C                   Movel(P)  SBNCDS        ADDRSS
       *
       *  If first ten characters used then try to find via SDCUSTPD
@@ -515,7 +518,7 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 10 characters should be key for SDCUST
      C                   If        ADSLSH <> '/'
      C                   Movel     ADCHK1        C#CNUM
@@ -526,7 +529,7 @@
      C                   MOVE      'Y'           WIND2             1                        MD027201
      C                   MOVE      *BLANKS       WIND1                                      MD027201
      C                   End
- 
+
       *  Check if the first 6 characters are numeric if so
       *  look for customer number else look for shortname
       *
@@ -534,12 +537,12 @@
      C                   Movel     C#CNUM        FLD
      C*****DIGITS        Check     FLD           Y#                       90                  243531
      C     ALPHAN        Check     FLD           Y#                       90                  243531
- 
+
       *  Valid only if 6 digits - now check rest for blanks
      C                   If        *IN90 = *On and
      C                             Y# = 7
      C     ' '           CHECK     FLD:7         Y#                       90
- 
+
       * Customer validation
      C                   If        *IN90 = *Off
      C                             AND BEN1EXPND = 'Y'                                      MD027201
@@ -570,7 +573,7 @@
      C                   ENDIF                                                              MD026333
      C                   Else                                                               BUG13161
       *                                                                                     BUG13161
- 
+
      C**********         If        C#RTCD = *Blanks or                                        262721
      C**********                   C#KYST <> '*CNUM  '                                        262721
      C                   IF        (C#RTCD = *BLANKS AND C#KYST = '*CNUM') OR                 262721
@@ -585,7 +588,7 @@
      C**********                   and C#KYST = '*CNUM  '                              233421 255453
      C**********         Eval      @BNCT = 'A'                                         233421 255453
      C**********         Endif                                                         233421 255453
- 
+
      C                   Else
       *  Send error to screen
      C                   If        ADSLSH <> '/'
@@ -601,7 +604,7 @@
      C                   End
       *
      C                   Endif                                                              BUG13161
- 
+
      C                   Else
       *                                                                                     MD027201
       ** Expand only if Sytem value is 'Y'                                                  MD027201
@@ -618,7 +621,7 @@
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
      C     SDCUST        Parm      *Blanks       DSSDY
- 
+
      C*****              If        C#RTCD = *Blanks or                                        243531
      C*****                        C#KYST <> '*CSHT  '                                        243531
      C                   If        C#RTCD = *Blanks and                                       228239
@@ -626,13 +629,13 @@
                                                                                               228239
      C                   If        C#KYST = '*CNUM  ' or                                      228239
      C                             C#KYST = '*CSHT  '                                         228239
- 
+
      C                   If        ADSLSH <> '/'
      C                   Movel(P)  BBCUST        SBNC1
      C                   Else
      C                   Movel(P)  BBCUST        SBNC2
      C                   End
- 
+
      C                   Eval      @BNCT = 'C'
      C**********         If        ADSLSH = '/'                                        233421 255453
      C**********                   and C#KYST = '*CSHT  '                              233421 255453
@@ -641,19 +644,19 @@
      C**********         Endif                                                         233421 255453
      C                   End
      C                   Endif                                                                228239
- 
+
      C                   ENDIF                                                              MD027201
      C                   End
      C                   End
      C                   End
- 
+
      C                   If        OKBnc1 <> 'N' and
      C                             OKBnc2 <> 'N' and
      C                             @BNCT = *Blanks
- 
+
       *  If 1st 11 Chars of 1st line then SWIFT address assumed
       *  Or first is '/' and second is SWIFT Address
- 
+
       *  If field does not begin with '/' and is not longer than 11
       *  characters, validate as a S.W.I.F.T. Address
      C                   If        ADCH26 = *Blanks and
@@ -664,21 +667,21 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 11 characters should be key for CLSWT.
      C                   If        ADSLSH <> '/'
      C                   Movel     ADCHK1        CLSWTK
      C                   Else
      C                   Movel     ADCHK2        CLSWTK
      C                   End
- 
+
      C                   Exsr      SWIFT
- 
+
      C                   Move      'N'           WCsid             1                        BUG14771
      C                   If        ##CSID = 'Y'
      C                   If        ADSLSH = '/'and *IN31=*Off and *IN32=*Off                AR924684
      C                             or ADSLSH <> '/'                                         AR924684
- 
+
      C                   If        *IN31 = *On
       * Send error to screen
      C                   If        ADSLSH <> '/'
@@ -694,7 +697,7 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'DDBnc'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1055'     WMsgIdXAr(WIx)                               CSD089
- 
+
      C                   Else
      C                   Eval      @BNCT = 'S'
      C                   Move      'Y'           WCsid                                      BUG14771
@@ -702,7 +705,7 @@
       *  No SWIFT address record.
      C                   If        *IN32 = *On and
      C                             *IN31 = *Off
- 
+
       *  If text changed then warning needs to be changed
      C                   If        ADSLSH <> '/'
      C                   Movel     CLSWTK        @BNC1
@@ -711,7 +714,7 @@
      C                   Add       1             WIx
      C                   Movel     'MMA1056'     WMsgIdXAr(WIx)
      C                   Movel     'SBNC1'       WFldNmXAr(WIx)
- 
+
      C                   Else
      C                   Movel     CLSWTK        @BNC2
       * Send warning to screen
@@ -720,17 +723,17 @@
      C                   Movel     'MMA1056'     WMsgIdXAr(WIx)
      C                   Movel     'SBNC2'       WFldNmXAr(WIx)
      C                   End
- 
+
      C                   End
      C                   End
      C                   EndIf                                                              AR924684
      C                   End
      C                   End
      C                   End
- 
+
      C                   If        OKBnc1 <> 'N' and
      C                             @BNCT = *Blanks
- 
+
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
      C                             ADEXCS = *Blanks and
@@ -741,7 +744,7 @@
      C**********                   ADCHK2 <> *Blanks and                                      135810
      C**********                   ADSLSH = '/' and                                           135810
      C**********                   ADSLS2 <> '/'                                              135810
- 
+
       *  First 10 characters should be key for SDCUST
       * Send error to screen
      C                   Add       1             Idx
@@ -756,12 +759,12 @@
      C**********         End                                                                 BUG7778
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)
      C                   End                                                                 BUG7778
- 
+
      C                   Else
       * Validate as an address
      C                   Eval      ADLINE = 'Y'
      C                   Exsr      ADCHK
- 
+
       *  Depending on the indicators, highlight the field in error
      C**********         If        *IN91 = *On                                              BUG25237
       **Send*error*to*screen*                                                               BUG25237
@@ -786,7 +789,7 @@
      C                   Movel     'MMA1058'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKBnc1                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -797,7 +800,7 @@
      C                   Movel     'SBNC1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#2 = 'Y'
      C**********         Move      'N'           OKBnc2                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -808,7 +811,7 @@
      C                   Movel     'SBNC2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#3 = 'Y'
      C**********         Move      'N'           OKBnc3                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -819,7 +822,7 @@
      C                   Movel     'SBNC3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#4 = 'Y'
      C**********         Move      'N'           OKBnc4                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -830,7 +833,7 @@
      C                   Movel     'SBNC4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#5 = 'Y'
      C**********         Move      'N'           OKBnc5                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -841,7 +844,7 @@
      C                   Movel     'SBNC5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
       *  If no errors then customer is an address
      C**********         If        OKBnc1 = 'Y' and                                         MD021337
      C**********                   OKBnc2 = 'Y' and                                         MD021337
@@ -856,7 +859,7 @@
      C                             @BNCT = *Blanks
      C                   Eval      @BNCT = 'A'
      C                   End
- 
+
      C                   End
                                                                                 CFT014
       ** Beneficiary does not contain an account line while bank operation      CFT014
@@ -985,7 +988,7 @@
      C**********         End                                                       BUG25237 BUG26016
       **********                                                                   BUG25237 BUG26016
      C                   End
- 
+
      C                   EXSR      SROUFM                                                     CFT032
                                                                                               CFT032
      C                   ENDSR
@@ -1462,53 +1465,53 @@
      C/EJECT
       * Subroutine SWIFT
      E/COPY FTCPYSRC,SFTSWFTCLE
- 
+
       * Subroutine ADCHK
      E/COPY FTCPYSRC,SFTADDRCLE
- 
+
       * Subroutine SWSET
      E/COPY FTCPYSRC,SFTADDRSC1
- 
+
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInSecA
      C                   Parm                    TranInSecB
      C                   Parm                    TranInSecC                                 BUG12541
- 
+
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtaXAr
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Access Bank details                                                                  CFT032
                                                                                               CFT032
      C                   Call      'AOBANKR0'                                                 CFT032

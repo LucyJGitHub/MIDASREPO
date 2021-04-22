@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057437           Date 20Jan21               *
-      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057437           Date 20Jan21               *
+      *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD038303           Date 13May16               *
       *                 245692             Date 11Dec13               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
       *             Fix is to not allow CIRS transaction with         *
       *             Principal change (Decrease) that will result to   *
@@ -548,7 +550,8 @@
      C                   END
      C*
      C**  Our Base Rate Code
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVE      UBRTT         SUBRTT
      C                   ENDIF
      C*
@@ -580,7 +583,8 @@
                                                                                               CIR011
      C     CIR011        IFEQ      'Y'                                                        CIR011
      C     UICFR         ANDNE     'O'                                                        CIR011
-     C     UBRTT         ANDNE     *ZERO                                                      TDA081
+     C*****UBRTT         ANDNE     *ZERO                                               TDA081 CSD103
+     C     UBRTT         ANDNE     *BLANKS                                                    CSD103
                                                                                               CIR011
       ** Get The rate fix days from the currency file                                         CIR011
                                                                                               CIR011
@@ -601,7 +605,8 @@
      C/COPY WNCPYSRC,IRCIRSNC01
      C                   MOVE      UFRFD         SUFRFD
      C                   ELSE                                                                 TDA081
-     C     UBRTT         IFNE      *ZERO                                                      TDA081
+     C*****UBRTT         IFNE      *ZERO                                               TDA081 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVE      '00'          SUFRFD                                       TDA081
      C                   ENDIF                                                                TDA081
      C                   ENDIF                                                                TDA081
@@ -769,7 +774,8 @@
      C                   END
      C*
      C**  Their Base Rate Code
-     C     TBRTT         IFNE      *ZERO
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVE      TBRTT         STBRTT
      C                   END
      C*
@@ -801,7 +807,8 @@
       *                                                                                       CIR011
      C     CIR011        IFEQ      'Y'                                                        CIR011
      C     TICFR         ANDNE     'O'                                                        CIR011
-     C     TBRTT         ANDNE     *ZERO                                                      TDA081
+     C*****TBRTT         ANDNE     *ZERO                                               TDA081 CSD103
+     C     TBRTT         ANDNE     *BLANKS                                                    CSD103
                                                                                               CIR011
       ** Get The rate fix days from the currency file                                         CIR011
                                                                                               CIR011
@@ -825,7 +832,8 @@
                                                                                               CIR011
      C/COPY WNCPYSRC,IRCIRSNC04
      C                   ELSE                                               163378
-     C     TBRTT         IFNE      *ZERO                                    163378
+     C*****TBRTT         IFNE      *ZERO                                               163378 CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVE      '00'          STFRFD                     163378
      C                   END                                                163378
      C                   END
@@ -1101,7 +1109,8 @@
                                                                                               CDL028
       ** Our Start - 1st Term Base Rate Code                                                  CDL028
                                                                                               CDL028
-     C                   IF        FSOS1B = *ZERO                                             CDL028
+     C**********         IF        FSOS1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOS1B = *BLANKS                                           CSD103
      C                   EVAL      SOS1B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOS1B        SOS1B                                        CDL028
@@ -1122,7 +1131,8 @@
                                                                                               CDL028
       ** Our Start - 2nd Term Base Rate Code                                                  CDL028
                                                                                               CDL028
-     C                   IF        FSOS2B = *ZERO                                             CDL028
+     C**********         IF        FSOS2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOS2B = *BLANKS                                           CSD103
      C                   EVAL      SOS2B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOS2B        SOS2B                                        CDL028
@@ -1156,7 +1166,8 @@
                                                                                               CDL028
       ** Our End - 1st Term Base Rate Code                                                    CDL028
                                                                                               CDL028
-     C                   IF        FSOE1B = *ZERO                                             CDL028
+     C**********         IF        FSOE1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOE1B = *BLANKS                                           CSD103
      C                   EVAL      SOE1B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOE1B        SOE1B                                        CDL028
@@ -1177,7 +1188,8 @@
                                                                                               CDL028
       ** Our End - 2nd Term Base Rate Code                                                    CDL028
                                                                                               CDL028
-     C                   IF        FSOE2B = *ZERO                                             CDL028
+     C**********         IF        FSOE2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOE2B = *BLANKS                                           CSD103
      C                   EVAL      SOE2B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOE2B        SOE2B                                        CDL028
@@ -1211,7 +1223,8 @@
                                                                                               CDL028
       ** Their Start - 1st Term Base Rate Code                                                CDL028
                                                                                               CDL028
-     C                   IF        FSTS1B = *ZERO                                             CDL028
+     C**********         IF        FSTS1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTS1B = *BLANKS                                           CSD103
      C                   EVAL      STS1B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTS1B        STS1B                                        CDL028
@@ -1232,7 +1245,8 @@
                                                                                               CDL028
       ** Their Start - 2nd Term Base Rate Code                                                CDL028
                                                                                               CDL028
-     C                   IF        FSTS2B = *ZERO                                             CDL028
+     C**********         IF        FSTS2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTS2B = *BLANKS                                           CSD103
      C                   EVAL      STS2B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTS2B        STS2B                                        CDL028
@@ -1266,7 +1280,8 @@
                                                                                               CDL028
       ** Their End - 1st Term Base Rate Code                                                  CDL028
                                                                                               CDL028
-     C                   IF        FSTE1B = *ZERO                                             CDL028
+     C**********         IF        FSTE1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTE1B = *BLANKS                                           CSD103
      C                   EVAL      STE1B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTE1B        STE1B                                        CDL028
@@ -1287,7 +1302,8 @@
                                                                                               CDL028
       ** Their End - 2nd Term Base Rate Code                                                  CDL028
                                                                                               CDL028
-     C                   IF        FSTE2B = *ZERO                                             CDL028
+     C**********         IF        FSTE2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTE2B = *BLANKS                                           CSD103
      C                   EVAL      STE2B = *BLANKS                                            CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTE2B        STE2B                                        CDL028

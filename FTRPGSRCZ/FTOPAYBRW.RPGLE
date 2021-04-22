@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260903             Date 25Apr14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 260903             Date 25Apr14               *
       *                 CFT151             Date 20Mar14               *
       *                 MD019877           Date 10Apr13               *
       *                 260045             Date 20Dec12               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  260903 - Remove the error validation for reversed account.   *
       *           Changed DBERR hard coded Return Code for AOCUSTR0.  *
@@ -109,9 +112,9 @@
      FFTOPAYL1  IF   E           K DISK    INFSR(*PSSR)                                       228101
      F                                     RENAME(OTPAYDDF:FrontOff)
      F/COPY WNCPYSRC,FTH00619
- 
+
      FACNUMA    IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -130,69 +133,69 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  197792
       ** External DS for Dealing Details                                                      197792
                                                                                               197792
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D*SDFODA*****   E DS                  EXTNAME(SDFODAPD)                    179994
       ***EXTERNAL*DS*FOR*FUNDS*TRANSFER*ICD*DETAILS***************************  179994
- 
+
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                    179994
       * External DS for Funds Transfer details                                  179994
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACC2       E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR NOSTRO DETAILS
- 
+
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CFT032
      D   IFCNUM      E                     EXTFLD(CNUM)                                       CFT032
                                                                                               CFT032
@@ -206,7 +209,7 @@
      D SLCD          E                     EXTFLD(LCD)                                        CFT151
       *                                                                                       CFT151
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D                 DS
       ** Data structure for date conversion
      D  @@YEAR                 1      4  0
@@ -215,7 +218,7 @@
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D/COPY WNCPYSRC,FTH00326
      D                 DS
       ** Data structure for date conversion
@@ -223,7 +226,7 @@
      D  @1MNTH                 3      4  0
      D  @1DAY                  5      6  0
      D  @1DTIN                 1      6  0
- 
+
      D                 DS
      D*     DATA STRUCTURE REDEFINING ACCNT KEY FIELD
      D**CNUM****               1      6  0                                                    CSD027
@@ -249,7 +252,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D P@IBAN          S             34A                                                   CFT032
      D/COPY WNCPYSRC,FTH00620
       ** +--------------------------------------+
@@ -1055,7 +1058,7 @@
       *
       * Level 1/2 indicator
      C                   PARM                    @Level            1
- 
+
       * OUTPUT PARAMETERS
       *
       * ERROR MESSAGE

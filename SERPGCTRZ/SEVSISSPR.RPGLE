@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -193,13 +196,13 @@
      C                   IF        OKISSP = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKISSP <> 'N'
      C                   Z-ADD     WIssPr        S1ISSP
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -207,9 +210,9 @@
       *  SRValIssPrc - Validation for Issue Price                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValIssPrc   BEGSR
- 
+
       ** When taxation of savings income is on, Issue price must not                          CGL031
       ** be blank.                                                                            CGL031
                                                                                               CGL031
@@ -231,19 +234,19 @@
      C                   MOVEL     DDISSP        ZFIELD
      C                   Z-ADD     7             ZADIG
      C                   Z-ADD     8             ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKISSP
      C                   ADD       1             Idx
      C                   MOVEL     'DDISSP'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0102'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WIssPr
      C                   ENDIF
@@ -263,9 +266,9 @@
      C                   ENDIF                                                                233903
                                                                                               233903
      C                   ENDIF                                                                233903
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -275,9 +278,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -320,9 +323,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -331,7 +334,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

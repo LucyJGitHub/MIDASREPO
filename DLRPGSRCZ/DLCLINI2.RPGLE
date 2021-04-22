@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -61,66 +64,66 @@
       *  CDL038 - Extended Deal Sub Type                              *
       *                                                               *
       *****************************************************************
- 
+
      FSDTCLDPD  IP   E             DISK
- 
+
      FDEALSDB   UF   E             DISK
      FDLBHISPD  UF   E             DISK
      FFXDEALPP  UF   E             DISK
      FABDEALPP  UF   E             DISK
- 
+
      FDEALSDC   UF   E             DISK
      FDLCHISPD  UF   E             DISK
      FMMDELDPP  UF   E             DISK
- 
+
      FDEAMSDI   UF   E             DISK
      FMMDEAMPP  UF   E             DISK
- 
+
      FDEALSDD   UF   E             DISK
      FDLDHISPD  UF   E             DISK
      FMMDENBPP  UF   E             DISK
- 
+
      FDEALSDE   UF   E             DISK
      FDLEHISPD  UF   E             DISK
      FMMDENSPP  UF   E             DISK
- 
+
      FDEALSDG   UF   E             DISK
      FDLGHISPD  UF   E             DISK
- 
+
      FQSYSPRT   O    F  132        PRINTER USROPN
- 
+
      D DB              S              2    DIM(10) CTDATA PERRCD(10)
      D DC              S              2    DIM(30) CTDATA PERRCD(30)
      D DD              S              2    DIM(30) CTDATA PERRCD(30)
      D DE              S              2    DIM(30) CTDATA PERRCD(30)
      D DG              S              2    DIM(30) CTDATA PERRCD(30)
- 
- 
+
+
      C                   EXSR      P_DEALSDB
      C                   EXSR      P_DLBHISPD
      C                   EXSR      P_FXDEALPP
      C                   EXSR      P_ABDEALPP
- 
+
      C                   EXSR      P_DEALSDC
      C                   EXSR      P_DLCHISPD
      C                   EXSR      P_MMDELDPP
- 
+
      C                   EXSR      P_DEAMSDI
      C                   EXSR      P_MMDEAMPP
- 
+
      C                   EXSR      P_DEALSDD
      C                   EXSR      P_DLDHISPD
      C                   EXSR      P_MMDENBPP
- 
+
      C                   EXSR      P_DEALSDE
      C                   EXSR      P_DLEHISPD
      C                   EXSR      P_MMDENSPP
- 
+
      C                   EXSR      P_DEALSDG
      C                   EXSR      P_DLGHISPD
- 
+
      C                   ADD       1             Count             3 0
- 
+
      CLR                 EXSR      FINISH
       /SPACE 5
       ********************************************************************
@@ -409,16 +412,16 @@
       ********************************************************************
      C     FINISH        BEGSR
      C                   OPEN      QSYSPRT
- 
+
       * Report error or completion
- 
+
      C     Count         IFNE      1
      C                   EXCEPT    ERR
      C                   SETON                                        U8
      C                   ELSE
      C                   EXCEPT    FIN
      C                   ENDIF
- 
+
      C                   CLOSE     QSYSPRT
      C                   ENDSR
       ********************************************************************

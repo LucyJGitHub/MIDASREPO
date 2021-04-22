@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD057051           Date 28Oct20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057051           Date 28Oct20               *
+      *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -168,6 +169,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057051 - DLC0400 00001 fails during COB.                   *
       *           - Do not execute SR/CGSTAX when WSTAT is blanks as  *
       *             it is only being populated when CGL031 is ON and  *
@@ -2509,12 +2511,14 @@
      C                   EXSR      D@IPYT
       *
       ** Our Rate Change Details
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      D@RCHO
      C                   END
       *
       ** Their Rate Change Details
-     C     TBRTT         IFNE      *ZERO
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103 
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      D@RCHT
      C                   END
      C/COPY WNCPYSRC,CG4010C020
@@ -4612,12 +4616,14 @@
      C/COPY WNCPYSRC,CG4010C074
       *
       ** Our Base Rate Type
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103 
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     UBRTT         ##D(3)
      C                   END
       *
       ** Our Base Rate Name
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     UBRTT         ##BSRC
      C                   CALL      'AOBSRTR0'
      C                   PARM      *BLANKS       ##RTCD
@@ -4644,13 +4650,15 @@
      C                   MOVEL     BABSRN        ##D(4)
       *
       ** Our Fixed Rate
-     C     UBRTT         IFEQ      *ZERO
+     C*****UBRTT         IFEQ      *ZERO                                                      CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     UEINR         ##D(5)
      C                   END
       *
       ** Our Spread
      C                   MOVEL     *BLANKS       R#DATA
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     URTSP         R#DATA
      C     USPIN         IFEQ      'S'
      C                   MOVE      '-'           ##SIGN
@@ -4727,12 +4735,14 @@
      C/COPY WNCPYSRC,CG4010C075
       *
       ** Their Base Rate Type
-     C     TBRTT         IFNE      *ZERO
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103      
      C                   MOVEL     TBRTT         ##D(3)
      C                   END
       *
       ** Their Base Rate Name
-     C     TBRTT         IFNE      *ZERO
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     TBRTT         ##BSRC
      C                   CALL      'AOBSRTR0'
      C                   PARM      *BLANKS       ##RTCD
@@ -4759,13 +4769,15 @@
      C                   MOVEL     BABSRN        ##D(4)
       *
       ** Their Fixed Rate
-     C     TBRTT         IFEQ      *ZERO
+     C*****TBRTT         IFEQ      *ZERO                                                      CSD103     
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     TEINR         ##D(5)
      C                   END
       *
       ** Their Spread
      C                   MOVEL     *BLANKS       R#DATA
-     C     TBRTT         IFNE      *ZERO
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     TRTSP         R#DATA
      C     TSPIN         IFEQ      'S'
      C                   MOVE      '-'           ##SIGN
@@ -5311,7 +5323,8 @@
       *                                                                                     MD030644
       ** Base Rate Name                                                                     MD030644
      C                   MOVEL     CCY           ##CYCD                                     MD030644
-     C     BRTT          IFNE      *ZERO                                                    MD030644
+     C*****BRTT          IFNE      *ZERO                                             MD030644 CSD103
+     C     BRTT          IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     BRTT          ##BSRC                                     MD030644
      C                   CALL      'AOBSRTR0'                                               MD030644
      C                   PARM      *BLANKS       ##RTCD                                     MD030644

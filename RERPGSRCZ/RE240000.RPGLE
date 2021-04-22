@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD054826           Date 20Jan20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054826           Date 20Jan20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE095             Date 25Apr14               *
       *                 AR1095876          Date 30Sep13               *
       *                 AR1089939          Date 22Feb13               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054826 - After processing all the retail accounts, call    *
       *             again access object AOFCLTR0 with *FREE parameter *
       *             to close FCLTY file.                              *
@@ -99,7 +102,7 @@
       ** Midas GL Account Extension File
       *
      FGLACNTL3  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -121,10 +124,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -133,28 +136,28 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
      D P@FMT         E DS                  EXTNAME(DSSDY)
      D                                     PREFIX(P@)
      D Q@FMT         E DS                  EXTNAME(DSSDY)
      D                                     PREFIX(Q@)
- 
+
      D Z_SDCUR       E DS                  EXTNAME(SDCURRPD)
      D                                     PREFIX(W_)
      D Z_SDCUS       E DS                  EXTNAME(SDCUSTPD)
@@ -169,27 +172,27 @@
      D  WLCD         E                     EXTFLD(LCD)
      D
      D GPRABE        E DS                  EXTNAME(GPRABEPD)                                BUG27288
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
      D KBRCD           S              3A
      D KCNUM           S              6A
      D KACSQ           S              2  0
      D KACNO           S             10  0
      D KCCY            S              3A
      D KACOD           S             10  0
- 
+
      D P@RTCD          S              7A
      D P@OPTN          S              7A
      D P@SARD          S              6A
      D*P@RETL***       S             10  0                                                  BUG27942
      D P@ERMS          S             50A                                                    BUG27288
- 
+
      D P@BRCD          S              3A
      D P@CNUM          S              6A
      D P@CNM10         S             10A
@@ -200,9 +203,9 @@
      D P@FCNO          S              2  0
      D P@RCDT          S              1A
      D P@STAT          S              7A
- 
+
      D CLE025          S              1A   INZ('N')
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -213,7 +216,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -230,10 +233,10 @@
      C**********         EVAL      *IN98 = *ON                                             AR1005261
      C**********         ENDIF                                                             AR1005261
      C                   EXSR      SrMain
- 
+
      C                   EVAL      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -245,9 +248,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SrMain        BEGSR
- 
+
      C     1             SETLL     ACCNTAB
      C                   READ      ACCNTABF
      C                   DOW       NOT %EOF(ACCNTAB)
@@ -281,7 +284,7 @@
      C**********         PARM      0             P@ACSQ                                     BUG27942
      C**********         PARM      *BLANKS       P@BRCD                                     BUG27942
      C*****Z_MEMOS       PARM      *BLANKS       DSFDY                                      BUG27942
- 
+
      C**********         EVAL      ABLDBL = W2LDBLN                                         BUG27942
      C**********         EVAL      ABCLBL = W2CLBLN                                         BUG27942
      C                   EVAL      ABLDBL = LDBL                                            BUG27942
@@ -347,7 +350,7 @@
      C                   PARM      '*KEY   '     P@OPTN
      C                   PARM      CCY           P@CCY
      C     Z_SDCUR       PARM      *BLANKS       DSSDY
- 
+
      C                   EVAL      ABCCYN = W_A6CYNM
       ** Customer
      C                   EVALR     P@CNM10 = CNUM
@@ -357,7 +360,7 @@
      C                   PARM                    P@CNM10
      C                   PARM      *BLANKS       P@STAT
      C     Z_SDCUS       PARM      *BLANKS       DSLDY
- 
+
      C                   EVAL      ABCNM1 = W_BBCNA1
      C                   EVAL      ABCNM2 = W_BBCNA2
      C                   EVAL      ABCNM3 = W_BBCNA3
@@ -371,31 +374,31 @@
      C                   PARM      '*KEY   '     P@OPTN
      C                   PARM      BRCA          P@BRCD
      C     Z_SDBRC       PARM      *BLANKS       DSSDY
- 
+
      C                   EVAL      ABBRNM = W1A8BRNM
      C                   EVAL      ABZONE = W1A8ZONE                                        BUG27288
       *
       ***Global*Customer***********************************************                     BUG27288
- 
+
      C*****GCUSKey       CHAIN     GPCUSTXL1                                                BUG27288
- 
+
      C**********         IF        %FOUND                                                   BUG27288
      C**********         EVAL      ABGCNM  = CUGCUS                                         BUG27288
      C**********         ELSE                                                               BUG27288
      C**********         EVAL      ABGCNM  = *BLANKS                                        BUG27288
      C**********         ENDIF                                                              BUG27288
- 
+
      C                   EVAL      ABFCCU  = FCCU
      C                   EVAL      ABFACT  = FACT
      C                   EVAL      ABFCNO  = FCNO
- 
+
      C                   IF        ABFCNO = 0
      C                             Or FCCU = *Blanks                                       AR1089939
      C                             And CLE025 <> 'Y'                                       AR1089939
      C**********         EVAL      ABFAAMT = 0                                              BUG27288
      C                   EVAL      ABFAMT = 0                                               BUG27288
      C                   ELSE
- 
+
      C                   EVAL      P@CNUM  = FCCU
      C                   EVAL      P@FCTY  = FACT
      C                   EVAL      P@FCNO  = FCNO
@@ -408,9 +411,9 @@
      C                   EVAL      ABOAM1  = OAM1                                           BUG27978
      C                   EVAL      ABFAAMT = ABFAMT - ABOAM1                                BUG27978
      C                   ENDIF                                                              BUG27978
- 
+
      C                   ENDIF
- 
+
      C**********         WRITE     RERABED0                                                 BUG27288
                                                                                             BUG27288
       * Call program GP230000 to update global file GPRABEPD                                BUG27288
@@ -437,7 +440,7 @@
      C                   ENDIF                                                              BUG27288
                                                                                             BUG27288
      C                   ENDIF
- 
+
      C                   READ      ACCNTABF
      C                   ENDDO
 
@@ -453,7 +456,7 @@
      C                   PARM      *BLANKS       Q@FMT                                      MD054826
                                                                                             MD054826
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -465,9 +468,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SrFACILT      BEGSR
- 
+
      C                   CALL      'AOFCLTR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY   '     P@OPTN
@@ -485,10 +488,10 @@
      C                   EVAL      DBASE = 002
      C                   EXSR      *PSSR
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -500,26 +503,26 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     GCUSKey       KLIST
      C                   KFLD                    KBRCD
      C                   KFLD                    KCNUM
- 
+
      C     GLACKey       KLIST
      C                   KFLD                    KCNUM
      C                   KFLD                    KCCY
      C                   KFLD                    KACOD
      C                   KFLD                    KACSQ
      C                   KFLD                    KBRCD
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*VERIFY'     P@OPTN
      C                   PARM      'CLE025'      P@SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C                              AND P@RTCD <> '*NRF'                                    BUG27978
      C                   EVAL      DBKEY = 'CLE025'
@@ -543,9 +546,9 @@
      C                   IF        AGDFF = 'M'                                             AR1005261
      C                   EVAL      *IN98 = *ON                                             AR1005261
      C                   ENDIF                                                             AR1005261
- 
+
      C                   ENDSR
- 
+
       *
       /EJECT
       *****************************************************************

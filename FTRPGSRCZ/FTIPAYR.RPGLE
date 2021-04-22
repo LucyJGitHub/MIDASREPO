@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056993           Date 27Oct20               *
-      *  Prev Amend No. MD056823           Date 29Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056993           Date 27Oct20               *
+      *                 MD056823           Date 29Sep20               *
       *                 MD052870           Date 27Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044395           Date 08Mar17               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056993 - Added clear of valid file layout data structures  *
       *  MD056823 - Unable to Authorise in PAUT afer Reversal of      *
       *             Amendment in WIP                                  *

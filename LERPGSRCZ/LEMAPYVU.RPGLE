@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055652           Date 13Jul20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051892           Date 22Sep18               *
       *                 MD052228           Date 30Oct18               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055652 - Error LEM0215 occurs when authorising a manual    *
       *             repayment attached to PD. In the codes introduced *
       *             by CLE164, add condition to check if expected     *
@@ -1414,7 +1416,8 @@
       *                                                                                       CLE035
       ***  Determine rate                                                                     CLE035
       *                                                                                       CLE035
-     C                   IF        FC_LPBR <> 0                                               CLE035
+     C**********         IF        FC_LPBR <> 0                                        CLE035 CSD103
+     C                   IF        FC_LPBR <> *BLANKS                                         CSD103
       *                                                                                       CLE035
       ***  Read Base rate details                                                             CLE035
       *                                                                                       CLE035
@@ -1441,7 +1444,8 @@
       *
       ***  Determine rate
       *
-     C                   if        FC_LPBR <> 0
+     C**********         if        FC_LPBR <> 0                                               CSD103
+     C                   if        FC_LPBR <> *BLANKS                                         CSD103
       *
       ***  Read Base rate details
       *

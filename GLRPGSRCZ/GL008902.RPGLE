@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSC054 *CREATE     Date 23Feb12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSC054 *CREATE     Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC054 - Period End Adjustments                              *
       *                                                               *
@@ -47,14 +50,14 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas GL Manual Postings Detail File
      FMANPOPD   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(BT)
- 
+
       ** Midas GL Corrective Batch Register File
      FGLCORBL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas GL Accounts Master Detail File
      FACCNT     UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     IGNORE(ACCNTAAF)
@@ -90,11 +93,11 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D BTSPOS          DS
      D BNUMSP                  1      3
      D ITEMSP                  4      7
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -109,25 +112,25 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Read all postings from manual postings details file
- 
+
      C     1             SETLL     MANPOPD
      C                   READ      MANPOPD                                70
      C     *IN70         DOWEQ     '0'
- 
+
      C                   IF        BNUMSP <> *BLANKS AND
      C                             ITEMSP = *BLANKS AND
      C                             BTGETP = *BLANKS AND
      C                             BTRECI = 'P'
- 
+
       ** Check if posting is from corrective batch
- 
+
      C     KCorb         CHAIN     GLCORBL0                           71
      C                   IF        *IN71 = '0'
- 
+
       ** Update End of Period Balances of the account
- 
+
      C     KAccnt        CHAIN     ACCNT                              72
      C                   IF        *IN72 = '0'
      C     BTDRCR        IFEQ      0
@@ -140,11 +143,11 @@
      C                   UPDATE    ACCNTABF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   READ      MANPOPD                                70
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -155,24 +158,24 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      ** Key fields for corrective batch register file
- 
+
      C     KCorb         KLIST
      C                   KFLD                    BNUMSP
      C                   KFLD                    BTPSTD
- 
+
      ** Key fields for accounts master file
- 
+
      C     KAccnt        KLIST
      C                   KFLD                    BTCNUM
      C                   KFLD                    BTCCY
      C                   KFLD                    BTACOD
      C                   KFLD                    BTACSQ
      C                   KFLD                    BTBRCA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -189,15 +192,15 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
      C                   RETURN
- 
+
      C                   ENDSR

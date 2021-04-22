@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -81,12 +84,12 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FCLOAN     IF   E           K DISK
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
@@ -96,7 +99,7 @@
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
      F                                     PREFIX(FA_)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -108,87 +111,87 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED)
- 
+
       ** Midas LE API Feem File Record
- 
+
      D CrFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
       ** Midas LE API Feem Detail Screen Format Definition File
- 
+
       * Customer Loans record CL in file Format
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(CL_)
- 
+
       * Facility record FM in file Format
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FA_)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PACTN           S              1A
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSTS            S             24A
      D PCSTS           S             10A
      D TRANSDTL        S           5800A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -201,22 +204,22 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
      C
      C                   EVAL      DDACTN = PACTN
- 
+
      C                   EVAL      WSYND  = 'N'
       *
       ** Access Loan details
       *
      C*****FELOAN        IFNE      *zero                                                      CLE148
      C     FELOAN        IFNE      *BLANKS                                                    CLE148
- 
+
      C     KEY002        CHAIN     CLOAN                              78
- 
+
       * Check if Fee against Syndicated Loan/Facility
- 
+
      C     *IN78         IFEQ      '0'
      C     CL_PTYP       ANDNE     61
      C     CL_PTYP       ANDNE     62
@@ -228,7 +231,7 @@
      C                   MOVE      'Y'           WSYND             1
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate Facility with Customer Det.
@@ -237,12 +240,12 @@
      C                   Movel     FEFACL        WFAC03            3 0
      C                   Move      FEFACL        WFAC02            2 0
      C     KEY001        CHAIN     FCLTY                              78
- 
+
      C     *IN78         IFEQ      '0'
      C     FA_SYIN       ANDEQ     'Y'
      C                   MOVE      'Y'           WSYND
      C                   ENDIF
- 
+
      C     FEFACL        IFNE      *Zero
      C     FA_SYIN       ANDEQ     'Y'
      C     FA_PRTR       ANDNE     'I'
@@ -251,11 +254,11 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** Process Fee input
- 
+
      C                   CALLB     'LEFEEMCVT'
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    CrFeFilFmt
       *
@@ -278,17 +281,17 @@
       *
       * Participant Fee indicator
      C                   PARM                    WPTFI             1
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
      C                   EVAL      TRANSDTL = CrFeScnFmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -300,53 +303,53 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Action Code
      C                   PARM                    PACTN
- 
+
       ** Midas LE Fee file record
      C                   PARM                    CrFeFilFmt
- 
+
       ** CLE006
      C                   PARM                    CLE006            1
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Data Replication Details Screen Format
      C                   PARM                    TRANSDTL
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANK
      C                   EVAL      DBKEY = POPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 900
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
       *
       ** KLIST for file FCLTY
      C     KEY001        KLIST
@@ -359,7 +362,7 @@
      C     KEY002        KLIST
      C                   KFLD                    FELOAN
      C                   KFLD                    WRCDT
- 
+
      C                   MOVE      'A'           WRCDT             1
       *                                                                                      BUG3813
       ** Determine if CLE028 for Flat Rate Personal Loans (Rule of 78s)                      BUG3813
@@ -386,7 +389,7 @@
      C                   EXSR      *PSSR                                                     BUG3813
      C                   ENDIF                                                               BUG3813
      C                   ENDIF                                                               BUG3813
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

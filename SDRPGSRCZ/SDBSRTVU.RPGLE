@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG22152           Date 14Jan09               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG22152 - Missing authorization field in repository.        *
@@ -195,6 +197,9 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
+      * LIBOR Fields                                                                          CSD103
+     D LiborFlds       DS            49                                                       CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -235,7 +240,7 @@
      D CSC022          S              1A   INZ('N')                                           CSC022
      D wSkip           S              1A   INZ('N')                                           CSC022
                                                                                              BUG3124
-     D #1TESTN         S              1A                                                     BUG3124
+     D*#1TESTN**       S              1A                                              BUG3124 CSD103
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -328,6 +333,8 @@
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
+     C                                                    + AAuth                             CSD103
+     C                                                    + LiborFlds                         CSD103
 
      C                   RETURN
 
@@ -361,6 +368,8 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -597,19 +606,19 @@
 
      C                   ENDIF
                                                                                              BUG3124
-     ** Used MOVE to validate Base Rate Code                                                 BUG3124
+      * Used MOVE to validate Base Rate Code                                                 BUG3124
                                                                                              BUG3124
-     C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
-     C     DDBSRC        IFLE      '00'                                                      BUG3124
-     C     DDBSRC        ORGT      '99'                                                      BUG3124
-     C     #1TESTN       ORLT      '0'                                                       BUG3124
-     C     #1TESTN       ORGT      '9'                                                       BUG3124
-     C                   ADD       1             Idx                                         BUG3124
-     C                   EVAL      *IN98 = *ON                                               BUG3124
-     C                   EVAL      *IN33 = *ON                                               BUG3124
-     C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                BUG3124
-     C                   EVAL      MsgIDArr(Idx) = 'USR4572'                                 BUG3124
-     C                   END                                                                 BUG3124
+     C**********         MOVE      DDBSRC        #1TESTN                              BUG3124 CSD103
+     C*****DDBSRC        IFLE      '00'                                               BUG3124 CSD103
+     C*****DDBSRC        ORGT      '99'                                               BUG3124 CSD103
+     C*****#1TESTN       ORLT      '0'                                                BUG3124 CSD103
+     C*****#1TESTN       ORGT      '9'                                                BUG3124 CSD103
+     C**********         ADD       1             Idx                                  BUG3124 CSD103
+     C**********         EVAL      *IN98 = *ON                                        BUG3124 CSD103
+     C**********         EVAL      *IN33 = *ON                                        BUG3124 CSD103
+     C**********         EVAL      FldNameArr(Idx) = 'DDBSRC'                         BUG3124 CSD103
+     C**********         EVAL      MsgIDArr(Idx) = 'USR4572'                          BUG3124 CSD103
+     C**********         END                                                          BUG3124 CSD103
                                                                                              BUG3124
       *
      C                   ENDSR
@@ -746,6 +755,9 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+                                                                                              CSD103
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
      C                   ENDSR
       *****************************************************************

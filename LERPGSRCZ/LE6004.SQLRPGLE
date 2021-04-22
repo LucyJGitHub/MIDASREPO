@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CER050  *Create    Date 16Jun19               *
-      *  Prev Amend No. XXXXXX             Date ddMmmyy               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050  *Create    Date 16Jun19               *
+      *                 XXXXXX             Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (APR)                    *
       *                                                               *
       *****************************************************************
@@ -75,7 +77,8 @@
       * "Before image of file"
      D  RECIB                  1      1
      D  AMTPB                 23     24
-     D  BRTTB                 27     28  0
+      **BRTTB                 27     28  0                                                    CSD103
+     D  BRTTB                 27     28                                                       CSD103
      D  RTSPB                 35     37
      D  FEAMB                 59     65P 0
      D  LSMDB                267    269P 0
@@ -84,7 +87,8 @@
      D  RECIA                  1      1
      D  LNRFA                  2      7
      D  AMTPA                 23     24
-     D  BRTTA                 27     28  0
+      **BRTTA                 27     28  0                                                    CSD103
+     D  BRTTA                 27     28                                                       CSD103
      D  RTSPA                 35     37
      D  FEAMA                 59     65P 0
      D  LSMDA                267    269P 0

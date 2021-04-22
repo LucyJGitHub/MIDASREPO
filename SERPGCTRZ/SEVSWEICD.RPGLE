@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -194,13 +197,13 @@
      C                   IF        OKWEIC = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKWEIC <> 'N'
      C                   MOVE      DDWEIC        S1WEIC
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -208,16 +211,16 @@
       *  SRValWeiCd - Validation for Weighting Code                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValWeiCd    BEGSR
- 
+
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDWEIC                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKWEIC
      C                   ADD       1             Idx
@@ -225,14 +228,14 @@
      C                   MOVEL     'SEA0242'     MsgIdXAr(Idx)
      C                   GOTO      EValWeiCd
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
       *
       ** Weighting code must be a valid customer.
       *
      C                   IF        DDWEIC <> *BLANKS
- 
+
      C**********         CALL      'AOWEIGR0'                                                 CGP001
      C                   CALL      'GPAOWEIGR0'                                               CGP001
      C                   PARM      *BLANKS       PRtCd
@@ -240,7 +243,7 @@
      C                   PARM      DDWEIC        PWeiC
      C*****SDWEIG        PARM      SDWEIG        DSFDY                                        CGP001
      C     GPWEIG        PARM      GPWEIG        DSFDY                                        CGP001
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   IF        PRtCd = '*NOSEL '
      C                   EVAL      DDWEIC = *BLANKS
@@ -252,7 +255,7 @@
      C                   ELSE
      C                   MOVEL     PDWEIG        DDWEIC
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CGL014
       ** If CGL014 is on, instrument type is valid, and weighting                             CGL014
@@ -279,9 +282,9 @@
      C                   MOVE      PPDWEIG       DDWEIC                                       CGL014
      C                   ENDIF                                                                CGL014
      C                   ENDIF                                                                CGL014
- 
+
      C     EValWeiCd     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -291,9 +294,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -338,9 +341,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -349,7 +352,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD047582           Date 13Jul20               *
-      *  Prev Amend No. MD055065           Date 24Apr20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD047582           Date 13Jul20               *
+      *                 MD055065           Date 24Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD047582 - Unable to authorise/reject a manual repayment     *
       *             for discount loan. Allow MR with value date equal *
       *             to loan's maturity date but not attached to a     *

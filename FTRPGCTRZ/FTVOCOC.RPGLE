@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG26087           Date 22Sep09               *
       *                 BUG25973           Date 17Sep09               *
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  BUG26087 - The word COVER is missing in the error message    *
@@ -39,7 +42,7 @@
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -57,95 +60,95 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Incoming Transaction
      D NwOPFilFmt    E DS                  EXTNAME(FTVOPAYPD)
      D NwOPFilFmx    E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Cover Message
      D NwOPAScnFmt   E DS                  EXTNAME(FTOPYAPD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEOPYA       E DS                  EXTNAME(FTEOPYAPD)
- 
+
       ** External data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Externally described DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Externally described DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Data structure for Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Externally described DS for BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       ** Externally described DS for Counterparty Nostros
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** Ordering Customer data structure
      D ORDCST          DS           175
      D  WCOC1                  1     35
@@ -153,29 +156,29 @@
      D  WCOC3                 71    105
      D  WCOC4                106    140
      D  WCOC5                141    175
- 
+
       *
       /COPY FTCPYSRC,SFTVALCSLE
       *
       /COPY FTCPYSRC,SFTADDRILE
       *
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
       ** Work fields
      D CFT004          S              1A
      D POPTN           S              7A
@@ -189,12 +192,12 @@
      D P@IBAN          S             34A
      D POWith          S             47A
      D PONobl          S             34A
- 
+
       ** Used for SWIFT validation
      D ADLINE          S              1A
      D ADSLON          S              1A
      D ##CSID          S              1A
- 
+
       ** FT001000 parameters
      D PRTCD           S              7A
      D PMsgID          S              7A
@@ -222,7 +225,7 @@
      D POut3           S             35A
      D POut4           S             35A
      D POut5           S             35A
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -242,7 +245,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -255,10 +258,10 @@
      C                   Eval      WMsgDtaXAr = *Blanks
      C                   Eval      WIX = 0
      C                   Eval      Idx = 0
- 
+
       ** Validate
      C                   ExSr      VOCOC
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKCOC1 = 'N'
@@ -271,7 +274,7 @@
      C                   Eval      O2COC4 = SCOC4
      C                   Eval      O2COC5 = SCOC5
      C                   EndIf
- 
+
       ** RETURN
       *
      C                   Return
@@ -306,7 +309,7 @@
      C                   Eval      MsgIDXAr(Idx)  = 'ME00257'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   Else
       *
       ** Ordering Customer (Cover) can only be entered
@@ -322,7 +325,7 @@
      C                   Eval      MsgIDXAr(Idx)  = 'ME00258'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   EndIf
       *
      C                   If        ORDCST <> *Blanks
@@ -514,7 +517,7 @@
      C                   Eval      WMsgIdXAr(WIX) = 'FTM2401'
       *
       ** Invalid character
- 
+
      C**********         When      PRTCD = '      3'                                        BUG24934
      C**********         Eval      WMsgIdXAr(WIX) = 'FTM2402'                               BUG24934
       *
@@ -745,7 +748,7 @@
      C     *INZSR        BegSr
      C*
      C     *ENTRY        PList
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    NwOPFilFmt
      C                   Parm                    NwOPFilFmx
@@ -788,9 +791,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT

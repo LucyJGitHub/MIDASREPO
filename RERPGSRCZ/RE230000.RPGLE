@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039463           Date 11Aug16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039463           Date 11Aug16               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039463 - Issue Facilities to be linked to Retail account   *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
@@ -102,24 +105,24 @@
       ** +--------------------------------------+
       ***Retail*Account*Balance*Extract*-*Denormalized*****************                     BUG27288
       ***Update*LF*for*ACCNTAB*and*SDBRCHPD*triggers*******************                     BUG27288
- 
+
      F***RERABEL0  UF A E           K DISK    INFSR(*PSSR)                                  BUG27288
       ***Update*LF*for*SDCURRPD*trigger********************************                     BUG27288
- 
+
      F***RERABEL1  UF A E           K DISK    INFSR(*PSSR)                                  BUG27288
      F**********                              RENAME(RERABED0:RERABED1)                     BUG27288
       ***Update*LF*for*FCLTYFM*or*FCLTYFN*trigger**********************                     BUG27288
- 
+
      F***RERABEL2  UF A E           K DISK    INFSR(*PSSR)                                  BUG27288
      F**********                              RENAME(RERABED0:RERABED2)                     BUG27288
       ***Update*LF*for*SDCUSTPD*trigger********************************                     BUG27288
- 
+
      F***RERABEL3  UF A E           K DISK    INFSR(*PSSR)                                  BUG27288
      F**********                              RENAME(RERABED0:RERABED3)                     BUG27288
       ***Global*Customers*X-Reference*Retrieval*index******************                     BUG27288
- 
+
      F***GPCUSTXL1 IF   E           K DISK    INFSR(*PSSR)                                  BUG27288
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -128,53 +131,53 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
- 
+
       **                                    134 141 DBFILE
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program Status Data Structure
- 
+
       ** +------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
      D P@FMT         E DS                  EXTNAME(DSSDY)
      D                                     PREFIX(P@)
      D Q@FMT         E DS                  EXTNAME(DSSDY)
      D                                     PREFIX(Q@)
- 
+
      D Z_ACCNT       E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(W_)
      D Z_SDCUR       E DS                  EXTNAME(SDCURRPD)
@@ -194,7 +197,7 @@
      D
                                                                                             BUG27288
      D GPRABE        E DS                  EXTNAME(GPRABEPD)                                BUG27288
- 
+
      D P@IMGDS         DS
       * Physical file name
      D  PFLNAME                1     10
@@ -211,17 +214,17 @@
       * Length of the after image of the record
      D  PALEN                 69     72B 0
      D  PEntryData           117  10117A
- 
+
      D P@LENDS         DS
      D  PLENG                  1      4B 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Key fields
- 
+
      D KBRCD           S              3A
      D KCNUM           S              6A
      D KCCY            S              3A
@@ -231,21 +234,21 @@
      D KFCCU           S              6A
      D KFACT           S              3S 0
      D KFCNO           S              2S 0
- 
+
       ** Work fields
- 
+
      D W_@RUN          S              1
      D W_OffSet        S              5  0
      D W_AIMG          S           4000A
      D W_HHIT          S              1A
      D W_BAVBL         S             15S 0
- 
+
       ** Paramater fields
- 
+
      D W@RTCD          S              7A
      D W@SARD          S              6A
      D W@ERMS          S             50A
- 
+
      D I@OPTN          S              7A
      D I@BRCD          S              3A
      D I@CNUM          S              6A
@@ -260,7 +263,7 @@
      D I@VALD          S              5s 0
      D I@BAVBL         S             15S 0
      D I@FULLCHECK     S              1A
- 
+
      D O@ZONE          S             10A
      D O@SHTC          S              4A
      D O@RDNB          S              5  0
@@ -284,43 +287,43 @@
      D I#GPCustDet     S              1A                                                    BUG27288
      D O#RecordImage   S                   LIKE(GPRABE)                                     BUG27288
      D commitDef       S              1A
- 
+
       ** Switchable feature
- 
+
      D CLE025          S              1A   INZ('N')
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C                   IN        RUNDAT
- 
+
       ** Set Date Format Indicator *IN98  on if date format is MMDDYY
- 
+
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
- 
+
      C                   EXSR      SrMain
- 
+
      C                   EVAL      *INLR = *ON
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -333,12 +336,12 @@
       *        SrFCLTY and SrGLACN                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrMain        BEGSR
- 
+
      C                   EVAL      W_OffSet = PAOFF + 1
      C                   EVAL      W_AIMG = %SUBST(P@IMGDS :W_OffSet :PALEN)
- 
+
      C                   SELECT
      C                   WHEN      PFLNAME = 'ACCNTAB'
      C                   EXSR      SrACCNT
@@ -357,9 +360,9 @@
      C                   WHEN      PFLNAME = 'GLACNTQD'
      C                   EXSR      SrGLACN
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -372,12 +375,12 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrACCNT       BEGSR
- 
+
      C                   CLEAR                   Z_ACCNT
      C                   MOVEL     W_AIMG        Z_ACCNT
- 
+
      C                   IF        W_ATYP = 'R'
      C**********         EVAL      KBRCD = W_BRCA                                           BUG27288
      C**********         EVAL      KCNUM = W_CNUM                                           BUG27288
@@ -406,16 +409,16 @@
       ** Update the record
       *
       ** Move ACCNTAB fields to output fields
- 
+
      C                   EXSR      SrMVFLDS
      C                   EVAL      ABLDBL = W_LDBL                                         BUG28110A
      C                   EVAL      ABCLBL = W_CLBL                                         BUG28110A
- 
+
      C                   IF        ABFCNO = 0
      C**********         EVAL      ABFAAMT = 0                                              BUG27978
      C                   EVAL      ABFAMT = 0                                               BUG27978
      C                   ELSE
- 
+
      C                   IF        CLE025 = 'Y'                                             MD039463
      C                   EVAL      I@CNUM = W_FCCU
      C                   ELSE                                                               MD039463
@@ -432,11 +435,11 @@
      C                   EVAL      ABOAM1  = OAM1                                           BUG27978
      C                   EVAL      ABFAAMT = ABFAMT - ABOAM1                                BUG27978
      C                   ENDIF                                                              BUG27978
- 
+
      C                   ENDIF
      C**********         UPDATE    RERABED0                                                 BUG27288
      C                   EXSR      SRUpdate                                                 BUG27288
- 
+
      C                   ELSE
       *
       ** Add new record
@@ -444,22 +447,22 @@
      C                   EVAL      ABZONE = O@ZONE
      C                   EVAL      ABBRCD = W_BRCA
      C                   EVAL      ABCNUM = W_CNUM
- 
+
       ***Global*Customer***********************************************                     BUG27288
- 
+
      C**********         EVAL      KCNUM = W_CNUM                                           BUG27288
      C**********         EVAL      KBRCD = W_BRCA                                           BUG27288
- 
+
      C*****GCUSKey       CHAIN     GPCUSTXL1                                                BUG27288
- 
+
      C**********         IF        %FOUND                                                   BUG27288
      C**********         EVAL      ABGCNM  = CUGCUS                                         BUG27288
      C**********         ELSE                                                               BUG27288
      C**********         EVAL      ABGCNM  = *BLANKS                                        BUG27288
      C**********         ENDIF                                                              BUG27288
- 
+
       ** Customer
- 
+
      C                   EVALR     I@CNM10 = W_CNUM
      C                   CALL      'AOCUSTR1'
      C                   PARM      *BLANKS       W@RTCD
@@ -467,7 +470,7 @@
      C                   PARM                    I@CNM10
      C                   PARM      *BLANKS       I@STAT
      C     Z_SDCUS       PARM      *BLANKS       DSLDY
- 
+
      C                   IF        W@RTCD <> *BLANKS
      C                   EVAL      DBKEY  = I@CNM10
      C                   EVAL      DBFILE = 'SDCUSTPD'
@@ -481,7 +484,7 @@
      C                   EVAL      ABCRNM = W_BBCRNM                                        BUG27878
      C                   EVAL      ABACOC = W_BBACOC                                        BUG27878
      C                   ENDIF
- 
+
       ** Branch
      C**********         CALL      'AOBRCHR0'                                               BUG27288
      C                   CALL      'AOBRCHR1'                                               BUG27288
@@ -489,7 +492,7 @@
      C                   PARM      '*KEY   '     I@OPTN
      C                   PARM      W_BRCA        I@BRCD
      C     Z_SDBRC       PARM      *BLANKS       DSSDY
- 
+
      C                   IF        W@RTCD <> *BLANKS
      C                   EVAL      DBKEY  = I@BRCD
      C                   EVAL      DBFILE = 'SDBRCHPD'
@@ -498,20 +501,20 @@
      C                   ELSE
      C                   EVAL      ABBRNM = W1A8BRNM
      C                   ENDIF
- 
+
      C                   EVAL      ABACNO = W_ACNO
      C                   EVAL      ABACOD = W_ACOD
      C                   EVAL      ABACSQ = W_ACSQ
      C                   EVAL      ABCCY  = W_CCY
- 
+
       ** Currency description
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       W@RTCD
      C                   PARM      '*KEY   '     I@OPTN
      C                   PARM      W_CCY         I@CCY
      C     Z_SDCUR       PARM      *BLANKS       DSSDY
- 
+
      C                   IF        W@RTCD <> *BLANKS
      C                   EVAL      DBKEY  = I@CCY
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -520,18 +523,18 @@
      C                   ELSE
      C                   EVAL      ABCCYN = W_A6CYNM
      C                   ENDIF
- 
+
       ** Move ACCNTAB fields to output fields
- 
+
      C                   EXSR      SrMVFLDS
      C                   EVAL      ABLDBL = W_LDBL
      C                   EVAL      ABCLBL = W_CLBL
- 
+
      C                   IF        ABFCNO = 0
      C**********         EVAL      ABFAAMT = 0                                              BUG27978
      C                   EVAL      ABFAMT = 0                                               BUG27978
      C                   ELSE
- 
+
      C                   IF        CLE025 = 'Y'                                             MD039463
      C                   EVAL      I@CNUM = W_FCCU
      C                   ELSE                                                               MD039463
@@ -548,9 +551,9 @@
      C                   EVAL      ABOAM1  = OAM1                                           BUG27978
      C                   EVAL      ABFAAMT = ABFAMT - ABOAM1                                BUG27978
      C                   ENDIF                                                              BUG27978
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      ABDACC = W_DACC
      C                   EVAL      ABDACO = W_DACO
       *
@@ -568,19 +571,19 @@
      C                   EVAL      ABABA7 = *ZERO                                           BUG27878
      C                   EVAL      ABABA8 = *ZERO                                           BUG27878
      C                   EVAL      ABABA9 = *ZERO                                           BUG27878
- 
+
       ** Set Global Customer Details Indicator                                              BUG27288
                                                                                             BUG27288
      C                   EVAL      I#GPCustDet = 'Y'                                        BUG27288
      C**********         WRITE     RERABED0                                                 BUG27288
      C                   EXSR      SRUpdate                                                 BUG27288
      C                   ENDIF
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -592,12 +595,12 @@
       * Calls: NONE                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDCUR       BEGSR
- 
+
      C                   CLEAR                   Z_SDCUR
      C                   MOVEL     W_AIMG        Z_SDCUR
- 
+
      C*****W_A6CYCD      SETLL     RERABED1                                                 BUG27288
      C*****W_A6CYCD      READE     RERABED1                                                 BUG27288
      C**********         DOW       NOT %EOF(RERABEL1)                                       BUG27288
@@ -622,9 +625,9 @@
      C*****W_A6CYCD      READE     RERABED1                                                 BUG27288
      C                   EXSR      SrGPRABE                                                 BUG27288
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -636,12 +639,12 @@
       * Calls: NONE                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDCUS       BEGSR
- 
+
      C                   CLEAR                   Z_SDCUS
      C                   MOVEL     W_AIMG        Z_SDCUS
- 
+
      C*****W_BBCUST      SETLL     RERABED3                                                 BUG27288
      C*****W_BBCUST      READE     RERABED3                                                 BUG27288
      C**********         DOW       NOT %EOF(RERABEL3)                                       BUG27288
@@ -676,9 +679,9 @@
      C*****W_BBCUST      READE     RERABED3                                                 BUG27288
      C                   EXSR      SrGPRABE                                                 BUG27288
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -690,12 +693,12 @@
       * Calls: NONE                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDBRC       BEGSR
- 
+
      C                   CLEAR                   Z_SDBRC
      C                   MOVEL     W_AIMG        Z_SDBRC
- 
+
      C*****W1A8BRCD      SETLL     RERABED0                                                 BUG27288
      C*****W1A8BRCD      READE     RERABED0                                                 BUG27288
      C**********         DOW       NOT %EOF(RERABEL0)                                       BUG27288
@@ -720,9 +723,9 @@
      C*****W1A8BRCD      READE     RERABED0                                                 BUG27288
      C                   EXSR      SrGPRABE                                                 BUG27288
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -785,9 +788,9 @@
       * Calls: NONE                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrFCLTY       BEGSR
- 
+
      C                   CLEAR                   Z_FCLTM
      C                   MOVEL     W_AIMG        Z_FCLTM
                                                                                             BUG27978
@@ -834,11 +837,11 @@
       *
      C**********         UPDATE    RERABED2                                                 BUG27288
      C                   EXSR      SRUpdate                                                 BUG27288
- 
+
      C*****RERA2Key      READE     RERABED2                                                 BUG27288
      C                   EXSR      SrGPRABE                                                 BUG27288
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -852,10 +855,10 @@
       *                                                               *
       *****************************************************************
      C     SrGLACN       BEGSR
- 
+
      C                   CLEAR                   Z_GLACN
      C                   MOVEL     W_AIMG        Z_GLACN
- 
+
      C**********         EVAL      KBRCD = F1BRCA                                           BUG27288
      C**********         EVAL      KCNUM = F1CNUM                                           BUG27288
      C**********         EVAL      KCCY  = F1CCY                                            BUG27288
@@ -909,9 +912,9 @@
       * Calls: AOFCLTR0                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrFACILT      BEGSR
- 
+
      C                   CALL      'AOFCLTR0'
      C                   PARM      *BLANKS       W@RTCD
      C                   PARM      '*KEY   '     I@OPTN
@@ -922,16 +925,16 @@
      C                   PARM      *BLANKS       I@STAT
      C     Z_FCLTN       PARM      *BLANKS       P@FMT
      C     Z_FCLTM       PARM      *BLANKS       Q@FMT
- 
+
      C                   IF        W@RTCD <> *BLANKS
      C                   EVAL      DBKEY  = I@CNUM
      C                   EVAL      DBFILE = 'FCLTY'
      C                   EVAL      DBASE = 004
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -943,9 +946,9 @@
       * Calls: NONE                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrMVFLDS      BEGSR
- 
+
      C                   EVAL      ABACDN = W_ANAM
      C                   TESTB     '2'           W_RETB                   99
      C   99              EVAL      ABBLCD = 'Y'
@@ -959,7 +962,7 @@
      C                   TESTB     '1'           W_RETB                   99
      C   99              EVAL      ABRFRC = 'Y'
      C  N99              EVAL      ABRFRC = 'N'                                             BUG27288
- 
+
      C                   EVAL      ABIBAN = W_IBAN
      C                   EVAL      ABODLN = W_ODLN
      C                   EVAL      ABODED = W_ODED
@@ -974,9 +977,9 @@
      C                   EVAL      ABFCNO = W_FCNO
      C                   EVAL      ABHELD = W_HELD                                          BUG27288
      C                   EVAL      ABBCOA = W_BCOA                                          BUG27967
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                     BUG27288
       /EJECT                                                                                BUG27288
       *****************************************************************                     BUG27288
@@ -1087,45 +1090,45 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    P@IMGDS
      C                   PARM                    P@LENDS
- 
+
      C     LEFCAKey      KLIST
      C                   KFLD                    KBRCD
      C                   KFLD                    KFCCU
      C                   KFLD                    KFACT
      C                   KFLD                    KFCNO
- 
+
      C     RERA2Key      KLIST
      C                   KFLD                    KFCCU
      C                   KFLD                    KFACT
      C                   KFLD                    KFCNO
- 
+
      C     RERABKey      KLIST
      C                   KFLD                    KBRCD
      C                   KFLD                    KCNUM
      C                   KFLD                    KCCY
      C                   KFLD                    KACOD
      C                   KFLD                    KACSQ
- 
+
      C     HELDKey       KLIST
      C                   KFLD                    KACNO
      C                   KFLD                    KACSQ
- 
+
      C     GCUSKey       KLIST
      C                   KFLD                    KBRCD
      C                   KFLD                    KCNUM
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       W@RTCD
      C                   PARM      '*VERIFY'     I@OPTN
      C                   PARM      'CLE025'      W@SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        W@RTCD <> *BLANKS
      C                              AND W@RTCD <> '*NRF'                                    BUG27978
      C                   EVAL      DBKEY = 'CLE025'
@@ -1138,22 +1141,22 @@
      C                   IF        W@RTCD = *BLANKS                                         BUG27978
      C                   EVAL      CLE025 = 'Y'
      C                   ENDIF
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    W@RTCD
      C                   PARM      '*FIRST  '    I@OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        W@RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 006
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** /COPY of GOGETZONE cannot work with RPGLE bound PGM
- 
+
      C                   CALL      'GOGETZONE'
- 
+
      C                   PARM      *BLANK        W@RTCD
      C                   PARM      *BLANK        W@ERMS
       * INPUTS
@@ -1165,14 +1168,14 @@
      C                   PARM                    O@DNWD
      C                   PARM                    O@BCCY
      C                   PARM                    O@NJOB
- 
+
       * Error detected  (*PSSR will end the program)
- 
+
      C     W@RTCD        IFEQ      '*ERROR'
      C                   EVAL      W@ERMS = 'ERROR IN GOGETZONE'
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Check if commitment definition is running                                          BUG27288
                                                                                             BUG27288
      C                   CALL      'GPCOPN4COM'                                             BUG27288
@@ -1185,7 +1188,7 @@
      C                   ENDIF                                                              BUG27288
                                                                                             BUG27288
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -1199,20 +1202,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        W_@RUN = *BLANK
      C                   EVAL      W_@RUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR

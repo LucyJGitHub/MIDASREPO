@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR375891B          Date 26Aug20               *
-      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR375891B          Date 26Aug20               *
+      *                 AR375892           Date 26Aug20               *
       *                 MD031003           Date 08Sep20               *      
       *                 MD052696           Date 04Apr19               *
       *                 MD004904           Date 04Apr19               *
@@ -118,6 +119,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR375891B - Amendment to Settlement details do not reflect   *
       *              on file. Ensure currency is set correctly.       *
       *              (Child: AR375892)                                *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057538           Date 11Feb21               *
-      *  Prev Amend No. MD055657           Date 14May20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057538           Date 11Feb21               *
+      *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057538 - LEC000711 failed in COB due to WCPAM work variable*
       *             overflow. Loop to LEFCAMLA to read all relevant   *
       *             loan amendments to prevent WCPAM from being       *
@@ -243,7 +245,8 @@
      D POptn           S              7A
      D PCcy            S              3A
      D PCcyB           S              3A
-     D PNBRA           S              2
+     D*PNBRA****       S              2                                                       CSD103
+     D PNBRA           S              2A                                                      CSD103
      D PSard           S              6
 
       ** Parameters for ZSFILE
@@ -1313,7 +1316,9 @@
 
      C                   EVAL      WRollFlg = 'N'
      C                   IF        CLRLDT < FWDT
-     C                   IF        CLNBRA > 0 or CLNRTS > 0 or CLNSIN <> *BLANKS
+     C**********         IF        CLNBRA > 0 or CLNRTS > 0 or CLNSIN <> *BLANKS              CSD103
+     C                   IF        CLNBRA <> *BLANKS or CLNRTS > 0                            CSD103
+     C                             or CLNSIN <> *BLANKS                                       CSD103
      C**********                   or CLNCAS > 0                                              CLE106
      C                             or CLNCAS > 0 or CLNBSR > 0                                CLE106
      C                   EVAL      WRollFlg = 'Y'
@@ -1332,7 +1337,8 @@
      C                   IF        LAVDAT <> WSavAmdDate or CLRLDT < LAVDAT
      C                              and WRollFlg = 'Y'
      C                   IF        WRollFlg = 'Y' and CLRLDT < LAVDAT
-     C                   IF        CLNBRA > 0
+     C**********         IF        CLNBRA > 0                                                 CSD103
+     C                   IF        CLNBRA <> *BLANKS                                          CSD103
      C                   MOVE      CLNBRA        PNBRA
      C                   CALL      'AOBSRTR0'
      C                   PARM      *BLANKS       PRtCd

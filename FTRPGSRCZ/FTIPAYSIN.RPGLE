@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BUG7555            Date 16Feb21               *
-      *  Prev Amend No. AR921987           Date 23Mar12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. BUG7555            Date 16Feb21               *
+      *                 AR921987           Date 23Mar12               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD047369A          Date 24Jan18               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  BUG7555 - When an incoming message is routed to incoming     *
       *            payment, default payment value date to the date    *
       *            on field 32A.                                      *

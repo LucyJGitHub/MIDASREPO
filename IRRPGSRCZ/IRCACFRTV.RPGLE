@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1044,7 +1046,8 @@
      C                   EVAL      CrBAGE = *ZEROS
      C                   EVAL      CrLNKDN = *ZEROS
      C                   EVAL      CrUPAMT = *ZEROS
-     C                   EVAL      CrUBRTT = *ZEROS
+     C**********         EVAL      CrUBRTT = *ZEROS                                           CSD103
+     C                   EVAL      CrUBRTT = *BLANKS                                          CSD103
      C                   EVAL      CrUSTRT = *ZEROS
      C                   EVAL      CrUBRTE = *ZEROS
      C                   EVAL      CrURTSP = *ZEROS
@@ -1072,7 +1075,8 @@
      C                   EVAL      CrUTAXD = *ZEROS
      C                   EVAL      CrUTAXM = *ZEROS
      C                   EVAL      CrTPAMT = *ZEROS
-     C                   EVAL      CrTBRTT = *ZEROS
+     C**********         EVAL      CrTBRTT = *ZEROS                                           CSD103
+     C                   EVAL      CrTBRTT = *BLANKS                                          CSD103
      C                   EVAL      CrTSTRT = *ZEROS
      C                   EVAL      CrTBRTE = *ZEROS
      C                   EVAL      CrTRTSP = *ZEROS
@@ -1114,7 +1118,8 @@
      C                   EVAL      CrUNRL = *ZEROS
      C                   EVAL      CrUNRLP = *ZEROS
      C                   EVAL      CrDDTM = *ZEROS
-     C                   EVAL      CrBRSQ = *ZEROS
+     C**********         EVAL      CrBRSQ = *ZEROS                                            CSD103
+     C                   EVAL      CrBRSQ = *BLANKS                                           CSD103
      C                   EVAL      CrLSWC = *ZEROS
      C                   EVAL      CrLSWS = *ZEROS
      C                   EVAL      CrORED = *ZEROS
@@ -1165,7 +1170,8 @@
      C                   EVAL      BAGE = *ZEROS
      C                   EVAL      LNKDN = *ZEROS
      C                   EVAL      UPAMT = *ZEROS
-     C                   EVAL      UBRTT = *ZEROS
+     C**********         EVAL      UBRTT = *ZEROS                                             CSD103
+     C                   EVAL      UBRTT = *BLANKS                                            CSD103
      C                   EVAL      USTRT = *ZEROS
      C                   EVAL      UBRTE = *ZEROS
      C                   EVAL      URTSP = *ZEROS
@@ -1193,7 +1199,8 @@
      C                   EVAL      UTAXD = *ZEROS
      C                   EVAL      UTAXM = *ZEROS
      C                   EVAL      TPAMT = *ZEROS
-     C                   EVAL      TBRTT = *ZEROS
+     C**********         EVAL      TBRTT = *ZEROS                                             CSD103
+     C                   EVAL      TBRTT = *BLANKS                                            CSD103
      C                   EVAL      TSTRT = *ZEROS
      C                   EVAL      TBRTE = *ZEROS
      C                   EVAL      TRTSP = *ZEROS
@@ -1235,7 +1242,8 @@
      C                   EVAL      UNRL = *ZEROS
      C                   EVAL      UNRLP = *ZEROS
      C                   EVAL      DDTM = *ZEROS
-     C                   EVAL      BRSQ = *ZEROS
+     C**********         EVAL      BRSQ = *ZEROS                                              CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
      C                   EVAL      LSWC = *ZEROS
      C                   EVAL      LSWS = *ZEROS
      C                   EVAL      ORED = *ZEROS

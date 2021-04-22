@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -161,64 +164,64 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSD000743DFCF   E             WORKSTN INFDS(INFDS#)
      F                                     INFSR(*PSSR)
      F                                     SFILE(SD000743S0:#0RLRN)
      F                                     USROPN
       ** Hedge Strategy Maintenance Display File
- 
+
      FSDHGSTL0  UF A E           K DISK    COMMIT
      F                                     INFDS(HGSTL0)
      F                                     INFSR(*PSSR)
      F                                     RENAME(SDHGSTD0:@HGSTD0)
      F                                     USROPN
       ** Hedge Strategy by Shortname Master File Update Index
- 
+
      FSDHGSTL1  IF   E           K DISK    INFDS(HGSTL1)
      F                                     INFSR(*PSSR)
      F                                     RENAME(SDHGSTD0:@HGSTD1)
      F                                     USROPN
       ** Hedge Strategy by Shortname Master File Retrieval Index
- 
+
      FASHGLKL2  IF   E           K DISK    INFDS(HGLKL2)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(A_)
       ** Hedge Linkage File Retrieval by Hedge Strategy
- 
+
      FASHTRNL1  IF   E           K DISK    INFDS(HTRNL1)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(B_)
       ** Hedge Transaction File Retrieval by Hedge Id/Indicator
- 
+
      FASFHTRL1  IF   E           K DISK    INFDS(FHTRL1)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(C_)
       ** Forecast Transaction Details Master File Retrieval Index
- 
+
      FMKCTL     IF   E           K DISK    USROPN
      F                                     INFDS(MKCTL#)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(MK_)
       ** Midas FF Market Control details
- 
+
      FINTYP     IF   E           K DISK    USROPN
      F                                     INFDS(INTYP#)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(IT_)
       ** Midas FF Instrument Types
- 
+
      FINVTO     IF   E           K DISK    USROPN
      F                                     INFDS(INVTO#)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(TP_)
       ** Midas SE Investment Types
- 
+
      FDEALSL    IF   E           K DISK    USROPN
      F                                     INFDS(DEALSL#)
      F                                     INFSR(*PSSR)
@@ -230,7 +233,7 @@
      F                                     IGNORE(DEALSDFF)
       ** Midas DL Deals File Excluding Matured Deals
       ** Deals Files DEALSDB/DEALSDG
- 
+
      FDEALALL   IF   E           K DISK    USROPN
      F                                     INFDS(DEALALL#)
      F                                     INFSR(*PSSR)
@@ -239,7 +242,7 @@
      F                                     IGNORE(DEALSDFF)
       ** Midas DL All deals
       ** Deals Files DEALSDB/DEALSDC/DEALSDD/DEALSDE
- 
+
      FCLOAN     IF   E           K DISK    USROPN
      F                                     INFDS(CLOAN#)
      F                                     INFSR(*PSSR)
@@ -247,21 +250,21 @@
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
       ** Midas LE Loans File
- 
+
      FSECTY     IF   E           K DISK    USROPN
      F                                     INFDS(SECTY#)
      F                                     INFSR(*PSSR)
       ** Midas SE Securities
- 
+
      FSDLOANL1  IF   E           K DISK    USROPN
      F                                     INFDS(LOANL1)
      F                                     INFSR(*PSSR)
       ** Midas SD Loan Types/Sub-Types Retrieval Index
- 
+
      FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Control File Update Index
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -269,29 +272,29 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D TABNAM          S              3    DIM(12) CTDATA PERRCD(12)
      D TABNUM          S              2  0 DIM(12) ALT(TABNAM)
      D ArrScrnDVT      S             10    DIM(10)
@@ -310,84 +313,84 @@
      D ArrTemp3        S              3    DIM(10)
      D ArrTemp10       S             10    DIM(10) ASCEND
      D ArrIMQ          S              1    DIM(12)
- 
+
       ** File Information
      D HGSTL0          DS
      D  #HGST0                 9      9
      D HGSTL1          DS
      D  #HGST1                 9      9
- 
+
       ** Display file information data structure
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)
- 
+
       ** File information data structure
      D HGLKL2          DS           528
- 
+
       ** File information data structure
      D HTRNL1          DS           528
- 
+
       ** File information data structure
      D MKCTL#          DS           528
- 
+
       ** File information data structure
      D INTYP#          DS           528
- 
+
       ** File information data structure
      D INVTO#          DS           528
- 
+
       ** File information data structure
      D DEALSL#         DS           528
- 
+
       ** File information data structure
      D DEALALL#        DS           528
- 
+
       ** File information data structure
      D CLOAN#          DS           528
- 
+
       ** File information data structure
      D SECTY#          DS           528
- 
+
       ** File information data structure
      D FHTRL1          DS           528
- 
+
       ** File information data structure
      D LOANL1          DS           528
- 
+
       ** External data structure for Switchable Features Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Midas Modules
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Branch Code Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Deal Sub-Type Details
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
- 
+
       ** External data structure for Book Code Details
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
- 
+
       ** Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Current/previous master file format fields for change control
      D CurRec        E DS                  EXTNAME(SDHGSTL1)
- 
+
       ** Data Structure for record fields
      D***SavRec2         DS           280                                                     CAS006
      D SavRec2         DS           281                                                       CAS006
- 
+
       ** Data Structure for record fields
      D***SavRec*         DS           280                                                     CAS006
      D SavRec          DS           281                                                       CAS006
- 
+
      D WPOS            DS            10
      D  WP1X2                  1      2
      D  WP1X5                  1      5
@@ -400,7 +403,7 @@
      D  WP7X10                 7     10
      D  WP9                    9      9
      D  WP10                  10     10
- 
+
      D WScrnDVT        DS
      D  #1DVT1                 1     10
      D  #1DVT2                11     20
@@ -412,7 +415,7 @@
      D  #1DVT8                71     80
      D  #1DVT9                81     90
      D  #1DT10                91    100
- 
+
      D WScrnDST        DS
      D  #1DST1                 1      2
      D  #1DST2                 3      4
@@ -424,7 +427,7 @@
      D  #1DST8                15     16
      D  #1DST9                17     18
      D  #1DS10                19     20
- 
+
      D WScrnHDT        DS
      D  #1HDT1                 1      3
      D  #1HDT2                 4      6
@@ -436,7 +439,7 @@
      D  #1HDT8                22     24
      D  #1HDT9                25     27
      D  #1HD10                28     30
- 
+
      D WScrnDBK        DS
      D  #1DBK1                 1      2
      D  #1DBK2                 3      4
@@ -448,7 +451,7 @@
      D  #1DBK8                15     16
      D  #1DBK9                17     18
      D  #1DB10                19     20
- 
+
      D WScrnHST        DS
      D  #1HST1                 1      2
      D  #1HST2                 3      4
@@ -460,7 +463,7 @@
      D  #1HST8                15     16
      D  #1HST9                17     18
      D  #1HS10                19     20
- 
+
      D WScrnHBK        DS
      D  #1HBK1                 1      2
      D  #1HBK2                 3      4
@@ -472,15 +475,15 @@
      D  #1HBK8                15     16
      D  #1HBK9                17     18
      D  #1HB10                19     20
- 
+
      D WrkHDT          DS             3
      D   WrkHDT3               3      3
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PMODE           S              1
      D PRTCD           S              7
      D POPTN           S              7
@@ -512,7 +515,7 @@
      D PZMsgFile       S             10
      D PZMsgData       S            132
      D PZMsgType       S              7
- 
+
      D CDL006          S              1
      D CAS003          S              1                                                       CAS003
      D WRun            S              1
@@ -565,10 +568,10 @@
      D WZBRCA          S              3
      D WQHELD          S             35
      D WLDIN           S              1                                                       227674
- 
+
      D X               S              2  0
      D Y               S              2  0
- 
+
      D CAS004          S              1                                                       CAS004
      D CAS006          S              1                                                       CAS006
                                                                                               CAS004
@@ -592,55 +595,55 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Main Program
- 
+
      C                   DO        *HIVAL
- 
+
       ** Initialise and load subfile page
- 
+
      C                   EXSR      SRBuild
- 
+
      C                   EVAL      WReload = 'N'
- 
+
       ** Display screen until reload requested
- 
+
      C     WReload       DOWEQ     'N'
- 
+
       ** Display screen
- 
+
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *INKC         CASEQ     '1'           SREnd
- 
+
      C     *INKE         CASEQ     '1'           SRRefresh
- 
+
      C     *INKI         CASEQ     '1'           SRInsert
- 
+
      C     *IN31         CASEQ     '1'           SRLoad
- 
+
      C                   CAS                     SRProcess
      C                   ENDCS
- 
+
      C                   ENDDO
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = '1'
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -652,29 +655,29 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSelect      BEGSR
- 
+
      C     #0HESN        CHAIN     SDHGSTL1
- 
+
       ** Record found.
- 
+
      C                   IF        %FOUND(SDHGSTL1)
      C                   EVAL      PRTCD = *BLANKS
      C                   EVAL      PHESN = FSHESN
- 
+
       ** Record not found.
- 
+
      C                   ELSE
      C                   EVAL      PRTCD = '*ERROR '
      C                   EVAL      PHESN = *BLANKS
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = '1'
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -686,60 +689,60 @@
       * Calls    : SRLoad, SRZasnms                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBuild       BEGSR
- 
+
       ** Initialise & load subfile page
- 
+
      C                   EVAL      *IN80 = '1'
      C                   WRITE     SD000743C0
      C                   EVAL      *IN80 = '0'
      C                   EVAL      *IN81 = '1'
      C                   EVAL      WKeyScrn = 'N'
      C                   EVAL      WDetScrn = 'N'
- 
+
       ** Reset Number of Records in Subfile
- 
+
      C                   Z-ADD     0             WLRCD
- 
+
       ** Position file
- 
+
      C                   EVAL      FSHESN = #0POS1
- 
+
       ** Setup key
- 
+
      C     FSHESN        SETLL     @HGSTD1                            82
      C                   READ      @HGSTD1                                82
- 
+
       ** Save previous selector values
- 
+
      C                   EVAL      WZHESN = #0POS1
      C                   EVAL      WZHELD = #0POS2
      C                   EVAL      WZBRCA = #0POS3
- 
+
       ** Translate search mask for text field
- 
+
      C                   CALL      'QDCXLATE'
      C                   PARM      35            WQA5N             5 0
      C                   PARM      #0POS2        WQHELD
      C                   PARM      'QSYSTRNTBL'  WQB10X
      C                   PARM      'QSYS'        WQC10X           10
- 
+
       ** Load subfile page
- 
+
      C                   EXSR      SRLoad
- 
+
       ** If no records found, display error message
- 
+
      C                   IF        *IN82 = '1'  AND  #0RLRN = 0
      C                   EVAL      *IN81 = '0'
      C                   EVAL      PZMsgID = 'USR7590'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -751,36 +754,36 @@
       * Calls    : SRClrScrn, SRMove, SRValidate                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRLoad        BEGSR
- 
+
       ** Load subfile page
- 
+
      C                   EVAL      *IN84 = *OFF
- 
+
       ** Re-establish fields in read-ahead record
- 
+
      C                   IF        *IN31 = '1' AND *IN82 = '0'
      C                   READP     @HGSTD1                                60
      C                   READ      @HGSTD1                                60
      C                   ENDIF
- 
+
       ** Start at previous highest record in SFL
- 
+
      C                   Z-ADD     WLRCD         #0RLRN
      C                   Z-ADD     1             WRCTR
- 
+
       ** Load next subfile page
- 
+
      C                   DOW       *IN82 = '0'  AND  WRCTR <= WSFPG
- 
+
      C                   EVAL      WSkipRec = 'N'
      C                   ADD       1             #0RLRN
- 
+
      C                   IF        FSCHTP = 'D'
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0POS2 <> *BLANKS
      C                   CALL      'QCLSCAN'
      C                   PARM                    FSHELD
@@ -792,46 +795,46 @@
      C                   PARM      '1'           WQE1
      C                   PARM      '?'           WQF1
      C                   PARM                    WQG3N
- 
+
      C                   IF        WQG3N < 1
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #0POS3 <> *BLANK  AND  FSBRCA <> #0POS3
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WSkipRec = 'N'
- 
+
       ** Clear subfile fields
- 
+
      C                   EXSR      SRClrScrn
- 
+
       ** Load subfile fields
- 
+
      C                   EVAL      WFileToScrn = 'Y'
      C                   EVAL      WDetScrn = 'N'
      C                   EXSR      SRMove
- 
+
       ** Output to subfile
- 
+
      C                   ADD       1             WRCTR
- 
+
      C                   WRITE     SD000743S0
- 
+
      C                   ELSE
      C                   SUB       1             #0RLRN
- 
+
      C                   ENDIF
- 
+
      C                   READ      @HGSTD1                                82
      C                   ENDDO
- 
+
      C                   Z-ADD     #0RLRN        WLRCD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -843,43 +846,43 @@
       *  Calls    : ZA0250                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDisplay     BEGSR
- 
+
       ** Condition appropriate header and footer
- 
+
      C                   SELECT
      C                   WHEN      PMODE = 'M'
      C                   IF        WKeyScrn = 'N'  AND  WDetScrn = 'N'
      C                   EVAL      *IN26 = '1'
- 
+
      C                   ELSE
- 
+
      C                   IF        #0ACTN = 'D'
      C                   EVAL      *IN72 = '1'
      C                   ELSE
      C                   EVAL      *IN29 = '1'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   WHEN      PMODE = 'E'
      C                   IF        WDetScrn = 'N'
      C                   EVAL      *IN27 = '1'
      C                   ELSE
      C                   EVAL      *IN29 = '1'
      C                   ENDIF
- 
+
      C                   WHEN      PMODE = '?'
      C                   EVAL      *IN28 = '1'
      C                   ENDSL
- 
+
       ** Display screen
- 
+
      C                   TIME                    #0TIME
      C                   WRITE     SD000743F0
      C                   WRITE     SD000743F2
      C                   WRITE     SD000743C1
- 
+
      C                   IF        WKeyScrn = 'Y'  OR  WDetScrn = 'Y'
                                                                                               CAS006
       ** If CAS006 is installed, check linkage file if strategy is used by at                 CAS006
@@ -902,23 +905,23 @@
      C                   ELSE
      C                   EXFMT     SD000743C0
      C                   ENDIF
- 
+
       ** Reset error indicators
- 
+
      C                   MOVEA     '00000'       *IN(26)
      C                   MOVEA     '000000000000'*IN(41)
      C**********         MOVEA     '00000'       *IN(53)
      C                   MOVEA     '000000'      *IN(53)
      C                   MOVEA     '0000'        *IN(70)
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'Y2CLMSC'
      C                   PARM      #1PGMQ        PZPgmQ
      C                   PARM      '*SAME'       PZRelQ
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -930,45 +933,45 @@
       * Calls    : SRDetails                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProcess     BEGSR
- 
+
       ** If there are no records, continue displaying 'No Data to Display'.
- 
+
      C                   IF        *IN82 = '1'  AND  #0RLRN = 0
      C                   EVAL      *IN81 = '0'
      C                   EVAL      PZMsgID = 'USR7590'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
       ** Change of position specified
- 
+
      C                   IF        WZHESN <> #0POS1  OR  WZHELD <> #0POS2  OR
      C                             WZBRCA <> #0POS3
      C                   EVAL      WReload = 'Y'
- 
+
       ** Process subfile records if reload not requested
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WError = 'N'
      C                   EVAL      WProcess = 'N'
      C                   EVAL      WSLCTR = 0
      C                   EXSR      SRVAction
- 
+
       ** Process details according to action code.
- 
+
      C                   IF        WError = 'N'  AND  WProcess = 'Y'
      C                   EXSR      SRDetails
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -980,21 +983,21 @@
       * Calls    : SRZasnms                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVAction     BEGSR
- 
+
       ** Process modified subfile record
- 
+
      C                   READC     SD000743S0                             86
- 
+
      C                   DOW       *IN86 = '0'
- 
+
      C                   EVAL      *IN30 = '0'
- 
+
       ** Validate Action
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PMode = 'M' AND #0ACTN <> 'A' AND
      C                             #0ACTN <> 'D' AND #0ACTN <> 'E' AND
      C                             #0ACTN <> *BLANKS
@@ -1003,15 +1006,15 @@
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9357'
      C                   EXSR      SRZasnms
- 
+
       ** Valid entry.
- 
+
      C                   WHEN      PMode = 'M'  AND  (#0ACTN = 'A'  OR
      C                             #0ACTN = 'D'  OR  #0ACTN = 'E')
      C                   EVAL      WProcess = 'Y'
- 
+
       ** Hedge Strategy must not be deleted if it has an existing Hedge Linkage.
- 
+
      C                   IF        #0ACTN = 'D'
      C     #0HESN        CHAIN     ASHGLKL2
      C                   IF        %FOUND(ASHGLKL2)  AND  A_FSRECI = 'D'
@@ -1023,9 +1026,9 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** For enquiry mode, action code must be 'E'.
- 
+
      C                   WHEN      PMode = 'E' AND #0ACTN <> 'E' AND
      C                             #0ACTN <> *BLANKS
      C                   EVAL      *IN30 = '1'
@@ -1033,14 +1036,14 @@
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9367'
      C                   EXSR      SRZasnms
- 
+
       ** Valid entry.
- 
+
      C                   WHEN      PMode = 'E' AND #0ACTN = 'E'
      C                   EVAL      WProcess = 'Y'
- 
+
       ** For selection mode, action code should be '1'.
- 
+
      C                   WHEN      PMode = '?' AND #0ACTN <> '1' AND
      C                             #0ACTN <> *BLANKS
      C                   EVAL      *IN30 = '1'
@@ -1048,35 +1051,35 @@
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9358'
      C                   EXSR      SRZasnms
- 
+
      C                   WHEN      PMode = '?' AND #0ACTN = '1'
      C                   EVAL      WNODAT = 'Y'
      C                   ADD       1             WSLCTR
- 
+
      C                   IF        WSLCTR > 1
      C                   EVAL      *IN30 = '1'
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9359'
      C                   EXSR      SRZasnms
- 
+
       ** Valid entry.
- 
+
      C                   ELSE
      C                   EVAL      WProcess = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   EVAL      *IN84 = '1'
      C                   UPDATE    SD000743S0
      C                   EVAL      *IN84 = '0'
- 
+
      C                   READC     SD000743S0                             86
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1088,20 +1091,20 @@
       * Calls    : SRProcess                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDetails     BEGSR
- 
+
       ** Process all modified subfile records
- 
+
      C                   READC     SD000743S0                             86
- 
+
      C                   DOW       *IN86 = '0'
- 
+
       ** Process details according to action code.
- 
+
      C                   IF        #0ACTN = '1'
      C                   EXSR      SRSelect
- 
+
      C                   ELSE
      C                   EVAL      WDetScrn = 'Y'
      C                   EVAL      WReload = 'Y'
@@ -1109,36 +1112,36 @@
      C                   RESET                   SD000743F1
      C                   EVAL      #1HESN = WSaveHESN
      C                   EXSR      SRRetrieve
- 
+
      C                   SELECT
- 
+
       ** Amend
- 
+
      C                   WHEN      #0ACTN = 'A'
      C                   EXSR      SRAmdReq
- 
+
       ** Delete
- 
+
      C                   WHEN      #0ACTN = 'D'
      C                   EXSR      SRDelReq
- 
+
       ** Enquiry
- 
+
      C                   WHEN      #0ACTN = 'E'
      C                   EXSR      SREnquire
- 
+
      C                   ENDSL
      C                   ENDIF
- 
+
       ** Set screen conditioning indicators
- 
+
      C                   EVAL      #0ACTN = *BLANKS
      C                   UPDATE    SD000743S0
      C                   READC     SD000743S0                             86
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1150,23 +1153,23 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRetrieve    BEGSR
- 
+
      C     #0HESN        CHAIN     SDHGSTL1
- 
+
      C                   IF        %FOUND(SDHGSTL1)
      C                   EVAL      PBRCA = FSBRCA
- 
+
       ** Retrieve Branch Name
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PBRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        PRtrnCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBRCHPD'
@@ -1175,15 +1178,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   EVAL      #1BRNM = A8BRNM
      C                   EVAL      WFileToScrn = 'Y'
      C                   EXSR      SRMove
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1195,18 +1198,18 @@
       * Calls    : SRWrite, SRTrailer                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SREnquire     BEGSR
- 
+
      C                   EVAL      *IN71 = '1'
      C                   EXSR      SRDisplay
- 
+
      C                   IF        *INKC = '1'
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1218,42 +1221,42 @@
       * Calls    : SRWrite, SRTrailer                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInsert      BEGSR
- 
+
      C                   EVAL      #0ACTN = 'I'
      C                   EVAL      #1HESN = *BLANKS
      C                   EVAL      WKeyScrn = 'Y'
      C                   EVAL      WValid = 'N'
      C                   EVAL      WReload = 'Y'
- 
+
       ** Prompt for new Hedge Shortname
- 
+
      C                   DOW       *INKC = '0'  AND  *INKL = '0'  AND
      C                             WValid = 'N'
- 
+
      C                   IF        WKeyScrn = 'Y'
      C                   EVAL      *IN70 = '1'
      C                   ELSE
      C                   EVAL      *IN70 = '0'
      C                   ENDIF
- 
+
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *INKC         CASEQ     '1'           SREnd
- 
+
      C     *INKL         CASEQ     '1'           SRPrevious
- 
+
      C                   CAS                     SRValidate
      C                   ENDCS
- 
+
       ** Create Hedge Shortname Details
- 
+
      C                   IF        WValid = 'Y'
      C                   EXSR      SRWrite
- 
+
      C                   IF        WError = 'Y'
      C                   EVAL      WValid = 'N'
      C                   ELSE
@@ -1261,13 +1264,13 @@
      C                   EVAL      WDetScrn = 'N'
      C                   EXSR      SRTrailer
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1279,43 +1282,43 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValidate    BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WKeyScrn = 'Y'
      C                   EVAL      WSaveHESN = #1HESN
      C                   RESET                   SD000743F1
      C                   EVAL      #1HESN = WSaveHESN
      C                   EXSR      SRVHesn
- 
+
      C                   WHEN      WDetScrn = 'Y'  AND
      C                             (#0ACTN = 'I'  OR  #0ACTN = 'A')
      C                   EVAL      WValid = 'Y'
- 
+
      C                   IF        #0ACTN = 'I'
      C                   EXSR      SRVHeld
      C                   EXSR      SRVBrca
      C                   EXSR      SRVPrtp
- 
+
       ** Hedge Sub-Type field is available only if Midas Dealing module is on.
- 
+
      C                   IF        *IN32 = '0'
      C                   EXSR      SRVPrst
      C                   ENDIF
- 
+
      C**********         EXSR      SRVHrsk                                                    CAS006
      C**********         EXSR      SRVEffm                                                    CAS006
      C                   ENDIF
- 
+
      C                   EXSR      SRVEfup
      C                   EXSR      SRVEflo
- 
+
      C                   IF        #0ACTN = 'I'
      C                   EXSR      SRVEffq
      C                   ENDIF
- 
+
      C                   EXSR      SRVFsdt
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EXSR      SRVMeff                                                    CAS006
@@ -1327,9 +1330,9 @@
      C                   EXSR      SRVHst
      C                   EXSR      SRVHbk
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1341,35 +1344,35 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVHesn       BEGSR
- 
+
       ** Hedge Shortname required
- 
+
      C                   IF        #1HESN = *BLANKS
- 
+
      C                   EVAL      *IN41 = '1'
      C                   EVAL      WValid = 'N'
      C                   MOVEL     'Y2U0001'     PZMsgID
      C                   MOVEL     'Y2USRMSG'    PZMsgFile
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
       ** Hedge Shortname must be alphanumeric.
       ** Call SD0811 to check leading character for alpha
- 
+
      C                   EVAL      PString = #1HESN
- 
+
      C                   CALL      'SD0811'
      C                   PARM                    PString
      C                   PARM      1             PLength
      C                   PARM      *BLANKS       PRtnCd
      C                   PARM      'N'           PEmbed
      C                   PARM      'ALPHA'       PVType
- 
+
       ** If SD0811 returns 'INVAL' error
- 
+
      C                   IF        PRtnCd = 'INVAL'
      C                   EVAL      *IN41 = '1'
      C                   EVAL      WValid = 'N'
@@ -1377,18 +1380,18 @@
      C                   EVAL      PZMsgID = 'USR9300'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Check trailing characters.
- 
+
      C                   CALL      'SD0811'
      C                   PARM                    PString
      C                   PARM      10            PLength
      C                   PARM      *BLANKS       PRtnCd
      C                   PARM      'N'           PEmbed
      C                   PARM      'ANBLNK'      PVType
- 
+
       ** If SD0811 returns 'INVAL' error
- 
+
      C                   IF        PRtnCd = 'INVAL'
      C                   EVAL      *IN41 = '1'
      C                   EVAL      WValid = 'N'
@@ -1396,20 +1399,20 @@
      C                   EVAL      PZMsgID = 'USR9301'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Record must be unique.
- 
+
      C                   IF        *IN41 = '0'
- 
+
      C     #1HESN        CHAIN     SDHGSTL1
- 
+
      C                   IF        %FOUND(SDHGSTL1)
      C                   EVAL      *IN41 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
- 
+
       ** Record is flagged for deletion.
- 
+
      C                   IF        FSCHTP = 'D'
      C                   EVAL      PZMsgID = 'USR9360'
      C                   ELSE
@@ -1418,18 +1421,18 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If no errors, set display of details screen.
- 
+
      C                   IF        *IN41 = '0'
      C                   EVAL      WKeyScrn = 'N'
      C                   EVAL      WDetScrn = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1441,11 +1444,11 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVHeld       BEGSR
- 
+
       ** Hedge Description must be specified.
- 
+
      C                   IF        #1HELD = *BLANKS
      C                   EVAL      *IN42 = '1'
      C                   EVAL      WValid = 'N'
@@ -1453,9 +1456,9 @@
      C                   EVAL      PZMsgID = 'USR9303'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1467,55 +1470,55 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVBrca       BEGSR
- 
+
       ** Branch Code must be specified.
- 
+
      C                   IF        #1BRCA = *BLANKS
      C                   EVAL      *IN43 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9304'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   EVAL      PBRCA = #1BRCA
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PBRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   SELECT
- 
+
       ** Branch Code must exist in the branch codes file.
- 
+
      C                   WHEN      PRtrnCode = '*NRF   '
      C                   EVAL      *IN43 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9305'
      C                   EXSR      SRZasnms
- 
+
       ** Error if entry is '?' but no value selected.
- 
+
      C                   WHEN      PRtrnCode = '*NOSEL '
      C                   EVAL      *IN43 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0016'
      C                   EXSR      SRZasnms
- 
+
       ** Branch Code is valid or a selection has been made.
- 
+
      C                   WHEN      PRtrnCode = *BLANKS
      C                   EVAL      #1BRCA = A8BRCD
- 
+
       ** Error on call to AOBRCHR0.
- 
+
      C                   OTHER
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBRCHPD'
@@ -1524,11 +1527,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1540,13 +1543,13 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVPrtp       BEGSR
- 
+
       ** Product Type must be 'FV', 'CF', or 'FX'.
       ** If Hedge Accounting (CAS004) is installed, disallow 'FX' as                          CAS004
       ** a Hedge Product Type.                                                                CAS004
- 
+
      C                   IF        #1PRTP <> 'FV'  AND  #1PRTP <> 'CF'  AND
      C**********                   #1PRTP <> 'FX'                                             CAS004
      C                             #1PRTP <> 'FX' AND CAS004 = 'N'                            CAS004
@@ -1562,9 +1565,9 @@
      C                   ENDIF                                                                CAS004
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1576,54 +1579,54 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVPrst       BEGSR
- 
+
       ** Product Sub-Type must be entered.
- 
+
      C                   IF        #1PRST = *BLANKS
      C                   EVAL      *IN45 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9307'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   EVAL      PPRST = #1PRST
- 
+
      C                   CALLB     'AODLSTR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PPRST
      C     SDDLST        PARM      SDDLST        DSFDY
- 
+
      C                   SELECT
- 
+
       ** Sub-Type must exist in the Deal Sub-Types file.
- 
+
      C                   WHEN      PRtrnCode = '*NRF   '
      C                   EVAL      *IN45 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9308'
      C                   EXSR      SRZasnms
- 
+
       ** Error if entry is '?' but no value selected.
- 
+
      C                   WHEN      PRtrnCode = '*NOSEL '
      C                   EVAL      *IN45 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0016'
      C                   EXSR      SRZasnms
- 
+
       ** Branch Code is valid or a selection has been made.
- 
+
      C                   WHEN      PRtrnCode = *BLANKS
      C                   EVAL      #1PRST = ASDSTC
- 
+
       ** Error on call to AODLSTR0.
- 
+
      C                   OTHER
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDDLSTPD'
@@ -1632,11 +1635,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1648,11 +1651,11 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVHrsk       BEGSR
- 
+
       ** Hedge Risk must be 'A', 'I', 'E', 'P', or 'C'.
- 
+
      C                   IF        #1HRSK <> 'A'  AND  #1HRSK <> 'I'  AND
      C                             #1HRSK <> 'E'  AND  #1HRSK <> 'P'  AND
      C                             #1HRSK <> 'C'
@@ -1662,9 +1665,9 @@
      C                   EVAL      PZMsgID = 'USR9309'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1676,11 +1679,11 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVEffm       BEGSR
- 
+
       ** Effectiveness Measure must be 'T', 'S', 'F', or 'I'.
- 
+
      C                   IF        #1EFFM <> 'T'  AND  #1EFFM <> 'S'  AND
      C                             #1EFFM <> 'F'  AND  #1EFFM <> 'I'
      C                   EVAL      *IN47 = '1'
@@ -1689,9 +1692,9 @@
      C                   EVAL      PZMsgID = 'USR9310'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                       CAS006
       /EJECT                                                                                  CAS006
       *****************************************************************                       CAS006
@@ -1729,11 +1732,11 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVEfup       BEGSR
- 
+
       ** Effectiveness Upper Percentage must be greater than Lower Percentage.
- 
+
      C                   IF        #1EFUP <= #1EFLO
      C                   EVAL      *IN48 = '1'
      C                   EVAL      *IN49 = '1'
@@ -1742,9 +1745,9 @@
      C                   EVAL      PZMsgID = 'USR9311'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1756,11 +1759,11 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVEflo       BEGSR
- 
+
       ** Effectiveness Lower Percentage must be greater zero.
- 
+
      C                   IF        #1EFLO <= 0
      C                   EVAL      *IN49 = '1'
      C                   EVAL      WValid = 'N'
@@ -1768,9 +1771,9 @@
      C                   EVAL      PZMsgID = 'USR9312'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1782,11 +1785,11 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVEffq       BEGSR
- 
+
       ** Effectiveness Frequency must be 'D', 'M', or 'Q'.
- 
+
      C                   IF        #1EFFQ <> 'D'  AND  #1EFFQ <> 'M'  AND
      C                             #1EFFQ <> 'Q'
      C                   EVAL      *IN50 = '1'
@@ -1795,9 +1798,9 @@
      C                   EVAL      PZMsgID = 'USR9313'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1809,22 +1812,22 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVFsdt       BEGSR
- 
+
      C                   SELECT
- 
+
       ** First Date must be blank if Effectiveness Frequency is 'D'.
- 
+
      C                   WHEN      #1EFFQ = 'D'  AND  #1FSDT <> *BLANKS
      C                   EVAL      *IN51 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9314'
      C                   EXSR      SRZasnms
- 
+
       ** First Date cannot be amended if the previous value is earlier than rundate.
- 
+
      C                   WHEN      #0ACTN = 'A'  AND  FSFSDT <> 0  AND
      C                             FSFSDT < BJRDNB  AND  #1FSDT <> WScrnFSDT
      C                   EVAL      *IN51 = '1'
@@ -1833,77 +1836,77 @@
      C                   EVAL      PZMsgID = 'USR9315'
      C                   EXSR      SRZasnms
      C                   EVAL      #1FSDT = WScrnFSDT
- 
+
       ** If Effectiveness Frequency is 'M' or 'Q' and First Date
       ** is not entered, default to next working day.
- 
+
      C                   WHEN      (#1EFFQ = 'M'  OR  #1EFFQ = 'Q')  AND
      C                             #1FSDT = *BLANKS
- 
+
       ** Set up and call ZALIGN
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      BJDNWD        PMidasDayNo
      C**********         PARM      *BLANKS       PDateFmt                                     213352
      C                   PARM      BJDFIN        PDateFmt                                     213352
      C                   PARM                    PDDMMYY
      C                   PARM      *BLANKS       PWorkDate
- 
+
      C                   IF        PDDMMYY <> *ZERO
      C                   MOVE      PDDMMYY       #1FSDT
      C                   ENDIF
- 
+
       ** If entered, First Date must be in valid date format.
- 
+
      C                   WHEN      (#1EFFQ = 'M'  OR  #1EFFQ = 'Q')  AND
      C                             #1FSDT <> *BLANKS
- 
+
       ** Set up and call ZALIGN
- 
+
      C                   EVAL      PFieldIn = #1FSDT
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM                    PFieldIn
      C                   PARM      0             PDecimal
      C                   PARM      6             PDigits
      C                   PARM      *BLANKS       PFieldOut
- 
+
       ** Date must be numeric.
- 
+
      C                   IF        PRtrnCode = '*ERROR*'
      C                   EVAL      *IN51 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9316'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
       ** Call ZDATE1 to validate First Date
- 
+
      C                   MOVE      PFieldOut     PDDMMYY
- 
+
      C                   CALL      'ZDATE1'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM                    PDDMMYY
      C**********         PARM      *BLANKS       PDateFmt                                     213352
      C                   PARM      BJDFIN        PDateFmt                                     213352
      C                   PARM      *ZEROS        PMidasDayNo
- 
+
       ** Date is invalid.
- 
+
      C                   IF        PRtrnCode = '*ERROR*'
      C                   EVAL      *IN51 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9317'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
       ** Date must not be before rundate.
- 
+
      C                   IF        PMidasDayNo < BJRDNB
      C                   IF        (#0ACTN = 'I'
      C                             OR  (#0ACTN = 'A' AND  #1FSDT <> WScrnFSDT))
@@ -1914,23 +1917,23 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
       ** First Date cannot be amended to a date that is later than
       ** the Effective Date for any Hedge Linkage linked to this
       ** Hedge Strategy.
- 
+
      C                   IF        *IN51 = '0'  AND  #0ACTN = 'A'  AND
      C                             #1FSDT <> WScrnFSDT
      C     #1HESN        SETLL     ASHGLKL2
      C     #1HESN        READE     ASHGLKL2
- 
+
      C                   DOW       NOT %EOF(ASHGLKL2)
- 
+
      C                   IF        A_FSRECI = 'D'  AND  PMidasDayNo > A_FSEFFD
      C                   EVAL      *IN51 = '1'
      C                   EVAL      WValid = 'N'
@@ -1939,13 +1942,13 @@
      C                   EXSR      SRZasnms
      C                   LEAVE
      C                   ENDIF
- 
+
      C     #1HESN        READE     ASHGLKL2
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1957,38 +1960,38 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDVT        BEGSR
- 
+
      C                   OPEN      MKCTL
      C                   OPEN      INTYP
- 
+
       ** Move Derivative Types to array.
       ** Initialize array index.
       ** Set Deal Type Entry Indicator to 'No'.
       ** Set valid Derivative Type entry indicator to 'No'.
- 
+
      C                   MOVEA     WScrnDVT      ArrScrnDVT
      C                   EVAL      X = 0
      C                   EVAL      WDTIN = 'N'
      C                   EVAL      WVDVT = 'N'
- 
+
       ** Validate each of 10 individual Derivative Types.
- 
+
      C                   DO        10
      C                   EVAL      X = X + 1
- 
+
       ** Error if trying to amend an existing Derivative Type
       ** but linkages to Hedge Transactions exist for deals with this
       ** Derivative Type; skip further validations.
- 
+
      C                   IF        #0ACTN = 'A'  AND
      C                             ArrFileDVT(X)  <>  *BLANKS  AND
      C                             ArrScrnDVT(X)  <>  ArrFileDVT(X)
      C                   EVAL      WDType = 'DT'
      C                   EVAL      WPOS = ArrFileDVT(X)
      C                   EXSR      SRChkLink
- 
+
      C                   IF        WLink = 'Y'
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2000,18 +2003,18 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If Derivative Type is blank, skip further validations.
- 
+
      C                   IF        ArrScrnDVT(X) = *BLANKS
      C                   ITER
      C                   ENDIF
- 
+
      C                   EVAL      WPOS = ArrScrnDVT(X)
- 
+
       ** Condition: Positions 1-2 are blank.
       ** -- If pos. 1-2 are blank, error; skip further validations.
- 
+
      C                   IF        WP1X2 = *BLANKS
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2021,16 +2024,16 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** Condition: Pos. 1-2 are entered, pos. 3-10 are blank.
       ** Derivative Type is a derivative Deal Type.
- 
+
      C                   IF        WP1X2 <> *BLANKS  AND  WP3X10 = *BLANKS
- 
+
       ** -- If pos. 1-2 are not 'RS'/'RX'/'CX'
       **     error; skip further validations.
       ** -- Else, valid entry; skip further validations.
- 
+
      C                   IF        WP1X2 <> 'RS'  AND  WP1X2 <> 'RX'  AND
      C**********                   WP1X2 <> 'CX'                                              CAS006
      C                             WP1X2 <> 'CX' AND CAS006 = 'N' OR                          CAS006
@@ -2049,24 +2052,24 @@
      C                   EVAL      PZMsgData = ArrScrnDVT(X)
      C                   EXSR      SRZasnms
      C                   ITER
- 
+
       ** Condition: Pos. 1-2 are entered, pos. 3-10 are not blank.
       ** Derivative Type is a Futures & Options Position.
- 
+
      C                   ELSE
      C                   EVAL      WDTIN = 'Y'
      C                   EVAL      WVDVT = 'Y'
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Condition: Pos. 1-2 are entered, Pos. 3 is '*' (wildcard).
- 
+
      C                   IF        WP1X2 <> *BLANKS  AND  WP3 = '*'
- 
+
       ** -- If pos. 4-10 is not blank,
       **     error; skip further validations.
- 
+
      C                   IF        WP4X10 <> *BLANKS
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2076,13 +2079,13 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** -- If pos. 1-2 is not a valid Market Centre,
       **     error; skip further validations.
       ** -- Else, valid entry; skip further validations.
- 
+
      C                   EVAL      MK_MRKT = WP1X2
- 
+
      C     MK_MRKT       CHAIN     MKCTL
      C                   IF        NOT %FOUND(MKCTL)  OR
      C                             (%FOUND(MKCTL)  AND  MK_RECI <> 'D')
@@ -2093,7 +2096,7 @@
      C                   EVAL      PZMsgData = ArrScrnDVT(X)
      C                   EXSR      SRZasnms
      C                   ITER
- 
+
      C                   ELSE
                                                                                               CAS003
       ** Futures and Options entry is valid only if enhancement CAS003 is on.                 CAS003
@@ -2112,18 +2115,18 @@
      C                   ITER                                                                 CAS003
      C                   ENDIF                                                                CAS003
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Condition: Pos. 1-2 are entered, Pos. 3-5 are entered.
- 
+
      C     WP1X5         IFNE      *BLANKS
- 
+
       ** -- If pos. 1-5 is not a valid Instrument Type,
       **     error; skip further validations.
- 
+
      C                   MOVEL     WP1X5         IT_ISTT
- 
+
      C     IT_ISTT       CHAIN     INTYP
      C                   IF        NOT %FOUND(INTYP)  OR
      C                             (%FOUND(INTYP)  AND  IT_RECI <> 'D')
@@ -2135,10 +2138,10 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** -- If Instrument Indicator is 'Y' (OTC) and pos. 6-10 are not blank,
       **     error; skip further validations.
- 
+
      C     IT_ISTI       IFEQ      'Y'
      C     WP6X10        IFNE      *BLANKS                                                    CAS003
      C                   EVAL      *IN52 = '1'
@@ -2166,10 +2169,10 @@
      C                   ENDIF                                                                CAS003
      C                   ENDIF                                                                CAS003
      C                   ENDIF
- 
+
       ** -- If Instrument Indicator is 'N' (Market) and pos. 6-10 are blank,
       **     error; skip further validations.
- 
+
      C     IT_ISTI       IFEQ      'N'
      C     WP6X10        ANDEQ     *BLANK
      C                   EVAL      *IN52 = '1'
@@ -2180,17 +2183,17 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Condition: Pos. 1-5 are entered, Pos. 6 is '*' (wildcard).
- 
+
      C     WP1X5         IFNE      *BLANK
      C     WP6           ANDEQ     '*'
- 
+
       ** -- If pos. 7-10 is not blank,
       **     error; skip further validations.
- 
+
      C     WP7X10        IFNE      *BLANK
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2199,10 +2202,10 @@
      C                   EVAL      PZMsgData = ArrScrnDVT(X)
      C                   EXSR      SRZasnms
      C                   ITER
- 
+
       ** -- If pos. 7-10 is blank,
       **     valid entry; skip further validations.
- 
+
      C                   ELSE
                                                                                               CAS003
       ** Futures and Options entry is valid only if enhancement CAS003 is on.                 CAS003
@@ -2221,15 +2224,15 @@
      C                   ENDIF                                                                CAS003
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Condition: Pos. 1-5 are entered, Pos. 6-10 are entered.
- 
+
      C     WP1X5         IFNE      *BLANKS
      C     WP6X10        ANDNE     *BLANKS
- 
+
       ** -- If pos. 6-8 are not valid month,
       **     error; skip further validations.
- 
+
      C     WP6X8         LOOKUP    TABNAM        TABNUM                   89
      C     *IN89         IFEQ      *OFF
      C                   EVAL      *IN52 = '1'
@@ -2240,10 +2243,10 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** -- If pos. 6-8 are not quoted month for Instrument Type,
       **     error; skip further validations.
- 
+
      C                   Z-ADD     TABNUM        Y
      C                   MOVEA     IT_ISMQ       ArrIMQ
      C     ArrIMQ(Y)     IFNE      'Y'
@@ -2255,11 +2258,11 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** -- If pos. 9-10 are not valid year,
       **     error; skip further validations.
       ** -- Else, valid entry; skip further validations.
- 
+
      C     WP9           IFLT      '0'
      C     WP9           ORGT      '9 '
      C     WP10          ORLT      '0'
@@ -2271,7 +2274,7 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** Futures and Options entry is valid only if enhancement CAS003 is on.                 CAS003
                                                                                               CAS003
      C                   IF        CAS003 = 'Y'                                               CAS003
@@ -2285,30 +2288,30 @@
      C                   EXSR      SRZasnms                                                   CAS003
      C                   ENDIF                                                                CAS003
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Derivative Types may not be deleted.
- 
+
      C                   IF        #0ACTN = 'A'
      C                   EVAL      X = 0
      C                   EVAL      Y = 0
      C                   EVAL      WCtrFile = 0
      C                   EVAL      WCtrScrn = 0
- 
+
      C                   DOW       X < 10
      C                   EVAL      X = X + 1
      C                   EVAL      Y = Y + 1
- 
+
      C                   IF        ArrFileDVT(X) <> *BLANKS
      C                   EVAL      WCtrFile = WCtrFile + 1
      C                   ENDIF
- 
+
      C                   IF        ArrScrnDVT(X) <> *BLANKS
      C                   EVAL      WCtrScrn = WCtrScrn + 1
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WCtrFile > WCtrScrn
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2317,15 +2320,15 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Move Derivative Type array (which may have been updated)
       ** back to screen fields.
- 
+
      C                   MOVEA     ArrScrnDVT    WScrnDVT
- 
+
       ** Validate full set of 10 Derivative Types.
       ** Error if no Derivative Type has been entered.
- 
+
      C     WScrnDVT      IFEQ      *BLANKS
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2333,20 +2336,20 @@
      C                   EVAL      PZMsgID = 'USR9328'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Error if any of the 10 Derivative Types is a duplicate.
- 
+
      C                   Z-ADD     *ZERO         X
- 
+
      C                   DO        10
      C                   ADD       1             X
- 
+
      C     ArrScrnDVT(X) IFNE      *BLANKS
      C                   MOVE      ArrScrnDVT(X) WTest10
      C                   MOVEA     ArrScrnDVT    ArrTemp10
      C                   MOVE      *BLANKS       ArrTemp10(X)
      C     WTest10       LOOKUP    ArrTemp10(1)                           89
- 
+
      C     *IN89         IFEQ      '1'
      C                   EVAL      *IN52 = '1'
      C                   EVAL      WValid = 'N'
@@ -2355,15 +2358,15 @@
      C                   EVAL      PZMsgData = WTest10
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   CLOSE     MKCTL
      C                   CLOSE     INTYP
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2375,23 +2378,23 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDst        BEGSR
- 
+
       ** Move Sub-Types to array.
       ** Initialize array index.
- 
+
      C                   MOVEA     WScrnDST      ArrScrnDST
      C                   Z-ADD     *ZERO         X
- 
+
       ** Validate each of 10 individual Derivative Sub-Types.
- 
+
      C                   DO        10
      C                   ADD       1             X
- 
+
       ** Error if Sub-Type has been entered
       ** but no Derivative Type is a Deal Type
- 
+
      C     ArrScrnDST(X) IFNE      *BLANK
      C     WDTIN         ANDEQ     'N'
      C                   EVAL      *IN53 = '1'
@@ -2401,11 +2404,11 @@
      C                   EXSR      SRZasnms
      C                   ITER
      C                   ENDIF
- 
+
       ** Error if trying to amend an existing Sub-Type
       ** but linkages to Hedge Transactions exist for deals with this
       ** Sub-Type; skip further validations.
- 
+
      C     #0ACTN        IFEQ      'A'
      C     ArrFileDST(X) ANDNE     *BLANK
      C     ArrScrnDST(X) ANDNE     ArrFileDST(X)
@@ -2422,28 +2425,28 @@
      C                   MOVE      ArrFileDST(X) ArrScrnDST(X)
      C                   ENDIF
      C                   ENDIF
- 
+
       ** No further validation if Sub-Type is blank or '**'.
- 
+
      C     ArrScrnDST(X) IFEQ      '**'
      C     ArrScrnDST(X) OREQ      *BLANK
      C                   ITER
      C                   ENDIF
- 
+
       ** Validate entry.
- 
+
      C                   EVAL      PPRST = ArrScrnDST(X)
- 
+
      C                   CALLB     'AODLSTR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PPRST
      C     SDDLST        PARM      SDDLST        DSFDY
- 
+
      C                   SELECT
- 
+
       ** Sub-Type must exist in the Deal Sub-Types file.
- 
+
      C                   WHEN      PRtrnCode = '*NRF   '
      C                   EVAL      *IN53 = '1'
      C                   EVAL      WValid = 'N'
@@ -2451,23 +2454,23 @@
      C                   EVAL      PZMsgID = 'USR9332'
      C                   EVAL      PZMsgData = ArrScrnDST(X)
      C                   EXSR      SRZasnms
- 
+
       ** Error if entry is '?' but no value selected.
- 
+
      C                   WHEN      PRtrnCode = '*NOSEL '
      C                   EVAL      *IN53 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0016'
      C                   EXSR      SRZasnms
- 
+
       ** Branch Code is valid or a selection has been made.
- 
+
      C                   WHEN      PRtrnCode = *BLANKS
      C                   EVAL      ArrScrnDST(X) = ASDSTC
- 
+
       ** Error on call to AODLSTR0.
- 
+
      C                   OTHER
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDDLSTPD'
@@ -2476,30 +2479,30 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
       ** Derivative Sub-Types may not be deleted.
- 
+
      C                   IF        #0ACTN = 'A'
      C                   EVAL      X = 0
      C                   EVAL      Y = 0
      C                   EVAL      WCtrFile = 0
      C                   EVAL      WCtrScrn = 0
- 
+
      C                   DOW       X < 10
      C                   EVAL      X = X + 1
      C                   EVAL      Y = Y + 1
- 
+
      C                   IF        ArrFileDST(X) <> *BLANKS
      C                   EVAL      WCtrFile = WCtrFile + 1
      C                   ENDIF
- 
+
      C                   IF        ArrScrnDST(X) <> *BLANKS
      C                   EVAL      WCtrScrn = WCtrScrn + 1
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WCtrFile > WCtrScrn
      C                   EVAL      *IN53 = '1'
      C                   EVAL      WValid = 'N'
@@ -2508,17 +2511,17 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Move Sub-Type array (which may have been updated)
       ** back to screen fields.
- 
+
      C                   MOVEA     ArrScrnDST    WScrnDST
- 
+
       ** Validate full set of 10 Derivative Sub-Types.
- 
+
       ** Error if Derivative Type is a Deal Type
       ** but no Sub-Type has been entered.
- 
+
      C     WDTIN         IFEQ      'Y'
      C     WScrnDST      ANDEQ     *BLANK
      C                   EVAL      *IN53 = '1'
@@ -2527,9 +2530,9 @@
      C                   EVAL      PZMsgID = 'USR9333'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** If wildcard '**' is entered, it must be the only Sub-Type.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -2546,9 +2549,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Error if any of the 10 Sub-Types is a duplicate.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -2567,9 +2570,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2581,30 +2584,30 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDbk        BEGSR
- 
+
       ** Move Book Codes to array.
       ** Initialize array index.
- 
+
      C                   MOVEA     WScrnDBK      ArrScrnDBK
      C                   Z-ADD     *ZERO         X
- 
+
       ** Validate each of 10 individual Derivative Book Codes.
- 
+
      C                   DO        10
      C                   ADD       1             X
- 
+
       ** Error if trying to amend an existing Book Code
       ** but linkages to Hedge Transactions exist for deals with this
       ** Book Code; skip further validations.
- 
+
      C     #0ACTN        IFEQ      'A'
      C     ArrFileDBK(X) ANDNE     *BLANK
      C     ArrScrnDBK(X) ANDNE     ArrFileDBK(X)
      C                   MOVE      'DB'          WDType
      C                   EXSR      SRChkLink
- 
+
      C     WLink         IFEQ      'Y'
      C                   EVAL      *IN54 = '1'
      C                   EVAL      WValid = 'N'
@@ -2616,28 +2619,28 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** No further validation if Book Code is blank or '**'.
- 
+
      C     ArrScrnDBK(X) IFEQ      '**'
      C     ArrScrnDBK(X) OREQ      *BLANK
      C                   ITER
      C                   ENDIF
- 
+
       ** Validate entry.
- 
+
      C                   EVAL      PDBK = ArrScrnDBK(X)
- 
+
      C                   CALLB     'AOBOOKR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PDBK
      C     SDBOOK        PARM      SDBOOK        DSFDY
- 
+
      C                   SELECT
- 
+
       ** Book Code must exist in the Book Codes file.
- 
+
      C                   WHEN      PRtrnCode = '*NRF'
      C                   EVAL      *IN54 = '1'
      C                   EVAL      WValid = 'N'
@@ -2645,23 +2648,23 @@
      C                   EVAL      PZMsgID = 'USR9337'
      C                   EVAL      PZMsgData = ArrScrnDBK(X)
      C                   EXSR      SRZasnms
- 
+
       ** Error if entry is '?' but no value selected.
- 
+
      C                   WHEN      PRtrnCode = '*NOSEL '
      C                   EVAL      *IN54 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0016'
      C                   EXSR      SRZasnms
- 
+
       ** Book Code is valid or a selection has been made.
- 
+
      C                   WHEN      PRtrnCode = *BLANKS
      C                   EVAL      ArrScrnDBK(X) = BDBKCD
- 
+
       ** Error on call to AOBOOKR0.
- 
+
      C                   OTHER
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBOOKPD'
@@ -2670,30 +2673,30 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
       ** Derivative Book Codes may not be deleted.
- 
+
      C                   IF        #0ACTN = 'A'
      C                   EVAL      X = 0
      C                   EVAL      Y = 0
      C                   EVAL      WCtrFile = 0
      C                   EVAL      WCtrScrn = 0
- 
+
      C                   DOW       X < 10
      C                   EVAL      X = X + 1
      C                   EVAL      Y = Y + 1
- 
+
      C                   IF        ArrFileDBK(X) <> *BLANKS
      C                   EVAL      WCtrFile = WCtrFile + 1
      C                   ENDIF
- 
+
      C                   IF        ArrScrnDBK(X) <> *BLANKS
      C                   EVAL      WCtrScrn = WCtrScrn + 1
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WCtrFile > WCtrScrn
      C                   EVAL      *IN54 = '1'
      C                   EVAL      WValid = 'N'
@@ -2702,15 +2705,15 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Move Book Code array (which may have been updated)
       ** back to screen fields.
- 
+
      C                   MOVEA     ArrScrnDBK    WScrnDBK
- 
+
       ** Validate full set of 10 Derivative Book Codes.
       ** Error if no Book Code has been entered.
- 
+
      C     WScrnDBK      IFEQ      *BLANK
      C                   EVAL      *IN54 = '1'
      C                   EVAL      WValid = 'N'
@@ -2718,13 +2721,13 @@
      C                   EVAL      PZMsgID = 'USR9338'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** If wildcard '**' is entered, it must be the only Book Code.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
- 
+
      C     ArrScrnDBK(X) IFEQ      '**'
      C                   MOVEA     ArrScrnDBK    ArrTemp2
      C                   MOVE      '  '          ArrTemp2(X)
@@ -2738,13 +2741,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Error if any of the 10 Book Codes is a duplicate.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
- 
+
      C     ArrScrnDBK(X) IFNE      *BLANK
      C                   MOVE      ArrScrnDBK(X) WTest2
      C                   MOVEA     ArrScrnDBK    ArrTemp2
@@ -2760,9 +2763,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2774,19 +2777,19 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVHdt        BEGSR
- 
+
      C                   OPEN      SDLOANL1
      C                   OPEN      INVTO
- 
+
       ** Move Hedged Deal/Investment Types to array.
       ** Initialize array index.
       ** Set Deal Type Indicator to 'No'.
       ** Set Loan Type Indicator to 'No'.
       ** Set Investment Type Indicator to 'No'.
       ** Set valid Deal/Investment Type entry indicator to 'No'.
- 
+
      C                   MOVEA     WScrnHDT      ArrScrnHDT
      C                   Z-ADD     *ZERO         X
      C                   MOVE      'N'           WDTI
@@ -2794,16 +2797,16 @@
      C                   MOVE      'N'           WITI
      C                   MOVE      'N'           WLDIN                                        227674
      C                   MOVE      'N'           WVHDT
- 
+
       ** Validate each of 10 individual Hedged Deal/Investment Types.
- 
+
      C                   DO        10
      C                   ADD       1             X
- 
+
       ** Error if trying to amend an existing Deal/Investment Type
       ** but linkages to Hedge Transactions exist for deals with this
       ** Deal/Investment Type; skip further validations.
- 
+
      C     #0ACTN        IFEQ      'A'
      C     ArrFileHDT(X) ANDNE     *BLANK
      C     ArrScrnHDT(X) ANDNE     ArrFileHDT(X)
@@ -2820,10 +2823,10 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If Deal/Investment Type is blank or '***' or '**',
       ** skip further validations.
- 
+
      C     ArrScrnHDT(X) IFEQ      '***'
      C     ArrScrnHDT(X) OREQ      '**'
      C     ArrScrnHDT(X) OREQ      *BLANK
@@ -2832,12 +2835,12 @@
      C                   ENDIF                                                                227674
      C                   ITER
      C                   ENDIF
- 
+
       ** If Deal/Investment Type is a valid Deal Type,
       ** set Deal Type Indicator to 'Yes',
       ** set valid Deal/Investment Type entry indicator to 'Yes',
       ** skip further validations.
- 
+
      C     ArrScrnHDT(X) IFEQ      'IT '                                        MM Loans/Deps
      C     ArrScrnHDT(X) OREQ      'IP '                                        MM Loans/Deps
      C     ArrScrnHDT(X) OREQ      'TD '                                        MM Loans/Deps
@@ -2880,13 +2883,13 @@
      C                   MOVE      'Y'           WVHDT
      C                   ITER
      C                   ENDIF
- 
+
       ** If SAR CDL006 is turned on,
       ** and Deal/Investment Type is a valid Fiduciary Deal Type,
       ** set Deal Type Indicator to 'Yes',
       ** set valid Deal/Investment Type entry indicator to 'Yes',
       ** skip further validations.
- 
+
      C     CDL006        IFEQ      'Y'                                          SAR CDL006
      C     ArrScrnHDT(X) IFEQ      'FL '                                        Fiduciary Deal
      C     ArrScrnHDT(X) OREQ      'FT '                                        Fiduciary Deal
@@ -2899,31 +2902,31 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If Deal/Investment Type is a valid Loan Type,
       ** set Loan Type Indicator to 'Yes',
       ** set valid Deal/Investment Type entry indicator to 'Yes',
       ** skip further validations.
- 
+
      C                   EVAL      WrkHDT = ArrScrnHDT(X)
- 
+
      C                   IF        WrkHDT3 = *BLANK
      C                   EVAL      AYLNTY = ArrScrnHDT(X)
- 
+
      C     AYLNTY        SETLL     SDLOANL1
      C                   IF        %EQUAL(SDLOANL1)
      C                   MOVE      'Y'           WLTI
      C                   MOVE      'Y'           WVHDT
      C                   ITER
      C                   ENDIF
- 
+
       ** If Deal/Investment Type is a valid Investment Type,
       ** set Investment Type Indicator to 'Yes',
       ** set valid Deal/Investment Type entry indicator to 'Yes',
       ** skip further validations.
- 
+
      C                   ELSE
- 
+
      C                   EVAL      TP_INVT = ArrScrnHDT(X)
      C     TP_INVT       CHAIN     INVTO
      C                   IF        %FOUND(INVTO)
@@ -2932,40 +2935,40 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Deal/Investment Type is invalid;
       ** i.e, it is not a valid entry or blank or '**' or '***'.
- 
+
      C                   EVAL      *IN55 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9342'
      C                   EVAL      PZMsgData = ArrScrnHDT(X)
      C                   EXSR      SRZasnms
- 
+
      C                   ENDDO
- 
+
       ** Hedged Deal/Loan Types/Investment Types may not be deleted.
- 
+
      C                   IF        #0ACTN = 'A'
      C                   EVAL      X = 0
      C                   EVAL      Y = 0
      C                   EVAL      WCtrFile = 0
      C                   EVAL      WCtrScrn = 0
- 
+
      C                   DOW       X < 10
      C                   EVAL      X = X + 1
      C                   EVAL      Y = Y + 1
- 
+
      C                   IF        ArrFileHDT(X) <> *BLANKS
      C                   EVAL      WCtrFile = WCtrFile + 1
      C                   ENDIF
- 
+
      C                   IF        ArrScrnHDT(X) <> *BLANKS
      C                   EVAL      WCtrScrn = WCtrScrn + 1
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WCtrFile > WCtrScrn
      C                   EVAL      *IN55 = '1'
      C                   EVAL      WValid = 'N'
@@ -2974,15 +2977,15 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Move Deal/Investment Type array (which may have been updated)
       ** back to screen fields.
- 
+
      C                   MOVEA     ArrScrnHDT    WScrnHDT
- 
+
       ** Validate full set of 10 Hedged Deal/Investment Types.
       ** Error if no Deal/Investment Type has been entered.
- 
+
      C     WScrnHDT      IFEQ      *BLANK
      C                   EVAL      *IN55 = '1'
      C                   EVAL      WValid = 'N'
@@ -2990,9 +2993,9 @@
      C                   EVAL      PZMsgID = 'USR9343'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Error if any of the 10 Deal/Investment Types is a duplicate.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3011,10 +3014,10 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Error if wildcard '**' is entered, and a valid Deal Type
       ** or Loan Type has been entered.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3029,10 +3032,10 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Error if wildcard '***' is entered, and a valid
       ** Investment Type has been entered.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3045,12 +3048,12 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   CLOSE     SDLOANL1
      C                   CLOSE     INVTO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3062,24 +3065,24 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVHst        BEGSR
- 
+
       ** Move Sub-Types to array.
       ** Initialize array index.
- 
+
      C                   MOVEA     WScrnHST      ArrScrnHST
      C                   Z-ADD     *ZERO         X
- 
+
       ** Validate each of 10 individual Hedged Deal Sub-Types.
- 
+
      C                   DO        10
      C                   ADD       1             X
- 
+
       ** Error if trying to amend an existing Sub-Type
       ** but linkages to Hedge Transactions exist for deals with this
       ** Sub-Type; skip further validations.
- 
+
      C     #0ACTN        IFEQ      'A'
      C     ArrFileHST(X) ANDNE     *BLANK
      C     ArrScrnHST(X) ANDNE     ArrFileHST(X)
@@ -3096,28 +3099,28 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** No further validation if Sub-Type is blank or '**'.
- 
+
      C     ArrScrnHST(X) IFEQ      '**'
      C     ArrScrnHST(X) OREQ      *BLANK
      C                   ITER
      C                   ENDIF
- 
+
       ** Validate entry.
- 
+
      C                   EVAL      PPRST = ArrScrnHST(X)
- 
+
      C                   CALLB     'AODLSTR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PPRST
      C     SDDLST        PARM      SDDLST        DSFDY
- 
+
      C                   SELECT
- 
+
       ** Sub-Type must exist in the Deal Sub-Types file.
- 
+
      C                   WHEN      PRtrnCode = '*NRF   '
      C                   EVAL      *IN56 = '1'
      C                   EVAL      WValid = 'N'
@@ -3125,23 +3128,23 @@
      C                   EVAL      PZMsgID = 'USR9348'
      C                   EVAL      PZMsgData = ArrScrnHST(X)
      C                   EXSR      SRZasnms
- 
+
       ** Error if entry is '?' but no value selected.
- 
+
      C                   WHEN      PRtrnCode = '*NOSEL '
      C                   EVAL      *IN56 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0016'
      C                   EXSR      SRZasnms
- 
+
       ** Branch Code is valid or a selection has been made.
- 
+
      C                   WHEN      PRtrnCode = *BLANKS
      C                   EVAL      ArrScrnHST(X) = ASDSTC
- 
+
       ** Error on call to AODLSTR0.
- 
+
      C                   OTHER
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDDLSTPD'
@@ -3150,30 +3153,30 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
       ** Hedged Deal/Loan Sub-Types may not be deleted.
- 
+
      C                   IF        #0ACTN = 'A'
      C                   EVAL      X = 0
      C                   EVAL      Y = 0
      C                   EVAL      WCtrFile = 0
      C                   EVAL      WCtrScrn = 0
- 
+
      C                   DOW       X < 10
      C                   EVAL      X = X + 1
      C                   EVAL      Y = Y + 1
- 
+
      C                   IF        ArrFileHST(X) <> *BLANKS
      C                   EVAL      WCtrFile = WCtrFile + 1
      C                   ENDIF
- 
+
      C                   IF        ArrScrnHST(X) <> *BLANKS
      C                   EVAL      WCtrScrn = WCtrScrn + 1
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WCtrFile > WCtrScrn
      C                   EVAL      *IN56 = '1'
      C                   EVAL      WValid = 'N'
@@ -3182,17 +3185,17 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Move Sub-Type array (which may have been updated)
       ** back to screen fields.
- 
+
      C                   MOVEA     ArrScrnHST    WScrnHST
- 
+
       ** Validate full set of 10 Hedged Deal Sub-Types.
       ** Error if a Deal Type or Loan Type was entered
       ** as a Hedged Deal/Investment Type
       ** but no Hedged Deal Sub-Type has been entered.
- 
+
      C     WDTI          IFEQ      'Y'
      C     WScrnHST      ANDEQ     *BLANK
      C     WLTI          OREQ      'Y'
@@ -3205,9 +3208,9 @@
      C                   EVAL      PZMsgID = 'USR9349'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** If wildcard '**' is entered, it must be the only Sub-Type.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3224,9 +3227,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Error if any of the 10 Sub-Types is a duplicate.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3245,9 +3248,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3259,24 +3262,24 @@
       * Calls    :                                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVHbk        BEGSR
- 
+
       ** Move Book Codes to array.
       ** Initialize array index.
- 
+
      C                   MOVEA     WScrnHBK      ArrScrnHBK
      C                   Z-ADD     *ZERO         X
- 
+
       ** Validate each of 10 individual Hedged Deal Book Codes.
- 
+
      C                   DO        10
      C                   ADD       1             X
- 
+
       ** Error if trying to amend an existing Book Code
       ** but linkages to Hedge Transactions exist for deals with this
       ** Book Code; skip further validations.
- 
+
      C     #0ACTN        IFEQ      'A'
      C     ArrFileHBK(X) ANDNE     *BLANK
      C     ArrScrnHBK(X) ANDNE     ArrFileHBK(X)
@@ -3293,28 +3296,28 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** No further validation if Book Code is blank or '**'.
- 
+
      C     ArrScrnHBK(X) IFEQ      '**'
      C     ArrScrnHBK(X) OREQ      *BLANK
      C                   ITER
      C                   ENDIF
- 
+
       ** Validate entry.
- 
+
      C                   EVAL      PDBK = ArrScrnHBK(X)
- 
+
      C                   CALLB     'AOBOOKR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PDBK
      C     SDBOOK        PARM      SDBOOK        DSFDY
- 
+
      C                   SELECT
- 
+
       ** Book Code must exist in the Book Codes file.
- 
+
      C                   WHEN      PRtrnCode = '*NRF'
      C                   EVAL      *IN57 = '1'
      C                   EVAL      WValid = 'N'
@@ -3322,23 +3325,23 @@
      C                   EVAL      PZMsgID = 'USR9353'
      C                   EVAL      PZMsgData = ArrScrnHBK(X)
      C                   EXSR      SRZasnms
- 
+
       ** Error if entry is '?' but no value selected.
- 
+
      C                   WHEN      PRtrnCode = '*NOSEL '
      C                   EVAL      *IN57 = '1'
      C                   EVAL      WValid = 'N'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0016'
      C                   EXSR      SRZasnms
- 
+
       ** Book Code is valid or a selection has been made.
- 
+
      C                   WHEN      PRtrnCode = *BLANKS
      C                   EVAL      ArrScrnHBK(X) = BDBKCD
- 
+
       ** Error on call to AOBOOKR0.
- 
+
      C                   OTHER
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBOOKPD'
@@ -3347,30 +3350,30 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
       ** Hedged Book Codes may not be deleted.
- 
+
      C                   IF        #0ACTN = 'A'
      C                   EVAL      X = 0
      C                   EVAL      Y = 0
      C                   EVAL      WCtrFile = 0
      C                   EVAL      WCtrScrn = 0
- 
+
      C                   DOW       X < 10
      C                   EVAL      X = X + 1
      C                   EVAL      Y = Y + 1
- 
+
      C                   IF        ArrFileHBK(X) <> *BLANKS
      C                   EVAL      WCtrFile = WCtrFile + 1
      C                   ENDIF
- 
+
      C                   IF        ArrScrnHBK(X) <> *BLANKS
      C                   EVAL      WCtrScrn = WCtrScrn + 1
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WCtrFile > WCtrScrn
      C                   EVAL      *IN57 = '1'
      C                   EVAL      WValid = 'N'
@@ -3379,15 +3382,15 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Move Book Code array (which may have been updated)
       ** back to screen fields.
- 
+
      C                   MOVEA     ArrScrnHBK    WScrnHBK
- 
+
       ** Validate full set of 10 Hedged Deal Book Codes.
       ** Error if no Book Code has been entered.
- 
+
      C     WScrnHBK      IFEQ      *BLANK
      C                   EVAL      *IN57 = '1'
      C                   EVAL      WValid = 'N'
@@ -3395,9 +3398,9 @@
      C                   EVAL      PZMsgID = 'USR9354'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** If wildcard '**' is entered, it must be the only Book Code.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3414,9 +3417,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Error if any of the 10 Book Codes is a duplicate.
- 
+
      C                   Z-ADD     *ZERO         X
      C                   DO        10
      C                   ADD       1             X
@@ -3435,9 +3438,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3449,14 +3452,14 @@
       * Calls    : SRDelReq, SRMove, SRClrScrn                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkLink     BEGSR
- 
+
      C                   OPEN      SECTY
      C                   OPEN      CLOAN
      C                   OPEN      DEALSL
      C                   OPEN      DEALALL
- 
+
       ** Input to subroutine is Field Type:
       **   'DT' = Derivative Type
       **   'DS' = Derivative Sub-Type
@@ -3464,43 +3467,43 @@
       **   'HT' = Hedged Deal/Investment Type
       **   'HS' = Hedged Deal Sub-Type
       **   'HB' = Hedged Deal Book Code
- 
+
       ** Set up Derivative/Hedged Indicator ('D' or 'H').
       ** Initialize linkage indicator to 'No'.
- 
+
      C                   MOVEL     WDType        WDHIN
      C                   MOVE      'N'           WLink
- 
+
       ** Do any live Hedge Linkages exist?
       ** Start reading Hedge Linkages file for this Hedge Strategy.
- 
+
      C                   MOVEL     #1HESN        A_FSHGST
      C     A_FSHGST      SETLL     ASHGLKL2
      C     A_FSHGST      READE     ASHGLKL2
- 
+
       ** If there is a live Hedge Linkage,
       ** Are there any transactions for the Hedge Linkage?
       ** Start reading Hedge Transactions file.
- 
+
      C                   DOW       NOT %EOF(ASHGLKL2)
      C     A_FSRECI      IFEQ      'D'
- 
+
      C                   MOVEL     A_FSHEDI      B_FSHEDI
      C                   MOVEL     WDHIN         B_FSDHIN
      C     KLUJTR        SETLL     ASHTRNL1
      C     KLUJTR        READE     ASHTRNL1
- 
+
       ** If there is a Hedge Transaction, access the transaction
       **   record.
- 
+
      C                   DOW       NOT %EOF(ASHTRNL1)
- 
+
       ** If the Hedge Transaction record is a Derivative
       ** and the Derivative Deal Module is 'DL' then access
       ** Midas FRA/IRS deals (DEALSDG) and FX deals (DEALSDB).
       ** If the accessed deal has a field that matches the
       ** field being amended, set the linkage indicator to 'Yes'.
- 
+
      C     B_FSDHIN      IFEQ      'D'
      C     B_FSMOD       ANDEQ     'DL'
      C*****B_FSDLNO      CHAIN     DEALSL                                                     CLE148
@@ -3523,13 +3526,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If the Hedge Transaction record is a Derivative
       ** and the Derivative Deal Module is 'FF' then check
       ** the linked transaction.
       ** If the linked transaction has a field that matches the
       ** field being amended, set the linkage indicator to 'Yes'.
- 
+
      C     B_FSDHIN      IFEQ      'D'
      C     B_FSMOD       ANDEQ     'FF'
      C     WDType        IFEQ      'DT'
@@ -3552,13 +3555,13 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If the Hedge Transaction record is a Hedge
       ** and the Derivative Deal Module is 'DL' then access
       ** Midas FX/MM deals (DEALSDB/DEALSDC/DEALSDD/DEALSDE).
       ** If the accessed deal has a field that matches the
       ** field being amended, set the linkage indicator to 'Yes'.
- 
+
      C     B_FSDHIN      IFEQ      'H'
      C     B_FSMOD       ANDEQ     'DL'
      C*****B_FSDLNO      CHAIN     DEALALL                                                    CLE148
@@ -3587,13 +3590,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If the Hedge Transaction record is a Hedge
       ** and the Derivative Deal Module is 'LE' then access
       ** Midas LE loans.
       ** If the accessed loan has a field that matches the
       ** field being amended, set the linkage indicator to 'Yes'.
- 
+
      C     B_FSDHIN      IFEQ      'H'
      C     B_FSMOD       ANDEQ     'LE'
      C     B_FSDLNO      CHAIN     CLOAN
@@ -3620,13 +3623,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If the Hedge Transaction record is a Hedge
       ** and the Derivative Deal Module is 'SE' then access
       ** Midas SE securities.
       ** If the accessed security has a field that matches the
       ** field being amended, set the linkage indicator to 'Yes'.
- 
+
      C     B_FSDHIN      IFEQ      'H'
      C     B_FSMOD       ANDEQ     'SE'
      C     B_FSFPSE      CHAIN     SECTY
@@ -3644,13 +3647,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If the Hedge Transaction record is a Hedge
       ** and the Derivative Deal Module is 'FH' then access
       ** Midas Forecast Transactions Details
       ** If the accessed forecast has a field that matches the
       ** field being amended, set the linkage indicator to 'Yes'.
- 
+
      C     B_FSDHIN      IFEQ      'H'
      C     B_FSMOD       ANDEQ     'FH'
      C*****B_FSDLNO      CHAIN     ASFHTRL1                                                   CLE148
@@ -3669,26 +3672,26 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Read next Hedge Transactions file record.
- 
+
      C     KLUJTR        READE     ASHTRNL1
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Read next Hedge Linkages file record.
- 
+
      C     A_FSHGST      READE     ASHGLKL2
      C                   ENDDO
- 
+
      C                   CLOSE     SECTY
      C                   CLOSE     CLOAN
      C                   CLOSE     DEALSL
      C                   CLOSE     DEALALL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3700,39 +3703,39 @@
       * Calls    : SRDelete, SRMove, SRClrScrn                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDelReq      BEGSR
- 
+
      C                   EVAL      *INKJ = '0'
      C                   EVAL      *INKL = '0'
- 
+
      C                   DOW       *INKC = '0'  AND  *INKJ = '0'  AND
      C                             *INKL = '0'
- 
+
      C                   MOVEA     '11'          *IN(71)
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *INKC         CASEQ     '1'           SREnd
- 
+
      C     *INKJ         CASEQ     '1'           SRDelete
- 
+
      C     *INKL         CASEQ     '1'           SRPrevious
      C                   ENDCS
- 
+
       ** Enter key is pressed.
- 
+
      C                   IF        *INKJ = '0'  AND  *INKL = '0'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR0536'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3744,77 +3747,77 @@
       * Calls    : SRZasnms                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDelete      BEGSR
- 
+
      C                   EVAL      WError = 'N'
- 
+
       ** Check if record has been deleted by another user.
- 
+
      C     FSHESN        CHAIN(E)  SDHGSTL0
- 
+
      C                   IF        NOT %FOUND(SDHGSTL0)
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR7602'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
       ** Check if record is being used by another user.
- 
+
      C                   IF        %ERROR
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR7603'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
       ** Check if record has been updated by another user.
- 
+
      C                   IF        SavRec <> CurRec
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR7604'
      C                   EXSR      SRZasnms
- 
+
       ** Release record lock
- 
+
      C                   UNLOCK    SDHGSTL0
- 
+
      C                   ELSE
- 
+
       ** Flag record as deleted.
- 
+
      C                   EVAL      WFileToScrn = 'N'
      C                   EXSR      SRMove
      C                   EVAL      FSCHTP = 'D'
- 
+
      C                   UPDATE(E) @HGSTD0
- 
+
       ** Delete error detected
- 
+
      C                   IF        %ERROR
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0004'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Delete unsuccessful
- 
+
      C                   IF        WError = 'Y'
      C                   EVAL      *INKJ = '0'
      C                   ELSE
      C                   EXSR      SRTrailer
      C                   EVAL      WDetScrn = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3826,88 +3829,88 @@
       * Calls    : SRAmdReq SRMove, SRTrailer                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAmend       BEGSR
- 
+
       ** Set record data changed flag
- 
+
      C                   EVAL      WRecChg = 'N'
      C                   EVAL      WError = 'N'
- 
+
      C     #1HESN        CHAIN(E)  SDHGSTL0
- 
+
      C                   IF        NOT %FOUND(SDHGSTL0)
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR7605'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
       ** Record locked
- 
+
      C                   IF        %ERROR
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR7605'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
       ** Check for changed record
- 
+
      C                   IF        SavRec <> CurRec
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR7604'
      C                   EXSR      SRZasnms
      C                   UNLOCK    SDHGSTL0
- 
+
      C                   ELSE
- 
+
       ** Store record data for null update check
- 
+
      C                   EVAL      SavRec2 = *BLANKS
      C                   MOVEL     CurRec        SavRec2
- 
+
       ** Move screen fields to file.
- 
+
      C                   EVAL      WFileToScrn = 'N'
      C                   EXSR      SRMove
      C                   EVAL      FSCHTP = 'A'
- 
+
      C                   IF        CurRec <> SavRec2
      C                   EVAL      WRecChg = 'Y'
      C                   ENDIF
- 
+
       ** If record changed, update.
- 
+
      C                   IF        WRecChg = 'Y'
      C                   UPDATE(E) @HGSTD0
      C                   ELSE
      C                   UNLOCK(E) SDHGSTL0
      C                   ENDIF
- 
+
       ** Change error detected
- 
+
      C                   IF        %ERROR
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EVAL      PZMsgID = 'Y2U0004'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WError = 'Y'
      C                   EVAL      WValid = 'N'
      C                   ELSE
      C                   EVAL      WDetScrn = 'N'
      C                   EXSR      SRTrailer
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3919,43 +3922,43 @@
       * Calls    : *PSSR                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTrailer     BEGSR
- 
+
      C                   EVAL      AHFLNM = 'SDHGSTPD'
      C     AHFLNM        CHAIN     SDFCTLL0
- 
+
      C                   IF        %FOUND(SDFCTLL0)
- 
+
      C                   SELECT
      C                   WHEN      #0ACTN = 'A'
      C                   ADD       1             AHNOAM
- 
+
      C                   WHEN      #0ACTN = 'D'
      C                   ADD       1             AHNODL
      C                   SUB       1             AHNORC
- 
+
      C                   WHEN      #0ACTN = 'I'
      C                   ADD       1             AHNOIN
      C                   ADD       1             AHNORC
      C                   ENDSL
- 
+
      C                   UPDATE    @AHREAU
      C                   COMMIT
- 
+
      C                   ELSE
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDFCTLPA'
      C                   EVAL      DBKEY = AHFLNM
      C                   EVAL      DBASE = 7
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3967,17 +3970,17 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRefresh     BEGSR
- 
+
      C                   EVAL      #0POS1 = *BLANKS
      C                   EVAL      #0POS2 = *BLANKS
      C                   EVAL      #0POS3 = *BLANKS
      C                   EVAL      #0ACTN = *BLANKS
      C                   EVAL      WReload = 'Y'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3989,20 +3992,20 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRClrScrn     BEGSR
- 
+
       ** Initialise subfile record
- 
+
      C                   EVAL      #1CHTP = *BLANKS
      C                   EVAL      #1LCDT = *ZEROS
      C                   EVAL      #0ACTN = *BLANKS
      C                   EVAL      #0HESN = *BLANKS
      C                   EVAL      #0HELD = *BLANKS
      C                   EVAL      #0BRCA = *BLANKS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4014,26 +4017,26 @@
       * Calls    : ZEDIT                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMove        BEGSR
- 
+
       ** Move file fields to subfile
- 
+
      C                   IF        WDetScrn = 'N'
      C                   MOVEL     FSHESN        #0HESN
      C                   MOVEL     FSHELD        #0HELD
      C                   MOVEL     FSBRCA        #0BRCA
- 
+
      C                   ELSE
- 
+
       ** Move file fields to details screen
- 
+
      C                   IF        WFileToScrn = 'Y'
- 
+
      C                   MOVEL     FSHESN        #1HESN
      C                   MOVEL     FSHELD        #1HELD
      C                   MOVEL     FSBRCA        #1BRCA
- 
+
      C                   MOVEL     FSPRTP        #1PRTP
      C                   MOVEL     FSPRST        #1PRST
      C**********         MOVEL     FSHRSK        #1HRSK                                       CAS006
@@ -4044,23 +4047,23 @@
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   MOVEL     FSMEFF        #1MEFF                                       CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Convert file date to screen date
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      FSFSDT        PMidasDayNo
      C**********         PARM      *BLANKS       PDateFmt                                     213352
      C                   PARM      BJDFIN        PDateFmt                                     213352
      C                   PARM                    PDDMMYY
      C                   PARM      *BLANKS       PWorkDate
- 
+
      C                   IF        PDDMMYY <> *ZERO
      C                   MOVE      PDDMMYY       #1FSDT
      C                   MOVE      PDDMMYY       WScrnFSDT
      C                   ELSE
      C                   EVAL      #1FSDT = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FSDVT1        #1DVT1
      C                   MOVEL     FSDVT2        #1DVT2
      C                   MOVEL     FSDVT3        #1DVT3
@@ -4071,7 +4074,7 @@
      C                   MOVEL     FSDVT8        #1DVT8
      C                   MOVEL     FSDVT9        #1DVT9
      C                   MOVEL     FSDVT10       #1DT10
- 
+
      C                   MOVEL     FSDST1        #1DST1
      C                   MOVEL     FSDST2        #1DST2
      C                   MOVEL     FSDST3        #1DST3
@@ -4082,7 +4085,7 @@
      C                   MOVEL     FSDST8        #1DST8
      C                   MOVEL     FSDST9        #1DST9
      C                   MOVEL     FSDST10       #1DS10
- 
+
      C                   MOVEL     FSDBK1        #1DBK1
      C                   MOVEL     FSDBK2        #1DBK2
      C                   MOVEL     FSDBK3        #1DBK3
@@ -4093,7 +4096,7 @@
      C                   MOVEL     FSDBK8        #1DBK8
      C                   MOVEL     FSDBK9        #1DBK9
      C                   MOVEL     FSDBK10       #1DB10
- 
+
      C                   MOVEL     FSHDT1        #1HDT1
      C                   MOVEL     FSHDT2        #1HDT2
      C                   MOVEL     FSHDT3        #1HDT3
@@ -4104,7 +4107,7 @@
      C                   MOVEL     FSHDT8        #1HDT8
      C                   MOVEL     FSHDT9        #1HDT9
      C                   MOVEL     FSHDT10       #1HD10
- 
+
      C                   MOVEL     FSHST1        #1HST1
      C                   MOVEL     FSHST2        #1HST2
      C                   MOVEL     FSHST3        #1HST3
@@ -4115,7 +4118,7 @@
      C                   MOVEL     FSHST8        #1HST8
      C                   MOVEL     FSHST9        #1HST9
      C                   MOVEL     FSHST10       #1HS10
- 
+
      C                   MOVEL     FSHBK1        #1HBK1
      C                   MOVEL     FSHBK2        #1HBK2
      C                   MOVEL     FSHBK3        #1HBK3
@@ -4126,26 +4129,26 @@
      C                   MOVEL     FSHBK8        #1HBK8
      C                   MOVEL     FSHBK9        #1HBK9
      C                   MOVEL     FSHBK10       #1HB10
- 
+
      C                   Z-ADD     FSLCD         #1LCDT
      C                   MOVEL     FSCHTP        #1CHTP
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   MOVEL     FSMEFF        #1MEFF                                       CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Save original file contents
- 
+
      C                   MOVEA     WScrnDVT      ArrFileDVT
      C                   MOVEA     WScrnDST      ArrFileDST
      C                   MOVEA     WScrnDBK      ArrFileDBK
      C                   MOVEA     WScrnHDT      ArrFileHDT
      C                   MOVEA     WScrnHST      ArrFileHST
      C                   MOVEA     WScrnHBK      ArrFileHBK
- 
+
       ** Move field values from screen to file.
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     #1HESN        FSHESN
      C                   MOVEL     #1HELD        FSHELD
      C                   MOVEL     #1BRCA        FSBRCA
@@ -4159,24 +4162,24 @@
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   MOVEL     #1MEFF        FSMEFF                                       CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Convert date from screen to file format.
- 
+
      C                   MOVE      #1FSDT        PDDMMYY
- 
+
      C                   CALL      'ZDATE1'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM                    PDDMMYY
      C**********         PARM      *BLANKS       PDateFmt                                     213352
      C                   PARM      BJDFIN        PDateFmt                                     213352
      C                   PARM      *ZEROS        PMidasDayNo
- 
+
      C                   IF        PRtrnCode = *BLANKS
      C                   EVAL      FSFSDT = PMidasDayNo
      C                   ELSE
      C                   EVAL      FSFSDT = 0
      C                   ENDIF
- 
+
      C                   MOVE      *BLANK        ArrFileDVT
      C                   Z-ADD     *ZERO         X
      C                   Z-ADD     1             Y
@@ -4187,7 +4190,7 @@
      C                   ADD       1             Y
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEL     ArrFileDVT(1) FSDVT1
      C                   MOVEL     ArrFileDVT(2) FSDVT2
      C                   MOVEL     ArrFileDVT(3) FSDVT3
@@ -4198,7 +4201,7 @@
      C                   MOVEL     ArrFileDVT(8) FSDVT8
      C                   MOVEL     ArrFileDVT(9) FSDVT9
      C                   MOVEL     ArrFileDVT(10)FSDVT10
- 
+
      C                   MOVE      *BLANK        ArrFileDST
      C                   Z-ADD     *ZERO         X
      C                   Z-ADD     1             Y
@@ -4209,7 +4212,7 @@
      C                   ADD       1             Y
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEL     ArrFileDST(1) FSDST1
      C                   MOVEL     ArrFileDST(2) FSDST2
      C                   MOVEL     ArrFileDST(3) FSDST3
@@ -4220,7 +4223,7 @@
      C                   MOVEL     ArrFileDST(8) FSDST8
      C                   MOVEL     ArrFileDST(9) FSDST9
      C                   MOVEL     ArrFileDST(10)FSDST10
- 
+
      C                   MOVE      *BLANK        ArrFileDBK
      C                   Z-ADD     *ZERO         X
      C                   Z-ADD     1             Y
@@ -4231,7 +4234,7 @@
      C                   ADD       1             Y
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEL     ArrFileDBK(1) FSDBK1
      C                   MOVEL     ArrFileDBK(2) FSDBK2
      C                   MOVEL     ArrFileDBK(3) FSDBK3
@@ -4242,7 +4245,7 @@
      C                   MOVEL     ArrFileDBK(8) FSDBK8
      C                   MOVEL     ArrFileDBK(9) FSDBK9
      C                   MOVEL     ArrFileDBK(10)FSDBK10
- 
+
      C                   MOVE      *BLANK        ArrFileHDT
      C                   Z-ADD     *ZERO         X
      C                   Z-ADD     1             Y
@@ -4253,7 +4256,7 @@
      C                   ADD       1             Y
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEL     ArrFileHDT(1) FSHDT1
      C                   MOVEL     ArrFileHDT(2) FSHDT2
      C                   MOVEL     ArrFileHDT(3) FSHDT3
@@ -4264,7 +4267,7 @@
      C                   MOVEL     ArrFileHDT(8) FSHDT8
      C                   MOVEL     ArrFileHDT(9) FSHDT9
      C                   MOVEL     ArrFileHDT(10)FSHDT10
- 
+
      C                   MOVE      *BLANK        ArrFileHST
      C                   Z-ADD     *ZERO         X
      C                   Z-ADD     1             Y
@@ -4275,7 +4278,7 @@
      C                   ADD       1             Y
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEL     ArrFileHST(1) FSHST1
      C                   MOVEL     ArrFileHST(2) FSHST2
      C                   MOVEL     ArrFileHST(3) FSHST3
@@ -4286,7 +4289,7 @@
      C                   MOVEL     ArrFileHST(8) FSHST8
      C                   MOVEL     ArrFileHST(9) FSHST9
      C                   MOVEL     ArrFileHST(10)FSHST10
- 
+
      C                   MOVE      *BLANK        ArrFileHBK
      C                   Z-ADD     *ZERO         X
      C                   Z-ADD     1             Y
@@ -4297,7 +4300,7 @@
      C                   ADD       1             Y
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEL     ArrFileHBK(1) FSHBK1
      C                   MOVEL     ArrFileHBK(2) FSHBK2
      C                   MOVEL     ArrFileHBK(3) FSHBK3
@@ -4308,19 +4311,19 @@
      C                   MOVEL     ArrFileHBK(8) FSHBK8
      C                   MOVEL     ArrFileHBK(9) FSHBK9
      C                   MOVEL     ArrFileHBK(10)FSHBK10
- 
+
      C                   Z-ADD     BJRDNB        FSLCD
- 
+
      C                   ENDIF
- 
+
       ** Hold current record image for change detection
- 
+
      C                   EVAL      SavRec = *BLANKS
      C                   MOVEL     CurRec        SavRec
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4332,32 +4335,32 @@
       * Calls    : SRZasnms                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWrite       BEGSR
- 
+
      C                   EVAL      WError = 'N'
- 
+
       ** Check for duplicate primary key
- 
+
      C     #1HESN        SETLL     SDHGSTL1
- 
+
      C                   IF        %EQUAL(SDHGSTL1)
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN41 = '1'
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   EVAL      PZMsgID = 'USR9240'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
       ** Create Hedge Strategy Details
- 
+
      C                   EVAL      WFileToScrn = 'N'
      C                   EXSR      SRMove
      C                   EVAL      FSCHTP = 'I'
- 
+
      C                   WRITE     @HGSTD0
- 
+
      C                   IF        %ERROR
      C                   EVAL      WError = 'Y'
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
@@ -4365,9 +4368,9 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4379,37 +4382,37 @@
       * Calls    : SRZasnms                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAmdReq      BEGSR
- 
+
      C                   EVAL      WValid = 'N'
      C                   EVAL      *INKL = '0'
- 
+
      C                   DOW       *INKC = '0'  AND  *INKL = '0'  AND
      C                             WValid = 'N'
- 
+
      C                   EVAL      *IN73 = '1'
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *INKC         CASEQ     '1'           SREnd
- 
+
      C     *INKL         CASEQ     '1'           SRPrevious
- 
+
      C                   CAS                     SRValidate
      C                   ENDCS
- 
+
       ** Amend Hedge Shortname Details
- 
+
      C                   IF        WValid = 'Y'
      C                   EXSR      SRAmend
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4421,11 +4424,11 @@
       * Calls    : Y2SNMGC                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZasnms      BEGSR
- 
+
       ** Send message
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM      #1PGMQ        PZPgmQ
      C                   PARM                    PZRelQ
@@ -4433,9 +4436,9 @@
      C                   PARM                    PZMsgFile
      C                   PARM                    PZMsgData
      C                   PARM      *BLANKS       PZMsgType
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4447,28 +4450,28 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPrevious    BEGSR
- 
+
       ** Rollback any uncommitted DBF changes
- 
+
      C                   IF        WKeyScrn = 'Y'
      C                   EVAL      WKeyScrn = 'N'
      C                   ENDIF
- 
+
      C                   IF        WDetScrn = 'Y'  AND  #0ACTN = 'I'
      C                   EVAL      WDetScrn = 'N'
      C                   EVAL      WKeyScrn = 'Y'
      C                   EVAL      *INKL = '0'
      C                   ENDIF
- 
+
      C                   IF        WDetScrn = 'Y'  AND  #0ACTN <> 'I'
      C                   EVAL      WDetScrn = 'N'
      C                   EVAL      WKeyScrn = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4480,30 +4483,30 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SREnd         BEGSR
- 
+
       ** Rollback any uncommitted DBF changes
- 
+
      C                   ROLBK
- 
+
       ** If selection mode and F3 has been pressed
- 
+
      C                   IF        PMODE = '?'
      C                   EVAL      PRTCD = '*NOSEL '
      C                   EVAL      PHESN = *BLANKS
      C                   ENDIF
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = '1'
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4515,23 +4518,23 @@
       *  Calls    : AOBANKR0, AOMMODR0, AOSARDR0                      *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRTCD
      C                   PARM                    PMODE
      C                   PARM                    PHESN
- 
+
      C                   EVAL      DBPGM = 'SD000743'
- 
+
       ** Call Access Program for Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
      C                   IF        PRtrnCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -4540,14 +4543,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call Access Program for Midas Modules
- 
+
      C                   CALLB     'AOMMODR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*FIRST '     POption
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C                   IF        PRtrnCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDMMODPD'
@@ -4556,9 +4559,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Hedge Product Sub-Type is available only if Dealing module is on.
- 
+
      C                   IF        BGSWDL = 'Y'  OR  BGDLFX = 'Y'  OR
      C                             BGMTDL = 'Y'  OR  BGDLMM = 'Y'  OR
      C                             BGCHDL = 'Y'
@@ -4566,21 +4569,21 @@
      C                   ELSE
      C                   EVAL      *IN32 = '1'
      C                   ENDIF
- 
+
       ** Check if enhancement CDL006 (Dealing Fiduciary) is switched on.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtrnCode
      C                   PARM      '*VERIFY'     POption
      C                   PARM      'CDL006'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtrnCode = *BLANKS
      C                   EVAL      CDL006 = 'Y'
- 
+
      C                   ELSE
      C                   EVAL      CDL006 = 'N'
- 
+
      C                   IF        PRtrnCode <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -4614,7 +4617,7 @@
      C                   EXSR      *PSSR                                                      CAS003
      C                   ENDIF                                                                CAS003
      C                   ENDIF                                                                CAS003
- 
+
       ** Check if CAS004 is installed                                                         CAS004
                                                                                               CAS004
      C                   EVAL      CAS004 = 'N'                                               CAS004
@@ -4691,7 +4694,7 @@
      C                   ENDIF                                                                CAS007
                                                                                               CAS007
       ** Open files for update
- 
+
      C                   OPEN      SD000743DF
      C     #HGST0        IFNE      '1'
      C                   OPEN      SDHGSTL0
@@ -4699,27 +4702,27 @@
      C     #HGST1        IFNE      '1'
      C                   OPEN      SDHGSTL1
      C                   ENDIF
- 
+
       ** Initialise subfile control
- 
+
      C                   EVAL      #0RUNA = BJMRDT
      C                   EVAL      #0WSID = PSJobName
      C                   EVAL      #0USER = PSUser
      C                   EVAL      #1PGMQ = PSProcName
- 
+
      C                   Z-ADD     *ZERO         #1LCDT
      C                   MOVEL     *BLANK        #1CHTP
      C                   MOVEL     *BLANK        #0POS1
      C                   MOVEL     *BLANK        #0POS2
      C                   MOVEL     *BLANK        #0POS3
      C                   Z-ADD     14            WSFPG
- 
+
      C     KLUJTR        KLIST
      C                   KFLD                    B_FSHEDI
      C                   KFLD                    B_FSDHIN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4731,23 +4734,23 @@
       *  Calls    : DBERRCTL - Database Error Control                 *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
 ** TABNAM

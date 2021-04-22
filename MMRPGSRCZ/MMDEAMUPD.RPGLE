@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053472           Date 27Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 30May14               *
       *                 MD024110           Date 13Dec13               *
       *                 MD020388           Date 23Apr13               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053472 - Payment settlement details cleared for Early      *
       *             Maturity                                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -101,7 +103,7 @@
      FMMEIRDL0  UF   E           K DISK                                                       CAS009
      F                                     COMMIT                                             CAS009
      F/COPY WNCPYSRC,MMDEAMDF01
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -120,26 +122,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
-
+ 
       ** Data Structure for SAR Details                                                       CAS009
      D CAS009          S              1A                                                      CAS009
      D PRetCode        S              7A                                                      CAS009
@@ -347,7 +349,8 @@
      C/COPY WNCPYSRC,MMDEAMDC02
       *
       ** BASE RATE CODE
-     C                   Z-ADD     *ZERO         BRTT
+     C**********         Z-ADD     *ZERO         BRTT                                         CSD103
+     C                   MOVE      *BLANKS       BRTT                                         CSD103
       *
       ** RATE/SPREAD
      C                   Z-ADD     IGINTR        RTSP

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -994,7 +996,8 @@
      C                   MOVEL     'RO'          E#EVTP
       *
       * (New) Base Rate Code
-     C                   Z-ADD     CL_NBRA       E#BRTT
+     C**********         Z-ADD     CL_NBRA       E#BRTT                                       CSD103
+     C                   MOVE      CL_NBRA       E#BRTT                                       CSD103
       *
       * (New) Rate/Spread
      C                   Z-ADD     CL_NRTS       E#RTSP
@@ -1191,7 +1194,8 @@
       *
      C     LAAMTP        IFEQ      'BC'
      C                   MOVEL     'BC'          E#EVTP
-     C                   Z-ADD     LABRTT        E#BRTT
+     C**********         Z-ADD     LABRTT        E#BRTT                                       CSD103
+     C                   MOVE      LABRTT        E#BRTT                                       CSD103
      C                   END
       *
       * If the loan amendment is a spread change

@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055528           Date 13Aug20               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055528           Date 13Aug20               *
+      *                 MD052075           Date 07Jun19               *
       *                 CGL150             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026695           Date 12May14               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD055528 - Corrective Batches value dates are overwritten by *
       *             Booking Date.                                     *
       *           - When corrective batches value dates are equal to  *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057191           Date 02Dec20               *
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *                 MD034915           Date 26Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035672           Date 07Sep15               *
       *                 CLE134             Date 01Aug12               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
       *           - Incorrect rate/spread (positive) is displayed.    *
@@ -267,7 +269,8 @@
       *
       ***Base*rate****************************************************                        CLE106
       ** Base rate code                                                                       CLE106
-     C                   IF        BRTT = 0
+     C**********         IF        BRTT = 0                                                   CSD103
+     C                   IF        BRTT = *BLANKS                                             CSD103
      C                   MOVE      *BLANK        DDBRAT
      C                   ELSE
      C                   IF        DDATYP = 'BC'
@@ -320,7 +323,8 @@
      C**********         MOVE      ZFIELD        DDRTSP                                       CRE073
      C                   If        CLE036= 'N' or                                           MD035672
      C                             (CLE036= 'Y' and *IN01 = '0'and                          MD035672
-     C                                   (LO_BRTT  <> 0 or LO_BASR  <> 0                    MD035672
+     C**********                         (LO_BRTT  <> 0 or LO_BASR  <> 0             MD035672 CSD103
+     C                                   (LO_BRTT  <> *BLANKS or LO_BASR  <> 0                CSD103
      C                                     or LO_BRTE  <> 0))                               MD035672
      C                   IF        RTSP < 0                                                 MD057191
      C                   MOVEL     ZFIELD        DDRTSP                                       CRE073

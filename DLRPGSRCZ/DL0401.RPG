@@ -9,13 +9,14 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD051152           Date 02Aug18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD051152           Date 02Aug18               *
       *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
-      *                 MD035545           Date 11Sep15               *      
+      *                 MD035545           Date 11Sep15               *
       *                 AR743357           Date 06Jul17               *
       *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
@@ -124,6 +125,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -133,12 +135,12 @@
       *             amount for month of March (Recompile)             *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
-      *            ZFREQ/ZFRQ*.                                       *      
+      *            ZFREQ/ZFRQ*.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  AR743357 - Make sure that principal exchanges and interest   *
       *             are correct for CIR003.                           *
       *           - Applied for MD033602                              *
@@ -1077,8 +1079,10 @@
      C           DTYP      IFNE 'FR'                                      S01328
      C***********HEDIN*****ANDNE'Y'                                 S01328E26580
      C           HEDIN     ANDEQ'N'                                       E26580
-     C           UBRTT     IFNE *ZERO                                     S01328
-     C           TBRTT     ORNE *ZERO                                     S01328
+     C********** UBRTT     IFNE *ZERO                                                  S01328 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C********** TBRTT     ORNE *ZERO                                                  S01328 CSD103
+     C           TBRTT     ORNE *BLANKS                                                       CSD103
      C                     MOVEL'Y'       RSUPR                           S01328
      C                     END                                            S01328
      C                     END                                            S01328
@@ -2381,7 +2385,8 @@
      C*
      C** DETERMINE WHICH DETAILS ARE PRESENT & SET UP WORK FIELDS
      C*
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR THEIR
      C                     MOVE 'I'       IOIND   1
      C                     Z-ADDUEINR     WFIXR  117
@@ -2450,7 +2455,8 @@
      C** PROCESS DETAILS FOR THE PROVIDER OF THE INT. RATE CAP/COLLAR
      C** (PROVIDER HAS NON-ZERO BASE RATE TYPE)
      C*
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR THEIR
      C                     Z-ADDTEINR     WEINR
      C                     MOVE 'O'       IOIND
@@ -2651,8 +2657,10 @@
       * and Their Base Rate Type NE 0 , set I/O Indicator to 'I' and      S01393
       * use Their Details to get Their Next Rate Change Date              S01393
       *                                                                   S01393
-     C           UBRTT     IFEQ 0                                         S01393
-     C           TBRTT     ANDNE0                                         S01393
+     C********** UBRTT     IFEQ 0                                                      S01393 CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
+     C********** TBRTT     ANDNE0                                                      S01393 CSD103
+     C           TBRTT     ANDNE*BLANKS                                                       CSD103
      C                     MOVE 'I'       IOIND                           S01393
      C                     EXSR THEIR                                     S01393
      C                     EXSR CASHEV                                    S01393
@@ -2662,8 +2670,10 @@
       * and Their Base Rate Type EQ 0 , set I/O Indicator to 'O' and      S01393
       * use Our Details to get Our Next Rate Change Date                  S01393
       *                                                                   S01393
-     C           UBRTT     IFNE 0                                         S01393
-     C           TBRTT     ANDEQ0                                         S01393
+     C********** UBRTT     IFNE 0                                                      S01393 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C********** TBRTT     ANDEQ0                                                      S01393 CSD103
+     C           TBRTT     ANDEQ*BLANKS                                                       CSD103
      C                     MOVE 'O'       IOIND                           S01393
      C                     EXSR OUR                                       S01393
      C                     EXSR CASHEV                                    S01393
@@ -2673,8 +2683,10 @@
       * and Their Base Rate Type NE 0 , select details with earliest      S01393
       * 'Next Interest Rate Change Date'.                                 S01393
       *                                                                   S01393
-     C           UBRTT     IFNE 0                                         S01393
-     C           TBRTT     ANDNE0                                         S01393
+     C********** UBRTT     IFNE 0                                                      S01393 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C********** TBRTT     ANDNE0                                                      S01393 CSD103
+     C           TBRTT     ANDNE*BLANKS                                                       CSD103
       *                                                                   S01393
       * Determine Our and Their Next Interest Dates                       S01393
       *                                                                   S01393
@@ -2849,7 +2861,8 @@
      C*
      C                     EXSR OUR
      C                     MOVE 'O'       IOIND
-     C           WBRTT     IFEQ 0
+     C********** WBRTT     IFEQ 0                                                             CSD103
+     C           WBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR RXSETT
      C                     ELSE
      C                     TESTB'0'       WDNSI          11 INITIAL RATE SET IND
@@ -2865,7 +2878,8 @@
      C                     EXSR THEIR
      C                     SETON                     21
      C                     MOVE 'I'       IOIND
-     C           WBRTT     IFEQ 0
+     C********** WBRTT     IFEQ 0                                                             CSD103
+     C           WBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR RXSETT
      C                     ELSE
      C                     TESTB'0'       WDNSI          11 INITIAL RATE SET IND
@@ -2950,7 +2964,8 @@
      C** CALCULATE TAX ON INTEREST AMOUNT IF NECESSARY
      C** & SUBTRACT IT FROM INTEREST AMOUNT
      C*
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C           TAXR      IFNE 0
      C           TAXI      IFEQ 'Y'
      C           TAXR      MULT ZINTR     WRKTAX    H
@@ -3144,10 +3159,14 @@
       ** If (our base rate type NE 0 and theirs EQ 0)                     S01211
       ** Or (our base rate type NE 0 and theirs NE 0                      S01211
       **     and our next rate change date LE theirs)                     S01211
-     C           UBRTT     IFNE 0                                         S01211
-     C           TBRTT     ANDEQ0                                         S01211
-     C           UBRTT     ORNE 0                                         S01211
-     C           TBRTT     ANDNE0                                         S01211
+     C********** UBRTT     IFNE 0                                                      S01211 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C********** TBRTT     ANDEQ0                                                      S01211 CSD103
+     C           TBRTT     ANDEQ*BLANKS                                                       CSD103
+     C********** UBRTT     ORNE 0                                                      S01211 CSD103
+     C           UBRTT     ORNE *BLANKS                                                       CSD103
+     C********** TBRTT     ANDNE0                                                      S01211 CSD103
+     C           TBRTT     ANDNE*BLANKS                                                       CSD103
      C           UNICD     ANDLETNICD                                     S01211
      C                     MOVE 'O'       IOIND                           S01211
      C                     END                                            S01211
@@ -3163,8 +3182,10 @@
      C** & REVERSE INCOMING/OUTGOING INDICATOR FOR CORRECT REFLECTION
      C** OF DIRECTION OF FUNDS
      C*
-     C           UBRTT     IFEQ 0
-     C           TBRTT     IFNE 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
+     C********** TBRTT     IFNE 0                                                             CSD103
+     C           TBRTT     IFNE *BLANKS                                                       CSD103
      C                     EXSR THEIR
      C                     Z-ADD2         XCOUNT
      C           IOIND     IFEQ 'I'
@@ -3179,7 +3200,8 @@
      C** ('OURS' IS FIRST)
      C*
      C                     ELSE
-     C           TBRTT     IFNE 0
+     C********** TBRTT     IFNE 0                                                             CSD103
+     C           TBRTT     IFNE *BLANKS                                                       CSD103
      C                     EXSR OUR
      C                     Z-ADD1         XCOUNT
      C*
@@ -3509,7 +3531,8 @@
      C           CIR003    IFEQ 'N'                                       CIR003
       *  If our side is fixed use our details                             S01393
       *                                                                   S01393
-     C           UBRTT     IFEQ 0                                         S01393
+     C********** UBRTT     IFEQ 0                                                      S01393 CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR OUR                                       S01393
       *                                                                   S01393
      C                     MOVE 'I'       IOIND                           S01393
@@ -3542,7 +3565,8 @@
       *                                                                   S01393
       *  If their side is fixed use their details                         S01393
       *                                                                   S01393
-     C           TBRTT     IFEQ 0                                         S01393
+     C********** TBRTT     IFEQ 0                                                      S01393 CSD103
+     C           TBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR THEIR                                     S01393
       *                                                                   S01393
      C                     MOVE 'O'       IOIND                           S01393
@@ -3574,7 +3598,8 @@
       *                                                                   S01393
       *  If our side is floating use our currency and amount              S01393
       *                                                                   S01393
-     C           UBRTT     IFNE 0                                         S01393
+     C********** UBRTT     IFNE 0                                                      S01393 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
      C                     EXSR OUR                                       S01393
       *                                                                   S01393
       *  Bypass generation of Our Notional Events if Event Control Date   S01393
@@ -3717,7 +3742,8 @@
       *                                                                   S01393
       *  If their side is floating use their currency and amount          S01393
       *                                                                   S01393
-     C           TBRTT     IFNE 0                                         S01393
+     C********** TBRTT     IFNE 0                                                      S01393 CSD103
+     C           TBRTT     IFNE *BLANKS                                                       CSD103
      C                     EXSR THEIR                                     S01393
       *                                                                   S01393
       *  Bypass generation of Their Notional Events if Event Control      S01393
@@ -4189,8 +4215,10 @@
      C           ETYP      OREQ '23S1'                                    S01393
      C           ETYP      OREQ '23S2'                                    S01393
      C*                                                                   S01393
-     C           UBRTT     IFNE *ZERO                                     S01393
-     C           TBRTT     ANDNE*ZERO                                     S01393
+     C********** UBRTT     IFNE *ZERO                                                  S01393 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C********** TBRTT     ANDNE*ZERO                                                  S01393 CSD103
+     C           TBRTT     ANDNE*BLANKS                                                       CSD103
      C                     MOVE 'Y'       FLFL    1                       S01393
      C                     ELSE                                           S01393
      C                     MOVE 'N'       FLFL                            S01393
@@ -4547,7 +4575,8 @@
       *                                                                   CIR001
      C                     END                                            CIR001
      C*
-     C           UBRTT     IFNE 0
+     C********** UBRTT     IFNE 0                                                             CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
      C/COPY WNCPYSRC,DL0401CP16                                           S01408
      C*
      C                     TESTB'0'       UDNSI          11 INITIAL RATE SET IND
@@ -4690,7 +4719,8 @@
       *                                                                   CIR001
      C                     END                                            CIR001
      C*
-     C           TBRTT     IFNE 0
+     C********** TBRTT     IFNE 0                                                             CSD103
+     C           TBRTT     IFNE *BLANKS                                                       CSD103
      C/COPY WNCPYSRC,DL0401CP17                                           S01408
      C*
      C                     TESTB'0'       TDNSI          11 INITIAL RATE SET IND
@@ -5024,7 +5054,8 @@
      C           CIR001    IFNE 'Y'                                       CIR001
      C                     EXSR INTDUE
      C                     ELSE                                           CIR001
-     C           WBRTT     IFEQ 0                                         CIR001
+     C********** WBRTT     IFEQ 0                                                      CIR001 CSD103
+     C           WBRTT     IFEQ *BLANKS                                                       CSD103
      C                     EXSR INTDUE                                    CIR001
      C                     ELSE                                           CIR001
      C                     TESTB'0'       WDNSI          11               CIR001
@@ -5437,7 +5468,8 @@
      C*
      C           *IN13     IFEQ '1'
      C*
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     Z-ADDREIMBR    ICRT   117
      C                     ELSE
      C                     Z-ADDTOPUPR    ICRT
@@ -5447,7 +5479,8 @@
      C** TOPPING-UP RATE IF USER IS TAKER, ELSE SET IT TO REIMB. RATE
      C*
      C                     ELSE
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     Z-ADDTOPUPR    ICRT
      C                     ELSE
      C                     Z-ADDREIMBR    ICRT
@@ -5597,7 +5630,8 @@
      C*
      C           *IN13     IFEQ '1'
      C*
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     Z-ADDTOPUPR    ICRT
      C                     ELSE
      C                     Z-ADDREIMBR    ICRT
@@ -5607,7 +5641,8 @@
      C** REIMB. RATE IF USER IS TAKER, ELSE SET IT TO TOPPING-UP RATE
      C*
      C                     ELSE
-     C           UBRTT     IFEQ 0
+     C********** UBRTT     IFEQ 0                                                             CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     Z-ADDREIMBR    ICRT
      C                     ELSE
      C                     Z-ADDTOPUPR    ICRT
@@ -6135,7 +6170,8 @@
      C** IF PROCESSING PROVIDER'S DETAILS, APPLY SPREAD/RATE TO BASE
      C** RATE TO GET EFFECTIVE INTEREST RATE. IF NOT, EIR = SPREAD/RATE
      C*
-     C           WBRTT     IFNE 0
+     C********** WBRTT     IFNE 0                                                             CSD103
+     C           WBRTT     IFNE *BLANKS                                                       CSD103
      C*
      C           WSPIN     IFEQ *BLANK
      C                     Z-ADDWBRTE     WEINR  117
@@ -7129,7 +7165,8 @@
      C                     Z-ADDUPAMT     WPAMT  130
      C                     ENDIF                                                              CIR014
       *                                                                                       CIR014
-     C                     Z-ADDUBRTT     WBRTT   20
+     C**********           Z-ADDUBRTT     WBRTT   20                                          CSD103
+     C                     MOVE UBRTT     WBRTT   2                                           CSD103
      C                     Z-ADDUBRTE     WBRTE  117
      C                     Z-ADDURTSP     WRTSP  117
      C                     MOVE USPIN     WSPIN   1
@@ -7237,7 +7274,8 @@
      C                     Z-ADDTPAMT     WPAMT  130
      C                     ENDIF                                                              CIR014
       *                                                                                       CIR014
-     C                     Z-ADDTBRTT     WBRTT   20
+     C**********           Z-ADDTBRTT     WBRTT   20                                          CSD103
+     C                     MOVE TBRTT     WBRTT   2                                           CSD103
      C                     Z-ADDTBRTE     WBRTE  117
      C                     Z-ADDTRTSP     WRTSP  117
      C                     MOVE TSPIN     WSPIN   1

@@ -19,8 +19,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 05Jun06               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE026 - Consumer Banking                                    *
@@ -148,22 +151,22 @@
       *
       ** Index for arrays of error message ids, etc.
      D IdX             S              3P 0
- 
+
      D PRtcd           S              7A
      D POptn           S              7A
      D PCTRY           S              2A
      D PPROT           S              1A
- 
+
      D KCRTT           S              2A
      D KINCT           S              2A
      D KEXEM           S              2A
- 
+
      D OKCRTT          S              1A   INZ(*BLANKS)
      D OKINCT          S              1A   INZ(*BLANKS)
      D OKEXEM          S              1A   INZ(*BLANKS)
      D OKOIDI          S              1A   INZ(*BLANKS)
      D OKAPIE          S              1A   INZ(*BLANKS)
- 
+
       *
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
@@ -196,7 +199,7 @@
      C                   IF        IdX <> 0
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        IdX = 0
      C                   EVAL      S1CRTT = DDCRTT
      C                   EVAL      S1INCT = DDINCT
@@ -204,7 +207,7 @@
      C                   EVAL      S1OIDI = DDOIDI
      C                   EVAL      S1APIE = DDAPIE
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -215,15 +218,15 @@
       *                                                               *
       *****************************************************************
      C     SRValWTAX     BEGSR
- 
+
       ** Validate Country of tax treaty (DDCRTT)
- 
+
      C     DDCRTT        IFNE      *BLANKS
- 
+
       ** Question mark is valid only on repair and i/c screens input.
- 
+
      C     '?'           SCAN      DDCRTT                                 01
- 
+
      C                   IF        NotNumeric = *On
      C                   EVAL      PRtcd = '*ERROR '
      C                   ELSE
@@ -233,7 +236,7 @@
      C                   PARM      DDCRTT        PCTRY
      C     SDCTRY        PARM      SDCTRY        DSSDY
      C                   ENDIF
- 
+
      C     PRtcd         IFNE      *BLANKS
      C                   MOVE      'N'           OKCRTT
      C                   ADD       1             IdX
@@ -243,62 +246,62 @@
      C                   MOVE      A4CNCD        DDCRTT
      C                   MOVE      DDCRTT        KCRTT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate Income Type (DDINCT)
- 
+
      C     OKCRTT        IFNE      'N'
- 
+
      C     DDCRTT        IFNE      *BLANKS
      C     DDINCT        ANDEQ     *BLANKS
      C                   MOVE      'N'           OKINCT
      C                   ADD       1             IdX
      C                   MOVEL     'DDINCT'      FldNamXAr(IdX)
      C                   MOVEL     'WNE0102'     MsgIdXAr(IdX)
- 
+
      C                   ELSE
- 
+
      C     DDINCT        IFNE      *BLANKS
      C                   MOVE      DDINCT        KINCT
      C     KEY1          CHAIN     @INCCL1                            80
- 
+
      C     RecNotFnd     IFEQ      *ON
      C                   MOVE      'N'           OKINCT
      C                   ADD       1             IdX
      C                   MOVEL     'DDINCT'      FldNamXAr(IdX)
      C                   MOVEL     'WNE0103'     MsgIdXAr(IdX)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate Exemption Code (DDEXCD)
- 
+
      C     DDEXCD        IFNE      *BLANKS
      C     OKCRTT        ANDNE     'N'
      C                   MOVE      DDEXCD        KEXEM
      C     KEY2          CHAIN     @EXEML1                            80
- 
+
      C     RecNotFnd     IFEQ      *ON
      C                   MOVE      'N'           OKEXEM
      C                   ADD       1             IdX
      C                   MOVEL     'DDEXCD'      FldNamXAr(IdX)
      C                   MOVEL     'WNE0104'     MsgIdXAr(IdX)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If Processing type is not 2, not 4 and not 7
- 
+
      C                   IF        PPROT <> '2' AND PPROT <> '4' AND
      C                             PPROT <> '7'
- 
+
       ** Validate Original Interest Discount (DDOID)
- 
+
      C     DDOIDI        IFNE      'Y'
      C     DDOIDI        ANDNE     'N'
      C     DDOIDI        ANDNE     *BLANKS
@@ -307,15 +310,15 @@
      C                   MOVEL     'DDOIDI'      FldNamXAr(IdX)
      C                   MOVEL     'WNE0105'     MsgIdXAr(IdX)
      C                   ELSE
- 
+
      C     DDOIDI        IFEQ      *BLANKS
      C                   MOVE      'N'           DDOIDI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate Portfolio Interest Exemption (DDPOIE)
- 
+
      C     DDAPIE        IFNE      'Y'
      C     DDAPIE        ANDNE     'N'
      C     DDAPIE        ANDNE     *BLANKS
@@ -323,19 +326,19 @@
      C                   ADD       1             IdX
      C                   MOVEL     'DDAPIE'      FldNamXAr(IdX)
      C                   MOVEL     'WNE0106'     MsgIdXAr(IdX)
- 
+
      C                   ELSE
- 
+
      C     DDAPIE        IFEQ      *BLANKS
      C                   MOVE      'Y'           DDAPIE
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -373,13 +376,13 @@
       *
       ** Securities for file update - file format
      C                   PARM                    NwSEFilFmt
- 
+
       ** Set up KLIST
- 
+
      C     KEY1          KLIST
      C                   KFLD                    KCRTT
      C                   KFLD                    KINCT
- 
+
      C     KEY2          KLIST
      C                   KFLD                    KCRTT
      C                   KFLD                    KEXEM

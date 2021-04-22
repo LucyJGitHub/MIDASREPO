@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1063739          Date 03Dec12               *
@@ -38,10 +39,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *     
+      *             currency) and CLE134 (PDCL processing)            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
       *  AR1063739 - SettlementAccount09 Issues                       *
@@ -77,20 +80,20 @@
      F                                     OFLIND(*IN50)
      F                                     INFSR(*PSSR)
       *****************************************************************
- 
+
      D SPOOL1          DS
      D SFILE1                 83     92
      D SFNUM1                123    124B 0
      D OFLLN1                188    189B 0
      D PRTLN1                367    368B 0
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D QQACCD1       E                     EXTFLD(QQACCD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)

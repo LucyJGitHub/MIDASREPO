@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052645           Date 29May19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052645           Date 29May19               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052645 - Cannot enquire customer with 'N' Threshold Method *
       *  MD046248 - Finastra Rebranding                               *
@@ -2097,10 +2099,12 @@
      C**********         IF        LDBL < 0                                       BUG24018 BUG24018A
      C                   IF        LDBL > 0                                                BUG24018A
      C                   ADD       DRIS          IARATE                                     BUG24018
-     C                   Z-ADD     DRIB          IDCBR                                      BUG24018
+     C**********         Z-ADD     DRIB          IDCBR                               BUG24018 CSD103
+     C                   MOVE      DRIB          IDCBR                                        CSD103
      C                   ELSE                                                               BUG24018
      C                   ADD       CRIS          IARATE                                     BUG24018
-     C                   Z-ADD     CRIB          IDCBR                                      BUG24018
+     C**********         Z-ADD     CRIB          IDCBR                               BUG24018 CSD103
+     C                   MOVE      CRIB          IDCBR                                        CSD103
      C                   ENDIF                                                              BUG24018
       * Base Rate                                                                           BUG24018
      C                   IF        IDCBR > *ZERO                                            BUG24018
@@ -2341,7 +2345,8 @@
       *                                                                                     BUG24018
      C                   IF        TSDLLN > *ZEROS                                          BUG24018
       *                                                                                     BUG24018
-     C                   IF        BRTT <> 0                                                BUG24018
+     C**********         IF        BRTT <> 0                                         BUG24018 CSD103
+     C                   IF        BRTT <> *BLANKS                                            CSD103
      C                   EVAL      @@AMTW  = (BRTE + RTSP) * 10000000                       BUG24018
      C                   ELSE                                                               BUG24018
      C                   EVAL      @@AMTW  = RTSP * 10000000                                BUG24018

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051567           Date 26Sep20               *
-      *  Prev Amend No. MD056313           Date 21Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD051567           Date 26Sep20               *
+      *                 MD056313           Date 21Sep20               *
       *                 MD052922           Date 03Mar19               *
       *                 MD022945           Date 18Oct13               *
       *                 MD051877A          Date 02Oct18               *
@@ -144,6 +145,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD051567 - ISDA Rules version must be a valid year starting  *
       *             with 199 or 20.                                   *
       *           - Applied for MD056763                              *

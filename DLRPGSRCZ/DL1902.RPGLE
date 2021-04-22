@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 245692             Date 09Dec13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 245692             Date 09Dec13               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -68,6 +69,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
@@ -333,7 +335,8 @@
      D  @KVLDT                13     19
      D  @KVLDY                20     24  0
      D  @KMTDY                28     32  0
-     D  @KBSRT                33     34  0
+     D**@KBSRT**              33     34  0                                                    CSD103
+     D  @KBSRT                33     34                                                       CSD103
      D  @KDLNO                35     40  0
      D  @KSSNB                41     42  0
      D*
@@ -396,7 +399,8 @@
      D  @@FILL                13     19
      D  VDAT                  20     24  0
      D  MDAT                  28     32  0
-     D  BRSQ                  33     34  0
+     D**BRSQ****              33     34  0                                                    CSD103
+     D  BRSQ                  33     34                                                       CSD103
      D  DLNO                  35     40  0
      D  SSNB                  41     42  0
      D*
@@ -412,7 +416,8 @@
      D  @YFILL                13     19
      D  @YVDAT                20     24  0
      D  @YMDAT                28     32  0
-     D  @YBRSQ                33     34  0
+     D**@YBRSQ**              33     34  0                                                    CSD103
+     D  @YBRSQ                33     34                                                       CSD103
      D  @YDLNO                35     40  0
      D  @YSSNB                41     42  0
      D*

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD057078           Date 03Mar21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057078           Date 03Mar21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD052008           Date 05Oct18               *
       *                 MD051940           Date 21Sep18               *
       *                 MD051242           Date 29Jun18               *
@@ -49,6 +50,8 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057078 - Fee settlement amount not converted to settlement *
       *             currency and there are missing postings for the   *
       *             cross-currency keys. Use settlement currency      *

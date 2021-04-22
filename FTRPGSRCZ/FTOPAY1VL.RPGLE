@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057597           Date 19Feb21               *
-      *  Prev Amend No. MD057498           Date 26Jan21               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057597           Date 19Feb21               *
+      *                 MD057498           Date 26Jan21               *
       *                 254841B            Date 14May20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057597 - Move re-execution of VSETCA after DFTCHG to       *
       *             validate settle amount defaulted from pay amount. *
       *  MD057498 - Unable to complete OPAY transaction due error     *
@@ -2258,6 +2261,7 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
+
       *                                                                                     MD057498
       ** Warning fields/message IDs/message data (arrays) from/to caller                    MD057498
       *                                                                                     MD057498

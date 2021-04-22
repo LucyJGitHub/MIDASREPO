@@ -19,12 +19,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 263800             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 263800             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  263800 - Update MATLNZX too.                                 *
       *  CLE134 - Past Due Call Loans process                         *
@@ -54,7 +57,7 @@
       ** ¾ F-specs                              ¾
       ** ¾ =======                              ¾
       ** +--------------------------------------+
- 
+
      FCONFS     UF   E             DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(LOAMSZ1F:CONFSTTF)
      F                                     IGNORE(LOAMSDKF)
@@ -82,7 +85,7 @@
      F                                     RENAME(MATLNZXF:MATLNTTF)                          263800
      F                                     IGNORE(MATLNHHF)                                   263800
      F                                     IGNORE(MATLNMTF)                                   263800
- 
+
      FLETLXZX   IF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(LOAMSZ1F:LETLXZXF)
      FCONFSZX   IF   E             DISK    INFSR(*PSSR)
@@ -91,7 +94,7 @@
      FINTSTZX   IF   E             DISK    INFSR(*PSSR)
      FMKEYZZ    IF   E             DISK    INFSR(*PSSR)
      FMATLNZX   IF   E             DISK    INFSR(*PSSR)                                       263800
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -100,7 +103,7 @@
       ** ¾ =======                              ¾
       ** +--------------------------------------+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -109,37 +112,37 @@
       ** Defines:                           142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
      D @RUN            S              1
- 
+
       ** Additional Field Definitions
- 
+
       *****************************************************************
- 
+
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¾                                                            ¾
       ** ¾ Initial processing is performed automatically: the *INZSR  ¾
       ** ¾ executed at program activation.                            ¾
       ** ¾                                                            ¾
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LIKE         DEFINE    VLRF          WVLRF
      C     *LIKE         DEFINE    VLRL          WVLRL
      C     *LIKE         DEFINE    NORE          WNORE
- 
+
       ** Access trailers
- 
+
       ** CONFSZX
- 
+
      C                   Z-ADD     0             WNORE
      C     0001          CHAIN     CONFSZX
      C                   IF        %FOUND
@@ -152,9 +155,9 @@
      C                   EXCEPT    CONFSO
      C                   ENDIF
      C                   ENDIF
- 
+
       ** CUTX1ZX
- 
+
      C                   Z-ADD     0             WNORE
      C     1             CHAIN     CUTX1ZX                            30
      C                   IF        %FOUND
@@ -167,9 +170,9 @@
      C                   EXCEPT    CUTX1O
      C                   ENDIF
      C                   ENDIF
- 
+
       ** LETLXZX
- 
+
      C                   Z-ADD     0             WNORE
      C     1             CHAIN     LETLXZX                            30
      C                   IF        %FOUND
@@ -183,9 +186,9 @@
      C                   EXCEPT    LETLXO
      C                   ENDIF
      C                   ENDIF
- 
+
       ** INTSTZX
- 
+
      C                   Z-ADD     0             WNORE
      C     1             CHAIN     INTSTZX                            30
      C                   IF        %FOUND
@@ -214,11 +217,11 @@
      C                   EXCEPT    MATLNO                                                     263800
      C                   ENDIF                                                                263800
      C                   ENDIF                                                                263800
- 
+
      C**********         EXSR      *PSSR
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -226,11 +229,11 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Initializing the LDA information
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = *ZEROS
      C                   EVAL      DBFILE = *BLANKS
@@ -238,13 +241,13 @@
      C                   EVAL      DBPROC = *BLANKS
      C                   EVAL      DBPGM  = 'LE007050'
      C                   OUT       LDA
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
- 
+
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *
@@ -253,33 +256,33 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
- 
+
      OCONFSTTF  E            CONFSO
      O                       NORE
- 
+
      OCUTX1TTF  E            CUTX1O
      O                       NORE
- 
+
      OLETLXTTF  E            LETLXO
      O                       NORE
- 
+
      OINTSSTTF  E            INTSTO
      O                       NORE
                                                                                               263800
@@ -289,5 +292,5 @@
      O**********                 NORE
      O**********                 VRRF
      O**********                 VRRL
- 
+
       /EJECT

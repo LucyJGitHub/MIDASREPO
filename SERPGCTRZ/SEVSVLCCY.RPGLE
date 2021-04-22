@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -214,9 +217,9 @@
      C                   IF        OKVLCY <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKVLCY <> 'N'
- 
+
      C                   IF        DDVLCY <> *BLANKS
      C                   MOVEL     DDVLCY        S1VLCY
      C                   Z-ADD     A6NBDP        PVLDP
@@ -226,7 +229,7 @@
      C                   Z-ADD     PNMDP         PVLDP
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        OKNMCY <> 'N'
      C                   CALLB     'ZXRATE'
      C                   PARM                    PRATE1
@@ -235,13 +238,13 @@
      C                   PARM                    PMDI2
      C                   PARM      *ZEROS        PRATEX
      C                   PARM      *BLANKS       PMDIX
- 
+
      C                   Z-ADD     PRATEX        S1SEXR
      C                   MOVE      PMDIX         S1SMDI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -262,15 +265,15 @@
      C                   MOVE      PDVCY         DDVLCY
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDVLCY <> *BLANKS
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDVLCY                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMODE = '*FRONT'
      C                   MOVE      'N'           OKVLCY
      C                   ADD       1             IDx
@@ -279,30 +282,30 @@
      C                   MOVEL     DDVLCY        MsgDtaXAr(IDx)
      C                   GOTO      EValVLCY
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDVLCY        PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtcd <> *BLANKS
- 
+
      C                   IF        PRtcd = '*NOSEL '
      C                   EVAL      DDVLCY = *BLANKS
      C                   GOTO      EValVLCY
      C                   ENDIF
- 
+
      C                   MOVE      'N'           OKVLCY
      C                   ADD       1             IDx
      C                   MOVEL     'DDVLCY'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0113'     MsgIdXAr(IDx)
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     A6CYCD        DDVLCY
      C                   Z-ADD     A6SPRT        PRATE2
      C                   IF        A6MDIN = 'D'
@@ -319,25 +322,25 @@
      C                   MOVEL     'DDVLCY'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0114'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If action code is amend, perform extra validation
       *
      C                   IF        CSE007 = 'Y' OR
      C                             CEU017 = 'Y'
- 
+
      C                   IF        DDVLCY <> ODDVLCY
- 
+
      C                   CALL      'SE0041'
      C                   PARM      'V'           PVREQ
      C                   PARM                    DDSESN
      C                   PARM      DDVLCY        PCCY
      C                   PARM      *ZEROS        PDate
      C                   PARM      *BLANKS       PErrs
- 
+
      C     'W05'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'W'           OKVLCY
@@ -345,13 +348,13 @@
      C                   MOVEL     'DDVLCY'      WFldNmXAr(WIx)
      C                   MOVEL     'SEA0115'     WMsgIDxAr(WIx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValVLCY      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

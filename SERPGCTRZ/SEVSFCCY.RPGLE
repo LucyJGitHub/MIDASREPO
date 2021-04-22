@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -191,9 +194,9 @@
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   Z-ADD     *ZEROS        PFNBDP
      C                   ENDIF
- 
+
      C                   IF        OKFECY <> 'N'
- 
+
      C                   MOVE      WDFECY        S1FECY
      C                   Z-ADD     A6NBDP        PFNBDP
       *
@@ -202,11 +205,11 @@
      C                   IF        DDFECY = *BLANKS AND PMODE <> '*FRONT'
      C                   MOVE      WDFECY        DDFECY
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -214,19 +217,19 @@
       *  SRValFeeCcy - Validation for Fee Currency                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValFeeCcy   BEGSR
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
      C                   IF        DDFECY <> *BLANKS
- 
+
      C                   MOVEL     DDFECY        WDFECY
- 
+
      C     '?'           SCAN      WDFECY                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKFECY
      C                   ADD       1             Idx
@@ -234,14 +237,14 @@
      C                   MOVEL     'SEA0106'     MsgIdXAr(Idx)
      C                   GOTO      EValFeeCcy
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     S1NMCY        WDFECY
- 
+
      C                   ENDIF
       *
       ** Validate if currency is existing.
@@ -251,22 +254,22 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      WDFECY        PKey
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C                   IF        PRtCd = '*NOSEL '
      C                   EVAL      DDFECY = *BLANKS
- 
+
      C                   ELSE
- 
+
      C                   MOVE      'N'           OKFECY
      C                   ADD       1             Idx
      C                   MOVEL     'DDFECY'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0106'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     A6CYCD        WDFECY
      C                   MOVEL     A6CYCD        DDFECY
       *
@@ -278,11 +281,11 @@
      C                   MOVEL     'DDFECY'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0106'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValFeeCcy    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -292,9 +295,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -338,9 +341,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -349,7 +352,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

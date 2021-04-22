@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -73,12 +76,12 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -90,71 +93,71 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Midas LE API LOAM File Record
      D LOAMFilFmt    E DS                  EXTNAME(LOAMSDK)
                                                                                               CRE073
       ** Midas LE API LOAM Extension File Record                                              CRE073
      D LOAMFilXFmt   E DS                  EXTNAME(LEVLOAMPD)                                 CRE073
- 
+
       ** Midas LE API LOAM format definition file
      D LOAMScnFmt    E DS                  EXTNAME(LELOAMPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PACTN           S              1A
      D TRANSDTL        S           5800A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -167,18 +170,18 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
      C                   EVAL      DDACTN = PACTN
- 
+
       ** Convert Loan Amendment to screen format
      C                   CALLB     'LELOAMCVT'
- 
+
      C                   PARM      *BLANKS       RetCodeOut
- 
+
       ***  Loan amendment in file format
      C                   PARM                    LOAMFilFmt
- 
+
       * Date format indicator
      C                   PARM                    BJDFIN
       *
@@ -186,7 +189,7 @@
       *
       * Loan Amendment details in screen format
      C                   PARM                    LOAMScnFmt
- 
+
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16
@@ -194,17 +197,17 @@
       *
       **  Add the action code
      C                   MOVE      PACTN         DDACTN
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
      C                   EVAL      TRANSDTL = LOAMScnFmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -216,38 +219,38 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Action code
      C                   PARM                    PACTN
- 
+
       ** Midas LE valid loan amendments file record
      C                   PARM                    LOAMFilFmt
- 
+
       * Date format indicator
      C                   PARM                    BJDFIN            1
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Data Replication Details Screen Format
      C                   PARM                    TRANSDTL
      C                   PARM                    LOAMFilXFmt                                  CRE073
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

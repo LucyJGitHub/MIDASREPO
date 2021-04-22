@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -439,7 +441,8 @@
  
       ** Set Fixed/Variable Rate indicator, Base Rate, Rate/Spread, Interest
       ** Rate, Yield Rate
-     C                   IF        BRTT <> 0
+     C**********         IF        BRTT <> 0                                                  CSD103
+     C                   IF        BRTT <> *BLANKS                                            CSD103
      C                   EVAL      EXRATE = 'V'
      C                   ELSE
      C                   EVAL      EXRATE = 'F'

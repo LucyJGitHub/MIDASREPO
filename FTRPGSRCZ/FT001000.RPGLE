@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. AR927047           Date 21Mar12               *      
-      *  Prev Amend No. MD055694           Date 09Mar20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR927047           Date 21Mar12               *      
+      *                 MD055694           Date 09Mar20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD050730           Date 25Nov19               *
       *                 CER050             Date 16Jun19               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *      
       *  MD055694 - SWIFT Changes 2021                                *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *

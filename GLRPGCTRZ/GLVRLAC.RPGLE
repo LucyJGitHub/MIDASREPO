@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR939238           Date 23Apr12               *
-      *  Prev Amend No. AR1001991          Date 06Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR939238           Date 23Apr12               *
+      *                 AR1001991          Date 06Aug12               *
       *                 CRE114             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR939238 - Array Index Error whenever during retail account  *
       *             closure when there are more than 20 Stopped or    *
       *             Held Items. Send RE71055/6 only once.             *

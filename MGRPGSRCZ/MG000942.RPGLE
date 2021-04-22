@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR898442           Date 24Feb12               *
-      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD047450           Date 25Sep19               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
       *             (Child: AR898443)                                 *
       *  MD055842 - Second tag 86 not translated to To Characters.    *

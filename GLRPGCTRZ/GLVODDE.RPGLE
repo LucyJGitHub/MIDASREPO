@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR579557           Date 14Sep15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR579557           Date 14Sep15               *
       *                 CGL165             Date 23Feb15               *
       *                 MD029023           Date 21Nov14               *
       *                 MD019907           Date 30Spe13               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR579557 - Account Maintenance - date must be deleted in     *
       *             Debit Int/Overdraft Tab. Applied fix 254456.      *
@@ -78,7 +80,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,52 +99,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.                                                       CER055
      D WFldNmXAr       S             10A   DIM(XArrayMax)                                     CER055
                                                                                               CER055
@@ -160,18 +162,19 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-     DAMDRIB           S              2S 0
- 
+     D*AMDRIB***       S              2S 0                                                    CSD103
+     DAMDRIB           S              2A                                                      CSD103
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIx             S              3P 0                                                    CER055
      D/COPY WNCPYSRC,GLH00581
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -186,9 +189,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C                   MoveL     *Blanks       FldNamXAr
      C                   MoveL     *Blanks       MsgIDXAr
@@ -239,7 +242,7 @@
       *  SRVODLN - Validate Overdraft line                            *
       *****************************************************************
      C     SRVODLN       BEGSR
- 
+
      C/COPY WNCPYSRC,GLH00582
      C*****DDODLN        IFNE      *BLANK                                                    BUG4665
      C     DDODLNCHK     IFNE      *BLANKS                                                   BUG4665
@@ -275,7 +278,7 @@
      C                   Z-ADD     BJRDNB        AMDLIM
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00583
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -283,7 +286,7 @@
       *  SRVODSCED - Validate Overdraft Secured and Expiry Date       *
       *****************************************************************
      C     SRVODSCED     BEGSR
- 
+
      C/COPY WNCPYSRC,GLH00584
      C*****DDODLN        IFNE      *BLANKS                                      B01          BUG4665
      C     DDODLNCHK     IFNE      *BLANKS                                                   BUG4665
@@ -452,7 +455,7 @@
      C                   ENDIF                                                  E02
      C                   ENDIF                                                  E01
      C/COPY WNCPYSRC,GLH00585
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -628,7 +631,7 @@
      C                   Movel     'DDORTC'      FldNamXAr(Idx)
      C                   Movel     'RE71314'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C     WWORTC        IFLT      WWBKVD
      C     WWORTC        ANDNE     BXORTC                                                   AR579557
      C                   Move      'N'           DDORTCOk
@@ -669,7 +672,8 @@
      C                   ENDIF
       *
       ** IF Dr.Base Rate OR Dr.Rate/Spread have been amended
-     C                   Move      DDDRIB        WWDRIB            2 0
+     C**********         Move      DDDRIB        WWDRIB            2 0                        CSD103
+     C                   Move      DDDRIB        WWDRIB            2                          CSD103
       *
      C                   CallB     'ZALIGN'
      C                   Parm                    ZAlignOk
@@ -757,7 +761,7 @@
      C                   Movel     'DDOLVD'      FldNamXAr(Idx)
      C                   Movel     'RE72008'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C     WWOLVD        IFGE      WWFWVD
      C                   Move      'N'           DDOLVDOk
      C                   Add       1             Idx
@@ -778,7 +782,7 @@
      C                   Movel     'DDOLVD'      FldNamXAr(Idx)
      C                   Movel     'RE71314'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C     WWOLVD        IFLT      WWBKVD
      C     WWOLVD        ANDNE     BXOLVD                                                   AR579557
      C                   Move      'N'           DDOLVDOk
@@ -968,7 +972,7 @@
      C     BXOLVD        ANDNE     WWOLVD
      C                   Z-ADD     BJRDNB        AMDLIM
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -976,7 +980,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -1056,10 +1060,10 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
      C/COPY WNCPYSRC,GLH00586
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

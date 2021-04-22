@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -181,17 +184,17 @@
      C                             OKALRC = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKALRQ <> 'N'
      C                   Z-ADD     WAlReq        S1ALRQ
      C                   ENDIF
- 
+
      C                   IF        OKALRC <> 'N'
      C                   Z-ADD     WAlRcv        S1ALRC
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -199,22 +202,22 @@
       *  SRValAlReq - Validation for Allocation Requested             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAlReq    BEGSR
- 
+
      C                   IF        DDALRQ <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDALRQ        ZFIELD
      C                   Z-ADD     11            ZADIG
      C                   Z-ADD     0             ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKALRQ
      C                   ADD       1             Idx
@@ -222,15 +225,15 @@
      C                   MOVEL     'SEA0104'     MsgIdXAr(Idx)
      C                   EVAL      MsgDtaXAr(Idx) = 'Allocation +
      C                                              Requested'
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WAlReq
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -238,22 +241,22 @@
       *  SRValAlRcv - Validation for Allocation Received              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAlRcv    BEGSR
- 
+
      C                   IF        DDALRC <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDALRC        ZFIELD
      C                   Z-ADD     11            ZADIG
      C                   Z-ADD     0             ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKALRC
      C                   ADD       1             Idx
@@ -264,11 +267,11 @@
      C                   ELSE
      C                   MOVE      ZFIELD        WAlRcv
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -278,9 +281,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -312,9 +315,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -323,7 +326,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

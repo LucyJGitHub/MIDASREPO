@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -132,7 +135,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFXDEALPP  UF   E             DISK
      FDEALSDB   UF   E             DISK    PREFIX(B)
       *
@@ -142,7 +145,7 @@
      FMMDENBPP  UF   E             DISK
      FDEALSDD   UF   E             DISK    PREFIX(D)
       *
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -164,10 +167,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -176,44 +179,44 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D AADTA         E DS                  EXTNAME(AADTA)
       **  AA Data Area
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas modules details
- 
+
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
       **  Profit Centre Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Profit Centre Details
- 
+
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
       ** PCA ICD
- 
+
      D DSFDY         E DS
       **  Short Data Structure for Access Programs
- 
+
      D DSSDY         E DS
       **  Short Data Structure for Access Programs
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D PCDMBookC       S              2
      D PCDMTranType    S              5
@@ -228,7 +231,7 @@
      D RtnCode         S              7
      D WProfitC        S              4
      D Option          S              7
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -239,7 +242,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -257,7 +260,7 @@
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   END
- 
+
       *
       *IF Dealing (FX/Neg. Assets) is switched ON EXSR to populate PRFC
      C                   IF        BGDLFX = 'Y'
@@ -269,10 +272,10 @@
      C                   IF        BGDLMM = 'Y'
      C                   EXSR      MMARKET
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -284,9 +287,9 @@
       * Calls: PCDM                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DEALS         BEGSR
- 
+
       * If the value on the AADTA is not blank then process the FX deals
      C                   IF        AAFXPC <> *BLANKS
      C                   READ      FXDEALPP                               40
@@ -355,9 +358,9 @@
      C                   READ      DEALSDB                                40
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -369,10 +372,10 @@
       * Calls: PCDM                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     MMARKET       BEGSR
- 
- 
+
+
       * If the value on the AADTA is not blank then process the NA deals
      C                   IF        AANAPC <> *BLANKS
      C                   READ      MMDENBPP                               40
@@ -508,9 +511,9 @@
      C                   READ      DEALSDC                                40
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -522,9 +525,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     PCDM          BEGSR
- 
+
       * Move Customer No. into the Field for the call to the Access Object
      C                   EVAL      @KEY1 = PCDMCust
       *
@@ -580,9 +583,9 @@
      C                   MOVEL     DSPCCD        WProfitC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -594,9 +597,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       *
       ** GET MODULE DETAILS
       *
@@ -622,7 +625,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
       *
       ** GET PCA ICD
       *
@@ -648,9 +651,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
- 
+
       *
       /EJECT
       *****************************************************************

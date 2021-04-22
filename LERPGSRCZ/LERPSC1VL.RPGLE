@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024459           Date 07Feb14               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD024459           Date 07Feb14               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038257           Date 13Apr16               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE164             Date 18Aug14               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD024459 - LES0157 is not being shown upon authorisation     *
       *           Remove checking of DDACTN so that LES0157 will be   *
       *           issued accordingly whethere during insert or auth.  *

@@ -21,9 +21,10 @@
      F*  Called By: CGC5020 - Correspondence Management               *
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
       *                 CRE075             Date 06Dec10               *
@@ -46,7 +47,9 @@
      F*                 S01522             DATE 22NOV94               *
      F*                                                               *
      F*---------------------------------------------------------------*
-     F*                                                               *
+      *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *

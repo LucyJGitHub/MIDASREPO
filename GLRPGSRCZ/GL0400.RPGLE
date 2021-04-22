@@ -12,8 +12,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0010 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034502           Date 25May15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034502           Date 25May15               *
       *                 CGL049             Date 17Feb15               *
       *                 MD022412           Date 16Sep13               *
       *                 CGL120             Date 06Aug12               *
@@ -66,6 +67,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034502 - FB Midas 2.1 SP8 Drop3 COB issues                 *
       *  CGL049   - Separate Out Processing of Spot Reval and FX Tfr  *

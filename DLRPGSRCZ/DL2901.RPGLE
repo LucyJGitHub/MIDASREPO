@@ -13,8 +13,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 AR743357 *CREATE   Date 06Jul17               *
       *                 AR812349           Date 23Oct12               *
@@ -50,6 +51,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -302,7 +304,8 @@
      C** CHECK IF INITIAL RATE SET (EFFECTIVE INTEREST RATE SET
      C** FOR FIRST PERIOD OF THE IRS; I.E. STARTING FROM VALUE DATE)
      C*
-     C     WBRTT         COMP      *ZERO                                  11    *
+     C*****WBRTT         COMP      *ZERO                                  11    *             CSD103
+     C     WBRTT         COMP      *BLANKS                                11    *             CSD103
      C  N11              TESTB     '0'           WDNSI                    11    *INITIAL RATE SET IN
      C*
      C** IF INITIAL RATE SET USE EFFECTIVE INTEREST RATE
@@ -352,7 +355,8 @@
      C*
      C** WRITE NEXT RATE CHANGE DATE TO DEAL ACTIVITY FILE
      C*
-     C     WBRTT         IFNE      *ZERO
+     C*****WBRTT         IFNE      *ZERO                                                      CSD103
+     C     WBRTT         IFNE      *BLANKS                                                    CSD103
      C     WNICD         ANDNE     *ZERO
      C     WNICD         ANDLT     MDAT
      C*
@@ -988,7 +992,8 @@
      C                   MOVE      PSCY          WSTCY             3            CSW097
       *
      C                   Z-ADD     UPAMT         WPAMT            13 0
-     C                   Z-ADD     UBRTT         WBRTT             2 0
+     C**********         Z-ADD     UBRTT         WBRTT             2 0                        CSD103
+     C                   MOVE      UBRTT         WBRTT             2                          CSD103
      C                   Z-ADD     UBRTE         WBRTE            11 7
      C                   Z-ADD     URTSP         WRTSP            11 7
      C                   Z-ADD     UEINR         WEINR            11 7
@@ -1058,7 +1063,8 @@
      C                   MOVE      RSCY          WSTCY             3            CSW097
       *
      C                   Z-ADD     TPAMT         WPAMT            13 0
-     C                   Z-ADD     TBRTT         WBRTT             2 0
+     C**********         Z-ADD     TBRTT         WBRTT             2 0                        CSD103
+     C                   MOVE      TBRTT         WBRTT             2                          CSD103
      C                   Z-ADD     TBRTE         WBRTE            11 7
      C                   Z-ADD     TRTSP         WRTSP            11 7
      C                   Z-ADD     TEINR         WEINR            11 7

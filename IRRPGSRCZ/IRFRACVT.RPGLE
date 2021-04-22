@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 245692             Date 11Dec13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 245692             Date 11Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 258454             Date 15Jan09               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
@@ -99,7 +102,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -118,107 +121,107 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Deal Status
      D*@STSA****       S             24    DIM(2) CTDATA PERRCD(1)
      D @STSA           S             24    DIM(5) CTDATA PERRCD(1)
- 
+
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(DEALSDG)
      D DGLCD         E                     EXTFLD(LCD)
- 
+
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(IRFRAPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CIR008          S              1A
      D PRTCD           S              7
      D POPTN           S              7
      D PSARD           S              6
      D CAS006          S              1
- 
+
      D CIR011          S              1A
      D PDADJ           S              1  0
      D PUFRFD          S              2  0
      D PTFRFD          S              2  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -460,53 +463,53 @@
      C*
      C**  Rate Fix Days.
      C     BYSL          IFEQ      'B'
- 
+
      C     CIR011        IFEQ      'Y'
- 
+
       ** Get The rate fix days from the currency file
- 
+
      C                   MOVE      UCUCY         @AJCD
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANK        @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @AJCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6FXDY        PDADJ
      C     TFRFD         ADD       PDADJ         PTFRFD
      C                   MOVE      PTFRFD        SUFRFD
- 
+
      C                   ELSE
      C/COPY WNCPYSRC,IRFRANC001
      C                   MOVE      TFRFD         SUFRFD
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,IRFRANC002
      C                   ELSE
- 
+
      C     CIR011        IFEQ      'Y'
- 
+
       ** Get the rate fix days from the currency file
- 
+
      C                   MOVE      UCUCY         @AJCD
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANK        @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @AJCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6FXDY        PDADJ
      C     UFRFD         ADD       PDADJ         PUFRFD
      C                   MOVE      PUFRFD        SUFRFD
- 
+
      C                   ELSE
- 
+
      C/COPY WNCPYSRC,IRFRANC003
      C                   MOVE      UFRFD         SUFRFD
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,IRFRANC004
      C                   END
      C*
@@ -672,7 +675,7 @@
       *
       * Deal in file format
      C                   PARM                    DealFilFmt
- 
+
       ** Switchable feature CIR008
      C                   PARM                    CIR008
       *
@@ -839,7 +842,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CIR011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C     *LOCK         IN        LDA
@@ -849,7 +852,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CIR011
      C                   ELSE
@@ -880,7 +883,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CAS006
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,IRFRANC005
      C                   ENDSR
       *****************************************************************

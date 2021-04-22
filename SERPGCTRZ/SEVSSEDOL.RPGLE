@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -183,13 +186,13 @@
      C                   IF        OKSREF <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSREF <> 'N'
      C                   MOVEL     DDSREF        S1SREF
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -202,12 +205,12 @@
       ** Check if SEDOL/EXTEL already exists in securities file
       *
      C                   IF        DDSREF <> *BLANKS
- 
+
      C                   MOVE      DDSREF        WSRef
      C                   EVAL      WFound = 'N'
      C     WSRef         SETLL     SECTYL3
      C     WSRef         READE     SECTYL3                                01
- 
+
      C                   DOW       *IN01 = *OFF AND
      C                             WFound = 'N'
       *
@@ -215,7 +218,7 @@
      C                   IF        DDSESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WSRef         READE     SECTYL3                                01
      C                   ENDDO
       *
@@ -235,9 +238,9 @@
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
      C                   EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(MsgDtaTmp)                MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

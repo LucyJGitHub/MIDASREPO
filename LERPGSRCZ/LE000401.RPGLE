@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR751137           Date 30May11               *
@@ -28,6 +29,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -66,23 +69,23 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** Midas SD Loan types/sub-types
      FSDLOANL3  IF   E           K DISK
- 
+
       ** Midas LE Customer Loans
      FCLOANL8   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CL)
- 
+
       ** Midas LE Loan Amendments File  - PD records
      FLELAUPL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(PD)
- 
+
       ** Midas LE Loan Amendments File  - RE records
      FLELAUPL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LOAMSDKF:LOAMSD2)
      F                                     PREFIX(RE)
- 
+
       ** Midas LE N/M/P/Q History Files - MR's with EXVD>0 omitted
      FLEHISTL5  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(HS)
@@ -90,30 +93,30 @@
      F                                     RENAME(HISTSHNF:HISTSHN5)
      F                                     RENAME(HISTSHPF:HISTSHP5)
      F                                     RENAME(HISTSHQF:HISTSHQ5)
- 
+
       ** Midas LE N/M/P/Q History Files - MR's with EXVD>0
      FLEHISTL6  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(MR)
- 
+
       ** Midas EIR Cash Flow File
      FLECFLSL0  UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE EIR Loan Header History File
      FLEHTRMPD  O  A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(HT)
- 
+
       ** Midas LE EIR Loan Interest History File
      FLEHTRNPD  O  A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(HT)
- 
+
       ** Midas LE EIR Loan amount History File
      FLEHTRPPD  O  A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(HT)
- 
+
       ** Midas LE EIR Rate History File
      FLEHTRQPD  O  A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(HT)
- 
+
       ****************************************************************
       /EJECT
       *****************************************************************
@@ -122,12 +125,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       ** Array containing Copyright statement
- 
+
       ** +--------------------------------------+
       ** ¦ External data areas                  ¦
       ** ¦ ===================                  ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -138,51 +141,51 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Program Status Data Structure
       /COPY ZACPYSRC,PSDS
- 
+
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       **  External DS for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Whether or not *PSSR has been run previously
      D RunBefore       S              1A
- 
+
       ** Parameters for AOBANKR0
      D pReturnCode     S              7A
      D pOption         S              7A
- 
+
       ** Parameters for calling EU0200
      D PRTCD           S              7A
      D PFRAM           S             18  3
@@ -192,7 +195,7 @@
      D PINTA           S             18  3
      D PEXRT           S             15  9
      D PMDIN           S              1A
- 
+
       ** Parameters for calling GLINTC
      D pZIBEG          S              5  0
      D pZIEND          S              5  0
@@ -200,7 +203,7 @@
      D pZIAMT          S             15  0
      D pZIRATE         S             11  7
      D pZINTR          S             30  9
- 
+
       ** Work Variables
      D wCPAM           S                   LIKE(CLCPAM)
      D wIPRD           S                   LIKE(CLIPRD)
@@ -227,7 +230,7 @@
      D wCFTYP          S                   LIKE(LFFTYP)
      D wCFVDt          S                   LIKE(LFFLDT)
      D wCFSeq          S                   LIKE(LFPSeq)
- 
+
      ******************************************************************
       /EJECT
       *****************************************************************
@@ -235,19 +238,19 @@
       * MAIN - Main Processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Read Deal Type/Sub Type combinations to index deals file
      C     *LOVAL        SETLL     SDLOANL3
      C                   READ      SDLOANL3
- 
+
      C                   DOW       NOT %EOF(SDLOANL3)
- 
+
      C     KLoanType     SETLL     CLOANL8
      C     KLoanType     READE     CLOANL8
- 
+
       ** Read thru Loans file
      C                   DOW       NOT %EOF(CLOANL8)
- 
+
      ** Initilialise workfields
      C                   EVAL      EndOfProc = 'N'
      C                   EVAL      wCPAM = *ZEROS
@@ -257,39 +260,39 @@
      C                   EVAL      wICTD = *ZEROS
      C                   EVAL      wSTRec = 'N'
      C                   EVAL      wRecalHist = 'N'
- 
+
       ** Get and check loan details for repayment sked
      C                   EXSR      SRLoanDetail
- 
+
       ** Read History Records of the loan
      C                   EVAL      wHSVDate = *HIVAL
      C     CLLNRF        SETLL     LEHISTL5
      C                   EXSR      SRReadHist
- 
+
       ** Read Loan Amendments to check for existing Past Dues for the loan
      C                   EVAL      wPDVDate = *HIVAL
      C     CLLNRF        SETLL     LOAMSDKF
      C                   EXSR      SRReadPD
- 
+
       ** Read Loan Amendments to check for existing Repayments to be PDs
      C                   EVAL      wREVDate = *HIVAL
      C     KLoanDate     SETLL     LOAMSD2
      C                   EXSR      SRReadRE
- 
+
       ** Read Manual Repayments for Past Dues
      C                   EVAL      wMRVDate = *HIVAL
      C     CLLNRF        SETLL     LEHISTL6
      C                   EXSR      SRReadMR
- 
+
       ** Process history records without payments gone past due
      C                   EXSR      SRProcHist
- 
+
      C     KLoanType     READE     CLOANL8
- 
+
      C                   ENDDO
      C                   READ      SDLOANL3
      C                   ENDDO
- 
+
       ** End of program
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -305,9 +308,9 @@
       *                                                               *
       *****************************************************************
      C     SRProcHist    BEGSR
- 
+
      C                   DOW       EndOfProc = 'N'
- 
+
      C                   SELECT
       ** Process history records
      C                   WHEN      wHSRec = 'Y'
@@ -318,7 +321,7 @@
      C                   EXSR      SRProcHSRec
       ** Read Next History Records
      C                   EXSR      SRReadHist
- 
+
       ** Process Loan Detail records
      C                   WHEN      wCLRec = 'Y'
      C                             AND wCLVDate <= wHSVDate
@@ -326,7 +329,7 @@
      C                             AND wCLVDate <= wPDVDate
      C                             AND wCLVDate <= wREVDate
      C                   EXSR      SRProcCLRec
- 
+
       ** Process Loan Amendments records
      C                   WHEN      wRERec = 'Y'
      C                             AND wREVDate <= wHSVDate
@@ -334,10 +337,10 @@
      C                             AND wREVDate <= wPDVDate
      C                             AND wREVDate <= wCLVDate
      C                   EXSR      SRProcRERec
- 
+
       ** Read Next RE record
      C                   EXSR      SRReadRE
- 
+
       ** Process history records when there are existing PD records for the loan
      C                   WHEN      wPDRec = 'Y'
      C                             AND wPDVDate <= wHSVDate
@@ -345,24 +348,24 @@
      C                             AND wPDVDate <= wCLVDate
      C                             AND wPDVDate <= wREVDate
      C                   EXSR      SRProcPDRec
- 
+
       ** Read Next Past Due Record
      C                   EXSR      SRReadPD
- 
+
      C                   WHEN      wMRRec = 'Y'
      C                             AND wMRVDate <= wHSVDate
      C                             AND wMRVDate <= wPDVDate
      C                             AND wMRVDate <= wCLVDate
      C                             AND wMRVDate <= wREVDate
      C                   EXSR      SRProcMRRec
- 
+
       ** Read Next Manual Repayment Record
      C                   EXSR      SRReadMR
      C                   ENDSL
- 
+
       ** Save date for interest recalculation
      C                   EVAL      wBegDate = HTVDAT
- 
+
       ** End process if
      C                   IF        wCLRec = 'N'
      C                             AND wRERec = 'N'
@@ -372,9 +375,9 @@
      C                             AND wCLRec = 'N'
      C                   EVAL      EndOfProc = 'Y'
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -389,12 +392,12 @@
       *                                                               *
       *****************************************************************
      C     SRProcHSRec   BEGSR
- 
+
      C                   IF        wRecalHist = 'Y'
- 
+
       ** Recalculate History records for the new Principal/Interest Amount
      C                   EXSR      SRRecalHist
- 
+
      C                   ELSE
      C                   EVAL      HTPRAM = HSPRAM
      C                   EVAL      HTCPAM = HSCPAM
@@ -403,13 +406,13 @@
      C                   EVAL      HTIPRD = HSIPRD
      C                   EVAL      HTAIAP = HSAIAP
      C                   ENDIF
- 
+
      C                   IF        HSAMTP = 'ST'
      C                   EVAL      wBegDate = HSVDAT
      C                   ENDIF
- 
+
       ** Populate fields with history data
- 
+
      C                   SELECT
      C                   WHEN      HSRCDT = 'A'
      C                   EXSR      SRPopHTRM
@@ -424,7 +427,7 @@
      C                   EXSR      SRPopHTRQ
      C                   WRITE     ZAHTRQD0
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -438,12 +441,12 @@
       *                                                               *
       *****************************************************************
      C     SRProcPDRec   BEGSR
- 
+
       ** Recalculate History records for the new PD record
      C                   EVAL      wEndDate = PDVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
       ** Write record in history for 'PD' before next history record
      C                   EVAL      HTRCDT = 'D'
      C                   EVAL      HTVDAT = PDVDAT
@@ -451,7 +454,7 @@
      C                   EVAL      HTAMTP = 'PD'
      C                   EVAL      HTPRAM = PDPRAM
      C                   EVAL      HTINTA = PDINTA
- 
+
      C                   IF        PDPRAM > 0
      C                   EVAL      HTCPAM = HTCPAM - PDPRAM
      C                   ENDIF
@@ -463,12 +466,12 @@
      C                   EVAL      wICTD = wICTD + HTINTA
      c                   ENDIF
      C                   ENDIF
- 
+
       ** Update date for the recalculation of history
      C                   EVAL      wRecalHist = 'Y'
- 
+
      C                   WRITE     ZAHTRPD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -481,20 +484,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProcMRRec   BEGSR
- 
+
       ** Update date for the recalculation of history
      C                   EVAL      wEndDate = MREXVD
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
       ** Write record in history for 'MR' before next history record
      C                   EVAL      HTRCDT = 'D'
      C                   EVAL      HTVDAT = MREXVD
      C                   EVAL      HTEXVD = MREXVD
      C                   EVAL      HTAMTP = 'MR'
- 
+
       ** Update date for the recalculation of history
      C                   IF        MRPRAM > 0
      C                   EVAL      HTPRAM = MRPRAM
@@ -509,12 +512,12 @@
      C                   EVAL      wICTD = wICTD + HTINTA
      c                   ENDIF
      C                   ENDIF
- 
+
       ** Update indicator for recalculation of history
      C                   EVAL      wRecalHist = 'Y'
- 
+
      C                   WRITE     ZAHTRPD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -529,29 +532,29 @@
       *                                                               *
       *****************************************************************
      C     SRProcCLRec   BEGSR
- 
+
       ** Update date for the recalculation of history
      C                   EVAL      wEndDate = CLNRPD
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
      C                   IF        CLRAMT > 0
      C                   EVAL      HTPRAM = CLRAMT
      C                   ENDIF
- 
+
       ** Write record in history for 'MR' before next history record
      C                   EVAL      HTRCDT = 'D'
      C                   EVAL      HTVDAT = CLNRPD
      C                   EVAL      HTEXVD = CLNRPD
      C                   EVAL      HTAMTP = 'RE'
- 
+
       ** Update indicator for recalculation of history
      C                   EVAL      wRecalHist = 'Y'
      C                   EVAL      wCLRec = 'N'
      C                   EVAL      wCLVDate = *HIVAL
- 
+
      C                   WRITE     ZAHTRPD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -566,19 +569,19 @@
       *                                                               *
       *****************************************************************
      C     SRProcRERec   BEGSR
- 
+
      C                   IF        REVDAT <= wEvCD
       ** Update date for the recalculation of history
      C                   EVAL      wEndDate = REVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
       ** Write record in history for 'MR' before next history record
      C                   EVAL      HTRCDT = 'D'
      C                   EVAL      HTVDAT = REVDAT
      C                   EVAL      HTEXVD = REVDAT
      C                   EVAL      HTAMTP = 'RE'
- 
+
      C                   IF        REPRAM > 0
      C                   EVAL      HTCPAM = HTCPAM - REPRAM
      C                   EVAL      HTPRAM = REPRAM
@@ -592,18 +595,18 @@
      C                   EVAL      wICTD = wICTD + HTINTA
      c                   ENDIF
      C                   ENDIF
- 
+
       ** Update date for the recalculation of history
      C                   EVAL      wRecalHist = 'Y'
      C                   EVAL      wRERec = 'Y'
      C                   EVAL      wREVDate = REVDAT
- 
+
      C                   WRITE     ZAHTRPD0
      C                   ELSE
      C                   EVAL      wRERec = 'N'
      C                   EVAL      wREVDate = *HIVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -616,11 +619,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRecalHist   BEGSR
- 
+
       ** Check amendment type then recalculate interest accruals
- 
+
      C                   SELECT
      C                   WHEN      HSAMTP = 'IN'
      C                   EVAL      wEndDate = HSVDAT
@@ -629,11 +632,11 @@
      C                   EVAL      HTINTA = wACCR + HTAITC + HTAIAP
      C                                      + CLAIMN - CLIWOD - HTIPRD - wICTD
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
      C                   EXSR      SRCFUpdate
- 
+
       ** Check if Interest Capitalised
- 
+
      C                   IF        HSINTC <> 'Y'
      C                   EVAL      HTIPRD = HTIPRD + HSINTA
      C                   ELSE
@@ -641,21 +644,21 @@
      C                   EVAL      wICTD = wICTD + HTINTA
      C                   ENDIF
      C                   EVAL      HTPRAM = HSPRAM
- 
+
      C                   WHEN      HSAMTP = 'MI'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
      C                   EVAL      HTAIAP = HTAIAP + HSINTA
      C                   EVAL      HTPRAM = HSPRAM
- 
+
      C                   WHEN      HSAMTP = 'PI'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
      C                   EVAL      HTPRAM = HSPRAM
      C                   EVAL      HTCPAM = HTCPAM + HSPRAM
- 
+
      C                   WHEN      HSAMTP = 'MA'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
@@ -665,22 +668,22 @@
      C                   EVAL      HTAITC = HTAITC + wACCR
      C                   EVAL      HTPRAM = HTCPAM
      C                   EVAL      HTCPAM = 0
- 
+
      C                   WHEN      HSAMTP = 'BC' OR HSAMTP = 'BR'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
      C                   WHEN      HSAMTP = 'SC'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
      C                   WHEN      HSAMTP = 'RE' OR HSAMTP = 'MR'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
      C                   IF        HSINTA > 0
      C                   IF        HSINTC <> 'Y'
      C                   EVAL      HTIPRD = HTIPRD + HSINTA
@@ -690,12 +693,12 @@
      c                   ENDIF
      C                   ENDIF
      C                   EVAL      HTPRAM = HSPRAM
- 
+
      C                   WHEN      HSAMTP = 'RO' OR HSAMTP = 'MC'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTAITC = HTAITC + wACCR
- 
+
       ** check for change in currency on rollover
      C                   IF        HTCCY <> HSRLCY
      C                             AND HSRLCY <> *BLANKS
@@ -706,21 +709,21 @@
      C                   EXSR      SRConvCcy
      C                   Z-ADD     POUTA         HTAITC
      C                   ENDIF
- 
+
      C                   IF        HTIPRD > 0
      C                   Z-ADD     HTIPRD        PFRAM
      C                   EXSR      SRConvCcy
      C                   Z-ADD     POUTA         HTIPRD
      C                   ENDIF
- 
+
      C                   IF        HTAIAP > 0
      C                   Z-ADD     HTAIAP        PFRAM
      C                   EXSR      SRConvCcy
      C                   Z-ADD     POUTA         HTAIAP
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        HSRLCY <> *BLANKS
      C                   MOVE      HTCCY         PFRCY
      C                   MOVE      HSRLCY        PTOCY
@@ -728,15 +731,15 @@
      C                   EXSR      SRConvCcy
      C                   Z-ADD     POUTA         HTCPAM
      C                   ENDIF
- 
+
      C                   WHEN      HSAMTP = 'IH'
      C                   EVAL      wEndDate = HSVDAT
      C                   EXSR      SRIntCalc
      C                   EVAL      HTINTA = HTAITC + wACCR
      C                   EVAL      HTPRAM = HTCPAM
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -750,7 +753,7 @@
       *                                                               *
       *****************************************************************
      C     SRConvCcy     BEGSR
- 
+
      C                   CALL      'EU0200'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM                    PFRAM
@@ -760,7 +763,7 @@
      C                   PARM                    PINTA
      C                   PARM                    PEXRT
      C                   PARM                    PMDIN
- 
+
       ** Handle Error
      C                   IF        PRTCD <> *BLANKS
      C                   EXSR      *PSSR
@@ -779,7 +782,7 @@
       *                                                               *
       *****************************************************************
      C     SRReadHist    BEGSR
- 
+
      C     CLLNRF        READE     LEHISTL5
      C                   IF        NOT %EOF(LEHISTL5)
      C                   EVAL      wHSRec = 'Y'
@@ -792,7 +795,7 @@
      C                   EVAL      wHSRec = 'N'
      C                   EVAL      wHSVDate = *HIVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -806,7 +809,7 @@
       *                                                               *
       *****************************************************************
      C     SRReadPD      BEGSR
- 
+
      C     CLLNRF        READE     LOAMSDKF
      C                   IF        NOT %EOF(LELAUPL1)
      C                             AND wSTRec = 'Y'
@@ -816,7 +819,7 @@
      C                   EVAL      wPDRec = 'N'
      C                   EVAL      wPDVDate = *HIVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -830,7 +833,7 @@
       *                                                               *
       *****************************************************************
      C     SRReadRE      BEGSR
- 
+
      C     CLLNRF        READE     LOAMSD2
      C                   IF        NOT %EOF(LELAUPL2)
      C                             AND wSTRec = 'Y'
@@ -840,7 +843,7 @@
      C                   EVAL      wRERec = 'N'
      C                   EVAL      wREVDate = *HIVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -854,7 +857,7 @@
       *                                                               *
       *****************************************************************
      C     SRReadMR      BEGSR
- 
+
      C     CLLNRF        READE     LEHISTL6
      C                   IF        NOT %EOF(LEHISTL6)
      C                             AND wSTRec = 'Y'
@@ -864,7 +867,7 @@
      C                   EVAL      wMRRec = 'N'
      C                   EVAL      wMRVDate = *HIVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -879,11 +882,11 @@
       *                                                               *
       *****************************************************************
      C     SRLoanDetail  BEGSR
- 
+
      C                   EVAL      wCLVDate = *HIVAL
      C                   IF        CLAUTO = 'N'
      C                   EVAL      wCLVDate = CLNRPD
- 
+
       ** Check if the repayment should value irregardless of grace days
      C                   IF        wCLVDate > wEvCD
       ** Or if there is no repayment to process                                             AR751137
@@ -894,7 +897,7 @@
      C                   EVAL      wCLRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -908,7 +911,7 @@
       *                                                               *
       *****************************************************************
      C     SRCFUpdate    BEGSR
- 
+
      C                   EVAL      wCFSeq = HSPRSQ
      C                   EVAL      wCFVDt = HSVDAT
      C                   IF        HSPTYP = 66
@@ -923,7 +926,7 @@
      C                   EVAL      LFCAMT = HTINTA
      C                   UPDATE    LECFLSD0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -937,7 +940,7 @@
       *                                                               *
       *****************************************************************
      C     SRIntCalc     BEGSR
- 
+
      C                   EVAL      wACCR = 0
      C                   IF        wBegDate <> wEndDate
      C                   Z-ADD     HTINTR        pZIRATE
@@ -945,7 +948,7 @@
      C                   Z-ADD     HTCALC        pZICALC
      C                   Z-ADD     wBegDate      pZIBEG
      C                   Z-ADD     wEndDate      pZIEND
- 
+
      C                   CALLB     'GLINTC'
      C                   PARM                    pZIBEG
      C                   PARM                    pZIEND
@@ -956,7 +959,7 @@
      C                   EVAL(H)   wACCR = pZINTR
      C                   Z-ADD     wEndDate      wBegDate
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -970,7 +973,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopHTRM     BEGSR
- 
+
      C                   EVAL      HTRCDT  =  HSRCDT
      C                   EVAL      HTBRCA  =  HSBRCA
      C**********         EVAL      HTCNUM  =  HSCNUM                                         CAS019A
@@ -999,7 +1002,7 @@
      C                   EVAL      HTFCLB  =  HSFCLB
      C                   EVAL      HTLCD   =  HSLCD
      C                   EVAL      HTINTR  =  HSINTR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1013,7 +1016,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopHTRN     BEGSR
- 
+
      C                   EVAL      HTRCDT  =  HSRCDT
      C                   EVAL      HTBRCA  =  HSBRCA
      C**********         EVAL      HTCNUM  =  HSCNUM                                         CAS019A
@@ -1037,7 +1040,7 @@
      C                   EVAL      HTPPIS  =  HSPPIS
      C                   EVAL      HTIPIS  =  HSIPIS
      C                   EVAL      HTIPPS  =  HSIPPS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1051,7 +1054,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopHTRP     BEGSR
- 
+
      C                   EVAL      HTRCDT  =  HSRCDT
      C                   EVAL      HTBRCA  =  HSBRCA
      C**********         EVAL      HTCNUM  =  HSCNUM                                         CAS019A
@@ -1080,7 +1083,7 @@
      C                   EVAL      HTGPRT  =  HSGPRT
      C                   EVAL      HTROLN  =  HSROLN
      C                   EVAL      HTREPI  =  HSREPI
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1094,7 +1097,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopHTRQ     BEGSR
- 
+
      C                   EVAL      HTRCDT   =  HSRCDT
      C                   EVAL      HTBRCA   =  HSBRCA
      C**********         EVAL      HTCNUM   =  HSCNUM                                        CAS019A
@@ -1122,7 +1125,7 @@
      C                   EVAL      HTINTR   =  HSINTR
      C                   EVAL      HTMNSG   =  HSMNSG
      C                   EVAL      HTRLCY   =  HSRLCY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1135,17 +1138,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Access Bank ICD
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       pReturnCode
      C                   PARM      '*FIRST '     pOption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        pReturnCode <> *BLANKS
      C     *LOCK         IN        LDA
@@ -1155,13 +1158,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger
      C                   CALLB     'AOGELRR0'
      C                   PARM      *BLANKS       pReturnCode
      C                   PARM      '*FIRST '     pOption
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
      C                   IF        pReturnCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDGELRPD'
@@ -1170,29 +1173,29 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Calculate Event Control Date
- 
+
      C                   IF        (BJDNWD - 1) > BKAPDT
      C                   EVAL      wEvCD = BKAPDT
      C                   ELSE
      C                   EVAL      wEvCD = BJDNWD - 1
      C                   ENDIF
- 
+
      C     KLoanType     KLIST
      C                   KFLD                    AYLNTY
      C                   KFLD                    AYLNST
- 
+
      C     KLoanDate     KLIST
      C                   KFLD                    CLLNRF
      C                   KFLD                    BJRDNB
- 
+
      C     KCFTran       KLIST
      C                   KFLD                    CLLNRF
      C                   KFLD                    wCFVDt
      C                   KFLD                    wCFTYP
      C                   KFLD                    wCFSeq
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1209,23 +1212,23 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        RunBefore = *BLANK
      C                   EVAL      RunBefore = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
- 
+
 ** WCPY@
 (c) Finastra International Limited 2006

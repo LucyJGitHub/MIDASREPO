@@ -10,12 +10,14 @@
       *                                                               *
       *  (c)Finastra International Limited 2016                       *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD054017           Date 04Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD054017           Date 04Sep19               *
       *                 CER050  *CREATE    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -808,7 +810,8 @@
      C                   MOVE      'CLOANCL '    DBFILE
      C                   GOTO      END
      C                   ELSE
-     C                   MOVE      BRTT          BRTTPH            2 0
+     C**********         MOVE      BRTT          BRTTPH            2 0                        CSD103
+     C                   MOVE      BRTT          BRTTPH            2                          CSD103
       *
      C     PTFR          IFNE      *BLANKS                                      - B2
      C     BGPFMG        ANDEQ     'Y'
@@ -2963,8 +2966,10 @@
       * EFFECTIVE INTEREST RATE IS TO BE UPDATED
      C     AMTPLA        COMP      'BC'                                   87
      C  N87              GOTO      SPREAD
-     C     BRTTLA        COMP      0                                  87
-     C   87              MOVE      BRTTLA        BRTKEY            2 0
+     C*****BRTTLA        COMP      0                                  87                      CSD103
+     C***87*****         MOVE      BRTTLA        BRTKEY            2 0                        CSD103
+     C     BRTTLA        COMP      *BLANKS                            87                      CSD103
+     C   87              MOVE      BRTTLA        BRTKEY            2                          CSD103
      C   87              EXSR      SRBRTD
      C   87
      CAN 55              SETON                                        U7U8      * DBERR 24 *
@@ -3302,10 +3307,12 @@
       *
       * CHECK IF NEW BASE RATE APPLICABLE
      C     CHIN          COMP      'R'                                    88
-     C     NBRA          COMP      0                                  87
+     C*****NBRA*         COMP      0                                  87                      CSD103
+     C     NBRA          COMP      *BLANKS                            87                      CSD103
      C   88              MOVE      BRTT          BRTKEY
      C     *IN88         Ifeq      *On
-     C     Brtkey        andeq     0
+     C*****Brtkey        andeq     0                                                          CSD103
+     C     Brtkey        andeq     *BLANKS                                                    CSD103
      C                   Move      BRTTPH        BRTKEY
      C                   Endif
      C   87              MOVE      NBRA          BRTKEY
@@ -3359,7 +3366,8 @@
       *
       * CHECK IF NEW BASE RATE APPLICABLE
      C     CHIN          COMP      'R'                                    88
-     C     NBRA          COMP      0                                  87
+     C*****NBRA*         COMP      0                                  87                      CSD103
+     C     NBRA          COMP      *BLANKS                            87                      CSD103
      C   88              MOVE      BRTT          BRTKEY
      C   87              MOVE      NBRA          BRTKEY
      C  N88

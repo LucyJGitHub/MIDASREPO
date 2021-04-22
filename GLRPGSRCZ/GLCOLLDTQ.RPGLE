@@ -15,21 +15,24 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG18050 *CREATE   Date 28Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  BUG18050 - Collateral by facility enquiry displaying CAV     *
       *             and CLV as zero                                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -42,7 +45,7 @@ O    D F_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(F_)
 O    D B_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(B_)
       ** After images
 O    D A_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(A_)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -50,7 +53,7 @@ O    D A_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(A_)
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -60,35 +63,35 @@ O    D A_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(A_)
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data Area for Standing Data Details
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D ConstHead1      C                   CONST('<?xml version="1.0" encoding')
      D ConstHead2      C                   CONST('="UTF-8"?><calcManagerEvent ')
      D ConstHead3      C                   CONST('xmlns="http://www.misys.com/')
@@ -99,7 +102,7 @@ O    D A_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(A_)
      D ConstDet2       C                   CONST('</paramName><paramValue>')
      D ConstDet3       C                   CONST('</paramValue></eventParam>')
      D ConstFoot       C                   CONST('</calcManagerEvent>')
- 
+
      D AfterImg        S           4000A
      D BeforeImg       S           4000A
      D Buffer          S           6000A
@@ -161,7 +164,7 @@ O    D A_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(A_)
      D WLength         S              4S 0
      D FacBrch         S              3A
      D TRGEVENT        S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -169,14 +172,14 @@ O    D A_GLCOLLPD    E DS                  EXTNAME(GLCOLLPD) PREFIX(A_)
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
 O    C     I#BFAF        IFEQ      'B'
 O    C                   MOVEL     I#BIMG        B_GLCOLLPD
 O    C                   Eval      CDCREF = %SUBST(B_GLCOLLPD:2:10)
@@ -188,12 +191,12 @@ O
 O    C     K_GLCOLLL1    CHAIN     GZGLCOLLL1                         99
       ** Before
 O    C                   IF        I#BFAF = 'B'
- 
+
 O    C                   IF        %FOUND(GZGLCOLLL1)
      C                   Eval      TrgEvent = '2'
 O    C                   MOVEL     *BLANKS       A_GLCOLLPD
      C                   ENDIF
- 
+
      C                   Else
       ** After
 O    C                   IF        %FOUND(GZGLCOLLL1)
@@ -203,25 +206,25 @@ O    C                   MOVEL     F_GLCOLLPD    B_GLCOLLPD
      C                   Eval      TrgEvent = '1'
 O    C                   MOVEL     *BLANKS       B_GLCOLLPD
      C                   ENDIF
- 
+
      C                   ENDIF
 O
      C                   IF        TrgEvent <> *BLANK
      C                   EXSR      SrMain
      C                   ENDIF
- 
+
       ** Terminate Program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       *  SrMain - Main Processing                                     *
       *****************************************************************
      C     SrMain        BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B_CDRECI = 'D' AND
      C                                  A_CDRECI = 'R' AND
@@ -348,7 +351,7 @@ O
      C                   EVAL      WBeforeAfter = 'B'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        TrgEvent = '1' OR
      C                             (TrgEvent = '3' AND
      C                              B_CDRECI = 'D' AND
@@ -374,7 +377,7 @@ O
      C                             WFldChg33 = 'Y' OR WFldChg34 = 'Y' OR
      C                             WFldChg35 = 'Y' OR WFldChg36 = 'Y' OR
      C                             WFldChg37 = 'Y'
- 
+
      C                   EVAL      WEvntTyp = 'MN_COLLATERAL_REGISTER'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'CDCREF'
@@ -385,7 +388,7 @@ O
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
- 
+
      C                   IF        WBeforeAfter = 'B'
      C                   EVAL      CNUM = B_CDFCUS
      C                   EVAL      FACT = B_CDFTYP
@@ -412,33 +415,33 @@ O
      C                   EXSR      SrDetail
      C                   EVAL      WDtl5 = WDetail
      C                   ENDIF
- 
+
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + %TRIM(WDtl4) + %TRIM(WDtl5)
      C                                      + ConstFoot
- 
+
      C                   ENDIF
- 
+
       ** Send buffer to the data queue
      C                   IF        Buffer <> *BLANKS
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
      C                   EXSR      SrSendDtaQ
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *  SrHeader - Header Processing                                 *
       *****************************************************************
      C     SrHeader      BEGSR
- 
+
      C                   EVAL      WHeader = ConstHead1 + ConstHead2 +
      C                                       ConstHead3 + ConstHead4 +
      C                                       ConstHead5 + %TRIM(WEvntTyp)
      C                                       + ConstHead6
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -446,11 +449,11 @@ O
       *  SrDetail - Detail Processing                                 *
       *****************************************************************
      C     SrDetail      BEGSR
- 
+
      C                   EVAL      WDetail = ConstDet1 + %TRIM(WParamName)
      C                                       + ConstDet2 + %TRIM(WParamValue)
      C                                       + ConstDet3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -458,7 +461,7 @@ O
       *  SrReset - Initialise variables                               *
       *****************************************************************
      C     SrReset       BEGSR
- 
+
      C                   EVAL      WBeforeAfter = *BLANKS
      C                   EVAL      WDtl1 = *BLANKS
      C                   EVAL      WDtl2 = *BLANKS
@@ -507,7 +510,7 @@ O
      C                   EVAL      WParamName = *BLANKS
      C                   EVAL      WParamValue = *BLANKS
      C                   EVAL      Buffer = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -515,24 +518,24 @@ O
       *  SrSendDtaQ - Send Buffer to the data queue                   *
       *****************************************************************
      C     SrSendDtaQ    BEGSR
- 
+
       ** Find the first non-blank position starting from the right
       ** Result field would contain the position relative to the left
- 
+
      C     ' '           CHECKR    BUFFER        WLength
- 
+
      C                   CALL      'QSNDDTAQ'                           7070
      C                   PARM      'CLECALCMGR'  DtqNam
      C                   PARM                    DtqLib
      C                   PARM      WLength       DtqLen
      C                   PARM                    Buffer
- 
+
      C                   ENDSR
       *****************************************************************
       * FNDBRCA - Get the branch from facilities file.                *
       *****************************************************************
      C     FNDBRCA       BEGSR
- 
+
      C     FBRCH         CHAIN     FCLTYFMF
      C                   EVAL      FacBrch = BRCA
      C                   ENDSR
@@ -543,7 +546,7 @@ O
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -551,7 +554,7 @@ O
      C                   PARM                    I#BFAF            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
- 
+
 O     * Key lists
 O
 O    C     K_GLCOLLL1    KLIST
@@ -563,15 +566,15 @@ O    C                   KFLD                    FACT
 O    C                   KFLD                    FCNO
 O    C
      C                   Eval      TrgEvent = *BLANK
- 
+
       ** Read in data areas
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        RUNDAT
      C                   IN        SDSTAT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -579,15 +582,15 @@ O    C
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -602,10 +605,10 @@ O    C
      C                   EVAL      BUFFER2 = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER2        4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************

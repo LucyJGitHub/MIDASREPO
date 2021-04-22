@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055514           Date 06Apr20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD051247           Date 16Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -87,6 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
       *             add check if account in REDEFD is valid.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -1635,7 +1637,8 @@
       ** Check for Base rate codes.                                                           194431
       *                                                                                       194431
      C                   MOVE      A1DRIB        WWDRIB            2                          194431
-     C     A1DRIB        IFNE      *ZERO                                                      194431
+     C*****A1DRIB        IFNE      *ZERO                                               194431 CSD103
+     C     A1DRIB        IFNE      *BLANKS                                                    CSD103
      C     WDCCY         ANDNE     A1CCY                                                      194431
      C                   CALLB     'AOBSRTR0'                                                 194431
      C                   PARM      '*MSG   '     @RTCD                                        194431
@@ -1645,11 +1648,13 @@
      C     SDBSRT        PARM      SDBSRT        DSFDY                                        194431
      C                   ENDIF                                                                194431
      C     @RTCD         IFNE      *BLANKS                                                    194431
-     C                   MOVE      *ZERO         A1DRIB                                       194431
+     C**********         MOVE      *ZERO         A1DRIB                                194431 CSD103
+     C                   MOVE      *BLANKS       A1DRIB                                       CSD103
      C                   MOVE      *ZERO         A1DRIS                                       194431
      C                   ENDIF                                                                194431
       *                                                                                       194431
-     C     A1CRIB        IFNE      *ZERO                                                      194431
+     C*****A1CRIB        IFNE      *ZERO                                               194431 CSD103
+     C     A1CRIB        IFNE      *BLANKS                                                    CSD103
      C     WDCCY         ANDNE     KCCY                                                       194431
      C                   MOVE      A1CRIB        WWCRIB            2                          194431
      C                   CALLB     'AOBSRTR0'                                                 194431
@@ -1660,7 +1665,8 @@
      C     SDBSRT        PARM      SDBSRT        DSFDY                                        194431
      C                   ENDIF                                                                194431
      C     @RTCD         IFNE      *BLANKS                                                    194431
-     C                   MOVE      *ZERO         A1CRIB                                       194431
+     C**********         MOVE      *ZERO         A1CRIB                                194431 CSD103
+     C                   MOVE      *BLANKS       A1CRIB                                       CSD103
      C                   MOVE      *ZERO         A1CRIS                                       194431
      C                   ENDIF                                                                194431
       *                                                                                       194431

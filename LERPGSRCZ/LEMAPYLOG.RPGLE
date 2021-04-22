@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -53,12 +56,12 @@
       *  CAP077 - Lending API enhancements - Manual Repayments        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -70,45 +73,45 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D MaPyFilFmt    E DS                  EXTNAME(LOAMSDK)
      D MR_REC                321    389
      D MR_PAY                390    948
      D PDLoAmFilFmt  E DS                  EXTNAME(LOAMSDK) PRefix(PD_)
- 
+
       ** Midas LE API FCIP File Record
- 
+
      D MapyScnfmt    E DS                  EXTNAME(LEMAPYPD)
       ** Midas LE API MAPY First Screen Format Definition File
       *
@@ -138,15 +141,15 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PACTN           S              1A
       *
      D PassDtaDS       DS           512
@@ -155,10 +158,10 @@
      D CLE007                  5      5A
      D CLE023                  8      8A
      D WrkReactFaCil          16     16A
- 
+
      D TRANSDTL        S           5800A
       ***  Flat structure for 24x7 Interface
- 
+
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
                                                                                              CSF011A
@@ -169,13 +172,13 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ***  Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -185,13 +188,13 @@
       *****************************************************************
       *
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
      C
      C                   EVAL      DDACTN = PACTN
- 
+
       ***  Settlement Details
- 
+
      C                   MOVEL     MR_PAY        ##PAYF
      C                   MOVEL     CVMR          FLCVMR
      C                   MOVEL     SCCY          FLPSCY
@@ -219,13 +222,13 @@
      C                   else
      C                   MOVE      *blanks       FLPOBR
      C                   endif
- 
+
       ***  Process Conversion of Manual Repayment details
- 
+
      C                   CALLB     'LEMAPYCVT'
- 
+
       ***  INPUTS
- 
+
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    MaPyFilFmt
      C                   PARM                    PDLoAmFilFmt
@@ -233,20 +236,20 @@
      C                   PARM                    CLE007                         Feature
      C                   PARM                    CLE023                         Feature
      C                   PARM                    WrkReactFacil                  Reactivated facility
- 
+
       ***  OUTPUTS
- 
+
      C                   PARM                    MaPyScnFmt                     MR in screen format
      C                   PARM                    Dummy1            2 0
      C                   PARM                    Dummy2            3 0
      C                   PARM                    Dummy3            3 0
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
       ***  do conversion of Settlements details
- 
+
      C                   CALLB     'ZASETINCVT'
       ***  Inputs                                                               File Fmt
      C                   PARM                    ##PAYF                         File paym settl inst
@@ -258,11 +261,11 @@
      C                   PARM      *BLANK        ##FRIS                         FRA/IRS Sett inst
      C                   PARM      CCY           #TRCCY                                      CSF011A
      C                   PARM      CCY           #TPCCY                                      CSF011A
- 
+
      C                   EVAL      TRANSDTL = MapyScnFmt + ##RECS + ##PAYS
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -271,9 +274,9 @@
       *  Called by: Implicitly on program activation                  *
       *  Calls    : None                                              *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ***  INPUT
       ***  =====
@@ -285,16 +288,16 @@
       ***  OUTPUT
       ***  ======
      C                   PARM                    TRANSDTL                       Output
- 
+
       ***  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ***  Database Error
- 
+
      C                   IF        PRTCD <> *BLANK
      C                   EVAL      DBKEY = POPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -313,12 +316,12 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

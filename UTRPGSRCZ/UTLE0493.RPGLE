@@ -15,12 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR316218 *CREATE   Date 23Jul12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR316218 *CREATE   Date 23Jul12               *
       *                 XXXXXXXX           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR316218 - Unable to extract some fields of RUDWH library    *
       *             tables due to corrupted data.                     *
@@ -35,7 +38,7 @@
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
      FHISTSHM   UF   E             DISK    INFSR(*PSSR)
      F                                     INFDS(HISTMF)
      F                                     PREFIX(LM_)
@@ -64,9 +67,9 @@
      F                                     INFDS(MHSTQF)
      F                                     PREFIX(MQ_)
      F                                     RENAME(HISTSHQF:MHISTQF)
- 
+
      FUTL493P1  O    E             PRINTER
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -78,65 +81,65 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the LE standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** Bank Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Short Data structure for Access Program
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data structure for Access Program
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
      DHISTMF           DS
      D  LM_AITN              180    186P 0
      D  TM_AITN              180    186
@@ -148,13 +151,13 @@
      D  TM_FSPRAM            201    207
      D  LM_FSCPAM            208    214P 0
      D  TM_FSCPAM            208    214
- 
+
      DHISTNF           DS
      D  LN_INTN              119    125P 0
      D  TN_INTN              119    125
      D  LN_FSPRAM            126    132P 0
      D  TN_FSPRAM            126    132
- 
+
      DHISTPF           DS
      D  LP_AITN              186    192P 0
      D  TP_AITN              186    192
@@ -168,7 +171,7 @@
      D  TP_FSPRAM            214    220
      D  LP_FSCPAM            221    227P 0
      D  TP_FSCPAM            221    227
- 
+
      DHISTQF           DS
      D  LQ_AITN              179    185P 0
      D  TQ_AITN              179    185
@@ -178,7 +181,7 @@
      D  TQ_IPRN              193    199
      D  LQ_FSCPAM            200    206P 0
      D  TQ_FSCPAM            200    206
- 
+
      DMHSTMF           DS
      D  MM_AITN              180    186P 0
      D  CM_AITN              180    186
@@ -190,13 +193,13 @@
      D  CM_FSPRAM            201    207
      D  MM_FSCPAM            208    214P 0
      D  CM_FSCPAM            208    214
- 
+
      DMHSTNF           DS
      D  MN_INTN              119    125P 0
      D  CN_INTN              119    125
      D  MN_FSPRAM            126    132P 0
      D  CN_FSPRAM            126    132
- 
+
      DMHSTPF           DS
      D  MP_AITN              186    192P 0
      D  CP_AITN              186    192
@@ -210,7 +213,7 @@
      D  CP_FSPRAM            214    220
      D  MP_FSCPAM            221    227P 0
      D  CP_FSCPAM            221    227
- 
+
      DMHSTQF           DS
      D  MQ_AITN              179    185P 0
      D  CQ_AITN              179    185
@@ -220,34 +223,34 @@
      D  CQ_IPRN              193    199
      D  MQ_FSCPAM            200    206P 0
      D  CQ_FSCPAM            200    206
- 
+
       ** +--------------------------------------+
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       **                                                                   
       **   Initial processing is performed automatically: the *inzsr is    
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialize work variables.
       *

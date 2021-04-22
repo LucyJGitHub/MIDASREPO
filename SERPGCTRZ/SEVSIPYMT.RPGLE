@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -202,10 +205,10 @@
      C                   IF        OKSINP = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSINP <> 'N'
      C                   Z-ADD     WInitPr       S1SINP
- 
+
      C                   IF        DDACTN = 'I'
      C                   Z-ADD     S1SINP        S1CPDP
      C                   Z-ADD     S1SINP        S1TPHD
@@ -215,9 +218,9 @@
      C                   Z-ADD     S1SINP        S1TPHD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -237,7 +240,7 @@
       ** Check valid number
      C                   MOVEL     *BLANKS       ZFIELD
      C                   MOVEL     DDSINP        ZFIELD
- 
+
      C                   IF        PPROT <> '4'
      C                   Z-ADD     3             ZADIG
      C                   Z-ADD     3             ZADEC
@@ -246,7 +249,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKSINP
      C                   ADD       1             IDx
@@ -262,7 +265,7 @@
      C                   MOVEL     'SEA0222'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Check valid number
@@ -273,7 +276,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKSINP
      C                   ADD       1             IDx
@@ -282,12 +285,12 @@
      C                   ELSE
      C                   MOVE      ZFIELD        WInitPr
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Else if blank and security is complete, error
      C                   ELSE
- 
+
      C                   IF        S1INCS = 'C'
      C                   MOVE      'N'           OKSINP
      C                   ADD       1             IDx
@@ -298,9 +301,9 @@
      C                   MOVEL     'SEA0223'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

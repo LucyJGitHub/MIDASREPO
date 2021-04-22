@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER016A - German Interest Calculation: Upgarde of FGE059     *
@@ -306,7 +308,8 @@
      C     UICFR         IFEQ      'O'
      C     VDAT          ANDLE     BJRDNB
       *
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
       *
      C                   MOVE      'O'           L1OTCD
      C                   MOVE      UBRTT         WBRTT
@@ -318,7 +321,8 @@
      C     TICFR         IFEQ      'O'
      C     VDAT          ANDLE     BJRDNB
       *
-     C     TBRTT         IFNE      *ZERO
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
       *
      C                   MOVE      'T'           L1OTCD
      C                   MOVE      TBRTT         WBRTT             2

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -310,7 +312,8 @@
       ** set up all event details.                                                            208221
       ** This can happen if the only event for the fee is the fee event                       208221
       ** and have not reached payment date yet.                                               208221
-     C                   Z-ADD     0             NW_E#BRTT                                    208221
+     C**********         Z-ADD     0             NW_E#BRTT                             208221 CSD103
+     C                   MOVE      *BLANKS       NW_E#BRTT                                    CSD103
      C                   Z-ADD     0             NW_E#BRTE                                    208221
      C                   Z-ADD     0             NW_E#RTSP                                    208221
      C                   Z-ADD     0             NW_E#IRAT                                    208221

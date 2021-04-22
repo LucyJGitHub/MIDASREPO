@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -47,7 +50,7 @@
       *****************************************************************
      FFWDRT     IF   F  611     3AIDISK    KEYLOC(2)  INFSR(*PSSR)
       *
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -65,9 +68,9 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D ZHL1            S              1    DIM(366)
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)
      D*DAT*************S              5  0 DIM(26) ASCEND                       170442
@@ -121,12 +124,12 @@
      D  ZZDYNO                58     60P 0
      D  ZSRTN                 61     67
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for CURRENCY details
- 
+
       *    FORWARD RATES FILE
- 
+
      IFWDRT     NS  10    1 CD
      I                                  1    1  RECI
      I                                  2    4  CCY
@@ -135,18 +138,18 @@
      I                             P  255  257 0LCD
      I                                258  258  CHTP
      I                             P  259  261 0TNLU
- 
+
       *    CATCHALL FOR DELETED RECORDS
- 
+
      IFWDRT     NS
- 
+
       *
       * INPUT PARAMETERS
       *
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
- 
+
       * INPUTS
       * buy/sell
      C                   PARM                    BUYSELL           1

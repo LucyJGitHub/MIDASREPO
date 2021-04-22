@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -440,7 +442,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D  NBRAM                117    118  0
+     D**NBRAM***             117    118  0                                                    CSD103
+     D  NBRAM                117    118                                                       CSD103
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123

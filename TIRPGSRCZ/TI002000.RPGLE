@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -342,7 +344,8 @@
                                                                                               245028
      C**********         MOVE      'Y'           W1STR             1                 BUG2814 BUG3394
      C                   MOVE      BACYCD        WCYCD             3                         BUG2814
-     C                   MOVE      BABSRC        WBSRC             2 0                       BUG2814
+     C**********         MOVE      BABSRC        WBSRC             2 0                BUG2814 CSD103
+     C                   MOVE      BABSRC        WBSRC             2                          CSD103
      C                   MOVE      99999         WVDNR             5 0                       BUG2814
       ** Date Format is always 'D' even for US Midas system. Field is for TI use.            BUG2814
      C                   MOVE      'D'           DFF               1                         BUG2814

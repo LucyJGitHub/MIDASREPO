@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -160,7 +163,7 @@
      D POptn           S              7A
      D PKyst           S              7A
      D PKeyI           S              3A
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -195,17 +198,17 @@
      C                   IF        OKQLTY = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKQLTY <> 'N'
- 
+
      C                   IF        DDQLTY <> *BLANKS
      C                   MOVEL     DDQLTY        S1QLTY
      C                   ELSE
      C                   MOVE      *BLANKS       S1QLTY
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -216,14 +219,14 @@
       *                                                               *
       *****************************************************************
      C     SRValRatg     BEGSR
- 
+
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDQLTY                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKQLTY
      C                   ADD       1             IDx
@@ -234,18 +237,18 @@
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(DDQLTY)                   MD000091
      C                   GOTO      ESRValRatg
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALL      'AORATIR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDQLTY        PKeyI
      C     PBRATI        PARM      PBRATI        DSFDY
- 
+
      C                   IF        PRtcd <> *BLANKS
- 
+
      C                   IF        PRtcd = '*NOSEL '
      C                   EVAL      DDQLTY = *BLANKS
      C                   ELSE
@@ -254,13 +257,13 @@
      C                   MOVEL     'DDQLTY'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0314'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      DDQLTY = PDRATI
- 
+
      C                   ENDIF
- 
+
      C     ESRValRatg    ENDSR
       *
       *****************************************************************

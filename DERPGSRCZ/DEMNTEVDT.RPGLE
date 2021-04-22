@@ -16,18 +16,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CLE034             Date 16Sep03               *
+      *                 CLE034             Date 16Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CDE001  *CREATE    Date 16Dec99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE034 - Lending Enhancements for Phase 1 Priority 1A        *
       *           (recompiled).                                       *

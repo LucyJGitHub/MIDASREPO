@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057437           Date 20Jan21               *
-      *  Prev Amend No. MD056546           Date 16Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057437           Date 20Jan21               *
+      *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
       *                 MD054906           Date 18Dec19               *
       *                 MD054117           Date 12Sep19               *
@@ -108,6 +109,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
       *             Fix is to not allow CIRS transaction with         *
       *             Principal change (Decrease) that will result to   *

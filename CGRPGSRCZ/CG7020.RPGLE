@@ -17,8 +17,9 @@
       *                                                               *
       *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. MD057260           Date 23Feb21               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057260           Date 23Feb21               *
+      *                 MD056543           Date 15Sep20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057260 - RetailInterestSummary Report issue - incorrect    *
       *             value balances. Amend to use RECAPM Cap Balance.  *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *

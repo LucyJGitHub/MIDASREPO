@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057237           Date 04Dec20               *
-      *  Prev Amend No. MD054702           Date 07Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057237           Date 04Dec20               *
+      *                 MD054702           Date 07Sep20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
@@ -86,6 +87,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057237 - Journal Entry via Interface File: Batch Stuck     *
       *             in Upload Status                                  *
       *  MD054702 - Update valid indicator to 'Y' if batch header and *

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -211,14 +214,14 @@
      C                   IF        OKLMGR = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKLMGR <> 'N'
      C**********         Z-ADD     WLdMgr        S1LMGR                                       CSD027
      C                   EVAL      S1LMGR = WLdMgr                                            CSD027
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -226,15 +229,15 @@
       *  SRValLdMgr - Validation for Lead Manager                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValLdMgr    BEGSR
- 
+
      C                   IF        DDLMGR <> *BLANKS
       *
       ** Check if question mark is entered.
       *
      C     '?'           SCAN      DDLMGR                                 01
- 
+
      C                   IF        *IN01 = *ON
       *
       ** Question mark is valid only on repair and i/c screens input.
@@ -246,29 +249,29 @@
      C                   MOVEL     'SEA0103'     MsgIdXAr(Idx)
      C                   GOTO      EValLdMgr
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
- 
+
      C                   CALLB     'AOSECSR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDLMGR        PKey
      C     SDSECS        PARM      SDSECS        DSSDY
- 
+
      C                   EVAL      DDLMGR = *BLANKS
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      DDLMGR = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDLMGR        PKey1
      C                   PARM      *BLANKS       PKeyst
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   MOVE      'N'           OKLMGR
      C                   ADD       1             Idx
@@ -277,11 +280,11 @@
      C                   ELSE
      C                   MOVEL     BBCUST        WLdMgr
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValLdMgr     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -334,9 +337,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -345,7 +348,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

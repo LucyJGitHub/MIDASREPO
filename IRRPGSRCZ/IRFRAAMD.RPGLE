@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL039             Date 22Aug05               *
       *                 CDL038             Date 10May05               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -103,59 +106,59 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * New Deal in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(IRFRAPD)
- 
+
       * (Current) Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(IRFRAPD)
      D                                     PREFIX(@)
- 
+
       * (Current) Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(DEALSDG)
- 
+
      D @M              S              2  0 DIM(12) CTDATA PERRCD(12)
      D*
      D RUNDAT          DS
@@ -172,7 +175,7 @@
       *
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for currency details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
       *
@@ -182,7 +185,7 @@
      D*
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL039
      D R_LCD         E                     EXTFLD(LCD)                                        CDL039
       ** EXTERNAL DS FOR SAR DETAILS                                                          CDL039
@@ -197,10 +200,10 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  SAccdOK                       1A
@@ -258,8 +261,8 @@
      D**SSPiOK************************1A                                                      CDL038
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -274,7 +277,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ****Convert*the dates on the current live deal
       ****from*YYYYMMDD format to Midas day number format
       *******
@@ -283,7 +286,7 @@
       **  Compare fields with amended values.
      C
      C                   EXSR      COMPFLDS
- 
+
       *  If any errors were found:
       *    Set Amendments OK Indicator to 'N'
       *
@@ -303,7 +306,7 @@
       *
       * Return
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -319,7 +322,7 @@
       *                                                               *
       *****************************************************************
      C     COMPFLDS      BEGSR
- 
+
      C*-----------------------------------------*
      C* Deal Type                               *
      C*-----------------------------------------*
@@ -422,11 +425,11 @@
      C                   PARM                    @CLKEY           10
      C                   PARM      '       '     @KYSTS            7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     BBCSSN        CustSName
      C                   END
- 
+
      C     SCNUM         IFNE      @SCNUM
      C     SCNUM         ANDNE     CustSName
      C                   ADD       1             Idx
@@ -772,9 +775,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -809,7 +812,7 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM                    ResetErrs         1
- 
+
       ** Initialise program name
       *
      C                   MOVEL     'IRFRAAMD'    DBPGM
@@ -875,7 +878,7 @@
      C                   END                                                                  CDL039
      C*
      C                   ENDSR
- 
+
       *****************************************************************
      C*
       /EJECT

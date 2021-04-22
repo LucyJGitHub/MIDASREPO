@@ -14,14 +14,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD056972           Date 25Nov20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056972           Date 25Nov20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1097467B         Date 23Apr13               *
       *                 AR1097467A         Date 12Apr13               *
       *                 CGL127AP *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056972 - SWIFT accounts not closed when accounts close     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1097467B - Expected 15% COB run optimization not met       *

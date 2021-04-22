@@ -15,8 +15,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. HUT113             Date 01Apr20               *
-      *                 MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -107,12 +106,6 @@
       *                                                               *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
-      *  HUT113 - Full PB Functionality at FM 2.1                     *
-      *           (Upgrade HUT026 to FM2.1 SP22)                      *
-      *           Apply fix MD054322 MD052193                         *
-      *           Addition of hooks HUT113_114 to HUT113_131          *
-      *           Amendment of core hooks SDCUSDSC06, SDCUSDSC14,     *
-      *           SDH00729 and SDH00736.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -327,8 +320,6 @@
      D CrCuFilFmt    E DS                  EXTNAME(SDCUSTPD)
      D                                     PREFIX(C_)
 
-
-     D/COPY WNCPYSRC,HUT113_120                                                               HUT113
       * Current Customer - SWIFT Details  in File Format                                      CSW207
      D CrSwFilFmt    E DS                  EXTNAME(SDCSSWPD)                                  CSW207
      D                                     PREFIX(C_)                                         CSW207
@@ -423,9 +414,6 @@
       * New Customer in File Format
      D NwCuFilFmt    E DS                  EXTNAME(SDVCUSDPD)
                                                                                               CSW207
-
-     D/COPY WNCPYSRC,HUT113_121                                                               HUT113
-
       * New SWIFT Detail in File Format                                                       CSW207
      D NwSwFilFmt    E DS                  EXTNAME(SDVSWSDPD)                                 CSW207
 
@@ -643,8 +631,6 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
-
-     D/COPY WNCPYSRC,HUT113_115                                                              HUT113
       ** Customer Work Field
      D WKCUST          S                   LIKE(DDCUSN)
 
@@ -921,8 +907,6 @@
      C                   MOVE      *BLANKS       DDCUSN
      C                   ENDIF
       *
-     C/COPY WNCPYSRC,HUT113_116                                                              HUT113
-      *
       * Set F7/F8 called from Insert mode flag
      C                   MOVE      'Y'           INSERTENQ
       *
@@ -1147,7 +1131,6 @@
       ** Default Private Banking Customer Indicator to an 'N' for insert
       *
      C                   IF        DDACTN = 'I' and BGN4ST = 'Y'
-     C/COPY WNCPYSRC,HUT113_117                                                              HUT113
      C                   EVAL      DDPRBA = 'N'
      C                   END
                                                                                               CSD031
@@ -1241,7 +1224,6 @@
      C                   MOVEL     *BLANK        WMsgDtaArr
      C                   ENDIF
 
-     C/COPY WNCPYSRC,HUT113_118                                                              HUT113
       *
       * F3 - End Program
      C     @INKC         CASEQ     '1'           ENDP
@@ -1425,7 +1407,6 @@
      C                   PARM                    RespMode
       ** Customer Primary Details
      C                   PARM                    NewCuPrim
-     C/COPY WNCPYSRC,HUT113_122                                                               HUT113
       * Customer Extra Data file data
      C                   PARM                    ExtData
                                                                                               CLE025
@@ -1458,7 +1439,6 @@
       * Valid Customer layout (DS) from/to caller
       ** Valid Global Customer ID                                                             CGP001
      C                   PARM                    NwCuFilFmt
-     C/COPY WNCPYSRC,HUT113_123                                                               HUT113
      C                   PARM                    V_DDGCUS                                     CGP001
       ** Customer Primary Details OK inds                                                     CSW207
      C                   PARM                    OKCuSwft                                     CSW207
@@ -3513,7 +3493,6 @@
      C                   PARM                    CrPBFilFmt
      C                   PARM                    CrTIFilFmt                                  BUG3362
      C                   PARM                    GCrCuFilFmt                                  CGP001
-     C/COPY WNCPYSRC,HUT113_124                                                               HUT113
      C                   PARM                    CrcmFilFmt                                   CRE026
      C                   PARM                    CracFilFmt                                   CRE026
      C                   PARM                    CrcfFilFmt                                   CRE026
@@ -3525,14 +3504,11 @@
      C                   PARM                    CrplFilFmt                                   CRE026
      C                   PARM                    Crx2FilFmt                                   CRE026
      C                   PARM                    Crx1fFilFmt                                  CRE026
-     C/COPY WNCPYSRC,HUT113_125                                                               HUT113
      C                   PARM                    CrSwFilFmt                                   CSW207
      C**********         PARM                    CuSW13                              CFT050 MD022395
      C                   PARM                    CrCuSW13                                   MD022395
-     C/COPY WNCPYSRC,HUT113_126                                                               HUT113
      C                   PARM                    TranInCUAH                                   CER059
      C                   PARM                    TranInCCTX                                   CER059
-     C/COPY WNCPYSRC,HUT113_127                                                               HUT113
      C                   PARM                    CurCuPrim                                    CFT050
      C                   PARM                    CurCuSeco                                    CFT050
      C                   PARM                    CurCuMT3x                                    CFT050
@@ -3823,12 +3799,10 @@
       *
       * Private Banking format
      C                   PARM                    CrPBFilFmt
-     C/COPY WNCPYSRC,HUT113_128                                                               HUT113
                                                                                               CGP001
       ** Global Customer X-Reference                                                          CGP001
      C                   PARM                    GCrCuFilFmt                                  CGP001
      C                   PARM                    CrSwFilFmt                                   CSW207
-     C/COPY WNCPYSRC,HUT113_129                                                               HUT113
                                                                                               CGP001
       ** Switchable features                                                                  CLE025
                                                                                               CLE025
@@ -3844,10 +3818,8 @@
      C                   PARM                    NewCuMsg
      C                   PARM                    NewCuBrt
      C                   PARM                    NewCuPriv
-     C/COPY WNCPYSRC,HUT113_130                                                               HUT113
      C                   PARM                    TranInACU3                                   CER059
      C                   PARM                    TranInACU4                                   CER059
-     C/COPY WNCPYSRC,HUT113_131                                                               HUT113
      C                   PARM                    NewCuSwft                                    CSW207
      C/COPY WNCPYSRC,SDCUSDSC14
       *
@@ -4149,7 +4121,6 @@
      C                   MOVE      DDCRNM        FDCRNM
      C                   MOVE      DDLINC        FDLINC
      C                   MOVE      C_BBTICS      FDTICS
-     C/COPY WNCPYSRC,HUT113_119                                                              HUT113
      C**********         MOVE      DDCRPC        FDCRPC                              BUG4454 BUG5139
      C**********         MOVE      DDBRCD        FDBRCD                              BUG4454 BUG5139
      C**********         MOVE      DDLICD        FDLICD                              BUG4454 BUG5139

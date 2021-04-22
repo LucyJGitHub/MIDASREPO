@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056479           Date 14Sep19               *
-      *  Prev Amend No. MD055528           Date 13Aug20               *  
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056479           Date 14Sep19               *
+      *                 MD055528           Date 13Aug20               *
       *                 MD053869           Date 07Jan20               *
       *                 MD052075           Date 07Jun19               *
       *                 CGL148             Date 13Jul18               *
@@ -71,13 +72,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056479 - Cannot accept batch due to calculated hash        *
       *             not recalculated after deleting batch item        *
       *           - Applied for MD-56637                              *
       *  MD055528 - Corrective Batches value dates are overwritten by *
       *             Booking Date.                                     *
       *           - When corrective batches value dates are equal to  *
-      *             *BLANKS defaults value date to Booking Date       *  
+      *             *BLANKS defaults value date to Booking Date       *
       *  MD053869 - Do not validate batch item on delete.             *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *

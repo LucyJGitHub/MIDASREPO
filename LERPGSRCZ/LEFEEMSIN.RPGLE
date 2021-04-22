@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD050688           Date 26Aug20               *
-      *  Prev Amend No. AR375891B          Date 26Mar20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD050688           Date 26Aug20               *
+      *                 AR375891B          Date 26Mar20               *
       *                 AR375892           Date 26Aug20               *
       *                 MD052696           Date 04Apr19               *
       *                 MD031692           Date 12Mar20               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
       *  AR375891B - Amendment to Settlement details do not reflect   *
       *              on file. Ensure protect indicator set correctly. *

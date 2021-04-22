@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CLE134             Date 01Aug12               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -169,21 +172,21 @@
      D FacnFilFmt    E DS                  EXTNAME(FCLTYFN)
       ***  Current Fclty in File Format FN
      D                                     PREFIX(FN)
- 
+
       * (Current) Facility in Screen Format - Primary Details
      D CurPriScn     E DS                  EXTNAME(LEFCPPPD)
      D                                     PREFIX(@)
       * (Current) Facility in Screen Format - Secondary Details
      D CurSecScn     E DS                  EXTNAME(LEFCSPPD)
      D                                     PREFIX(@)
- 
+
       * Valid Facility FM layout
      D ValidFacm     E DS                  EXTNAME(LEVFCIMPD)
      D                                     PREFIX(V_)
       * Valid Facility FN layout
      D ValidFacn     E DS                  EXTNAME(LEVFCINPD)
      D                                     PREFIX(V_)
- 
+
       *
      D FcipNwPrim    E DS                  EXTNAME(LEFCPPPD)
       ***  New Fclty in Screen Format - Screen 1
@@ -221,7 +224,7 @@
       *
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ***  Midas modules details accessed via access program
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
       *
@@ -236,13 +239,13 @@
       *
      D  TransData      DS           500
       ***  Shared data
- 
+
       ** IN Message Format
      D P#INMF        E DS                  EXTNAME(LER1MFPD)
- 
+
       ** OUT Message Format
      D P#OUMF        E DS                  EXTNAME(LER2MFPD)
- 
+
       /COPY QWINDSRC,LEFCIPDTA                                                                LLN022
      D                 DS
      D  @SIFACR                1     11
@@ -516,7 +519,7 @@
      C                   PARM                    CLE005
      C                   PARM                    CLE006
      C                   PARM                    CLE008
- 
+
       * Participant Facility ind. from FCLTYFM file
      C                   PARM                    H#PRTR            1
       *
@@ -532,7 +535,7 @@
      C                   PARM                    @INKW             1
      C                   PARM                    @INKX             1
      C                   PARM      'N'           WriteOnly
- 
+
      C                   Z-ADD     WIDX          PRVWARN           3 0
       *
       ***  Reset errors file and check function keys
@@ -871,7 +874,7 @@
      C     Idx           IFNE      0
      C                   GOTO      EVAL@1
      C                   END
- 
+
      C                   END
       *
       ***  Validate Fclty details
@@ -899,7 +902,7 @@
      C                   PARM                    CLE007            1
       * CLE014
      C                   PARM                    CLE014            1
- 
+
       * Front office inputs (if mode = 'B' or ModeOfop = FRONT)
      C                   PARM                    F1PCOB            3
      C                   PARM                    F1TNRF           15
@@ -912,7 +915,7 @@
       ** Reject action                                                                      MD039655
                                                                                             MD039655
      C                   PARM      *BLANK        @ACTRV                                     MD039655
- 
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFcPrim
@@ -967,7 +970,7 @@
      C                   MOVEL     *BLANKS       DDFCNO
      C                   ENDIF                                                                CSC024
      C                   END
- 
+
       *----------------------------------------------------------------
      C     EVAL@1        ENDSR
       *****************************************************************
@@ -1062,7 +1065,7 @@
      C                   PARM                    WWNBDP            1
       * OK indicator - filed TRCA
      C                   PARM                    OKTRCA            1
- 
+
       * OK indicator - filed CAFT
      C                   PARM                    OKCAFT            1
       * OK indicator - filed CAFN
@@ -1075,7 +1078,7 @@
      C                   PARM                    WBLACF            1
       * Participant Facility ind. from FCLTYFM file
      C                   PARM                    H#PRTR            1
- 
+
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
       * CLE005
@@ -1094,7 +1097,7 @@
       ** Reject Action Code                                                                 MD039655
                                                                                             MD039655
      C                   PARM      *BLANK        @ACTRV                                     MD039655
- 
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFcSeco
@@ -1496,7 +1499,7 @@
                                                                                             MD039655
      C                   PARM      *BLANK        @ACTRV            1                        MD039655
      C/COPY WNCPYSRC,LEH00358
- 
+
       * OUTPUTS
       * (Current) Facility FM in file format
      C                   PARM                    FacmFilFmt
@@ -1761,7 +1764,7 @@
      C                   PARM                    FcipNwPrim
       *
       ***  Fields in error
- 
+
      C                   PARM                    OkFcPrim
       *
       ***  Errors
@@ -1921,7 +1924,7 @@
      C     DDFCNO        ANDEQ     *BLANKS
      C                   MOVEL     WWFCNO        DDFCNO
      C                   END
- 
+
      C                   MOVEL     DDFCNO        V_FPFCNO
      C                   MOVEL     DDFCNO        V_FNFCNO
       *
@@ -1964,7 +1967,7 @@
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
- 
+
      C                   END
       *
       ***  If there were any errors in the update functions ROLLBACK any
@@ -2183,40 +2186,40 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       ** Determine if CLE002 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE002'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE002            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE002
      C                   ENDIF
- 
+
       ** Determine if CLE005 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE005            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE005
      C                   ENDIF
- 
+
       ** Determine if CLE006 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE006            1
      C                   ELSE
@@ -2229,20 +2232,20 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE007            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE007
      C                   ENDIF
- 
+
       ** Determine if CLE008 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE008'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE008            1
      C                   ELSE
@@ -2255,7 +2258,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE014'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE014            1
      C                   ELSE
@@ -2268,7 +2271,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CSC011            1
      C                   ELSE
@@ -2281,7 +2284,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU013'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CEU013            1
      C                   ELSE
@@ -2376,9 +2379,9 @@
       *
      C                   EXSR      IFDS@A
      C                   EXSR      IFKS@A
- 
+
      C                   MOVE      *BLANKS       @RTCD
- 
+
       *
       ***  Hook to enable non-core initial processing to be included
       *

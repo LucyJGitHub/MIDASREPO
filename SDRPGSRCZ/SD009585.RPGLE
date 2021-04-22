@@ -1,4 +1,4 @@
-     H DEBUG
+    H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -17,13 +17,11 @@
       *  Prev Amend No. 248270A            Date 01Jun20               *
       *                 248270             Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
-
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CLE025             Date 20Oct03               *
-
       *                 CGL029             Date 01Sep03               *
       *                 CRE009  *CREATE    Date 12Sep02               *
       *                                                               *

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 207964             Date 23Aug02               *
-      *  Prev Amend No. MD031292           Date 06Nov19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 207964             Date 23Aug02               *
+      *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
@@ -164,6 +165,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
       *           not change ZMD to 'M'. Amendment to CLE023.         *
       *         - Applied for MD-10504(artf1087794)                   *
@@ -3254,7 +3256,8 @@
       *
       * Change ind
      C                   MOVE      L_CLCHIN      CHIN
-     C     L_CLBRTT      IFNE      *ZERO
+     C*****L_CLBRTT      IFNE      *ZERO                                                      CSD103
+     C     L_CLBRTT      IFNE      *BLANKS                                                    CSD103
      C     L_CLCHIN      ANDEQ     *BLANK
      C     L_CLPTYP      IFEQ      63
      C     L_CLPTYP      OREQ      65
@@ -3391,8 +3394,10 @@
      C     RLDT_M        ANDNE     *ZERO
      C     NCCY_M        ANDNE     *BLANKS
      C     NCCY_M        ANDNE     CCY_M
-     C     NBRA_M        ANDNE     *ZERO
-     C                   Z-ADD     NBRA_M        NBRA
+     C*****NBRA_M        ANDNE     *ZERO                                                      CSD103
+     C     NBRA_M        ANDNE     *BLANKS                                                    CSD103
+     C**********         Z-ADD     NBRA_M        NBRA                                         CSD103
+     C                   MOVE      NBRA_M        NBRA                                         CSD103
      C                   Z-ADD     NCAS_M        NCAS
      C                   MOVE      NCHI_M        NCHI
      C                   ENDIF
@@ -7836,7 +7841,8 @@
      C                   MOVE      'B'           WEPAR
      C     WKLON         CHAIN(N)  CLOAN                              99
      C     *IN99         IFEQ      '0'
-     C                   Z-ADD     NBRA          NBRA_M            2 0
+     C**********         Z-ADD     NBRA          NBRA_M            2 0                        CSD103
+     C                   MOVE      NBRA          NBRA_M            2                          CSD103
      C                   Z-ADD     NCAS          NCAS_M            1 0
      C                   MOVE      NCHI          NCHI_M            1
      C                   MOVE      NCCY          NCCY_M            3

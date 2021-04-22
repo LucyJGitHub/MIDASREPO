@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 AR784570           Date 21Feb17               *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057049 - Moved IKRRAT to FSRRAT                            *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -700,7 +702,8 @@
       * BASE RATE CODE & BASE RATE
       *
      C     IKBSRC        IFEQ      *BLANK
-     C                   Z-ADD     *ZERO         BRTT
+     C**********         Z-ADD     *ZERO         BRTT                                         CSD103
+     C                   MOVE      *BLANKS       BRTT                                         CSD103
      C                   Z-ADD     *ZERO         BRTE
      C                   ELSE
      C                   MOVE      IKBSRC        BRTT
@@ -2802,14 +2805,16 @@
       ** Access Historic Base Rates                                                          BUG5169
                                                                                              BUG5169
      C                   ELSE                                                                BUG5169
-     C                   Z-ADD     0             @BSRT             2 0                       BUG5169
+     C**********         Z-ADD     0             @BSRT             2 0                BUG5169 CSD103
+     C                   MOVE      *BLANKS       @BSRT             2                          CSD103
      C                   MOVE      IKBSRC        @BSRT                                       BUG5169
                                                                                              BUG5169
      C                   CALL      'AOBSHSR0'                                                BUG5169
      C                   PARM      *BLANKS       @RTCD                                       BUG5169
      C                   PARM      '*KEY   '     @OPTN                                       BUG5169
      C                   PARM      IKCCY         @AJCD                                       BUG5169
-     C                   PARM      @BSRT         @DEFFNDRT         2 0                       BUG5169
+     C**********         PARM      @BSRT         @DEFFNDRT         2 0                BUG5169 CSD103
+     C                   PARM      @BSRT         @DEFFNDRT         2                          CSD103
      C                   PARM      IKDVSD        @HISTDATE         5 0                       BUG5169
      C     SDBSHS        PARM      SDBSHS        DSFDY                                       BUG5169
                                                                                              BUG5169

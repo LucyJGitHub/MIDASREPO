@@ -1107,8 +1107,6 @@
      D WCTAX           S              2A                                                      CGL132
      D WWCLAC          S              5A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
-
-
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1301,7 +1299,6 @@
       ** Retrieve Service Fees                                                                CSD079
                                                                                               CSD079
      C     CSD008        IFEQ      'Y'                                                        CSD079
-
      C                   EXSR      RtvSfee                                                    CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -2279,8 +2276,6 @@
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C**********         MOVEL     'USR0553'     MsgIdArr(Ix)                                 254109
      C                   MOVEL     '5049396'     MsgIdArr(Ix)                                 254109
-
-
      C                   GOTO      EVAL
       *
      C                   ENDIF
@@ -5770,20 +5765,6 @@
      C                   Eval      WCusAlphChksum  = PSysVal2                                 CSD027
      C                   Eval      WCusAlphaSupNum = PSysVal3                                 CSD027
       *                                                                                       CSD027
-
-
-
-
-
-
-
-
-
-
-
-
-
-
      C                   ENDSR
       *****************************************************************
       /EJECT

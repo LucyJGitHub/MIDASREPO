@@ -1189,7 +1189,6 @@
      D***FillerBufEx2    S           5590A                                         MD054028 MD055446
      D***FillerBufEx2    S           5580A                                         MD055446 MD055373
      D FillerBufEx2    S           5560A                                                    MD055373
-
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1223,8 +1222,6 @@
      D  PACRTN                36     45                                                     MD042692
      D  PAACCZ                46     47                                                     MD042692
      D  PAINSF                48     48                                                     MD042692
-
-
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
@@ -2104,7 +2101,6 @@
       ** Validate Service Fees                                                                CSD079
                                                                                               CSD079
      C     CSD008        IFEQ      'Y'                                                        CSD079
-
      C     SFEDDSMAC     IFNE      *BLANKS                                                   BG12238
      C     SFEDDHMIN     ORNE      *BLANKS                                                   BG12238
      C     SFEDDNAIN     ORNE      *BLANKS                                                   BG12238
@@ -2585,7 +2581,6 @@
       *                                                                                     MD055446
       ** Customer Base Rate Tax Details (Century)                                           MD055446
      C                   PARM                    TranInBRTCent                              MD055446
-
 
       *
       * OUTPUTS
@@ -3973,12 +3968,6 @@
                                                                                               CSD079
       ** Set Service fees Fields                                                              CSD079
                                                                                               CSD079
-
-
-
-
-
-
      C                   IF        CSD008 = 'Y'                                               CSD079
      C                   MOVEL     DDCUSN        V_SFCUST                                     CSD079
      C                   MOVEL     SFEDDSMAC     V_SFSMAC                                     CSD079
@@ -7269,21 +7258,7 @@
      C                   eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      /COPY WNCPYSRC,SDCUSDVU03
+       /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082
       /COPY WNCPYSRC,SDCUSDVU05

@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -49,12 +51,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -219,7 +221,7 @@
       *
      C                   IF        DTYP = 'IL'
      C                             or DTYP = 'ID'
- 
+
      C                   EVAL      DDDLNOOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDDLNO    '
@@ -255,9 +257,11 @@
       ** or our base rate type is  0 and their interest fix date < run date the
       ** adjustment is valid
       *
-     C                   IF        UBRTT <> 0
+     C**********         IF        UBRTT <> 0                                                 CSD103
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
      C                             and UINFD < BJRDNB
-     C                             or UBRTT = 0
+     C**********                   or UBRTT = 0                                               CSD103
+     C                             or UBRTT = *BLANKS                                         CSD103
      C                             and TINFD < BJRDNB
      C                   ELSE
      C                   EVAL      DDDLNOOK = 'N'
@@ -303,7 +307,7 @@
       ** Customer of deal to be adjusted is mandatory
       *
      C                   IF        DDCNUM = *BLANK
- 
+
      C                   EVAL      DDCNUMOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDCNUM    '
@@ -737,17 +741,22 @@
      C                   ENDIF
       *
      C                   IF        DTYP = 'RS'
-     C                             and UBRTT = 0
+     C**********                   and UBRTT = 0                                              CSD103
+     C                             and UBRTT = *BLANKS                                        CSD103
      C                             or DTYP = 'RX'
-     C                             and UBRTT = 0
+     C**********                   and UBRTT = 0                                              CSD103
+     C                             and UBRTT = *BLANKS                                        CSD103
      C                             or DTYP = 'RP'
-     C                             and UBRTT = 0
+     C**********                   and UBRTT = 0                                              CSD103
+     C                             and UBRTT = *BLANKS                                        CSD103
      C                             and CIR006 = 'Y'
      C                             or DTYP = 'RR'
-     C                             and UBRTT = 0
+     C**********                   and UBRTT = 0                                              CSD103
+     C                             and UBRTT = *BLANKS                                        CSD103
      C                             and CIR006 = 'Y'
      C                             or DTYP = 'RF'
-     C                             and UBRTT = 0
+     C**********                   and UBRTT = 0                                              CSD103
+     C                             and UBRTT = *BLANKS                                        CSD103
      C                             and CIR006 = 'Y'
      C                   EVAL      DDUSITOK = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -783,17 +792,22 @@
      C                   ENDIF
       *
      C                   IF        DTYP = 'RS'
-     C                             and TBRTT = 0
+     C**********                   and TBRTT = 0                                              CSD103
+     C                             and TBRTT = *BLANKS                                        CSD103
      C                             or DTYP = 'RX'
-     C                             and TBRTT = 0
+     C**********                   and TBRTT = 0                                              CSD103
+     C                             and TBRTT = *BLANKS                                        CSD103
      C                             or DTYP = 'RP'
-     C                             and TBRTT = 0
+     C**********                   and TBRTT = 0                                              CSD103
+     C                             and TBRTT = *BLANKS                                        CSD103
      C                             and CIR006 = 'Y'
      C                             or DTYP = 'RR'
-     C                             and TBRTT = 0
+     C**********                   and TBRTT = 0                                              CSD103
+     C                             and TBRTT = *BLANKS                                        CSD103
      C                             and CIR006 = 'Y'
      C                             or DTYP = 'RF'
-     C                             and TBRTT = 0
+     C**********                   and TBRTT = 0                                              CSD103
+     C                             and TBRTT = *BLANKS                                        CSD103
      C                             and CIR006 = 'Y'
      C                   EVAL      DDUSITOK = 'N'
      C                   EVAL      Idx = Idx + 1

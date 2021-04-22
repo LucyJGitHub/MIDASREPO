@@ -13,7 +13,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. MD056982           Date 12Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
@@ -159,6 +160,8 @@
       *                                                               *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
@@ -1353,8 +1356,6 @@
      D X               S              2S 0                                                    CGL157
      D A               S              4S 0                                                    CGL177
 
-
-
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -2027,9 +2028,6 @@
      C*****A_CUTYLC      OREQ      'R'                                               CSD079 BUG14009
                                                                                               CSD079
      C                   IF        CSD008 = 'Y' AND CSD079 = 'Y'                              CSD079
-
-
-
      C     F_SFSMAC      IFNE      *BLANKS                                                   BG12238
      C     F_SFHMIN      ORNE      *BLANKS                                                   BG12238
      C     F_SFNAIN      ORNE      *BLANKS                                                   BG12238
@@ -2039,7 +2037,6 @@
      C     F_SFPCAC      ORNE      *BLANKS                                                   BG12238
      C     F_SFPCHM      ORNE      *BLANKS                                                   BG12238
      C     F_SFTAIF      ORNE      *BLANKS                                                   BG12238
-
      C                   EXSR      UPDSFD                                                     CSD079
      C                   ENDIF                                                               BG12238
      C                   ENDIF                                                                CSD079
@@ -3786,9 +3783,6 @@
      C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
      C                   EXSR      ChkChain                                                   252069
 
-
-
-
       ** DATABASE ERROR
 
      C     *IN99         IFEQ      '1'
@@ -5300,9 +5294,6 @@
      C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
      C                   EXSR      ChkChain                                                   252069
 
-
-
-
       ** DATABASE ERROR
 
      C     *IN99         IFEQ      '1'
@@ -5577,9 +5568,6 @@
      C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
      C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
      C                   EXSR      ChkChain                                                   252069
-
-
-
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -5731,9 +5719,6 @@
      C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
      C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
      C                   EXSR      ChkChain                                                   252069
-
-
-
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -7997,20 +7982,6 @@
      C                   EVAL      CER050      = 'N'                                          CER050
      C                   ENDIF                                                                CER050
       *                                                                                       CER050
-
-
-
-
-
-
-
-
-
-
-
-
-
-
      C                   ENDSR
      C****************************************************************
       /EJECT

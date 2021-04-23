@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. 248683             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       *                 AR698195B          Date 20Jan11               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248683 - Initialize Data Area for SE1806 Flag.               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -4670,6 +4672,12 @@ TAS  C                   PARM                    WARNIND                        
       ** Initialize program name
       *
      C                   MOVEL     'SETRADRPR'   DBPGM
+      *                                                                                       248683
+      ** Initialize Data Area for SE1806 Flag                                                 248683
+      *                                                                                       248683
+     C                   CALL      'SECDTARA'                                                 248683
+     C                   PARM      'SETRADRPR'   PGMNAM           10                          248683
+     C                   PARM      *BLANKS       WRTFLG            1                          248683
       *
       ** ACCESS BANK DETAILS
       *

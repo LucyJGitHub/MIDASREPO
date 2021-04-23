@@ -14,7 +14,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR1088819          Date 03Jun20               *
       *                 MD053472           Date 27Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -90,6 +91,8 @@
       *                                                               *
       *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
       *           parameter mismatch. Apply fix 258724.               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *

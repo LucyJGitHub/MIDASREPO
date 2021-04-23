@@ -36,6 +36,7 @@
       *  Last Amend No. 258901             Date 22May20               *
       *  Prev Amend No. 247907             Date 22May20               *
       *                 247524             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056627           Date 02Sep20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
@@ -132,6 +133,8 @@
       *           not calculated.                                     *
       *  247907 - Wrong settlement amount for trades with the same    *
       *           nominal and settlement currency.                    *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*

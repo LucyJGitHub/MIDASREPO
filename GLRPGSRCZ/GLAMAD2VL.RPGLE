@@ -13,6 +13,7 @@
       *                                                               *
       *  Last Amend No. 250822             Date 22May20               *
       *  Prev Amend No. 252664             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057639           Date 10Mar21               *
       *                 CER050             Date 16Jun19               *
       *                 MD053611           Date 19Aug19               *
@@ -70,6 +71,8 @@
       *  250822 - Used the day number from ToF and ensure that        *
       *           ZFREQB2 is called. Patterned fix after 210058.      *
       *  252664 - Do not set to blanks field DDNCID                   *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057639 - Error messages for Alternate Credit/Debit Interest*
       *             Account are inconsistent                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

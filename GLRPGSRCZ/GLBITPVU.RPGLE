@@ -34,7 +34,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. AR574704           Date 01Jun20               *
-      *  Prev Amend No. MD056412           Date 11Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056412           Date 11Aug20               *
       *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -99,6 +100,8 @@
       *                                                               *
       *  AR574704 - Cannot delete item if account is invalid. Neglect *
       *             validation for action code Delete.                *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056412 - BITP API message not shows in Repair              *
       *             Queue - Batch Details. Pass BRBTNB to DDBTNB      *
       *             after reading GLJENHL3.                           *

@@ -13,6 +13,7 @@
       *                                                               *
       *  Last Amend No. AR573975           Date 01Jun20               *
       *  Prev Amend No. 254657             Date 01Jun20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057744           Date 24Mar21               *
       *                 MD056651           Date 05Oct20               *
       *                 MD041767           Date 25Jun20               *
@@ -102,6 +103,8 @@
       *             after 254657.                                     *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
       *           user tries to amend/accept JE inserted via APIs     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057744 - T&P Batch item goes into Repair - overwrites      *
       *             another item when repaired. Amend program to add  *
       *             condition, Insert will not pass through processing*

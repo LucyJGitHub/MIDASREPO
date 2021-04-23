@@ -35,7 +35,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. 250822             Date 22May20               *
-      *  Prev Amend No. AR979910           Date 07Jun12               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR979910           Date 07Jun12               *
       *                 260405             Date 04Apr20               *
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
@@ -147,6 +148,7 @@
       *                                                               *
       *  250822 - Commented-out /cpy GLAMADSMV1 as this is irrelevant *
       *           since it was not changed for HUT003.                *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
       *             constant timestamp value constant for validation  *
       *             indicating that no change has occured yet.        *
@@ -2889,7 +2891,8 @@
      C                   ENDIF                                                                CRE030
       *                                                                                       BUG553
      C     X_RCCY        IFEQ      DDCCY                                                      BUG553
-     C     DRIB          IFEQ      *ZEROS                                                     BUG553
+     C*****DRIB*         IFEQ      *ZEROS                                              BUG553 CSD103
+     C     DRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDDRIB                                       BUG553
      C                   ELSE                                                                 BUG553
      C                   MOVE      DRIB          DDDRIB                                       BUG553
@@ -2897,7 +2900,8 @@
       *                                                                                       BUG553
       ** If not the same Ccy - Check Base Type is valid for other Ccy                         BUG553
      C                   ELSE                                                                 BUG553
-     C     DRIB          IFNE      *ZEROS                                                     BUG553
+     C*****DRIB*         IFNE      *ZEROS                                              BUG553 CSD103
+     C     DRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      DRIB          WWRIB             2                          BUG553
       *                                                                                       BUG553
       ** Get Base Rate Codes                                                                  BUG553
@@ -2935,7 +2939,8 @@
      C                   ENDIF                                                                BUG553
       *                                                                                       BUG553
      C     X_RCCY        IFEQ      DDCCY                                                      BUG553
-     C     CRIB          IFEQ      *ZEROS                                                     BUG553
+     C*****CRIB*         IFEQ      *ZEROS                                              BUG553 CSD103
+     C     CRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDCRIB                                       BUG553
      C                   ELSE                                                                 BUG553
      C                   MOVE      CRIB          DDCRIB                                       BUG553
@@ -2943,7 +2948,8 @@
       *                                                                                       BUG553
       ** If not the same Ccy - Check Base Type is valid for other Ccy                         BUG553
      C                   ELSE                                                                 BUG553
-     C     CRIB          IFNE      *ZEROS                                                     BUG553
+     C*****CRIB*         IFNE      *ZEROS                                              BUG553 CSD103
+     C     CRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      CRIB          WWRIB                                        BUG553
       *                                                                                       BUG553
       ** Get Base Rate Codes                                                                  BUG553

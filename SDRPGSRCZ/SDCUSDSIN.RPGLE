@@ -222,7 +222,6 @@
       *                                                               *
       *****************************************************************
 
-
      FSDCUSTL5  IF   E           K DISK    INFSR(*PSSR)                                       202805
       *                                                                                       CER001
      FSDCUX2L0  IF   E           K DISK    USROPN                                             CER001
@@ -251,7 +250,6 @@
       ** SWIFT Customer extension                                                             CFT050
      FSDCSSWL2  IF   E           K DISK    INFSR(*PSSR)                                       CFT050
 
-
      F/COPY WNCPYSRC,SDCUSDSF01
       *****************************************************************
       ** +--------------------------------------+
@@ -265,12 +263,10 @@
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
 
-
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
@@ -279,42 +275,35 @@
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
 
-
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
 
-
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
 
-
       *****************************************************************
       /EJECT
       *****************************************************************
-
 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
 
-
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
 
-
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
 
       * Current Customer in File Format
      D CrCuFilFmt    E DS                  EXTNAME(SDCUSTPD)
@@ -334,7 +323,6 @@
       * Current Customer in File Format - Base Rate Tax Details
      D CrBrFilFmt    E DS                  EXTNAME(SDVCUBRPD)
      D                                     PREFIX(C_)
-
 
       * Current Customer in File Format - Private Banking Details
      D CrPBFilFmt    E DS                  EXTNAME(SDVCUPBPD)
@@ -380,7 +368,6 @@
      D CurCuPrim     E DS                  EXTNAME(SDCUPRPD)
      D                                     PREFIX(@)
 
-
       * Current Customer in Screen Format - Swift Extension                                   CSW207
      D CurCuSwft     E DS                  EXTNAME(SDCUSWPD)                                  CSW207
      D                                     PREFIX(@)                                          CSW207
@@ -389,7 +376,6 @@
      D CurCuBrt      E DS                  EXTNAME(SDCUBRPD)
      D                                     PREFIX(@)
 
-
       * Current Customer in Screen Format - Private Banking Details
      D CurCuPriv     E DS                  EXTNAME(SDCUPBPD)
      D                                     PREFIX(@)
@@ -397,7 +383,6 @@
       * Current TI details Screen Format - TI Details                                        BUG3362
      D CurTIDet      E DS                  EXTNAME(SDTICSPD)                                 BUG3362
      D                                     PREFIX(@)                                         BUG3362
-
 
       * Current Customer in Screen Format - Secondary Details
      D CurCuSeco     E DS                  EXTNAME(SDCUSEPD)
@@ -410,21 +395,17 @@
      D CurCuMT3x     E DS                  EXTNAME(SDCUMTPD)                                  CSW024
      D                                     PREFIX(@)                                          CSW024
 
-
       * New Customer in File Format
      D NwCuFilFmt    E DS                  EXTNAME(SDVCUSDPD)
                                                                                               CSW207
       * New SWIFT Detail in File Format                                                       CSW207
      D NwSwFilFmt    E DS                  EXTNAME(SDVSWSDPD)                                 CSW207
 
-
       * New Customer in File Format - Base Rate Tax Details
      D NwBrFilFmt    E DS                  EXTNAME(SDVCUBRPD)
 
-
       * New Customer in File Format - Private Banking Details
      D NwPBFilFmt    E DS                  EXTNAME(SDVCUPBPD)
-
 
       * New TI Details in File Format                                                        BUG3362
      D NwTIFilFmt    E DS                  EXTNAME(SDVTICDPD)                                BUG3362
@@ -439,14 +420,11 @@
       * New Customer in Screen Format - Swift Extension                                       CSW207
      D NewCuSwft     E DS                  EXTNAME(SDCUSWPD)                                  CSW207
 
-
       * New Customer in Screen Format - Base Rate Tax Details
      D NewCuBrt      E DS                  EXTNAME(SDCUBRPD)
 
-
       * New Customer in Screen Format - Private Banking Details
      D NewCuPriv     E DS                  EXTNAME(SDCUPBPD)
-
 
       * New TI Details in Screen Format - TI Details                                         BUG3362
      D NewTIDet      E DS                  EXTNAME(SDTICSPD)                                 BUG3362
@@ -455,27 +433,19 @@
       * New Customer in Screen Format - Secondary Details
      D NewCuSeco     E DS                  EXTNAME(SDCUSEPD)
 
-
       * New Customer in Screen Format - Message Details
      D NewCuMsg      E DS                  EXTNAME(SDCUMRPD)
       *                                                                                       CSW024
       ** New Customer in Screen Format - MT3xx BEI Details                                    CSW024
      D NewCuMT3x     E DS                  EXTNAME(SDCUMTPD)                                  CSW024
 
-
-
-
-
-
       * Previous Customer in Screen Format - Primary Details
      D PrvCuPrim     E DS                  EXTNAME(SDCUPRPD)
      D                                     PREFIX(@P)
 
-
       * Previous Customer in Screen Format - Base Rate Tax Details
      D PrvCuBrt      E DS                  EXTNAME(SDCUBRPD)
      D                                     PREFIX(@P)
-
 
       * Previous Customer in Screen Format - Private Banking Details
      D PrvCuPriv     E DS                  EXTNAME(SDCUPBPD)
@@ -484,11 +454,9 @@
      D PrvTIDet      E DS                  EXTNAME(SDTICSPD)                                 BUG3362
      D                                     PREFIX(@P)                                        BUG3362
 
-
       * Previous Customer in Screen Format - Secondary Details
      D PrvCuSeco     E DS                  EXTNAME(SDCUSEPD)
      D                                     PREFIX(@P)
-
 
       * Previous Customer in Screen Format - Message Details
      D PrvCuMsg      E DS                  EXTNAME(SDCUMRPD)
@@ -514,11 +482,6 @@
      D CrCuSW13      E DS                  EXTNAME(SDSW13PD)                                MD022395
      D                                     PREFIX(C13_)                                     MD022395
 
-
-
-
-
-
       * Error indicators
      D OKCuPrim      E DS                  EXTNAME(SDECUPRPD)
      D OKCuSeco      E DS                  EXTNAME(SDECUSEPD)
@@ -528,9 +491,7 @@
      D OKCuMT3x      E DS                  EXTNAME(SDECUMTPD)                                 CSW024
      D OKCuSwft      E DS                  EXTNAME(SDECUSWPD)                                 CSW207
 
-
      D/COPY WNCPYSRC,SDH00729
-
 
       * Further Details Parameter Data Structure
      D**FURDETS          DS           565                                                    BUG3362
@@ -552,29 +513,21 @@
      D***FDLICD*               706    708                                            BUG4454 BUG5139
      D***FDTAIN                709    709                                         BUG26917 BUG26917A
 
-
-
-
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
 
-
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
-
 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
 
-
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
 
-
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access progrmas, long data structure
-
 
      D ExtData       E DS                  EXTNAME(SDCUEXPD)
       * SD Custom Extra Data - File (D/B) format
@@ -590,10 +543,8 @@
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CFT050
      D                                     PREFIX(PR_)                                        CFT050
 
-
       ** Changed Party Names Array
      D ChgNamArr       S              1    DIM(5)
-
 
       **  Data Structure for AOSVALR0 string                                                  CSD012
      DSVAL1            DS           200                                                       CSD012
@@ -634,11 +585,9 @@
       ** Customer Work Field
      D WKCUST          S                   LIKE(DDCUSN)
 
-
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
-
 
       ** Timestamp for the transaction
      D TimeStamp       S               Z
@@ -694,12 +643,10 @@
      D @KYST           S              7A                                                      CFT050
      D CFT050          S              1                                                     MD022463
 
-
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -707,7 +654,6 @@
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUSDS001
-
 
      D DDTMESTMP       S             26Z                                                      CER001
      D DDFOTRANID      S             20                                                       CER001
@@ -889,10 +835,8 @@
       *
       *****************************************************************
 
-
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUSDS012
-
 
       /EJECT
       *****************************************************************
@@ -1123,7 +1067,6 @@
       *****************************************************************
      C     SCRN@P        BEGSR
 
-
       * Set function key status on PRIMARY screen
       *
      C                   EXSR      SFKEYS
@@ -1252,7 +1195,6 @@
      C     DDACTN        ANDEQ     'D'                                                        237595
      C                   EXSR      FURDET
      C                   ENDIF
-
 
      C                   ENDSR
       *****************************************************************
@@ -1384,21 +1326,13 @@
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
 
-
       * Validate Primary Customer Details
 
-
-
-
       * Update 'previous' screens and previous number of warnings
-
 
      C/COPY WNCPYSRC,SDH00735
      C                   MOVEL     NewCuPrim     PrvCuPrim
      C                   Z-ADD     WIdx_PVAL     PrvN_Warn         3 0
-
-
-
 
      C                   CALLB     'SDCUSD2VL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -1513,7 +1447,6 @@
       *****************************************************************
      C     SCRN@B        BEGSR
 
-
       * IF ACTION CODE IS DELETE
       * BYPASS SCREEN PROCESSING AND PROCESS BRT DATA
       *
@@ -1522,7 +1455,6 @@
      C                   MOVE      'U'           @SCRN
      C                   GOTO      EndBDSP
      C                   ENDIF
-
 
       * If Account Holder Type is 'R' then default BRT Tax Ind to 'N'.                        CRE007
       * If Insert mode as well then default Post 5/4/01 to 'Y'.                               CRE007
@@ -1533,7 +1465,6 @@
      C                   EVAL      DDPSTR = 'Y'                                               CRE007
      C                   ENDIF                                                                CRE007
      C                   ENDIF                                                                CRE007
-
 
      C                   CALLB     'SDCUSD6DP'
       * INPUT PARAMETERS :
@@ -1656,9 +1587,7 @@
      C                   ENDIF
      C                   ENDIF
 
-
      C                   ENDIF
-
 
      C                   Z-ADD     *ZERO         Idx
      C                   MOVE      *ALL'Y'       OKCuBrt
@@ -1671,7 +1600,6 @@
       *
       *
       * Update 'previous' screens and previous number of warnings
-
 
      C                   MOVEL     NewCuBrt      PrvCuBrt
      C                   Z-ADD     WIdx_BVAL     PrvN_Warn
@@ -1758,7 +1686,6 @@
       *
      C                   EXSR      VAL@T
 
-
       * Clear any warning messages
       *
      C                   MOVE      *ALL'Y'       OKCuBrt
@@ -1795,7 +1722,6 @@
      C                   CALLB     'SDCUSD7VL'
       * INPUTS
 
-
       * Response mode
      C                   PARM                    RespMode          1
       *
@@ -1806,37 +1732,29 @@
      C                   PARM                    DDCUSN
      C                   PARM                    DDTAIN
 
-
       ** Customer Base Rate Tax
      C                   PARM                    NewCuBrt
 
-
       ** OUTPUTS
-
 
       ** Customer Base Rate Tax OK indicators
      C                   PARM                    OKCuBrt
-
 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
 
-
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
-
 
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
 
-
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx_TVAL
-
 
       * Changed Party Name Array
      C                   PARM                    ChgNamArr
@@ -1846,16 +1764,13 @@
       *
       * If there are errors, redisplay Base Rate Tax screen
 
-
      C     Idx           IFNE      0
      C                   GOTO      EndVAL@T
      C                   ENDIF
 
-
       * If the screen has changed in the course of the validation
       * or if there are warnings which have not been displayed
       * re-display the screen
-
 
      C     BRTSCREEN     IFEQ      '2'
      C                   MOVEA     *BLANKS       ChgNamArr
@@ -1874,9 +1789,6 @@
      C                   MOVE      'S'           @SCRN
      C                   ENDIF
 
-
-
-
      C     EndVAL@T      ENDSR
       *****************************************************************
       /EJECT
@@ -1884,7 +1796,6 @@
       * SCRN@S - PROCESS SECOND SCREEN
       *****************************************************************
      C     SCRN@S        BEGSR
-
 
       * Set function key status on SECONDARY screen
       *
@@ -2034,7 +1945,6 @@
      C     DDACTN        OREQ      'A'
       *
       * Update 'previous' screens and previous number of warnings
-
 
      C                   MOVEL     NewCuSeco     PrvCuSeco
      C                   Z-ADD     WIdx_SVAL     PrvN_Warn
@@ -2358,7 +2268,6 @@
       *****************************************************************
      C     SCRN@M        BEGSR
 
-
       * Set function key status on SECONDARY screen
       *
      C                   EXSR      SFKEYS
@@ -2420,7 +2329,6 @@
      C                   CAS                     VAL@M
       *
      C                   ENDCS
-
 
       * On F23, go to Further Details, if there are no errors on this screen
       *
@@ -2491,7 +2399,6 @@
       *
       * Update 'previous' screens and previous number of warnings
 
-
      C                   MOVEL     NewCuMsg      PrvCuMsg
      C                   Z-ADD     WIdx_Mval     PrvN_Warn
       *
@@ -2511,10 +2418,8 @@
       * Custom Extra Data file data
      C                   PARM                    ExtData
 
-
       ** Message details OK indicators
      C                   PARM                    OKCuMsg
-
 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -2523,14 +2428,12 @@
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
 
-
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx_Mval
-
 
       * Valid Customer layout (DS) from/to caller
      C                   PARM                    NwCuFilFmt
@@ -2604,9 +2507,6 @@
       * SCRN@R - PROCESS Private Banking Details Screen
       *****************************************************************
      C     SCRN@R        BEGSR
-
-
-
 
      C                   CALLB     'SDCUSD5DP'
       * INPUT PARAMETERS :
@@ -3035,7 +2935,6 @@
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
 
-
      C                   Z-ADD     *ZERO         Idx
      C                   MOVE      *ALL'Y'       OKCuPriv
      C                   MOVEL     *BLANK        FldNameArr
@@ -3044,7 +2943,6 @@
       *
       *
       * Update 'previous' screens and previous number of warnings
-
 
      C                   MOVEL     NewCuPriv     PrvCuPriv
       *
@@ -3534,7 +3432,6 @@
       * Array index (3P0) from/to caller                                                    BUG23518
      C                   PARM      *ZEROS        WIdx_PVAL                                  BUG23518
      C/COPY WNCPYSRC,SDCUSDSC13
-
 
      C     EndRTVCUS     ENDSR
       *****************************************************************                       CER001
@@ -5437,11 +5334,8 @@
       *
      C                   EXSR      INITIAL
       *
-
-
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUSDS013
-
 
      C                   ENDSR
       *****************************************************************

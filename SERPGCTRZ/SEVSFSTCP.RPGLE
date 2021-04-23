@@ -22,7 +22,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. 261824             Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,9 +43,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. 261824             Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CRE073             Date 06Dec10               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

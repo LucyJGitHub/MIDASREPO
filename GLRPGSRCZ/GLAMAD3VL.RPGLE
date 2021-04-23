@@ -13,6 +13,7 @@
       *                                                               *
       *  Last Amend No. 250822             Date 22May20               *
       *  Prev Amend No. 252664             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,8 @@
       *  252664 - Do not set to blanks field DDNCID                   *
       *  250822 - Used the day number from ToF and ensure that        *
       *           ZFREQB2 is called. Patterned fix after 210058.      *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *

@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 250822             Date 22May20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
@@ -87,6 +88,8 @@
       *  250822 - Next Statement date is incorrect.  Ensure that      *
       *           DnxtSDat is always called to calculate value based  *
       *           on Frequency and/or Next Statement Day.             *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *

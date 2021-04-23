@@ -52,7 +52,6 @@
      D SDRETL        E DS                  EXTNAME(SDRETLPD)                                 248270B
      D SDRETLACCD    E                     EXTFLD(QQACCD)                                    248270B
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                 248270B
-
       ** Short Data Structure for Access Objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
@@ -65,7 +64,6 @@
      D  Digit2                 2      2                                                       248270
      D  Digit3                 3      3                                                       248270
      D  DigitC                 1      3                                                       248270
-
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -104,7 +102,6 @@
       *                                                                                       CGL029
 
      D DIGITS          C                   CONST('1234567890 ')                               248270
-
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -167,7 +164,6 @@
      C                   Add       1             Idx                                         248270A
      C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
      C                   Endif                                                                248270
-
       ** If value entered by user is not in the range 0 to 999 incl
       ** then return an error
 
@@ -263,7 +259,6 @@
       ** CLE025 off                                                                           CLE025
                                                                                               CLE025
      C                   ELSE                                                                 CLE025
-
 
      C     BGRTBN        IFEQ      'Y'                                                       258270B
      C     DataToVal     IFGT      BMNDFV                                                    248270B

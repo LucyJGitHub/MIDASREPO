@@ -22,7 +22,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. 250665             Date 01Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,8 @@
       *           types 7 and 8.  If field is left blank, NMDP will   *
       *           be equal to 4 and nominal ccy's NMDP for processing *
       *           types 7 and 8 respectively.  Applied 235696.        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

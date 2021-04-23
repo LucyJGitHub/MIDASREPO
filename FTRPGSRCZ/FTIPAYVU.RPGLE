@@ -34,7 +34,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. 257943             Date 22May20               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928           Date 15May18               *
@@ -107,6 +108,8 @@
       *           incoming message, does not release the MT103 to be  *
       *           routed again. Ensure that a selected message is     *
       *           released if the transaction is cancelled.           *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
       *             (Child: AR928997A)                                *

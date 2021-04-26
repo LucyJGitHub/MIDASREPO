@@ -25,7 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       EML108 - Upgrade FMD003 and fixes to FBM2.1SP21            */
+/*       EML108 - Upgrade FMD003 and fixes to FBM2.1SP21.           */
 /*                Added hooks EML108_022 -> EML108_032              */
 /*                Amend core hook MCC84P001                         */
 /*       AR1051497 - Problems with selection criteria screen        */

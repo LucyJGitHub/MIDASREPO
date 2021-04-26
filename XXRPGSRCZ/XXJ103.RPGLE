@@ -31,7 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  EML110 - Account Balance Pooling. Upgrade to FBM 2.1         *
+      *  EML110 - Account Balance Pooling. Upgrade to FBM 2.1.        *
       *  TFJ11A - Account Transfer Service                            *
       *  TFJ011 - (CHG141) Further Requirements by client             *
       *  TFJ011 - (CHG014) Create a Data Error Report                 *

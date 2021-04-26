@@ -193,7 +193,7 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  MD057942 - Field TRBTT is not defined. Used TBRTT instead as *
-      *           as the corresponding field for Their Base Rate Type.*
+      *             the corresponding field for Their Base Rate Type. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057008 - CGC2050 00007 fails during COB                    *
       *           - Do not execute SR/CGSTAT when WSTAT is blanks as  *

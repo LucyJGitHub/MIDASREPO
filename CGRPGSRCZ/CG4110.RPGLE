@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057008           Date 27Oct20               *
+      *  Last Amend No. MD057942           Date 26Apr21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057008           Date 27Oct20               *
       *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -191,6 +192,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD057942 - Object CG4110 not created in FM2021B00Z. Correct  *
+      *             TRBTT to TBRTT.                                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057008 - CGC2050 00007 fails during COB                    *
       *           - Do not execute SR/CGSTAT when WSTAT is blanks as  *
@@ -9733,7 +9736,8 @@
       *                                                                                       CIR001
       ** Their Base Rate Type                                                                 CIR001
      C********** TBRTT         IFNE      *ZERO                                         CIR001 CSD103
-     C     TRBTT         IFNE      *BLANKS                                                    CSD103
+     C********** TRBTT         IFNE      *BLANKS                                     CSD103 MD057942
+     C     TBRTT         IFNE      *BLANKS                                                  MD057942
      C                   MOVEL     TBRTT         ##D(3)                                       CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001

@@ -1402,12 +1402,12 @@
                    if apinAME = 'LERI';
                       wSQLStr = 'select * from CLOANCL' +
                                 ' where LNRF    = ' + QUO + TransRef + QUO +
-                                ' fetch 1 rows only';
+                                ' fetch first row only';
                    elseif APIName =  'BSRT';
                       wSQLStr = 'select * from CLOANCL' +
                                 ' where CCY    = ' + QUO + TransCCY + QUO +
                                 ' and BRTT = ' +  QUO + TransBSRC + QUO +
-                                ' fetch 1 rows only';
+                                ' fetch first row only';
                    endif;
 
                    exec sql prepare P1 from :wSQLStr;

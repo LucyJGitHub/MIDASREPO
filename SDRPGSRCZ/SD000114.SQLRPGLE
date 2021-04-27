@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103  *CREATE    Date 10Aug20               *
+      *  Last Amend No. MD057946           Date 27Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057946 - Floor rate passed as 10000000 instead of          *
+      *            1.0000000 causing an exception error in ARR Calc   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *                                                               *
@@ -181,7 +184,7 @@
      D ARRCalcFreq     S              1A
      D CallARR         S              1A
      D RatesKnown      S              1A
-     D WRateFloor      S             13A
+     D*** WRateFloor      S             13A                                                 MD057946
      D WCalcTillDate   S             10A
      D SumLBLO         S              3S 0
      D Idx             S              2S 0
@@ -633,8 +636,9 @@
 
      C                   EVAL      RiskFreeRate = TrRFRR
 
-     C                   MOVE      TrFLOR        WRateFloor
-     C                   EVAL      RiskFreeRatFl = %trim(WRateFloor)
+     C**********         MOVE      TrFLOR        WRateFloor                                 MD057946
+     C**********         EVAL      RiskFreeRatFl = %trim(WRateFloor)                        MD057946
+     C                   EVAL      RiskFreeRatFl = %char(trFLOR)                            MD057946
 
      C                   MOVE      TrLBDY        LookBackDays
 

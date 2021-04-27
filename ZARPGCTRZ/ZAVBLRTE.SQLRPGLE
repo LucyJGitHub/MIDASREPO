@@ -1404,7 +1404,7 @@
                                 ' fetch first row only';
                    elseif APIName =  'BSRT';
                       wSQLStr = 'select * from CLOANCL' +
-                                'where (CCY    = ' + QUO + TransCCY + QUO +
+                                ' where (CCY    = ' + QUO + TransCCY + QUO +
                                 ' and BRTT = ' +  QUO + TransBSRC + QUO + ')' +
                                 ' or (CCY    = ' + QUO + TransCCY + QUO +
                                 ' and NBRA = ' +  QUO + TransBSRC + QUO + ')' +

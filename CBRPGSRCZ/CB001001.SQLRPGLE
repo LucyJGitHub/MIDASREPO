@@ -305,12 +305,12 @@
 
      C                   WRITE     CB001001F0
      C                   WRITE     CB001001F3
-      ***If*no*record*were*extracted*from*V_DASHACTN,*set*off*subfile*display.    MD057673 MD057637A
-      ***Subfile*display*was*switched*ON*and*initiliaze*to*1*at*main*program      MD057673 MD057637A
-     C**********         IF        RCNTR = 1                                      MD057673 MD057637A
-     C**********         EVAL      *IN01 = '0'                                    MD057673 MD057637A
-     C**********         ENDIF                                                    MD057673 MD057637A
-      *                                                                           MD057673 MD057637A
+      ***If*no*record*were*extracted*from*V_DASHACTN,*set*off*subfile*display.    MD057673 MD057673A
+      ***Subfile*display*was*switched*ON*and*initiliaze*to*1*at*main*program      MD057673 MD057673A
+     C**********         IF        RCNTR = 1                                      MD057673 MD057673A
+     C**********         EVAL      *IN01 = '0'                                    MD057673 MD057673A
+     C**********         ENDIF                                                    MD057673 MD057673A
+      *                                                                           MD057673 MD057673A
      C                   EXFMT     CB001001F2
      C                   EVAL      *IN01 = *OFF
      C                   EVAL      *IN02 = *OFF

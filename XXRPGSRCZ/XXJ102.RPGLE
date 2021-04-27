@@ -23,7 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  EML110 - Account Balance Pooling. Upgrade to FBM 2.1.        *
+      *  EML110 - Account Balance Pooling. Upgrade to FBM 2.1         *
       *  TFJ011I01 - SFDC 250835 Account Pooling Screen Updates       *
       *              Inconsistent./Add Open/read/close on SDPICDV0 in *
       *              GETFDTLS routine.                                *

@@ -1406,7 +1406,7 @@
                       wSQLStr = 'select * from CLOANCL' +
                                 'where (CCY    = ' + QUO + TransCCY + QUO +
                                 ' and BRTT = ' +  QUO + TransBSRC + QUO + ')' +
-                                'or (CCY    = ' + QUO + TransCCY + QUO +
+                                ' or (CCY    = ' + QUO + TransCCY + QUO +
                                 ' and NBRA = ' +  QUO + TransBSRC + QUO + ')' +
                                 ' fetch first row only';
                    endif;

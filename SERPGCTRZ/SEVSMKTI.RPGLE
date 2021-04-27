@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD023865           Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023865 - Not able to change Market Indicator from          *
+      *             Securities Details Screen. Check only RECI = 'D'  *
+      *             records for non-zero positions before issuing     *
+      *             error message.                                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -294,6 +299,13 @@
      C     DDSESN        READE     UDEPPDF                                01
  
      C                   IF        *IN01 = *OFF and
+     C                             (UECN <> *ZEROS OR                                       MD023865
+     C                             UDNT <> *ZEROS OR                                        MD023865
+     C                             UDNV <> *ZEROS OR                                        MD023865
+     C                             UDNS <> *ZEROS OR                                        MD023865
+     C                             UNRT <> *ZEROS OR                                        MD023865
+     C                             UNRV <> *ZEROS) AND                                      MD023865
+     C                             RECI = 'D' AND                                           MD023865
      C                             UDMK = ODDMKTI
      C                   MOVE      'N'           OKMKTI
      C                   ADD       1             IDx
@@ -312,6 +324,11 @@
      C     DDSESN        READE     CDEPPDF                                01
  
      C                   IF        *IN01 = *OFF AND
+     C                             (CECN <> *ZEROS OR                                       MD023865
+     C                             CDNT <> *ZEROS OR                                        MD023865
+     C                             CDNV <> *ZEROS OR                                        MD023865
+     C                             CDNS <> *ZEROS) AND                                      MD023865
+     C                             RECI = 'D' AND                                           MD023865
      C                             CDMK = ODDMKTI
      C                   MOVE      'N'           OKMKTI
      C                   ADD       1             IDx

@@ -28,12 +28,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259591             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259591 - From the Depot Walk In/Out, users intermittently    *
+      *           encounter booking branch validation error message.  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -280,7 +283,8 @@
      C                   PARM      DPBA          @ZBR
      C                   PARM                    @ERR
       *
-     C     @ERR          IFEQ      2
+     C*****@ERR*         IFEQ      2                                                          259591
+     C     @ERR          IFEQ      1                                                          259591
       *
       ** Error 307
       *
@@ -289,8 +293,9 @@
      C                   MOVEL     'MMA0343'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPBAOK
      C                   END
- 
-     C     @ERR          IFEQ      1
+     C*
+     C*****@ERR*         IFEQ      1                                                          259591
+     C     @ERR          IFEQ      2                                                          259591
       *
       ** Error 308
       *

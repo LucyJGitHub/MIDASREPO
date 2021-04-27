@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. 251029             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251029 - Applied fix 231306.                                 *
+      *  231306 - Handle file locking properly.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
@@ -86,6 +89,7 @@
      FFXVFXDLL1 UF   E           K DISK
      F                                     RENAME(FXVFXDLD0:FXVFXDLD1)
      FFXVEFXDLPDO    E             DISK
+     F                                     BLOCK(*NO)                                         231306
      F                                     RENAME(FXVFXDLD0:FXVFXDLERR)
                                                                                               244036
       ** Midas DL Foreign Exchange Deals Extension Details.                                   244036
@@ -244,6 +248,7 @@
      C                   EVAL      ARFOTranID = F3FRNT
      C                   EVAL      ARFOAsocID = F3AFRT
      C                   EVAL      ARRprLocn  = F3REPA
+     C                   EVAL      @Timestamp = F3TMESTMP                                     231306
 
       /COPY WNCPYSRC,FXFXDLU004
 
@@ -266,6 +271,7 @@
      C                   END                                                                  245219
                                                                                               245219
      C     @@RTCD        IFNE      '*RECUPD'                                    CAP006
+     C     @@RTCD        ANDNE     '*RECLCK'                                                  231306
      C     F3CHTP        IFEQ      'I'
      C     F3CHTP        OREQ      'A'
      C     F3CHTP        OREQ      'R'
@@ -295,6 +301,7 @@
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
+     C     @@RTCD        OREQ      '*RECLCK'                                                  231306
      C                   ROLBK
      C                   ELSE
      C                   DELETE    FXVFXDLD0
@@ -311,8 +318,9 @@
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
+     C     @@RTCD        OREQ      '*RECLCK'                                                  231306
      C                   EVAL      @Dealno = F3DN38
-     C                   EVAL      @Timestamp = F3TMESTMP
+     C**********         EVAL      @Timestamp = F3TMESTMP                                     231306
      C     @KFXDL1       CHAIN     FXVFXDLL1                          89
      ** Write details of record to error file (same format as FXVFXDLPD)
      C                   WRITE     FXVFXDLERR

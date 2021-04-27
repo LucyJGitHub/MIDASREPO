@@ -264,8 +264,7 @@
       ** base rate code table to get the default values
      C                   EVAL      BSRTRecFound = 'N'                                         CLE172
      C                   IF        TransCCY  <> *BLANKS and
-     C                             TransBSRC <> *BLANKS and
-     C                                 APIName <> 'BSRT'                                    MD057934
+     C                             TransBSRC <> *BLANKS
 
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       PRTCD
@@ -1405,8 +1404,10 @@
                                 ' fetch first row only';
                    elseif APIName =  'BSRT';
                       wSQLStr = 'select * from CLOANCL' +
-                                ' where CCY    = ' + QUO + TransCCY + QUO +
-                                ' and BRTT = ' +  QUO + TransBSRC + QUO +
+                                'where (CCY    = ' + QUO + TransCCY + QUO +
+                                ' and BRTT = ' +  QUO + TransBSRC + QUO + ')' +
+                                '(CCY    = ' + QUO + TransCCY + QUO +
+                                ' and NBRA = ' +  QUO + TransBSRC + QUO + ')' +
                                 ' fetch first row only';
                    endif;
 

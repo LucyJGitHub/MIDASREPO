@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD048901A          Date 05Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057673A          Date 23Apr21               *
+      *  Prev Amend No. MD057673           Date 13Mar21               *
+      *                 MD048901A          Date 05Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 MD021155           Date 19Jul13               *
       *                 MD020661A          Date 19Jun13               *
@@ -32,6 +34,13 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057673A- Unauthorised transactions screen error in         *
+      *             CB001001DF.                                       *
+      *           - Remove previous fix of MD057673 and replaced by   *
+      *             the fix to call SHWSCRN if RCNTR is greater than 1*
+      *  MD057673 - Unauthorised transactions screen error in         *
+      *             CB001001DF.                                       *
+      *           - Switched off SFLDSP indicator if SFLRRN is only 1.*
       *  MD048901A - Not possible to check Fusion Banking Midas Dash  *
       *              Dash Board (still 2 unauthorised Items)          *
       *  MD046248 - Finastra Rebranding                               *
@@ -247,7 +256,8 @@
 
      C**********         IF        DSVAL <> *BLANKS                                        AR1091294
      C**********         IF        DLVAL <> *ZEROS                               AR1091294 MD048901A
-     C                   IF        DLVAL <> '00000'                                        MD048901A
+     C**********         IF        DLVAL <> '00000'                              MD048901A MD057673A
+     C                   IF        RCNTR > 1                                               MD057673A
 
      C**********         EVAL      DLVAL = *ZEROS                                AR1092065 MD048901A
      C                   EVAL      DLVAL = '00000'                                         MD048901A
@@ -295,6 +305,12 @@
 
      C                   WRITE     CB001001F0
      C                   WRITE     CB001001F3
+      ***If*no*record*were*extracted*from*V_DASHACTN,*set*off*subfile*display.    MD057673 MD057637A
+      ***Subfile*display*was*switched*ON*and*initiliaze*to*1*at*main*program      MD057673 MD057637A
+     C**********         IF        RCNTR = 1                                      MD057673 MD057637A
+     C**********         EVAL      *IN01 = '0'                                    MD057673 MD057637A
+     C**********         ENDIF                                                    MD057673 MD057637A
+      *                                                                           MD057673 MD057637A
      C                   EXFMT     CB001001F2
      C                   EVAL      *IN01 = *OFF
      C                   EVAL      *IN02 = *OFF

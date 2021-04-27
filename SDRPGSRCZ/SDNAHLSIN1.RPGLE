@@ -15,7 +15,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER076   - Update to KWG § 24c interface specification       *
+      *  CER076   - Update to KWG § 24c interface specification.      *
       *             (BaFin version 3.3)                               *
       *                                                               *
       *****************************************************************

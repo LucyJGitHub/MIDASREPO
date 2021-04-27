@@ -185,6 +185,7 @@
      D CallARR         S              1A
      D RatesKnown      S              1A
      D*** WRateFloor      S             13A                                                 MD057946
+     D wRateFloor      S             11S 6                                                  MD057946
      D WCalcTillDate   S             10A
      D SumLBLO         S              3S 0
      D Idx             S              2S 0
@@ -636,9 +637,9 @@
 
      C                   EVAL      RiskFreeRate = TrRFRR
 
-     C**********         MOVE      TrFLOR        WRateFloor                                 MD057946
+     C                   MOVE      TrFLOR        WRateFloor
      C**********         EVAL      RiskFreeRatFl = %trim(WRateFloor)                        MD057946
-     C                   EVAL      RiskFreeRatFl = %char(trFLOR)                            MD057946
+     C                   EVAL      RiskFreeRatFl = %char(wRateFloor)                        MD057946
 
      C                   MOVE      TrLBDY        LookBackDays
 

@@ -35,7 +35,7 @@
       *****************************************************************
       *                                                               *
       *  MD057673A- Unauthorised transactions screen error in         *
-      *             CB001001DF.                                       *
+      *             CB001001DF                                        *
       *           - Remove previous fix of MD057673 and replaced by   *
       *             the fix to call SHWSCRN if RCNTR is greater than 1*
       *  MD057673 - Unauthorised transactions screen error in         *

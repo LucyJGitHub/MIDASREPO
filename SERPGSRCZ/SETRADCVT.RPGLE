@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. 249587             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 AR698195B          Date 20Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249587 - Commission code amount should be zero and not       *
+      *           blanks if Commission code is also entered.          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -926,6 +929,7 @@
       *
       *  Broker commission amount
      C     WTBCA         IFNE      *ZEROS
+     C     DDTBCC        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTBCA         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -939,6 +943,7 @@
       *
       *  Customer commission amount
      C     WTCCA         IFNE      *ZEROS
+     C     DDTCCC        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCCA         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -952,6 +957,7 @@
       *
       *  Charges 1 amount
      C     WTCA1         IFNE      *ZEROS
+     C     DDTCC1        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA1         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -965,6 +971,7 @@
       *
      C*  Charges 2 amount
      C     WTCA2         IFNE      *ZEROS
+     C     DDTCC2        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA2         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -978,6 +985,7 @@
       *
       *  Charges 3 amount
      C     WTCA3         IFNE      *ZEROS
+     C     DDTCC3        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA3         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -991,6 +999,7 @@
       *
       *  Charges 4 amount
      C     WTCA4         IFNE      *ZEROS
+     C     DDTCC4        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA4         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1004,6 +1013,7 @@
       *
       *  Charges 5 amount
      C     WTCA5         IFNE      *ZEROS
+     C     DDTCC5        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA5         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1017,6 +1027,7 @@
       *
       *  Charges 6 amount
      C     WTCA6         IFNE      *ZEROS
+     C     DDTCC6        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA6         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1030,6 +1041,7 @@
       *
       *  Charges 7 amount
      C     WTCA7         IFNE      *ZEROS
+     C     DDTCC7        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA7         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS

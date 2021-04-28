@@ -140,7 +140,7 @@
       ** Constants declaration
      D NO_ERROR        c                   const(0)
      D NO_RECORD       c                   const(100)
-     D EC              c                   const('   0.       ')                            MD057946
+     D EC              c                   const('  0 .       ')                            MD057946
 
       ** Reference Rates Array
      D ArraySize       C                   CONST(10)

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD056262           Date 10Mar21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CSE040             Date 10Mar21              */
+/*       Prev Amend No. MD056262           Date 10Mar21              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CUP005             Date 27Aug10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -20,6 +21,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSE040 - Securities Statement Processing                    */
+/*                Applied for MD-55740                               */
 /*       MD056262 - Error encountered on deletion of temp files      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP005 - Change processing of temporary files for IASP      */
@@ -149,6 +152,21 @@
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(END)
              ENDDO
+
+/* Midas SE Pending Transaction - Extract */                                             /*CSE040*/
+                                                                                         /*CSE040*/
+             CALLPRC    PRC(SE4655) PARM(&RTNCODE)                                       /*CSE040*/
+                                                                                         /*CSE040*/
+/* Database error processing */                                                          /*CSE040*/
+                                                                                         /*CSE040*/
+             IF         COND(%SWITCH(XXXXXX11) *OR &RTNCODE *NE ' ') +
+                          THEN(DO)                                                       /*CSE040*/
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                             /*CSE040*/
+                ROLLBACK                                                                 /*CSE040*/
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)                                 /*CSE040*/
+                GOTO       CMDLBL(END)                                                   /*CSE040*/
+             ENDDO                                                                       /*CSE040*/
 
 /* General details extract */
 

@@ -638,7 +638,7 @@
 
      C**********         MOVE      TrFLOR        WRateFloor                                 MD057946
      C**********         EVAL      RiskFreeRatFl = %trim(WRateFloor)                        MD057946
-     C                   EVAL      RiskFreeRatFl = %EDITC(trFLOR:'P')                       MD057946
+     C                   EVAL      RiskFreeRatFl = %TRIM(%EDITC(trFLOR:'P'))                MD057946
 
      C                   MOVE      TrLBDY        LookBackDays
 
@@ -682,7 +682,7 @@
      C                   EVAL      WCalcTillDate = %char(ISODate)
 
      C********           EVAL      BenchMarkAdj = %char(TrBADJ)                             MD057946
-     C                   EVAL      BenchMarkAdj = %EDITc(TrBADJ:'P')                        MD057946
+     C                   EVAL      BenchMarkAdj = %TRIM(%EDITC(TrBADJ:'P'))                 MD057946
 
      C                   ENDSR
       *****************************************************************

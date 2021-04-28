@@ -140,6 +140,7 @@
       ** Constants declaration
      D NO_ERROR        c                   const(0)
      D NO_RECORD       c                   const(100)
+     D EC              c                   const('   0.       ')                            MD057946
 
       ** Reference Rates Array
      D ArraySize       C                   CONST(10)
@@ -638,7 +639,11 @@
 
      C**********         MOVE      TrFLOR        WRateFloor                                 MD057946
      C**********         EVAL      RiskFreeRatFl = %trim(WRateFloor)                        MD057946
-     C                   EVAL      RiskFreeRatFl = %TRIM(%EDITC(trFLOR:'P'))                MD057946
+     C                   IF        trFLOR < 0                                               MD057946
+     C                   EVAL      RiskFreeRatFl ='-' + %TRIM(%EDITW(trFLOR:EC))            MD057946
+     C                   ELSE                                                               MD057946
+     C                   EVAL      RiskFreeRatFl = %TRIM(%EDITW(trFLOR:EC))                 MD057946
+     C                   ENDIF                                                              MD057946
 
      C                   MOVE      TrLBDY        LookBackDays
 
@@ -682,7 +687,11 @@
      C                   EVAL      WCalcTillDate = %char(ISODate)
 
      C********           EVAL      BenchMarkAdj = %char(TrBADJ)                             MD057946
-     C                   EVAL      BenchMarkAdj = %TRIM(%EDITC(TrBADJ:'P'))                 MD057946
+     C                   IF        TrBADJ < 0                                               MD057946
+     C                   EVAL      BenchMarkAdj = '-' + %TRIM(%EDITW(TrBADJ:EC))            MD057946
+     C                   ELSE                                                               MD057946
+     C                   EVAL      BenchMarkAdj = %TRIM(%EDITW(TrBADJ:EC))                  MD057946
+     C                   ENDIF                                                              MD057946
 
      C                   ENDSR
       *****************************************************************

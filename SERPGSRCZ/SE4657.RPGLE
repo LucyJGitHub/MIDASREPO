@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056262           Date 10Mar21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSE040             Date 10Mar21               *
+      *  Prev Amend No. MD056262           Date 10Mar21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE040 - Securities Statement Processing                     *
+      *           Applied for MD-55740                                *
       *  MD056262 - Allow MQseries to support Meridian 5 and 6        *
       *  MD046248 - Finastra Rebranding                               *
       *  221616 - Avoid sending empty message in data queue.          *
@@ -218,6 +221,9 @@
      C                   EVAL      WkData = '<MeridianMessage MessageType= +
      C                                      "SEStatementTransaction">'
 
+     C                   WHEN      XMTAGN = '<SEStatementPending>'                            CSE040
+     C                   EVAL      WkData = '<MeridianMessage MessageType= +                  CSE040
+     C                                      "SEStatementPending">'                            CSE040
       ** Update Message Trailer for Meridian
 
      C                   WHEN      XMTAGN = '</SEStatementHolding>'
@@ -226,6 +232,9 @@
      C                   WHEN      XMTAGN = '</SEStatementTransaction>'
      C                   EVAL      WkData = '</MeridianMessage>'
 
+     C                   WHEN      XMTAGN = '</SEStatementPending>'                           CSE040
+     C                   EVAL      WkData = '</MeridianMessage>'                              CSE040
+                                                                                              CSE040
      C                   OTHER
 
       ** Convert Invalid Characters

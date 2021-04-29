@@ -18,16 +18,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057806           Date 25Mar21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 TDA035             Date 02Apr04               *
       *                 CSE040   *CREATE   Date 25Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057806 - Field tag 98C of MT537 message is being NAKed     *
+      *             in MMM                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
@@ -38,34 +41,34 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      F/COPY WNCPYSRC,SESTPRS001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -77,80 +80,80 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D/COPY QWINDSRC,SESTPRDTA
       ** Fields to pass data to the window program
- 
+
      D SESTPR        E DS                  EXTNAME(SESTPRPD)
       ** Statement Production Request in file format
- 
+
      D NewSEStPR     E DS                  EXTNAME(SEVSTPRPD)
       ** New Statement Production Request in file format
- 
+
      D NewScnIFld    E DS                  EXTNAME(SESTPR1PD)
       ** Statement Production Request, in screen format - Input/output fields
- 
+
      D NewScnOFld    E DS                  EXTNAME(SESTPR2PD)
       ** Statement Production Request, in screen format - Output only fields
- 
+
      D CurScnIFld    E DS                  EXTNAME(SESTPR1PD) PREFIX(C_)
       ** Very first state of the screen input/output fields
- 
+
      D CurScnOFld    E DS                  EXTNAME(SESTPR2PD) PREFIX(C_)
       ** Very first state of the screen output only fields
- 
+
      D PrvScnIFld    E DS                  EXTNAME(SESTPR1PD) PREFIX(P_)
       ** Previous state of the screen input/output fields
- 
+
      D PrvScnOFld    E DS                  EXTNAME(SESTPR2PD) PREFIX(P_)
       ** Previous state of the screen output only fields
- 
+
      D OKStPRFlags   E DS                  EXTNAME(SEESTPRPD)
       ** Error indicators flags
- 
+
      D SDUSER        E DS                  EXTNAME(MUSERDD) PREFIX(US_)
       ** External DS for User Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas Modules Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
      D/COPY WNCPYSRC,SESTPRS002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -158,25 +161,25 @@
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C/COPY WNCPYSRC,SESTPRS003
- 
+
       ** Issue rollback to clear any possible updates in window functions
       *
      C                   IF        @INKL = '1'
      C                   ROLBK
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SESTPRS004
- 
+
       ** Build browse subfile and write/read the browse screen
       *
      C                   IF        @Scrn = 'B'
      C                   EXSR      BldBrw
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SESTPRS005
- 
+
       ** Process the last user's action on the browse screen
       ** (Returns a function key, or the database record to process
       **  and an action code, according with the next modified browse
@@ -185,50 +188,50 @@
      C                   IF        @Scrn = 'R'
      C                   EXSR      RdNBrw
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SESTPRS006
- 
+
       ** Do while screen: Statement Production Request Details Screen
       *
      C                   DOW       @Scrn = 'D'
      C                   EXSR      Scrn@D
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,SESTPRS007
- 
+
       ** Do while screen: Statement Production Request View Only Screen
       *
      C                   DOW       @Scrn = 'V'
      C                   EXSR      Scrn@V
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,SESTPRS008
- 
+
       ** File updates
       *
      C                   IF        @Scrn = 'U'
      C                   EXSR      Updats
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SESTPRS009
- 
+
       ** Do while screen: Statement Production Request Extension(s) Details Screen(s)
       *
      C                   DOW       @Scrn = 'W'
      C                   EXSR      Window
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,SESTPRS010
- 
+
       ** Terminate module
       *
      C                   IF        @Scrn = 'T'
      C                   EVAL      *INLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SESTPRS011
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -866,6 +869,7 @@
       ** Start Date
       *
      C                   EVAL      SPMSTD = BJRDNB
+     C                   TIME                    SPSTTM                                     MD057806
       *
      C                   ENDSR
       *****************************************************************

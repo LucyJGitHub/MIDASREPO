@@ -7773,8 +7773,8 @@
      C     DDAGTY        ANDNE     'ISDACS'                                                   CSW221
      C     DDAGTY        OREQ      'ISDACN'                                                   CSW214
      C     CSW214        ANDEQ     'N'                                                        CSW214
-     C     DDAGTY        OREQ      'ISDACS'                                                   CSW214
-     C     CSW221        ANDEQ     'N'                                                        CSW214
+     C     DDAGTY        OREQ      'ISDACS'                                                   CSW221
+     C     CSW221        ANDEQ     'N'                                                        CSW221
      C                   ADD       1             Idx                                          CSW212
      C                   EVAL      FldNameArr(Idx) = 'DDAGTY'                                 CSW212
      C                   EVAL      MsgIDArr(Idx) = '5045748'                                  CSW212

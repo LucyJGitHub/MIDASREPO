@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD044880           Date 15Jan18               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -271,6 +273,9 @@
 
      D WIdx            S              3P 0
       ** Index for arrays of warning message ids etc
+     D Pos             S              3P 0                                                  MD057871
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       * Asset code and health code                                                            CLE120
      D SASCD           S              4                                                       CLE120
@@ -315,6 +320,7 @@
                                                                                               CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
      D LoanScnBlrt     DS            50                                                       CLE172
+     D NewLibor        S             50A                                                    MD057871
       *                                                                                       CLE148
       ** Parameters for calling AOSVALR0 (System Value Access Object)                         CLE148
       *                                                                                       CLE148
@@ -492,6 +498,13 @@
      C                   EVAL      @DDIPFR = WWIPFR                                        AR1075452
      C                   EVAL      @DDIFDY = WWIFDY                                        AR1075452
      C                   EVAL      @DDINTR = WWINTR                                         MD025521
+      *                                                                                     MD057871
+     C                   EVAL       NewLibor = LoanScnBlrt                                  MD057871
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
+     C                   IF         Pos <> 0                                                MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)            MD057871
+     C                   EVAL       LoanScnBlrt = NewLibor                                  MD057871
+     C                   ENDIF                                                              MD057871
                                                                                            AR1075452
       * Build buffer with required output
      C                   EVAL                 Buffer = CrLnScnFmt1 + CrLnScnFmt2

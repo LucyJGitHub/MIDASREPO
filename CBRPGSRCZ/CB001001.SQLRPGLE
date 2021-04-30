@@ -19,7 +19,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD057898           Date 30Apr21               *
+      *  Last Amend No. MD057673A          Date 30Apr21               *
       *  Prev Amend No. MD048901A          Date 05Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
@@ -33,9 +33,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD057898 - Error in CB001001 at the start of COB with Session*
-      *             or device error occurred in file CB001001DF.      *
-      *           - Call SHWSCRN if RCNTR is greater than 1.          *
+      *  MD057673A - Unauthorised transactions screen error in        *
+      *              CB001001DF.                                      *
+      *            - Call SHWSCRN if RCNTR is greater than 1.         *
+      *            - Applied for MD057898.                            *
       *  MD048901A - Not possible to check Fusion Banking Midas Dash  *
       *              Dash Board (still 2 unauthorised Items)          *
       *  MD046248 - Finastra Rebranding                               *
@@ -251,8 +252,8 @@
 
      C**********         IF        DSVAL <> *BLANKS                                        AR1091294
      C**********         IF        DLVAL <> *ZEROS                               AR1091294 MD048901A
-     C**********         IF        DLVAL <> '00000'                               MD048901A MD057898
-     C                   IF        RCNTR > 1                                                MD057898
+     C**********         IF        DLVAL <> '00000'                              MD048901A MD057673A
+     C                   IF        RCNTR > 1                                               MD057673A
 
      C**********         EVAL      DLVAL = *ZEROS                                AR1092065 MD048901A
      C                   EVAL      DLVAL = '00000'                                         MD048901A

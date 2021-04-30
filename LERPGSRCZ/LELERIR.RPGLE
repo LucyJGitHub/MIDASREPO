@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 08Apr21               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
       *  Prev Amend No. CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -265,7 +265,7 @@
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D Pos             S              3P 0                                                  MD057871
-     D BLKFLR          C                   CONST('             ')                           MD057871
+     D BLKFLR          C                   CONST('            ')                            MD057871
      D SCNSTR          C                   CONST('9999.9999999')                            MD057871
                                                                                               CLE106
       ** CLE106 feature                                                                       CLE106

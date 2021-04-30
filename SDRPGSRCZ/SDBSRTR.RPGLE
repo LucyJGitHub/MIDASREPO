@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 08Apr21               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -104,7 +104,7 @@
       * Fields defined for CSD012
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')
-     D BLKFLR          C                   CONST('             ')                           MD057871
+     D BLKFLR          C                   CONST('            ')                            MD057871
      D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       **  Data Structure for AOSVALR0 string

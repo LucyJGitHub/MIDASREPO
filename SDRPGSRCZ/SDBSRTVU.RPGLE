@@ -32,7 +32,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 08Apr21               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -235,7 +235,7 @@
       * Fields defined for CSD012
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')
-     D BLKFLR          C                   CONST('             ')
+     D BLKFLR          C                   CONST('            ')
      D SCNSTR          C                   CONST('9999.9999999')
 
       **  Data Structure for AOSVALR0 string

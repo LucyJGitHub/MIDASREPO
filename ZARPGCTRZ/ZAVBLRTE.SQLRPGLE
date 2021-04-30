@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057934           Date 23Apr21               *
-      *  Prev Amend No. MD057889           Date 19Apr21               *
+      *  Last Amend No. MD057930           Date 26Apr21               *
+      *  Prev Amend No. MD057934           Date 23Apr21               *
+      *                 MD057889           Date 19Apr21               *
       *                 MD057794           Date 24Mar21               *
       *                 MD057790           Date 23Mar21               *
       *                 MD057770           Date 18Mar21               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057930 - Calculation basis 4 not mapped to actual/365 on   *
+      *             Day Basis for Average field.                      *
       *  MD057934 - Serious Midas Error encountered on BSRT and CLIP  *
       *  MD057889 - System throws a validation error when BLRT and    *
       *             OPSH are left blank when a fixed rate loan is     *
@@ -1303,7 +1306,8 @@
      C                             TransICBS = 5                                              CLE172
      C                   Z-ADD     2             WDBAV                                        CLE172
      C                   WHEN      TransICBS = 4                                              CLE172
-     C                   Z-ADD     3             WDBAV                                        CLE172
+     C**********         Z-ADD     3             WDBAV                               CLE172 MD057930
+     C                   Z-ADD     1             WDBAV                                      MD057930
      C                   OTHER                                                                CLE172
      C                   Z-ADD     TransICBS     WDBAV                                        CLE172
      C                   ENDSL                                                                CLE172

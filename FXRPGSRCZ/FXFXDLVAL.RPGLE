@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057657           Date 09Mar21               *
-      *  Prev Amend No. MD052014           Date 05Oct18               *
+      *  Last Amend No. 251863             Date 22May20               *
+      *  Prev Amend No. MD057657           Date 09Mar21               *
+      *                 MD052014           Date 05Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD039203           Date 14Jun16               *
@@ -91,6 +92,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251863 - Applied fix 238023.                                 *
+      *  238023 - Added parameter F3MGBS upon calling FXVEXCHVAM.     *
       *  MD057657 - Passed Local Currency BLCCY to FXVEXCHVAM         *
       *  MD052014 - Sale Value Date not defaulting correctly for Swap *
       *             Deals. Should be defaulted with the Core Value    *
@@ -1786,6 +1789,8 @@
      C                   PARM                    @@SXP2                         scaling exponent
      C                   PARM                    @@MDF2            1            mult/div ind
      C                   PARM                    @NEXRT2           5 2                     BUG23050A
+      *                                                                                       238023
+     C                   PARM                    F3MGBS            1            marg ind      238023
       *                                                                                       CER043
       ** Reciprocal rate indicator, exchange rate                                             CER043
       *                                                                                       CER043

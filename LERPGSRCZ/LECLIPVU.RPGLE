@@ -1554,7 +1554,7 @@
      C                   EVAL       NewLibor = TranScnBlrt                                  MD057871
      C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
      C                   IF         Pos <> 0                                                MD057871
-     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:13)            MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)            MD057871
      C                   EVAL       TranScnBlrt = NewLibor                                  MD057871
      C                   ENDIF                                                              MD057871
       *                                                                                     MD057871

@@ -12,11 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CTI006  *CREATE    Date 31Mar14               *
+      *  Last Amend No. MD057673           Date 30Apr21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CTI006  *CREATE    Date 31Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057673 - Unauthorised transactions screen error in         *
+      *             CB001001DF                                        *
+      *           - Default value from '0' to '00000'.                *
+      *           - Applied for MD057898.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *                                                               *
@@ -59,7 +64,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
@@ -103,7 +108,8 @@
       *
      C     GPDWNLL0Key   SETLL     GPDWNLL0
      C     GPDWNLL0Key   CHAIN     GPDWNLL0                           11
-     C                   EVAL      DLVAL = '0'
+     C**********         EVAL      DLVAL = '0'                                              MD057673
+     C                   EVAL      DLVAL = '00000'                                          MD057673
      C                   EVAL      DLMPGM = Maint_Program
      C                   EVAL      DLMPRM = Maint_Parms
      C                   EVAL      DLEPGM = Enq_Program

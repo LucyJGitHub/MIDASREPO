@@ -274,7 +274,7 @@
      D WIdx            S              3P 0
       ** Index for arrays of warning message ids etc
      D Pos             S              3P 0                                                  MD057871
-     D BLKFLR          C                   CONST('             ')                           MD057871
+     D BLKFLR          C                   CONST('            ')                            MD057871
      D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       * Asset code and health code                                                            CLE120

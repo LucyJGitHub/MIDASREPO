@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057294           Date 03Dec20               *
-      *  Prev Amend No. MD050526           Date 27Oct20               *
+      *  Last Amend No. MD053345           Date 01Jun20               *
+      *  Prev Amend No. MD057294           Date 03Dec20               *
+      *                 MD050526           Date 27Oct20               *
       *                 AR970389B          Date 16Sep20               *
       *                 AR970389A          Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -158,6 +159,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053345 - Dead lock when amending customer through JMS CUSD *
+      *             API.                                              *
       *  MD057294 - Missing Customer's Authority Holders Link after   *
       *             amend                                             *
       *  MD050526 - Maintain Customers tab Authority Holders Link and *
@@ -4648,7 +4651,16 @@
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                  CSC022
      C                   ROLBK
      C                   EndIf                                                                CSC022
+      *                                                                                     MD053345
+     C     @RTCD         IFEQ      '*LOCKED'                                                MD053345
+     C                   ADD       1             Idx                                        MD053345
+     C                   EVAL      FldNameArr(Idx) = 'DDACTN'                               MD053345
+     C                   EVAL      MsgIdArr(Idx)   = 'USR8867'                              MD053345
+     C                   EVAL      MsgFArray(Idx)  = 'GBSDUSRMSG'                           MD053345
+     C                   ELSE                                                               MD053345
      C                   EXSR      *PSSR
+     C                   ENDIF                                                              MD053345
+      *                                                                                     MD053345
      C                   ELSE
       /COPY WNCPYSRC,SDCUSDVU04
      C                   IF        CGL132 = 'Y' AND                                         MD026519
@@ -7246,7 +7258,7 @@
      C                   eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
-      /COPY WNCPYSRC,SDCUSDVU03
+       /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082
       /COPY WNCPYSRC,SDCUSDVU05

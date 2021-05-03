@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057237           Date 04Dec20               *
+      *  Last Amend No. 254657             Date 01Jun20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057237           Date 04Dec20               *
       *                 MD054702           Date 07Sep20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
@@ -87,6 +88,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254657 - Front Office ID overridden with APCTRANVU*** when   *
+      *           user tries to amend/accept JE inserted via APIs     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057237 - Journal Entry via Interface File: Batch Stuck     *
@@ -654,7 +657,7 @@
       *
      C                   MOVE      WVSUB1        WVSUB2
       *
-     C                   MOVE      B1FRNT        BRFRNT
+     C**********         MOVE      B1FRNT        BRFRNT                                       254657
      C                   MOVE      B1AFRT        BRAFRT
      C                   MOVE      B1TMST        BRTMST
      C**********         MOVE      B1BHAI        BRBHAI                                       239155
@@ -668,7 +671,10 @@
       ** If retail account access security is on....                                          237621
                                                                                               237621
      C     JAVAUSER      IFEQ      'Y'                                                        237621
-     C     CGL037        ANDEQ     'Y'                                                        237621
+     C*****CGL037        ANDEQ     'Y'                                                 237621 254657
+     C     BRFRNT        ANDEQ     *BLANKS                                                    254657
+     C                   MOVE      B1FRNT        BRFRNT                                       254657
+     C     CGL037        IFEQ      'Y'                                                        254657
                                                                                               237621
       ** ... find out what the menu option taken was and suffix the                           237621
       ** front office ID accordingly.                                                         237621
@@ -693,6 +699,7 @@
      C                   ENDIF                                                              MD046910
                                                                                               CSC054
      C                   EndIf                                                                237621
+     C                   ENDIF                                                                254657
       *                                                                                       CAP084
       ** Delete batch header record if B1BHAI is flagged as 'D'                               CAP084
       *                                                                                       CAP084

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057744           Date 24Mar21               *
+      *  Last Amend No. AR573975           Date 01Jun20               *
+      *  Prev Amend No. 254657             Date 01Jun20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD057744           Date 24Mar21               *
       *                 MD056651           Date 05Oct20               *
       *                 MD041767           Date 25Jun20               *
       *                 CSD102             Date 08Jan19               *
@@ -94,6 +96,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR573975 - Associated Front Office ID is overridden with     *
+      *             blanks when user tries to amend/accept JE inserted*
+      *             via APIs. If Assoc. Front Office ID is not blank  *
+      *             do not override it with blanks. Fix patterned     *
+      *             after 254657.                                     *
+      *  254657 - Front Office ID overridden with APCTRANVU*** when   *
+      *           user tries to amend/accept JE inserted via APIs     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057744 - T&P Batch item goes into Repair - overwrites      *
@@ -543,6 +552,8 @@
      D PActnCde        S              1A                                                      CSC024
      D WPlayBack       S              1A                                                      CSC024
                                                                                               CSC024
+     D SaveFRNT        S             20A                                                      254657
+     D SavAFRNT        S             20A                                                    AR573975
      D PApiMode        S              1A                                                      246418
      D PMode           S              1A                                                      246418
      D PRetCodeIn      S              7A                                                      246418
@@ -791,8 +802,22 @@
       ** Move Valid details into file details ready for update                                CAP084
                                                                                               CAP084
      C                   MOVE      BRBTNB        B2BTNB                                       CAP084
+     C                   MOVE      *BLANKS       SaveFRNT                                     254657
+     C                   MOVE      *BLANKS       SavAFRNT                                   AR573975
+     C                   IF        BTFRNT <> *BLANKS                                          254657
+     C                   EVAL      SaveFRNT = BTFRNT                                          254657
+     C                   ENDIF                                                                254657
+     C                   IF        BTAFRT <> *BLANKS                                        AR573975
+     C                   EVAL      SavAFRNT = BTAFRT                                        AR573975
+     C                   ENDIF                                                              AR573975
      C                   MOVE      BRBCDA        B2BCBH                                       239576
      C                   MOVEL     PVBITP        WJENP                                        CAP084
+     C                   IF        SaveFRNT <> *BLANKS                                        254657
+     C                   EVAL      BTFRNT = SaveFRNT                                          254657
+     C                   ENDIF                                                                254657
+     C                   IF        SavAFRNT <> *BLANKS                                      AR573975
+     C                   EVAL      BTAFRT = SavAFRNT                                        AR573975
+     C                   ENDIF                                                              AR573975
      C                   IF        WPdId > 0                                                MD020177
      C                   EVAL      BTPDID = WPdId                                          AR1093096
      C                   ENDIF                                                              MD020177
@@ -1521,7 +1546,7 @@ E1   C                   ENDIF                                                  
      C                   ADD       1             BRHINC
                                                                                               CGL148
      C*****CGL148        Ifeq      'Y'                                               CGL148 MD056651
-     C*****JAVAUSER      ANDEQ     'Y'                                             MD025083 MD056651                                             
+     C*****JAVAUSER      ANDEQ     'Y'                                             MD025083 MD056651
      C***********        z-add     BRHINC        BRHINI                              CGL148 MD056651
      C***********        Endif                                                       CGL148 MD056651
       *                                                                                       CAP084
@@ -1601,7 +1626,7 @@ E1   C                   ENDIF                                                  
       *                                                                                       CAP084
      C                   SUB       1             BRHINC                                       CAP084
      C     CGL148        Ifeq      'Y'                                                      MD056651
-     C     JAVAUSER      ANDEQ     'Y'                                                      MD056651                                                
+     C     JAVAUSER      ANDEQ     'Y'                                                      MD056651
      C                   z-add     BRHINC        BRHINI                                     MD056651
      C                   Endif                                                              MD056651
                                                                                               CAP084

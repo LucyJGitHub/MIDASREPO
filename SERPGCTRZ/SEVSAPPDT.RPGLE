@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 261824             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR875871           Date 06Dec11               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -37,6 +38,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -331,6 +336,7 @@
       *
      C                   IF        ZDAYNO <= S1ITLD OR
      C                             ZDAYNO > S1MATY
+     C                             and S1MATY <> *ZEROS                                       261824
      C                   ADD       1             IDx
      C                   EXSR      SRApplcdErr
      C                   MOVE      'SEA0506'     MsgIDXAr(IDx)

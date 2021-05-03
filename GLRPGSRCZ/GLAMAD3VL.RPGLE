@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 250822             Date 22May20               *
+      *  Prev Amend No. 252664             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047680           Date 08Sep17               *
@@ -63,6 +65,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252664 - Do not set to blanks field DDNCID                   *
+      *  250822 - Used the day number from ToF and ensure that        *
+      *           ZFREQB2 is called. Patterned fix after 210058.      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -742,6 +747,7 @@
       ** VNXCAP - Validate Next Capital. Date, Frequency & Day no
       *****************************************************************
      C     VNXCAP        BEGSR
+     C**********         Eval      DDNCID = *blank                                     250822 252664
 
       * Reset variables updated by each module
 
@@ -750,13 +756,15 @@
      C     WValforPB     Ifeq      'Y'                                          180721
      C     DDNCID        Andeq     *Blanks                                      180721
                                                                                 180721
-     C     DDCRIF        Ifeq      'D'                                          180721
+     C*****DDCRIF        Ifeq      'D'                                                 180721 250822
+     C     DDCRIF        Ifne      'D'                                                        250822
      C                   Movel     DDCNCD        ZMDAY                          180721
      C                   Else                                                   180721
      C                   Z-add     *zeros        ZMDAY                          180721
      C                   Endif                                                  180721
                                                                                 180721
-     C                   CallB     'ZFREQB'                                     180721
+     C**********         CallB     'ZFREQB'                                            180721 250822
+     C                   CallB     'ZFREQB2'                                                  250822
      C                   Parm      *blanks       RetCodeIn                      180721
      C                   Parm      DDCRIF        ZFREQ             1            180721
      C**********         Parm      BJRDNB        ZDAYNO            5 0                 180721 CSC011

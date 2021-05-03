@@ -23,6 +23,7 @@
       *                                                               *
       *  Last Amend No. 260191A            Date 22May20               *
       *  Prev Amend No. 260191             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD038918           Date 31May16               *
       *                 260331             Date 31Mar16               *
@@ -61,6 +62,7 @@
       *           fix 247625.                                         *
       *  259978 - System does not allow to do Event type "Conversions"*
       *           in Security diary Input function.                   *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
       *             event for an FRN security with event date equal   *
@@ -531,7 +533,8 @@
      C                   Z-ADD     0             F1NEXD
      C                   Z-ADD     0             F1LCPN
      C                   Z-ADD     0             F1CPNR
-     C                   Z-ADD     0             F1BASC
+     C**********         Z-ADD     0             F1BASC                                       CSD103
+     C                   EVAL      F1BASC = *BLANKS                                           CSD103
      C                   Z-ADD     0             F1BASS
      C                   Z-ADD     0             F1MCPN
      C                   Z-ADD     0             F1MATY

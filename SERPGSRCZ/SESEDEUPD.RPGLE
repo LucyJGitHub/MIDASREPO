@@ -20,6 +20,7 @@
       *                                                               *
       *  Last Amend No. 260191A            Date 22May20               *
       *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 03Apr16               *
@@ -49,6 +50,8 @@
       *                                                               *
       *  260191A - Incorrect dividend position settlement generated.  *
       *           Correct the validation of action 'D'elete.          *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *

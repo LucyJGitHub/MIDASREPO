@@ -13,6 +13,7 @@
       *                                                               *
       *  Last Amend No. 258848             Date 22May20               *
       *  Prev Amend no. 248683             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056996           Date 19Oct20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -128,6 +129,8 @@
       *           TRADE REPAIR. Amended program to write 'B' record to*
       *           said file as it does to TRADSDX1. Amended program to*
       *           check whether TRADSDX2 was already written by SE1806*
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD056996 - In a 2 node system where trades are processed     *
       *             symulaneously, a duplicate record error was       *
       *             encountered in writing to BKPHPD file. Fix was to *

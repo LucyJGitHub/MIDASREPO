@@ -31,7 +31,8 @@
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  Last Amend No. 260191A            Date 22May20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 01Apr16               *
       *                 CRE073             Date 06Dec10               *
@@ -64,6 +65,8 @@
       *           event. This validation is only valid if the diary   *
       *           event being deleted is still live record. Applied   *
       *           fix 247625.                                         *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *

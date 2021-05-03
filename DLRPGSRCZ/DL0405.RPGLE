@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD057457           Date 16Jan21               *
-      *  Prev Amend No. MD055401           Date 23Oct20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057457           Date 16Jan21               *
+      *                 MD055401           Date 23Oct20               *
       *                 MD054655           Date 06Dec19               *
       *                 MD048346           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057457 - GLC0802C 00001 failed due to FOOB on GL0580AU.    *
       *           - Replace the condition from 'WDecSum > 1000' to    *
       *              to 'WDecSum >= 1000'. Patterned after MD-51930.  *

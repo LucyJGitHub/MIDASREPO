@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD057616           Date 05Mar21               *
-      *  Prev Amend No. MD057275           Date 20Jan21               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057616           Date 05Mar21               *
+      *                 MD057275           Date 20Jan21               *
       *                 MD048575           Date 07Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057616 - LERC20 00001 failed during COB                    *
       *           - Clear temporary account detail and nostro field   *
       *             variables                                         *

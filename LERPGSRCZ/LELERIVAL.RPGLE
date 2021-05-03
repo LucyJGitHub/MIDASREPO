@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057191           Date 02Dec20               *
-      *  Prev Amend No. MD057323           Date 09Dec20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *                 MD057323           Date 09Dec20               *
       *                 MD045482           Date 23Oct20               *
       *                 MD034915A          Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
-      *                 MD024812A          Date 06Nov19               *
+      *               . MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -122,6 +123,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
       *           - DL ICD must not be used, removed unnecessary codes*
@@ -1548,11 +1550,14 @@
      C                   ENDIF
       *
      C     WNBRA1        IFEQ      '*'
-     C     VNBRA         ORNE      *ZERO
-     C     VNBRA         OREQ      *ZERO                                                      248162
+     C*****VNBRA         ORNE      *ZERO                                                      CSD103
+     C*****VNBRA         OREQ      *ZERO                                               248162 CSD103
+     C     VNBRA         ORNE      *BLANKS                                                    CSD103
+     C     VNBRA         OREQ      *BLANKS                                                    CSD103
      C     DDACTN        ANDEQ     'A'                                                        248162
      C     @@CTU         ANDNE     'Y'                                                        248162
-     C                   Z-ADD     VNBRA         L_CLNBRA
+     C**********         Z-ADD     VNBRA         L_CLNBRA                                     CSD103
+     C                   MOVE      VNBRA         L_CLNBRA                                     CSD103
      C                   ENDIF
       *
      C     WNRTS1        IFEQ      '*'
@@ -2830,18 +2835,27 @@
                                                                                               CRE073
      C     WNBRA1        IFNE      '*'
      C     DDACTN        IFEQ      'A'
-     C                   MOVE      DDNBRAB       WNBRA             2 0
-     C                   TESTN                   DDNBRAB              85        *on means numeric
+     C**********         MOVE      DDNBRAB       WNBRA             2 0                        CSD103
+     C                   MOVE      DDNBRAB       WNBRA             2                          CSD103
+     C**********         TESTN                   DDNBRAB              85    *on means numeric CSD103
+     C     DDNBRAB       IFNE      '00'                                                       CSD103
+     C                   MOVE      1             *IN85                          *means valid  CSD103
+     C                   ENDIF                                                                CSD103
      C                   ELSE
-     C                   MOVE      DDNBRA        WNBRA             2 0
-     C                   TESTN                   DDNBRA               85        *on means numeric
+     C**********         MOVE      DDNBRA        WNBRA             2 0                        CSD103
+     C                   MOVE      DDNBRA        WNBRA             2                          CSD103
+     C**********         TESTN                   DDNBRA               85    *on means numeric CSD103
+     C     DDNBRAB       IFNE      '00'                                                       CSD103
+     C                   MOVE      1             *IN85                          *means valid  CSD103
+     C                   ENDIF                                                                CSD103
      C                   ENDIF
       *
       **  Skip validation if field is blank and loan not currently
       **  attached to base rate.
       *
      C                   SELECT
-     C     BRTT          WHENEQ    *ZEROS
+     C*****BRTT*         WHENEQ    *ZEROS                                                     CSD103
+     C     BRTT          WHENEQ    *BLANKS                                                    CSD103
      C     DDNBRAB       ANDEQ     *BLANKS
      C     DDNBRA        ANDEQ     *BLANKS
       *****************************************************************                     AR826115
@@ -2939,7 +2953,8 @@
       *
       **  Note: These details will be used later for
       **        validation of new discount amount.
-     C                   Z-ADD     WNBRA         NBRA
+     C**********         Z-ADD     WNBRA         NBRA                                         CSD103
+     C                   MOVE      WNBRA         NBRA                                         CSD103
      C                   Z-ADD     BANBRT        BASE             11 7
      C                   Z-ADD     BANBRT        TMBSRT                                       CRE073
      C                   ENDIF
@@ -2953,7 +2968,8 @@
      C     DDNBRA        ANDNE     *BLANKS
      C     DDNBRAB       OREQ      *BLANKS
      C     DDACTN        ANDEQ     'A'
-     C     BRTT          ANDNE     *ZEROS
+     C*****BRTT*         ANDNE     *ZEROS                                                     CSD103
+     C     BRTT          ANDNE     *BLANKS                                                    CSD103
       *
       **  If base rate code is not entered, use the old one
       ** Use new base rate from file if not blank. Otherwise
@@ -3007,7 +3023,8 @@
       **  Note: These details will be used later for
       **        validation of new discount amount.
       *
-     C                   Z-ADD     WNBRA         NBRA
+     C**********         Z-ADD     WNBRA         NBRA                                         CSD103
+     C                   MOVE      WNBRA         NBRA                                         CSD103
      C                   Z-ADD     BANBRT        BASE
      C                   ENDIF
      C                   ENDSL
@@ -3046,7 +3063,8 @@
      C*****WNFYLD        ANDEQ     '*'                                                BUG827 BUG3352
      C*****@FYIELD       ANDEQ     'Y'                                                BUG827 BUG3352
       **********                                                                      BUG827 BUG3352
-     C                   Z-ADD     *ZEROS        VNBRA
+     C**********         Z-ADD     *ZEROS        VNBRA                                        CSD103
+     C                   MOVE      *BLANKS       VNBRA                                        CSD103
      C                   Z-ADD     *ZEROS        VNRTS
      C                   MOVE      *BLANK        VNSIN
      C                   Z-ADD     *ZERO         VNCAS
@@ -3821,7 +3839,8 @@
       **  if New base rate code was entered.
       *
      C     DDNCHIB       WHENNE    *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDNE     63
      C     PTYP          ANDNE     65
@@ -3832,7 +3851,8 @@
      C     DDACTN        ANDEQ     'A'
       *
      C     DDNCHI        ORNE      *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDNE     63
      C     PTYP          ANDNE     65
@@ -3843,7 +3863,8 @@
      C     DDACTN        ANDEQ     'X'
       *                                                                                       CLE030
      C     DDNCHI        ORNE      *BLANK                                                     CLE030
-     C     VNBRA         ANDNE     *ZEROS                                                     CLE030
+     C*****VNBRA         ANDNE     *ZEROS                                              CLE030 CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'                                                        CLE030
      C     PTYP          ANDNE     63                                                         CLE030
      C     PTYP          ANDNE     65                                                         CLE030
@@ -3894,59 +3915,68 @@
       **  if New base rate code was entered.
       *
      C     DDNCHIB       WHENNE    *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDEQ     63
      C     DDNCHIB       ANDNE     'N'
      C     DDACTN        ANDEQ     'A'
      C     DDNCHIB       ORNE      *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDEQ     65
      C     DDNCHIB       ANDNE     'N'
      C     DDACTN        ANDEQ     'A'
      C     DDNCHIB       ORNE      *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDEQ     67
      C     DDNCHIB       ANDNE     'N'
      C     DDACTN        ANDEQ     'A'
       *
      C     DDNCHI        ORNE      *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDEQ     63
      C     DDNCHI        ANDNE     'N'
      C     DDACTN        ANDEQ     'X'
      C     DDNCHI        ORNE      *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDEQ     65
      C     DDNCHI        ANDNE     'N'
      C     DDACTN        ANDEQ     'X'
      C     DDNCHI        ORNE      *BLANK
-     C     VNBRA         ANDNE     *ZEROS
+     C*****VNBRA         ANDNE     *ZEROS                                                     CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'
      C     PTYP          ANDEQ     67
      C     DDNCHI        ANDNE     'N'
      C     DDACTN        ANDEQ     'X'
       *                                                                                       CLE030
      C     DDNCHI        ORNE      *BLANK                                                     CLE030
-     C     VNBRA         ANDNE     *ZEROS                                                     CLE030
+     C*****VNBRA         ANDNE     *ZEROS                                              CLE030 CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'                                                        CLE030
      C     PTYP          ANDEQ     63                                                         CLE030
      C     DDNCHI        ANDNE     'N'                                                        CLE030
      C     DDACTN        ANDEQ     'Q'                                                        CLE030
      C     CLE030        ANDEQ     'Y'                                                        CLE030
      C     DDNCHI        ORNE      *BLANK                                                     CLE030
-     C     VNBRA         ANDNE     *ZEROS                                                     CLE030
+     C*****VNBRA         ANDNE     *ZEROS                                              CLE030 CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'                                                        CLE030
      C     PTYP          ANDEQ     65                                                         CLE030
      C     DDNCHI        ANDNE     'N'                                                        CLE030
      C     DDACTN        ANDEQ     'Q'                                                        CLE030
      C     CLE030        ANDEQ     'Y'                                                        CLE030
      C     DDNCHI        ORNE      *BLANK                                                     CLE030
-     C     VNBRA         ANDNE     *ZEROS                                                     CLE030
+     C*****VNBRA         ANDNE     *ZEROS                                              CLE030 CSD103
+     C     VNBRA         ANDNE     *BLANKS                                                    CSD103
      C     DDNbraOK      ANDNE     'N'                                                        CLE030
      C     PTYP          ANDEQ     67                                                         CLE030
      C     DDNCHI        ANDNE     'N'                                                        CLE030
@@ -4018,13 +4048,15 @@
      C                   Z-ADD     RLDT          W#HIDT
      C                   ENDIF
       *
-     C                   Z-ADD     WNBRA         G0BSRC
+     C**********         Z-ADD     WNBRA         G0BSRC                                       CSD103
+     C                   MOVE      WNBRA         G0BSRC                                       CSD103
       *
      C                   CALL      'AOBSHSR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM                    POPTN
      C                   PARM      W#CCY         @CCY              3
-     C                   PARM      G0BSRC        @BSRN             2 0
+     C**********         PARM      G0BSRC        @BSRN             2 0                        CSD103
+     C                   PARM      G0BSRC        @BSRN             2                          CSD103
      C                   PARM                    @INTD             5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
       *                                                                                       247860
@@ -5676,7 +5708,8 @@
      C     CLE030        ANDEQ     'Y'                                                        CLE030
       *
       **  Next base rate code on file is blank.
-     C     NBRA          IFEQ      *ZEROS
+     C*****NBRA*         IFEQ      *ZEROS                                                     CSD103
+     C     NBRA          IFEQ      *BLANKS                                                    CSD103
       *
       **  If next spread/rate and other related fields
       **  are blank, use old details from file.
@@ -7190,7 +7223,8 @@
      C                   Z-ADD     *ZEROS        VRLDT             5 0
      C                   MOVE      *BLANK        VRLFQ             1
      C                   Z-ADD     *ZEROS        VRLDY             2 0
-     C                   Z-ADD     *ZEROS        VNBRA             2 0
+     C**********         Z-ADD     *ZEROS        VNBRA             2 0                        CSD103
+     C                   MOVE      *BLANKS       VNBRA             2                          CSD103
      C                   Z-ADD     *ZEROS        VNRTS            11 7
      C                   Z-ADD     *ZEROS        VNRTF            11 7                        CLE035
      C                   Z-ADD     *ZEROS        VNBRT            11 7                        CLE035
@@ -7870,17 +7904,22 @@
       **  If New base rate code is blank and loan is
       **  currently attached to base rate.
       *
-     C     BRTT          IFNE      *ZEROS
+     C*****BRTT*         IFNE      *ZEROS                                                     CSD103
+     C     BRTT          IFNE      *BLANKS                                                    CSD103
      C     DDNBRAB       ANDEQ     *BLANKS
      C     DDNBRA        ANDEQ     *BLANKS
      C     DDFRCOB       ANDNE     'Y'                                                      MD031083
      C     DDACTN        ANDEQ     'A'
-     C     BRTT          ORNE      *ZEROS
-     C     NBRA          ANDEQ     *ZEROS
+     C*****BRTT*         ORNE      *ZEROS                                                     CSD103
+     C*****NBRA*         ANDEQ     *ZEROS                                                     CSD103
+     C     BRTT          ORNE      *BLANKS                                                    CSD103
+     C     NBRA          ANDEQ     *BLANKS                                                    CSD103
      C     DDFRCO        ANDNE     'Y'                                                      MD031083
      C     DDACTN        ANDEQ     'X'
-     C     BRTT          ORNE      *ZEROS                                                     CLE030
-     C     NBRA          ANDEQ     *ZEROS                                                     CLE030
+     C*****BRTT*         ORNE      *ZEROS                                              CLE030 CSD103
+     C*****NBRA*         ANDEQ     *ZEROS                                              CLE030 CSD103
+     C     BRTT          ORNE      *BLANKS                                                    CSD103
+     C     NBRA          ANDEQ     *BLANKS                                                    CSD103
      C     DDFRCO        ANDNE     'Y'                                                      MD031083
      C     DDACTN        ANDEQ     'Q'                                                        CLE030
      C     CLE030        ANDEQ     'Y'                                                        CLE030

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056949           Date 13Nov20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035962           Date 25May16               *
       *                 MD000091           Date 16May13               *
       *                 AR1077984          Date 17Jan13               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
       *             date array - which is not an error                *
       *           - skip validation for last coupon date and next     *
@@ -669,7 +671,8 @@
      C                   EVAL      S1CPNR = *ZEROS
  
      C                   EVAL      DDBASC = *BLANKS
-     C                   EVAL      S1BASC = *ZEROS
+     C**********         EVAL      S1BASC = *ZEROS                                            CSD103
+     C                   EVAL      S1BASC = *BLANKS                                           CSD103
  
      C                   EVAL      DDBASS = *BLANKS
      C                   EVAL      S1BASS = *ZEROS

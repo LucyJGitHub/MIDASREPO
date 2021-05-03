@@ -18,15 +18,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSE040             Date 10Mar21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE040  *CREATE    Date 24Mar03               *
+      *                         *CREATE    Date 24Mar03               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSE040 - Securities Statement Processing                     *
+      *           Applied for MD-55740                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE040 - Securities Statement Processing                     *
       *                                                               *
@@ -54,51 +57,51 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSESDRVL4  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SE Statement - Driver file - Generation Flag
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Data structure for access objects, first DS
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Data structure for access objects, second DS
- 
+
      D PDsSDRV       E DS                  EXTNAME(SESDRVPD)
       ** Midas SE Statement - Driver File
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WNumRec         S             15P 0
       ** Number of records read from the input file
- 
+
       ** Parameter fields
      D PAction8        S              8A
      D PPath           S            256A
@@ -106,28 +109,28 @@
      D PRtnCode        S              7A
      D PSequence       S              5A
      D PCommit         S              3A
- 
+
       ** Entry parameter fields
      D P0RtnCde        S              7A
      D P0Commit        S              3A
- 
+
      D/COPY CGCPYSRC,SRERRDLE
       ** Fields, data structures, arrays definition for CG error processing
- 
+
      D/COPY CGCPYSRC,CGAUDTDLE
       ** Fields, data structures, arrays definition for CG audit processing
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *
       ** Set up subroutine stack name
       *
@@ -155,7 +158,7 @@
       *
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -225,6 +228,23 @@
      C                   EXSR      SRERR
      C                   ENDIF
       *
+     C                   WHEN         SPTYPE = 'PE'                                           CSE040
+      *                                                                                       CSE040
+     C                   CALLB     'SE4667'                                                   CSE040
+     C                   PARM      *Blanks       PRtnCode                                     CSE040
+     C                   PARM                    PDsSDRV                                      CSE040
+     C                   PARM      P0Commit      PCommit                                      CSE040
+      *                                                                                       CSE040
+     C                   IF        PRtnCode <> *BLANKS                                        CSE040
+     C                   EXSR      SRAudit                                                    CSE040
+     C                   MOVEL     'SE4667  '    W0File                                       CSE040
+     C                   MOVEL     PRtnCode      W0Key                                        CSE040
+     C                   Z-ADD     2             W0ERNB                                       CSE040
+     C                   MOVEL     'MEM5003'     W0MSGD                                       CSE040
+     C                   MOVEL     'MIDAS  '     W0MSGF                                       CSE040
+     C                   EXSR      SRERR                                                      CSE040
+     C                   ENDIF                                                                CSE040
+      *                                                                                       CSE040
      C                   ENDSL
       *
      C                   READ      SESDRVL4

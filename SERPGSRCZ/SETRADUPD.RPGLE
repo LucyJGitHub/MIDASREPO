@@ -135,7 +135,7 @@
       *             symulaneously, a duplicate record error was       *
       *             encountered in writing to BKPHPD file. Fix was to *
       *             ensure that the duplicate record will be ignored  *
-      *             and no database error will be encountered.        *      
+      *             and no database error will be encountered.        * 
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020922 - Serious Midas error encountered when authorising  *

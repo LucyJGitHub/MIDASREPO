@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR903401           Date 30Jan12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR903401           Date 30Jan12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSF011             Date 12Sep11               *
       *                 CER049             Date 06Dec10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR903401 - Incorrect Customer Name details during enquiry    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *

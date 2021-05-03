@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056655A          Date 09Oct20               *
-      *  Prev Amend No. MD056655           Date 21Sep20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056655A          Date 09Oct20               *
+      *                 MD056655           Date 21Sep20               *
       *                 MD031031           Date 24Feb15               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
@@ -120,6 +121,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056655A - Deal no already exists is encountered when NASP  *
       *              transaction is entered; error in SOAP exists     *
       *  MD056655 - Deal no already exists is encountered when NASP   *
@@ -1118,24 +1120,32 @@
      C                   CLEAR                   DEALS
      C                   CLEAR                   DEALEXT                                      CLE025
      C                   EVAL      FSOSDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSOS1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOS1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOS1B = *BLANKS                                           CSD103
      C                   EVAL      FSOS1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSOS2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOS2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOS2B = *BLANKS                                           CSD103
      C                   EVAL      FSOS2D = *ZEROS                                           BUG7535
      C                   EVAL      FSOEDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSOE1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOE1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOE1B = *BLANKS                                           CSD103
      C                   EVAL      FSOE1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSOE2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOE2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOE2B = *BLANKS                                           CSD103
      C                   EVAL      FSOE2D = *ZEROS                                           BUG7535
      C                   EVAL      FSTSDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSTS1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTS1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTS1B = *BLANKS                                           CSD103
      C                   EVAL      FSTS1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSTS2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTS2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTS2B = *BLANKS                                           CSD103
      C                   EVAL      FSTS2D = *ZEROS                                           BUG7535
      C                   EVAL      FSTEDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSTE1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTE1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTE1B = *BLANKS                                           CSD103
      C                   EVAL      FSTE1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSTE2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTE2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTE2B = *BLANKS                                           CSD103
      C                   EVAL      FSTE2D = *ZEROS                                           BUG7535
 
       ** Initialise "before" status of deal for on-line updates.
@@ -1877,7 +1887,8 @@
      C                   EVAL      FSUPAM = UPAMT                                             CAS005
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
-     C     RSUBRTT       IFEQ      *ZEROS
+     C*****RSUBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     URTSP         UEINR
                                                                                               CAS005
      C                   IF        CAS005 = 'Y'                                               CAS005
@@ -1891,7 +1902,8 @@
      C                   EVAL      FSTPAM = TPAMT                                             CAS005
      C                   ENDIF                                                                CAS005
       *
-     C     RSTBRTT       IFEQ      *ZEROS
+     C*****RSTBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     TRTSP         TEINR
                                                                                               CAS005
      C                   IF        CAS005 = 'Y'                                               CAS005
@@ -1904,7 +1916,8 @@
       **Default*if*not*entered****
       * (Defaulting done in IRVRTFXDAY)
       *
-     C     RSUBRTT       IFEQ      *ZEROS
+     C*****RSUBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFEQ      *BLANKS                                                    CSD103
       *
      C                   Z-ADD     0             UINFD
      C                   ELSE
@@ -2030,7 +2043,8 @@
       * (Defaulting done in IRVRTFXDAY)
       *
       * User pays Fixed Rate, Counterparty pays Floating Rate
-     C     RSTBRTT       IFEQ      *ZEROS
+     C*****RSTBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFEQ      *BLANKS                                                    CSD103
 
      C                   Z-ADD     0             TINFD
      C                   ELSE
@@ -2175,26 +2189,30 @@
      C                   Z-ADD     VDAT          TIACD
 
       * Last Interest Payment/Change Date
-     C     RSUBRTT       IFEQ      *ZEROS
+     C*****RSUBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     0             ULPCD
      C                   ELSE
      C                   Z-ADD     VDAT          ULPCD
      C                   END
       *
-     C     RSTBRTT       IFEQ      *ZEROS
+     C*****RSTBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     0             TLPCD
      C                   ELSE
      C                   Z-ADD     VDAT          TLPCD
      C                   END
       *
       * Spread Indicators
-     C     RSUBRTT       IFNE      *ZEROS
+     C*****RSUBRTT       IFNE      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFNE      *BLANKS                                                    CSD103
      C     RSURTSP       ANDNE     *ZEROS
      C     RSUSPIN       ANDEQ     *BLANK
      C                   MOVE      'A'           USPIN
      C                   END
       *
-     C     RSTBRTT       IFNE      *ZEROS
+     C*****RSTBRTT       IFNE      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFNE      *BLANKS                                                    CSD103
      C     RSTRTSP       ANDNE     *ZEROS
      C     RSTSPIN       ANDEQ     *BLANK
      C                   MOVE      'A'           TSPIN
@@ -2290,7 +2308,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C**********         Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
       ** Start Date Current Average Period                                                  BUG7217R
       *                                                                                     BUG7217R
@@ -2312,7 +2331,8 @@
       *
       **  Our/Their effective interest rate
       *
-     C     RSUBRTT       IFEQ      *ZEROS
+     C*****RSUBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     URTSP         UEINR
                                                                                               CAS005
      C                   IF        CAS005 = 'Y'                                               CAS005
@@ -2339,7 +2359,8 @@
      C                   ENDIF                                                  167793
       *                                                                         167793
       *
-     C     RSTBRTT       IFEQ      *ZEROS
+     C*****RSTBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     TRTSP         TEINR
                                                                                               CAS005
      C                   IF        CAS005 = 'Y'                                               CAS005
@@ -2369,7 +2390,8 @@
       **Default*if*not*entered*********
       * (Defaulting done in IRVRTFXDAY)
       *
-     C     RSUBRTT       IFEQ      *ZEROS
+     C*****RSUBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFEQ      *BLANKS                                                    CSD103
       *
      C                   Z-ADD     0             UINFD
      C                   ELSE
@@ -2517,7 +2539,8 @@
       **Default*if*not*entered********
       * (Defaulting done in IRVRTFXDAY)
       *
-     C     RSTBRTT       IFEQ      *ZEROS
+     C*****RSTBRTT       IFEQ      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFEQ      *BLANKS                                                    CSD103
 
      C                   Z-ADD     0             TINFD
      C                   ELSE
@@ -2710,13 +2733,15 @@
      C                   END
       *
       * Spread Indicators
-     C     RSUBRTT       IFNE      *ZEROS
+     C*****RSUBRTT       IFNE      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFNE      *BLANKS                                                    CSD103
      C     RSURTSP       ANDNE     *ZEROS
      C     RSUSPIN       ANDEQ     *BLANK
      C                   MOVE      'A'           USPIN
      C                   END
       *
-     C     RSTBRTT       IFNE      *ZEROS
+     C*****RSTBRTT       IFNE      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFNE      *BLANKS                                                    CSD103
      C     RSTRTSP       ANDNE     *ZEROS
      C     RSTSPIN       ANDEQ     *BLANK
      C                   MOVE      'A'           TSPIN
@@ -2831,7 +2856,8 @@
       *
       **  Our short term rate / initial rate set entered bits
       *
-     C     RSUBRTT       IFNE      *ZEROS
+     C*****RSUBRTT       IFNE      *ZEROS                                                     CSD103
+     C     RSUBRTT       IFNE      *BLANKS                                                    CSD103
      C     UEINR         ANDNE     ##UEINR
      C                   BITON     '02'          UDNSI
       *                                                                                       227642
@@ -2843,7 +2869,8 @@
       *
       **  Their short term rate / initial rate set entered bits
       *
-     C     RSTBRTT       IFNE      *ZEROS
+     C*****RSTBRTT       IFNE      *ZEROS                                                     CSD103
+     C     RSTBRTT       IFNE      *BLANKS                                                    CSD103
      C     TEINR         ANDNE     ##TEINR
      C                   BITON     '02'          TDNSI
       *                                                                                       227642
@@ -2864,7 +2891,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C*********          Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
      C                   IF        UINFD >= BJRDNB                                          MD036601
      C                             and UINFD <= UNICD                                       MD036601

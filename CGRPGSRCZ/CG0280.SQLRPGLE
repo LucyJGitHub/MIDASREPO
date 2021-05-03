@@ -21,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD055928           Date 02Jun20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD055928           Date 02Jun20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -62,6 +63,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *

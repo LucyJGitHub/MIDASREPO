@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057744           Date 24Mar21               *
-      *  Prev Amend No  MD056651           Date 05Oct20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057744           Date 24Mar21               *
+      *                 MD056651           Date 05Oct20               *
       *                 MD041767           Date 25Jun20               *
       *                 CSD102             Date 08Jan19               *
       *                 CGL148             Date 13Jul18               *
@@ -93,6 +94,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057744 - T&P Batch item goes into Repair - overwrites      *
       *             another item when repaired. Amend program to add  *
       *             condition, Insert will not pass through processing*

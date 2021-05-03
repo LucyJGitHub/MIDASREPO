@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR918343           Date 25Apr12               *
-      *  Prev Amend No. MD027517           Date 08Jul14               *      
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR918343           Date 25Apr12               *
+      *                 MD027517           Date 08Jul14               *      
       *               . MD053093           Date 03Sep19               *
       *                 MD048074           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
       *             Defaulting of drawing types should only occured   *
@@ -1901,7 +1903,7 @@
       *                                                                                       CLE106
      C     DDLPBR        IFEQ      *BLANKS                                                    CLE106
      C     DDLPRT        ANDEQ     *BLANKS                                                    CLE106
-     C     DDLPBR        OREQ      '0'                                                      BUG22100
+     C*****DDLPBR        OREQ      '0'                                               BUG22100 CSD103
      C     DDLPRT        ANDEQ     '0'                                                      BUG22100
      C                   Move      'N'           DDLPFROK                                     CLE106
      C                   Add       1             Idx                                          CLE106

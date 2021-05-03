@@ -49,8 +49,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD026171           Date 07Apr14               *
-      *  Prev Amend No. MD055657           Date 14May20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD026171           Date 07Apr14               *
+      *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 CER050             Date 16Jun19               *
       *                 CLE168             Date 26Feb18               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD026171 - Decimal data error occurred. Initialise field     *
       *             INMAAN to zero this will prevent the DBERR.       *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *
@@ -473,7 +475,8 @@
      C                   Z-ADD     *ZEROS        FCXAFA
      C                   EVAL      FCXFAS = ' '
      C                   EVAL      FCXAFC = '  '
-     C                   Z-ADD     *ZEROS        FCXFBC
+     C**********         Z-ADD     *ZEROS        FCXFBC                                       CSD103
+     C                   MOVEL     *BLANKS       FCXFBC                                       CSD103
      C                   Z-ADD     *ZEROS        FCXFBR
      C                   Z-ADD     *ZEROS        FCXFSR
      C                   EVAL      FCXSRS = ' '
@@ -504,7 +507,8 @@
      C                   ENDIF
 
      C                   IF        FLPTP = 'P' AND FLPAM <> 0
-     C                   IF        FLPBR = 0
+     C**********         IF        FLPBR = 0                                                  CSD103
+     C                   IF        FLPBR = *BLANKS                                            CSD103
      C                   MOVE      FLPAM         FCXPFR
      C                   ELSE
      C                   MOVE      FLPAM         FCXPSR
@@ -543,7 +547,8 @@
      C                   Z-ADD     *ZEROS        FCXAFA
      C                   EVAL      FCXFAS = ' '
      C                   EVAL      FCXAFC = '  '
-     C                   Z-ADD     *ZEROS        FCXFBC
+     C**********         Z-ADD     *ZEROS        FCXFBC                                       CSD103
+     C                   MOVEL     *BLANKS       FCXFBC                                       CSD103
      C                   Z-ADD     *ZEROS        FCXFBR
      C                   Z-ADD     *ZEROS        FCXFSR
      C                   EVAL      FCXSRS = ' '
@@ -574,7 +579,8 @@
      C                   ENDIF
 
      C                   IF        ALPTP = 'P' AND ALPAM <> 0
-     C                   IF        ALPBR = 0
+     C**********         IF        ALPBR = 0                                                  CSD103
+     C                   IF        ALPBR = *BLANKS                                            CSD103
      C                   MOVE      ALPAM         FCXPFR
      C                   ELSE
      C                   MOVE      ALPAM         FCXPSR

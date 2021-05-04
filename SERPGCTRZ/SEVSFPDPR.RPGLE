@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -147,12 +150,12 @@
      D PRtCd           S              7A
      D POptn           S              7A
      D PKey            S              3A
- 
+
      D ZFIELD          S             16A
      D ZADEC           S              1P 0
      D ZADIG           S              2P 0
      D ZALIGNok        S              1A
- 
+
      D WFulPr          S             15P 0
      D PPROT           S              1A
      D PNmDp           S              1P 0
@@ -187,11 +190,11 @@
      C                   IF        OKSFPP = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSFPP <> 'N'
      C                   Z-ADD     WFulPr        S1SFPP
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -211,7 +214,7 @@
       ** Check valid number
      C                   MOVEL     *BLANKS       ZFIELD
      C                   MOVEL     DDSFPP        ZFIELD
- 
+
      C                   IF        PPROT <> '4'
      C                   Z-ADD     3             ZADIG
      C                   Z-ADD     3             ZADEC
@@ -220,7 +223,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok <> 'Y'
      C                   MOVE      'N'           OKSFPP
      C                   ADD       1             IDx
@@ -237,7 +240,7 @@
      C                   MOVEL     'SEA0225'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Check valid number
@@ -248,7 +251,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   MOVE      ZFIELD        WFulPr
      C                   IF        ZALIGNok <> 'Y'
      C                   MOVE      'N'           OKSFPP
@@ -264,12 +267,12 @@
      C                   MOVEL     'DDSFPP'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0227'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If blank, but initial price entered
      C                   ELSE
- 
+
      C                   IF        S1SINP <> *ZEROS
      C                   MOVE      'N'           OKSFPP
      C                   ADD       1             IDx
@@ -280,9 +283,9 @@
      C                   MOVEL     'SEA0227'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

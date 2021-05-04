@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD056811             Date 20Sep20             *
-      *  Prev Amend No. MD056564             Date 24Aug20             *
+      *  Last Amend No. MD057943             Date 26Apr21             *
+      *  Prev Amend No. MD056811             Date 20Sep20             *
+      *                 MD056564             Date 24Aug20             *
       *                 MD056807             Date 20Sep20             *
       *                 MD056605             Date 05Sep20             *
       *                 MD056609             Date 07Sep20             *
@@ -56,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057943 - Program cannot set the layer for newly            *
+      *             introduced files. Set the layer depending on      *
+      *             source file.                                      *
       *  MD056811 - Deliverable Data Split for SDRPCKTD and SDRPDFTD  *
       *  MD056564 - Deliverable Data Split for No Display field cond  *
       *  MD056807 - Deliverable Data Split for Compliance Watch       *
@@ -122,6 +126,7 @@
      D Count           S              3  0
      D RptAction       S              7    INZ('*REPORT')
      D RptPgm          S             10    INZ('UP0090')
+     D x_SRCPF         S              1                                                     MD057943
       *
      D UPDLVC        E DS                  EXTNAME(UPDLVCPD)
      C     *ENTRY        PLIST
@@ -1148,11 +1153,25 @@
      C                             or Member = 'SDRPDCTD'                                   MD056811
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
+     C/exec SQL                                                                             MD057943
+     C+ select substr(AUSRCF, 9, 1) into :x_SRCPF                                           MD057943
+     C+ from UPDLVCPD                                                                       MD057943
+     C+ where AUMBNM = :Member                                                              MD057943
+     C/end-exec                                                                             MD057943
+     C                   If        SQLCODE = 0                                              MD057943
+     C                   If        x_SRCPF = 'G'                                            MD057943
+     C                   EVAL      AUDTLB = '*GLOBAL'                                       MD057943
+     C                   else                                                               MD057943
+     C                   EVAL      AUDTLB = '*ZONE'                                         MD057943
+     C                   Endif                                                              MD057943
+     C                   Else                                                               MD057943
+                                                                                            MD057943
      C                   EVAL      AUDTLB = '*UNKNOWN'
      C                   EVAL      Char100 = 'Deliverable data - +
      C                             Unknown layer                           : ' +
      C                             Member + ObjectType
      C                   EXSR      InsertErrMsg
+     C                   ENDIF                                                              MD057943
      C                   Endif                                                              MD055264
      C                   Endif                                                              MD055081
      C                   ENDIF

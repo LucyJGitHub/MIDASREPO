@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055830           Date 25Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250390             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055830           Date 25Jun20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039111           Date 01Jun16               *
       *                 MD034990           Date 25May16               *
       *                 CRE100             Date 21Mar14               *
@@ -74,6 +76,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  250390 - In SR/SRPNAR, initialized field ##NARR for new      *
+      *           transaction and use MOVEL in moving DSPNAR to       *
+      *           ##NARR.  Applied fix 248456.                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055830 - Checked first if CRE100 is switched on considering*
       *             system values RET_INTAC_CUST_LVL and RET_CHG_CUST_*
       *             LVL would not be allocated when CRE100 is switched*
@@ -2353,7 +2359,8 @@
       ** Error in REHRDJ
 
      C     *IN99         IFEQ      '1'
-     C     DRIB          ANDEQ     *ZEROS
+     C*****DRIB*         ANDEQ     *ZEROS                                                     CSD103
+     C     DRIB          ANDEQ     *BLANKS                                                    CSD103
      C     DRIS          ANDEQ     *ZEROS
      C                   MOVE      '0'           *IN99
      C                   END
@@ -2421,7 +2428,8 @@
       ** Error in REHRCJ
 
      C     *IN99         IFEQ      '1'
-     C     CRIB          ANDEQ     *ZEROS
+     C*****CRIB*         ANDEQ     *ZEROS                                                     CSD103
+     C     CRIB          ANDEQ     *BLANKS                                                    CSD103
      C     CRIS          ANDEQ     *ZEROS
      C                   MOVE      '0'           *IN99
      C                   END
@@ -2632,7 +2640,8 @@
      C                   MOVE      BRCA          D#BRCA
      C                   MOVE      'GB00380'     ##MGID
      C                   ENDIF
-     C                   MOVE      DSPNAR        ##NARR
+     C**********         MOVE DSPNAR    ##NARR                                       S01522 250390
+     C                   MOVEL     DSPNAR        ##NARR
 
       ** Determine the value for the first narrative using AOPNARR0:
 

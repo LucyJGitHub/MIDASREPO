@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD050688           Date 26Aug20               *
-      *  Prev Amend No. AR375891B          Date 26Aug20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD050688           Date 26Aug20               *
+      *                 AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
       *                 MD052696           Date 04Apr19               *
       *                 MD031692           Date 12Mar20               *
@@ -89,6 +90,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
       *           - If the fee is attached to a non-Part Sold loan    *
       *             clear the Payment Settlement details.             *
@@ -102,7 +105,7 @@
       *             after rejecting amendments to their maturity dates*
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
-      *             LEFEEMAMD.                                        *      
+      *             LEFEEMAMD.                                        *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *

@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053611           Date 19Aug19               *
+      *  Last Amend No. 250822             Date 22May20               *
+      *  Prev Amend No. 252664             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD057639           Date 10Mar21               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047680           Date 08Sep17               *
       *                 MD046635           Date 10Aug17               *
@@ -64,6 +68,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250822 - Used the day number from ToF and ensure that        *
+      *           ZFREQB2 is called. Patterned fix after 210058.      *
+      *  252664 - Do not set to blanks field DDNCID                   *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  MD057639 - Error messages for Alternate Credit/Debit Interest*
+      *             Account are inconsistent                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *
@@ -748,6 +759,7 @@
       ** VNXCAP - Validate Next Capital. Date, Frequency & Day no
       *****************************************************************
      C     VNXCAP        BEGSR
+     C**********         Eval      DDNDID = *blank                                     250822 252664
 
       * Reset variables updated by each module
 
@@ -756,13 +768,15 @@
      C     WValforPB     Ifeq      'Y'                                          180721
      C     DDNDID        Andeq     *Blanks                                      180721
                                                                                 180721
-     C     DDDRIF        Ifeq      'D'                                          180721
+     C*****DDDRIF        Ifeq      'D'                                                 180721 250822
+     C     DDDRIF        Ifne      'D'                                                        250822
      C                   Movel     DDDNCD        ZMDAY                          180721
      C                   Else                                                   180721
      C                   Z-add     *zeros        ZMDAY                          180721
      C                   Endif                                                  180721
                                                                                 180721
-     C                   CallB     'ZFREQB'                                     180721
+     C**********         CallB     'ZFREQB'                                            180721 250822
+     C                   CallB     'ZFREQB2'                                                  250822
      C                   Parm      *blanks       RetCodeIn                      180721
      C                   Parm      DDDRIF        ZFREQ             1            180721
      C**********         Parm      BJRDNB        ZDAYNO            5 0                 180721 CSC011
@@ -935,9 +949,10 @@
      C     ERR           OREQ      2                                                        MD046635
      C                   MOVE      'N'           DDDRBROk                                   MD046635
      C                   ENDIF                                                              MD046635
+     C                   EXSR      UPDATERRS                                                MD057639
      C                   ENDIF                                                              MD046635
       *                                                                                     MD046635
-     C                   EXSR      UPDATERRS                                                MD046635
+     C**********         EXSR      UPDATERRS                                       MD046635 MD057639
       *                                                                                     MD020938
      C*****DDDRBR        IFEQ      *Blanks                                         MD020938 MD046635
      C*****BRIND         ANDEQ     'Y'                                             MD020938 MD046635

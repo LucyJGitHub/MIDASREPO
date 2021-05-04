@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056223           Date 15Jul20               *
-      *  Prev Amend No. MD054245           Date 09Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057078           Date 03Mar21               *
+      *                 MD056223           Date 15Jul20               *
+      *                 MD054245           Date 09Sep19               *
       *                 MD051883           Date 04Apr19               *
       *                 MD051944           Date 22Sep18               *
       *                 MD049865           Date 06Aug18               *
@@ -28,6 +30,12 @@
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  MD057078 - Fee settlement amount not converted to settlement *
+      *             currency and there are missing postings for the   *
+      *             cross-currency keys. Use settlement currency      *
+      *             instead of fee currency.                          *
       *  MD056223 - CLE031: Incorrect Posting narratives in           *
       *             Fee postings with conversion                      *
       *           - The amount and currency of the posting narratives *
@@ -471,10 +479,18 @@
      C                   ENDIF
 
      C                   ELSE
+     C                   IF        wSETTLE = 2 AND L2_LKEXRT > 0                            MD057078
+     C                             AND L2_LKOTHC <> *BLANKS                                 MD057078
+     C                             AND L2_LKSCCY <> *BLANKS                                 MD057078
+     C                   EVAL      WCCY1 = L2_LKSCCY                                        MD057078
+     C                   EVAL      WRATE = L2_LKEXRT                                        MD057078
+     C                   MOVEL     L2_LKOTHC     WIND1                                      MD057078
+     C                   ELSE                                                               MD057078
      C                   EVAL      WCCY1 = FESCCY
      C                   EVAL      WRATE = FEREXR
      C**********         EVAL      WREXI = FEREXI                                           MD051242
      C                   EVAL      WIND1 = FEREXI                                           MD051242
+     C                   ENDIF                                                              MD057078
      C                   ENDIF
      C                   ENDIF
 
@@ -792,6 +808,15 @@
      C                   Z-ADD     FEREXR        WRKEXR
      C                   MOVE      FEREXI        WRKEXI
      C                   ENDIF
+      *                                                                                     MD057078
+     C                   IF        L2_LKEXRT > 0 AND L2_LKOTHC <> *BLANKS                   MD057078
+     C                             AND L2_LKSCCY <> *BLANKS                                 MD057078
+     C                   EVAL      WRKCCY = L2_LKSCCY                                       MD057078
+     C                   EVAL      WRKEXR = L2_LKEXRT                                       MD057078
+     C                   MOVEL     L2_LKOTHC     WRKEXI                                     MD057078
+     C                   EVAL      L2_LKEXRT = *ZEROS                                       MD057078
+     C                   EVAL      L2_LKOTHC = *BLANKS                                      MD057078
+     C                   ENDIF                                                              MD057078
       *                                                                                     MD051242
      C                   IF        WRKCCY = *BLANKS                                         MD051242
      C                   LEAVESR                                                            MD051242

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. 222088             Date 28May12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
       *                 212319             Date 28May12               *
       *                 CMG008             Date 20Feb20               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
       *  222088 - Conditioning of CM narrative should account for     *
       *           details on heirarchy, not ICD.                      *

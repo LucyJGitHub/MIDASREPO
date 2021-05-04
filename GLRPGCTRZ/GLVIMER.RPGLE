@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD057083           Date 20Jan21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057083           Date 20Jan21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024980           Date 26Mar14               *
       *                 MD000091           Date 08May13               *
       *                 MD020266           Date 07May13               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD057083 - Journal entry overrides for Retail accounts not   *
       *             working. Amend to check user authorise to         *
       *             Override for Retail Accounts.                     *

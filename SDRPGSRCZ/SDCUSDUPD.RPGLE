@@ -7,12 +7,15 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *
+
       *  SDCUSDUPD - STANDING DATA CUSTOMERS DATABASE UPDATE          *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *  Last Amend No. 252069             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056982           Date 12Oct20               *
+      *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
@@ -155,6 +158,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252069 - Database error message occurs when there is a       *
+      *           record locking issue.                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
@@ -375,6 +382,7 @@
 
       * UPD : Midas SD Customer Details Master File
      FSDCUSTL0  UF A E           K DISK    COMMIT
+     F                                     INFDS(DSPDS)                                       252069
      F/COPY WNCPYSRC,SDH00749
 
       ** UPD : Midas SD Customer Ext Details File                                             CGL132
@@ -1133,6 +1141,11 @@
      D  LCHGDA                 1     30
      D  LCHD                   1     30P 0 INZ(0)
      D                                     DIM(10)                              LIAB.CHG. DTE ARR
+      *                                                                                       252069
+      ** File information data structure                                                      252069
+      *                                                                                       252069
+     DDSPDS            DS                                                                     252069
+     D STATUS            *STATUS                                                              252069
                                                                                               CGL132
       ** Parameter variables for AOSVALR0 string                                              CGL132
      D SValK1          S             20                                                       CGL132
@@ -3766,7 +3779,9 @@
 
       ** ACCESS CUSTOMER DETAILS RECORD
 
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99                      252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
 
       ** DATABASE ERROR
 
@@ -5275,7 +5290,9 @@
 
       ** ACCESS CUSTOMER
 
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99                      252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
 
       ** DATABASE ERROR
 
@@ -5548,7 +5565,9 @@
                                                                                               CSD007
       ** ACCESS CUSTOMER                                                                      CSD007
                                                                                               CSD007
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99                      CSD007
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -5697,7 +5716,9 @@
                                                                                               CSD007
       ** ACCESS CUSTOMER                                                                      CSD007
                                                                                               CSD007
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99                      CSD007
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -6922,6 +6943,20 @@
      C                   ENDIF                                                                CGP001
                                                                                               CGP001
      C                   ENDSR                                                                CGP001
+     C****************************************************************                        252069
+      /EJECT                                                                                  252069
+      ********************************************************************                    252069
+      *                                                                  *                    252069
+      * ChkChain - Exit SDCUSDUPD if there is record locking in SDCUSTL0 *                    252069
+      *                                                                  *                    252069
+      ********************************************************************                    252069
+     C     ChkChain      BEGSR                                                                252069
+     C     *IN97         IFEQ      *ON                                                        252069
+     C     STATUS        ANDEQ     01218                                                      252069
+     C                   EVAL      @@RTCD = '*LOCKED'                                         252069
+     C                   GOTO      EXIT                                                       252069
+     C                   ENDIF                                                                252069
+     C                   ENDSR                                                                252069
       ****************************************************************                        CGP001
       /EJECT
       *****************************************************************

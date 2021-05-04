@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -158,7 +161,7 @@
      D WDASR           S             12A
      D WDCSR           S             12A
      D WDDSR           S             12A
- 
+
      D*PSDC1****       S              6S 0                                                    CSD027
      D*PSDC2****       S              6S 0                                                    CSD027
      D*PSDC3****       S              6S 0                                                    CSD027
@@ -172,7 +175,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -208,19 +211,19 @@
      C                             OKDDSR <> 'Y'                                              210378
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKDASR <> 'N'
      C                   MOVE      DDDASR        S1DASR
      C                   ENDIF
- 
+
      C                   IF        OKDCSR <> 'N'
      C                   MOVE      DDDCSR        S1DCSR
      C                   ENDIF
- 
+
      C                   IF        OKDASR <> 'N'
      C                   MOVE      DDDDSR        S1DDSR
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -247,16 +250,16 @@
       ** Feature CSE011 is installed.
       *
      C                   IF        CSE011 = 'Y'
- 
+
       *
       ** Check if code depot 1 already exists in securities file
      C                   IF        DDDASR <> *BLANKS
- 
+
      C                   EVAL      WDASR = DDDASR
      C                   EVAL      WFound = 'N'
      C     WDASR         SETLL     SECTE
      C     WDASR         READE     SECTE                                  01
- 
+
      C                   DOW       *IN01 = *OFF AND
      C                             WFound = 'N'
       *
@@ -264,7 +267,7 @@
      C                   IF        S1SESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WDASR         READE     SECTE                                  01
      C                   ENDDO
       *
@@ -289,9 +292,9 @@
      C                   EVAL      WMsgDtXAr(WIx) = %TRIM(WMsgDtXAr(WIx))                   MD000091
      C                                             +%TRIM(SESN)                             MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Depot 2
@@ -312,12 +315,12 @@
       *
       ** Check if code depot 2 already exists in securities file
      C                   IF        DDDCSR <> *BLANKS
- 
+
      C                   EVAL      WDCSR = DDDCSR
      C                   EVAL      WFound = 'N'
      C     WDCSR         SETLL     SECT2
      C     WDCSR         READE     SECT2                                  01
- 
+
      C                   DOW       *IN01 = *OFF AND
      C                             WFound = 'N'
       *
@@ -325,7 +328,7 @@
      C                   IF        S1SESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WDCSR         READE     SECT2                                  01
      C                   ENDDO
       *
@@ -350,9 +353,9 @@
      C                   EVAL      WMsgDtXAr(WIx) = %TRIM(WMsgDtXAr(WIx))                   MD000091
      C                                             +%TRIM(SESN)                             MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Depot 3
@@ -373,12 +376,12 @@
       *
       ** Check if code depot 3 already exists in securities file
      C                   IF        DDDDSR <> *BLANKS
- 
+
      C                   MOVE      DDDDSR        WDDSR
      C                   EVAL      WFound = 'N'
      C     WDDSR         SETLL     SECT3
      C     WDDSR         READE     SECT3                                  01
- 
+
      C                   DOW       *IN01 = *OFF AND
      C                             WFound = 'N'
       *
@@ -386,7 +389,7 @@
      C                   IF        S1SESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WDDSR         READE     SECT3                                  01
      C                   ENDDO
       *
@@ -411,12 +414,12 @@
      C                   EVAL      WMsgDtXAr(WIx) = %TRIM(WMsgDtXAr(WIx))                   MD000091
      C                                             +%TRIM(SESN)                             MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       *
       *****************************************************************

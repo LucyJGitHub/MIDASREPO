@@ -23,8 +23,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052008           Date 05Oct18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057078           Date 03Mar21               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD052008           Date 05Oct18               *
       *                 MD051940           Date 21Sep18               *
       *                 MD051242           Date 29Jun18               *
       *                 MD049745A          Date 16Mar18               *
@@ -48,6 +50,12 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  MD057078 - Fee settlement amount not converted to settlement *
+      *             currency and there are missing postings for the   *
+      *             cross-currency keys. Use settlement currency      *
+      *             instead of fee currency.                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052008 - Rounding off issue on PDCL amount using           *
       *             settlement account with partial balance           *
@@ -1080,9 +1088,16 @@
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
      C                   ELSE                                                               MD046080
+     C                   IF        LKEXRT > 0 AND LKSCCY <> *BLANKS                         MD057078
+     C                             AND LKOTHC <> *BLANKS                                    MD057078
+     C                   EVAL      WCCY1 = LKSCCY                                           MD057078
+     C                   EVAL      WRATE = LKEXRT                                           MD057078
+     C                   MOVEL     LKOTHC        WREXI                                      MD057078
+     C                   ELSE                                                               MD057078
      C                   EVAL      WCCY1 = FESCCY                                           MD046080
      C                   EVAL      WRATE = FEREXR                                           MD046080
      C                   EVAL      WREXI = FEREXI                                           MD046080
+     C                   ENDIF                                                              MD057078
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
      C                   EVAL      WSCCY = WCCY1                                           MD049745A

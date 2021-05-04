@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *      
-      *  Prev Amend No. MD049134           Date 27Jul20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 223783             Date 28May12               *      
+      *                 MD049134           Date 27Jul20               *
       *                 CMG008             Date 20Feb20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD045952           Date 06Jul17               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *      
       *  MD049134 - Retrieve History Balance from Retail History      *
       *             instead of CLBL from ACCNTAB for the correct      *

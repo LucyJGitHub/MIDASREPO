@@ -23,8 +23,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD057008           Date 27Oct20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. MD057942           Date 26Apr21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057008           Date 27Oct20               *
+      *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
@@ -190,6 +192,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD057942 - Field TRBTT is not defined. Used TBRTT instead as *
+      *             the corresponding field for Their Base Rate Type. *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057008 - CGC2050 00007 fails during COB                    *
       *           - Do not execute SR/CGSTAT when WSTAT is blanks as  *
       *             it is only being populated when CGL031 is ON and  *
@@ -1489,12 +1494,14 @@
      C                   EXSR      D@IPYT                                                     CIR001
       *                                                                                       CIR001
       ** Our Rate Change Details                                                              CIR001
-     C     UBRTT         IFNE      *ZERO                                                      CIR001
+     c********** UBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      D@RCHO                                                     CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001
       ** Their Rate Change Details                                                            CIR001
-     C     TBRTT         IFNE      *ZERO                                                      CIR001
+     C********** TBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      D@RCHT                                                     CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001
@@ -4432,7 +4439,8 @@
       *                                                                                     MD030644
      C                   MOVEL     CCY           ##CYCD                                     MD030644
      C********** BRTT      IFEQ 0                                                  MD030644 MD033854
-     C     DABRTT        IFEQ      0                                                        MD030644
+     C********** DABRTT        IFEQ      0                                           MD030644 CSD103
+     C     DABRTT        IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       ##D(11)                                    MD030644
      C                   ELSE                                                               MD030644
      C**********           MOVELBRTT      ##BSRC                                   MD030644 MD033854
@@ -5868,7 +5876,8 @@
       ** Base Rate Name                                                                     MD030644
       *                                                                                     MD030644
      C                   MOVEL     CCY           ##CYCD                                     MD030644
-     C     BRTT          IFEQ      0                                                        MD030644
+     C********** BRTT          IFEQ      0                                           MD030644 CSD103
+     C     BRTT          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       ##D(9)                                     MD030644
      C                   ELSE                                                               MD030644
      C                   MOVEL     BRTT          ##BSRC                                     MD030644
@@ -6336,7 +6345,8 @@
       ** Base Rate Name                                                                     MD030644
       *                                                                                     MD030644
      C                   MOVEL     CCY           ##CYCD                                     MD030644
-     C     BRTT          IFEQ      0                                                        MD030644
+     C********** BRTT          IFEQ      0                                           MD030644 CSD103
+     C     BRTT          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       ##D(4)                                     MD030644
      C                   ELSE                                                               MD030644
      C                   MOVEL     BRTT          ##BSRC                                     MD030644
@@ -9613,12 +9623,14 @@
      C                   MOVE      A6NBDP        ##D(2)                                       CIR001
       *                                                                                       CIR001
       ** Our Base Rate Type                                                                   CIR001
-     C     UBRTT         IFNE      *ZERO                                                      CIR001
+     C********** UBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     UBRTT         ##D(3)                                       CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001
       ** Our Base Rate Name                                                                   CIR001
-     C     UBRTT         IFNE      *ZERO                                                      CIR001
+     C********** UBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     UBRTT         ##BSRC                                       CIR001
      C                   CALL      'AOBSRTR0'                                                 CIR001
      C                   PARM      *BLANKS       ##RTCD                                       CIR001
@@ -9645,13 +9657,15 @@
      C                   MOVEL     BABSRN        ##D(4)                                       CIR001
       *                                                                                       CIR001
       ** Our Fixed Rate                                                                       CIR001
-     C     UBRTT         IFEQ      *ZERO                                                      CIR001
+     C********** UBRTT         IFEQ      *ZERO                                         CIR001 CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     UEINR         ##D(5)                                       CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001
       ** Our Spread                                                                           CIR001
      C                   MOVEL     *BLANKS       R#DATA                                       CIR001
-     C     UBRTT         IFNE      *ZERO                                                      CIR001
+     C********** UBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     URTSP         R#DATA                                       CIR001
      C     USPIN         IFEQ      'S'                                                        CIR001
      C                   MOVE      '-'           ##SIGN                                       CIR001
@@ -9721,12 +9735,15 @@
      C                   MOVE      A6NBDP        ##D(2)                                       CIR001
       *                                                                                       CIR001
       ** Their Base Rate Type                                                                 CIR001
-     C     TBRTT         IFNE      *ZERO                                                      CIR001
+     C********** TBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C*****TRBTT         IFNE      *BLANKS                                           CSD103 MD057942
+     C     TBRTT         IFNE      *BLANKS                                                  MD057942
      C                   MOVEL     TBRTT         ##D(3)                                       CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001
       ** Their Base Rate Name                                                                 CIR001
-     C     TBRTT         IFNE      *ZERO                                                      CIR001
+     C********** TBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     TBRTT         ##BSRC                                       CIR001
      C                   CALL      'AOBSRTR0'                                                 CIR001
      C                   PARM      *BLANKS       ##RTCD                                       CIR001
@@ -9753,13 +9770,15 @@
      C                   MOVEL     BABSRN        ##D(4)                                       CIR001
       *                                                                                       CIR001
       ** Their Fixed Rate                                                                     CIR001
-     C     TBRTT         IFEQ      *ZERO                                                      CIR001
+     C********** TBRTT         IFEQ      *ZERO                                         CIR001 CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     TEINR         ##D(5)                                       CIR001
      C                   END                                                                  CIR001
       *                                                                                       CIR001
       ** Their Spread                                                                         CIR001
      C                   MOVEL     *BLANKS       R#DATA                                       CIR001
-     C     TBRTT         IFNE      *ZERO                                                      CIR001
+     C********** TBRTT         IFNE      *ZERO                                         CIR001 CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     TRTSP         R#DATA                                       CIR001
      C     TSPIN         IFEQ      'S'                                                        CIR001
      C                   MOVE      '-'           ##SIGN                                       CIR001
@@ -11225,7 +11244,8 @@
      C                   PARM                    ##AITC           13 0
      C                   PARM      IPRD          ##IPRD           13 0
      C                   PARM      ICTD          ##ICTD           13 0
-     C                   PARM      BRTT          ##BRTT            2 0
+     C**********         PARM      BRTT          ##BRTT            2 0                        CSD103
+     C                   PARM      BRTT          ##BRTT            2                          CSD103
      C                   PARM      BRTE          ##BRTE           11 7
      C                   PARM      RTSP          ##RTSP           11 7
      C                   PARM      INTR          ##INTR           11 7

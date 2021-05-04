@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD056838           Date 01Oct20               *
-      *  Prev Amend No. AR1095148          Date 07May18               *
+      *  Last Amend No. MD057760           Date 01Apr21               *
+      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *                 AR1095148          Date 07May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 MD040602           Date 19Aug16               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057760 - Add error details in GL001601P1 report.           *
       *  MD056838 - Amend SFNUM type to packed decimal                *
       *  AR1095148 - Verify that currencies are in balance.           *
       *              Batches are accepted even though out of balance. *
@@ -209,7 +211,8 @@
       ** Array for the error
       *
      D ErrFlg          S              1A   DIM(3)
-     D Err_Dtl         S             25A   DIM(4) CTDATA PERRCD(1)
+     D*Err_Dtl**       S             25A   DIM(4) CTDATA PERRCD(1)                          MD057760
+     D Err_Dtl         S             37A   DIM(5) CTDATA PERRCD(1)                          MD057760
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -444,6 +447,7 @@
      C                   PARM                    WOBcno
      C                   PARM                    PSbcno
      C                   PARM                    PBatchParm
+     C                   PARM                    ItemErr           1                        MD057760
       *
      C                   IF        %ERROR
      C                   EXSR      *PSSR
@@ -761,6 +765,9 @@
      C                   ENDIF
       *
      C                   EVAL      RBSTAT = Err_Dtl(WCnt)
+     C                   If        ItemErr ='Y' and WCnt = 3                                MD057760
+     C                   EVAL      RBSTAT = Err_Dtl(5)                                      MD057760
+     C                   Endif                                                              MD057760
      C                   EXSR      SRPrint
      C                   EVAL      WPrtCnt = 'Y'
      C                   EVAL      WCnt = WCnt + 1
@@ -1009,3 +1016,4 @@ Error in Branch
 Error in Dept Code
 Error in Batch
 Successful Transfer
+Error in Batch, check GL0150P1 report

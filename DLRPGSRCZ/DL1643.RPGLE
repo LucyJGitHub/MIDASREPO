@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051713           Date 08Sep18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD051713           Date 08Sep18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051713 - Incorrect rates are displayed on OIS Compounding  *
       *             Interest Rate Enquiry screen.                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -739,7 +741,8 @@
       *
      C     *IN50         IFEQ      '0'
      C     RECI          ANDEQ     'D'
-     C                   MOVE      #0BSRC        WBSRC             2 0
+     C**********         MOVE      #0BSRC        WBSRC             2 0                        CSD103
+     C                   MOVE      #0BSRC        WBSRC             2                          CSD103
       *
      C     #0CCY         IFEQ      UCUCY
      C     WBSRC         ANDEQ     UBRTT

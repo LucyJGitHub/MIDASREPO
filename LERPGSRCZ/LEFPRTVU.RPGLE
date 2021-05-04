@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CLE134             Date 01Aug12               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -76,9 +79,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,121 +100,121 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInFPRT    E DS                  EXTNAME(LEFPRTPD)
- 
+
       * Valid Funding Participant Details layout record 'A'
      D ValidFPRT     E DS                  EXTNAME(LEVFCLMPD)
      D                                     PREFIX(V_)
      D ValidREC              455    523
      D ValidPAY              524   1082
- 
+
       * Valid Funding Participant Details layout record 'B'
      D ValidFCLN     E DS                  EXTNAME(LEVFCLNPD)
      D                                     PREFIX(V_)
- 
+
       * Current transaction record in file format
      D FPRTFilFmt    E DS                  EXTNAME(FCLTYFM)
      D FPRTRecIns            455    523
      D FPRTPayIns            524   1082
- 
+
       * Current transaction in screen format
      D CurTrFPRT     E DS                  EXTNAME(LEFPRTPD)
      D                                     PREFIX(@)
- 
+
       * Error indicators
      D OKTrFPRT      E DS                  EXTNAME(LEEFPRTPD)
- 
+
       * Pay settlement instructions in screen format
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
- 
+
       * Receive settlement instructions in screen format
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
- 
+
       * FRA/IRS settlement instructions in screen format
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
- 
+
       * Pay settlement instructions - current
      D CrPaySttmt    E DS                  EXTNAME(SDESSPPD) PREFIX(@)
- 
+
       * Receive settlement instructions - current
      D CrRecSttmt    E DS                  EXTNAME(SDESSRPD) PREFIX(@)
- 
+
       * FRA/IRS settlement instructions - current
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)
- 
+
       * Pay settlement instructions in file format
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
      D  FLPAY                  1    559
- 
+
       * Receive settlement instructions in file format
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
      D  FLREC                  1     69
- 
+
       * FRA/IRS settlement instructions in file format
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)
- 
+
       * 24X7 Data area structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
      D OKPayInsDS      DS
@@ -245,7 +248,7 @@
      D  DDPmacOK                      1A   INZ('Y')                                           CLE031
      D  DDPexrOK                      1A   INZ('Y')                                           CLE031
      D  DDPexiOK                      1A   INZ('Y')                                           CLE031
- 
+
       ** Flags to indicate whether Receive Settlement instruction fields
       **  are valid
      D OKRecInsDS      DS
@@ -259,7 +262,7 @@
      D  DDRmacOK                      1A   INZ('Y')                                           CLE031
      D  DDRexrOK                      1A   INZ('Y')                                           CLE031
      D  DDRexiOK                      1A   INZ('Y')                                           CLE031
- 
+
       ** Flags to indicate whether FRA/IRS instruction fields are valid
      D OKFRAInsDS      DS
      D  DDDsr1OK                      1A   INZ('Y')
@@ -284,51 +287,51 @@
      D  DDAgtyOK                      1A   INZ('Y')
      D  DDAgdtOK                      1A   INZ('Y')
      D  DDAgvvOK                      1A   INZ('Y')
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       * Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
@@ -341,18 +344,18 @@
      D  S#FCCY                44     46
      D  S#PRNM                47     66
      D  S#PRTN                67     76
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -362,23 +365,23 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     TranInFPRT
- 
+
       ** Generate a timestamp for this transaction
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Access primary facility
      C                   EXSR      ACSPFA
- 
+
       * Validate action code
      C     Idx           IFEQ      0
      C                   EXSR      ValidateAc
@@ -388,14 +391,14 @@
      C                   IF        Idx <> 0  or P#MODE = 'J'
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** TNLU used in 'record updated by another WS' checking
- 
+
      C                   Z-ADD     TNLU          H#TNLU
- 
+
       * Processing depends upon action code
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         S#ACTN = 'I'
      C                   EXSR      DftSettmts
@@ -404,7 +407,7 @@
      C                   GOTO      INVALID
      C                   ENDIF
      C                   EXSR      ValidateSt
- 
+
       * Processing for amends or changes
      C                   WHEN         S#ACTN = 'A' OR S#ACTN = 'R'
      C                   EXSR      SetupAmd
@@ -413,24 +416,24 @@
      C                   GOTO      INVALID
      C                   ENDIF
      C                   EXSR      ValidateSt
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
       * Remerge buffer with all relevant data structures
      C                   EVAL      Buffer = TranInFPRT + FPRTScnFmtAdd
      C                             + InRecSttmt + InPaySttmt
- 
+
      C                   SETON                                        LR
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
@@ -439,12 +442,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    InPaySttmt
@@ -459,7 +462,7 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
@@ -471,13 +474,13 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       * Access SAR details file to determine if CSC011 switchable feature
       * is switched on
      C                   CALLB     'AOSARDR0'
@@ -514,10 +517,10 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,LEFPRT01
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -540,7 +543,7 @@
       * The Funding participant in file format from the database is retrieved
       * as well.
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'LEFPRTRTV'
       *
       * Inputs
@@ -556,23 +559,23 @@
      C                   PARM                    S#CSSN
      C                   PARM                    S#FACT
      C                   PARM                    S#FCNO
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC
      C                   PARM                    S#PMFT
      C                   PARM                    S#PMFN
- 
+
       * Outputs
       *
       * Funding participant in file format
      C                   PARM                    FPRTFilFmt
- 
+
       * Action, customer, facility type and facility number OK indicators
      C                   PARM                    S#ACTNok          1
      C                   PARM                    S#CSSNok          1
      C                   PARM                    S#FACTok          1
      C                   PARM                    S#FCNOok          1
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
       *
@@ -583,7 +586,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -592,49 +595,49 @@
       *                                                               *
       *****************************************************************
      C     DftSettmts    BEGSR
- 
+
       *
       ** Set up customer
      C                   MOVEL     S#CNUM        WWCUST           10
- 
+
       * If ANY of the Settlements fields have been entered, bypass this
       *  routine.
       * Otherwise, use modules which will use Standard Settlement
       *  Instructions to apply defaults.
- 
+
      C                   IF            (InRecSttmt = *blank)
      C                             AND (InPaySttmt = *blank)
- 
+
      C                   CALLB     'ZASETINDFT'
- 
+
       * Output
       * Calling function type
      C                   PARM      'LEND'        ##CALP            4
       * Payment currency
      C                   PARM      S#FCCY        ##PCCY            3
- 
+
       * Receive currency
      C                   PARM      S#FCCY        ##RCCY            3
- 
+
       * Customer (shortname or number)
      C                   PARM      WWCUST        ##CSNM           10
- 
+
       * Deal type
      C                   PARM      *BLANKS       ##TTYP            2
- 
+
       * Federal Funds Ind.
      C                   PARM      *BLANK        ##FFND            1
- 
+
       * ISDA Rules for FRA/IRS deals only
       * Version of ISDA Rules govern
      C                   PARM                    Blank4            4
- 
+
       * Type of ISDA agreement
      C                   PARM                    Blank6            6
- 
+
       * Date of ISDA Agreement
      C                   PARM                    Blank6X           6
- 
+
       * Version of ISDA Agreement
      C                   PARM                    Blank2            2
       *
@@ -650,31 +653,31 @@
       * Return
       * Defaulted Payment Settlement Instruction in file format
      C                   PARM                    DBPaySttmt
- 
+
       * Defaulted Receipt Settlement Instruction in file format
      C                   PARM                    DBRecSttmt
- 
+
       * Defaulted FRA/IRS Settlement Instruction in file format
      C                   PARM                    DBFRASttmt
- 
+
       * The defaulted instructions are in file format, but the
       * Settlements validation requires that they are in the input format.
       * Therefore run them through a conversion module.
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM      *BLANK        DBFRASttmt
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InFRASttmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -692,94 +695,94 @@
      C                   MOVEL     S#CNUM        WWCUST
       *
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ZASETINVAL'
- 
+
       * Return Code
      C                   PARM                    ReturnCode
- 
+
       * Following parameters are output to called module
       * Calling function type
      C                   PARM      'LEND'        ##CALP            4
- 
+
       * Transaction Fields
       * Payment currency (or Loan currency if only one currency on Loan)
      C                   PARM      S#FCCY        ##PCCY            3
- 
+
       * Receive currency (or Loan currency if only one currency on Loan)
      C                   PARM      S#FCCY        ##RCCY            3
- 
+
       * Customer (shortname or number)
      C                   PARM      WWCUST        ##CSNM           10
- 
+
       * Loan type
      C                   PARM                    ##TTYP            2
- 
+
       * Federal Funds Ind.
      C                   PARM      *BLANKS       ##FFND            1
- 
+
       * Booking Branch
      C                   PARM      S#BRCA        ##BRCA            3
- 
+
       * Receipt Date
      C                   PARM                    ##DATR            5 0
- 
+
       * Payment Date
      C                   PARM                    ##DATP            5 0
- 
+
       ** Input (or Defaulted) Receipt/Payment/FRA/IRS Settlement Instruction
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InFRASttmt
- 
+
       * Action Code
      C                   PARM      S#ACTN        ##ACTN            1
- 
+
       * Protect Payment Field
      C                   PARM                    ##PPAY            1
       * Protect Receipt Field
      C                   PARM                    ##PREC            1
- 
+
       * Following parameters are returned by called module
       * Payment Instruction OK flag
      C                   PARM                    OKPayInsDS
- 
- 
+
+
       * Receive Instruction OK flag
      C                   PARM                    OKRecInsDS
- 
+
       * FRA/IRS Instruction OK flag
      C                   PARM                    OKFRAInsDS
- 
+
       * Error fields/message IDs (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning Messages
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
- 
+
       * Payment instructions - file format
      C                   PARM                    DBPaySttmt
- 
+
       * Receive instructions - file format
      C                   PARM                    DBRecSttmt
- 
+
       * FRA/IRS instructions - file format
      C                   PARM                    DBFRASttmt
- 
+
       * Extra Input
       * Action Code used
      C                   PARM      S#ACTN        ##ACTN            1
- 
+
       * Validation Iteration
      C                   PARM      '1ST'         ##ValIter         3
- 
+
      C                   MOVEL     FLREC         ValidREC
      C                   MOVEL     FLPAY         ValidPAY
       *                                                                                       CLE031
@@ -791,7 +794,7 @@
      C                   MOVE      FLRSCY        V_FPSCCY                                     CLE031
      C                   MOVE      FLPSCY        V_FPPSCY                                     CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -801,15 +804,15 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For amends, put the complete (pre-existing) transaction into the valid
       * file record - fields in this will be updated during processing
- 
+
      C                   MOVE      FPRTFilFmt    ValidFPRT
- 
- 
+
+
       * For Amends, convert the Funding Participant transaction to screen format
- 
+
      C                   CALLB     'LEFPRTCVT'
       * Inputs
       *
@@ -823,47 +826,47 @@
       *
       * Funding Participant Transaction Details - screen formats
      C                   PARM                    CurTrFPRT
- 
+
       * Syndicate member details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#SRNM           20
      C                   PARM                    S#SRTN           10
- 
+
       * Introducing customer details
      C                   PARM                    S#IRNM           20
      C                   PARM                    S#IRTN           10
- 
+
      C                   MOVEL     FPRTRecIns    FLREC
      C                   MOVEL     FPRTPayIns    FLPAY
- 
+
       * The defaulted instructions are in file format, but the
       * Settlements validation requires that they are in the input format.
       * Therefore run them through a conversion module.
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM      *BLANK        DBFRASttmt
- 
+
       ** Current Settlement Instruction in input format
      C                   PARM                    CrPaySttmt
      C                   PARM                    CrRecSttmt
      C                   PARM                    CrFRASttmt
- 
+
       *  If no Payment or Receive instructions have been supplied
       *  Default them to those currently on the deal.
- 
+
      C                   IF            (InPaySttmt = *blank)
      C                   EVAL      InPaySttmt = CrPaySttmt
      C                   ENDIF
- 
+
      C                   IF            (InRecSttmt = *blank)
      C                   EVAL      InRecSttmt = CrRecSttmt
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       ******************************************************************
@@ -872,26 +875,26 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Funding participant details
      C                   RESET                   RetCodeIn
- 
+
      C                   CALLB     'LEFPRTVAL'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Funding Participant Details in screen format
      C                   PARM                    TranInFPRT
- 
+
       * Agent number
      C                   PARM                    S#ANUM            6
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -905,10 +908,10 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * TNLU of funding participant record on FCLTYFM/FN
      C                   PARM                    H#TNLU            5 0
- 
+
       * Front office inputs (if mode = 'B')
      C                   PARM                    F1PCOB            3
      C                   PARM                    F1TNRF           15
@@ -917,7 +920,7 @@
      C                   PARM      *BLANK        F1AUSR           10
       *
       * OUTPUTS
- 
+
       * Field OK flags
      C                   PARM                    OKTrFPRT
       *
@@ -941,12 +944,12 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx
- 
+
       * Valid Funding Participant record 'A'
      C                   PARM                    ValidFPRT
       * Valid Funding Participant record 'B'
      C                   PARM                    ValidFCLN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -956,20 +959,20 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrFPRT
- 
+
      C                   MOVE      *ALL'Y'       OKTrFPRT
- 
+
      C                   CLEAR                   ValidFPRT
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -978,9 +981,9 @@
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Set Valid file field(s) that are needed for all Action Codes
       * Include Header fields that need to be o/p to the Valid file
       * If there is no front office ID, use the PCREF created by LEFPRTVAL.
@@ -992,7 +995,7 @@
      C                   EVAL      V_FPAFRT = APFOAsocID
      C                   EVAL      V_FPREPA = APRprLocn
      C                   EVAL      V_FPSTMP = TimeStamp
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1000,7 +1003,7 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       * Update
@@ -1011,16 +1014,16 @@
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeOut
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN
- 
+
       * TNLU of funding participant record on FCLTYFM/FN
      C                   PARM                    H#TNLU            5 0
- 
+
       * Funding Participant Details in file format record 'A'
      C                   PARM                    ValidFPRT
       * Funding Participant Details in file format record 'B'
@@ -1043,9 +1046,9 @@
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx
       * Facility sequence assigned
- 
+
      C                   PARM                    A_FCNO            2
- 
+
       *
       * If there were any errors in the update functions, rollback any
       * updates (done in *PSSR) and end this program. Otherwise commit.
@@ -1056,24 +1059,24 @@
      C                   ELSE
      C                   COMMIT
      C                   EndIf
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * Access Primary Facility                                       *
       *****************************************************************
      C     ACSPFA        BEGSR
- 
+
      C                   CALLB     'LE002510'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC
      C                   PARM                    S#PMFT
@@ -1081,7 +1084,7 @@
       *
       * OUTPUTS
       *
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -1102,19 +1105,19 @@
      C                   PARM                    FccaCANM          6                          CSD027
      C                   PARM                    FccaCAFT          3 0
      C                   PARM                    FccaCAFN          2 0
- 
+
       * Primary customer name & town
      C                   PARM                    S#PRNM           20
      C                   PARM                    S#PRTN           10
- 
+
       * Agent customer number, name & town
      C                   PARM                    S#ANUM            6
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Primary facility amount edited
      C                   PARM                    S#FAMT           14
- 
+
       * Field OK flags
      C                   PARM                    S#PMFCOK          1
      C                   PARM                    S#PMFTOK          1
@@ -1132,12 +1135,12 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
       * Populate primary facility fields
- 
+
      C                   MOVE      FcbrBranch    S#BRCA
      C                   MOVE      FccyFCCY      S#FCCY
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************

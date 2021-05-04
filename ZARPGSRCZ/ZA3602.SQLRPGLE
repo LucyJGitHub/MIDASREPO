@@ -1,7 +1,9 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
-/*STD *  RPGBASEMOD                                                   *
+/**** *  RPGBASEMOD                                                   *                     MD057730
+/*STD *  RPGSQLMOD                                                    *                     MD057730
+/*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD057730
 /*EXI *  TEXT('Midas ZA CG UDC names conversion')
       *****************************************************************
       *                                                               *
@@ -14,16 +16,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057730           Date 10Mar21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSE040  *CREATE    Date 18Nov03               *
+      *                 CSE040  *CREATE    Date 18Nov03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057730 - SEC4651 job ended in error upon testing MT536     *
+      *             message. Replaced redundant LF CGRDECL0.          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE040 - Securities Statements                               *
       *                                                               *
@@ -36,7 +41,7 @@
       ** reasons a CLRPFM of another file makes this file disappears
       ** from the job list of opened files; this triggers a
       ** internal failure.
-     FCGRDECL0  IF   E           K DISK    USROPN
+     F*CGRDECL0* IF   E           K DISK    USROPN                                          MD057730
       *
       /EJECT
       *
@@ -117,6 +122,8 @@
      D  EndArr                        3  0 VALUE
      D  PathNm                             VALUE LIKE(CGARGT)
       *
+     D CGRDEC        E DS                  EXTNAME(CGRDEJW0)                                MD057730
+      *                                                                                     MD057730
       /EJECT
       **********************************************************************
       * Main Routine                                                       *
@@ -513,15 +520,30 @@
       *
       ** Search RDE Conversion file for matching records.
       *
-     C                   OPEN      CGRDECL0
-     C     ConvKey       SETLL     CGRDECL0
-     C                   READ      CGRDECL0
+     C**********         OPEN      CGRDECL0                                                 MD057730
+     C*****ConvKey       SETLL     CGRDECL0                                                 MD057730
+     C**********         READ      CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ declare ACursor insensitive scroll cursor for                                       MD057730
+     C+ select * from CGRDEJW0                                                              MD057730
+     C+ where CGTYPE = :CGTYPE and CGARGT >= :CGARGT                                        MD057730
+     C+ order by CGTYPE, CGARGT                                                             MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ open ACursor                                                                        MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from ACursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
       *
       ** Repeat search while not EOF and Root Group Set match
       ** with argument. Also ensure that only matching records
       ** with RDE type = PATH is retrieved.
       *
-     C                   DOW       NOT %EOF
+     C**********         DOW       NOT %EOF                                                 MD057730
+     C                   DOW       SQLCODE = 0                                              MD057730
      C                             AND %SUBST(CGARGT:1:lenpth) = GrpSetRoot
      C                             AND CGTYPE = 'PATH'
       *
@@ -539,9 +561,15 @@
       *
       ** Read the next record.
       *
-     C                   READ      CGRDECL0
+     C**********         READ      CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from ACursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
      C                   ENDDO
-     C                   CLOSE     CGRDECL0
+     C**********         CLOSE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ close ACursor                                                                       MD057730
+     C/END-EXEC                                                                             MD057730
      C
      C                   RETURN    SetOfVar
      P                 E
@@ -567,11 +595,26 @@
       ** Read all CGRDECPD records with type = REFR and store them
       ** into array SetofRef.
       *
-     C                   OPEN      CGRDECL0
-     C     CGTYPE        SETLL     CGRDECL0
-     C     CGTYPE        READE     CGRDECL0
+     C**********         OPEN      CGRDECL0                                                 MD057730
+     C*****CGTYPE        SETLL     CGRDECL0                                                 MD057730
+     C*****CGTYPE        READE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ declare BCursor insensitive scroll cursor for                                       MD057730
+     C+ select * from CGRDEJW0                                                              MD057730
+     C+ where CGTYPE = :CGTYPE                                                              MD057730
+     C+ order by CGTYPE, CGARGT                                                             MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ open BCursor                                                                        MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from BCursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
       *
-     C                   DOW       NOT %EOF
+     C**********         DOW       NOT %EOF                                                 MD057730
+     C                   DOW       SQLCODE = 0                                              MD057730
       *
       ** Initialise data structure fields
       *
@@ -587,11 +630,17 @@
       *
      C                   EVAL      i = i + 1
      C                   EVAL      SetOfRef(i) = EntOfRef
-     C     CGTYPE        READE     CGRDECL0
+     C*****CGTYPE        READE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from BCursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
      C                   ENDDO
- 
-     C                   CLOSE     CGRDECL0
- 
+
+     C**********         CLOSE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ close BCursor                                                                       MD057730
+     C/END-EXEC                                                                             MD057730
+
      C                   RETURN    SetOfRef
      P                 E
       /EJECT
@@ -616,11 +665,26 @@
       ** Read all CGRDECPD records with type = SYST and store them
       ** into array SetofSys.
       *
-     C                   OPEN      CGRDECL0
-     C     CGTYPE        SETLL     CGRDECL0
-     C     CGTYPE        READE     CGRDECL0
+     C**********         OPEN      CGRDECL0                                                 MD057730
+     C*****CGTYPE        SETLL     CGRDECL0                                                 MD057730
+     C*****CGTYPE        READE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ declare CCursor insensitive scroll cursor for                                       MD057730
+     C+ select * from CGRDEJW0                                                              MD057730
+     C+ where CGTYPE = :CGTYPE                                                              MD057730
+     C+ order by CGTYPE, CGARGT                                                             MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ open CCursor                                                                        MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from CCursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
       *
-     C                   DOW       NOT %EOF
+     C**********         DOW       NOT %EOF                                                 MD057730
+     C                   DOW       SQLCODE = 0                                              MD057730
       *
       ** Initialise data structure fields
       *
@@ -636,10 +700,16 @@
       *
      C                   EVAL      i = i + 1
      C                   EVAL      SetOfSys(i) = EntOfSys
-     C     CGTYPE        READE     CGRDECL0
+     C*****CGTYPE        READE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from CCursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
      C                   ENDDO
      C
-     C                   CLOSE     CGRDECL0
+     C**********         CLOSE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ close CCursor                                                                       MD057730
+     C/END-EXEC                                                                             MD057730
      C                   RETURN    SetOfSys
      P                 E
       /EJECT
@@ -664,11 +734,26 @@
       ** Read all CGRDECPD records with type = SYGP and store them
       ** into array SetofSyg.
       *
-     C                   OPEN      CGRDECL0
-     C     CGTYPE        SETLL     CGRDECL0
-     C     CGTYPE        READE     CGRDECL0
+     C**********         OPEN      CGRDECL0                                                 MD057730
+     C*****CGTYPE        SETLL     CGRDECL0                                                 MD057730
+     C*****CGTYPE        READE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ declare DCursor insensitive scroll cursor for                                       MD057730
+     C+ select * from CGRDEJW0                                                              MD057730
+     C+ where CGTYPE = :CGTYPE                                                              MD057730
+     C+ order by CGTYPE, CGARGT                                                             MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ open DCursor                                                                        MD057730
+     C/END-EXEC                                                                             MD057730
+                                                                                            MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from DCursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
       *
-     C                   DOW       NOT %EOF
+     C**********         DOW       NOT %EOF                                                 MD057730
+     C                   DOW       SQLCODE = 0                                              MD057730
       *
       ** Initialise data structure fields
       *
@@ -684,10 +769,16 @@
       *
      C                   EVAL      i = i + 1
      C                   EVAL      SetOfSyg(i) = EntOfSyg
-     C     CGTYPE        READE     CGRDECL0
+     C*****CGTYPE        READE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ fetch next from DCursor into :CGRDEC                                                MD057730
+     C/END-EXEC                                                                             MD057730
      C                   ENDDO
      C
-     C                   CLOSE     CGRDECL0
- 
+     C**********         CLOSE     CGRDECL0                                                 MD057730
+     C/EXEC SQL                                                                             MD057730
+     C+ close DCursor                                                                       MD057730
+     C/END-EXEC                                                                             MD057730
+
      C                   RETURN    SetOfSyg
      P                 E

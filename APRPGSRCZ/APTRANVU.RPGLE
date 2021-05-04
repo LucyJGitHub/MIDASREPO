@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056546           Date 16Sep20               *
-      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056546           Date 16Sep20               *
+      *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
       *                 MD055373           Date 14Jul20               *
       *                 MD030856           Date 06Nov19               *
@@ -229,6 +231,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Introduce new parameter in DEAM API to be used in   *
+      *           the validation of action code during reversal       *
+      *           authorization. Apply fix 258724.                    *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
       *             Reversed MD044553                                 *
       *  MD039655 - Facility cannot be rejected.                      *
@@ -834,6 +840,8 @@
      D AuthUsers       S             20                                                       CFT163
      D P_SIGN          S              1                                                     MD054354
      D DRejFlg         S              1                                                     MD030856
+      ** LIBOR Fields for Base Rate Maintenance                                               CSD103
+     D LiborBSRTfld    DS            49                                                       CSD103
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2292,6 +2300,9 @@ RGC  D RPIF4LN         S              4  0                                      
       **  Send Loan/Deposit indicator for settlement tab conditioning.                       BUG6534
      C     1             SUBST     BUFFER:Bfp    LONDEP                                      BUG6534
      C                   ADD       1             Bfp                                         BUG6534
+      **  Restore Authorise Reversal Action Code                                              260173
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                       260173
+     C                   ADD       1             Bfp                                          260173
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
@@ -2327,6 +2338,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4146
      C                   PARM                    LONDEP                                      BUG6534
      C                   PARM                    DDFOID                                       239400
+     C                   PARM                    @ACTRV                                       260173
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'MMDEAMUPD'                                       CRE020
@@ -2880,6 +2892,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       BSEXLn        Bfp                                        BUG22140
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
+     C     49            SUBST     BUFFER:Bfp    LiborBSRTfld                                 CSD103
+     C                   ADD       49            Bfp                                          CSD103
 
      C                   CALL      'SDBSRTVU'
 
@@ -2901,6 +2915,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    AAuth                                      BUG22140
+     C                   PARM                    LiborBSRTfld                                 CSD103
 
       ** Fees                                                                                BUG1100
      C     TransTYPE     WHENEQ    'FEEM'                                                    BUG1100
@@ -5167,8 +5182,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
-     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD056546
-     C**********         ADD       26            Bfp                                MD044553 MD056546
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD05654
+     C**********         ADD       26            Bfp                                MD044553 MD05654
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 

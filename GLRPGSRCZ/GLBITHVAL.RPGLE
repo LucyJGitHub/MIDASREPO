@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD057194           Date 16Nov20               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. AR850162           Date 01Jun20               *
+      *  Prev Amend No. MD057194           Date 16Nov20               *
+      *                 MD054696           Date 29Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 246752             Date 29Oct15               *
@@ -64,6 +65,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR850162 - Batches were not held due to wrong summary of     *
+      *             totals and wrong checking of multi-branch ind.    *
+      *             Applied fix 263436 and changed checking of        *
+      *             amended multi-branch ind. value only during       *
+      *             amendments. (Child: AR850163)                     *
+      *           - Applied for MD-35908                              *
       *  MD057194 - The Batch goes to repair queue if the Batch       *
       *             coming from SOAP/JMS has Batch Number defined and *
       *             Hold/Accept Indicator = A.                        *
@@ -824,6 +831,8 @@
       ** Multibranch Batch Indicator on File                                                 BUG2948
      C                   PARM                    H_BRMBRB                                    BUG2948
       *
+      ** Action Code of Transaction                                                         AR850162
+     C                   PARM                    DDACTN                                     AR850162
       ** OUTPUT
       ** ======
       *

@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Global Objects Restore in PEA System')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000127 - DTALIB Objects Restore in PEA System            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD055480 *CREATE   Date 03Mar21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD055480 - Files from DTALIB for PEARESTORE                 */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCLF       FILE(SCDTRSPD)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited Ltd. 2021')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SCC000127 - SC DTALIB Objects Restore in PEA System') +
+                          TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+
+ READNEXT:   RCVF       RCDFMT(SCDTRSD0)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+
+             CPYF       FROMFILE(PEADTLBRST/&DTOBJ) TOFILE(&DTOBJ) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+
+/** If FROM file member is empty, not an error */
+
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(CLRPFM FILE(&DTOBJ))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(CLRPFM FILE(&DTOBJ))
+             MONMSG     MSGID(CPF2817 CPF0000)
+
+             GOTO       CMDLBL(READNEXT)
+
+/** Abnormal termination processing */
+
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SCC000127 +
+                          ended abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:         ENDPGM

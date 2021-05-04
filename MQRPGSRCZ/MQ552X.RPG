@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD050604           Date 21Feb20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057247           Date 01Feb21               *
+      *                 MD055733           Date 03Jul20               *
+      *                 MD050604           Date 21Feb20               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -94,6 +96,10 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057247 - Multiple calls of UTCHOBJEX for several COB com-  *
+      *             ponents - Securities module.                      *
+      *           - Moved the call of AOSARDR0 from /copy ZLCDZ1.     *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -912,7 +918,8 @@
      C                     Z-ADD*ZERO     SPRD
      C*
      C**  BASE RATE CODE
-     C                     Z-ADD*ZERO     BRTT
+     C**********           Z-ADD*ZERO     BRTT                                                CSD103
+     C                     MOVE *BLANKS   BRTT                                                CSD103
      C*
      C**  CURRENT BASE RATE
      C                     Z-ADD*ZERO     BRTE
@@ -963,7 +970,8 @@
      C                     Z-ADD*ZERO     SPR2
      C*
      C**  BASE RATE CODE 2
-     C                     Z-ADD*ZERO     BRT2
+     C**********           Z-ADD*ZERO     BRT2                                                CSD103
+     C                     MOVE *BLANKS   BRT2                                                CSD103
      C*
      C**  BASE RATE 2
      C                     Z-ADD*ZERO     BRA2
@@ -1229,7 +1237,8 @@
      C*
      C**  BASE RATE = CURRENT BASE RATE IF BASE RATE TYPE IS NON-ZERO
      C           ATYP      IFEQ 'R'
-     C           DRIB      IFEQ *ZERO
+     C********** DRIB      IFEQ *ZERO                                                         CSD103
+     C           DRIB      IFEQ *BLANKS                                                       CSD103
      C           CLBL      IFGE *ZERO
      C                     Z-ADDDRIS      INTR
      C                     ELSE
@@ -1237,7 +1246,8 @@
      C                     END
      C                     END
      C*
-     C           CRIB      IFEQ *ZERO
+     C********** CRIB      IFEQ *ZERO                                                         CSD103
+     C           CRIB      IFEQ *BLANKS                                                       CSD103
      C           CLBL      IFGE *ZERO
      C                     Z-ADDCRIS      INT2
      C                     ELSE
@@ -1245,7 +1255,8 @@
      C                     END
      C                     END
      C*
-     C           DRIB      IFNE *ZERO
+     C********** DRIB      IFNE *ZERO                                                         CSD103
+     C           DRIB      IFNE *BLANKS                                                       CSD103
      C                     MOVE CCY       @AJCD
      C                     MOVELDRIB      @DWNB
      C                     CALL 'AOBSRTR0'PLIST2
@@ -1268,7 +1279,8 @@
      C                     END
      C                     END
      C*
-     C           CRIB      IFNE *ZERO
+     C********** CRIB      IFNE *ZERO                                                         CSD103
+     C           CRIB      IFNE *BLANKS                                                       CSD103
      C                     MOVE CCY       @AJCD
      C                     MOVELCRIB      @DWNB
      C                     CALL 'AOBSRTR0'PLIST2
@@ -1294,7 +1306,8 @@
      C*
      C**  SPREAD 1 AND 2 = SPREAD IF BASE TYPE IS NON-ZERO
      C           ATYP      IFEQ 'R'
-     C           DRIB      IFNE *ZERO
+     C********** DRIB      IFNE *ZERO                                                         CSD103
+     C           DRIB      IFNE *BLANKS                                                       CSD103
      C           CLBL      IFGE *ZERO
      C                     Z-ADDDRIS      SPRD
      C                     ELSE
@@ -1302,7 +1315,8 @@
      C                     END
      C                     END
      C*
-     C           CRIB      IFNE *ZERO
+     C********** CRIB      IFNE *ZERO                                                         CSD103
+     C           CRIB      IFNE *BLANKS                                                       CSD103
      C           CLBL      IFGE *ZERO
      C                     Z-ADDCRIS      SPR2
      C                     ELSE
@@ -1314,11 +1328,15 @@
      C**  BASE RATE CODE 1 AND 2
      C           ATYP      IFEQ 'R'
      C           CLBL      IFGE *ZERO
-     C                     Z-ADDDRIB      BRTT
-     C                     Z-ADDCRIB      BRT2
+     C**********           Z-ADDDRIB      BRTT                                                CSD103
+     C                     MOVE DRIB      BRTT                                                CSD103
+     C**********           Z-ADDCRIB      BRT2                                                CSD103
+     C                     MOVE CRIB      BRT2                                                CSD103
      C                     ELSE
-     C                     Z-ADDCRIB      BRTT
-     C                     Z-ADDDRIB      BRT2
+     C**********           Z-ADDCRIB      BRTT                                                CSD103
+     C                     MOVE CRIB      BRTT                                                CSD103
+     C**********           Z-ADDDRIB      BRT2                                                CSD103
+     C                     MOVE DRIB      BRT2                                                CSD103
      C                     END
      C                     END
      C*
@@ -2318,7 +2336,8 @@
      C                     Z-ADDRTSP      SPRD
      C*
      C**  BASE RATE CODE
-     C                     Z-ADDBRTT      BRTT
+     C**********           Z-ADDBRTT      BRTT                                                CSD103
+     C                     MOVE BRTT      BRTT                                                CSD103
      C*
      C**  CURRENT BASE RATE
      C                     Z-ADDBRTE      BRTE
@@ -2553,7 +2572,8 @@
      C                     Z-ADDRTSP      SPRD                            180198
      C*                                                                   180198
      C**  BASE RATE CODE                                                  180198
-     C                     Z-ADDBRTT      BRTT                            180198
+     C**********           Z-ADDBRTT      BRTT                                         180198 CSD103
+     C                     MOVE BRTT      BRTT                                                CSD103
      C*                                                                   180198
      C**  CURRENT BASE RATE                                               180198
      C                     Z-ADDBRTE      BRTE                            180198
@@ -3862,7 +3882,8 @@
      C                     END
      C*
      C**  BASE RATE CODE = OUR BASE RATE TYPE
-     C                     Z-ADDUBRTT     BRTT
+     C**********           Z-ADDUBRTT     BRTT                                                CSD103
+     C                     MOVE UBRTT     BRTT                                                CSD103
      C*
      C**  CURRENT BASE RATE = OUR BASE RATE
      C                     Z-ADDUBRTE     BRTE
@@ -3923,7 +3944,8 @@
      C                     END
      C*
      C**  BASE RATE CODE 2 = THEIR BASE RATE TYPE
-     C                     Z-ADDTBRTT     BRT2
+     C**********           Z-ADDTBRTT     BRT2                                                CSD103
+     C                     MOVE TBRTT     BRT2                                                CSD103
      C*
      C**  BASE RATE 2 = THEIR BASE RATE
      C                     Z-ADDTBRTE     BRA2
@@ -4091,10 +4113,13 @@
      C*
      C**  BASE RATE CODE = OUR OR THEIR BASE RATE TYPE, WHICHEVER IS
      C**                   NON-ZERO
-     C           UBRTT     IFNE *ZERO
-     C                     Z-ADDUBRTT     BRTT
+     C********** UBRTT     IFNE *ZERO                                                         CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C**********           Z-ADDUBRTT     BRTT                                                CSD103
+     C                     MOVE UBRTT     BRTT                                                CSD103
      C                     ELSE
-     C                     Z-ADDTBRTT     BRTT
+     C**********           Z-ADDTBRTT     BRTT                                                CSD103
+     C                     MOVE TBRTT     BRTT                                                CSD103
      C                     END
      C*
      C**  CURRENT BASE RATE = OUR OR THEIR BASE RATE, WHICHEVER IS
@@ -5204,7 +5229,8 @@
      C                     Z-ADDRTSP      SPRD
      C*
      C**  BASE RATE CODE
-     C                     Z-ADDBRTT      BRTT
+     C**********           Z-ADDBRTT      BRTT                                                CSD103
+     C                     MOVE BRTT      BRTT                                                CSD103
      C*
      C**  CURRENT BASE RATE
      C                     Z-ADDBRTE      BRTE
@@ -5421,7 +5447,8 @@
      C                     Z-ADDRTSP      SPRD                            180198
      C*                                                                   180198
      C**  BASE RATE CODE                                                  180198
-     C                     Z-ADDBRTT      BRTT                            180198
+     C**********           Z-ADDBRTT      BRTT                                         180198 CSD103
+     C                     MOVE BRTT      BRTT                                                CSD103
      C*                                                                   180198
      C**  CURRENT BASE RATE                                               180198
      C                     Z-ADDBRTE      BRTE                            180198
@@ -6828,6 +6855,33 @@
      C                     MOVE 'N'       CEU018                                              207543
      C                     END                                                                207543
       *                                                                                       CSE035
+      ** Access Switchable Features file to determine if CSE031 is                          MD057247
+      ** installed in the system.                                                           MD057247
+      *                                                                                     MD057247
+     C                     CALL 'AOSARDR0'                                                  MD057247
+     C                     PARM           URTNCD  7                                         MD057247
+     C                     PARM '*VERIFY' UOPTN   7                                         MD057247
+     C                     PARM 'CSE031'  UUKEY   6                                         MD057247
+     C                     PARM           UDSFDY 76                                         MD057247
+      *                                                                                     MD057247
+     C                     MOVE 'N'       CSE031  1                                         MD057247
+     C           URTNCD    IFEQ *BLANKS                                                     MD057247
+     C                     MOVE 'Y'       CSE031                                            MD057247
+     C                     ENDIF                                                            MD057247
+      *                                                                                     MD057247
+      ** Access Switchable Features file to determine if CSE071 is                          MD057247
+      ** installed in the system.                                                           MD057247
+      *                                                                                     MD057247
+     C                     CALL 'AOSARDR0'                                                  MD057247
+     C                     PARM           URTNCD                                            MD057247
+     C                     PARM '*VERIFY' UOPTN                                             MD057247
+     C                     PARM 'CSE071'  UUKEY                                             MD057247
+     C                     PARM           UDSFDY                                            MD057247
+      *                                                                                     MD057247
+     C                     MOVE 'N'       CSE071  1                                         MD057247
+     C           URTNCD    IFEQ *BLANKS                                                     MD057247
+     C                     MOVE 'Y'       CSE071                                            MD057247
+     C                     ENDIF                                                            MD057247
      C*
      C**  ACCESS BANK DETAILS FOR BASE CURRENCY
      C                     CALL 'AOBANKR0'
@@ -7261,7 +7315,7 @@
       /EJECT
       /COPY ZSRSRC,ZDYYRZ3
       /EJECT
-      /COPY ZSRSRC,ZLCDZ1
+      /COPY ZSRSRC,ZLCDZ1                                                                   MD057247
       /EJECT
       /COPY ZSRSRC,FFPLCLZ1
       /EJECT

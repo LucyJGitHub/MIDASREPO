@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD057275           Date 20Jan21               *
-      *  Prev Amend No. MD048575           Date 07Mar18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057616           Date 05Mar21               *
+      *                 MD057275           Date 20Jan21               *
+      *                 MD048575           Date 07Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1097202          Date 28Mar13               *
@@ -33,6 +35,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  MD057616 - LERC20 00001 failed during COB                    *
+      *           - Clear temporary account detail and nostro field   *
+      *             variables                                         *
       *  MD057275 - Multiple UTCHOBJEX calls by LEC06A 00010. Removed *
       *             SETON INLR.                                       *
       *  MD048575 - LE: MR amount transfered to PDCL                  *
@@ -55,24 +62,24 @@
      FACKEY     IF   E           K DISK    INCLUDE(ACKEYALF)
      FACNUM     IF   E           K DISK
      F***LEACCNL4  IF   E           K DISK                                                    CLE164
- 
+
       ** Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D QQACCD1       E                     EXTFLD(QQACCD)
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                 AR741212
      D                                     PREFIX(A_)                                       AR741212
- 
+
      D DSFDY         E DS
      D DSSDY         E DS
- 
+
      D PRETURNCODE     S              7
      D WPARM           S             20A   INZ('LoanCustOriginPurch')
- 
+
       ** Account
      D WLNRF           S              6
      D WFCNUM          S              6
@@ -84,7 +91,7 @@
      D WCNU2           S              6
      D WFACL           S              5
      D WFBRCD          S              3
- 
+
      D WBRCA           S              3
      D WCNUM           S              6
      D WCCY            S              3
@@ -92,18 +99,18 @@
      D WACSQ           S              2  0
      D WACODA          S             10
      D WACSQA          S              2
- 
+
      D                 DS
      D OSACDS                  1     18
      D OSACCN                  1      6
      D OSACAC                  7     16
      D OSACAS                 17     18
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
      D/copy zacpysrc,psds
- 
+
      D SVAL            S             20    DIM(4) CTDATA PERRCD(1)
- 
+
       ** Additional Field Definitions
      D IACKEY          S             14
      D IECCY           S              3
@@ -180,16 +187,16 @@
      D SVAL10          S            200
      D WRK01           S              1
      D PPCUST          S              1
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Receives input parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRETURNCODE
      C                   PARM                    IACKEY
@@ -200,13 +207,13 @@
      C                   PARM                    IFFACL
      C                   PARM                    IFSEQ
      C                   PARM                    IFCOD
- 
+
      C                   PARM                    ISCCY
      C                   PARM                    IOSAC
      C                   PARM                    ISETP
      C                   PARM                    IOLNO
      C                   PARM                    IOSBR
- 
+
      C                   PARM                    IBRCA
      C                   PARM                    ICNUM
      C                   PARM                    ICCY
@@ -214,33 +221,41 @@
      C                   PARM                    IACSQ
      C**********         PARM                    OPCNK                                        CLE164
      C                   PARM                    IATYP             1                        AR741212
- 
+
      C                   CLEAR                   IBRCA
      C                   CLEAR                   ICNUM
      C                   CLEAR                   ICCY
      C                   CLEAR                   IACOD
      C                   CLEAR                   IACSQ
      C                   CLEAR                   IATYP                                      AR741212
- 
+     C                   CLEAR                   @CUSN                                      MD057616
+     C                   CLEAR                   @CURR                                      MD057616
+     C                   CLEAR                   @ACCD                                      MD057616
+     C                   CLEAR                   @ACSN                                      MD057616
+     C                   CLEAR                   @BRCA                                      MD057616
+     C                   CLEAR                   @CSSN                                      MD057616
+     C                   CLEAR                   @NONB                                      MD057616
+     C                   CLEAR                   @PNOI                                      MD057616
+
      C                   MOVE      ILNRF         WLNRF
      C                   MOVE      IFCNUM        WFCNUM
      C                   MOVE      IFLOAN        WFLOAN
      C                   MOVE      IFFACL        WFFACL
      C                   MOVE      IFSEQ         WFSEQ
      C                   MOVE      IFCOD         WFCOD
- 
+
       ** Chec if account key has posting ref 2
- 
+
      C                   EXSR      CHECKAC
- 
+
       ** Set Account fields depending on settlement type
- 
+
      C                   EXSR      POSTR2
- 
+
      C**********         EVAL      *INLR = *ON                                              MD057275
- 
+
      C                   RETURN
- 
+
       /EJECT
       *****************************************************************
       *  CHECKAC - Check whether the account key has posting reference*
@@ -249,25 +264,25 @@
       ** skip to next record of LEPK3DPD                              *
       *****************************************************************
      C     CHECKAC       BEGSR
- 
+
      C     IACKEY        CHAIN     ACKEY
- 
+
       ** Dump if account key not found
- 
+
      C                   IF        NOT %FOUND(ACKEY)
      C**********         RETURN                                                             AR402543
      C                   ELSE
- 
+
       ** Check if posting reference 2 exists
       ** in one of the 3 debit accont
- 
+
      C                   IF        PRF1 <> 2
      C                             AND PRF2 <> 2 AND PRF3 <> 2
      C**********         RETURN                                                             AR402543
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -275,59 +290,59 @@
       *  POSTR2 - Derive account                                      *
       *****************************************************************
      C     POSTR2        BEGSR
- 
+
       ** Derive account depending on the value of Settlement type
- 
+
      C                   MOVE      IOSBR         WBRCA
- 
+
      C                   MOVE      IOSBR         BRANCH
      C                   EXSR      GETBRCA
- 
+
       ** Settlement type 03
- 
+
      C                   SELECT
      C     ISETP         WHENEQ    03
      C                   EXSR      ACC03
- 
+
      C     ISETP         WHENEQ    05
      C                   EXSR      ACC05
- 
+
       ** Settlement type 04
- 
+
      C     ISETP         WHENEQ    04
      C                   MOVE      BLACCD        WACOD
      C                   EXSR      ACC04
- 
+
       ** Nostro Settlement type
- 
+
      C     ISETP         WHENEQ    01
      C     ISETP         OREQ      02
      C     ISETP         OREQ      07
      C     ISETP         OREQ      08
      C     ISETP         OREQ      12
      C                   EXSR      ACCNS
- 
+
       ** Suspense a/c settlement type
- 
+
      C     ISETP         WHENEQ    00
      C     ISETP         OREQ      06
      C                   MOVE      BKACCD        WACOD
      C                   EXSR      ACC04
- 
+
       ** Retail
- 
+
      C     ISETP         WHENEQ    14
      C                   EXSR      ACCRE
- 
+
       ** Settlement type 09
- 
+
      C     ISETP         WHENEQ    09
      C                   EXSR      ACC09
- 
+
      C                   ENDSL
- 
+
       ** Retrieve settlement priority
- 
+
      C                   EXSR      CHKSETTP
       *                                                                                     AR741212
       ** Retrieve account details                                                           AR741212
@@ -351,7 +366,7 @@
      C                   ENDIF                                                              AR741212
       *                                                                                     AR741212
      C                   EXSR      SrNostro                                                 MD048575
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -359,13 +374,13 @@
       *  CHKSETTP - Check Set-Up                                      *
       *****************************************************************
      C     CHKSETTP      BEGSR
- 
+
      C                   MOVE      WBRCA         IBRCA
      C                   MOVE      WCCY          ICCY
      C                   MOVE      WCNUM         ICNUM
      C                   MOVE      WACOD         IACOD
      C                   MOVE      WACSQ         IACSQ
- 
+
      C**********         Z-ADD     0             OPCNK                                        CLE164
      C*****KLEACC        CHAIN     LEACCNL4                                                   CLE164
      C**********         IF        %FOUND(LEACCNL4)                                           CLE164
@@ -375,7 +390,7 @@
      C*****OPCNK         IFEQ      0                                                          CLE164
      C**********         Z-ADD     99999         OPCNK                                        CLE164
      C**********         ENDIF                                                                CLE164
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -383,12 +398,12 @@
       *  ACC03 - Settlement type 03                                   *
       *****************************************************************
      C     ACC03         BEGSR
- 
+
      C                   MOVE      A8BICN        WCNUM
      C                   MOVE      IECCY         WCCY
      C                   MOVE      01            WACSQ
      C                   MOVE      BLACCD        WACOD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -396,7 +411,7 @@
       *  ACC04 - Settlement type 04, 00 and 06                        *
       *****************************************************************
      C     ACC04         BEGSR
- 
+
      C     PPCUST        IFEQ      'O'
      C                   MOVE      IOLNO         WCNUM
      C                   ELSE
@@ -404,7 +419,7 @@
      C                   ENDIF
      C                   MOVE      IECCY         WCCY
      C                   MOVE      01            WACSQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -412,13 +427,13 @@
       *  ACC05 - Settlement type 05                                   *
       *****************************************************************
      C     ACC05         BEGSR
- 
+
      C                   MOVE      IOSAC         OSACDS
      C                   MOVE      IECCY         WCCY
      C                   MOVE      OSACCN        WCNUM
      C                   MOVE      OSACAC        WACOD
      C                   MOVE      OSACAS        WACSQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -426,7 +441,7 @@
       *  ACCNS - settlement type 01, 02, 07, 08, 12 (Nostro)          *
       *****************************************************************
      C     ACCNS         BEGSR
- 
+
      C                   MOVEL     IOSAC         WNOSTRO
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       WRETCD
@@ -441,7 +456,7 @@
      C                   PARM                    @CSSN
      C                   PARM                    @PNOI
      C     SDNOST        PARM                    DSFDY
- 
+
      C     WRETCD        IFNE      *BLANKS
      C                   MOVEL     'AONOSTR0'    DBFILE
      C                   Z-ADD     001           DBASE
@@ -449,9 +464,9 @@
      C                   MOVEL     IECCY         DBKEY                                      AR214036
      C                   MOVE      WNOSTRO       DBKEY
      C                   EXSR      *PSSR
- 
+
       ** Set nostro account
- 
+
      C                   ELSE
      C                   MOVE      A7CUST        WCNUM
      C                   MOVE      IECCY         WCCY
@@ -460,7 +475,7 @@
      C**********         MOVE      A7ACSN        WBRCA                                     AR1097202
      C                   MOVE      A7BRCD        WBRCA                                     AR1097202
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -468,7 +483,7 @@
       *  ACCRE - Settlement type 14 (Retail)                          *
       *****************************************************************
      C     ACCRE         BEGSR
- 
+
      C                   MOVEL     IOSAC         WRETN
      C     WRETN         CHAIN     ACNUM
      C                   IF        %FOUND(ACNUM)
@@ -478,7 +493,7 @@
      C                   MOVE      CCY           WCCY
      C                   MOVE      CNUM          WCNUM
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -486,7 +501,7 @@
       *  ACC09 - Settlement type 09                                   *
       *****************************************************************
      C     ACC09         BEGSR
- 
+
      C                   MOVEL     P@VL01        WCNUM
      C                   MOVEL     P@VL02        WACOD
      C                   MOVEL     IECCY         WCCY
@@ -494,7 +509,7 @@
      C     SET09         IFEQ      'T'
      C                   MOVEL     ISCCY         WCCY
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -502,7 +517,7 @@
       *  GETBRCA - Get Branch Details                                 *
       *****************************************************************
      C     GETBRCA       BEGSR
- 
+
      C     BRANCH        IFNE      *BLANKS
      C                   CALL      'AOBRCHR1'
      C                   PARM      '*DBERR'      @RTCD
@@ -510,7 +525,7 @@
      C                   PARM                    BRANCH
      C     SDBRCH        PARM                    DSSDY
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************                     MD048575
       *                                                               *                     MD048575
@@ -545,33 +560,33 @@
       *  *INZSR - *INZSR                                              *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   EVAL      DBPGM = PSPROCPGM
- 
+
      C     KLEACC        KLIST
      C                   KFLD                    WBRCA
      C                   KFLD                    WCCY
      C                   KFLD                    WCNUM
      C                   KFLD                    WACOD
      C                   KFLD                    WACSQ
- 
+
       ** Loan
      C                   KFLD                    WLNRF
- 
+
       ** Fee details
      C                   KFLD                    WFCNUM
      C                   KFLD                    WFLOAN
      C                   KFLD                    WFFACL
      C                   KFLD                    WFSEQ
      C                   KFLD                    WFCOD
- 
+
       ** Access General Ledger details
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDGELRPD'    DBFILE
@@ -580,9 +595,9 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
       ** Retrieve trading data
- 
+
      C                   CALL      'AOTRADR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -595,21 +610,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check for presence of feature CLE033
- 
+
      C                   MOVE      'N'           CLE033
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE033'      @SARD
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CLE033 = 'Y'
      C                   ELSE
      C                   EVAL      CLE033 = 'N'
      C                   ENDIF
- 
+
      C                   IF        CLE033 = 'Y'                                            AR1063739
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       WRETCD
@@ -633,7 +648,7 @@
      C                   PARM      *BLANKS       P@VL09
      C                   PARM      *BLANKS       P@OP10
      C                   PARM      *BLANKS       P@VL10
- 
+
      C     WRETCD        IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'LE0458  '    DBPGM
@@ -643,19 +658,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Save value of Settlement09Postings in a one character field
- 
+
      C                   MOVEL     P@VL04        SET09
      C                   ENDIF                                                             AR1063739
- 
+
       ** Check System Value: Use Original Borrower or Purchased From?
       ** Set up parameter so access object checks LoanCustOriginPurch
- 
+
      C                   MOVEL     WPARM         SVALK1
- 
+
       ** Call Access object
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    WRETCD
      C                   PARM                    SVALK1
@@ -678,15 +693,15 @@
      C                   PARM                    SVAL9
      C                   PARM                    SVALK0
      C                   PARM                    SVAL10
- 
+
       ** If the system value is not found then default value to 'P'
- 
+
      C     WRETCD        IFNE      '        '
      C                   MOVE      'P'           PPCUST
      C                   ELSE
- 
+
       ** Isolate the first character of SVAL1 which = 'P' or 'O'.
- 
+
      C                   MOVEL     SVAL1         WRK01
      C     WRK01         IFEQ      'O'
      C                   MOVE      'O'           PPCUST
@@ -694,7 +709,7 @@
      C                   MOVE      'P'           PPCUST
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -706,15 +721,15 @@
      C                   EVAL      RUNBEFORE = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'
      C                   EVAL      *INLR = '1'
      C                   EVAL      PRETURNCODE = '*ERROR*'
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2012

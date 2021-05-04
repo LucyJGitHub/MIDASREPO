@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. AR1088283          Date 20Mar13               *
-      *  Prev Amend No. BUG25122B          Date 13Oct09               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR1088283          Date 20Mar13               *
+      *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
       *                 BUG25122A          Date 02Sep09               *
       *                 MD055733           Date 03Jul20               *
@@ -78,7 +79,7 @@
       *                 176080             Date 11Feb00               *
       *                 144366             Date 11Feb00               *
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Prev Amend No. CAP035             Date 11Nov99               *
+      *                 CAP035             Date 11Nov99               *
       *                 CFT004             Date 22Jul99               *
       *                 169210             Date 19Oct99               *
       * Midas DBA 3.01 -----------------------------------------------*
@@ -164,6 +165,8 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR1088283 - Group Account narrative appears unconditionally. *
       *              Must take consideration hierarchy level setting  *
       *              for Top ob Balance Sheet (Child: AR1088286)      *

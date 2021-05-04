@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR818539           Date 12Mar20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD057285           Date 17Feb21               *
+      *  Prev Amend No. AR818539           Date 12Mar20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047971           Date 16Oct17               *
@@ -117,13 +118,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057285 - Removed execution of *PSSR after AOCUSTR0         *
       *  AR818539 - Make sure to default settlement based on SSI when *
       *             customer has changed. (Child: AR818540)           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *     
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date                                    *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -2175,15 +2177,15 @@
      C                   PARM      *BLANKS       PKey7                                        CER043
      C     SDCUST        PARM      SDCUST        DSSDY                                        CER043
                                                                                               CER043
-     C                   IF        PRTCD <> *BLANKS AND                                       CER043
-     C                             PRTCD <> '*NRF   '                                         CER043
-     C     *LOCK         IN        LDA                                                        CER043
-     C                   EVAL      DBFILE = 'SDCUSTPD'                                        CER043
-     C                   EVAL      DBASE = 905                                                CER043
-     C                   EVAL      DBKEY = PCnum                                              CER043
-     C                   OUT       LDA                                                        CER043
-     C                   EXSR      *PSSR                                                      CER043
-     C                   ENDIF                                                                CER043
+     C**********         IF        PRTCD <> *BLANKS AND                              CER043 MD057285
+     C**********                   PRTCD <> '*NRF   '                                CER043 MD057285
+     C******LOCK         IN        LDA                                               CER043 MD057285
+     C**********         EVAL      DBFILE = 'SDCUSTPD'                               CER043 MD057285
+     C**********         EVAL      DBASE = 905                                       CER043 MD057285
+     C**********         EVAL      DBKEY = PCnum                                     CER043 MD057285
+     C**********         OUT       LDA                                               CER043 MD057285
+     C**********         EXSR      *PSSR                                             CER043 MD057285
+     C**********         ENDIF                                                       CER043 MD057285
       *                                                                                       CER043
      C                   ENDSR                                                                CER043
       *****************************************************************                       CER043

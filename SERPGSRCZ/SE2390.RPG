@@ -35,7 +35,6 @@
      F*                                                               *
       *  Last Amend No. 248698             Date 01Jun20               *
       *  Prev Amend No. 248184             Date 01Jun20               *
-      *                 AR324886           Date 07Apr20               *
       *                 MD050604           Date 21Feb20               *
       *                 MD052583           Date 22Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -155,18 +154,15 @@
      F*                                                               *
       *  248698 - Rounding discrepancies on some SE reports. Applied  *
       *           fix 228682.                                         *
-      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *     
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
       *  248184 - Wrong security withholding tax calculation.  If     *
-      *           S01496, use 4 dec places for tax rate else use 2.   *     
-      *  AR324886 - Implement 4-eyes processing in Position           *
-      *             Settlement Maintenance.                           *
-      *             (Upgrade as required by HUT105)                   *  
+      *           S01496, use 4 dec places for tax rate else use 2.   *
       *  MD050604 - Average price of position changed incorrectly.    *
       *           - Recompiled due to changes in copy source ZCNSDZ1. *
       *  MD052583 - Reinstate deleted fixes CSE110                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE110 - Condition Output of Partly Paid Account Key on      *
-      *           Position Settlement.                                *      
+      *           Position Settlement.                                *
       *  MD037742 - Security diary events - pool factor reversal.     *
       *             Additional fix to initialize tax fields to prevent*
       *             garbage which cause decimal data error in COB.    *
@@ -429,9 +425,6 @@
      F                                              KINFSR SEKDSR
      FPOSETD  O   E           K        DISK         KINFDS POSDDS
      F                                              KINFSR POSDSR
-     FPSAUTD  O   E           K        DISK                                                 AR324886
-      ** SE Position Settlement Authorisation detail                                        AR324886
-      *                                                                                     AR324886
      FCLINT   IF  E           K        DISK                               E16085
      F            CLINTCAF                          KIGNORE               E16085
      F            CLINTCBF                          KIGNORE               E16085
@@ -716,9 +709,6 @@
      I              'ZAAMLSETSE'          C         ZAAMLP                                    CGL020
      I**********    'ZACALCSPRT'          C         SPRDSR                      AR1001183 AR1001183A
       *                                                                                       CGL020
-     ISDSTAT    E DSSDSTAT                                                                  AR324886
-      ** SD Data area                                                                       AR324886
-      *                                                                                     AR324886
      I/COPY ZSRSRC,ZHOLI                                                  S01512
      I*                                                                   S01512
      I/COPY WNCPYSRC,SE2390I001
@@ -807,8 +797,6 @@
      C                     MOVE *BLANKS   DBPGM                           S01447
      C                     MOVEL'SE2390'  DBPGM                           S01447
      C                     OUT  LDA                                       S01117
-     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
-     C                     IN   SDSTAT                                                      AR324886
      C                     EXSR FIRST
      C*
      C* CHECK FOR DATABASE ERRORS
@@ -3064,7 +3052,6 @@
      C*                                                                   CSE023
      C                     ADD  1         W02CNT  50                      CSE023
      C                     WRITEPOSETDF
-     C                     EXSR PSAUDT                                                      AR324886
       *                                                                                     AR853119
       ***  Write extension file                                                             AR853119
       *                                                                                     AR853119
@@ -3210,7 +3197,7 @@
      C           S01496    IFEQ 'Y'                                                           248184
      C           PAMD      MULT UTXRSR    WTASO  204                                          248184
      C           WTASO     DIV  100       TASO      H                                         248184
-     C                     ELSE                                                               248184      
+     C                     ELSE                                                               248184
      C           UTXRSR    DIV  100       URATE   54                      S01447
      C           PAMD      MULT URATE     TASO      H                     S01447
      C                     ENDIF                                                              248184
@@ -3220,7 +3207,7 @@
      C           S01496    IFEQ 'Y'                                                           248184
      C           PAMD      MULT UTXRRF    WTASR  204                                          248184
      C           WTASR     DIV  100       TASR      H                                         248184
-     C                     ELSE                                                               248184      
+     C                     ELSE                                                               248184
      C           UTXRRF    DIV  100       URATE                           S01447
      C           PAMD      MULT URATE     TASR      H                     S01447
      C                     ENDIF                                                              248184
@@ -3842,7 +3829,7 @@ AW   C                     Z-ADDDEC,1     WHASHD
      C                     MOVE 'Y'       S01496  1                                           248184
      C                     ELSE                                                               248184
      C                     MOVE 'N'       S01496                                              248184
-     C                     END                                                                248184     
+     C                     END                                                                248184
       *                                                                   S01447
      C/COPY WNCPYSRC,SE2390C030
       *                                                                   S01447
@@ -4185,28 +4172,6 @@ AW   C                     Z-ADDDEC,1     WHASHD
       **********                                                                AR1001183 AR1001183A
      C**********           ENDSR                                                AR1001183 AR1001183A
       **********                                                                AR1001183 AR1001183A
-     C********************************************************************                  AR324886
-     C/EJECT                                                                                AR324886
-     C********************************************************************                  AR324886
-     C           PSAUDT    BEGSR                                                            AR324886
-      *                                                                                     AR324886
-     C                     MOVE RECI      PARECI                                            AR324886
-     C                     MOVE PBCA      PAPBCA                                            AR324886
-     C                     MOVE PSSH      PAPSSH                                            AR324886
-     C                     MOVE PCPY      PAPCPY                                            AR324886
-     C                     MOVE PDUD      PAPDUD                                            AR324886
-     C                     MOVE PEVT      PAPEVT                                            AR324886
-     C                     MOVE PTFR      PAPTFR                                            AR324886
-     C                     MOVE TNLU      PATNLU                                            AR324886
-     C                     MOVE TXBS      PATXBS                                            AR324886
-     C                     MOVE BNFO      PABNFO                                            AR324886
-     C                     MOVE EXCD      PAEXCD                                            AR324886
-     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
-     C                     MOVE LCD       PALCD                                             AR324886
-     C                     MOVE CHTP      PALCTP                                            AR324886
-     C                     WRITEPSAUTDF                                                     AR324886
-      *                                                                                     AR324886
-     C                     ENDSR                                                            AR324886
      C*****************************************************************
       /EJECT                                                              S01117
       *****************************************************************   S01117

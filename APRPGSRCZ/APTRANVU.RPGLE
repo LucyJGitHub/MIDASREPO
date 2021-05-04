@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056546           Date 16Sep20               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
       *                 MD055373           Date 14Jul20               *
@@ -230,6 +231,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Introduce new parameter in DEAM API to be used in   *
+      *           the validation of action code during reversal       *
+      *           authorization. Apply fix 258724.                    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
       *             Reversed MD044553                                 *
@@ -2296,6 +2300,9 @@ RGC  D RPIF4LN         S              4  0                                      
       **  Send Loan/Deposit indicator for settlement tab conditioning.                       BUG6534
      C     1             SUBST     BUFFER:Bfp    LONDEP                                      BUG6534
      C                   ADD       1             Bfp                                         BUG6534
+      **  Restore Authorise Reversal Action Code                                              260173
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                       260173
+     C                   ADD       1             Bfp                                          260173
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
@@ -2331,6 +2338,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4146
      C                   PARM                    LONDEP                                      BUG6534
      C                   PARM                    DDFOID                                       239400
+     C                   PARM                    @ACTRV                                       260173
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'MMDEAMUPD'                                       CRE020

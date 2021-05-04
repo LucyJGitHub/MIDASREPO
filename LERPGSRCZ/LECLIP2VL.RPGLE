@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *  Last Amend No. MD042329           Date 04May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057191           Date 02Dec20               *
       *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
@@ -132,6 +133,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042329 - Reject button is not working in loan.             *
+      *           - Initialize CCLNIDT field at start of SRRSFD subr. *
+      *           - Applied for MD056624.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
@@ -5787,6 +5791,7 @@ E004 C                   ENDIF
       ** Interest Date                                                                      AR804863
       *                                                                                     AR804863
      C                   Z-ADD     *ZEROS        WSVID                                      AR804863
+     C                   MOVEL     *ZEROS        CCLNIDT                                    MD042329
      C     DDNIDT        IFNE      *BLANKS                                                  AR804863
      C                   MOVEL     DDNIDT        WNUM7                                      AR804863
      C                   MOVEL     WNUM7         WALF6                                      AR804863

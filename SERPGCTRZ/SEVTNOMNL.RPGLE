@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,7 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data   *
+      *  AR1075401 - Increase parameter field @PNOPO of SE6710/SE7570.*
+      *              (Child: AR1075402)                               *      
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -601,10 +604,12 @@
      C                   PARM                    @PPTFR
      C                   PARM                    @PBLTY
      C                   PARM                    @PNOBL           13
-     C                   PARM                    @PNOPO           13
+     C**********         PARM                    @PNOPO           13                       AR1075401
+     C                   PARM                    @PNOPO           15                       AR1075401
       *
      C                   MOVE      @PNOBL        WWNOBL           13 0
-     C                   MOVE      @PNOPO        WWNOPO           13 0
+     C**********         MOVE      @PNOPO        WWNOPO           13 0                     AR1075401
+     C                   MOVE      @PNOPO        WWNOPO           15 0                     AR1075401
       *
       ***  If block found, send error message
       *
@@ -675,12 +680,14 @@
      C                   PARM                    @PPTFR
      C                   PARM                    @PBLTY
      C                   PARM                    @PNOBL           13
-     C                   PARM                    @PNOPO           13
+     C**********         PARM                    @PNOPO           13                       AR1075401
+     C                   PARM                    @PNOPO           15                       AR1075401
      C                   PARM                    @PCOLF                                       CGL011
      C                   PARM      *ZEROS        @PCOLA           15                          CGL011
       *
      C                   MOVE      @PNOBL        WWNOBL           13 0
-     C                   MOVE      @PNOPO        WWNOPO           13 0
+     C**********         MOVE      @PNOPO        WWNOPO           13 0                     AR1075401
+     C                   MOVE      @PNOPO        WWNOPO           15 0                     AR1075401
       *
      C     @PCOLF        IfEq      'Y'                                                        CGL011
      C     DDTDTP        AndEq     'TP'                                                       CGL011

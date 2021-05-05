@@ -11,6 +11,7 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *     
       *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD048980           Date 15Dec17               *
@@ -87,6 +88,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR1075401 - Increase QFOAMT length in PMHOLDPD. Recompiled.  *
+      *              (Child: AR1075402)                               *     
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate                          *

@@ -9,18 +9,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 250228             Date 22May20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPM005             Date 24Jun96              */
+/*                      CPM005             Date 24Jun96              */
 /*                      S01124             Date 22Jun94              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       250228 - Error on OPNQRYF for PMPSTCPD.                     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase 2                            */
 /*                Focus Group Changes upgraded to DBA                */
@@ -153,20 +155,33 @@
 /* Copy extracted data from workfile to master file */
 /**********  CPYF       FROMFILE(PMPSTCPP) TOFILE(PMPSTMPP) +        * *CPM005*/
 /**********               MBROPT(*ADD) FMTOPT(*MAP *DROP)            * *CPM005*/
-             OPNQRYF    FILE((PMPSTCPD)) FORMAT(PMPSTMQ0) +
-                          MAPFLD((QFCNUM GFCNUM) (QFPTFR GFPTFR) +
-                          (QFINNR GFINNR) (QFVALG GFVALG) (QFCCY1 +
-                          GFCCY1) (QFCDP1 GFCDP1) (QFCNTR GFCNTR) +
-                          (QFLIND GFLIND) (QFTDSS GFTDSS) (QFAMT1 +
-                          GFAMT1) (QFACIS GFACIS) (QFPLFX GFPLFX) +
-                          (QFMFXR GFMFXR) (QFMFMD GFMFMD) (QFMPRC +
-                          GFMPRC) (QFTRNB GFTRNB) (QFMODI GFMODI) +
-                          (QFBYSF GFBYSF) (QFFOIS GFFOIS) (QFTXT2 +
-                          GFTXT2) (QFSTMN GFSTMN) (QFPPRC GFPPRC) +
-                          (QFMFXD GFMFXD) (QFNMDP GFNMDP) (QFSPBS +
-                          GFSPBS) (QFTKDM GFTKDM) (QFMNPF GFMNPF) +
-                          (QFTKVL GFTKVL) (QFFPSI GFRESH) (QFVDAT +
-                          GFVDAT) (QFMVPC GFMVPC))                    /*CPM005*/
+/* Copy extracted data from workfile to master file */
+/**********  CPYF       FROMFILE(PMPSTCPP) TOFILE(PMPSTMPP) +        * *CPM005*/
+/**********               MBROPT(*ADD) FMTOPT(*MAP *DROP)            * *CPM005*/
+ /********** OPNQRYF    FILE((PMPSTCPD)) FORMAT(PMPSTMQ0) +
+ /**********              MAPFLD((QFCNUM GFCNUM) (QFPTFR GFPTFR) +
+ /**********              (QFINNR GFINNR) (QFVALG GFVALG) (QFCCY1 +
+ /**********              GFCCY1) (QFCDP1 GFCDP1) (QFCNTR GFCNTR) +
+ /**********              (QFLIND GFLIND) (QFTDSS GFTDSS) (QFAMT1 +
+ /**********              GFAMT1) (QFACIS GFACIS) (QFPLFX GFPLFX) +
+ /**********              (QFMFXR GFMFXR) (QFMFMD GFMFMD) (QFMPRC +
+ /**********              GFMPRC) (QFTRNB GFTRNB) (QFMODI GFMODI) +
+ /**********              (QFBYSF GFBYSF) (QFFOIS GFFOIS) (QFTXT2 +
+ /**********              GFTXT2) (QFSTMN GFSTMN) (QFPPRC GFPPRC) +
+ /**********              (QFMFXD GFMFXD) (QFNMDP GFNMDP) (QFSPBS +
+ /**********              GFSPBS) (QFTKDM GFTKDM) (QFMNPF GFMNPF) +
+ /**********              (QFTKVL GFTKVL) (QFFPSI GFRESH) (QFVDAT +
+ /**********              GFVDAT) (QFMVPC GFMVPC))                                 /*CPM005 250228*/
+             OPNQRYF    FILE((PMPSTCPD)) FORMAT(PMPSTMQ0) MAPFLD((QFCNUM GFCNUM) +
+                          (QFPTFR GFPTFR) (QFINNR GFINNR) (QFVALG GFVALG) (QFCCY1 +
+                          GFCCY1) (QFCDP1 GFCDP1) (QFCNTR GFCNTR) (QFLIND GFLIND) +
+                          (QFTDSS GFTDSS) (QFAMT1 GFAMT1) (QFACIS GFACIS) (QFPLFX +
+                          GFPLFX) (QFMFXR GFMFXR) (QFMFMD GFMFMD) (QFMPRC GFMPRC) +
+                          (QFTRNB GFTRNB) (QFMODI GFMODI) (QFBYSF GFBYSF) (QFFOIS +
+                          GFFOIS) (QQTXT2 GFTXT2) (QFSTMN GFSTMN) (QFPPRC GFPPRC) +
+                          (QFMFXD GFMFXD) (QFNMDP GFNMDP) (QFSPBS GFSPBS) (QFTKDM +
+                          GFTKDM) (QFMNPF GFMNPF) (QFTKVL GFTKVL) (QFFPSI GFRESH) +
+                          (QFVDAT GFVDAT) (QFMVPC GFMVPC)) /*250228*/
              CPYFRMQRYF FROMOPNID(PMPSTCPD) TOFILE(PMPSTMQ0) +
                           MBROPT(*ADD)  FMTOPT(*NOCHK)                /*CPM005*/
              CLOF       OPNID(PMPSTCPD)                               /*CPM005*/

@@ -21,8 +21,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260191A            Date 22May20               *
+      *  Prev Amend No. 260191             Date 22May20               *
+      *                 259978             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038918           Date 31May16               *
       *                 260331             Date 31Mar16               *
       *                 MD000091           Date 17May13               *
@@ -48,6 +51,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260191A- System should not allow deletion of LIVE/MATURED    *
+      *           security diary event if ALL generated position      *
+      *           settlements are still unsettled/live records.       *
+      *           Hence, system will not generate reversal position   *
+      *           settlements.                                        *
+      *  260191 - System should not allow deletion of a security diary*
+      *           event if atleast one live position exists for the   *
+      *           event. This validation is only valid if the diary   *
+      *           event being deleted is still live record. Applied   *
+      *           fix 247625.                                         *
+      *  259978 - System does not allow to do Event type "Conversions"*
+      *           in Security diary Input function.                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
@@ -895,6 +910,12 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEA0318'
      C                   GOTO      EValDel
      C                   ENDIF
+      *                                                                                      260191A
+      ** Use temporary variables to determine if all position settlements                    260191A
+      ** are settled or not.                                                                 260191A
+      *                                                                                      260191A
+     C                   MOVE      'N'           NOTALL            1                         260191A
+     C                   MOVE      'N'           LIVREC            1                         260191A
       *
       ** If there are any live position settlements for this security
       ** event, output message to screen, and prevent deletion.
@@ -913,16 +934,32 @@
       *                                                                                       260331
      C**********         IF        F3RECI= 'D' AND SDED = F3PDUD                              260331
      C**********                   AND SDET = F3PEVT                                          260331
-     C                   IF        F3RECI = 'D' AND WWPDUD = F3PDUD                           260331
-     C                             AND SDET = F3PEVT AND RECI = 'D'                           260331
+     C**********         IF        F3RECI = 'D' AND WWPDUD = F3PDUD                   260191 260191A
+     C**********                   AND SDET = F3PEVT AND RECI = 'D'                   260191 260191A
+      *                                                                                      260191A
+      ** System should not allow deletion of Live/Matured security                           260191A
+      ** diary event if generated position settlements are still                             260191A
+      ** live/unsettled.                                                                     260191A
+      *                                                                                      260191A
+     C                   IF        WWPDUD = F3PDUD AND SDET = F3PEVT                         260191A
+     C                   IF        F3RECI = 'M'                                              260191A
+     C                   EVAL      NOTALL = 'Y'                                              260191A
+     C                   ELSEIF    F3RECI = 'D'                                              260191A
+     C                   EVAL      LIVREC = 'Y'                                              260191A
+     C                   ENDIF                                                               260191A
+     C                   ENDIF                                                               260191A
+     C     SDSN          READE     POSETDF                                02                 260191A
+     C                   ENDDO                                                               260191A
+      *                                                                                      260191A
+     C                   IF        NOTALL = 'N' and LIVREC = 'Y'                             260191A
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0357'
-     C                   LEAVE
+     C**********         LEAVE                                                               260191A
      C                   ENDIF
-     C     SDSN          READE     POSETDF                                02
-     C                   ENDDO
+     C*****SDSN*         READE     POSETDF                                02                 260191A
+     C**********         ENDDO                                                               260191A
 
      C     EValDel       ENDSR
 
@@ -1661,7 +1698,8 @@
       *
       ** If entry 'CV', check for Convertible indicator.
       *
-     C                   IF        DDSDET = 'CV' AND D1CNVI <> 'Y'
+     C**********         IF        DDSDET = 'CV' AND D1CNVI <> 'Y'                            259978
+     C                   IF        DDSDET = 'CV' AND F1SCVI <> 'Y'                            259978
      C                   MOVE      'N'           OKSDET
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDET'

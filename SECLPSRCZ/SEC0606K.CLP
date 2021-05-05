@@ -10,20 +10,23 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 255926             Date 22May20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 11May95              */
+/*                      S01408             Date 11May95              */
 /*                      S01117             Date 08Jan91              */
 /*                      S01189                  DATE  08JAN91       */
 /*                      E21114                  DATE  13FEB90       */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       255926 - Addition of error handling to prevent missing     */
+/*                members in logical files.                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook SEC0606KMS                  *  *E15549*/
 /*       S01117  -  MULTIBRANCHING                                  */
@@ -55,6 +58,10 @@
 /************DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(128)          * *S01189*/
              DCL        VAR(&SDSTAT)  TYPE(*CHAR)  LEN(256)
  
+/* Catch non-specified error messages and process error routine */                        /*255926*/
+                                                                                          /*255926*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))                                                  /*255926*/
              RTVDTAARA DTAARA(SDSTAT) RTNVAR(&SDSTAT)
              CHGVAR    VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
 /************CHGVAR    VAR(&TOLIB) VALUE(&PRE *TCAT 'DLIB')             S01117*/

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. 250019             Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250019 - Added fields DDTE and PTFR in KLIST K_GZCDEPPL1     *
+      *           after the fields were added as key in GZCDEPPL1.    *      
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
@@ -112,6 +115,8 @@ O    C                   KFLD                    CDCN
 O    C                   KFLD                    CDSN
 O    C                   KFLD                    CDPT
 O    C                   KFLD                    CDMK
+O    C                   KFLD                    DDTE                                         250019
+O    C                   KFLD                    PTFR                                         250019
  
      C                   ENDSR
       ********************************************************************

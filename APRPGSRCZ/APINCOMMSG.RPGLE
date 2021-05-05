@@ -1,4 +1,4 @@
-     H DEBUG
+	    H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                     MD039105
@@ -24,6 +24,11 @@
       *                                                               *                       CAP083
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD039032           Date 22May20               *
+      *  Prev Amend No. 259813             Date 22May20               *
+      *                 251029             Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *  Last Amend No. MD039032           Date 22May20               *
       *  Prev Amend No. 259813             Date 22May20               *
       *                 251029             Date 22May20               *
@@ -135,6 +140,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039032 - Modified fix 251029 to include checking of the    *
+      *             Front Office ID to make sure that new transactions*
+      *             will be processed.                                *
+      *  259813 - Clear APDUMP before giving it a new value.          *
+      *           Applied for MD-39032                                *
+      *  251029 - Handle file locking properly.  Applied fix 231306   *
+      *           and added some checking in field ARERRMODE.         *
       *  MD039032 - Modified fix 251029 to include checking of the    *
       *             Front Office ID to make sure that new transactions*
       *             will be processed.                                *
@@ -371,7 +383,7 @@
      D ConnFailed      C                   CONST('MQSeries MQCONN failed: ')                  245310
      D DiscFailed      C                   CONST('MQSeries MQDISC failed: ')                  245310
      D ProcErr         C                   CONST('Error in module')                           251029
-
+ 
       ** Do NOT change the following constant values. Alterations
       ** here require changes to PC applications.
 
@@ -960,7 +972,7 @@
       *                                                                                     MD041126
      C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
      C                                     HIN : OCODE : REASON )                           MD041126
-
+ 
       ** Error processing
      C     REASON        IFNE      RCNONE
 

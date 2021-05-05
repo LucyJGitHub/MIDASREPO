@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD023865           Date 01Jun20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023865 - Not able to change Market Indicator from          *
+      *             Securities Details Screen. Check only RECI = 'D'  *
+      *             records for non-zero positions before issuing     *
+      *             error message.                                    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -193,13 +198,13 @@
      C                   IF        OKMKTI = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
-
+ 
      C                   IF        OKMKTI <> 'N'
      C                   MOVEL     DDMKTI        S1MKTI
      C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -214,7 +219,7 @@
      C                   IF        DDMKTI = *BLANK
      C                   EVAL      DDMKTI = PDMAR
      C                   ENDIF
-
+ 
      C                   IF        DDMKTI <> 'G' AND
      C                             DDMKTI <> 'P' AND
      C                             DDMKTI <> 'S'
@@ -236,14 +241,14 @@
      C                              DDMKTI <> 'G' AND
      C                              DDMKTI <> 'P' AND
      C                              DDMKTI <> 'S') OR
-
+ 
      C                             (ODDMKTI = 'P' AND
      C                              DDMKTI <> 'P' AND
      C                              DDMKTI <> 'S') OR
-
+ 
      C                              ODDMKTI = 'S' AND
      C                              DDMKTI <> 'S'
-
+ 
      C                   MOVE      'N'           OKMKTI
      C                   ADD       1             Idx
      C                   MOVEL     'DDMKTI'      FldNamXAr(IDx)
@@ -258,9 +263,9 @@
      C                             ODDMKTI = 'G')
      C                   EXSR      SrValDCMkt
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *
       *****************************************************************
@@ -277,7 +282,7 @@
      C     DDSESN        SETLL     TRADSDF
      C     *IN01         DOWEQ     *OFF
      C     DDSESN        READE     TRADSDF                                01
-
+ 
      C                   IF        *IN01 = *OFF AND
      C                             TDMI = ODDMKTI
      C                   MOVE      'N'           OKMKTI
@@ -286,7 +291,7 @@
      C                   MOVEL     'SEA0119'     MsgIdXAr(IDx)
      C                   GOTO      EValDCMkt
      C                   ENDIF
-
+ 
      C                   ENDDO
       *
       ** Check LF/UDEPZ - user depot positions
@@ -295,8 +300,15 @@
      C     DDSESN        SETLL     UDEPPDF
      C     *IN01         DOWEQ     *OFF
      C     DDSESN        READE     UDEPPDF                                01
-
+ 
      C                   IF        *IN01 = *OFF and
+     C                             (UECN <> *ZEROS OR                                       MD023865
+     C                             UDNT <> *ZEROS OR                                        MD023865
+     C                             UDNV <> *ZEROS OR                                        MD023865
+     C                             UDNS <> *ZEROS OR                                        MD023865
+     C                             UNRT <> *ZEROS OR                                        MD023865
+     C                             UNRV <> *ZEROS) AND                                      MD023865
+     C                             RECI = 'D' AND                                           MD023865
      C                             UDMK = ODDMKTI
      C                   MOVE      'N'           OKMKTI
      C                   ADD       1             IDx
@@ -304,7 +316,7 @@
      C                   MOVEL     'SEA0119'     MsgIdXAr(IDx)
      C                   GOTO      EValDCMkt
      C                   ENDIF
-
+ 
      C                   ENDDO
       *
       ** Check CDEPZ - customer depot positions
@@ -313,8 +325,13 @@
      C     DDSESN        SETLL     CDEPPDF
      C     *IN01         DOWEQ     *OFF
      C     DDSESN        READE     CDEPPDF                                01
-
+ 
      C                   IF        *IN01 = *OFF AND
+     C                             (CECN <> *ZEROS OR                                       MD023865
+     C                             CDNT <> *ZEROS OR                                        MD023865
+     C                             CDNV <> *ZEROS OR                                        MD023865
+     C                             CDNS <> *ZEROS) AND                                      MD023865
+     C                             RECI = 'D' AND                                           MD023865
      C                             CDMK = ODDMKTI
      C                   MOVE      'N'           OKMKTI
      C                   ADD       1             IDx
@@ -322,7 +339,7 @@
      C                   MOVEL     'SEA0119'     MsgIdXAr(IDx)
      C                   GOTO      EValDCMkt
      C                   ENDIF
-
+ 
      C                   ENDDO
       *
       ** Check LF/BKPHD - book positions header
@@ -331,14 +348,14 @@
      C     DDSESN        SETLL     BKPHDDF
      C     *IN01         DOWEQ     *OFF
      C     DDSESN        READE     BKPHDDF                                01
-
+ 
      C                   IF        *IN01 = *OFF AND
      C                             RECI = 'D'
       *
       ** Check BKPOSD of record found on header
       *
      C     KBPKY         CHAIN     BKPOS                              01
-
+ 
      C                   IF        *IN01 = *OFF AND
      C                             (ECNP <> *ZEROS OR
      C                             NPSN <> *ZEROS) AND
@@ -348,13 +365,13 @@
      C                   MOVEL     'DDMKTI'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0119'     MsgIdXAr(IDx)
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C     EValDCMkt     ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************

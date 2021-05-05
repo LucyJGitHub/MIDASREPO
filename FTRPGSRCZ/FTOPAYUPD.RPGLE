@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048586           Date 11Jan21               *
-      *  Prev Amend No. MD023298A          Date 03Jun20               *
+      *  Last Amend No, CFT162             Date 13Sep17               *      
+      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *                 MD023298A          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
@@ -126,6 +127,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation                  *      
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
       *  MD023298A - Front office ID already exists for OTPAYDQD.     *
@@ -304,6 +306,7 @@
       ** Compliance Watch Hit List file                                                       CSD015
      FSDCWHTL1  IF   E           K DISK    COMMIT                                             CSD015
                                                                                               CSD015
+     FSDM901L0  IF   E           K DISK                                                       CFT162
      F*FTPREFX1**UF*A*E********     DISK    COMMIT                                  BUG4776 BUG4776R
       **********                                                                    BUG4776 BUG4776R
      F/COPY WNCPYSRC,FTOPAYDF01
@@ -1083,6 +1086,7 @@
      C                   If        @CFT003 = 'Y'
      C                             Or (@CFT014 = 'Y')                           CFT014
      C                             Or (@CFT009 = 'Y')                           CFT009
+     C                             Or (@CFT162 = 'Y')                                         CFT162
      C*****OTPREF        CHAIN     OTPAYXL0                           99        CFT014
      C     OTPREF        CHAIN     OTPAYXDF                           99        CFT014
 
@@ -1139,6 +1143,66 @@
      C                   Eval      OPAUTO = 'N'
      C/COPY WNCPYSRC,FTH00198
      C                   Move      OTSTMT        OPSETM
+      *                                                                                       CFT162
+     C                   If        @CFT162 = 'Y'                                              CFT162
+      *                                                                                       CFT162
+     C                   Exsr      SRAccntV                                                   CFT162
+      *                                                                                       CFT162
+      ** Check customer/account MT900 defaults                                                CFT162
+      ** Check From Account (Ordering Bank or Ordering Customer)                              CFT162
+      *                                                                                       CFT162
+     C                   Movel     FTFRGL        C#ACCT                                       CFT162
+      *                                                                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   If        %Found                                                     CFT162
+     C                   Movel     M9R900        OPR900                                       CFT162
+     C                   Else                                                                 CFT162
+                                                                                              CFT162
+      * If no record found for the account, check if there is a record for the customer       CFT162
+     C                   Move      *Blanks       W#BRC1                                       CFT162
+     C                   Move      *Blanks       W#CCY1                                       CFT162
+     C                   Z-add     0             W#ACO1                                       CFT162
+     C                   Z-Add     0             W#ACS1                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        %found(SDM901L0)                                           CFT162
+     C                   Movel     M9R900        OPR900                                       CFT162
+     C                   Else                                                                 CFT162
+     C                   Movel     'N'           OPR900                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      ** Set MT900 generated flag to 'N'                                                      CFT162
+      *                                                                                       CFT162
+     C                   Movel     'N'           OPG900                                       CFT162
+      *                                                                                       CFT162
+      ** Check customer/account MT910 defaults                                                CFT162
+      ** Check To Account (Senders Correspondent or Destination)                              CFT162
+      *                                                                                       CFT162
+     C                   Movel     FTTOGL        C#ACCT                                       CFT162
+      *                                                                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   If        %Found                                                     CFT162
+     C                   Movel     M9R910        OPR910                                       CFT162
+     C                   Else                                                                 CFT162
+      * If no record found for the account, check if there is a record for the customer       CFT162
+     C                   Move      *Blanks       W#BRC1                                       CFT162
+     C                   Move      *Blanks       W#CCY1                                       CFT162
+     C                   Z-Add     0             W#ACO1                                       CFT162
+     C                   Z-Add     0             W#ACS1                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        %found(SDM901L0)                                           CFT162
+     C                   Movel     M9R910        OPR910                                       CFT162
+     C                   Else                                                                 CFT162
+     C                   Movel     'N'           OPR910                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      * Set MT910 generated flag to 'N'                                                       CFT162
+     C                   Movel     'N'           OPG910                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
      C***********        Write     OTPAYXDF                                     CFT014
                                                                                 CFT014
       ** Generate timestamp                                                     CFT014
@@ -2537,6 +2601,33 @@
       *
      CSR                 ENDSR
      C/EJECT
+      *****************************************************************                       CFT162
+      *                                                               *                       CFT162
+      *  SRAccntV - Get account details using values from FTVOPAYPD   *                       CFT162
+      *                                                               *                       CFT162
+      *****************************************************************                       CFT162
+      *                                                                                       CFT162
+     CSR   SRAccntV      BEGSR                                                                CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   INFT                                         CFT162
+                                                                                              CFT162
+     C     OTORBT        IFNE      *BLANKS                                                    CFT162
+     C                   MOVEL     @ORBDS        FTFRWR                                       CFT162
+     C                   ELSE                                                                 CFT162
+     C                   MOVEL     @ORCDS        FTFRWR                                       CFT162
+     C                   END                                                                  CFT162
+      *                                                                                       CFT162
+     C     OTSNCT        IFNE      *BLANKS                                                    CFT162
+     C                   MOVEL     @SNCDS        FTTOWR                                       CFT162
+     C                   ELSE                                                                 CFT162
+     C                   MOVEL     @DSTDS        FTTOWR                                       CFT162
+     C                   END                                                                  CFT162
+                                                                                              CFT162
+     C                   MOVEL     FTFRWR        FTFRGL                         Funds From    CFT162
+     C                   MOVEL     FTTOWR        FTTOGL                         Funds To      CFT162
+      *                                                                                       CFT162
+     CSR                 ENDSR                                                                CFT162
+     C/EJECT                                                                                  CFT162
       *****************************************************************
       *  SRADD    : Add shadow positions to store                     *
       *****************************************************************
@@ -5056,6 +5147,25 @@
      C                   ELSE                                                                 CSW220
      C                   MOVE      'N'           CSW220                                       CSW220
      C                   ENDIF                                                                CSW220
+      *                                                                                       CFT162
+      ** Check if 'CFT162' is switched 'ON'                                                   CFT162
+      *                                                                                       CFT162
+     C                   MoveL     'N'           @CFT162                                      CFT162
+     C                   CallB     'AOSARDR0'                                                 CFT162
+     C                   Parm      *BLANKS       @RTCD                                        CFT162
+     C                   Parm      '*VERIFY'     @OPTN                                        CFT162
+     C                   Parm      'CFT162'      @SARD                                        CFT162
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT162
+      *                                                                                       CFT162
+     C     @RTCD         Ifeq      *BLANKS                                                    CFT162
+     C                   MoveL     'Y'           @CFT162           1                          CFT162
+     C     KYM901        KLIST                                                                CFT162
+     C                   KFLD                    W#CNU1                                       CFT162
+     C                   KFLD                    W#CCY1                                       CFT162
+     C                   KFLD                    W#ACO1                                       CFT162
+     C                   KFLD                    W#ACS1                                       CFT162
+     C                   KFLD                    W#BRC1                                       CFT162
+     C                   Endif                                                                CFT162
 
      C                   ENDSR
       *****************************************************************                       CGL029

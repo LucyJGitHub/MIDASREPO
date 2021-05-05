@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 25Sep17               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
-      *                 CSW218             Date 19Mar18               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD021276           Date 31Jul13               *
@@ -64,7 +63,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation                  *
       *  MD039547 - Referred account is not properly validated.       *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *

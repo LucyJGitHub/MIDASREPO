@@ -9,19 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Ament No. LUC114             DATE 24Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 25Jul96              */
+/*                      S01408             Date 25Jul96              */
 /*                      S01408             Date 01Apy96              */
 /*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC114 - Change Layout of Interest Capitalization Report    */
+/*                Amend CORE hook:  REC3762001 REC3762MPE            */
+/*                Add New hook   :  LUC114_002                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01408 -  Addition of core hook REC3762MPE                  */
 /*       S01408  - Addition of core hook REC3762INT                  */
@@ -68,6 +72,7 @@
              OVRMSGF    MSGF(QUSERMSG) TOMSGF(&MSGF)
              OVRDBF     FILE(ACCRACJ) TOFILE(EACCRACJ)
              OVRDBF     FILE(ACCNT) TOFILE(EACCNT)
+/*/COPY WNCPYSRC,LUC114_002                                          */
              CALL       PGM(RE3762) PARM(&BJLANG)
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,REC3762MPE                                          /*S01408*/

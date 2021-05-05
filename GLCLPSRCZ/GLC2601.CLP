@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC110             Date 21Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Prev Amend No. 179753             Date 05Feb01              */
+/*                      179753             Date 05Feb01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -27,6 +28,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)    */
+/*                Use core hook GLC2601001                           */
+/*                Addition of hook LUC110_024                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       179753 - AUTL MIDAS10 should not be hardcoded               */
 /*       CCB009 - Journal files throughout close of business         */
@@ -65,7 +69,8 @@
 /*                                                                      CCB009*/
              DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
- 
+/*/COPY WNCPYSRC,LUC110_024                                        */ /*LUC110*/
+
 /* Global monitor message */
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +

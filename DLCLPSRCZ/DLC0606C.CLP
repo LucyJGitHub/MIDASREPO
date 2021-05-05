@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. LUC110             Date 17Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG23276           Date 10Mar09              */
 /*                      CER044             Date 19May08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -40,6 +41,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to BFM 2.1)    */
+/*                Use core hook DLC0606C02                          */
+/*                Use core hook DLC0606C05                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23276 - Items with Customers set up as Banks not shown   */

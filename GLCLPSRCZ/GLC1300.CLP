@@ -8,7 +8,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC111             Date 24Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,7 +17,7 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Prev Amend No. CDL008             Date 02May00              */
+/*                      CDL008             Date 02May00              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -33,6 +34,12 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC111 - Upgrade R4/NUC003 as FB 2.1 LUC111                 */
+/*                Amend core hook GLC1300005                         */
+/*       NUC003 - Output EXTENDED NARRATIVES for GL, DL and RE       */
+/*                Modules to SWIFT MT940 statements field 86.        */
+/*                Amend core hook  GLC1300001                        */
+/*                Add local hook   LUC111_002                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) */
 /*       CPK009 - Replace reference to SWPOSX1 with SWPOSAPD.        */
@@ -209,6 +216,7 @@
              MONMSG     MSGID(CPF2817)                                /*CEU013*/
              CPYF       FROMFILE(SWPOOZZ) TOFILE(SWPOSZZ) +
                           MBROPT(*ADD) FMTOPT(*NOCHK)
+/*/COPY WNCPYSRC,LUC111_002                                          */                   /*LUC111*/
              ENDDO
  
 /* Update SWIFT Acs files */

@@ -70,7 +70,6 @@
              DCL        VAR(&TRNREF) TYPE(*CHAR) LEN(15)              /*042167*/
              DCL        VAR(&RINFOR) TYPE(*CHAR) LEN(80)              /*042167*/
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)               /*042167*/
-
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CFT162*/
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CFT162*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CFT162*/
@@ -81,7 +80,6 @@
              DCLF       FILE(SDFTFRPD)                                /*S01194*/
 
              CHGJOB     SWS(XXXXXX00)
-
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CFT162*/
              CHGVAR     VAR(&SARD) VALUE('CFT162')                                        /*CFT162*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CFT162*/

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057084           Date 15Nov20               *
+      *  Last Amend No. MD057555           Date 08Feb21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057084           Date 15Nov20               *
       *                 AR989230           Date 04Jul12               *
       *                 MD052570           Date 17Jul19               *
       *                 MD046592A          Date 24Sep18               *
@@ -115,6 +116,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057555 - No Postings To Display For This Selection.        *
+      *            Reinstate 209031 and condition with system value.  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057084 - Narrative under Accounts Movement for OD Line     *
@@ -731,6 +734,7 @@
       *                                                                                     MD021130
      I              'AccMovEnqAvlBal'     C         V#GLAB                                  MD021130
       *                                                                                     MD021130
+     I              'ShwAllAcctMvmts'     C         V#MVMT                                  MD057555
       *                                                                                       CGL183
      I              'UserEnqAccessAudit'  C         V#AAUD                                    CGL183
       /TITLE         >>> START OF MAIN PROCESSING <<<
@@ -1209,12 +1213,14 @@
       *                                                                                     MD021130
      C**********           MOVELV#GLAB    P@OP01                                   MD021130 MD050886
      C                     MOVELV#GLAB    P@OP01    P                                       MD050886
+     C                     MOVELV#MVMT    P@OP02    P                                       MD057555
       *                                                                                     MD021130
      C                     CALL 'AOSVALR0'                                                  MD021130
      C                     PARM *BLANKS   @RTCD   7                                         MD021130
      C                     PARM           P@OP01 20                                         MD021130
      C                     PARM *BLANKS   P@VL01200                                         MD021130
-     C                     PARM *BLANKS   P@OP02 20                                         MD021130
+     C**********           PARM *BLANKS   P@OP02 20                                MD021130 MD057555
+     C                     PARM           P@OP02 20                                         MD057555
      C                     PARM *BLANKS   P@VL02200                                         MD021130
      C                     PARM *BLANKS   P@OP03 20                                         MD021130
      C                     PARM *BLANKS   P@VL03200                                         MD021130
@@ -1234,6 +1240,7 @@
      C                     PARM *BLANKS   P@VL10200                                         MD021130
       *                                                                                     MD021130
      C                     MOVELP@VL01    VLGLAB  1                                         MD021130
+     C                     MOVELP@VL02    MVTLST  1                                         MD057555
       *                                                                                     MD021130
      C                     EXSR SRBALT                                                      MD022437
      C                     EXSR LDA
@@ -2305,7 +2312,12 @@
      C*                                                                   S01408
      C**********           Z-ADDLSTD      POSDN                                        E21183 209031
      C**********           Z-ADD0         POSDN                                      209031 AR989230
+      *                                                                                     MD057555
+     C           MVTLST    IFEQ 'Y'                                                         MD057555
+     C                     Z-ADD0         POSDN                                             MD057555
+     C                     ELSE                                                             MD057555
      C                     Z-ADDLSTD      POSDN                                             AR989230
+     C                     ENDIF                                                            MD057555
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL4441CP28                                           S01408
       *                                                                                       CGL131
@@ -2321,11 +2333,14 @@
      C********** DACO      ORNE LSTD                                                   049240 209031
      C********** LSTD      ADD  1         POSDN                                        049240 209031
      C**********           END                                                         049240 209031
+     C           MVTLST    IFEQ 'Y'                                                         MD057555
+     C                     ELSE                                                             MD057555
      C           CFSB      IFNE 0                                                           AR989230
      C           LSTP      ORNE 0                                                           AR989230
      C           DACO      ORNE LSTD                                                        AR989230
      C                     ADD  1         POSDN                                             AR989230
      C                     END                                                              AR989230
+     C                     ENDIF                                                            MD057555
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL4441CP42                                           S01408
       *                                                                                       CGL131

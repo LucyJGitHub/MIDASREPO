@@ -723,9 +723,7 @@
      C                   EVAL      WNumFLOR = 0
      C                   IF        DDFLOR = *BLANKS                                           CLE172
       ** Default value for no floor (BSRT)                                                  MD057871
-     C                   IF        (ApiName = 'BSRT' and DDBLRT = 'Y') or                   MD057871
-     C                             (ApiName = 'CLIP' and DDBLRT = 'Y') or                   MD057871
-     C                             (ApiName = 'LERI' and DDBLRT = 'Y')                      MD057871
+     C                   IF        (ApiName = 'BSRT' and DDBLRT = 'Y')                      MD057871
      C                   EVAL      WNumFLOR = WFLOOR                                        MD057871
                                                                                             MD057871
      C                   ELSE                                                               MD057871
@@ -755,10 +753,8 @@
      C                   CALLB     'ZA0841'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    @@ALPH
-     C**********         PARM      6             @@IDP                                      MD057871
-     C**********         PARM      3             @@IINT                                     MD057871
-     C                   PARM      7             @@IDP                                      MD057871
-     C                   PARM      4             @@IINT                                     MD057871
+     C                   PARM      6             @@IDP
+     C                   PARM      3             @@IINT
      C                   PARM      'N'           @@MTID
      C                   PARM      *ZERO         @@ERCD
      C                   PARM      *ZERO         @@AMT

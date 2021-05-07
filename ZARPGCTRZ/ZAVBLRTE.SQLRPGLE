@@ -721,11 +721,14 @@
      C     SRFLOR        BEGSR
 
      C                   EVAL      WNumFLOR = 0
+     C                   IF        DDFLOR = %CHAR(WFLOOR)                                   MD057871
+     C                   LEAVESR                                                            MD057871
+     C                   ENDIF                                                              MD057871
      C                   IF        DDFLOR = *BLANKS                                           CLE172
       ** Default value for no floor (BSRT)                                                  MD057871
      C                   IF        (ApiName = 'BSRT' and DDBLRT = 'Y')                      MD057871
      C                   EVAL      DDFLOR   = %CHAR(WFLOOR)                                 MD057871
-     C                   EVAL      VLFOR    = WFLOOR                                        MD057871
+     C                   EVAL      VFLOR    = WFLOOR                                        MD057871
      C                   LEAVESR                                                            MD057871
                                                                                             MD057871
      C                   ELSE                                                               MD057871

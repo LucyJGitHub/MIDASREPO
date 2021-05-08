@@ -224,8 +224,7 @@
      D WNUMAMT2        S             11P 7
      D WDBAV           S              1S 0
      D WNumBADJ        S             11P 7
-     D*** WNumFLOR        S              9P 6                                              MD057871
-     D WNumFLOR        S             11P 7                                                 MD057871
+     D WNumFLOR        S              9P 6
      D WSign           S              1A
      D KSCRFLD         S                   LIKE(SCRFLD)
      D KINTVAL         S                   LIKE(INTVAL)
@@ -722,6 +721,7 @@
 
      C                   EVAL      WNumFLOR = 0
      C                   IF        DDFLOR = %CHAR(WFLOOR)                                   MD057871
+     C                   EVAL      VFLOR    = WFLOOR                                        MD057871
      C                   LEAVESR                                                            MD057871
      C                   ENDIF                                                              MD057871
      C                   IF        DDFLOR = *BLANKS                                           CLE172
@@ -827,7 +827,6 @@
      C**********                   %TRIMR(DDFLOR) <> '0'                                    MD057770
      C                             (  WNumFLOR <> 0                                         MD057770
      C                             or @@ERCD <> *ZERO )                                     MD057770
-     C                             and WNumFLOR <> WFLOOR                                   MD057871
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172

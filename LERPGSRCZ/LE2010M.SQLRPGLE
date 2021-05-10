@@ -28,8 +28,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD057748           Date 16Mar21               *
-      *  Prev Amend No. MD041126           Date 05Oct20               *      
+      *  Last Amend No. MD056616A          Date 07May21               *
+      *  Prev Amend No. MD057748           Date 16Mar21               *
+      *                 MD041126           Date 05Oct20               *
       *                 MD056890           Date 11Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -129,6 +130,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056616A - WSMQ 9.0 readiness.                              *
+      *            - Re-instate MD041126/MD056616 changes.            *
+      *            - Remove MD057748 changes.                         *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
       *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
@@ -427,32 +431,27 @@
       * MQI named constants
      **D/COPY**QRPGLESRC,CMQR**********                                                       211959
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                   211959 MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQG                                                 MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQR                                                             MD057748
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
       * Object Descriptor
      D MQOD            DS
      **D/COPY**QRPGLESRC,CMQODR********                                                       211959
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                 211959 MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQODG                                               MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQODR                                                           MD057748
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
       * Message Descriptor
      D MQMD            DS
      **D/COPY**QRPGLESRC,CMQMDR********                                                       211959
      D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                 211959 MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQMDG                                               MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQMDR                                                           MD057748
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
       * Get message options
      D MQGMO           DS
      **D/COPY**QRPGLESRC,CMQGMOR*******                                                       211959
      D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                211959 MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQGMOG                                              MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQGMOR                                                          MD057748
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
       * Put message options
      D MQPMO           DS
      **D/COPY**QRPGLESRC,CMQPMOR*******                                                       211959
      D***/COPYQMQM/QRPGLESRC,CMQPMOR                                                 211959 MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQPMOG                                              MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQPMOR                                                          MD057748
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
       *
      D SPOOLU          DS
      D  SFILEU                83     92
@@ -515,17 +514,17 @@
      D WFeeSeq         S              2S 0                                                    CLE035
      D WLastType       S              4A                                                      CLE035
                                                                                               CLE035
-      ***MQ*Parameters*************************************************                     MD041126
-     D*P#HCONN**       S             10I 0                                         MD041126 MD057748
-     D*P#HOBJ***       S             10I 0                                         MD041126 MD057748
-     D*P#OPTS***       S             10I 0                                         MD041126 MD057748
-     D*P#CCODE**       S             10I 0                                         MD041126 MD057748
-     D*P#RSCOD**       S              9P 0                                         MD041126 MD057748
-     D*P#REASON*       S             10I 0                                         MD041126 MD057748
-     D*BUFLEN***       S             10I 0                                         MD041126 MD057748
-     D*P#QMNAME*       S             48A                                           MD041126 MD057748
-     D*P#MLEN***       S             10I 0                                         MD041126 MD057748
-     D*W#TEMP***       S              5A                                           MD041126 MD057748
+      ** MQ Parameters                                                                      MD041126
+     D P#HCONN         S             10I 0                                                  MD041126
+     D P#HOBJ          S             10I 0                                                  MD041126
+     D P#OPTS          S             10I 0                                                  MD041126
+     D P#CCODE         S             10I 0                                                  MD041126
+     D P#RSCOD         S              9P 0                                                  MD041126
+     D P#REASON        S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D P#QMNAME        S             48A                                                    MD041126
+     D P#MLEN          S             10I 0                                                  MD041126
+     D W#TEMP          S              5A                                                    MD041126
       *
       * Constant to be sent on QCMDEXEC command
      D SETDLY          C                   CONST('DLYJOB DLY(1)')
@@ -669,30 +668,22 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#SOBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     CONONE        P#OPTS                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#SOBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     CONONE        P#OPTS                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C***********        CALLP     MQCLOSE( P#HCONN : P#HOBJ : P#OPTS :            MD041126 MD057748
-     C***********                           P#CCODE : P#REASON )                   MD041126 MD057748
+     C                   CALLP     MQCLOSE( P#HCONN : P#HOBJ : P#OPTS :                     MD041126
+     C                                      P#CCODE : P#REASON )                            MD041126
                                                                                             MD041126
-     C***********        Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQCLOS        P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#SOBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM      CONONE        P#OPTS            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQCLOSE failed
       *
      C     P#CCODE       IFEQ      CCFAIL
      C**********         MOVEL     MQCLOS        DBKEY                                      MD041126
-     C**********         MOVEL     'MQCLOSE'     DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQCLOS        DBKEY                                      MD057748
+     C                   MOVEL     'MQCLOSE'     DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     1             DBASE
      C                   MOVE      *ON           *IN30
@@ -709,30 +700,22 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#ROBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     CONONE        P#OPTS                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#ROBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     CONONE        P#OPTS                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQCLOSE( P#HCONN : P#HOBJ : P#OPTS :            MD041126 MD057748
-     C**********                            P#CCODE : P#REASON )                   MD041126 MD057748
+     C                   CALLP     MQCLOSE( P#HCONN : P#HOBJ : P#OPTS :                     MD041126
+     C                                      P#CCODE : P#REASON )                            MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQCLOS        P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#ROBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM      CONONE        P#OPTS            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQCLOSE failed
       *
      C     P#CCODE       IFEQ      CCFAIL
      C**********         MOVEL     MQCLOS        DBKEY                                      MD041126
-     C**********         MOVEL     'MQCLOSE'     DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQCLOS        DBKEY                                      MD057748
+     C                   MOVEL     'MQCLOSE'     DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     2             DBASE
      C                   MOVE      *ON           *IN30
@@ -747,26 +730,20 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQDISC( P#HCONN : P#CCODE :                     MD041126 MD057748
-     C**********                           P#REASON )                              MD041126 MD057748
+     C                   CALLP     MQDISC( P#HCONN : P#CCODE :                              MD041126
+     C                                     P#REASON )                                       MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQDISC        P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQDISC failed
       *
      C     P#CCODE       IFEQ      CCFAIL
      C**********         MOVEL     MQDISC        DBKEY                                      MD041126
-     C**********         MOVEL     'MQDISC'      DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQDISC        DBKEY                                      MD057748
+     C                   MOVEL     'MQDISC'      DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     3             DBASE
      C                   MOVE      *ON           *IN30
@@ -858,37 +835,25 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#SOBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     2000          P#MLEN                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#SOBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     2000          P#MLEN                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQGET( P#HCONN : P#HOBJ :                       MD041126 MD057748
-     C**********                          MQMD : MQGMO : BUFLEN :                  MD041126 MD057748
-     C**********                          %ADDR(P#MESSAGE) :P#MLEN :               MD041126 MD057748
-     C**********                          P#CCODE : P#REASON )                     MD041126 MD057748
+     C                   CALLP     MQGET( P#HCONN : P#HOBJ :                                MD041126
+     C                                    MQMD : MQGMO : BUFLEN :                           MD041126
+     C                                    %ADDR(P#MESSAGE) :P#MLEN :                        MD041126
+     C                                    P#CCODE : P#REASON )                              MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQGET         P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#SOBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQGMO                                      MD057748
-     C                   PARM                    BUFLEN            9 0                      MD057748
-     C                   PARM                    P#MESSAGE      2000                        MD057748
-     C                   PARM      2000          P#MLEN            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQGET failed
       *
      C     P#CCODE       IFGT      *ZERO
      C     P#RSCOD       ANDNE     2033
      C*********          MOVEL     MQGET         DBKEY                                      MD041126
-     C*********          MOVEL     'MQGET'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQGET         DBKEY                                      MD057748
+     C                   MOVEL     'MQGET'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     4             DBASE
      C                   MOVE      *ON           *IN30
@@ -1043,37 +1008,25 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#SOBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     2000          P#MLEN                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#SOBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     2000          P#MLEN                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQGET( P#HCONN : P#HOBJ :                       MD041126 MD057748
-     C**********                          MQMD : MQGMO : BUFLEN :                  MD041126 MD057748
-     C**********                          %ADDR(P#MESSAGE) :P#MLEN :               MD041126 MD057748
-     C**********                          P#CCODE : P#REASON )                     MD041126 MD057748
+     C                   CALLP     MQGET( P#HCONN : P#HOBJ :                                MD041126
+     C                                    MQMD : MQGMO : BUFLEN :                           MD041126
+     C                                    %ADDR(P#MESSAGE) :P#MLEN :                        MD041126
+     C                                    P#CCODE : P#REASON )                              MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQGET         P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#SOBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQGMO                                      MD057748
-     C                   PARM                    BUFLEN            9 0                      MD057748
-     C                   PARM                    P#MESSAGE      2000                        MD057748
-     C                   PARM      2000          P#MLEN            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQGET failed
       *
      C     P#CCODE       IFGT      *ZERO
      C     P#RSCOD       ANDNE     2033
      C**********         MOVEL     MQGET         DBKEY                                      MD041126
-     C**********         MOVEL     'MQGET'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQGET         DBKEY                                      MD057748
+     C                   MOVEL     'MQGET'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     5             DBASE
      C                   MOVE      *ON           *IN30
@@ -1115,8 +1068,7 @@
       *
      C     W#FAILACES    IFEQ      100
      C**********         MOVEL     MQGET         DBKEY                                      MD041126
-     C**********         MOVEL     'MQGET'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQGET         DBKEY                                      MD057748
+     C                   MOVEL     'MQGET'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     6             DBASE
       *                                                                                       133783
@@ -1124,10 +1076,8 @@
       *                                                                                       133783
      C**********         MOVEL     MQGET         W#TEMP            1                 133783 MD041126
      C*****W#TEMP        IFEQ      '5'                                               133783 MD041126
-     C***********        MOVEL     'MQGET'       W#TEMP                            MD041126 MD057748
-     C**********         IF        W#TEMP = 'MQGET'                                MD041126 MD057748
-     C                   MOVEL     MQGET         W#TEMP            1                        MD057748
-     C     W#TEMP        IFEQ      '5'                                                      MD057748
+     C                   MOVEL     'MQGET'       W#TEMP                                     MD041126
+     C                   IF        W#TEMP = 'MQGET'                                         MD041126
       *                                                                                       133783
       ** Send Error Message to MOPERQ                                                         133783
       *                                                                                       133783
@@ -1235,37 +1185,25 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#SOBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     2000          P#MLEN                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#SOBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     2000          P#MLEN                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQGET( P#HCONN : P#HOBJ :                       MD041126 MD057748
-     C**********                          MQMD : MQGMO : BUFLEN :                  MD041126 MD057748
-     C**********                          %ADDR(P#MESSAGE) :P#MLEN :               MD041126 MD057748
-     C**********                          P#CCODE : P#REASON )                     MD041126 MD057748
+     C                   CALLP     MQGET( P#HCONN : P#HOBJ :                                MD041126
+     C                                    MQMD : MQGMO : BUFLEN :                           MD041126
+     C                                    %ADDR(P#MESSAGE) :P#MLEN :                        MD041126
+     C                                    P#CCODE : P#REASON )                              MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQGET         P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#SOBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQGMO                                      MD057748
-     C                   PARM                    BUFLEN            9 0                      MD057748
-     C                   PARM                    P#MESSAGE      2000                        MD057748
-     C                   PARM      2000          P#MLEN            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQGET failed
       *
      C     P#CCODE       IFGT      *ZERO
      C     P#RSCOD       ANDNE     2033
      C**********         MOVEL     MQGET         DBKEY                                      MD041126
-     C**********         MOVEL     'MQGET'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQGET         DBKEY                                      MD057748
+     C                   MOVEL     'MQGET'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     7             DBASE
      C                   MOVE      *ON           *IN30
@@ -1307,37 +1245,25 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#SOBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     2000          P#MLEN                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#SOBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     2000          P#MLEN                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQGET( P#HCONN : P#HOBJ :                       MD041126 MD057748
-     C**********                          MQMD : MQGMO : BUFLEN :                  MD041126 MD057748
-     C**********                          %ADDR(P#MESSAGE) :P#MLEN :               MD041126 MD057748
-     C**********                          P#CCODE : P#REASON )                     MD041126 MD057748
+     C                   CALLP     MQGET( P#HCONN : P#HOBJ :                                MD041126
+     C                                    MQMD : MQGMO : BUFLEN :                           MD041126
+     C                                    %ADDR(P#MESSAGE) :P#MLEN :                        MD041126
+     C                                    P#CCODE : P#REASON )                              MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQGET         P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#SOBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQGMO                                      MD057748
-     C                   PARM                    BUFLEN            9 0                      MD057748
-     C                   PARM                    P#MESSAGE      2000                        MD057748
-     C                   PARM      2000          P#MLEN            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQGET failed
       *
      C     P#CCODE       IFGT      *ZERO
      C     P#RSCOD       ANDNE     2033
      C**********         MOVEL     MQGET         DBKEY                                      MD041126
-     C**********         MOVEL     'MQGET'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQGET         DBKEY                                      MD057748
+     C                   MOVEL     'MQGET'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     8             DBASE
      C                   MOVE      *ON           *IN30
@@ -1412,34 +1338,23 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#ROBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     W#MLEN        P#MLEN                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#ROBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     W#MLEN        P#MLEN                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQPUT( P#HCONN : P#HOBJ :                       MD041126 MD057748
-     C**********                          MQMD : MQPMO : P#MLEN :                  MD041126 MD057748
-     C**********                          %ADDR(W#RMSG) : P#CCODE :                MD041126 MD057748
-     C**********                          P#REASON )                               MD041126 MD057748
+     C                   CALLP     MQPUT( P#HCONN : P#HOBJ :                                MD041126
+     C                                    MQMD : MQPMO : P#MLEN :                           MD041126
+     C                                    %ADDR(W#RMSG) : P#CCODE :                         MD041126
+     C                                    P#REASON )                                        MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQPUT         P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#ROBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQPMO                                      MD057748
-     C                   PARM      W#MLEN        P#MLEN            9 0                      MD057748
-     C                   PARM                    W#RMSG                                     MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQPUT failed
      C     P#CCODE       IFNE      CCOK
      C**********         MOVEL     MQPUT         DBKEY                                      MD041126
-     C**********         MOVEL     'MQPUT'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQPUT         DBKEY                                      MD057748
+     C                   MOVEL     'MQPUT'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     31            DBASE
      C                   MOVE      *ON           *IN30
@@ -3440,34 +3355,23 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     W#ROBJH       P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     W#MLEN        P#MLEN                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     W#ROBJH       P#HOBJ                                     MD041126
+     C                   Z-ADD     W#MLEN        P#MLEN                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQPUT( P#HCONN : P#HOBJ :                       MD041126 MD057748
-     C**********                          MQMD : MQPMO : P#MLEN :                  MD041126 MD057748
-     C**********                          %ADDR(W#RMSG) : P#CCODE :                MD041126 MD057748
-     C**********                          P#REASON )                               MD041126 MD057748
+     C                   CALLP     MQPUT( P#HCONN : P#HOBJ :                                MD041126
+     C                                    MQMD : MQPMO : P#MLEN :                           MD041126
+     C                                    %ADDR(W#RMSG) : P#CCODE :                         MD041126
+     C                                    P#REASON )                                        MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQPUT         P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM      W#ROBJH       P#HOBJ            9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQPMO                                      MD057748
-     C                   PARM      W#MLEN        P#MLEN            9 0                      MD057748
-     C                   PARM                    W#RMSG                                     MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQPUT failed
      C     P#CCODE       IFNE      CCOK
      C**********         MOVEL     MQPUT         DBKEY                                      MD041126
-     C**********         MOVEL     'MQPUT'       DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQPUT         DBKEY                                      MD057748
+     C                   MOVEL     'MQPUT'       DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     25            DBASE
      C                   MOVE      *ON           *IN30
@@ -3689,28 +3593,21 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         EVAL      P#QMNAME = *BLANKS                              MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   EVAL      P#QMNAME = *BLANKS                                       MD041126
+     C                   Z-ADD     *ZERO         P#HCONN                                    MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQCONN( P#QMNAME : P#HCONN :                    MD041126 MD057748
-     C**********                           P#CCODE : P#REASON )                    MD041126 MD057748
+     C                   CALLP     MQCONN( P#QMNAME : P#HCONN :                             MD041126
+     C                                     P#CCODE : P#REASON )                             MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#HCONN       W#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQCONN        P#CID             9 0                      MD057748
-     C                   PARM      *BLANKS       P#QMNAME         48                        MD057748
-     C     W#HCONN       PARM      *ZERO         P#HCONN           9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#HCONN       W#HCONN                                    MD041126
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQConnect failed
      C     P#CCODE       IFEQ      CCFAIL
      C**********         MOVEL     MQCONN        DBKEY                                      MD041126
-     C**********         MOVEL     'MQCONN'      DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQCONN        DBKEY                                      MD057748
+     C                   MOVEL     'MQCONN'      DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     28            DBASE
      C                   MOVE      *ON           *IN30
@@ -3738,32 +3635,23 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     OOINPX        P#OPTS                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     OOINPX        P#OPTS                                     MD041126
+     C                   Z-ADD     *ZERO         P#HOBJ                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQOPEN( P#HCONN : MQOD :                        MD041126 MD057748
-     C**********                           P#OPTS  : P#HOBJ :                      MD041126 MD057748
-     C**********                           P#CCODE : P#REASON )                    MD041126 MD057748
+     C                   CALLP     MQOPEN( P#HCONN : MQOD :                                 MD041126
+     C                                     P#OPTS  : P#HOBJ :                               MD041126
+     C                                     P#CCODE : P#REASON )                             MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM      MQOPEN        P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM                    MQOD                                       MD057748
-     C                   PARM      OOINPX        P#OPTS            9 0                      MD057748
-     C                   PARM      *ZERO         P#HOBJ            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQOPEN failed
       *
      C     P#RSCOD       IFNE      RCNONE
      C**********         MOVEL     MQOPEN        DBKEY                                      MD041126
-     C**********         MOVEL     'MQOPEN'      DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQOPEN        DBKEY                                      MD057748
+     C                   MOVEL     'MQOPEN'      DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     29            DBASE
      C                   MOVE      *ON           *IN30
@@ -3791,33 +3679,23 @@
      C**********         PARM      *ZERO         P#CCODE           9 0                      MD041126
      C**********         PARM      *ZERO         P#RSCOD           9 0                      MD041126
                                                                                             MD041126
-     C**********         Z-ADD     W#HCONN       P#HCONN                           MD041126 MD057748
-     C**********         Z-ADD     OOOUT         P#OPTS                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#HOBJ                            MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#CCODE                           MD041126 MD057748
-     C**********         Z-ADD     *ZERO         P#REASON                          MD041126 MD057748
+     C                   Z-ADD     W#HCONN       P#HCONN                                    MD041126
+     C                   Z-ADD     OOOUT         P#OPTS                                     MD041126
+     C                   Z-ADD     *ZERO         P#HOBJ                                     MD041126
+     C                   Z-ADD     *ZERO         P#CCODE                                    MD041126
+     C                   Z-ADD     *ZERO         P#REASON                                   MD041126
                                                                                             MD041126
-     C**********         CALLP     MQOPEN( P#HCONN : MQOD :                        MD041126 MD057748
-     C**********                           P#OPTS  : P#HOBJ :                      MD041126 MD057748
-     C**********                           P#CCODE : P#REASON )                    MD041126 MD057748
+     C                   CALLP     MQOPEN( P#HCONN : MQOD :                                 MD041126
+     C                                     P#OPTS  : P#HOBJ :                               MD041126
+     C                                     P#CCODE : P#REASON )                             MD041126
                                                                                             MD041126
-     C**********         Z-ADD     P#REASON      P#RSCOD                           MD041126 MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-                                                                                            MD057748
-     C                   PARM      MQOPEN        P#CID             9 0                      MD057748
-     C                   PARM      W#HCONN       P#HCONN           9 0                      MD057748
-     C                   PARM                    MQOD                                       MD057748
-     C                   PARM      OOOUT         P#OPTS            9 0                      MD057748
-     C                   PARM      *ZERO         P#HOBJ            9 0                      MD057748
-     C                   PARM      *ZERO         P#CCODE           9 0                      MD057748
-     C                   PARM      *ZERO         P#RSCOD           9 0                      MD057748
+     C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
       **  MQOPEN failed
       *
      C     P#RSCOD       IFNE      RCNONE
      C**********         MOVEL     MQOPEN        DBKEY                                      MD041126
-     C**********         MOVEL     'MQOPEN'      DBKEY                             MD041126 MD057748
-     C                   MOVEL     MQOPEN        DBKEY                                      MD057748
+     C                   MOVEL     'MQOPEN'      DBKEY                                      MD041126
      C                   MOVEL     'QMQM'        DBFILE
      C                   Z-ADD     30            DBASE
      C                   MOVE      *ON           *IN30

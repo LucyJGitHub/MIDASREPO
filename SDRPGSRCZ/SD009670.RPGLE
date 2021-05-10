@@ -2,8 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                     MD041126
-/*S*D ***RPGBASEMOD****************************************************            MD041126 MD057748
-/*STD *  RPGBASEBND                                                   *                     MD057748
+/*STD *  RPGBASEMOD                                                   *                     MD041126
 /*EXI *  TEXT('Midas SD Validate MQ queue name')
       *****************************************************************
       *                                                               *
@@ -13,14 +12,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD057748           Date 16Mar21               *
-      *  Prev Amend No. MD041126           Date 05Oct20               *
+      *  Last Amend No. MD056616A          Date 07May21               *
+      *  Prev Amend No. MD057748           Date 16Mar21               *
+      *                 MD041126           Date 05Oct20               *
       *                 MD046248           Date 27Oct17               *
       *                 BUG27831B          Date 09Aug10               *
       *                 BUG27831A *CREATE  Date 03Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056616A - WSMQ 9.0 readiness.                              *
+      *            - Re-instate MD041126/MD056616 changes.            *
+      *            - Remove MD057748 changes.                         *
       *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD056616.                             *
@@ -84,14 +87,12 @@
       **  Declare MQI structures needed
       * MQI Constants
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQG                                                 MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQR                                                             MD057748
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
 
       ** Object Descriptor
      D MQOD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQODG                                               MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQODR                                                           MD057748
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
 
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
@@ -126,18 +127,12 @@
      D***P@Opts*         S              9P 0                                                MD041126
      D***P@Code*         S              9P 0                                                MD041126
      D***P@Resn*         S              9P 0                                                MD041126
-     D*P@Conn***       S             10I 0                                         MD041126 MD057748
-     D*P@In*****       S             10I 0                                         MD041126 MD057748
-     D*P@Opts***       S             10I 0                                         MD041126 MD057748
-     D*P@Code***       S             10I 0                                         MD041126 MD057748
-     D*P@Resn***       S             10I 0                                         MD041126 MD057748
+     D P@Conn          S             10I 0                                                  MD041126
+     D P@In            S             10I 0                                                  MD041126
+     D P@Opts          S             10I 0                                                  MD041126
+     D P@Code          S             10I 0                                                  MD041126
+     D P@Resn          S             10I 0                                                  MD041126
      D P@MQMgr         S             48A                                                   BUG27831B
-     D P@CID           S              9P 0                                                  MD057748
-     D P@Conn          S              9P 0                                                  MD057748
-     D P@In            S              9P 0                                                  MD057748
-     D P@Opts          S              9P 0                                                  MD057748
-     D P@Code          S              9P 0                                                  MD057748
-     D P@Resn          S              9P 0                                                  MD057748
 
      D P@OP01          S             20                                                    BUG27831B
      D P@VL01          S            200                                                    BUG27831B
@@ -214,15 +209,8 @@
      C**********         PARM                    P@CODE                           BUG27831B MD041126
      C**********         PARM                    P@RESN                           BUG27831B MD041126
                                                                                             MD041126
-     C**********         CALLP     MQCONN( P@MQMgr : P@CONN :                      MD041126 MD057748
-     C**********                           P@CODE : P@RESN )                       MD041126 MD057748
-     C                   EVAL      P@CID = MQCONN                                           MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    P@CID                                      MD057748
-     C                   PARM                    P@MQMgr                                    MD057748
-     C                   PARM                    P@CONN                                     MD057748
-     C                   PARM                    P@CODE                                     MD057748
-     C                   PARM                    P@RESN                                     MD057748
+     C                   CALLP     MQCONN( P@MQMgr : P@CONN :                               MD041126
+     C                                     P@CODE : P@RESN )                                MD041126
                                                                                            BUG27831B
      C                   IF        P@CODE =  CCFAIL                                        BUG27831B
      C                   EVAL      GenError = 'Y'                                          BUG27831B
@@ -251,18 +239,8 @@
      C**********         PARM                    P@Code                                     MD041126
      C**********         PARM                    P@Resn                                     MD041126
                                                                                             MD041126
-     C**********         CALLP     MQOPEN( P@Conn : MQOD : P@Opts :                MD041126 MD057748
-     C**********                           P@In : P@Code : P@Resn )                MD041126 MD057748
-     C                   EVAL      P@CID = MQOPEN                                           MD057748
-                                                                                            MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    P@CID                                      MD057748
-     C                   PARM                    P@Conn                                     MD057748
-     C                   PARM                    MQOD                                       MD057748
-     C                   PARM                    P@Opts                                     MD057748
-     C                   PARM                    P@In                                       MD057748
-     C                   PARM                    P@Code                                     MD057748
-     C                   PARM                    P@Resn                                     MD057748
+     C                   CALLP     MQOPEN( P@Conn : MQOD : P@Opts :                         MD041126
+     C                                     P@In : P@Code : P@Resn )                         MD041126
 
       ** If open queue failed, indicate abnormal end
 
@@ -298,17 +276,8 @@
      C**********         PARM                    P@Code                                     MD041126
      C**********         PARM                    P@Resn                                     MD041126
                                                                                             MD041126
-     C**********         CALLP     MQCLOSE( P@Conn : P@In : P@Opts :               MD041126 MD057748
-     C**********                            P@Code : P@Resn )                      MD041126 MD057748
-     C                   EVAL      P@CID = MQCLOS                                           MD057748
-                                                                                            MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    P@CID                                      MD057748
-     C                   PARM                    P@Conn                                     MD057748
-     C                   PARM                    P@In                                       MD057748
-     C                   PARM                    P@Opts                                     MD057748
-     C                   PARM                    P@Code                                     MD057748
-     C                   PARM                    P@Resn                                     MD057748
+     C                   CALLP     MQCLOSE( P@Conn : P@In : P@Opts :                        MD041126
+     C                                      P@Code : P@Resn )                               MD041126
 
       ** If close queue failed, indicate abnormal end
 

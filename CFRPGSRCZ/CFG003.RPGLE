@@ -2,8 +2,7 @@
      H COPYRIGHT('(c) Finastra International Ltd. 2018')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                     MD041126
-/*S*D ***RPGBASEMOD****************************************************            MD041126 MD057748
-/*STD *  RPGBASEBND                                                   *                     MD057748
+/*STD *  RPGBASEMOD                                                   *                     MD041126
 /*EXI *  TEXT('Midas CF Receive Confirmation from MMM via queue')     *
       *****************************************************************
       *                                                               *
@@ -20,12 +19,16 @@
       *                                                               *
       *  (c) Finastra International Ltd. 2018                         *
       *                                                               *
-      *  Last Amend No. MD057748           Date 16Mar21               *
-      *  Prev Amend No. MD041126           Date 05Oct20               *
+      *  Last Amend No. MD056616A          Date 07May21               *
+      *  Prev Amend No. MD057748           Date 16Mar21               *
+      *                 MD041126           Date 05Oct20               *
       *                 CSW051  *CREATE    Date 15Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056616A - WSMQ 9.0 readiness.                              *
+      *            - Re-instate MD041126/MD056616 changes.            *
+      *            - Remove MD057748 changes.                         *
       *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD056616.                             *
@@ -88,8 +91,7 @@
       ** +--------------------------------------+
       * MQI Constants
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQG                                                 MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQR                                                             MD057748
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -98,20 +100,17 @@
       ** Object Descriptor
      D MQOD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQODG                                               MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQODR                                                           MD057748
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
 
       ** Message Descriptor
      D MQMD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQMDG                                               MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQMDR                                                           MD057748
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
 
       ** Get message options
      D MQGMO           DS
      D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
-     D***/COPY*QMQM/QRPGLESRC,CMQGMOG                                              MD041126 MD057748
-     D/COPY QMQM/QRPGLESRC,CMQGMOR                                                          MD057748
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -133,15 +132,15 @@
      D w@msgbuf        S              1    DIM(12000)
       ** message buffer array
                                                                                             MD041126
-      ***MQ*Parameters*************************************************            MD041126 MD057748
-     D*HCONN****       S             10I 0                                         MD041126 MD057748
-     D*OCODE****       S             10I 0                                         MD041126 MD057748
-     D*REASON***       S             10I 0                                         MD041126 MD057748
-     D*OPTS*****       S             10I 0                                         MD041126 MD057748
-     D*HIN******       S             10I 0                                         MD041126 MD057748
-     D*CCODE****       S             10I 0                                         MD041126 MD057748
-     D*P@MsgLen*       S             10I 0                                         MD041126 MD057748
-     D*MESLEN***       S             10I 0                                         MD041126 MD057748
+      ** MQ Parameters                                                                      MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D P@MsgLen        S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
       *
       *****************************************************************
       /EJECT
@@ -379,16 +378,9 @@
      C**********         PARM                    OCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C**********         CALLP     MQCONN( MCMQMN : HCONN :                        MD041126 MD057748
-     C**********                           OCODE  : REASON )                       MD041126 MD057748
+     C                   CALLP     MQCONN( MCMQMN : HCONN :                                 MD041126
+     C                                     OCODE  : REASON )                                MD041126
 
-     C                   Z-ADD     MQCONN        CID                                        MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    CID               9 0                      MD057748
-     C                   PARM                    MCMQMN                                     MD057748
-     C                   PARM                    HCONN             9 0                      MD057748
-     C                   PARM                    OCODE             9 0                      MD057748
-     C                   PARM                    REASON            9 0                      MD057748
       ** If connect failed, indicate abnormal end
 
      C     REASON        IFNE      RCNONE
@@ -414,17 +406,8 @@
      C**********         PARM                    OCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C**********         CALLP     MQOPEN( HCONN : MQOD : OPTS :                   MD041126 MD057748
-     C**********                           HIN : OCODE : REASON )                  MD041126 MD057748
-     C                   Z-ADD     MQOPEN        CID                                        MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    CID               9 0                      MD057748
-     C                   PARM                    HCONN             9 0                      MD057748
-     C                   PARM                    MQOD                                       MD057748
-     C                   PARM                    OPTS              9 0                      MD057748
-     C                   PARM                    HIN               9 0                      MD057748
-     C                   PARM                    OCODE             9 0                      MD057748
-     C                   PARM                    REASON            9 0                      MD057748
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
 
       ** If open queue failed, indicate abnormal end
 
@@ -461,16 +444,8 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C**********         CALLP     MQCLOSE( HCONN : HIN : OPTS :                   MD041126 MD057748
-     C**********                            CCODE : REASON )                       MD041126 MD057748
-     C                   Z-ADD     MQCLOS        CID                                        MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    CID               9 0                      MD057748
-     C                   PARM                    HCONN             9 0                      MD057748
-     C                   PARM                    HIN               9 0                      MD057748
-     C                   PARM                    OPTS              9 0                      MD057748
-     C                   PARM                    CCODE             9 0                      MD057748
-     C                   PARM                    REASON            9 0                      MD057748
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
 
       ** If close queue failed, indicate abnormal end
 
@@ -487,13 +462,7 @@
      C**********         PARM                    OCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C**********         CALLP     MQDISC( HCONN : OCODE : REASON )                MD041126 MD057748
-     C                   Z-ADD     MQDISC        CID                                        MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    CID               9 0                      MD057748
-     C                   PARM                    HCONN             9 0                      MD057748
-     C                   PARM                    OCODE             9 0                      MD057748
-     C                   PARM                    REASON            9 0                      MD057748
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
 
       ** If close queue failed, indicate abnormal end
 
@@ -565,22 +534,10 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
       *                                                                                     MD041126
-     C**********         Z-ADD     12000         P@MsgLen                          MD041126 MD057748
-     C**********         CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :             MD041126 MD057748
-     C**********                          P@MsgLen : %ADDR(Q@MsgBuf) :             MD041126 MD057748
-     C**********                          MESLEN : CCODE : REASON )                MD041126 MD057748
-     C                   Z-ADD     MQGET         CID                                        MD057748
-     C                   CALL      'QMQM'                                                   MD057748
-     C                   PARM                    CID               9 0                      MD057748
-     C                   PARM                    HCONN             9 0                      MD057748
-     C                   PARM                    HIN               9 0                      MD057748
-     C                   PARM                    MQMD                                       MD057748
-     C                   PARM                    MQGMO                                      MD057748
-     C                   PARM      12000         p@msglen          9 0                      MD057748
-     C                   PARM                    q@msgbuf                                   MD057748
-     C                   PARM                    MESLEN            9 0                      MD057748
-     C                   PARM                    CCODE             9 0                      MD057748
-     C                   PARM                    REASON            9 0                      MD057748
+     C                   Z-ADD     12000         P@MsgLen                                   MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    P@MsgLen : %ADDR(Q@MsgBuf) :                      MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
 
      C     REASON        ifne      RCNONE
      C     REASON        andne     RC2033

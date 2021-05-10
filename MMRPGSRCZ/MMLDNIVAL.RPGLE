@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. LUC104             Date 14Apr16               *      
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD047719           Date 24Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -156,6 +157,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC104 - KondorPlus Details on Deals                         *
+      *           Use hooks: MMLDNIV001, MMLDNIV092                   *      
       *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *

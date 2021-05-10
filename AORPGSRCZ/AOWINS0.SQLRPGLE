@@ -11,8 +11,9 @@
      F*                                                                  *
      F*  (c) Finastra International Limited 2001                         *
      F*                                                                  *
-      *  Last Amend No. MD056890           Date 11Oct20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD057705           Date 21Jan21               *
+      *  Prev Amend No. MD056890           Date 11Oct20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *
+      *      MD057705 - Deliverable Data Split for SDOREFPD              *
       *      MD056890 - Deliverable Data Split for SDMREFPD              *
       *      MD055681 - Deliverable Data Split for SAR                   *
       *      MD046248 - Finastra Rebranding                              *
@@ -48,7 +50,7 @@
      F*SDMREFJ0* IF   E           K DISK                                                    MD056890
       * IN  - @DLREGT Mandatory Window
       ************************************************************
-     FSDOREFL1  IF   E           K DISK    USROPN
+     F*SDOREFL1* IF   E           K DISK    USROPN                                          MD057705
       * IN  - @DNREGZ Optional Window
       ************************************************************
       /EJECT
@@ -70,6 +72,7 @@
      D                                     DIM(1) CTDATA PERRCD(1)              Copyright     arr
      D SDMREF        E DS                  EXTNAME(SDMRFJW1)                                MD056890
      D NullInds        s              5i 0 dim(17)                                          MD056890
+     D SDOREF        E DS                  EXTNAME(SDOREJW0)                                MD057705
       ************************************************************
       /EJECT
      C*CSTART
@@ -106,20 +109,34 @@
      C**Open*File*SDOREFL1*if*a*record*was*not*found*in*SDMREFL1**********                    CPK018
      C* Open File SDOREFL1 if a record was not found in SDMREFJ0                              CPK018
      C*
-     C                   OPEN      SDOREFL1                             91        Open  file
-     C     *IN91         CABEQ     '1'           T@SKIP                           Open  error
+     C***********        OPEN      SDOREFL1                             91        Open  fileMD057705
+     C******IN91         CABEQ     '1'           T@SKIP                           Open  erroMD057705
      C*
      C* Chain to SDOREFL1 for a window record
      C*
      C***********P@PGM*****CHAIN@DNREGZ              9590    Get record   BHF270
-     C     P@PGM         CHAIN     @DMREGW                            9590        Get record   BHF27
+     C*****P@PGM         CHAIN     @DMREGW                            9590        Get BHF27 MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ SELECT *                                                                            MD057705
+     C+ into :SDOREF                                                                        MD057705
+     C+ from SDOREJW0                                                                       MD057705
+     C+ where DMNMCP = :P@PGM                                                               MD057705
+     C/END-EXEC                                                                             MD057705
+     C                   Setoff                                       9095                  MD057705
+     C                   If        SQLCODE = 100                                            MD057705
+     C                   SETON                                        95                    MD057705
+     C                   ENDIF                                                              MD057705
+     C                   If        SQLCODE <> 100 and SQLCODE <> 0                          MD057705
+     C                   SETON                                        90                    MD057705
+     C                   ENDIF                                                              MD057705
+                                                                                            MD057705
      C     *IN90         CABEQ     '1'           T@SKIP                           File error
      C     *IN95         CABEQ     '1'           T@SKIP                           No record found
      C*
      C* Close File SDOREFL1
      C*
-     C                   CLOSE     SDOREFL1                             92        Close file
-     C     *IN92         CABEQ     '1'           T@SKIP                           Close error
+     C**********         CLOSE     SDOREFL1                             92        Close fileMD057705
+     C******IN92         CABEQ     '1'           T@SKIP                           Close erroMD057705
      C*
      C                   END
       *
@@ -129,8 +146,8 @@
       *          ~~~~~~~~~~~~~
      C                   MOVE      *BLANK        P@RTCD                         No Errors
      C   90              MOVE      '*ERROR '     P@RTCD                         File error
-     C   91              MOVE      '*OPEN  '     P@RTCD                         Open error
-     C   92              MOVE      '*CLOSE '     P@RTCD                         Close error
+     C***91*****         MOVE      '*OPEN  '     P@RTCD                         Open error  MD057705
+     C***92*****         MOVE      '*CLOSE '     P@RTCD                         Close error MD057705
      C   95              MOVE      '*NRF   '     P@RTCD                         No record found
       *
       * Return to caller :

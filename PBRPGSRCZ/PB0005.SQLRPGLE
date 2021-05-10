@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056890           Date 11Oct20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD057705           Date 21Jan21               *
+      *  Prev Amend No. MD056890           Date 11Oct20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -37,7 +39,7 @@
      FSDMMODPD  IF   E             DISK
      F*SDMREFL1IF*E*******    K        DISK                                                   CPK018
      F*SDMREFJ0* IF   E           K DISK                                                    MD056890
-     FSDOREFL1  IF   E           K DISK
+     F*SDOREFL1* IF   E           K DISK                                                    MD057705
      D MSG             S             40    DIM(1) CTDATA PERRCD(1)
      D*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
      D CPYR@#          DS
@@ -46,6 +48,7 @@
      D  CPY@##                 1     20
      D SDMREF        E DS                  EXTNAME(SDMRFJW1)                                MD056890
      D NullInds        s              5i 0 dim(17)                                          MD056890
+     D SDOREF        E DS                  EXTNAME(SDOREJW0)                                MD057705
      C*
      C*  ENTRY PARAMETERS ARE PROGRAM NAMES
      C*
@@ -93,7 +96,18 @@
      C                   seton                                        92                    MD056890
      C                   Endif                                                              MD056890
                                                                                             MD056890
-     C     WPGM3         CHAIN     SDOREFL1                           93
+     C*****WPGM3         CHAIN     SDOREFL1                           93                    MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ SELECT *                                                                            MD057705
+     C+ into :SDOREF                                                                        MD057705
+     C+ from SDOREJW0                                                                       MD057705
+     C+ where DMNMCP = :WPGM3                                                               MD057705
+     C/END-EXEC                                                                             MD057705
+     C                   setoff                                       93                    MD057705
+     C                   If        SQLCODE = 100                                            MD057705
+     C                   seton                                        93                    MD057705
+     C                   Endif                                                              MD057705
+                                                                                            MD057705
      C     *IN92         IFEQ      '1'
      C     *IN93         ANDEQ     '1'
      C                   CALL      PGM1                                 90

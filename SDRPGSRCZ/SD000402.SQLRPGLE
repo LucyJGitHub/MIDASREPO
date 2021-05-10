@@ -15,14 +15,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053487           Date 28May19               *
-      *  Prev Amend No. MD053314           Date 30Apr19               *
+      *  Last Amend No. MD056613           Date 20Sep20               *
+      *  Prev Amend No. MD056633           Date 07Sep20               *
+      *                 MD053487           Date 28May19               *
+      *                 MD053314           Date 30Apr19               *
       *                 MD053140           Date 03Apr19               *
       *                 MD053114           Date 28Mar19               *
       *                 CSD101 *CREATE     Date 07Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056613 - Deliverable Data Split for CSD101                 *
+      *  MD056633 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD053487 - Audit Report should be available for Interface    *
       *             Password Maintenance                              *
       *  MD053314 - Ensure user cannot be deleted when attached to    *
@@ -68,7 +72,7 @@
 
       ** Validation list entries maintenance display file.
      FSD000402DFCF   E             WORKSTN SFILE(SD000402S0:RRN0)
-     FSDINPVL0  IF   E           K DISK    INFSR(*pssr)                                     MD053314
+     F*SDINPVL0* IF   E           K DISK    INFSR(*pssr)                           MD053314 MD056613
       *
       /EJECT
       *****************************************************************
@@ -133,7 +137,9 @@
      D True            C                   *ON
      D False           C                   *OFF
       *
-     D FileFormat    E DS                  EXTNAME(SDFACXTD)
+     D*FileFormat    E DS                  EXTNAME(SDFACXTD)                                MD056633
+     D FileFormat    E DS                  EXTNAME(SDFUCJW0)                                MD056633
+     D SDINPV        E DS                  EXTNAME(SDINPJW0)                                MD056613
       *
      D SflChanged      S              1N
      D UpdateOptn      S              1N
@@ -335,7 +341,8 @@
      C                   EVAL      wSqlStr1 = *BLANKS
      C                   ENDIF
      C
-     C                   EVAL      wSqlStr = 'select * from SDFACXTD ' +
+     C**********         EVAL      wSqlStr = 'select * from SDFACXTD ' +                    MD056633
+     C                   EVAL      wSqlStr = 'select * from SDFUCJW0 ' +                    MD056633
      C                                'where ININTF =' + quote + %trim(PID) +
      C                               quote + %trim(wSqlStr1) +
      C                                ' order by ININTF, INUSER'
@@ -568,8 +575,14 @@
      C                   WHEN      D0OPTN = ACT_Delete
       *                                                                                     MD053314
       ** Access validation program for the user's interface.                                MD053314
-     C     PID           CHAIN     SDINPVL0                           50                    MD053314
-     C                   IF        *IN50 = *off                                             MD053314
+     C*****PID**         CHAIN     SDINPVL0                           50           MD053314 MD056613
+     C/exec SQL                                                                             MD056613
+     C+ select * into :SDINPV                                                               MD056613
+     C+ from SDINPJW0                                                                       MD056613
+     C+ where IPINTF = :PID                                                                 MD056613
+     C/end-exec                                                                             MD056613
+     C**********         IF        *IN50 = *off                                    MD053314 MD056613
+     C                   IF        SQLCODE = 0                                              MD056613
      C                   CALL      IPPGMV                                                   MD053314
      C                   PARM                    PID                                        MD053314
      C                   PARM                    D0USID                                     MD053314
@@ -810,7 +823,8 @@
       ** Get record count of SDFACXTD
      C/exec SQL
      C+ select count(*) into :Count
-     C+ from SDFACXTD
+     C**from*SDFACXTD                                                                       MD056633
+     C+ from SDFUCJW0                                                                       MD056633
      C+ where
      C+   ININTF = :PID
      C/end-exec
@@ -840,7 +854,8 @@
       ** description if changed. If so, then update its description.
      C/exec SQL
      C+ select count(*) into :CountD
-     C+ from SDFACXTD
+     C**from*SDFACXTD                                                                       MD056633
+     C+ from SDFUCJW0                                                                       MD056633
      C+ where
      C+   INUNIQ = :D0UNIQ
      C/end-exec
@@ -858,7 +873,8 @@
       *
       ** Update description if user cancel the deletion.
      C/exec SQL
-     C+ update SDFACXTD set
+     C**update*SDFACXTD set                                                                 MD056633
+     C+ update SDFUCXTD set                                                                 MD056633
      C+   INUSRD = :D0DESC,                                                                 MD053487
      C+   INTMST = :PTimeStamp,                                                             MD053487
      C+   INTYLC = :PChangeType,                                                            MD053487
@@ -941,7 +957,8 @@
      C                   CALL      'SFC000026'                                              MD053487
      C                   PARM      *BLANKS       PLUSER                                     MD053487
      C/exec SQL
-     C+ update SDFACXTD set
+     C**update*SDFACXTD set                                                                 MD056633
+     C+ update SDFUCXTD set                                                                 MD056633
      C+   INUSRD = :D0DESC,                                                                 MD053487
      C+   INTMST = :PTimeStamp,                                                             MD053487
      C+   INTYLC = :PChangeType,                                                            MD053487
@@ -1028,7 +1045,8 @@
       ** Check user if existing.
      C/exec SQL
      C+ select count(*) into :CountI
-     C+ from SDFACXTD
+     C**from*SDFACXTD                                                                       MD056633
+     C+ from SDFUCXTD                                                                       MD056633
      C+ where
      C+   INUSER = :D1USID and ININTF = :PID
      C/end-exec

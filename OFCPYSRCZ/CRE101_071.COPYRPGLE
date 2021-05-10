@@ -1,0 +1,114 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member for GL3572                              *
+      *                                                               *
+      *  CRE101_071 - Midas GL Accounts Master Details Report         *
+      *                                                               *
+      *  Last Amend No. MD056557           Date 31Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE101  *CREATE    Date 03Sep14               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD056557 - Deliverable Data Split for Pulldown               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE101 - Interim Interest Statement on a Frequency           *
+      *                                                               *
+      *****************************************************************
+     C     CRE101        IFEQ      'Y'
+      *
+     C     KACCNT        CHAIN     GLACMI10                           99
+     C     *IN99         IFEQ      *OFF
+     C                   Z-ADD     MINISD        ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        MDNISD
+     C     MIISFM        IFEQ      0
+     C                   MOVE      *BLANKS       MDISFM
+     C                   ELSE
+     C                   MOVE      MIISFM        MDISFM
+     C                   ENDIF
+      * Indicator
+     C                   Z-ADD     660           WHIND
+     C                   MOVE      *BLANKS       MISTMT
+     C                   MOVEL     *BLANKS       GLVDTA           20                        MD056557
+     C                   MOVEL     *BLANKS       GLDESC          100                        MD056557
+     C*****KDROP         SETLL     SDPDWNL0                                                 MD056557
+     C*****KDROP         READE     SDPDWNL0                               99                MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ declare ACursor insensitive scroll cursor for                                       MD056557
+     C+ select GLVDTA, GLDESC from SDPWNJW0                                                 MD056557
+     C+ where GLHIND = :WHIND                                                               MD056557
+     C+ order by GLHIND, GLDIND                                                             MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ open ACursor                                                                        MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ fetch next from ACursor into :GLVDTA, :GLDESC                                       MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C                   DOW       SQLCODE = 0                                              MD056557
+     C******IN99         DOWEQ     *OFF                                                     MD056557
+     C     GLVDTA        IFEQ      MISTMI
+     C                   MOVEL     GLDESC        MISTMT
+     C                   LEAVE
+     C                   ENDIF
+     C*****KDROP         READE     SDPDWNL0                               99                MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ fetch next from ACursor into :GLVDTA, :GLDESC                                       MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C                   ENDDO
+      * Narrative
+     C                   Z-ADD     93            WHIND
+     C                   MOVE      *BLANKS       MIISFT
+     C*****KDROP         SETLL     SDPDWNL0                                                 MD056557
+     C*****KDROP         READE     SDPDWNL0                               99                MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ declare BCursor insensitive scroll cursor for                                       MD056557
+     C+ select GLVDTA, GLDESC from SDPWNJW0                                                 MD056557
+     C+ where GLHIND = :WHIND                                                               MD056557
+     C+ order by GLHIND, GLDIND                                                             MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ open BCursor                                                                        MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ fetch next from BCursor into :GLVDTA, :GLDESC                                       MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C                   DOW       SQLCODE = 0                                              MD056557
+     C******IN99         DOWEQ     *OFF                                                     MD056557
+     C     GLVDTA        IFEQ      MIISFF
+     C                   MOVEL     GLDESC        MIISFT
+     C                   LEAVE
+     C                   ENDIF
+     C*****KDROP         READE     SDPDWNL0                               99
+     C/EXEC SQL                                                                             MD056557
+     C+ fetch next from BCursor into :GLVDTA, :GLDESC                                       MD056557
+     C/END-EXEC                                                                             MD056557
+                                                                                            MD056557
+     C                   ENDDO
+     C                   ELSE
+     C                   MOVE      *BLANKS       MISTMI
+     C                   MOVE      *BLANKS       MISTMT
+     C                   MOVE      *BLANKS       MDNISD
+     C                   MOVE      *BLANKS       MIISFF
+     C                   MOVE      *BLANKS       MIISFT
+     C                   MOVE      *BLANKS       MDISFM
+     C                   ENDIF
+      *
+     C/EXEC SQL                                                                             MD056557
+     C+ close ACursor                                                                       MD056557
+     C/END-EXEC                                                                             MD056557
+     C/EXEC SQL                                                                             MD056557
+     C+ close BCursor                                                                       MD056557
+     C/END-EXEC                                                                             MD056557
+     C                   ENDIF
+      *****************************************************************
+      * End of /COPY CRE101_071                                       *
+      *****************************************************************

@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD056888           Date 20Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -152,6 +153,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056888 - Deliverable Data Split for SDCODEPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
@@ -358,7 +360,7 @@
       *
      FPMPORTLL  IF   E             DISK    INFSR(*PSSR)
       *
-     FSDCODEL1  IF   E             DISK    INFSR(*PSSR)
+     F*SDCODEL1* IF   E             DISK    INFSR(*PSSR)                                    MD056888
       *
      FSDPRFML1  IF   E             DISK    INFSR(*PSSR)
       *
@@ -708,6 +710,7 @@
      D NullInds        s              5i 0 dim(21)                                          MD054605
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D  XLCD         E                     EXTFLD(LCD)                                      MD055681
+     D SDCODE        E DS                  EXTNAME(SDCODJW0)                                MD056888
       **  Message Format
      D W#MFMT          S                   LIKE(P#MFMT)
       *
@@ -870,6 +873,9 @@
      C/EXEC SQL                                                                             MD054605
      C+ close ACursor                                                                       MD054605
      C/END-EXEC                                                                             MD054605
+     C/EXEC SQL                                                                             MD056888
+     C+ close SCursor                                                                       MD056888
+     C/END-EXEC                                                                             MD056888
       *
       * Put Midas Module message
      C                   MOVE      'MMOD'        X1MSGT
@@ -3661,7 +3667,29 @@
       * Access Swift Codewords
      C     X1MSGT        WHENEQ    'CODE'
       *
-     C                   READ      SDCODEL1                             8687
+     C**********         READ      SDCODEL1                             8687                MD056888
+     C/EXEC SQL                                                                             MD056888
+     C+ declare SCursor insensitive scroll cursor for                                       MD056888
+     C+ select * from SDCODJW0                                                              MD056888
+     C+ order by FYSWCD, FYSEQ1, FYSEQ2, FYSEQ3                                             MD056888
+     C/END-EXEC                                                                             MD056888
+                                                                                            MD056888
+     C/EXEC SQL                                                                             MD056888
+     C+ open SCursor                                                                        MD056888
+     C/END-EXEC                                                                             MD056888
+                                                                                            MD056888
+     C/EXEC SQL                                                                             MD056888
+     C+ fetch next from SCursor into :SDCODE                                                MD056888
+     C/END-EXEC                                                                             MD056888
+     C                   SETOFF                                       8687                  MD056888
+     C                   If        SQLCODE = 100                                            MD056888
+     C                   SETON                                        87                    MD056888
+     C                   ELSE                                                               MD056888
+     C                   If        SQLCODE <> 0                                             MD056888
+     C                   SETON                                        86                    MD056888
+     C                   ENDIF                                                              MD056888
+     C                   ENDIF                                                              MD056888
+                                                                                            MD056888
      C     *IN87         IFEQ      *OFF
      C                   CLEAR                   WWRTCD
      C                   ENDIF
@@ -4313,7 +4341,19 @@
       * Access Swift Codewords
      C     X1MSGT        WHENEQ    'CODE'
       *
-     C                   READ      SDCODEL1                             8687
+     C**********         READ      SDCODEL1                             8687                MD056888
+     C/EXEC SQL                                                                             MD056888
+     C+ fetch next from SCursor into :SDCODE                                                MD056888
+     C/END-EXEC                                                                             MD056888
+     C                   SETOFF                                       8687                  MD056888
+     C                   If        SQLCODE = 100                                            MD056888
+     C                   SETON                                        87                    MD056888
+     C                   ELSE                                                               MD056888
+     C                   If        SQLCODE <> 0                                             MD056888
+     C                   SETON                                        86                    MD056888
+     C                   ENDIF                                                              MD056888
+     C                   ENDIF                                                              MD056888
+                                                                                            MD056888
      C     *IN87         IFEQ      *OFF
      C                   CLEAR                   WWRTCD
      C                   ENDIF

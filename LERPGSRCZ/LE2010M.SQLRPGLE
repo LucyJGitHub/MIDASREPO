@@ -28,8 +28,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD056890           Date 11Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD057705           Date 21Jan21               *
+      *  Prev Amend No. MD056890           Date 11Oct20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 262992             Date 01Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -127,6 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -285,7 +287,7 @@
      F*SDMREFL2* IF   E           K DISK    INFSR(*PSSR)                                    MD056890
       *
       **  Optional Windows by message type file
-     FSDOREFL2  IF   E           K DISK    INFSR(*PSSR)
+     F*SDOREFL2* IF   E           K DISK    INFSR(*PSSR)                                    MD057705
       *
       **  Lending Branch Messages work file
      FLEBRMSPD  IF A E             DISK    INFSR(*PSSR)
@@ -417,6 +419,7 @@
       * Program Status Data Structure
      D PGMDS         ESDS                  EXTNAME(Y2PGDSP)
      D SDMREF        E DS                  EXTNAME(SDMRFJW0)                                MD056890
+     D SDOREF        E DS                  EXTNAME(SDOREJW0)                                MD056890
       * MQI structures
       *
       * MQI named constants
@@ -3062,9 +3065,16 @@
      C                   ELSE
       *
       **  Access the Optional Window by message type
-     C     W#MSGT        CHAIN     SDOREFL2                           80
+     C*****W#MSGT        CHAIN     SDOREFL2                           80                    MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ SELECT *                                                                            MD057705
+     C+ into :SDOREF                                                                        MD057705
+     C+ from SDOREJW0                                                                       MD057705
+     C+ where DLMSGT = :W#MSGT                                                              MD057705
+     C/END-EXEC                                                                             MD057705
       *
-     C     *IN80         IFEQ      *OFF
+     C******IN80         IFEQ      *OFF                                                     MD057705
+     C     SQLCODE       IFEQ      0                                                        MD057705
       *
      C                   MOVE      DMWNCN        W#WNCN
      C                   MOVE      DMLGWD        W#LGWD

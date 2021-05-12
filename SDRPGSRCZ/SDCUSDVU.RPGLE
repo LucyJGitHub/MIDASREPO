@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053345           Date 01Jun20               *
-      *  Prev Amend No. MD057294           Date 03Dec20               *
+      *  Last Amend No. MD058090           Date 12May21               *
+      *  Prev Amend No. MD053345           Date 01Jun20               *
+      *                 MD057294           Date 03Dec20               *
       *                 MD050526           Date 27Oct20               *
       *                 AR970389B          Date 16Sep20               *
       *                 AR970389A          Date 16Sep20               *
@@ -159,6 +160,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058090 - Reinstate /COPY SDCUSDVU03 with correct starting  *
+      *             position (pos 7).                                 *
       *  MD053345 - Dead lock when amending customer through JMS CUSD *
       *             API.                                              *
       *  MD057294 - Missing Customer's Authority Holders Link after   *
@@ -7258,7 +7261,8 @@
      C                   eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
-       /COPY WNCPYSRC,SDCUSDVU03
+      */COPY*WNCPYSRC,SDCUSDVU03***************************************                     MD058090
+      /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082
       /COPY WNCPYSRC,SDCUSDVU05

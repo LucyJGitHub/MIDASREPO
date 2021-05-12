@@ -39,12 +39,12 @@
       *                                                               *
       *****************************************************************
 
-     FMXEXFDL2  IF   E           K DISK    INFSR(*PSSR)
+     F*MXEXFDL2* IF   E           K DISK    INFSR(*PSSR)                                    MD056612
       * Export Format Details
 
-     FMXEXFDL2X UF   E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(MXEXFDP0:MXEXFDUPD)
-     F                                     PREFIX(U_)
+     F*MXEXFDL2X UF   E           K DISK    INFSR(*PSSR)                                    MD056612
+     F**********                           RENAME(MXEXFDP0:MXEXFDUPD)                       MD056612
+     F**********                           PREFIX(U_)                                       MD056612
       * Export Format Details
 
      F*MXCOMDPD* IF   E           K DISK    INFSR(*PSSR)                                    MD056612
@@ -134,6 +134,9 @@
 
      D MXCOMD        E DS                  EXTNAME(MXCMDJW0)                                MD056612
      D U_MXCOMD      E DS                  EXTNAME(MXCMDJW0)                                MD056612
+     D                                     PREFIX(U_)                                       MD056612
+     D MXEXFD        E DS                  EXTNAME(MXEXDJW0)                                MD056612
+     D U_MXEXFD      E DS                  EXTNAME(MXEXDJW0)                                MD056612
      D                                     PREFIX(U_)                                       MD056612
 
      IMXMQDLP0      01
@@ -540,10 +543,22 @@
       * One is added to the transmission control total
       * after the first message has been written to the MQ/SERIES queue.
 
-     C     I#FMT         CHAIN     MXEXFDUPD                          99        *
-     C     *in99         IFEQ      '0'
+     C*****I#FMT         CHAIN     MXEXFDUPD                          99        *           MD056612
+     C/EXEC SQL                                                                             MD056612
+     C+ SELECT *                                                                            MD056612
+     C+ into :U_MXEXFD                                                                      MD056612
+     C+ from MXEXDJW0                                                                       MD056612
+     C+ where EXFMT  = :I#FMT                                                               MD056612
+     C/END-EXEC                                                                             MD056612
+     C******in99         IFEQ      '0'                                                      MD056612
+     C     SQLCODE       IFEQ      0                                                        MD056612
      C                   ADD       1             U_EXTCTL
-     C                   UPDATE    MXEXFDUPD
+     C**********         UPDATE    MXEXFDUPD                                                MD056612
+     C/exec SQL                                                                             MD056612
+     C+ update MXEXDXTD set                                                                 MD056612
+     C+   EXXCTL = :U_EXTCTL                                                                MD056612
+     C+ where EXFMT  = :I#FMT                                                               MD056612
+     C/end-exec                                                                             MD056612
      C                   ENDIF
 
      C                   ENDSR
@@ -583,8 +598,15 @@
       *********************************************************************
      C     ACS_FMT       BEGSR
 
-     C     I#FMT         CHAIN     MXEXFDP0                           99        *
-     C     *in99         IFEQ      '1'
+     C*****I#FMT         CHAIN     MXEXFDP0                           99        *           MD056612
+     C/EXEC SQL                                                                             MD056612
+     C+ SELECT *                                                                            MD056612
+     C+ into :MXEXFD                                                                        MD056612
+     C+ from MXEXDJW0                                                                       MD056612
+     C+ where EXFMT  = :I#FMT                                                               MD056612
+     C/END-EXEC                                                                             MD056612
+     C******in99         IFEQ      '1'                                                      MD056612
+     C     SQLCODE       IFEQ      100                                                      MD056612
      C                   EVAL      I#ERMS = 'MISSING FORMAT:'
      C                             + I#FMT
      C                   EXSR      *PSSR

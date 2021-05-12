@@ -1,4 +1,4 @@
-    H DEBUG
+     H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 248270B            Date 01Jun20               *
-      *  Prev Amend No. 248270A            Date 01Jun20               *
+      *  Last Amend No. MD058091           Date 12May21               *
+      *  Prev Amend No. 248270B            Date 01Jun20               *
+      *                 248270A            Date 01Jun20               *
       *                 248270             Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058091 - Build failure - compilation error in SD009585     *
+      *             Fixed the H DEBUG alignment                       *
       *  248270B- If CLE025 is *off, check BMNDFV of RE-ICD against   *
       *           Current Setting inserted by user.                   *
       *  248270A- Improved error msgid USR4039 when Current Setting   *

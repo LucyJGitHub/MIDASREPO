@@ -1042,6 +1042,7 @@
                                   ' and CTRNID = ' + QUO + transactREF + QUO +            //MD058040
                                   ' and CINPDT = ' +                                      //MD058040
                                     %char(result.list(i).intPDMidas) +                    //MD058040
+                                  ' and CINPDT < '  + %char(BJRDNB)  +                    //MD058040
                                   ' and CRORED <> ' + %char(BJRDNB);                      //MD058040
                    endif;
 
@@ -1305,8 +1306,9 @@
        begsr writeToExtractFile;
 
        //**********fileToCheck = LELIBEPD;                                                //MD058040
-       // Check if the extracted interest period date and rate is                         //MD058040
+       // Check if the interest period date and rate is already                           //MD058040
        // inserted in ARR History File from the previous COB run                          //MD058040
+       // (it means that the rate have already BR event record)                           //MD058040
                    fileToCheck = SDHSDRTD2;                                               //MD058040
                    exsr checkExist;
 

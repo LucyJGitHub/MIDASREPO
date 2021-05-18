@@ -65,6 +65,8 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  MD057686 - Missing last line of address in CM advice         *
+      *           - Remove checking of country code if not the same   *
+      *             for the customer and bank prior output of line 5  *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD056576           Date 21Sep20               *
+      *  Last Amend No. MD036080           Date 19Feb16               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD056576           Date 21Sep20               *
       *                 MD054681           Date 01Jun20               *
       *                 261705             Date 08Oct19               *
       *                 259159             Date 22Jan18               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036080 - Do not include postings at DACO for the specified *
+      *             range during I/C statement request.               *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -1966,11 +1969,15 @@
       **  Last Page Number is zero ...
       *
       **  ... Posting Group Set 3 (simple)
-     C     PSTD          IFGT      SDLSTD
+     C     SDLSTD        ADD       1             WKSDAT            5 0                      MD036080
+     C*****PSTD          IFGT      SDLSTD                                                   MD036080
+     C     PSTD          IFGE      WKSDAT                                                   MD036080
      C     PSTD          ANDLE     SDUNXD
       *
-     C     PSTD          OREQ      SDLSTD
-     C     DACO          ANDEQ     SDLSTD
+     C*****PSTD          OREQ      SDLSTD                                                   MD036080
+     C*****DACO          ANDEQ     SDLSTD                                                   MD036080
+     C     PSTD          OREQ      WKSDAT                                                   MD036080
+     C     DACO          ANDEQ     WKSDAT                                                   MD036080
      C     SDLSTP        ANDEQ     *ZEROS
       *
       **  If data has been formatted but not written, process it.

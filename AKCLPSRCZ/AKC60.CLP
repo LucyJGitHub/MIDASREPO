@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 202112             Date 25Jul17              */
+/*       Last Amend No. 114468             Date 18Jan13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      202112             Date 25Jul17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -34,7 +35,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/*                                                                  */
+/*   114468 - Enhanced Template Processing - use LIVE KEYS          */
+/*            Applied for AR1079856                                 */
 /*   MD046248 - Finastra Rebranding                                 */
 /*   202112 - File out of balance occurred in SE0370. Fix will      */
 /*            ensure to update the audit file SEACKA correctly      */
@@ -428,66 +430,68 @@
              ENDDO
 /**/
 /*********************************************************************  E40664*/
-/*                                                                   *  E40664*/
-/*  Menu option 5  -  Define current contents of XSEACKD as a        *  E40664*/
-/*                    template by copying it to TSEACKD.             *  E40664*/
-/*                                                                   *  E40664*/
+/**********                                                          */            /*E40664 114468*/
+/***Menu*option*5**-**Define*current*contents*of*XSEACKD*as*a        */            /*E40664 114468*/
+/*********************template*by*copying*it*to*TSEACKD.             */            /*E40664 114468*/
+/**********                                                          */            /*E40664 114468*/
 /*********************************************************************  E40664*/
 /**/                                                                  /*E40664*/
-             IF         COND(&OPTION *EQ '5') THEN(DO)                /*E40664*/
+/**********  IF         COND(&OPTION *EQ '5') THEN(DO)                */           /*E40664 114468*/
 /**/                                                                  /*E40664*/
-             CPYF       FROMFILE(*LIBL/XSEACKD) TOFILE(QTEMP/CHECK) +
-                          MBROPT(*REPLACE)                            /*E40664*/
-             MONMSG     MSGID(CPF2817) EXEC(DO)                       /*E40664*/
-             CHGVAR     VAR(&IN80) VALUE('1')                         /*E40664*/
-             CHGVAR     VAR(&MSG1) VALUE('There are no keys +
-                          in the workfile - use Option 1')            /*E40664*/
-             GOTO       CMDLBL(RDSPLY)                                /*E40664*/
-             ENDDO                                                    /*E40664*/
+/**********  CPYF       FROMFILE(*LIBL/XSEACKD) TOFILE(QTEMP/CHECK) + */                  /*114468*/
+/**********               MBROPT(*REPLACE)                            */           /*E40664 114468*/
+/**********  MONMSG     MSGID(CPF2817) EXEC(DO)                       */           /*E40664 114468*/
+/**********  CHGVAR     VAR(&IN80) VALUE('1')                         */           /*E40664 114468*/
+/**********  CHGVAR     VAR(&MSG1) VALUE('There are no keys +         */                  /*114468*/
+/**********               in the workfile - use Option 1')            */           /*E40664 114468*/
+/**********  GOTO       CMDLBL(RDSPLY)                                */           /*E40664 114468*/
+/**********  ENDDO                                                    */           /*E40664 114468*/
 /**/                                                                  /*E40664*/
 /*           CPYF       FROMFILE(*LIBL/XSEACKD) TOFILE(*LIBL/TSEACKD) +
                           MBROPT(*ADD) INCREL((*IF RECI *EQ 'D')) +
                           FMTOPT(*NOCHK)                     E40664     092556*/
-             CHGJOB SWS(XXXX0XXX)                                     /*092556*/
-             CALL AK0110                                              /*092556*/
-             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)       /*E40664*/
-             SNDPGMMSG  MSGID(CPF9898) MSGF(*LIBL/QCPFMSG) +
-                          MSGDTA('TRANSFER FAILED - check joblog') +
-                          TOPGMQ(*EXT) MSGTYPE(*STATUS)               /*E40664*/
-             GOTO       CMDLBL(RDSPLY)                                /*E40664*/
-             ENDDO                                                    /*E40664*/
+/**********  CHGJOB SWS(XXXX0XXX)                                     */           /*092556 114468*/
+/**********  CALL AK0110                                              */           /*092556 114468*/
+/**********  MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)       */           /*E40664 114468*/
+/**********  SNDPGMMSG  MSGID(CPF9898) MSGF(*LIBL/QCPFMSG) +          */                  /*114468*/
+/**********               MSGDTA('TRANSFER FAILED - check joblog') +  */                  /*114468*/
+/**********               TOPGMQ(*EXT) MSGTYPE(*STATUS)               */           /*E40664 114468*/
+/**********  GOTO       CMDLBL(RDSPLY)                                */           /*E40664 114468*/
+/**********  ENDDO                                                    */           /*E40664 114468*/
 /**/                                                                  /*E40664*/
 /************CLRPFM     FILE(*LIBL/XSEACKD)                     E40664  092374*/
-             IF         COND(%SWITCH(XXXX1XXX)) THEN(DO)              /*092374*/
-/*           SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Keys +   /*131108*/
-/*                     transferred successfully to live but some +
-/*                     A/C keys are double and are still in work file +
-/*                     If you want to transfer again don''t forget to +
-/*                     delete same keys in master file or come back at the-
-/*                     the begining to clear work file') +
-/*                     TOPGMQ(*EXT) MSGTYPE(*STATUS)           /*092374 131108*/
-             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Not all +
-                          Keys transferred to live.  Some +
-                          duplicates exist in the work file') +
-                          TOPGMQ(*EXT) MSGTYPE(*STATUS)             /*131108*/
-             GOTO       CMDLBL(RDSPLY)                              /*131108*/
-             ENDDO                                                    /*092374*/
-             ELSE DO                                                  /*092374*/
-             CLRPFM     FILE(*LIBL/XSEACKD)                           /*092374*/
-             ENDDO                                                    /*092374*/
-             CHGVAR     VAR(&OPTION) VALUE(' ')                       /*E40664*/
-             GOTO       CMDLBL(RDSPLY)                                /*E40664*/
+/**********  IF         COND(%SWITCH(XXXX1XXX)) THEN(DO)              */           /*092374 114468*/
+/**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Keys +   */           /*131108 114468*/
+/**********            transferred successfully to live but some +    */                  /*114468*/
+/**********            A/C keys are double and are still in work file +*/                 /*114468*/
+/**********            If you want to transfer again don''t forget to +*/                 /*114468*/
+/**********            delete same keys in master file or come back at the-*/             /*114468*/
+/**********            the begining to clear work file') +            */                  /*114468*/
+/**********            TOPGMQ(*EXT) MSGTYPE(*STATUS)                  */    /*092374 131108 114468*/
+/**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Not all +*/                  /*114468*/
+/**********               Keys transferred to live.  Some +           */                  /*114468*/
+/**********               duplicates exist in the work file') +       */                  /*114468*/
+/**********               TOPGMQ(*EXT) MSGTYPE(*STATUS)               */           /*131108 114468*/
+/**********  GOTO       CMDLBL(RDSPLY)                                */           /*131108 114468*/
+/**********  ENDDO                                                    */           /*092374 114468*/
+/**********  ELSE DO                                                  */           /*092374 114468*/
+/**********  CLRPFM     FILE(*LIBL/XSEACKD)                           */           /*092374 114468*/
+/**********  ENDDO                                                    */           /*092374 114468*/
+/**********  CHGVAR     VAR(&OPTION) VALUE(' ')                       */           /*E40664 114468*/
+/**********  GOTO       CMDLBL(RDSPLY)                                */           /*E40664 114468*/
 /**/                                                                  /*E40664*/
-             ENDDO                                                    /*E40664*/
+/**********  ENDDO                                                    */           /*E40664 114468*/
 /**/                                                                  /*E40664*/
 /********************************************************************* *E40669*/
 /*                                                                   * *E40669*/
 /***Menu*option*6**-**Clear*Workfile                      * *E40669   /*074401*/
-/** Menu option 6  -  Maintain Template Key                          * *074401*/
+/***Menu*option*6**-**Maintain*Template*Key                          */            /*074401 114468*/
+/** Menu option 5  -  Maintain Live Keys                             */                   /*114468*/
 /*                                                                   * *E40669*/
 /********************************************************************* *E40669*/
 /**/                                                                  /*074401*/
-             IF         COND(&OPTION *EQ '6') THEN(DO)                /*074401*/
+/**********  IF         COND(&OPTION *EQ '6') THEN(DO)                */           /*074401 114468*/
+             IF         COND(&OPTION *EQ '5') THEN(DO)                                    /*114468*/
 /**/                                                                  /*074401*/
 /************OVRDBF     FILE(SEACKA) TOFILE(TSEACKA)            /*074401081881*/
 /************OVRDBF     FILE(SEACKD) TOFILE(TSEACKD)            /*074401081881*/
@@ -506,12 +510,14 @@
              ENDDO                                                    /*074401*/
 /**/                                                                  /*074401*/
 /********************************************************************* *074401*/
-/** Menu option 7  -  Clear work file                                * *074401*/
+/***Menu*option*7**-**Clear*work*file                                */            /*074401 114468*/
+/** Menu option 6  -  Clear work file                                */                   /*114468*/
 /*                                                                   * *074401*/
 /********************************************************************* *074401*/
 /**/                                                                  /*E40669*/
 /*********** IF         COND(&OPTION *EQ '6') THEN(DO)     /*E40669*/ /*074401*/
-             IF         COND(&OPTION *EQ '7') THEN(DO)                /*074401*/
+/**********  IF         COND(&OPTION *EQ '7') THEN(DO)                */           /*074401 114468*/
+             IF         COND(&OPTION *EQ '6') THEN(DO)                                    /*114468*/
 /**/                                                                  /*E40669*/
 /**/                                                                  /*E40669*/
              CLRPFM     FILE(*LIBL/XSEACKD)                           /*E40669*/
@@ -521,17 +527,17 @@
              ENDDO                                                    /*E40669*/
 /**/                                                                  /*E40669*/
 /********************************************************************* 092374*/
-/*  Menu option 8  -  Clear template file                            * 092374*/
+/***Menu*option*8**-**Clear*template*file                            */            /*092374 114468*/
 /*                                                                   * 092374*/
 /********************************************************************* 092374*/
-             IF         COND(&OPTION *EQ '8') THEN(DO)               /*092374*/
+/**********  IF         COND(&OPTION *EQ '8') THEN(DO)               */            /*092374 114468*/
 /**/                                                                 /*092374*/
 /**/                                                                 /*092374*/
-             CLRPFM     FILE(*LIBL/TSEACKD)                          /*092374*/
-             CHGVAR     VAR(&OPTION) VALUE(' ')                      /*092374*/
-             GOTO       CMDLBL(RDSPLY)                               /*092374*/
+/**********  CLRPFM     FILE(*LIBL/TSEACKD)                          */            /*092374 114468*/
+/**********  CHGVAR     VAR(&OPTION) VALUE(' ')                      */            /*092374 114468*/
+/**********  GOTO       CMDLBL(RDSPLY)                               */            /*092374 114468*/
 /**/                                                                 /*092374*/
-             ENDDO                                                   /*092374*/
+/**********  ENDDO                                                   */            /*092374 114468*/
 /*********************************************************************/
 /*********                                                           * *074401*/
 /***Menu*option*5**-**Exit*A/C*key*generation*menu.******************* *074401*/
@@ -551,8 +557,10 @@
 /************IF*********COND(&OPTION**GE*'4'**OR*&OPTION**LT*'1')*+*** *074401*/
 /************IF*********COND(&OPTION *GE '7' *OR &OPTION *LT '1')074401 092374*/
 /*************************THEN(DO)*******************************074401*092374*/
-             IF         COND(&OPTION *GE '8' *OR &OPTION *LT '1') +
-                          THEN(DO)                                    /*092374*/
+/**********  IF         COND(&OPTION *GE '8' *OR &OPTION *LT '1') +  */                   /*114468*/
+/**********               THEN(DO)                                   */            /*092374 114468*/
+             IF         COND(&OPTION *GE '6' *OR &OPTION *LT '1') +
+                          THEN(DO)                                                        /*114468*/
              CHGVAR     VAR(&MSG2) VALUE('Invalid option entered')
              CHGVAR     VAR(&IN81) VALUE('1')
              ENDDO

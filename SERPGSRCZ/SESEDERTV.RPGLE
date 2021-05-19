@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038918           Date 31May16               *
+      *  Last Amend No. MD052592           Date 17Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD038918           Date 31May16               *
       *                 260331             Date 31Mar16               *
       *                 MD000091           Date 17May13               *
       *                 CRE073             Date 06Dec10               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052592 - Can't delete Security Event. Fix is to consider   *
+      *             the long term maturity indicator of the security. *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
       *             event for an FRN security with event date equal   *
@@ -1098,6 +1101,12 @@
      C                   ELSE
      C                   Z-ADD     WMYr          WMYrC
      C                   ENDIF
+      *                                                                                     MD052592
+      ** If Long Term Maturity = 'Y' add another 100 to WMYrC                               MD052592
+      *                                                                                     MD052592
+     C                   IF        F1LTMI = 'Y'                                             MD052592
+     C                   ADD       100           WMYrC                                      MD052592
+     C                   ENDIF                                                              MD052592
  
      C                   IF        WIYr < 72
      C     WIYr          ADD       100           WIYrC

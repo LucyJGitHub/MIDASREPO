@@ -17,8 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD049475           Date 16Nov18               *
+      *  Prev Amend No. MD036706           Date 21Apr16               *
+      *                 218487             Date 24Jan13               *
+      *                 191287             Date 24Jan13               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +42,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049475 - ERROR on Service Fees Settlement                  *
+      *  MD036706 - FOOB in GLC30. Add 1 to HRWN if HRDC >= 1000      *
+      *             Pattern fix to MD-31137.                          *
+      *  MD031137 - Decimals Hash Total strictly equal to 1000        *
+      *             cause GLC30 to fail out of Balance of 1000        *
+      *             Add 1 to HRWN if HRDC <= 1000.                    *
+      *  218487 - Cust Service Fees not multilanguage - apply fix     *
+      *           191287 and also apply to core (GL19nn) versions.    *
+      *  191287 - Narratives on postings are not Multilanguage.       *
+      *           Applied for AR1083062                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -170,6 +184,15 @@
      I                                       26  29 DSPTFR
      I                                       30  30 DSRIGH
      I                                        1  30 XFPNAR
+      *                                                                                       191287
+     ICGPNAR    E DSCGPNARPD                                                                  191287
+      * UDC Multi Language Narrative Data Structure                                           191287
+      *                                                                                       191287
+     I##PRM1      DS                                                                          191287
+      **  Data Structure for Customer and Branch                                              191287
+      *                                                                                       191287
+     I                                        1   6 A#CUST                                    191287
+     I                                        7   9 A#BRCA                                    191287
       *
      ISPOOLU      DS
       ** GL1961AU Spool details
@@ -192,6 +215,9 @@
       *
      ISDBANK    E DSSDBANKPD
       ** External Data Structure for Bank Details
+      *                                                                                       218487
+     ISDMMOD    E DSSDMMODPD                                                                  218487
+      ** Midas Modules Installed Details                                                      218487
       *
      ISDGELR    E DSSDGELRPD
       ** External Data Structure for GL ICD
@@ -385,6 +411,21 @@
      C           BJDFIN    IFEQ 'M'
      C                     MOVE *ON       *IN98
      C                     ENDIF
+      *                                                                                       218487
+      ***  Access SDMMODPD Details                                                            218487
+      *                                                                                       218487
+     C                     CALL 'AOMMODR0'                                                    218487
+     C                     PARM *BLANKS   P@RTCD  7                                           218487
+     C                     PARM '*FIRST'  P@OPTN  7                                           218487
+     C           SDMMOD    PARM SDMMOD    DSSDY                                               218487
+     C           P@RTCD    IFNE *BLANKS                                                       218487
+     C           *LOCK     IN   LDA                                                           218487
+     C                     Z-ADD03        DBASE            ***************                    218487
+     C                     MOVE 'SDMMODPD'DBFILE           *DB ERROR 003 *                    218487
+     C                     MOVEL'*FIRST'  DBKEY            ***************                    218487
+     C                     OUT  LDA                                                           218487
+     C                     EXSR *PSSR                                                         218487
+     C                     ENDIF                                                              218487
       *
       ** Access SDGELRPD Details
       *
@@ -432,6 +473,22 @@
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
+      *                                                                                       191287
+      ** Check Multi-Language Posting Narratives (Securities)                                 191287
+      *                                                                                       191287
+     C                     MOVE 'N'       SEPNAR  1                                           191287
+      *                                                                                       191287
+     C           BGN1ST    IFEQ 'Y'                                                           191287
+     C                     CALL 'AOSARDR0'                                                    191287
+     C                     PARM '       ' P@RTCD                                              191287
+     C                     PARM '*VERIFY' P@OPTN                                              191287
+     C                     PARM 'SEPNAR'  P@SARD  7                                           191287
+      *                                                                                       191287
+     C           P@RTCD    IFEQ *BLANK                                                        191287
+     C                     MOVE 'Y'       SEPNAR                                              191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+     C                     ENDIF                                                              191287
       *
       ** Keep Spot trade account (work field prefix 'WT')
       *
@@ -775,7 +832,8 @@
       ** Retrieve Settlement Customer Taxable indicator
       *
      C                     MOVE 'N'       WSTAIN
-     C           F7SCUS    CHAINSDCFCDL0             81
+     C********** F7SCUS    CHAINSDCFCDL0             81                                     MD049475
+     C           F7CNUM    CHAINSDCFCDL0             81                                     MD049475
       *
      C           *IN81     IFEQ *OFF
      C                     MOVE E6TAIF    WSTAIN  1
@@ -1666,6 +1724,7 @@
       ** Write a Record on PF/GEFEPD
       *
      C           PSTA      IFNE 0
+     C                     EXSR SRPNAR                                                        191287
      C                     WRITEAPOSTPDF
      C                     ADD  1         WWRCNT
      C                     ADD  PSTA      WWHTOT
@@ -1737,6 +1796,7 @@
       ** Write a record on PF/GEFEPD
       *
      C           PSTA      IFNE 0
+     C                     EXSR SRPNAR                                                        191287
      C                     WRITEAPOSTPDF
      C                     ADD  1         WWRCNT
      C                     ADD  PSTA      WWHTOT
@@ -1825,7 +1885,8 @@
      C                     ADD  WWHRWN    HRWN
      C           HRDC      ADD  WWHRDC    WWHRDC
       *
-     C           WWHRDC    IFGT 1000
+     C           WWHRDC    IFGE 1000                                                        MD036706
+     C********** WWHRDC    IFGT 1000                                                        MD036706
      C           WWHRDC    SUB  1000      HRDC
      C                     ADD  1         HRWN
      C                     ELSE
@@ -1917,6 +1978,60 @@
      C                     ENDSR
       *
       *****************************************************************
+      *   SRPNAR : Determines Multilanguage Narratives                *                       191287
+      *  -------                                                      *                       191287
+      *  Called by : #WNSE #WTSE                                      *                       191287
+      *  Calls     :                                                  *                       191287
+      *****************************************************************                       191287
+     C           SRPNAR    BEGSR                                                              191287
+      *                                                                                       191287
+     C                     CLEARCGPNAR                                                        191287
+     C                     CLEAR##PRM1                                                        191287
+      *                                                                                       191287
+      * If the facility is switched off or unavailable,                                       191287
+      *  or UDC is not installed, exit this subroutine:                                       191287
+      *                                                                                       191287
+     C           SEPNAR    IFNE 'Y'                                                           191287
+     C                     GOTO EXPNAR                                                        191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+      * Determine the value for the narrative using AOPNARR0                                  191287
+      *                                                                                       191287
+     C                     MOVE 'SE'      MNMODI                                              191287
+     C                     MOVE BRCA      MNBRCA                                              191287
+     C                     MOVE CNUM      MNCUST                                              191287
+     C                     MOVE CCY       MNCYCD                                              191287
+     C                     MOVE ACOD      MNACCD                                              191287
+     C                     MOVE ACSQ      MNACSQ                                              191287
+     C                     MOVE F7FETP    MNFCDE                                              191287
+     C                     MOVE F7PRTP    MNBOKC                                              191287
+     C                     MOVE ACNO      MNRACN                                              191287
+     C                     MOVE F7CNUM    MNASOC                                              191287
+      *                                                                                       191287
+     C           F1FECP    IFEQ 'P'                                                           191287
+     C           '('       CAT  F7PTFR:0  MNNARR    P                                         191287
+     C                     CAT  ')'       MNNARR                                              191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+     C           DSTEXT    IFEQ WWNAR1                                                        191287
+     C                     MOVE 'GBCFE07' ##MGID                                              191287
+     C                     ELSE                                                               191287
+     C                     MOVE 'GBCFE09' ##MGID                                              191287 
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+     C                     CALL 'AOPNARR0'                                                    191287
+     C                     PARM           ##RTN   7                                           191287
+     C                     PARM           ##MGID  7                                           191287
+     C                     PARM           ##PRM1                                              191287
+     C                     PARM           CGPNAR                                              191287
+     C                     PARM           ##NARR 50                                           191287
+      *                                                                                       191287
+     C           ##RTN     IFEQ *BLANKS                                                       191287
+     C                     MOVEL##NARR    PNAR      P                                         191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+     C           EXPNAR    ENDSR                                                              191287
+     C********************************************************************                    191287
       /EJECT
      C/COPY ZSRSRC,ZCCYCN
       *****************************************************************

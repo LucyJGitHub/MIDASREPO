@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR858264A          Date 16Jul12               *
+      *  Last Amend No. 248485             Date 22Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR858264A          Date 16Jul12               *
       *                 AR983495           Date 04Jun12               *
       *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248485 - job RPTRGSRV01 in Repmidasxx is dumping.            *
+      *           Apply fix 236420.                                   *
+      *  236420 - RPTRGSRV01 job loops when getting a database.       *
+      *         - Applied for MD048591.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR858264A - Compilation Issues on various RP programs        *
       *  AR983495 - Missing fixes in some replication trigger         *
@@ -959,6 +964,7 @@
      C     SRGetSetAc    BEGSR
  
      C                   RESET                   ReturnCode
+     C                   Movel     'PB213b'      ReturnCode                                   236420
  
      C                   CALLB     'ZAGETSETAC'
       ** Outputs

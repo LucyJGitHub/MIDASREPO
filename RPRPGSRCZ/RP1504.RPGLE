@@ -23,8 +23,9 @@
       *                                                               *
       *  (c)Finastra International Limited 2001                       *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. 248485             Date 22Jan18               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
@@ -55,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248485 - job RPTRGSRV01 in Repmidasxx is dumping.            *
+      *           Apply fix 236420.                                   *
+      *  236420 - RPTRGSRV01 job loops when getting a database.       *
+      *         - Applied for MD048591.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
@@ -966,6 +971,7 @@
      C     GetSetAc      Begsr
 
      C                   Reset                   ReturnCode
+     C                   Movel     'PB213b'      ReturnCode                                   236420
      C                   Callb     'ZAGETSETAC'
       **  Outputs
       **  -------

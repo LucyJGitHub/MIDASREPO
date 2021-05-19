@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas PM Portfolio Definition Validation Control')
+/*EXI *  TEXT('Midas PM Portfolio Definition Validation Control')     *
       *****************************************************************
       *                                                               *
       *  Midas - Portfolio Management Module                          *
@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027553           Date 21Aug14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CPB002             Date 13Dec99               *
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027553 - Field Portfolio Management Type from TOF not      *
+      *             considerd in BF Midas.                            *
+      *           - Don't default Manage Indicator.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CPB002 - New Private Banking Customer Processing.            *
@@ -237,10 +241,13 @@
  
       ** Validate Portfolio Managed Indicator only if customer is
       ** a PM Customer.
+      ** Validate Portfolio Managed Indicator also if Private Banking                       MD027553
+      ** Customer.                                                                          MD027553
  
       /COPY WNCPYSRC,PMPFDMV016
  
      C     PMCUST        IFEQ      'Y'
+     C     PMCUST        OREQ      'P'                                                      MD027553
      C                   EXSR      SRVMNGI
      C                   ENDIF
  

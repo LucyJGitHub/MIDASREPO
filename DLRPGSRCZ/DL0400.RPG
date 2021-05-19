@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD022218           Date 17Mar20               *
-      *  Prev Amend No. 243161A            Date 17Mar20               *
+      *  Last Amend No. MD023792A          Date 31Jan14               *
+      *  Prev Amend No. MD023792           Date 16Dec13               *
+      *                 MD022218           Date 17Mar20               *
+      *                 243161A            Date 17Mar20               *
       *                 MD055733           Date 03Jul20               *
       *                 MD026916           Date 12Mar20               *
       *                 MD053295           Date 13Apr19               *
@@ -219,6 +221,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD023792A - Incorrect rounding of tax projection when deal   *
+      *              currency is equal to base currency. Added CDL081 *
+      *              processing in projecting Tiered Withholding Tax. *
+      *  MD023792 - Added tax computations for Event Codes 'I2' and   *
+      *             'M2' when CDL013 is ON. Patterned after AR854478. *
       *  MD022218 - Fail component in Nordea frankfurt DLC0607        *
       *           - Applied fix for MD051977                          *
       *  243161A - DL0280 crash                                       *
@@ -658,6 +665,10 @@
      F*DEAMS***IF**F*****963*14AI*****2*DISK                                           CDL017 CDL038
      F***DEAMS***IF**F**   967 14AI     2 DISK                                         CDL038 CRE073
      FDEAMS   IF  F     985 14AI     2 DISK                                                   CRE073
+      *                                                                                     MD023792
+     FSDSTAAL1IF  E           K        DISK                           UC                    MD023792
+      ** WHT ICD extension file                                                             MD023792
+      *                                                                                     MD023792
      FSDJACCLBIF  E           K        DISK                                                   234341
 0014 F***NT   IF  F     256  7AI     2 DISK                               S01194
 0015 F***LE   IF  F      96 12AI     2 DISK                               S01194
@@ -1831,6 +1842,9 @@
      I              'ZACALCSPRT'          C         CALCSR                                    CRE073
      I** Constant                                                                             CRE073
       *                                                                                       CRE073
+     I              'BasCcyTaxRoundDown'  C         C#BASE                                 MD023792A
+     I              'NBasCcyTaxRoundDown' C         C#NBAS                                 MD023792A
+      *                                                                                    MD023792A
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      C           *NAMVAR   DEFN           LDA                                                 234341
       *                                                                                       234341
@@ -2013,6 +2027,113 @@
      C                     ENDIF                                                              CAS005
       *                                                                                       CAS005
      C           *LIKE     DEFN ZIRATE    WZRATE                                              CAS005
+      *                                                                                     MD023792
+      ** Access Switchable Feature Details, Check if CDL013 is                              MD023792
+      ** switch on.                                                                         MD023792
+      *                                                                                     MD023792
+     C                     CALL 'AOSARDR0'                                                  MD023792
+     C                     PARM *BLANKS   PRTCD                                             MD023792
+     C                     PARM '*VERIFY 'POPTN                                             MD023792
+     C                     PARM 'CDL013'  PSARD                                             MD023792
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD023792
+      *                                                                                     MD023792
+     C           PRTCD     IFNE *BLANKS                                                     MD023792
+     C           PRTCD     ANDNE'*NRF '                                                     MD023792
+     C                     SETON                     U7U8LR                                 MD023792
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD023792
+     C                     MOVEL'35'      DBASE                                             MD023792
+     C                     MOVE POPTN     DBOPTN                                            MD023792
+     C                     MOVELPOPTN     DBKEY                                             MD023792
+     C                     GOTO END                                                         MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C           PRTCD     IFEQ *BLANKS                                                     MD023792
+     C                     MOVE 'Y'       CDL013  1                                         MD023792
+     C                     MOVEL'RETAIL'  WTYPE  10 P                                       MD023792
+      *                                                                                     MD023792
+      ** Open & access WHT ICD extension file to retrieve WHT rate                          MD023792
+      *                                                                                     MD023792
+     C                     OPEN SDSTAAL1                                                    MD023792
+     C           WTYPE     CHAINSDSTAAL1             18                                     MD023792
+      *                                                                                     MD023792
+      ** If CHAIN failed                                                                    MD023792
+      *                                                                                     MD023792
+     C           *IN18     IFEQ '1'                                                         MD023792
+     C                     SETON                     U7U8LR                                 MD023792
+     C                     MOVEL'SDSTAAL1'DBFILE           ************                     MD023792
+     C                     MOVELWTYPE     DBKEY            * DBERR 36 *                     MD023792
+     C                     MOVEL'36'      DBASE            ************                     MD023792
+     C                     GOTO END                                                         MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+     C                     MOVE 'N'       CDL013                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                    MD023792A
+      ** Check if CDL081 is installed                                                      MD023792A
+      *                                                                                    MD023792A
+     C                     MOVE 'N'       CDL081  1                                        MD023792A
+     C                     CALL 'AOSARDR0'                                                 MD023792A
+     C                     PARM *BLANKS   PRTCD                                            MD023792A
+     C                     PARM '*VERIFY' POPTN                                            MD023792A
+     C                     PARM 'CDL081'  PSARD                                            MD023792A
+     C           SCSARD    PARM SCSARD    DSFDY                                            MD023792A
+      *                                                                                    MD023792A
+     C           PRTCD     IFNE *BLANKS                                                    MD023792A
+     C           PRTCD     ANDNE'*NRF   '                                                  MD023792A
+     C                     MOVEL'SCSARDPD'DBFILE           ************                    MD023792A
+     C                     MOVE '038'     DBASE            * DBERR 38 *                    MD023792A
+     C                     MOVEL'CDL081'  DBKEY            ************                    MD023792A
+     C                     GOTO END                                                        MD023792A
+     C                     ENDIF                                                           MD023792A
+      *                                                                                    MD023792A
+     C           PRTCD     IFEQ *BLANKS                                                    MD023792A
+     C                     MOVE 'Y'       CDL081                                           MD023792A
+     C                     ENDIF                                                           MD023792A
+      *                                                                                    MD023792A
+      ** Access withholding tax round down system values if CDL081 is on                   MD023792A
+      *                                                                                    MD023792A
+     C           CDL081    IFEQ 'Y'                                                        MD023792A
+     C                     CALL 'AOSVALR0'                                                 MD023792A
+     C                     PARM *BLANKS   PRTCD                                            MD023792A
+     C                     PARM C#BASE    SVALK1 20                                        MD023792A
+     C                     PARM           SVAL1 200                                        MD023792A
+     C                     PARM C#NBAS    SVALK2 20                                        MD023792A
+     C                     PARM           SVAL2 200                                        MD023792A
+     C                     PARM *BLANK    SVALK3 20                                        MD023792A
+     C                     PARM           SVAL3 200                                        MD023792A
+     C                     PARM *BLANK    SVALK4 20                                        MD023792A
+     C                     PARM           SVAL4 200                                        MD023792A
+     C                     PARM *BLANK    SVALK5 20                                        MD023792A
+     C                     PARM           SVAL5 200                                        MD023792A
+     C                     PARM *BLANK    SVALK6 20                                        MD023792A
+     C                     PARM           SVAL6 200                                        MD023792A
+     C                     PARM *BLANK    SVALK7 20                                        MD023792A
+     C                     PARM           SVAL7 200                                        MD023792A
+     C                     PARM *BLANK    SVALK8 20                                        MD023792A
+     C                     PARM           SVAL8 200                                        MD023792A
+     C                     PARM *BLANK    SVALK9 20                                        MD023792A
+     C                     PARM           SVAL9 200                                        MD023792A
+     C                     PARM *BLANK    SVALK0 20                                        MD023792A
+     C                     PARM           SVAL10200                                        MD023792A
+      *                                                                                    MD023792A
+     C           PRTCD     IFNE *BLANKS                                                    MD023792A
+     C           SVAL1     IFEQ '*NRF'                                                     MD023792A
+     C                     MOVELSVALK1    DBKEY                                            MD023792A
+     C                     ENDIF                                                           MD023792A
+     C           SVAL2     IFEQ '*NRF'                                                     MD023792A
+     C                     MOVELSVALK2    DBKEY                                            MD023792A
+     C                     ENDIF                                                           MD023792A
+     C                     MOVE '039'     DBASE            ************                    MD023792A
+     C                     MOVE 'SDSVALPD'DBFILE           * DBERR 39 *                    MD023792A
+     C                     GOTO END                        ************                    MD023792A
+     C                     ENDIF                                                           MD023792A
+      *                                                                                    MD023792A
+      ** Setup tax amount rounding down indicators                                         MD023792A
+      *                                                                                    MD023792A
+     C                     MOVELSVAL1     W#BSRD  1                                        MD023792A
+     C                     MOVELSVAL2     W#NBRD  1                                        MD023792A
+     C                     ENDIF                                                           MD023792A
      C*                                                                   CEU015
      C/COPY WNCPYSRC,DL0400CCP9                                           S01408
       *                                                                                       CGL187
@@ -3718,6 +3839,15 @@ A670 C****                 MOVELCPAR      CLIKEY                          S01194
      C           BNHKTR    ANDNE0                                                             CGL015
      C                     EXSR CALHKT                                                        CGL015
      C                     ENDIF                                                              CGL015
+      *                                                                                     MD023792
+      ** Calculate for tax for event 'I2'                                                   MD023792
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
+     C                     Z-ADDNIDT      BRMDAT  50                                        MD023792
+     C                     EXSR CALTAX                                                      MD023792
+     C                     ENDIF                                                            MD023792
      C**
      C**   INTEREST NOT CAP'D - GENERATE EVENT
      C**
@@ -4346,6 +4476,15 @@ S13  C           VDATM     COMP BJDNWD               65                   E15988
      C           BNHKTR    ANDNE0                                                             CGL015
      C                     EXSR CALHKT                                                        CGL015
      C                     ENDIF                                                              CGL015
+      *                                                                                     MD023792
+      ** Calculate tax for 'M1' event code                                                  MD023792
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
+     C                     Z-ADDMDAT      BRMDAT                                            MD023792
+     C                     EXSR CALTAX                                                      MD023792
+     C                     ENDIF                                                            MD023792
      C**
      C**   IF INTEREST IS CAPITALISED ADD TO PRINCIPAL
      C**
@@ -4418,6 +4557,15 @@ S13  C           VDATM     COMP BJDNWD               65                   E15988
      C                     Z-ADDTAXSV     EVETAX                                              CGL015
      C                     ENDIF                                                              CGL015
       *                                                                                       CGL015
+      ** Calculate tax for 'M2' event code                                                  MD023792
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
+     C                     Z-ADDMDAT      BRMDAT                                            MD023792
+     C                     EXSR CALTAX                                                      MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
      C  N59                MOVE 'M2'      KEY
      C  N59                EXSR EVENT
       *                                                                                       CAS005
@@ -5594,6 +5742,11 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C                     Z-ADD*ZEROS    PSAIP                                               CGL187
       *                                                                                       CGL187
      C                     ENDIF                                                              CGL187
+      *                                                                                     MD023792
+      ** Initialise indicator used for printing tax & for IPDS                              MD023792
+      *                                                                                     MD023792
+     C                     MOVE '0'       *IN72                                             MD023792
+     C                     MOVE '0'       *IN89                                             MD023792
 0941 C*
 0942 C*    FIND FIELD VALUES FROM TABLES - SEE COMMENTS IN EXTENSION SPECS
 0943 C*
@@ -5733,6 +5886,7 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C           CAS005    ANDEQ'Y'                                                           CAS005
      C                     MOVE '2'       SIIND                           S01434
      C           IMET      IFNE *BLANKS                                                       181604
+     C           IMET      ANDNE'00'                                                        MD023792
      C                     SETON                     72                   138004
      C                     ENDIF                                                              181604
      C           IMET      IFEQ *BLANKS                                   138004
@@ -6262,6 +6416,7 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C           EVCODE    OREQ '16I6'                                                        CAS005
      C           CAS005    ANDEQ'Y'                                                           CAS005
      C           IMET      IFNE '00'                                                          181604
+     C           IMET      ANDNE*BLANKS                                                     MD023792
      C                     MOVE SETISA    SETTLE                          130756
      C                     ENDIF                                                              181604
      C                     ENDIF                                          130756
@@ -6814,6 +6969,7 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C           EVCODE    OREQ '16I6'                                                        CAS005
      C           CAS005    ANDEQ'Y'                                                           CAS005
      C           IMET      IFNE '00'                                                          181604
+     C           IMET      ANDNE*BLANKS                                                     MD023792
      C                     SETON                     72                   138004
      C                     ENDIF                                                              181604
      C                     END                                            138004
@@ -6904,11 +7060,17 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C*                                                                   138007
       *                                                                                       CGL015
      C           CGL015    IFEQ 'Y'                                                           CGL015
+     C           CDL013    OREQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
      C           DTYP      IFEQ 'IT'                                                          CGL015
      C           DTYP      OREQ 'CD'                                                          CGL015
      C           DTYP      OREQ 'TD'                                                          CGL015
      C           EVCODE    IFEQ '16I2'                                                        CGL015
      C           EVCODE    OREQ '16M1'                                                        CGL015
+     C           IPDS      ANDEQ'N'                                                         MD023792
+     C           EVCODE    OREQ '16M2'                                                      MD023792
+     C           IPDS      ANDEQ'Y'                                                         MD023792
      C                     MOVE '1'       *IN89                                               CGL015
      C                     ENDIF                                                              CGL015
      C                     ENDIF                                                              CGL015
@@ -6926,6 +7088,11 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
       *                                                                                       CGL187
      C                     ENDIF                                                              CGL187
       *                                                                                       CGL187
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+     C                     Z-ADD*ZERO     EVETAX                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
      C/COPY WNCPYSRC,DL0400C096
      C                     ENDIF                                          CEU003
      C           CER049    IFEQ 'Y'                                                           CER049
@@ -7070,11 +7237,17 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C/COPY WNCPYSRC,DL0400C106
       *                                                                                       CGL015
      C           CGL015    IFEQ 'Y'                                                           CGL015
+     C           CDL013    OREQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
      C           DTYP      IFEQ 'IT'                                                          CGL015
      C           DTYP      OREQ 'CD'                                                          CGL015
      C           DTYP      OREQ 'TD'                                                          CGL015
      C           EVCODE    IFEQ '16I2'                                                        CGL015
      C           EVCODE    OREQ '16M1'                                                        CGL015
+     C           IPDS      ANDEQ'N'                                                         MD023792
+     C           EVCODE    OREQ '16M2'                                                      MD023792
+     C           IPDS      ANDEQ'Y'                                                         MD023792
      C                     MOVE '1'       *IN89                                               CGL015
      C                     ENDIF                                                              CGL015
      C                     ENDIF                                                              CGL015
@@ -7091,6 +7264,11 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
       *                                                                                       CGL187
      C                     ENDIF                                                              CGL187
       *                                                                                       CGL187
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+     C                     Z-ADD*ZERO     EVETAX                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
      C                     MOVE WBBUTX    BBCRNM                          155498
      C                     MOVE WBBVTX    BBCRTN                          155498
      C                     MOVE WBBWTX    BBCASC                          155498
@@ -7176,11 +7354,17 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C/COPY WNCPYSRC,DL0400C107
       *                                                                                       CGL015
      C           CGL015    IFEQ 'Y'                                                           CGL015
+     C           CDL013    OREQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
      C           DTYP      IFEQ 'IT'                                                          CGL015
      C           DTYP      OREQ 'CD'                                                          CGL015
      C           DTYP      OREQ 'TD'                                                          CGL015
      C           EVCODE    IFEQ '16I2'                                                        CGL015
      C           EVCODE    OREQ '16M1'                                                        CGL015
+     C           IPDS      ANDEQ'N'                                                         MD023792
+     C           EVCODE    OREQ '16M2'                                                      MD023792
+     C           IPDS      ANDEQ'Y'                                                         MD023792
      C                     MOVE '1'       *IN89                                               CGL015
      C                     ENDIF                                                              CGL015
      C                     ENDIF                                                              CGL015
@@ -7197,6 +7381,11 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
       *                                                                                       CGL187
      C                     ENDIF                                                              CGL187
       *                                                                                       CGL187
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+     C                     Z-ADD*ZERO     EVETAX                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
      C/COPY WNCPYSRC,DL0400C042
       *
       ** RESET FIELDS READY FOR NEXT EVENT
@@ -9722,6 +9911,153 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
       *                                                                                       CGL015
      C           CALHK9    ENDSR                                                              CGL015
       *****************************************************************                       CGL015
+      C/EJECT                                                                                MD023792
+      *****************************************************************                     MD023792
+      *                                                               *                     MD023792
+      *  CALTAX - Calculate Tax amount                                *                     MD023792
+      *                                                               *                     MD023792
+      *  Called By  : Various                                         *                     MD023792
+      *                                                               *                     MD023792
+      *  Calls      : *NONE                                           *                     MD023792
+      *                                                               *                     MD023792
+      *****************************************************************                     MD023792
+     C           CALTAX    BEGSR                                                            MD023792
+      *                                                                                     MD023792
+      ** If CDL013 installed, calculate WHT amount                                          MD023792
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+      *                                                                                     MD023792
+      ** Set WHT rate                                                                       MD023792
+      *                                                                                     MD023792
+     C                     SELEC                                                            MD023792
+     C           TAXI      WHEQ '0'                                                         MD023792
+     C                     Z-ADD0         WRATE   52                                        MD023792
+     C           TAXI      WHEQ '1'                                                         MD023792
+     C                     Z-ADDETXR1     WRATE                                             MD023792
+     C           TAXI      WHEQ '2'                                                         MD023792
+     C                     Z-ADDETXR2     WRATE                                             MD023792
+     C           TAXI      WHEQ '3'                                                         MD023792
+     C                     Z-ADDETXR3     WRATE                                             MD023792
+     C           TAXI      WHEQ '4'                                                         MD023792
+     C                     Z-ADDETXR4     WRATE                                             MD023792
+     C           TAXI      WHEQ '5'                                                         MD023792
+     C                     Z-ADDETXR5     WRATE                                             MD023792
+     C           TAXI      WHEQ '6'                                                         MD023792
+     C                     Z-ADDETXR6     WRATE                                             MD023792
+     C           TAXI      WHEQ '7'                                                         MD023792
+     C                     Z-ADDETXR7     WRATE                                             MD023792
+     C           TAXI      WHEQ '8'                                                         MD023792
+     C                     Z-ADDETXR8     WRATE                                             MD023792
+     C           TAXI      WHEQ '9'                                                         MD023792
+     C                     Z-ADDETXR9     WRATE                                             MD023792
+     C                     ENDSL                                                            MD023792
+      *                                                                                     MD023792
+      ** If WHT rate is 0, set Tax Amount to 0                                              MD023792
+      *                                                                                     MD023792
+     C           WRATE     IFEQ 0                                                           MD023792
+     C                     Z-ADD0         EVETAX                                            MD023792
+      *                                                                                     MD023792
+      ** Otherwise, call subroutine #UTWHT                                                  MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+      *                                                                                     MD023792
+      ** Set event date first                                                               MD023792
+      *                                                                                     MD023792
+     C                     Z-ADDVDAT      WEVTDT  50                                        MD023792
+      *                                                                                     MD023792
+      ** Set tax rate                                                                       MD023792
+      *                                                                                     MD023792
+     C                     Z-ADDWRATE     TXRT    52                                        MD023792
+      *                                                                                     MD023792
+     C                     EXSR #UTWHT                                                      MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDSR                                                            MD023792
+      *****************************************************************                     MD023792
+     C/EJECT                                                                                MD023792
+      *****************************************************************                     MD023792
+      *                                                               *                     MD023792
+      *  #UTWHT - Tiered WHT Calculation                              *                     MD023792
+      *                                                               *                     MD023792
+      *****************************************************************                     MD023792
+      *                                                                                     MD023792
+     C           #UTWHT    BEGSR                                                            MD023792
+      *                                                                                     MD023792
+      ** If Deal Ccy = Base Ccy, calculate WHT rounded down                                 MD023792
+      *                                                                                     MD023792
+     C           CCY       IFEQ BJCYCD                                                      MD023792
+     C           CDL081    ANDEQ'N'                                                        MD023792A
+      *                                                                                     MD023792
+      ** Details of BJCYCD (base currency)                                                  MD023792
+      *                                                                                     MD023792
+     C                     CALL 'AOCURRR0'                                                  MD023792
+     C                     PARM '*MSG   ' @RTCD                                             MD023792
+     C                     PARM '*KEY   ' @OPTN                                             MD023792
+     C                     PARM CCY       WKEY1   3                                         MD023792
+     C           SDCURR    PARM SDCURR    DSSDY                                             MD023792
+      *                                                                                     MD023792
+     C           @RTCD     IFNE *BLANKS                                                     MD023792
+     C                     SETON                     U7U8LR                                 MD023792
+     C                     MOVEL'SDCURRPD'DBFILE                                            MD023792
+     C                     MOVE '037'     DBASE                                             MD023792
+     C                     MOVE @OPTN     DBOPTN                                            MD023792
+     C                     MOVEL@OPTN     DBKEY                                             MD023792
+     C                     GOTO END                                                         MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+      ** Set work adjustment field according to decimal places.                             MD023792
+      *                                                                                     MD023792
+     C                     SELEC                                                            MD023792
+     C           A6NBDP    WHEQ 0                                                           MD023792
+     C                     Z-ADD1         WADJ    40                                        MD023792
+     C           A6NBDP    WHEQ 1                                                           MD023792
+     C                     Z-ADD10        WADJ                                              MD023792
+     C           A6NBDP    WHEQ 2                                                           MD023792
+     C                     Z-ADD100       WADJ                                              MD023792
+     C           A6NBDP    WHEQ 3                                                           MD023792
+     C                     Z-ADD1000      WADJ                                              MD023792
+     C                     ENDSL                                                            MD023792
+      *                                                                                     MD023792
+      ** Round down Interest Amount                                                         MD023792
+      *                                                                                     MD023792
+     C           INTDUE    DIV  WADJ      WINT   150                                        MD023792
+     C                     MULT WADJ      WINT                                              MD023792
+      *                                                                                     MD023792
+      ** Calculate WHT                                                                      MD023792
+      *                                                                                     MD023792
+     C           WINT      MULT WRATE     WWHT   150                                        MD023792
+     C                     DIV  100       WWHT                                              MD023792
+      *                                                                                     MD023792
+      ** Round down WHT                                                                     MD023792
+      *                                                                                     MD023792
+     C                     DIV  WADJ      WWHT                                              MD023792
+     C           WWHT      MULT WADJ      EVETAX                                            MD023792
+      *                                                                                     MD023792
+      ** If Deal Ccy NOT Base Ccy, calculate half-adjusted WHT                              MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+     C           INTDUE    MULT WRATE     EVETAX                                            MD023792
+      *                                                                                    MD023792A
+      ** Check if tax amount is to be rounded down                                         MD023792A
+      *                                                                                    MD023792A
+     C           CCY       IFEQ BJCYCD                                                     MD023792A
+     C           CDL081    ANDEQ'Y'                                                        MD023792A
+     C           W#BSRD    ANDEQ'Y'                                                        MD023792A
+     C           CCY       ORNE BJCYCD                                                     MD023792A
+     C           CDL081    ANDEQ'Y'                                                        MD023792A
+     C           W#NBRD    ANDEQ'Y'                                                        MD023792A
+     C                     DIV  100       EVETAX                                           MD023792A
+     C                     ELSE                                                            MD023792A
+     C                     DIV  100       EVETAX 130H                                       MD023792
+     C                     ENDIF                                                           MD023792A
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDSR                                                            MD023792
+      *                                                                                     MD023792
+      *****************************************************************                     MD023792
      C/EJECT                                                                                  234341
       *****************************************************************                       234341
       *                                                               *                       234341

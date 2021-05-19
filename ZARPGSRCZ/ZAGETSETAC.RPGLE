@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas ZA Get settlement a/c given settlement inst')
+/*EXI *  TEXT('Midas ZA Get settlement a/c given settlement inst')    *
       *****************************************************************
       *                                                               *
       *  Midas - General functions                                    *
@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 236420             Date 22Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CLE025             Date 20Oct03               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -32,6 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  236420 - RPTRGSRV01 job loops when getting a database        *
+      *           + 00085444 - No DB error if settlement type 05      *
+      *         - Applied for MD048591.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CLE025 - Credit Lines (Recompile)                            *
@@ -192,6 +196,10 @@
       ** Retail account number (numeric and alpha)
      D RetailNo        S             10S 0
      D RetailNoA       S             10A
+      *                                                                                       236420
+      ** PB213b flag                                                                          236420
+      *                                                                                       236420
+     D PB213b          S              1A                                                      236420
  
       ** -------------------------------------------------------------------------------------------
  
@@ -214,6 +222,16 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
  
+      *                                                                                       236420
+      ** Store return code parameter                                                          236420
+      *                                                                                       236420
+     C                   If        ReturnCode = 'PB213b'                                      236420
+     C                   EVAL      PB213b = 'Y'                                               236420
+     C                   Else                                                                 236420
+     C                   EVAL      PB213b = 'N'                                               236420
+     C                   Endif                                                                236420
+     C                   Eval      ReturnCode = ' '                                           236420
+      *                                                                                       236420
       ** Reset the MEMOS and PRONO update flags (this is done here rather
       ** than by the INZ keyword because they are on the entry parameter
       ** list.  Also clear some file fields which are tested later,
@@ -354,7 +372,11 @@
  
      C                   IF        @RTCD <> *blanks
      C                   EVAL      ReturnCode = 'Error'
+     C                   IF        PB213b = 'N'                                               236420
      C                   EXSR      *pssr
+     C                   Else                                                                 236420
+     C                   Return                                                               236420
+     C                   Endif                                                                236420
      C                   ENDIF
  
       ***Set*up*the*account*key*with*this*account*code;*clear*the*account       147775
@@ -380,7 +402,11 @@
      C                   IF        ATYP <> 'R'
      C                   EXSR      ClearAcc
      C                   EVAL      ReturnCode = 'Error'
+     C                   IF        PB213b = 'N'                                               236420
      C                   EXSR      *pssr
+     C                   Else                                                                 236420
+     C                   Return                                                               236420
+     C                   Endif                                                                236420
      C                   ENDIF
  
      C                   ENDSR
@@ -404,7 +430,11 @@
       ** End in error if account not found
      C                   IF        NoRecFound = True
      C                   EVAL      ReturnCode = 'Error'
+     C                   IF        PB213b = 'N'                                               236420
      C                   EXSR      *pssr
+     C                   Else                                                                 236420
+     C                   Return                                                               236420
+     C                   Endif                                                                236420
      C                   ENDIF
  
       ** Return a/c details                                                     147775
@@ -448,7 +478,11 @@
  
      C                   IF        @RTCD <> *blanks
      C                   EVAL      ReturnCode = 'Error'
+     C                   IF        PB213b = 'N'                                               236420
      C                   EXSR      *pssr
+     C                   Else                                                                 236420
+     C                   Return                                                               236420
+     C                   Endif                                                                236420
      C                   ENDIF
  
      C*******************EVAL      Branch = A7BRCD                              147775
@@ -499,7 +533,11 @@
       ** End in error if account not found
      C                   IF        NoRecFound = True
      C                   EVAL      ReturnCode = 'Error'
+     C                   IF        PB213b = 'N'                                               236420
      C                   EXSR      *pssr
+     C                   Else                                                                 236420
+     C                   Return                                                               236420
+     C                   Endif                                                                236420
      C                   ENDIF
  
      C                   EVAL      Branch = BRCA

@@ -15,8 +15,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036452           Date 22Mar16               *
+      *  Prev Amend No. AR990362A          Date 27Mar13               *
+      *                 AR990362           Date 19Mar13               *
+      *                 260405             Date 04Apr20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -101,6 +104,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD036452 - Unable to handle negative rates                   *
+      *             Negate TOTI if INTR is negative                   *
+      *  AR990362A  - Changed Total Interest Override conditions      *
+      *               (Child: AR990363)                               *
+      *  AR990362   - Changed Total Interest Override conditions      *
+      *               (Child: AR990363)                               *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -1334,6 +1343,11 @@
      C                     MOVELCCY       ##CCY
      C                     EXSR SRDCDT
      C                     MOVE A6NBDP    ##D,2
+      *                                                                                     MD036452
+     C           INTR      IFLT 0                                                           MD036452
+     C                     Z-SUBTOTI      TOTI                                              MD036452
+     C                     ENDIF                                                            MD036452
+      *                                                                                     MD036452
      C/COPY WNCPYSRC,CG4310C004
       *
       ** Interest Rate
@@ -1342,7 +1356,16 @@
       *
       ** IF TOTAL INTEREST OVERRIDE, INTEREST AMOUNT IS ZERO (IE UNKNOWN)
      C                     TESTB'2'       DNSI           99*
-     C   99                Z-ADD0         TOTI
+     C***99*****           Z-ADD0         TOTI                                              AR990362
+      *                                                                                     AR990362
+      ** Do not override if maturity date is past.                                          AR990362
+      *                                                                                     AR990362
+     C           *IN99     IFEQ '1'                                                         AR990362
+     C           MDAT      ANDNE0                                                           AR990362
+     C********** MDAT      ANDGEBJRDNB                                            AR990362 AR990362A
+     C           MDAT      ANDGTBJRDNB                                                     AR990362A
+     C                     Z-ADD0         TOTI                                              AR990362
+     C                     ENDIF                                                            AR990362
      C/COPY WNCPYSRC,CG4310C010
       *
       ** Gross Interest

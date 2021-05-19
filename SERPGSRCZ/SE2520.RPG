@@ -22,8 +22,12 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. 254443A            Date 03Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056221           Date 03Dec20               *
+      *  Prev Amend No. 254290             Date 14Nov19               *
+      *                 230498             Date 08Feb12               *
+      *                 144347             DATE 13Mar03               *
+      *                 254443A            Date 03Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 217131             Date 02Apr12               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
@@ -68,6 +72,18 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD056221 - ICD - Drop Transactions Securities                *
+      *           - Enhance the validation when dropping historic     *
+      *             trades by checking the trades Security if matured *
+      *             (RECI = 'M').                                     *
+      *  254290 - Delete from TRADSDX2 when T2WHEN = 'B'.             *
+      *           Applied fix for MD054407.                           *
+      *  230498 - Records with same trade reference exist in TRADSDX1 *
+      *           and TRADSDX2. Preventative fix is to drop records if*
+      *           TRADSD records are to be deleted. Applied 223696.   *
+      *  144347 - Flag PF/TRAUTD records as deleted when corresponding*
+      *           trades records no longer exist in PF/TRADSD.        *
+      *           Applied for AR986197 (Child:AR986200)               *
       *  254443A - I/O Operation Error due to closed files.           *
       *            Applied for MD-56562.                              *
       *  MD046248 - Finastra Rebranding                               *
@@ -144,15 +160,22 @@
      F*****************************************************************
      F*
      FHSTTR   UP  E           K        DISK
+     FHSTTTR  IF  E           K        DISK                                                   230498
+     F            HSTTRDF                           KRENAMEHISTRAD                            230498
      FSETLT   UF  E           K        DISK
      FPMCHTVPDUF  E           K        DISK                      A        S01486
      FTRADSDY1UF  E           K        DISK                                                   202689
      FTRADSDY2UF  E           K        DISK                                                   202689
+     FTRADSD10IF  E           K        DISK                                                   230498
+     F            TRADSDF                           KRENAMETRADSDF1                           230498
      FSECTY   IF  E           K        DISK
      FINVTP   IF  E           K        DISK                               S01486
      FHSTTRA  UF  E                    DISK
      FSETLEA  UF  E                    DISK
      FHTRAUT  UF  E           K        DISK                               S01269
+     FTRADS   IF  E           K        DISK                                                   144347
+     FTRAUT   UF  E           K        DISK                                                   144347
+     F            TRAUTDF                           KRENAMETRAUTDF2                           144347
      FTABSE   IF  E           K        DISK
      F            TABLETAF                          KIGNORE
      F            TABTB11F                          KIGNORE
@@ -197,6 +220,8 @@
      F*   33 - General work indicator                                 *
      F*   36 - DETAIL PRINTER P1 IS OPEN                              *   E29170
      F*   37 - MULTIBRANCHING ON                                      *   E29170
+     F*   38 - Read TRAUT indicator                                   *                       144347
+     F*   39 - Chain TRADS indicator                                  *                       144347
      F*   69 - Used to Control first cycle processing                 *
      F*   70 - ON-Print Client number/OFF-Print shortname             *
      F*   71 - ON-Trade not settled - Print message                   *
@@ -245,6 +270,11 @@
      I                                              TDRF  L1
      I              RECI                            RECIX
      I              LCD                             LCDX
+     I*                                                                                       144347
+     I** Rename TRADSDF record id field                                                       144347
+     I*                                                                                       144347
+     ITRADSDF                                                                                 144347
+     I              RECI                            RECIY                                     144347
      I*
      ICPYR@#      DS
      I*
@@ -647,6 +677,8 @@
      C           LATERD    IFLE RTNTDT
       ** Check that security has matured                                                      217131
      C           LATERD    ANDGEMATY                                                          217131
+     C           LATERD    ORLE RTNTDT                                                      MD056221
+     C           RECI      ANDEQ'M'                                                         MD056221
      C*                                                                   S01408
      C/COPY WNCPYSRC,SE2520CCP2                                           S01408
      C*                                                                   S01408
@@ -819,7 +851,112 @@
      CL0                   END
      CL0                   END
      C*
+     C** Flag PF/TRAUTD records as deleted if corresponding trade                             144347
+     C** record in PF/TRADSD no longer exist                                                  144347
+     C*                                                                                       144347
+     CLR                   READ TRAUTDF2                 38                                   144347
+     CLR         *IN38     DOWNE'1'                                                           144347
+     CLR                   MOVE TRDRF     PTRDRF  6                                           144347
+     CLR         TRDRF     CHAINTRADSDF              39                                       144347
+     CLR         *IN39     IFEQ '1'                                                           144347
+     CLR         *IN39     OREQ '0'                                                           144347
+     CLR         RECIY     ANDEQ'*'                                                           144347
+     CLR         PTRDRF    DOWEQTRDRF                                                         144347
+     CLR         *IN38     ANDNE'1'                                                           144347
+     CLR                   MOVE '*'       RECI                                                144347
+     CLR                   UPDATTRAUTDF2                                                      144347
+     CLR                   READ TRAUTDF2                 38                                   144347
+     CLR                   ENDDO                                                              144347
+     CLR                   ELSE                                                               144347
+     CLR         PTRDRF    DOWEQTRDRF                                                         144347
+     CLR         *IN38     ANDNE'1'                                                           144347
+     CLR                   READ TRAUTDF2                 38                                   144347
+     CLR                   ENDDO                                                              144347
+     CLR                   ENDIF                                                              144347
+     CLR                   ENDDO                                                              144347
+      *                                                                                       230498
      C/COPY WNCPYSRC,SE2520C003
+      *                                                                                       230498
+      ** If S01401 is on and CSW003 is off, delete 1 record each from                         230498
+      ** files TRADSDX1 and TRADSDX2.                                                         230498
+      *                                                                                       230498
+     CLR         S01401    IFEQ 'Y'                                                           230498
+     CLR         CSW003    ANDEQ'N'                                                           230498
+     CLR                   MOVE '0'       *IN28                                               230498
+     CLR                   MOVE '0'       *IN34                                               230498
+     CLR                   READ TRADSD10                 28                                   230498
+      *                                                                                       230498
+     CLR         *IN28     DOWEQ'0'                                                           230498
+      *                                                                                       230498
+     CLR         KEY1      CHAINHISTRAD              35                                       230498
+      *                                                                                       230498
+      ** Delete records from TRADSDX1 and TRADSDX2 if no record found                         230498
+      ** in PF/HSTTRD.                                                                        230498
+      *                                                                                       230498
+     CLR         *IN35     IFEQ '1'                                                           230498
+     CLR         RECIX     OREQ '*'                                                           230498
+     CLR         KEY1      CHAINTRADSDY1             34                                       230498
+     CLR         *IN34     IFEQ '0'                                                           230498
+     CLR                   DELETTRADSDD1                                                      230498
+     CLR                   ENDIF                                                              230498
+     CLR         KEY1      CHAINTRADSDY2             34                                       230498
+     CLR         *IN34     IFEQ '0'                                                           230498
+     CLR                   DELETTRADSDD2                                                      230498
+     CLR                   ENDIF                                                              230498
+     CLR                   ENDIF                                                              230498
+      *                                                                                       230498
+     CLR                   READ TRADSD10                 28                                   230498
+     CLR                   ENDDO                                                              230498
+     CLR                   ENDIF                                                              230498
+      *                                                                                       230498
+      ** If S01401 is on and CSW003 is off, delete 2 records each from                        230498
+      ** files TRADSDX1 and TRADSDX2, if they exist.                                          230498
+      *                                                                                       230498
+     CLR         S01401    IFEQ 'Y'                                                           230498
+     CLR         CSW003    ANDEQ'Y'                                                           230498
+     CLR                   MOVE '0'       *IN28                                               230498
+     CLR                   MOVE '0'       *IN34                                               230498
+     CLR                   READ TRADSD10                 28                                   230498
+      *                                                                                       230498
+     CLR         *IN28     DOWEQ'0'                                                           230498
+      *                                                                                       230498
+     CLR         KEY1      CHAINHISTRAD              35                                       230498
+      *                                                                                       230498
+      ** Delete records from TRADSDX1 and TRADSDX2 if no record found                         230498
+      ** in PF/HSTTRD.                                                                        230498
+      *                                                                                       230498
+     CLR         *IN35     IFEQ '1'                                                           230498
+     CLR         RECIX     OREQ '*'                                                           230498
+     CLR                   MOVELTDRF      W#TDRF                                              230498
+     CLR                   MOVE 'A'       W#WHEN                                              230498
+      *                                                                                       230498
+     CLR         DY1KY     CHAINTRADSDY1             34                                       230498
+     CLR         *IN34     IFEQ '0'                                                           230498
+     CLR                   DELETTRADSDD1                                                      230498
+     CLR                   MOVE 'B'       W#WHEN                                              230498
+     CLR         DY1KY     CHAINTRADSDY1             34                                       230498
+     CLR         *IN34     IFEQ '0'                                                           230498
+     CLR                   DELETTRADSDD1                                                      230498
+     CLR                   ENDIF                                                              230498
+     CLR                   ENDIF                                                              230498
+      *                                                                                       230498
+     CLR                   MOVE 'A'       W#WHEN                                              230498
+     CLR         DY1KY     CHAINTRADSDY2             34                                       230498
+     CLR         *IN34     IFEQ '0'                                                           230498
+     CLR                   DELETTRADSDD2                                                      230498
+     CLR                   MOVE 'B'       W#WHEN                                              230498
+     CLR         DY1KY     CHAINTRADSDY2             34                                       230498
+     CLR         *IN34     IFEQ '0'                                                           230498
+     C*LR*******           DELETTRADSDD1                                               230498 254290
+     CLR                   DELETTRADSDD2                                                      254290
+     CLR                   ENDIF                                                              230498
+     CLR                   ENDIF                                                              230498
+     CLR                   ENDIF                                                              230498
+      *                                                                                       230498
+     CLR                   READ TRADSD10                 28                                   230498
+     CLR                   ENDDO                                                              230498
+     CLR                   ENDIF                                                              230498
+      *                                                                                       230498
      CLR         *IN46     IFEQ *ON                                                           CER001
      CLR                   CLOSESETRX1PD                                                      CER001
      CLR                   ENDIF                                                              CER001
@@ -887,6 +1024,7 @@
       *                                                                                       202689
       ** If both features are on, more than one record must be                                202689
       ** deleted from file TRADSDX1                                                           202689
+      ** and TRADSDX2.                                                                        230498
       *                                                                                       202689
      C           S01401    IFEQ 'Y'                        IF*1                               202689
      C           CSW003    ANDEQ'Y'                                                           202689
@@ -911,6 +1049,18 @@
      C                     ENDIF                           FI*3                               202689
      C*                                                                                       202689
      C                     ENDIF                           FI*2                               202689
+     C                     MOVE 'A'       W#WHEN                                              230498
+     C           DY1KY     CHAINTRADSDY2             40                                       230498
+     C           *IN40     IFEQ '0'                                                           230498
+     C                     DELETTRADSDD2                                                      230498
+     C                     MOVE 'B'       W#WHEN                                              230498
+     C           DY1KY     CHAINTRADSDY2             40                                       230498
+     C           *IN40     IFEQ '0'                                                           230498
+     C**********           DELETTRADSDD1                                               230498 254290
+     C                     DELETTRADSDD2                                                      254290
+     C                     ENDIF                                                              230498
+     C                     ENDIF                                                              230498
+     C*                                                                                       230498
      C*                                                                                       202689
      C                     ENDIF                           FI*1                               202689
      C*

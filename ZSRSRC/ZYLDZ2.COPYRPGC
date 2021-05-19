@@ -7,12 +7,14 @@
       *  ZYLD subroutine sets up parameter values and calls the       *
       *  ZYIELD routine for calculating yields or prices              *
       *                                                               *
+      *  Last Amend No. MD033891           Date 07Jul15               *
+      *  Prev Amend No. ADEFIX             Date 14Dec14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSE071             Date 19Jul05
-      *  Prev Amend No. 229857             Date 07Oct04               *
+      *                 CSE071             Date 19Jul05
+      *                 229857             Date 07Oct04               *
       *                 226570             Date 27Jun04               *
       *                 211407             Date 08Nov02               *
       *                 207543             Date 17Jul02               *
@@ -48,6 +50,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033891 - LAVP issue on Branch 900. Set LAVP to 100 if      *
+      *             passing from above 100 to below 100 or vice versa.*
+      *  ADEFIX   Recalculation using Yield on Price 100 causes       *
+      *           rounding difference on new price on 6 to 9 decimal  *
+      *           places.                                             *
+      *           Reset the price to 100 if it was Previouly 100      *
       *  CSE071 - Multiple Holidays Re Securities                     *
       *  229857 - Calculate the correct NMAT and FMAT for divisor     *
       *           basis 1 and 2. Applied fix 188723.                  *
@@ -993,6 +1001,10 @@
      C**  ALL PARAMETERS SET UP CALL ZYIELD ROUTINE
      C***********          CALL 'ZYIELD'  YPARMS                          083039
      C**********           CALL 'ZYIELD'  YPARMS       99                              083039 CPK015
+      *  IF CALLS Y TO P  BUT SAVE PRICE WAS 100 FORCE SAVE PRICE IN NEW PRICE                ADEFIX
+     C           PRCYLD    IFEQ 'Y'                                                           ADEFIX
+     C                     Z-ADDPRICEC    SAVP   159                                          ADEFIX
+     C                     END                                                                ADEFIX
      C                     CALL 'ZYIELD'               99                                     CPK015
      C                     PARM           PRCYLD                                              CPK015
      C                     PARM           METHOD                                              CPK015
@@ -1024,6 +1036,18 @@
      C                     PARM           DLCOUP                                              CPK015
      C                     PARM           ISSDTE                                              CSE035
      C                     PARM           WBENCD                                              CSE035
+     C           PRCYLD    IFEQ 'P'                                                           ADEFIX
+     C           SAVP      IFEQ 100                                                           ADEFIX
+     C                     Z-ADDSAVP      PRICEC                                              ADEFIX
+     C                     END                                                                ADEFIX
+      ** Price cannot pass from above 100 to below 100 or vice versa.                       MD033891
+     C           SAVP      IFLT 100                                                         MD033891
+     C           PRICEC    ANDGT100                                                         MD033891
+     C           SAVP      ORGT 100                                                         MD033891
+     C           PRICEC    ANDLT100                                                         MD033891
+     C                     Z-ADD100       PRICEC                                            MD033891
+     C                     ENDIF                                                            MD033891
+     C                     END                                                                ADEFIX
      C                     END                                            E39495
      C*                                                                   E39495
      C**  IF  long term CD and Price to Yield conversion required,        E39495

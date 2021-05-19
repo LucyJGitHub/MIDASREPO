@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1088819          Date 03Jun20               *
-      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *  Last Amend No. MD023765           Date 07Jan14               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 MD053472           Date 27Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -87,6 +88,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023765 - Incorrect projected movements for Adjustment to   *
+      *             Accrued Interest. Added parameters BEDEDC,        *
+      *             AFDEDC and CALLER for AOOUMMU0. Patterned after   *
+      *             fix AR1044820.                                    *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *
@@ -1869,7 +1874,8 @@
       *                                                                                    AR1044820
       ** Calling Program                                                                   AR1044820
       *                                                                                    AR1044820
-     C                   PARM      *BLANKS       CALLER           10                       AR1044820
+     C**********         PARM      *BLANKS       CALLER           10              AR1044820 MD023765
+     C                   PARM      'MMDEAMUPM'   CALLER           10                        MD023765
      C/COPY WNCPYSRC,MMDEAMMC04
      C     @RTCD         IFEQ      '*ERROR*'
      C                   MOVEL     *BLANK        DBKEY

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *  Last Amend No. AR971184A          Date 13Jun12               *
+      *  Prev Amend No. MD056982           Date 12Oct20               *
+      *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
@@ -155,6 +156,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR971184A - Additional Coding. Missed out repair location    *
+      *              A_PBAFRT.                                        *
+      *            - Applied fix for AR989192 (Child:AR989193)        *
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
@@ -6855,8 +6859,9 @@
 
      C                   EVAL      D_PBFRNT = A_PBFRNT                                      AR971184
      C                   EVAL      D_PBAFRT = A_PBAFRT                                      AR971184
-     C                   EVAL      D_PBAFRT = A_PBAFRT                                      AR971184
-                                                                                            AR971184
+     C**********         EVAL      D_PBAFRT = A_PBAFRT                           AR971184  AR971184A
+     C                   EVAL      D_PBREPA = A_PBREPA                                     AR971184A
+                                                                                           AR971184A
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
       ** transaction even if it originated from SIN module.                                   CSC011
                                                                                               CSC011

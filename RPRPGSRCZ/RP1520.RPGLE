@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. 248485             Date 22Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -71,6 +72,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248485 - job RPTRGSRV01 in Repmidasxx is dumping.            *
+      *           Apply fix 236420.                                   *
+      *  236420 - RPTRGSRV01 job loops when getting a database.       *
+      *         - Applied for MD048591.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -1135,6 +1140,7 @@
      C     GetSetAc      Begsr
  
      C                   Reset                   ReturnCode
+     C                   Movel     'PB213b'      ReturnCode                                   236420
      C                   Callb     'ZAGETSETAC'
       **  Outputs
       **  -------

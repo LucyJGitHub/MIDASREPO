@@ -1,7 +1,8 @@
      H***DEBUG                                                                  192099
      H DEBUG FIXNBR(*INPUTPACKED)                                               192099
       *****************************************************************
-/*STD *  RPGBASEMOD                                                   *
+/******STD****RPGBASEMOD***********************************************                     MD026365
+/*STD *  RPGSQLMOD                                                    *                     MD026365
 /*EXI *  TEXT('Midas RP Extraction Module for DEALSDC.')              *
       *****************************************************************
       *                                                               *
@@ -25,8 +26,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. 248485             Date 22Jan18               *
+      *  Prev Amend No. MD026365           Date 19May14               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -68,6 +71,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248485 - job RPTRGSRV01 in Repmidasxx is dumping.            *
+      *           Apply fix 236420.                                   *
+      *  236420 - RPTRGSRV01 job loops when getting a database.       *
+      *         - Applied for MD048591.                               *
+      *  MD026365 - Reconciliation difference ToF/Midas               *
+      *             due to Gross Interest being passed.               *
+      *           - Ensure that Net Interest is passed (the lesser    *
+      *             amount from the two interest postings on          *
+      *             maturity date) instead of Gross Interest          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -208,6 +220,23 @@
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
+                                                                                            MD026365
+     D*****************************************************************                     MD026365
+     D* Procedure name: GetNetInterest                                *                     MD026365
+     D*****************************************************************                     MD026365
+     D* Purpose:        Ensure that Net Interest is retrieved         *                     MD026365
+     D*                 (instead of Gross Interest) from HISTSAA      *                     MD026365
+     D* Accepts:                                                      *                     MD026365
+     D* Parameter:      Customer Name                                 *                     MD026365
+     D* Parameter:      Deal Number                                   *                     MD026365
+     D* Parameter:      Event Date                                    *                     MD026365
+     P* Returns:        Event Amount                                  *                     MD026365
+     D*****************************************************************                     MD026365
+     D GetNetInterest  PR            15P 0                                                  MD026365
+     D  iCust                         6A   CONST                                            MD026365
+     D  iDeal                         6P 0 CONST                                            MD026365
+     D  iEvent_Date                   5P 0 CONST                                            MD026365
+                                                                                            MD026365
       **--------------------------------------------------------------------------------------------
  
       ** The following /COPY contains various standard declares
@@ -919,6 +948,17 @@
      C     K_HISTSAA     Reade     HIST4                                  83
  
      C                   Enddo
+                                                                                            MD026365
+      ** Get Event Amount for Net Interest                                                  MD026365
+                                                                                            MD026365
+     C                   If        H_RTYP = 'IP'                                            MD026365
+     C                             and *IN83 = False                                        MD026365
+                                                                                            MD026365
+     C                   Eval      H_EAMT = getNetInterest(                                 MD026365
+     C                                         HKCNUM:                                      MD026365
+     C                                         HKDN38:                                      MD026365
+     C                                         K_MATD)                                      MD026365
+     C                   EndIf                                                              MD026365
                                                                                               215312
      C     *in83         Ifeq      False                                                      215312
      C     H_RTYP        Andeq     'RO'                                                       215312
@@ -1224,6 +1264,7 @@
      C     GetSetAc      Begsr
  
      C                   Reset                   ReturnCode
+     C                   Movel     'PB213b'      ReturnCode                                   236420
      C                   Callb     'ZAGETSETAC'
       **  Outputs
       **  -------
@@ -1509,6 +1550,42 @@
      C                   Eval      EndPosition = FieldPosition - 1
  
      C                   Endsr
+     P*****************************************************************                     MD026365
+     P* Procedure name: GetNetInterest                                *                     MD026365
+     P*****************************************************************                     MD026365
+     D* Purpose:        Ensure that Net Interest is retrieved         *                     MD026365
+     D*                 (the lesser amount of interest posting        *                     MD026365
+     D*                  during deal maturity)                        *                     MD026365
+     D*                 instead of Gross Interest from HISTSAA        *                     MD026365
+     P* Accepts:                                                      *                     MD026365
+     P* Parameter:      Customer Name                                 *                     MD026365
+     P* Parameter:      Deal Number                                   *                     MD026365
+     P* Parameter:      Event Date                                    *                     MD026365
+     P* Returns:        Event Amount                                  *                     MD026365
+     P*****************************************************************                     MD026365
+     P GetNetInterest  B                                                                    MD026365
+     D GetNetInterest  PI            15P 0                                                  MD026365
+                                                                                            MD026365
+     D  iCust                         6A   CONST                                            MD026365
+     D  iDeal                         6P 0 CONST                                            MD026365
+     D  iEvent_Date                   5P 0 CONST                                            MD026365
+                                                                                            MD026365
+     D  oEvent_Amount  S             15P 0                                                  MD026365
+                                                                                            MD026365
+     C/exec sql                                                                             MD026365
+     C+ select min(EAMT) into :oEvent_Amount                                                MD026365
+     C+    from HISTSAA                                                                     MD026365
+     C+    where CNUM = :iCust and                                                          MD026365
+     C+          DLNO = :iDeal and                                                          MD026365
+     C+          EDAT = :iEvent_Date and                                                    MD026365
+     C+          RTYP  = 'IP' and                                                           MD026365
+     C+          EAMT  <> 0                                                                 MD026365
+     C/end-exec                                                                             MD026365
+                                                                                            MD026365
+     C                   Return    oEvent_Amount                                            MD026365
+     C                                                                                      MD026365
+     P GetNetInterest  E                                                                    MD026365
+      *****************************************************************                     MD026365
       /Eject
       *****************************************************************
  

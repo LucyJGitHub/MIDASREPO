@@ -7,13 +7,14 @@
 /*       SEC0604B - POSITION SETTLEMENT CONFIRMATIONS               */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*                                                                   */
+/*       Last Amend No. MD049828           Date 12Feb19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 086128             Date 01Mar95              */
+/*                      086128             Date 01Mar95              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      JOURN              Date 24Feb95              */
@@ -22,7 +23,9 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/*       MD046248 - Finastra Rebranding                              */
+/*   MD049828 - Database error in file SDSECSPD in component        */
+/*               CGC2050 00005.                                     */
+/*   MD046248 - Finastra Rebranding                                 */
 /*   086128 - Move CG extract to CGC2200                            */
 /*   JOURN  - FILE POSETD HAS TO BE JOURNALLED                      */
 /*   S01522 - USER DEFINED CORRESPONDENCE                           */
@@ -57,6 +60,9 @@
 /* CLEAR SWITCHES */
  
              CHGJOB     SWS(00000000)
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)                            /*MD049828*/
+             MONMSG     MSGID(CPF8351)                              /*MD049828*/
  
 /***********                                                           *086128*/
 /*** *******                                                   *S01522**086128*/
@@ -92,6 +98,9 @@
 /*/COPY WNCPYSRC,SEC0604B02                                          */
  
              CALL       PGM(SE0580)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)    /*MD049828*/
+             COMMIT                                                 /*MD049828*/
+             GOTO       CMDLBL(ENDCLPGM)                            /*MD049828*/
  
 ERROR:                                                                /*S01522*/
 /* IF EXTERNAL SWITCHES U7 AND U8 ON, RECOVER DATA FROM LDA */
@@ -115,6 +124,8 @@ ERROR:                                                                /*S01522*/
                           of Balance')
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
+             ROLLBACK                                               /*MD049828*/
+ENDCLPGM:                                                           /*MD049828*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

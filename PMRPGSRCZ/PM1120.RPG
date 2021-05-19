@@ -13,8 +13,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. 250318             Date 18Dec13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -56,6 +57,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  250318 - Problem on PMHOLDPD data. Currency must be from     *
+      *           portfolio in all cases.                             *
+      *         - Applied for MD024115                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -592,6 +596,23 @@
      C*****                EXSR *PSSR                               B08040CPB002
      C*****                                                         S01486CPB002
      C*****                ELSE                                     S01486CPB002
+     C                     CALL 'AOPLCSR0'                                                    250318
+     C                     PARM *BLANKS   PRTCD   7                                           250318
+     C                     PARM '*KEY'    POPTN   7                                           250318
+     C                     PARM           PLCUS  10                                           250318
+     C           SDPLCS    PARM SDPLCS    DSFDY                                               250318
+      *                                                                                       250318
+      ** Perform database in error processing if no record found                              250318
+      *                                                                                       250318
+     C           PRTCD     IFNE *BLANKS                                                       250318
+     C           *LOCK     IN   LDA                                                           250318
+     C                     Z-ADD02        DBASE            ***************                    250318
+     C                     MOVEL'SDPLCSPD'DBFILE           * DB ERROR 02 *                    250318
+     C                     MOVELCACNUM    DBKEY            ***************                    250318
+     C                     OUT  LDA                                                           250318
+     C                     EXSR *PSSR                                                         250318
+      *                                                                                       250318
+     C                     ELSE                                                               250318
      C*****                CALL 'AOCUSTR0'                          S01486CPB002
      C                     CALL 'AOCUSTR1'                                CPB002
      C                     PARM *BLANKS   PRTCD   7                       S01486
@@ -611,6 +632,7 @@
      C                     EXSR *PSSR                                     S01486
      C                     END                                            S01486
      C*****                END                                      B08040CPB002
+     C                     ENDIF                                                              250318
      C*                                                                   CPB002
      C                     CALL 'AOPLCSR0'                                CPB002
      C                     PARM *BLANKS   PRTCD   7                       CPB002

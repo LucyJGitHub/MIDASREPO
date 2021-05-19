@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1071025          Date 16Jan13               *
+      *  Last Amend No. 114468             Date 18Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1071025          Date 16Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  114468 - Template Enhancements - Live file maintained        *
+      *           Applied for AR1079856                               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1071025 - Erroneous field will only highlight after the    *
       *              second enter (Recompile)                         *
@@ -47,7 +50,9 @@
      F*SE4020DFCF**E******              WORKSTN                           S01315
      FAK0062DFCF  E                    WORKSTN                            S01315
      F                                        RRN   KSFILE AKSUB
-     FXSEACKD IF  E                    DISK                           UC  S01315
+     F***XSEACKD IF  E                    DISK                           UC            S01315 114468
+     FXSEACKD IF  E           K        DISK                                                   114468
+     FSEACKD  IF  E           K        DISK                                                   114468
       *
       *   INDICATOR USAGE
       *   ---------------
@@ -76,7 +81,8 @@
      E*                                                                   S01315
      E                    CPY@    1   1 80                                S01315
      E** Copyright array                                                  S01315
-     E                    SOPTN       3  1               Option fields.
+     E**********          SOPTN       3  1               Option fields.                       114468
+     E                    SOPT        3  1               Option fields.                       114468
      E                    SKEY        3 20               Keys in subfile.
       *
       *  Data structures for transferring fields from program to screen
@@ -90,6 +96,16 @@
      I                                        1  20 KEY1
      I                                       21  40 KEY2
      I                                       41  60 KEY3
+     IPSTREF      DS                                                                          114468
+     I                                        1   10PRF1                                      114468
+     I                                        2   20PRF2                                      114468
+     I                                        3   30PRF3                                      114468
+     I                                        4   40PRF4                                      114468
+     I                                        5   50PRF5                                      114468
+     I                                        6   60PRF6                                      114468
+     IKSEACK      DS                                                                          114468
+     I                                        1  20 POSS                                      114468
+     I                                        1   3 POSR                                      114468
      I*                                                                   S01315
      ICPYR@#      DS                                                      S01315
      I                                        1  80 CPY@                  S01315
@@ -123,7 +139,8 @@
      C           *NAMVAR   DEFN           RUNDAT                          S01315
      C                     IN   RUNDAT                                    S01315
      C*                                                                   S01315
-     C           TYPE      IFEQ 'TEMPLATE'                                081881
+     C********** TYPE      IFEQ 'TEMPLATE'                                             081881 114468
+     C           TYPE      IFEQ 'LIVEFILE'                                                    114468
      C                     SETON                     30                   081881
      C                     ELSE                                           081881
      C                     SETOF                     30                   081881
@@ -175,28 +192,95 @@
       *
      C           FILL      BEGSR
       *
-     C                     OPEN XSEACKD                                   S01315
+     C**********           OPEN XSEACKD                                                S01315 114468
      C*
-     C                     Z-ADD1         RRN
+     C**********           Z-ADD1         RRN                                                 114468
+     C   35                MOVE *IN30     *IN35                                               114468
+     C  N35                Z-ADD1         RRN                                                 114468
+     C   35                MOVELPOSL      POSS                                                114468
+     C   36                MOVELPOSF      POSS                                                114468
+     C                     SETOF                     209091                                   114468
+     C*                                                                                       114468
+     C           *IN30     IFEQ '1'                                                           114468
+     C           POSS      SETLLSEACKD                                                        114468
+     C*                                                                                       114468
+     C           *IN36     IFEQ '0'                                                           114468
+     C                     READ SEACKD                   91                                   114468
+     C           *IN91     IFEQ '1'                                                           114468
+     C           *IN35     IFEQ '0'                                                           114468
+     C           POSS      SETGTSEACKD                                                        114468
+     C                     READPSEACKD                   91                                   114468
+     C                     ELSE                                                               114468
+     C                     MOVE *IN91     *IN90                                               114468
+     C                     END                                                                114468
+     C                     END                                                                114468
+     C*                                                                                       114468
+     C                     ELSE                                                               114468
+     C                     READPSEACKD                   91                                   114468
+     C                     END                                                                114468
+     C                     END                                                                114468
+     C*                                                                                       114468
+     C           *IN91     IFEQ '0'                                                           114468
+     C   35                Z-ADDWRRN      RRN                                                 114468
+     C                     Z-ADDRRN       #RRN    40                                          114468
+     C                     MOVE *BLANKS   POSS                                                114468
+     C                     MOVELACKE      POSR                                                114468
+     C  N35                MOVELPOSS      POSF   20                                           114468
+     C   30      POSS      SETLLSEACKD                                                        114468
+     C                     END                                                                114468
+     C*                                                                                       114468
+     C  N35N91             WRITEAKSUBCTL                                                      114468
      C*                                                                   S01315
      C** While not eof (XSEACKD)                                          S01315
      C*                                                                   S01315
+     C  N30      *LOVAL    SETLLXSEACKD                                                       114468
      C           *IN90     DOWEQ'0'                                       S01315
+     C           *IN91     ANDEQ'0'                                                           114468
       *
       *  3 a/c keys in each subfile record.
       *
      C                     Z-ADD0         X       10
      C           X         DOUEQ3
      C************         READ XSEACKDF                 90               081884
-     C                     READ TSEACKDF                 90               081884
+     C**********           READ TSEACKDF                 90                            081884 114468
+     C  N30                READ XSEACKD                  90                                   114468
+     C   30                READ SEACKD                   90                                   114468
+     C*                                                                                       114468
+     C           *IN30     IFEQ '1'                                                           114468
+     C                     MOVELACKE      INVT    3                                           114468
+     C*                                                                                       114468
+     C           ACKE      IFLE POSN                                                          114468
+     C           *IN36     OREQ '1'                                                           114468
+     C                     Z-ADDRRN       #RRN                                                114468
+     C                     END                                                                114468
+     C*                                                                                       114468
+     C           INVT      IFNE POSR                                                          114468
+     C                     MOVE '1'       *IN91                                               114468
+     C                     END                                                                114468
+     C                     END                                                                114468
       *
       *  If EOF not yet reached, move a/c key from generated file to next
       *  available position in subfile record.
       *
      C           *IN90     IFEQ '0'
-     C           RECI      IFNE '*'                                       S01315
+     C           *IN91     ANDEQ'0'                                                           114468
+     C********** RECI      IFNE '*'                                                    S01315 114468
      C                     ADD  1         X
      C                     MOVE ACKE      SKEY,X
+     C*                                                                                       114468
+     C           40        ADD  X         I                                                   114468
+     C           RECI      IFEQ '*'                                                           114468
+     C                     MOVE '1'       *IN,I                                               114468
+     C                     ELSE                                                               114468
+     C                     MOVE '0'       *IN,I                                               114468
+     C                     END                                                                114468
+     C           43        ADD  X         N       20                                          114468
+     C           PSTREF    IFNE *ZEROS                                                        114468
+     C           *IN,I     ANDEQ'0'                                                           114468
+     C                     MOVE '1'       *IN,N                                               114468
+     C                     ELSE                                                               114468
+     C                     MOVE '0'       *IN,N                                               114468
+     C                     END                                                                114468
       *                                                                   AK0007
       *  If this subfile record filled, write it and increment RRN.       AK0007
       *                                                                   AK0007
@@ -204,10 +288,11 @@
      C                     MOVE *BLANKS   OPT                             AK0007
      C                     MOVEASKEY      KEY                             AK0007
      C                     WRITEAKSUB                                     AK0007
+     C                     MOVEA*BLANKS   SKEY                                                114468
      C                     ADD  1         RRN     40                      AK0007
      C                     END                                            AK0007
       *                                                                   AK0007
-     C                     END                             RECI=*  AK0007 S01315
+     C**********           END                             RECI=*               AK0007 S01315 114468
       *                                                            AK0007 S01315
      C                     ELSE
       *
@@ -219,28 +304,37 @@
       *  to prevent RPG1255.                                              AK0007
       *
      C*
-     C                     CLOSEXSEACKD                                   S01315
+     C**********           CLOSEXSEACKD                                                S01315 114468
      C*
      C           X         IFEQ 1
      C                     MOVE *BLANKS   SKEY,2
      C                     MOVE *BLANKS   SKEY,3
+     C                     MOVEA'00'      *IN,42                                              114468
+     C                     MOVEA'00'      *IN,45                                              114468
      C                     ELSE
      C           X         IFEQ 2
      C                     MOVE *BLANKS   SKEY,3
+     C                     MOVE '0'       *IN,43                                              114468
+     C                     MOVE '0'       *IN,46                                              114468
      C                     END
      C                     END
+     C                     END                                                                114468
       *
      C           X         IFNE 0                                         AK0007
      C                     MOVE *BLANKS   OPT                             AK0007
      C                     MOVEASKEY      KEY                             AK0007
      C                     WRITEAKSUB                                     AK0007
+     C                     ADD  1         RRN                                                 114468
      C                     ELSE
+     C           *IN36     IFEQ '1'                                                           114468
+     C           RRN       SUB  1         #RRN                                                114468
+     C                     END                                                                114468
       *                                                                   AK0007
      C           RRN       IFEQ 1                                         AK0007
      C                     SETON                     20                   AK0007
      C                     MOVE *BLANKS   OPT                             AK0007
      C                     MOVE *BLANKS   KEY                             AK0007
-     C                     WRITEAKSUB                                     AK0007
+     C**********           WRITEAKSUB                                                  AK0007 114468
      C                     END                                            AK0007
       *                                                                   AK0007
      C                     END                                            AK0007
@@ -258,7 +352,11 @@
      C***                  ADD  1         RRN     40                      AK0007
      C***                  END                                            AK0007
       *
-     C                     END
+     C**********           END                                                                114468
+     C* Save Last position  & key                                                             114468
+     C                     Z-ADDRRN       WRRN    40                                          114468
+     C   90                MOVE *HIVAL    ACKE                                                114468
+     C                     MOVE ACKE      POSL   20                                           114468
      C                     END
       *
       *  Subfile filled at this point. Set indicators for SFLDSP, SFLDSPCTL
@@ -270,7 +368,10 @@
      C                     ELSE                                           AK0007
      C                     MOVEA'111'     *IN,01
      C                     END                                            AK0007
-     C                     Z-ADD1         RRN
+     C**********           Z-ADD1         RRN                                                 114468
+     C                     MOVE *IN90     *IN03                                               114468
+     C                     MOVE *BLANKS   POSN                                                114468
+     C                     Z-ADD#RRN      RRN                                                 114468
       *
      C                     ENDSR
       *
@@ -291,6 +392,8 @@
      C           *IN12     OREQ '1'                                       S01315
      C           FKEY4     OREQ '1'                                       S01315
      C           *IN05     OREQ '1'                                       S01315
+     C           *IN35     OREQ '1'                                                           114468
+     C           *IN36     OREQ '1'                                                           114468
       *
      C                     WRITEHEADER                                    S01315
      C*                                                                   S01315
@@ -317,11 +420,19 @@
      C                     MOVE ' '       FKEY4                           101299
      C                     END                                            101299
      C*                                                                   101299
+     C           *IN30     IFEQ *ON                                                           114468
+     C                     CALL 'SE0110'                                                      114468
+     C                     PARM *BLANKS   SKEY,X                                              114468
+     C                     PARM           ACTN                                                114468
+     C                     SETON                     05    Reload reqd                        114468
+     C                     ELSE                            F9                                 114468
+     C*                                                                                       114468
      C                     CALL 'AK0063'                                  S01315
      C                     PARM           SKEY,X                          S01315
      C                     PARM           ACTN                            S01315
      C                     PARM           FKEY4                           S01315
      C                     SETON                     05    Reload reqd    S01315
+     C                     END                                                                114468
      C                     END                             F9             S01315
      C*                                                                   S01315
      C** If records exist in subfile                                      S01315
@@ -347,11 +458,18 @@
      C                     MOVE ' '       FKEY4                           101299
      C                     END                                            101299
      C*                                                                   101299
+     C           *IN30     IFEQ *ON                                                           114468
+     C                     CALL 'SE0110'                                                      114468
+     C                     PARM *BLANKS   SKEY,X                                              114468
+     C                     PARM           ACTN                                                114468
+     C                     ELSE                                                               114468
+     C*                                                                                       114468
      C                     CALL 'AK0063'                                  S01315
      C                     PARM           SKEY,X                          S01315
      C                     PARM           ACTN                            S01315
      C                     PARM           FKEY4                           S01315
-     C                     SETON                     05    Reload reqd    S01315
+     C**********           SETON                     05    Reload reqd                 S01315 114468
+     C                     END                                            114468
      C*                                                                   S01315
      C                     ELSE                            Not F9         S01315
       *
@@ -359,6 +477,8 @@
       *                                                                   S01315
      C           *IN10     IFEQ '0'                        If not F3/F12  S01315
      C           *IN12     ANDEQ'0'                                       S01315
+     C           *IN35     ANDEQ'0'                        Rollup                             114468
+     C           *IN36     ANDEQ'0'                        Rolldown                           114468
       *
       *  Read all changed records from currently displayed page.
       *
@@ -372,7 +492,8 @@
       *
      C           *IN55     IFEQ '0'                        Not eof        S01315
       *
-     C                     MOVEAOPT       SOPTN
+     C**********           MOVEAOPT       SOPTN                                               114468
+     C                     MOVEAOPT       SOPT                                                114468
      C                     MOVEAKEY       SKEY
      C                     Z-ADD0         X
      C*                                                                   S01315
@@ -383,7 +504,8 @@
      C*                                                                   S01315
      C** If option entered                                                S01315
      C*                                                                   S01315
-     C           SOPTN,X   IFNE ' '                        If blank optn  S01315
+     C********** SOPTN,X   IFNE ' '                        If blank optn               S01315 114468
+     C           SOPT,X    IFNE ' '                        If blank optn                      114468
      C*                                                                   S01315
      C** If option entered for blank key, send message & blank out        S01315
      C** option                                                           S01315
@@ -392,26 +514,33 @@
      C                     MOVEL'USR4265' ZAMSID                          S01315
      C                     EXSR ZASNMS                     Send message   S01315
      C                     WRITE#MSGCTL                                   S01315
+     C                     MOVE *BLANK    SOPT,X                                              114468
+     C                     MOVEASOPT      OPT                                                 114468
+     C                     Z-ADD3         X                                                   114468
      C*                                                                   S01315
-     C           X         IFEQ 1                                         S01315
-     C                     MOVE *BLANKS   OPTN1                           S01315
-     C                     ELSE                                           S01315
-     C           X         IFEQ 2                                         S01315
-     C                     MOVE *BLANKS   OPTN2                           S01315
-     C                     ELSE                                           S01315
-     C           X         IFEQ 3                                         S01315
-     C                     MOVE *BLANKS   OPTN3                           S01315
-     C                     END                                            S01315
-     C                     END                                            S01315
-     C                     END                                            S01315
+     C********** X         IFEQ 1                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN1                                        S01315 114468
+     C**********           ELSE                                                        S01315 114468
+     C********** X         IFEQ 2                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN2                                        S01315 114468
+     C**********           ELSE                                                        S01315 114468
+     C********** X         IFEQ 3                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN3                                        S01315 114468
+     C**********           END                                                         S01315 114468
+     C**********           END                                                         S01315 114468
+     C**********           END                                                         S01315 114468
      C*                                                                   S01315
      C** If valid option entered on non-blank key, call AK0063            S01315
      C*                                                                   S01315
      C                     ELSE                                           S01315
-     C           SOPTN,X   IFEQ 'A'                        If amend reqd  S01315
-     C           SOPTN,X   OREQ 'E'                        If enquire req S01315
-     C           SOPTN,X   OREQ 'D'                        If delete req  S01315
-     C                     MOVE SOPTN,X   ACTN    1                       S01315
+     C********** SOPTN,X   IFEQ 'A'                        If amend reqd               S01315 114468
+     C********** SOPTN,X   OREQ 'E'                        If enquire req              S01315 114468
+     C********** SOPTN,X   OREQ 'D'                        If delete req               S01315 114468
+     C**********           MOVE SOPTN,X   ACTN    1                                    S01315 114468
+     C           SOPT,X    IFEQ 'A'                        If amend reqd                      114468
+     C           SOPT,X    OREQ 'E'                        If enquire req                     114468
+     C           SOPT,X    OREQ 'D'                        If delete req                      114468
+     C                     MOVE SOPT,X    ACTN    1                                           114468
      C***********          CALL 'SE4030'                                  S01315
      C*                                                                   101299
      C           *IN30     IFEQ '1'                                       101299
@@ -420,33 +549,40 @@
      C                     MOVE ' '       FKEY4                           101299
      C                     END                                            101299
      C*                                                                   101299
+     C           *IN30     IFEQ *ON                                                           114468
+     C                     CALL 'SE0110'                                                      114468
+     C                     PARM           SKEY,X                                              114468
+     C                     PARM           ACTN                                                114468
+     C                     PARM           FKEY4                                               114468
+     C                     ELSE                                                               114468
      C                     CALL 'AK0063'                                  S01315
      C                     PARM           SKEY,X
      C                     PARM           ACTN                            S01315
      C                     PARM           FKEY4                           S01315
-     C*                                                                   S01315
-     C* If F3 not pressed from AK0063, blank out option                   S01315
-     C*                                                                   S01315
-     C           FKEY4     IFNE '1'                                       S01315
-     C           X         IFEQ 1                                         S01315
-     C                     MOVE *BLANKS   OPTN1                           S01315
-     C                     ELSE                                           S01315
-     C           X         IFEQ 2                                         S01315
-     C                     MOVE *BLANKS   OPTN2                           S01315
-     C                     ELSE                                           S01315
-     C           X         IFEQ 3                                         S01315
-     C                     MOVE *BLANKS   OPTN3                           S01315
-     C                     END                                            S01315
-     C                     END                                            S01315
-     C                     END                                            S01315
-     C*                                                                   S01315
-     C** Set on Indicator 05, if subfile needs reloading                  S01315
-     C*                                                                   S01315
-     C           ACTN      IFEQ 'D'                                       S01315
-     C                     SETON                     05                   S01315
-     C                     END                                            S01315
-     C*                                                                   S01315
-     C                     END                             FKEY4 <> 1     S01315
+     C                     END                                            114468
+     C**********                                                                       S01315 114468
+     C**If*F3*not*pressed*from*AK0063,*blank*out*option                                S01315 114468
+     C**********                                                                       S01315 114468
+     C********** FKEY4     IFNE '1'                                                    S01315 114468
+     C********** X         IFEQ 1                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN1                                        S01315 114468
+     C**********           ELSE                                                        S01315 114468
+     C********** X         IFEQ 2                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN2                                        S01315 114468
+     C**********           ELSE                                                        S01315 114468
+     C********** X         IFEQ 3                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN3                                        S01315 114468
+     C**********           END                                                         S01315 114468
+     C**********           END                                                         S01315 114468
+     C**********           END                                                         S01315 114468
+     C**********                                                                       S01315 114468
+     C***Set*on*Indicator*05,*if*subfile*needs*reloading                               S01315 114468
+     C**********                                                                       S01315 114468
+     C********** ACTN      IFEQ 'D'                                                    S01315 114468
+     C**********           SETON                     05                                S01315 114468
+     C**********           END                                                         S01315 114468
+     C**********                                                                       S01315 114468
+     C**********           END                             FKEY4 <> 1                  S01315 114468
      C*                                                                   S01315
      C** If invalid option entered on non-blank key, send message         S01315
      C** and blank out option                                             S01315
@@ -456,27 +592,53 @@
      C                     EXSR ZASNMS                     Send message   S01315
      C                     WRITE#MSGCTL                                   S01315
      C*                                                                   S01315
-     C           X         IFEQ 1                                         S01315
-     C                     MOVE *BLANKS   OPTN1                           S01315
-     C                     ELSE                                           S01315
-     C           X         IFEQ 2                                         S01315
-     C                     MOVE *BLANKS   OPTN2                           S01315
-     C                     ELSE                                           S01315
-     C           X         IFEQ 3                                         S01315
-     C                     MOVE *BLANKS   OPTN3                           S01315
-     C                     END                             X=3            S01315
-     C                     END                             X=2            S01315
-     C                     END                             X=1            S01315
+     C                     MOVE *BLANK    SOPT,X                                              114468
+     C                     MOVEASOPT      OPT                                                 114468
+     C                     Z-ADD3         X                                                   114468
+     C********** X         IFEQ 1                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN1                                        S01315 114468
+     C**********           ELSE                                                        S01315 114468
+     C********** X         IFEQ 2                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN2                                        S01315 114468
+     C**********           ELSE                                                        S01315 114468
+     C********** X         IFEQ 3                                                      S01315 114468
+     C**********           MOVE *BLANKS   OPTN3                                        S01315 114468
+     C**********           END                             X=3                         S01315 114468
+     C**********           END                             X=2                         S01315 114468
+     C**********           END                             X=1                         S01315 114468
      C                     END                             Amd/Del/Enq    S01315
      C                     END                             Blank key      S01315
      C                     END                             Option blank   S01315
+     C*                                                                                       114468
+     C** Highlight Deleted Keys                                                               114468
+     C*                                                                                       114468
+     C           SKEY,X    IFNE *BLANKS                                                       114468
+     C   30      SKEY,X    CHAINSEACKD               47                                       114468
+     C  N30      SKEY,X    CHAINXSEACKD              47                                       114468
+     C           40        ADD  X         I       20                                          114468
+     C           *IN47     IFEQ '1'                                                           114468
+     C           RECI      OREQ '*'                                                           114468
+     C                     MOVE '1'       *IN,I                                               114468
+     C                     ELSE                                                               114468
+     C                     MOVE '0'       *IN,I                                               114468
+     C                     END                                                                114468
+     C           43        ADD  X         N       20                                          114468
+     C           PSTREF    IFNE *ZEROS                                                        114468
+     C           *IN,I     ANDEQ'0'                                                           114468
+     C                     MOVE '1'       *IN,N                                               114468
+     C                     ELSE                                                               114468
+     C                     MOVE '0'       *IN,N                                               114468
+     C                     END                                                                114468
+     C                     END                                                                114468
+     C                     MOVE *BLANK    SOPT,X                                              114468
+     C                     MOVEASOPT      OPT                                                 114468
      C                     END                             3 keys per lineS01315
      C*                                                                   S01315
      C**  Update subfile                                                  S01315
      C*                                                                   S01315
-     C           FKEY4     IFNE '1'                                       S01315
+     C********** FKEY4     IFNE '1'                                                    S01315 114468
      C                     UPDATAKSUB                                     S01315
-     C                     END                                            S01315
+     C**********           END                                                         S01315 114468
      C*                                                                   S01315
      C                     END                             EOF            S01315
      C                     END                             Eof            S01315
@@ -485,6 +647,13 @@
       *                                                                   S01315
      C                     END                             NOT F9      t  S01315
       *                                                                   S01315
+     C                     READ HEADER                   55                                   114468
+     C           POSN      IFNE POSS                                                          114468
+     C           POSN      ANDNE*BLANKS                                                       114468
+     C                     MOVE '1'       *IN05                                               114468
+     C                     MOVELPOSN      POSS                                                114468
+     C                     ENDIF                                                              114468
+      *                                                                                       114468
      C                     END                             RECS EXIST     S01315
      C*                                                                   S01315
      C                     END                             F3/F12         S01315
@@ -506,7 +675,7 @@
      C* Clear subfile                                                     S01315
      C*                                                                   S01315
      C                     SETOF                     0102                 S01315
-     C                     WRITEAKSUBCTL                                  S01315
+     C**********           WRITEAKSUBCTL                                               S01315 114468
      C*                                                                   S01315
      C                     ENDSR
       *

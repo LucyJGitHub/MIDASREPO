@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027553           Date 21Aug14               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027553 - Field Portfolio Management Type from TOF not      *
+      *             considerd in BF Midas.                            *
+      *           - Don't default Manage Indicator.                   *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -577,7 +581,9 @@
      C                   EVAL      P1PNCYIN = 'N'
      C                   EVAL      P1PNYPIN = 'N'
      C                   EVAL      P1PNNPIN = 'N'
+     C     PMCUST        IFNE      'P'                                                      MD027553
      C                   EVAL      P1PNMNGI = 'M'
+     C                   ENDIF                                                              MD027553
      C                   EVAL      P1PNRPYP = 'N'
      C                   Z-ADD     99999         P1PNPSDT
      C                   ENDIF

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055401           Date 25Oct20               *
-      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *  Last Amend No. MD032026           Date 24Feb15               *
+      *  Prev Amend No. MD023792           Date 16Dec13               *
+      *                 MD055401           Date 25Oct20               *
+      *                 MD055652           Date 13Jul20               *
       *                 MD053950           Date 16Jul19               *
       *                 MD052216           Date 04Apr19               *
       *                 MD051925           Date 18Sep18               *
@@ -137,6 +139,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032026 - Do not generate projected for unsettled trade.    *
+      *  MD023792 - Output net interest for projections. Patterned    *
+      *             after AR854478.                                   *
       *  MD055401 - FX Netting / incorrect projected movement on      *
       *             nostro for Nets inserted at D-1. Fix is to        *
       *             suppress projection for netted FX deal.           *
@@ -376,6 +381,7 @@
      F/COPY WNCPYSRC,GL0554F003
      FSDNOSTL4IF  E           K        DISK                               090404
      FACNUM   IF  E           K        DISK                               090404
+     FTRADS   IF  E           K        DISK                                                 MD032026
      FFXNETML3IF  E           K        DISK                                                MD036589A
      FNOSEXEC O   F     320            DISK
      F***NOSEXED O   F     320            DISK                                                CGL029
@@ -621,6 +627,8 @@
      I                                    P 214 2200TOTI                  S01392
      I/COPY WNCPYSRC,GL0554I003
      I*
+     ITRADSDF                                                                               MD032026
+     I              CRSK                            XXCRSK                                  MD032026
      ISDBANK    E DSSDBANKPD
      I** EXTERNAL DS FOR BANK DETAILS
      I*
@@ -897,6 +905,27 @@
      C                     SETON                     99
      C                     GOTO END
      C                     END
+      *
+      ** Check if CDL013 is switched on                                                     MD023792
+      *                                                                                     MD023792
+     C                     MOVE 'N'       CDL013                                            MD023792
+     C                     CALL 'AOSARDR0'                                                  MD023792
+     C                     PARM *BLANKS   PRTCD                                             MD023792
+     C                     PARM '*VERIFY' POPTN                                             MD023792
+     C                     PARM 'CDL013'  PSARD                                             MD023792
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD023792
+     C           PRTCD     IFEQ *BLANKS                                                     MD023792
+     C                     MOVE 'Y'       CDL013  1                                         MD023792
+     C                     ELSE                                                             MD023792
+     C           PRTCD     IFNE '*NRF   '                                                   MD023792
+     C                     MOVEL'08'      DBASE                                             MD023792
+     C                     MOVEL'CDL013  'DBKEY                                             MD023792
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD023792
+     C                     EXSR *PSSR                                                       MD023792
+     C                     GOTO END                                                         MD023792
+     C                     ENDIF                                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
      C***THIS*PROGRAM*CAN*BE*RUN*BY*SECURITIES*TRADING*WITHOUT*DEALING*   036796
      C***IN*THE*SYSTEM,*IN*WHICH*CASE*D/DLSTAT*WILL*NOT*BE*SET.***        036796
      C***********DYSA      COMP '  '                     51               036796
@@ -1638,6 +1667,14 @@
      C           *IN27     OREQ '1'                                       087177
      C           *IN28     OREQ '1'                                       087177
      C           EDAT      COMP ZDYNBR               41
+      * If trade is unsettled, do not generate projected                                    MD032026
+     C           *IN26     IFEQ '1'                                                         MD032026
+     C           TRTR      CHAINTRADS                97                                     MD032026
+     C           *IN97     IFEQ '0'                                                         MD032026
+     C           AUTS      ANDEQ'N'                                                         MD032026
+     C                     SETON                     41                                     MD032026
+     C                     ENDIF                                                            MD032026
+     C                     ENDIF                                                            MD032026
      C                     ELSE
      C           EDAT      COMP ZDYNBR               41
      C  N41      EDAT      COMP BJRDNB                 4141
@@ -2120,6 +2157,9 @@
      C  N65                GOTO END
       *                                                                                       CGL015
      C           CGL015    IFEQ 'Y'                                                           CGL015
+     C           CDL013    OREQ 'Y'                                                         MD023792
+     C           TAXI      ANDNE'N'                                                         MD023792
+     C           TAXI      ANDNE' '                                                         MD023792
      C           *IN02     IFEQ '1'                                                           CGL015
      C           *IN42     IFEQ '1'                                                           CGL015
      C           REPAMT    SUB  ETAX      REPAMT                                              CGL015

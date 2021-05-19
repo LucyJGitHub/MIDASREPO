@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 08Apr21               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
       *  Prev Amend No. CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD024812A          Date 06Nov19               *
@@ -8802,7 +8802,6 @@
      C                   MOVE      DDNRTSB       ZFIELD                                     AR702532
      C                   Z-ADD     7             ZADEC                                      AR702532
      C                   Z-ADD     4             ZADIG                                      AR702532
-     C
      C                   EXSR      ZALIGN                                                   AR702532
      C     ZALIGNok      IFEQ      'Y'                                                      AR702532
      C                   MOVE      ZFIELD        VNRTS                                      AR702532

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057546           Date 19Mar21               *
-      *  Prev Amend No. MD054698           Date 02Nov19               *
+      *  Last Amend No. MD057966           Date 19May21               *
+      *  Prev Amend No. MD057546           Date 19Mar21               *
+      *                 MD054698           Date 02Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
@@ -87,6 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057966 - Defaulting of exchange rate indicator not working.*
+      *             Need to ensure this works if customer is a Private*
+      *             Banking customer.                                 *
       *  MD057546 - Depot Walk-In: Customer Delivery/Withdrawal error *
       *             message is incorrectly displayed.                 *
       *           - Allow Customer Delivery/Withdrawal value of 'Y'   *
@@ -1738,6 +1742,7 @@
      C                   PARM                    DDSPMD
      C                   PARM                    SPXR
      C                   PARM                    SPMD
+     C                   PARM                    WWPBCS                                     MD057966
 
      C                   EXSR      SRUpdate
 

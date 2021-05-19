@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD055010           Date 04Mar20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR1079461          Date 18Dec13               *
+      *  Prev Amend No. AR1060299          Date 23Nov12               *
+      *                 AR1051652          Date 13Nov12               *
+      *                 MD055010           Date 04Mar20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -57,6 +60,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1079461 - Time deposit validation to enhance               *
+      *  AR1060299 - Short term rate was not used                     *
+      *  AR1051652 - Base rate changes are not generated for deal     *
+      *              type IT causing reconciliation issues            *
+      *              (Child:AR1051654)                                *
       *  MD055010 - Error message displayed with special character    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -382,6 +390,14 @@
       ** Error return code for ZA0840 module                                                BUG24317
      D @@ERCD          S              1  0                                                  BUG24317
      D W@AMNP          S             15P 0                                                  AR910937
+     D CDL019          S              1A                                                   AR1051652
+     D PAmountIn       S             15P 0                                                 AR1079461
+     D PLenght         S              2P 0                                                 AR1079461
+     D PNoDecPl        S              1P 0                                                 AR1079461
+     D PDecSeptr       S              1A                                                   AR1079461
+     D PThouSeptr      S              1A                                                   AR1079461
+     D PAmountOut      S             21A                                                   AR1079461
+     D WDefault        S              1A                                                   AR1079461
      D CDL093          S              1A                                                      CDL093
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -523,6 +539,7 @@
       **-----------------------------------------*                                            CDL033
                                                                                               CDL033
      C                   MOVE      'N'           WValidOk                                     CDL033
+     C                   EVAL      WDefault = 'N'                                          AR1079461
                                                                                             BUG24317
      C                   IF        CDL033 = 'Y'                                             AR853445
      C                   IF        DDTYPE <> 'CD'                                           AR853445
@@ -607,10 +624,16 @@
      C                              DDRCDM <> '  ' OR (WSTRT <> 0.0000000  AND              BUG24317
      C                              DDSTRT <> '         ') OR DDFXDM <> '  ' OR               CDL033
      C                              DDFYLD <> '  '))
+     C                   IF        CDL019 = 'Y' AND                                        AR1051652
+     C                             DDRCFR = *BLANKS AND                                    AR1051652
+     C                             DDRCDT = *BLANKS AND                                    AR1051652
+     C                             DDRCDM = *BLANKS                                        AR1051652
+     C                   ELSE                                                              AR1060299
       *                                                                                       CDL033
      C                   EXSR      ValidRcfR                                                  CDL033
      C                   EXSR      ValidRcDt                                                  CDL033
      C                   EXSR      ValidRcDm                                                  CDL033
+     C                   ENDIF                                                             AR1060299
      C**********         EXSR      ValidStRt                                         CDL033 BUG24317
      C                   EXSR      ValidStRt                                                AR851172
                                                                                             BUG10810
@@ -640,6 +663,7 @@
      C                   EXSR      RESETERRS                                                BUG10810
                                                                                               259981
      C                   ENDIF                                                                259981
+     C**********         ENDIF                                                   AR1051652 AR1060299
      C                   ENDIF                                                                259981
                                                                                               259981
      C     DDAIR         IFNE      *BLANKS                                                    259981
@@ -752,7 +776,11 @@
                                                                                             BUG10810
      C                   ELSE                                                               BUG10810
                                                                                             BUG10810
-     C                   EXSR      RESETERRS                                                MD023258
+     C                   IF        WDefault = 'Y'                                          AR1079461
+     C                   Z-ADD     0             IKMTTI                                    AR1079461
+     C                   MOVE      *BLANKS       DDTOTI                                    AR1079461
+     C                   MOVE      '0.00'        DDTOTI                                    AR1079461
+     C                   ENDIF                                                             AR1079461
      C                   CALLB     'ZAVTOTINT'                                              BUG10810
      C                   PARM                    ReturnCode                                 BUG10810
      C                   PARM                    MSG1                                       BUG10810
@@ -1227,6 +1255,17 @@
      C                   MOVEL     'N'           S01468                                     BUG10810
      C                   ENDIF                                                              BUG10810
                                                                                             BUG10810
+     C                   CALLB     'AOSARDR0'                                              AR1051652
+     C                   PARM      *BLANKS       @RTCD                                     AR1051652
+     C                   PARM      '*VERIFY'     @OPTN                                     AR1051652
+     C                   PARM      'CDL019'      @SARD                                     AR1051652
+     C     SCSARD        PARM      SCSARD        DSFDY                                     AR1051652
+                                                                                           AR1051652
+     C     @RTCD         IFEQ      *BLANK                                                  AR1051652
+     C                   MOVEL     'Y'           CDL019                                    AR1051652
+     C                   ELSE                                                              AR1051652
+     C                   MOVEL     'N'           CDL019                                    AR1051652
+     C                   ENDIF                                                             AR1051652
       ** Check if CDL093 is installed                                                         CDL093
                                                                                               CDL093
      C                   CALLB     'AOSARDR0'                                                 CDL093
@@ -1342,6 +1381,7 @@
      C                   ENDIF                                                                CDL033
                                                                                               CDL033
      C                   EVAL      WRCDT = ZDayNo                                             CDL033
+     C                   IF        CDL020 = 'N'                                            AR1079461
       *                                                                                       CDL033
       ** Rate Change Date should be greater than or equal to Value Date and less than         CDL033
       ** Maturity Date and greater than or equal to rundate                                   CDL033
@@ -1355,6 +1395,16 @@
      C                   EVAL      ReturnCode = 'Error'                                       CDL033
      C                   LEAVE                                                                CDL033
      C                   ENDIF                                                                CDL033
+     C                   ELSE                                                              AR1079461
+     C                   IF         WRCDT <  IKDVSD  OR                                    AR1079461
+     C                              WRCDT >= IKMATD                                        AR1079461
+     C                   EVAL      Idx = Idx + 1                                           AR1079461
+     C                   EVAL      FldNameArr(Idx) = 'DDRCDT'                              AR1079461
+     C                   EVAL      MsgIDArr(Idx) = '5049499'                               AR1079461
+     C                   EVAL      ReturnCode = 'Error'                                    AR1079461
+     C                   LEAVE                                                             AR1079461
+     C                   ENDIF                                                             AR1079461
+     C                   ENDIF                                                             AR1079461
       *                                                                                       CDL033
       ** Determine if Rate Change Date is holiday in the local currency                       CDL033
       *                                                                                       CDL033
@@ -1608,10 +1658,24 @@
      C                   MOVE      *BLANKS       ZLOC                                         CDL033
      C                   EXSR      DLBACK                                                     CDL033
      C                   IF        ZRFDT < BJRDNB                                             CDL033
-     C                   EVAL      Idx = Idx + 1                                              CDL033
-     C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                                 CDL033
-     C                   EVAL      MsgIDArr(Idx)   = 'FLR0022'                                CDL033
-     C                   EVAL      ReturnCode      = 'Error'                                  CDL033
+     C                   MOVE      IKINTR        DDSTRT                                    AR1079461
+     C                   MOVE      DDSTRT        PAmountIn                                 AR1079461
+                                                                                           AR1079461
+     C                   CALLB     'ZA1020'                                                AR1079461
+     C                   PARM                    PAmountIn                                 AR1079461
+     C                   PARM      21            PLenght                                   AR1079461
+     C                   PARM      7             PNoDecPl                                  AR1079461
+     C                   PARM      '.'           PDecSeptr                                 AR1079461
+     C                   PARM      ','           PThouSeptr                                AR1079461
+     C                   PARM                    PAmountOut                                AR1079461
+                                                                                           AR1079461
+     C                   MOVE      PAmountOut    DDSTRT                                    AR1079461
+     C                   EVAL      WSTRT = IKINTR                                          AR1079461
+     C                   EVAL      WDefault = 'Y'                                          AR1079461
+     C**********         EVAL      Idx = Idx + 1                                    CDL033 AR1079461
+     C**********         EVAL      FldNameArr(Idx) = 'DDSTRT'                       CDL033 AR1079461
+     C**********         EVAL      MsgIDArr(Idx)   = 'FLR0022'                      CDL033 AR1079461
+     C**********         EVAL      ReturnCode      = 'Error'                        CDL033 AR1079461
      C                   ENDIF                                                                CDL033
      C                   ENDIF                                                                CDL033
      C                   ENDIF                                                                CDL033

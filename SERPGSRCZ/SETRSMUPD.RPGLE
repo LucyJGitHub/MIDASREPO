@@ -18,10 +18,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD026173           Date 15Apr14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG13456           Date 09Mar07               *
+      *                 BUG13456           Date 09Mar07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026173 - Add on-line position update.                      *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG13456 - Warning message on Manual Full Settlement Trade   *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -196,6 +198,12 @@
      D  RecNotFnd             01     01
      D  EndOfFile             02     02
       *
+     D TRADSF        E DS                  EXTNAME(TRADSD)                                  MD026173
+     D                                     PREFIX(T_)                                       MD026173
+      **  PROJECTED ACCOUNT MOVEMENTS UPDATES                                               MD026173
+     D Z#BSTS        E DS                  EXTNAME(Z#BST)                                   MD026173
+     D Z#ASTS        E DS                  EXTNAME(Z#AST)                                   MD026173
+                                                                                            MD026173
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -279,6 +287,8 @@
      C                   Parm                    RetCodeOut
      C                   Parm                    PNATN
       *
+     C                   MOVEL     *BLANK        Z#BSTS                                     MD026173
+     C                   MOVEL     *BLANK        Z#ASTS                                     MD026173
       *
       ** Update Trade Details File
       *  -------------------------
@@ -329,6 +339,10 @@
       *
      C                   Exsr      SrMovement
       *
+      ** Update on-line balances                                                            MD026173
+      *  -----------------------                                                            MD026173
+     C                   EXSR      ONLNUP                                                   MD026173
+                                                                                            MD026173
       ** Return.
      C                   RETURN
       *
@@ -352,8 +366,12 @@
      C                   Eval      DBASE  =  002
      C                   OUT       LDA
      C                   Exsr      *PSSR
- 
+
      C                   Else
+      ** Load the 'before image' only in case of reversal                                   MD026173
+     C                   If        VTSSRIN = 'Y'                                            MD026173
+     C                   MOVEL     TRADSF        Z#BSTS                                     MD026173
+     C                   Endif                                                              MD026173
       *
       ** Generate Timestamp.
      C                   CALLB     'ZAGENTMSTM'
@@ -457,6 +475,11 @@
      C                   OUT       LDA
      C                   Exsr      *PSSR
      C                   EndIf
+      ** In case of reverse, simulate deleted trade                                         MD026173
+     C                   If        VTSSRIN = 'Y'                                            MD026173
+     C                   EVAL      T_CHTP = 'D'                                             MD026173
+     C                   Endif                                                              MD026173
+     C                   MOVEL     TRADSF        Z#ASTS                                     MD026173
       *
      C                   EndIf
       *
@@ -496,7 +519,7 @@
      C                   OUT       LDA
      C                   Exsr      *PSSR
      C                   EndIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -896,6 +919,30 @@
      C                   ENDSR
       *
       *****************************************************************
+      /EJECT                                                                                MD026173
+     C*****************************************************************                     MD026173
+     C*                                                               *                     MD026173
+     C* ONLNUP - ON-LINE UPDATES (MEMOS, PRONO, OLPOS, RSACMTPD)      *                     MD026173
+     C*                                                               *                     MD026173
+     C*****************************************************************                     MD026173
+     C     ONLNUP        BEGSR                                                              MD026173
+                                                                                            MD026173
+     C                   CALL      'AOOUTRU0'                                               MD026173
+     C                   PARM      *BLANK        @RTCD             7                        MD026173
+     C                   PARM                    Z#BSTS                                     MD026173
+     C                   PARM                    Z#ASTS                                     MD026173
+                                                                                            MD026173
+     C     @RTCD         IFEQ      '*ERROR*'                                                MD026173
+     C     *LOCK         IN        LDA                                                      MD026173
+     C                   MOVEL     *BLANK        DBKEY                                      MD026173
+     C                   MOVEL     'AOOUTRU0'    DBFILE                                     MD026173
+     C                   MOVEL     '010'         DBASE                                      MD026173
+     C                   OUT       LDA                                                      MD026173
+     C                   Exsr      *PSSR                                                    MD026173
+     C                   END                                                                MD026173
+      *                                                                                     MD026173
+     C                   ENDSR                                                              MD026173
+     C*****************************************************************                     MD026173
       /EJECT
       *****************************************************************
       *                                                               *
@@ -924,7 +971,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Input
@@ -946,7 +993,7 @@
       ** =================================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *
       *****************************************************************

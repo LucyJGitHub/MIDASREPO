@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR981194           Date 29May12               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR981194 - PBS Compatibility with BankFusion Midas 2.00      *
+      *             Split take-on for Future Value.                   *
+      *             (Child:AR981196)                                  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -309,6 +313,9 @@
       *                                                               *
       *****************************************************************
 
+     C     *ENTRY        PLIST                                                              AR981194
+     C                   PARM                    DateMode          1                        AR981194
+                                                                                            AR981194
       **  Perform initialization subroutine as program remains in memory.
      C                   Exsr      #Init
 
@@ -379,6 +386,14 @@
 
       **  Do while LE Customer Loans to be processed for required selection.
      C     *in82         Doweq     False                                        Begin Do_W_N82
+                                                                                            AR981194
+      **  DateMode '1' ==> Transactions until Value Date                                    AR981194
+      **  DateMode '2' ==> Transactions on Future Value                                     AR981194
+     C     DateMode      IFEQ      '1'                                                      AR981194
+     C     VDAT          ANDLT     BJRDNB                                                   AR981194
+                                                                                            AR981194
+     C     DateMode      OREQ      '2'                                                      AR981194
+     C     VDAT          ANDGE     BJRDNB                                                   AR981194
 
       **  Update Replication Indicator field.
      C                   Testn                   REPI                 77
@@ -400,6 +415,8 @@
 
       **  Print Loan Details informations on report.
      C                   Exsr      #Report
+                                                                                            AR981194
+     C                   ENDIF                                                              AR981194
 
       **  Read next Loan Details record.
      C     K_LELoan      Reade     PMCLONL6                               82

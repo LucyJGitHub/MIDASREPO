@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036556           Date 12Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 212918             Date 08May03               *
       * Midas Release 4.01.02 ----------------------------------------*
       *                 212004             Date 14Nov02               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *                                                               *
+      *  MD036556 - DDNDR1 and DDNDR2 are alphanumeric fields in BF   *
+      *             Midas user guide however program still validates  *
+      *             if values are numeric. Pattern fix after 221794.  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  212918 - Remove Euroclear reference validation to allow any  *
@@ -46,11 +51,11 @@
       *  CAP039 - Conversion of SD inputs to modular structure        *
       *           to use as APIs                                      *
       *****************************************************************
- 
+
      FSDSECSL0  IF   E           K Disk
- 
+
      FSDSTRDL0  IF   E           K Disk
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -62,53 +67,53 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * Second DS for access programs, long data structure
      D*RefArr***       S              6    DIM(10)                                            CSE022
      D RefArr          S             20    DIM(10)                                            CSE022
@@ -117,7 +122,7 @@
      D ParArr          S              2    DIM(10)
      D ParFldNam       S             10    DIM(10) CTDATA PERRCD(5)
      D ParOKArr        S              1    DIM(10)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -128,10 +133,10 @@
      D WDepRef         S              6A                                                      CSE022
      D DDDRF1          S              6A                                                      CSE022
      D DDDRF2          S              6A                                                      CSE022
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -146,9 +151,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
      C                   MOVEA     *ALL'Y'       RefOKArr
      C                   MOVEA     *ALL'Y'       ParOKArr
@@ -159,7 +164,7 @@
                                                                                               CSE022
      C                   MOVEL     DDNDR1        DDDRF1                                       CSE022
      C                   MOVEL     DDNDR2        DDDRF2                                       CSE022
- 
+
       *
       ** VALIDATION
       *
@@ -186,9 +191,9 @@
       ** VALIDATION
       *****************************************************************
      C     VDRFN         BEGSR
- 
+
      C                   Z-ADD     0             I                 2 0
- 
+
       ** Set up reference fields array
      C                   Eval      RefArr(1) = DDDRF1
      C                   Eval      RefArr(2) = DDDRF2
@@ -208,7 +213,7 @@
      C                   Eval      RefArr(9) = DDNDR9                                         CSE022
      C**********         Eval      RefArr(10) = DDDRF0                                        CSE022
      C                   Eval      RefArr(10) = DDNDR0                                        CSE022
- 
+
       ** Set up participant fields array
      C                   Eval      ParArr(1) = DDPNP1
      C                   Eval      ParArr(2) = DDPNP2
@@ -220,21 +225,26 @@
      C                   Eval      ParArr(8) = DDPNP8
      C                   Eval      ParArr(9) = DDPNP9
      C                   Eval      ParArr(10) = DDPNP0
- 
+
       ** Get depot values from Securities Trading ICD file
      C     'STRD      '  CHAIN     SDSTRDL0                           99
- 
+
       ** If classification is E
  b1  C                   IF        DDCLAS = 'E'
- 
+
       ** If depot 1 (Euroclear) is not blank
  b2  C                   IF        BVDR1 <> *BLANKS
- 
+
       ** If depot reference 1 is not blank
  b3  C                   IF        DDDRF1 <> *BLANKS
      C                   MOVE      *BLANK        WKDRF1
      C                   MOVE      DDDRF1        WKDRF1
- 
+                                                                                            MD036556
+      ** Test if DDDRF1 is numeric before to call ZALIGN                                    MD036556
+     C                   TESTN                   DDDRF1               01                    MD036556
+                                                                                            MD036556
+     C                   IF        *IN01 = *ON                                              MD036556
+
       ** Check numeric
      C                   CALL      'ZALIGN'
       *
@@ -248,16 +258,16 @@
      C                   PARM      *ZERO         DECIMALS          1 0
      C                   PARM      6             DIGITS            2 0
      C                   PARM      *BLANK        WKDRF1N          16
- 
+
       * If depot reference 1 is not numeric
  b4  C     @RTCD         IFNE      *BLANK
- 
+
       ** Err: 'Value entered must be numeric'
      C                   Eval      RefOKArr(1) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDDRF1    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0822'
- 
+
  x4  C                   ELSE
      C                   CALL      'ZEDIT'
       ** Depot Reference Message Field (16A)
@@ -268,7 +278,7 @@
      C                   MOVE      WKDRF1N       WKDR1N
      C**********         MOVE      *BLANKS       DDDRF1                                       212004
      C**********         MOVE      WKDRF1N       DDDRF1                                       212004
- 
+
       ***If*depot reference 1 is not in ranges 60000-69999 or 90000-99999                     212918
  b5  C**********         IF        not(                                                       212918
      C**********                   (WKDR1N >= 60000 and WKDR1N <= 69999) or                   212918
@@ -281,16 +291,17 @@
      C**********         Eval      MsgIdXAr(Idx) = 'USR0269'                                  212918
       **********                                                                              212918
  e5  C**********         ENDIF                                                                212918
- 
+
  e4  C                   ENDIF
- 
+     C                   ENDIF                                                              MD036556
+
  e3  C                   ENDIF
- 
+
  e2  C                   ENDIF
       ** For depot references 2 - 10
      C     2             DO        10            I
  b2  C                   IF        RefArr(I) <> *BLANKS
- 
+
       ** Err: 'Entry not allowed'
      C                   Eval      RefOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
@@ -298,17 +309,22 @@
      C                   Eval      MsgIdXAr(Idx) = 'USR0264'
  e2  C                   ENDIF
      C                   ENDDO
- 
+
  e1  C                   ENDIF
- 
+
       ** If classification is X or M
  b1  C                   IF        DDCLAS = 'X' or DDCLAS = 'M'
- 
+
       ** If depot reference 1 is not blank
  b2  C                   IF        DDDRF1 <> *BLANKS
      C                   MOVE      *BLANK        WKDRF1
      C                   MOVE      DDDRF1        WKDRF1
- 
+                                                                                            MD036556
+      ** Test if DDDRF1 is numeric before to call ZALIGN                                    MD036556
+     C                   TESTN                   DDDRF1               01                    MD036556
+                                                                                            MD036556
+     C                   IF        *IN01 = *ON                                              MD036556
+
       ** Check numeric
      C                   CALL      'ZALIGN'
       *
@@ -322,17 +338,17 @@
      C                   PARM      *ZERO         DECIMALS          1 0
      C                   PARM      6             DIGITS            2 0
      C                   PARM      *BLANK        WKDRF1N          16
- 
- 
+
+
  b3  C     @RTCD         IFNE      *BLANK
- 
+
       ** Err: 'Value entered must be numeric
      C                   Eval      RefOKArr(1) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDDRF1    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0822'
  x3  C                   ELSE
- 
+
      C                   CALL      'ZEDIT'
       ** Depot Reference Message Field (16A)
       ** Number of Decimals (1,0)
@@ -342,7 +358,7 @@
      C                   MOVE      WKDRF1N       WKDR1N
      C**********         MOVE      *BLANKS       DDDRF1                                       212004
      C**********         MOVE      WKDRF1N       DDDRF1                                       212004
- 
+
       ***Check*entry within valid range                                                       212918
  b4  C**********         IF        not(                                                       212918
      C**********                   (WKDR1N >= 60000 and WKDR1N <= 69999) or                   212918
@@ -353,17 +369,24 @@
      C**********         Eval      FldNamXAr(Idx) = 'DDDRF1    '                              212918
      C**********         Eval      MsgIdXAr(Idx) = 'USR0269'                                  212918
  e4  C**********         ENDIF                                                                212918
- 
+
  e3  C                   ENDIF
- 
+     C                   ENDIF                                                              MD036556
+
  e2  C                   ENDIF
- 
+
       ** If depot reference 2 is not blank
  b2  C                   IF        DDDRF2 <> *BLANKS
- 
+
       ** Check numeric
      C                   MOVE      *BLANK        WKDRF2
      C                   MOVE      DDDRF2        WKDRF2
+                                                                                            MD036556
+      ** Test if DDDRF2 is numeric before to call ZALIGN                                    MD036556
+     C                   TESTN                   DDDRF2               02                    MD036556
+                                                                                            MD036556
+     C                   IF        *IN02 = *ON                                              MD036556
+                                                                                            MD036556
      C                   CALL      'ZALIGN'
       *
       ** Return Code (7A)
@@ -376,17 +399,17 @@
      C                   PARM      *ZERO         DECIMALS          1 0
      C                   PARM      6             DIGITS            2 0
      C                   PARM      *BLANK        WKDRF2N          16
- 
+
       * If not numeric
  b3  C     @RTCD         IFNE      *BLANK
- 
+
       ** Err: 'Value entered must be numeric'
      C                   Eval      RefOKArr(2) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDDRF2    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0822'
  x3  C                   ELSE
- 
+
      C                   CALL      'ZEDIT'
       ** Depot Reference Message Field (16A)
       ** Number of Decimals (1,0)
@@ -397,45 +420,46 @@
      C**********         MOVE      *BLANKS       DDDRF2                                       212004
      C**********         MOVE      WKDRF2N       DDDRF2                                       212004
  b4  C                   IF        WKDR2N < 1 or WKDR2N > 99999
- 
+
       ** Err: 'Invalid ref at Cedel, must be range 1 - 99999'
      C                   Eval      RefOKArr(2) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDDRF2    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0626'
  e4  C                   ENDIF
- 
+
  e3  C                   ENDIF
- 
+     C                   ENDIF                                                              MD036556
+
  e2  C                   ENDIF
- 
+
  e1  C                   ENDIF
- 
+
      C                   IF        CSE022 = 'N'                                               204584
- 
+
       ** If classification is D or I or S
  b1  C                   IF        DDCLAS = 'D' or DDCLAS = 'I' or
      C                             DDCLAS = 'S'
- 
+
       ** If depot reference 1 is not blank
  b2  C                   IF        DDDRF1 <> *BLANKS
- 
+
       ** Get record for this reference on securities details file
      C     DDDRF1        CHAIN     SDSECSL0                           99
- 
+
  b3  C     *IN99         IFEQ      '1'
- 
+
       ** Err: 'Invalid depot reference'
      C                   Eval      RefOKArr(1) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDDRF1    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0268'
- 
+
  x3  C                   ELSE
- 
+
       ** If file classification is not E
  b4  C                   IF        BFCLAS <> 'E'
- 
+
       ** Err: 'Invalid depot reference'
      C                   Eval      RefOKArr(1) = 'N'
      C                   Eval      Idx = Idx + 1
@@ -444,27 +468,27 @@
  e4  C                   ENDIF
  e3  C                   ENDIF
  e2  C                   ENDIF
- 
+
       ** If depot reference 2 is not blank
  b2  C                   IF        DDDRF2 <> *BLANKS
- 
+
       ** Get record for this reference on securities details file
      C     DDDRF2        CHAIN     SDSECSL0                           99
- 
+
  b3  C     *IN99         IFEQ      '1'
- 
- 
+
+
       ** Err: 'Invalid depot reference'
      C                   Eval      RefOKArr(2) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDDRF2    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0268'
- 
+
  x3  C                   ELSE
- 
+
       ** If file classification is not C
  b4  C                   IF        BFCLAS <> 'C'
- 
+
       ** Err: 'Invalid depot reference
      C                   Eval      RefOKArr(2) = 'N'
      C                   Eval      Idx = Idx + 1
@@ -503,62 +527,62 @@
  e3  C**********         ENDIF                                                                CSE022
       **********                                                                              CSE022
  e2  C**********         ENDIF                                                                CSE022
- 
+
       ***For*references*4*to*10****************************************                       CSE022
      C*****4             DO        10            I                                            CSE022
                                                                                               CSE022
       ** For references 3 to 10                                                               CSE022
      C     3             DO        10            I                                            CSE022
- 
+
  b2  C                   IF        RefArr(I) <> *BLANKS
- 
+
       ** Get record for this reference on securities details file
      C*****RefArr(I)     CHAIN     SDSECSL0                           99                      CSE022
                                                                                               CSE022
      C                   EVAL      WDepRef = RefArr(I)                                        CSE022
                                                                                               CSE022
      C     WDepRef       CHAIN     SDSECSL0                           99                      CSE022
- 
+
  b3  C     *IN99         IFEQ      '1'
- 
- 
+
+
       ** Err: 'Invalid depot reference'
      C                   Eval      RefOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = RefFldNam(I)
      C                   Eval      MsgIdXAr(Idx) = 'USR0268'
- 
+
  x3  C                   ELSE
- 
+
       ** If file classification is not X
  b4  C***********        IF        BFCLAS <> 'X'                                              204584
  b4  C                   IF        BFCLAS = 'X' OR                                            204584
  b4  C                             BFCLAS = 'M'                                               204584
  b4  C                   ELSE                                                                 204584
- 
+
       ** Err: 'Invalid depot reference'
      C                   Eval      RefOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = RefFldNam(I)
      C                   Eval      MsgIdXAr(Idx) = 'USR0268'
  e4  C                   ENDIF
- 
+
  e3  C                   ENDIF
- 
+
  e2  C                   ENDIF
- 
+
      C                   ENDDO
- 
+
  e1  C                   ENDIF
- 
+
  e1  C                   ENDIF                                                                204584
- 
+
       ** If classification is C
  b1  C                   IF        DDCLAS = 'C'
- 
+
       ** If depot 2 is not blank and depot reference 2 is blank
  b2  C                   IF        BVDR2 <> *BLANKS and DDDRF2 = *BLANKS
- 
+
       ** Err: 'Value Required'
      C                   Eval      RefOKArr(2) = 'N'
      C                   Eval      Idx = Idx + 1
@@ -569,6 +593,12 @@
  b2  C                   IF        DDDRF2 <> *BLANKS
      C                   MOVE      *BLANK        WKDRF2
      C                   MOVE      DDDRF2        WKDRF2
+                                                                                            MD036556
+      ** Test if DDDRF2 is numeric before to call ZALIGN                                    MD036556
+     C                   TESTN                   DDDRF2               02                    MD036556
+                                                                                            MD036556
+     C                   IF        *IN02 = *ON                                              MD036556
+                                                                                            MD036556
      C                   CALL      'ZALIGN'
       *
       ** Return Code (7A)
@@ -581,7 +611,7 @@
      C                   PARM      *ZERO         DECIMALS          1 0
      C                   PARM      6             DIGITS            2 0
      C                   PARM      *BLANK        WKDRF2N          16
- 
+
  b3  C     @RTCD         IFNE      *BLANK
       ** Err: 'Value entered must be numeric'
      C                   Eval      RefOKArr(2) = 'N'
@@ -589,7 +619,7 @@
      C                   Eval      FldNamXAr(Idx) = 'DDDRF2    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0822'
  x3  C                   ELSE
- 
+
      C                   CALL      'ZEDIT'
       ** Depot Reference Message Field (16A)
       ** Number of Decimals (1,0)
@@ -599,7 +629,7 @@
      C                   MOVE      WKDRF2N       WKDR2N
      C**********         MOVE      *BLANKS       DDDRF2                                       212004
      C**********         MOVE      WKDRF2N       DDDRF2                                       212004
- 
+
  b4  C                   IF        WKDR2N < 1 or WKDR2N > 99999
       ** Err: 'Invalid Range at Cedel, must be in range 1 to 99999'
      C                   Eval      RefOKArr(2) = 'N'
@@ -608,31 +638,32 @@
      C                   Eval      MsgIdXAr(Idx) = 'USR0626'
  e4  C                   ENDIF
  e3  C                   ENDIF
+     C                   ENDIF                                                              MD036556
  e2  C                   ENDIF
- 
+
       ** For depot references 1 to 10 excluding reference 2
      C     1             DO        10            I
- 
+
       ** Skip depot reference 2
  b2  C                   IF        I <> 2
- 
+
       ** If depot reference (I) is not blank
  b3  C                   IF        RefArr(I) <> *BLANKS
- 
+
       ** Err: 'Entry not allowed'
      C                   Eval      RefOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = RefFldNam(I)
      C                   Eval      MsgIdXAr(Idx) = 'USR0264'
  e3  C                   ENDIF
- 
+
  e2  C                   ENDIF
- 
+
      C                   ENDDO
- 
+
  e1  C                   ENDIF
- 
- 
+
+
       ***If*classification*is*K****************************************                       CSE022
  b1  C**********         IF        DDCLAS = 'K'                                               CSE022
       **********                                                                              CSE022
@@ -658,22 +689,22 @@
       **********                                                                              CSE022
       **********                                                                              CSE022
  e1  C**********         ENDIF                                                                CSE022
- 
- 
- 
+
+
+
       ** If classification is X
  b1  C                   IF        DDCLAS = 'X'
- 
+
       ** If participant 1 is 'P'
  b2  C                   IF        DDPNP1 = 'P'
- 
+
       ** Err: 'Participant must be NP'
      C                   Eval      ParOKArr(1) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDPNP1    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0555'
  e2  C                   ENDIF
- 
+
       ***If*reference*3*is*not*blank***********************************                       CSE022
       **********                                                                              CSE022
  b2  C**********         IF        DDDRF3 <> *BLANKS                                          CSE022
@@ -685,70 +716,70 @@
  e2  C**********         ENDIF                                                                CSE022
       **********                                                                              CSE022
  e1  C                   ENDIF
- 
- 
- 
+
+
+
       ** If classification is D, I or S
  b1  C                   IF        DDCLAS <> 'D' and DDCLAS <> 'I' and
      C                             DDCLAS <> 'S'
- 
+
      C     1             DO        10            I
- 
+
       ** If depot reference (I) is not blank
  b2  C                   IF        RefArr(I) <> *BLANKS
- 
+
       ** If participant (I) is blank
  b3  C                   IF        ParArr(I) = *BLANKS
- 
+
       ** Err: 'Mandatory entry, if reference allowed'
      C                   Eval      ParOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = ParFldNam(I)
      C                   Eval      MsgIdXAr(Idx) = 'USR0273'
- 
+
       ** If <space,P> entered, set to <P,space>
  x3  C                   ELSE
  b4  C                   IF        ParArr(I) = ' P'
      C                   Eval      ParArr(I) = 'P '
  e4  C                   ENDIF
- 
+
       ** If participant is not 'NP' or 'P '
  b4  C                   IF        ParArr(I) <> 'NP' and ParArr(I) <> 'P'
- 
+
       ** Err: 'The value entered for participation is invalid'
      C                   Eval      ParOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = ParFldNam(I)
      C                   Eval      MsgIdXAr(Idx) = 'USR1496'
  e4  C                   ENDIF
- 
+
  e3  C                   ENDIF
- 
+
  e2  C                   ENDIF
- 
+
      C                   ENDDO
- 
+
  e1  C                   ENDIF
- 
- 
- 
- 
+
+
+
+
      C     1             DO        10            I
- 
+
       ** If reference is blank and participant is not blank
  b1  C                   IF        RefArr(I) = *BLANKS and
      C                             ParArr(I) <> *BLANKS
- 
+
       ** Err: 'Participant/non-participant not allowed'
      C                   Eval      ParOKArr(I) = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = ParFldNam(I)
      C                   Eval      MsgIdXAr(Idx) = 'USR0301'
  e1  C                   ENDIF
- 
+
      C                   ENDDO
- 
- 
+
+
       ** Pass reference error indicators from array to OK fields
      C**********         Eval      DDDRF1OK = RefOKArr(1)                                     CSE022
      C                   Eval      DDNDR1OK = RefOKArr(1)                                     CSE022
@@ -782,7 +813,7 @@
      C                   Eval      DDPNP8OK = ParOKArr(8)
      C                   Eval      DDPNP9OK = ParOKArr(9)
      C                   Eval      DDPNP0OK = ParOKArr(10)
- 
+
      C     ENDVAL        ENDSR
       *****************************************************************
       /EJECT
@@ -790,7 +821,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -967,9 +998,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

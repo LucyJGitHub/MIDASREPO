@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054698           Date 02Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1092998A         Date 06Mar13               *
+      *  Prev Amend No. AR1092998          Date 04Mar13               *
+      *                 MD054698           Date 02Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -86,6 +88,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1092998A - Backvalue control error - Date IN               *
+      *  AR1092998 - Backvalue control error                          *
       *  MD054689 - System allows to REPO more than the actual        *
       *             Security Position Without any warning             *
       *  MD046248 - Finastra Rebranding                               *
@@ -1052,6 +1056,8 @@
      C     DDDate        PARM                    DDDPMD
      C                   PARM                    DDDPID
      C                   PARM                    DDDPOD
+     C                   PARM                    DDACTN                                   AR1092998A
+     C                   PARM                    ORED                                     AR1092998A
      C                   PARM                    SEC_MATY
      C                   PARM                    SEC_NMCY
      C                   PARM                    BFCLASInDp
@@ -1133,6 +1139,8 @@
      C                   PARM                    DDDPMD
      C                   PARM                    DDDepot
      C                   PARM                    DDDPID
+     C                   PARM                    DDACTN                                    AR1092998
+     C                   PARM                    ORED                                      AR1092998
      C                   PARM                    SEC_MATY
      C                   PARM                    SEC_NMCY
      C                   PARM                    BFCLASOtDp
@@ -1214,6 +1222,8 @@
      C                   PARM                    DDDPMD                                       CAP087
      C                   PARM                    DDDPOD                                       CAP087
      C                   PARM                    DDDPID                                       CAP087
+     C                   PARM                    DDACTN                                    AR1092998
+     C                   PARM                    ORED                                      AR1092998
      C                   PARM                    SEC_MATY                                     CAP087
      C                   PARM                    SEC_NMCY                                     CAP087
      C                   PARM                    BFCLASOtDp                                   CAP087

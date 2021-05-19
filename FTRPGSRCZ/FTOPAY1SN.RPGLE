@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056364           Date 10Aug20               *
-      *  Prev Amend No. ERZ248             Date 18Nov19               *
+      *  Last Amend No. MD058151           Date 19May21               *
+      *  Prev Amend No. MD056364           Date 10Aug20               *
+      *                 ERZ248             Date 18Nov19               *
       *                 MD021318           Date 26Jul13               *
       *                 262474             Date 29Jan13               *
       *                 ERZ123             Date 29Jan13               *
@@ -178,6 +179,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058151 - FTOPAY1SN *PGM was removed in the NC Layer        *
+      *             during RBRU FM2021.A + Compatibility Patch        *
+      *             Installation. Redeliver together wih *PGM.        *
       *  MD056364 - ERZ248: UETR is not wiped out in replicated       *
       *             FT payments                                       *
       *           - Amended hook FTH00661                             *

@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD057686           Date 11May21               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
       *                 MD039544           Date 30Jun16               *
@@ -63,6 +64,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD057686 - Missing last line of address in CM advice         *
+      *           - Remove checking of country code if not the same   *
+      *             for the customer and bank prior output of line 5  *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -994,7 +998,7 @@
       *                                                                                     BUG22356
      C     WFLD6         CHAIN     SDCUSTL0                           93
      C     *IN93         IFNE      *ON
-     C     BBCOLC        ANDNE     BJCNCD
+     C*****BBCOLC        ANDNE     BJCNCD                                                   MD057686
       *                                                                                       CER038
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD

@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD038500           Date 17Aug16              */
+/*                                                                   */
+/*       Last Amend No. MD021975           Date 26Nov13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD038500           Date 17Aug16              */
 /*                      MD035839           Date 14Sep15              */
 /*                      AR1096483          Date 18Mar13              */
 /*                      CSC048             Date 06Aug12              */
@@ -84,6 +86,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD021975 - Save Global BSPL files for Reopen IC restore in  */
+/*                  PEA system (live system not changed).            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD038500 - Error when saving global library due to file     */
 /*                  locking. Patterned after fix AR546370 as a pre-  */
@@ -209,7 +213,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODE)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -234,14 +238,17 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                           */
              DCL        VAR(&DTACPRV) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PRFK) TYPE(*CHAR) LEN(3) VALUE(' ')
- 
+             DCL        VAR(&CGP010) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD021975*/
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10) VALUE('  GMLIB   ')             /*MD021975*/
+             DCL        VAR(&LIB7) TYPE(*CHAR) LEN(8) VALUE('  DPLIB ')                 /*MD021975*/
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
- 
+
              SNDPGMMSG  MSG('Input Cycle Database Save - ' *CAT &MODE) +
                         TOMSGQ(MOPERQ)
- 
+
 /* Check if access paths are to be saved                               */
- 
+
              CHGVAR     VAR(&RTN) VALUE('       ')
              CHGVAR     VAR(&OPN) VALUE('*VERIFY')
              CHGVAR     VAR(&SARD) VALUE('CSC003')
@@ -252,9 +259,9 @@
              ELSE       DO
                CHGVAR     VAR(&ACPTH) VALUE('*NO')
              ENDDO
- 
+
 /*  Get System Value for Data Compression parameter in save commands */
- 
+
              CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
                         'SavDataCompression' &SVAL1 +
                         ' ' &SVAL2 +
@@ -266,113 +273,118 @@
                         ' ' &SVAL8 +
                         ' ' &SVAL9 +
                         ' ' &SVAL10)
- 
+
              IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
                              CMDLBL(ABNOR))
              CHGVAR     VAR(&DTACPRV) VALUE(&SVAL1)
- 
+
 /*  Determine whether global libraries should be saved.              */
- 
+
              RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
              CHGVAR     VAR(&GLOBAL) VALUE(%SST(&JNSTAT 172 1))
- 
+
              IF         COND(&MODE *EQ 'BF') THEN(DO)
- 
+
 /** Save zonal schemas/libraries */
- 
+
                IF         COND(&ACPTH *EQ '*YES') THEN(DO)
                  CHGVAR     VAR(&PRFK) VALUE('005')
                ENDDO
                ELSE       CMD(DO)
                  CHGVAR     VAR(&PRFK) VALUE('006')
                ENDDO
- 
+
                CALL       PGM(SCC000303) PARM(&PRTCD &PRFK)
- 
+
                IF         COND(&PRTCD *NE ' ') THEN(DO)
                  CHGJOB   SWS(XXXXXX11)
                  GOTO     CMDLBL(ENDPGM)
                ENDDO
- 
+
                IF         COND(&GLOBAL *EQ 'Y') THEN(DO)
- 
+
 /** Save global schemas/libraries */
- 
+
                  IF         COND(&ACPTH *EQ '*YES') THEN(DO)
                    CHGVAR       VAR(&PRFK) VALUE('007')
                  ENDDO
                  ELSE       DO
                    CHGVAR       VAR(&PRFK) VALUE('008')
                  ENDDO
- 
+
                  CALL       PGM(SCC000303) PARM(&PRTCD &PRFK)
- 
+
                  IF         COND(&PRTCD *NE ' ') THEN(DO)
                    CHGJOB   SWS(XXXXXX11)
                    GOTO     CMDLBL(ENDPGM)
                  ENDDO
- 
+
                ENDDO
- 
+
                GOTO       ENDPGM
- 
+
              ENDDO
- 
+
 /*           IF         COND((&MODE *EQ 'DM') *OR (&MODE *EQ 'DTA')) + */           /*MD035839*/
 /*                        THEN(DO)                                     */           /*MD035839*/
              IF         COND((&MODE *EQ 'DM') *OR (&MODE *EQ 'DTA') *OR +
                           (&MODE *EQ 'DD')) THEN(DO)                                /*MD035839*/
- 
+
 /* Retrieve data area SDSTAT for zone prefix */
- 
+
                RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
                CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
                CHGVAR     VAR(&MODLIB) VALUE(&ZONEID *CAT &MODE +
                             *TCAT 'LIB')
                CHGVAR     VAR(&DILIB) VALUE(&ZONEID *CAT 'DILIB ')
- 
+
              ENDDO
- 
+
 /*           IF         COND((&MODE *EQ 'GM') *OR (&MODE *EQ 'GTA')) +  */          /*MD035839*/
 /*                          THEN(DO)                                    */          /*MD035839*/
              IF         COND((&MODE *EQ 'GM') *OR (&MODE *EQ 'GTA') *OR +
                           (&MODE *EQ 'GD')) THEN(DO)                                /*MD035839*/
- 
-               IF         COND(&GLOBAL *EQ 'Y') THEN(DO)
- 
+
+/**********  IF         COND(&GLOBAL *EQ 'Y') THEN(DO) */                               /*MD021975*/
+             IF         COND((&GLOBAL *EQ 'Y') *OR  (&CGP010 *EQ +
+                             'Y')) THEN(DO)                                             /*MD021975*/
 /*  Determine global system ID.                                      */
- 
+
                CALL       PGM(AOSVALR0) PARM(&PRTCD 'BrgMidasGlobalPrefix' +
                             &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
                             &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
                             &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
                             &SVALK9 &SVAL9 &SVALK10 &SVAL10)
- 
+
 /* If there is an error finding system values, then end abnormally.  */
- 
+
                IF         COND(&PRTCD *NE '       ') THEN(GOTO +
                             CMDLBL(ABNOR))
- 
+
                CHGVAR     VAR(&GLOBID) VALUE(&SVAL1)
                CHGVAR     VAR(&MODLIB) VALUE(&GLOBID *CAT &MODE +
                             *TCAT 'LIB')
                RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                               /*AR1096483*/
                CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))                  /*AR1096483*/
                CHGVAR     VAR(&DILIB) VALUE(&ZONEID *CAT 'DILIB ')                     /*AR1096483*/
- 
+                                                                                        /*MD021975*/
+               CHGVAR     VAR(&GMLIB) VALUE(&GLOBID *CAT 'GMLIB   ')                    /*MD021975*/
+               CHGVAR     VAR(%SUBSTRING(&LIB7 1 2)) +
+                          VALUE(%SUBSTRING(&SDSTAT 6 2))                                /*MD021975*/
+
                ENDDO
                ELSE       DO
- 
+
                  GOTO       ENDPGM
- 
+
                ENDDO
- 
+
              ENDDO
- 
+
 /* Determine savefile name */
- 
+
              CHGVAR   VAR(&SAVF) VALUE('DBIC' *CAT &MODE)
- 
+
 /*           IF         COND((&MODE *EQ 'GM') *OR +                */               /*MD035839*/
 /*                        (&MODE *EQ 'GTA')) THEN(DO)              */               /*MD035839*/
              IF         COND((&MODE *EQ 'GM') *OR +
@@ -386,7 +398,7 @@
                           SAVACT(*LIB) SAVACTWAIT(120 *NOCMTBDY) +
                           ACCPTH(*YES) DTACPR(&DTACPRV) +
                           OUTPUT(*PRINT)                                                /*MD038500*/
- 
+
              ENDDO
              ELSE       DO
 /**********    SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
@@ -399,14 +411,14 @@
                           ACCPTH(&ACPTH) DTACPR(&DTACPRV) +
                           OUTPUT(*PRINT)                                                /*MD038500*/
              ENDDO
- 
+
              RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT)
- 
+
              CHGVAR     VAR(&SAVFTEXT) VALUE(%SST(&RUNDAT 1 7) +
                          *CAT  ' - Midas I/C termination ' +
                          *CAT &MODE *TCAT 'LIB save')
              CHGSAVF    FILE(&DILIB/&SAVF) TEXT(&SAVFTEXT)
- 
+
              CHGVAR     VAR(%SUBSTRING(&JRNE 1 5)) VALUE('DISK ')
              CHGVAR     VAR(%SUBSTRING(&JRNE 6 8)) VALUE(&MODLIB)
              CHGVAR     VAR(%SUBSTRING(&JRNE 16 8)) VALUE(&DILIB)
@@ -414,19 +426,36 @@
 /*********   SNDJRNE    JRN(ICJRN) TYPE('SV') ENTDTA(&JRNE)      */                       /*CSC048*/
              SNDJRNE    JRN(ICJRN) TYPE('SV') ENTDTA(&JRNE) +
                           FORCE(*YES)                                                     /*CSC048*/
- 
+
+                                                                                        /*MD021975*/
+/* If CGP010 is *ON save Global BSPL files */                                           /*MD021975*/
+                                                                                        /*MD021975*/
+             IF         COND(&CGP010 *EQ 'Y') THEN(DO)                                  /*MD021975*/
+                                                                                        /*MD021975*/
+             CHKOBJ     OBJ(&LIB7/BSPLIC) OBJTYPE(*FILE)                                /*MD021975*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD021975*/
+             CRTSAVF    FILE(&LIB7/BSPLIC) AUT(*ALL)                                    /*MD021975*/
+             ENDDO                                                                      /*MD021975*/
+                                                                                        /*MD021975*/
+             CLRSAVF    FILE(&LIB7/BSPLIC)                                              /*MD021975*/
+                                                                                        /*MD021975*/
+             SAVOBJ     OBJ(GPACODPD GPBSADPD GPBSANPD GPBSRIPD +
+                          GPBSRQPD GPBSXDPD GPHHOXPD GPHIBLPD) +
+                          LIB(&GMLIB) DEV(*SAVF) SAVF(&LIB7/BSPLIC)                     /*MD021975*/
+             ENDDO                                                                      /*MD021975*/
+                                                                                        /*MD021975*/
              GOTO       ENDPGM
- 
+
 ABNOR:
- 
+
              SNDPGMMSG  MSG('Input Cycle Database Save - ' *CAT &MODE +
                           *TCAT ' ENDED ABNORMALLY') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  ENDPGM:
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              ENDPGM

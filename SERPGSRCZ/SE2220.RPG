@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050604           Date 21Feb20               *
-      *  Prev Amend No. 260909             Date 04Apr19               *
+      *  Last Amend No. AR1049910          Date 26Oct12               *
+      *  Prev Amend No. MD030796           Date 30Oct14               *
+      *                 MD050604           Date 21Feb20               *
+      *                 260909             Date 04Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045514           Date 07Jun17               *
       *                 229720             Date 29Nov05               *
@@ -292,6 +294,31 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1049910 - APPLIED FIX 143715 AND 130814 (CHILD:AR1049911)  *
+      *  143715 - The Realised P/L is uncorrect when it is due to MM  *
+      *           revaluation and no trade actions exist. When a      *
+      *           price change action (Code 60) is read from BPACC    *
+      *           and the security is not subject to Amortisation, the*
+      *           Realised P/L is calculated as the difference between*
+      *           Current Average Numerator (BPACC price * Nominal)   *
+      *           and the Average Numerator (APNC) stored in BKPOSD.  *
+      *           This is wrong because there could be previous MM    *
+      *           revaluations. The problem occured after fix 130814  *
+      *           which removed the recalculation of APNC in SR/BKSET *
+      *           and it is due to the fact that DPAP is not updated  *
+      *           by SR/P60 when the security is not subject to       *
+      *           amortisation.                                       *
+      *  130814 - UNREALISED P/L POSTINGS MISSING DUE TO FIX 091803   *
+      *           091803 Removed as also chains to wrong Security     *
+      *           corrupting Investment type on A/C Keys.             *
+      *           Event Date for RL keys zero if no maturity due to   *
+      *           fix 100100.                                         *
+      *           Fix 031177 REMOVED Corrupts APNC if Mark to Market  *
+      *           not done, and DPAP changed to record APNC/LAVP      *
+      *           differences.                                        *
+      *  MD030796 - Portuguese Upgrade - Discount/Premium Amortisation*
+      *             on Trade Date not done when CSE032 on             *
+      *             Formalised fix from PS.                           *
       *  MD050604 - Average price of position changed incorrectly.    *
       *           - Recompiled due to changes in /copy sources ZAVPRZ1*
       *             and ZCNSDZ1.                                      *
@@ -976,7 +1003,7 @@
      FBKMTHA  UF  E           K        DISK         KINFDS BMADS
      F                                              KINFSR BMASR
      FSEPCBD  IF  E           K        DISK                               S01117
-     FPRICED  IF  E           K        DISK                               091803
+     F***PRICED* IF  E           K        DISK                                         091803 130814
      FBOOKD   IF  E           K        DISK
      FSECTY   IF  E           K        DISK
      FINVTP   IF  E           K        DISK
@@ -1120,8 +1147,8 @@
       *   44  -  CUM-COUPON NOMINAL CHANGES CASE 1 (P10)              *
       *   45  -  CUM-COUPON NOMINAL CHANGES CASE 2 (P10)              *
       *   46  -  CUM-COUPON NOMINAL CHANGES CASE 3 (P10)              *
-      *   48  -  NO RECORDS IN PRICED FILE                            *   091803
-      *   49  -  NO PRICE RECORD EXISTS FOR A SECURITY                *   091803
+      ****48**-**NO*RECORDS*IN*PRICED*FILE*****************************                091803 130814
+      ****49**-**NO*PRICE*RECORD*EXISTS*FOR*A*SECURITY*****************                091803 130814
       *   50  -  FILE AND CALCULATED TOTALS DISAGREE - BPACCD         *
       *   51  -  FILE AND CALCULATED TOTALS DISAGREE - BPACBD         *
       *   52  -  FILE AND CALCULATED TOTALS DISAGREE - BPACHD         *
@@ -2097,10 +2124,10 @@
      C*                                                                   091803
      C** PRICED FILE KEY                                                  091803
      C*                                                                   091803
-     C           PKEY      KLIST                                          091803
-     C                     KFLD           PSSN                            091803
-     C                     KFLD           PPRT                            091803
-     C                     KFLD           PVDT                            091803
+     C********** PKEY      KLIST                                                       091803 130814
+     C**********           KFLD           PSSN                                         091803 130814
+     C**********           KFLD           PPRT                                         091803 130814
+     C**********           KFLD           PVDT                                         091803 130814
      C***********                                                  S01486 CPM004
      C***********HSEXKY    KLIST                                   S01486 CPM004
      C***********          KFLD           NMCY                     S01486 CPM004
@@ -2514,15 +2541,15 @@
      C*
      C           UPBS      IFEQ 'B'
      C           UPBS      OREQ KBCTV
-     C*                                                                   091803
-     C***  Chain to SECTYD FILE EARLIER WAS REMOVED BECAUSE IT WAS        091803
-     C***  DEEMED POINTLESS, BUT THEN WHEN DOING THE UNRLPL SUBR.         091803
-     C***  SYSTEM NEEDS MARKET PRICE FROM THE SECTYD FILE.                091803
-     C*                                                                   091803
-     C                     EXSR SECCHN                                    091803
-     C           *INU7     IFEQ '1'                                       091803
-     C                     GOTO ENDLP                                     091803
-     C                     END                                            091803
+     C**********                                                                       091803 130814
+     C*****Chain*to*SECTYD*FILE*EARLIER*WAS*REMOVED*BECAUSE*IT*WAS****                 091803 130814
+     C*****DEEMED*POINTLESS,*BUT*THEN*WHEN*DOING*THE*UNRLPL*SUBR.*****                 091803 130814
+     C*****SYSTEM*NEEDS*MARKET*PRICE*FROM*THE*SECTYD*FILE.************                 091803 130814
+     C*                                                                                091803 130814
+     C**********           EXSR SECCHN                                                 091803 130814
+     C********** *INU7     IFEQ '1'                                                    091803 130814
+     C**********           GOTO ENDLP                                                  091803 130814
+     C**********           END                                                         091803 130814
      C/COPY WNCPYSRC,SE2220C135
       *                                                                                       CSE036
       ** If CSE036 don't do unrealised P/L                                                    CSE036
@@ -3472,18 +3499,18 @@
      C                     Z-ADDNPSN      ONPSN
      C                     MOVE BKPREC    RECST1
      C                     END
-     C*                                                                   031177
-     C** RECALCULATE APNC ( = NPSN X LAVP) IF NON-AMORTIZING POSITION     031177
-     C** (THERE MAY HAVE BEEN MARK TO MARKET DONE SINCE LAST TRADE)       031177
-     C*                                                                   031177
-     C           BUDU      IFEQ *ZERO                                     031177
-     C                     Z-ADDNPSN      ZNOML                           031177
-     C                     Z-ADDLAVP      ZPRC                            031177
-     C                     EXSR ZCNSD                                     031177
-     C                     Z-ADDZCONS     APNC                            031177
-     C                     ELSE                                           099591
+     C**********                                                                       031177 130814
+     C***RECALCULATE*APNC*(*=*NPSN*X*LAVP)*IF*NON-AMORTIZING*POSITION                  031177 130814
+     C***(THERE*MAY*HAVE*BEEN*MARK*TO*MARKET*DONE SINCE LAST TRADE)                    031177 130814
+     C**********                                                                       031177 130814
+     C********** BUDU      IFEQ *ZERO                                                  031177 130814
+     C**********           Z-ADDNPSN      ZNOML                                        031177 130814
+     C**********           Z-ADDLAVP      ZPRC                                         031177 130814
+     C**********           EXSR ZCNSD                                                  031177 130814
+     C**********           Z-ADDZCONS     APNC                                         031177 130814
+     C**********           ELSE                                                        099591 130814
      C                     ADD  BHPP      APNC                            099591
-     C                     END                                            031177
+     C**********           END                                                         031177 130814
      C*                                                                   E22957
      C           CSE065    IFEQ 'Y'                                                           CSE065
      C********** STRM      ANDEQ'Y'                                                    CSE065 233707
@@ -4673,6 +4700,27 @@
      C           BYSL      ANDNE'Y'                                       CSE006
      C           CSE006    ORNE 'Y'                                       CSE006
      C                     EXSR REALPL
+     C*                                                                                       130814
+     C** Accumulate Realised P&L in Discount Accrued to                                       130814
+     C** reflects the difference between APNC and NOM x LAVP                                  130814
+     C** When there is no Trade APNC is not updated on BKPOSD                                 130814
+     C*                                                                                       130814
+     C           BCTP      IFNE 'MM'                                                          130814
+     C           PROT      ANDNE'2'                                                           130814
+     C           PROT      ANDNE'4'                                                           130814
+     C           PROT      ANDNE'7'                                                           130814
+     C           MATY      ANDNE99999                                                         130814
+      *                                                                                       130814
+     C           STAD      IFEQ 'Y'                                                           130814
+     C           STAD      OREQ 'C'                                                           130814
+     C           STBS      OREQ 'D'                                                           130814
+     C           GDPK      ANDEQ'Y'                                                           130814
+     C                     ELSE                                                               130814
+     C                     ADD  WRLPL     DPAP                                                130814
+     C                     END                                                                130814
+     C                     ELSE                                                               130814
+     C                     ADD  WRLPL     DPAP                                                130814
+     C                     END                                                                130814
      C                     ELSE                                           CSE006
      C                     EXSR BSPLS                                     CSE006
      C                     ENDIF                                          CSE006
@@ -6314,6 +6362,14 @@
      C                     Z-ADD0         WCAMT                           E22957
      C*                                                                   E22957
      C                     EXSR REALPL
+     C*                                                                                       143715
+     C** Accumulate Realised P&L in Discount Accrued to                                       143715
+     C** reflects the difference between APNC and NOM x LAVP                                  143715
+     C** When there is no Trade APNC is not updated on BKPOSD                                 143715
+     C*                                                                                       143715
+     C           BCTP      IFEQ 'MM'                                                          143715
+     C                     ADD  WRLPL     DPAP                                                143715
+     C                     END                                                                143715
      C*                                                                   E15965
      C** UPDATE MONTHLY STATISTICS TOTAL FOR M/M PROFIT                   E15965
      C*                                                                   E15965
@@ -7106,6 +7162,27 @@
      C           AMCD      IFEQ 'PA'                                      CSE032
      C                     Z-SUBEVAM      EVAM                            CSE032
      C                     END                                            CSE032
+      *                                                                                     MD030796
+      ** If CSE105 is installed and this is a Trade Date Position,                          MD030796
+      ** change to 'DT' when "discount" or 'PT' when "premium".                             MD030796
+      *                                                                                     MD030796
+     C           CSE105    IFEQ 'Y'                                                         MD030796
+      *                                                                                     MD030796
+     C           IPL7K     IFEQ ' '                                                         MD030796
+     C           BCTV      ANDEQ'T'                                                         MD030796
+      *                                                                                     MD030796
+     C           IPL7K     OREQ 'K'                                                         MD030796
+     C           KBCTV     ANDEQ'T'                                                         MD030796
+      *                                                                                     MD030796
+     C                     SELEC                                                            MD030796
+     C           AMCD      WHEQ 'DA'                                                        MD030796
+     C                     MOVE 'DT'      AMCD                                              MD030796
+     C           AMCD      WHEQ 'PA'                                                        MD030796
+     C                     MOVE 'PT'      AMCD                                              MD030796
+     C                     ENDSL                                                            MD030796
+      *                                                                                     MD030796
+     C                     ENDIF                                                            MD030796
+     C                     ENDIF                                                            MD030796
      C*                                                                   CSE032
      C** - Reverse sign, if Negative Position on Key                      CSE032
      C*                                                                   CSE032
@@ -13570,32 +13647,32 @@
      C           MKPR      ANDEQ*ZERO                                     E15965
      C*                                                                   091803
      C** IF MARKET PRICE EQUALS TO ZERO CHAIN TO PRICED FILE IF A         091803
-     C** PRICE EXISTS.                                                    091803
-     C*                                                                   091803
-     C                     MOVE BCSS      PSSN                            091803
-     C                     MOVE 'V '      PPRT                            091803
-     C                     Z-ADDECD       PVDT                            091803
-     C*                                                                   091803
-     C           PKEY      SETGTPRICED                                    091803
-     C                     READPPRICED                   48               091803
-     C*                                                                   091803
-     C           *IN48     IFEQ *OFF                                      091803
-     C           PSSN      ANDEQBCSS                                      091803
-     C           PPRT      ANDEQ'V '                                      091803
-     C           PPRC      ANDEQ0                                         091803
-     C                     SETOF                         49               091803
-     C                     ELSE                                           091803
-     C                     SETON                         49               091803
-     C                     END                                            091803
-     C*                                                                   091803
-     C                     END                                            091803
-     C*                                                                   091803
-     C** IF NO MARKET PRICE EXISTS THEN SKIP UNREALISED PROFIT AND        091803
-     C** LOSS PROCESSING.                                                 091803
-     C*                                                                   091803
-     C           *IN49     IFEQ *ON                                       091803
+     C***PRICE*EXISTS.                                                                 091803 130814
+     C**********                                                                       091803 130814
+     C**********           MOVE BCSS      PSSN                                         091803 130814
+     C**********           MOVE 'V '      PPRT                                         091803 130814
+     C**********           Z-ADDECD       PVDT                                         091803 130814
+     C**********                                                                       091803 130814
+     C********** PKEY      SETGTPRICED                                                 091803 130814
+     C**********           READPPRICED                   48                            091803 130814
+     C**********                                                                       091803 130814
+     C********** *IN48     IFEQ *OFF                                                   091803 130814
+     C********** PSSN      ANDEQBCSS                                                   091803 130814
+     C********** PPRT      ANDEQ'V '                                                   091803 130814
+     C********** PPRC      ANDEQ0                                                      091803 130814
+     C**********           SETOF                         49                            091803 130814
+     C**********           ELSE                                                        091803 130814
+     C**********           SETON                         49                            091803 130814
+     C**********           END                                                         091803 130814
+     C**********                                                                       091803 130814
+     C**********           END                                                         091803 130814
+     C**********                                                                       091803 130814
+     C***IF*NO*MARKET*PRICE*EXISTS*THEN*SKIP*UNREALISED*PROFIT*AND                     091803 130814
+     C***LOSS*PROCESSING.                                                              091803 130814
+     C**********                                                                       091803 130814
+     C********** *IN49     IFEQ *ON                                                    091803 130814
      C                     Z-ADD0         UPPT
-     C                     SETOF                         49               091803
+     C**********           SETOF                         49                            091803 130814
      C                     ELSE
      C*
      C* STORE UNREALISED P/L AS PREVIOUS

@@ -19,27 +19,29 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1092998A         Date 04Mar13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Prev Amend No. CSE015             Date 06Dec99               *
+      *                 CSE015             Date 06Dec99               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CAP003  *CREATE    Date 23Feb98               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1092998A - Backvalue control error - Date IN               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE015 - Forward Valued Depot Movements                      *
       *  CAP003 - Conversion of SE inputs into modular structure to   *
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -58,97 +60,99 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      ** Screen Inputs
      D DDDPID          S             10A
      D DDDPOD          S             10A
      D DDDPMD          S              6A
- 
+     D DDACTN          S              1A                                                  AR1092998A
+     D DDORED          S              5P 0                                                AR1092998A
+
      D BFCLASInDp      S              1A
- 
+
      ** ICD
      ** System Input
- 
+
      D BVBVP           S              3P 0
      D BVCCCY          S              3A
      D BVEUCY          S              3A
      D RUND            S              5P 0
      D BJDFIN          S              1A
- 
- 
+
+
       ** Security Details
- 
+
      D MATY            S              5P 0
      D NMCY            S              3A
- 
+
       ** Output
      D DDDPMDOk        S              1A
      D DPMD            S              5P 0
- 
+
       ** Working Variables
- 
+
      D ZCCY            S              3A
      D ZDATE           S              6A
      D ZDAYNO          S              5P 0
@@ -158,13 +162,13 @@
      D DATEN           S              6P 0
      D DATEA           S              6A
      D WBKVP           S              5P 0
- 
+
       ** Index for arrays of error message ids etc
       ** Index for arrays of warning message ids etc
- 
+
      D Idx             S              3P 0
      D WIx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -172,7 +176,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -180,11 +184,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -193,7 +197,7 @@
      C                   MOVE      *BLANK        WMsgIDXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
- 
+
      C                   Z-ADD     *ZEROS        DPMD
       *
       ** VALIDATION
@@ -209,7 +213,7 @@
       ** Return
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -221,9 +225,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DPMDV         BEGSR
- 
+
      C     DDDPMD        IFNE      *BLANKS
       *
       ** Prohibited if depot not entered
@@ -242,7 +246,7 @@
       *
      C                   MOVE      DDDPMD        DATEN
      C                   MOVE      DATEN         DATEA
- 
+
      C     DDDPMD        IFNE      DATEA
       *
       ** Error 203
@@ -252,7 +256,7 @@
      C                   MOVEL     'MMA0178'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPMDOk
      C                   ELSE
- 
+
      C     DDDPMD        IFEQ      '999999'
      C                   MOVE      DDDPMD        DPMD
      C                   ELSE
@@ -263,7 +267,7 @@
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
      C     ErrorFlag     IFEQ      'Y'
       *
       ** Error 203
@@ -297,7 +301,7 @@
       *
      C     DPMD          IFGT      RUND
      C     DPMD          ANDNE     99999
- 
+
      C     DPMD          IFGT      MATY
      C     MATY          ANDNE     *ZEROS
       *
@@ -308,15 +312,20 @@
      C                   MOVEL     'MMA0180'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPMDOk
      C                   END
- 
+
      C                   END
       *
       **    must fall within back value period on TABTB36
       *
      C     RUND          SUB       BVBVP         WBKVP
- 
+
      C     DPMD          IFLT      RUND
      C     DPMD          ANDLT     WBKVP
+     C     DDACTN        ANDEQ     'I'                                                    AR1092998A
+     C     DPMD          ORLT      RUND                                                   AR1092998A
+     C     DPMD          ANDLT     WBKVP                                                  AR1092998A
+     C     DDACTN        ANDEQ     'A'                                                    AR1092998A
+     C     RUND          ANDEQ     DDORED                                                 AR1092998A
       *
       ** Error 232
       *
@@ -334,7 +343,7 @@
      C                   MOVEL     BVEUCY        ZCCY
      C                   MOVEL     DPMD          ZDAYNO
      C                   MOVEL     *BLANKS       ZLOC
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
@@ -350,7 +359,7 @@
      C                   MOVEL     'MMA0182'     WMsgIdXAr(WIx)
      C                   MOVE      'W'           DDDPMDOk
      C                   END
- 
+
      C                   ELSE
       *
       ** Cedel
@@ -375,7 +384,7 @@
      C                   MOVEL     'MMA0182'     WMsgIdXAr(WIx)
      C                   MOVE      'W'           DDDPMDOk
      C                   END
- 
+
      C                   ELSE
       *
       ** If In depot is not Euroclear or Cedel, should not be a holiday in
@@ -400,7 +409,7 @@
      C                   MOVEL     'MMA0183'     WMsgIdXAr(WIx)
      C                   MOVE      'W'           DDDPMDOk
      C                   END
- 
+
      C                   END
      C                   END
      C                   END
@@ -420,11 +429,11 @@
      C                   MOVEL     'MMA0177'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPMDOk
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -436,16 +445,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       ** Return Code error indicator (1A)
      C                   PARM                    RetCodeIn
       ** Received Parameters
       ** -------------------
- 
+
       ** Screen fields
       * Date In (6A)
       * In Depot (10A)
@@ -453,20 +462,22 @@
      C                   PARM                    DDDPMD
      C                   PARM                    DDDPID
      C                   PARM                    DDDPOD
- 
+     C                   PARM                    DDACTN                                   AR1092998A
+     C                   PARM                    DDORED                                   AR1092998A
+
       ** Security Details
       *  Maturity Date (5P 0)
       *  Nominal Currency (3A)
      C                   PARM                    MATY
      C                   PARM                    NMCY
- 
+
       ** Transaction Details
       ** In Depot Customer Classification  (1A)
      C                   PARM                    BFCLASInDp
- 
+
       ** ICD Info
       ** System details
- 
+
       * Date Format (1A)
       * Run Date (5P 0)
       * EuroClear currency Code (3A)
@@ -477,10 +488,10 @@
      C                   PARM                    BVEUCY
      C                   PARM                    BVCCCY
      C                   PARM                    BVBVP
- 
+
       ** Returned Parameters
       ** -------------------
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
@@ -516,15 +527,15 @@
      C                   MOVE      'Y'           CSE015                                       CSE015
      C                   ENDIF                                                                CSE015
      C                   ENDIF                                                                CSE015
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

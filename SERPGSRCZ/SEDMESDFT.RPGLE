@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR586519           Date 02Aug10               *
+      *  Last Amend No. AR1069662          Date 14Dec12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR586519           Date 02Aug10               *
       *                 AR578319           Date 14Jul10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1069662 - Euroclear/Clearstream Code defaults to blank     *
+      *              after edit of Repo transaction                   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR586519 - Account for Payment and Account for Payment       *
       *             (detail) not populated from SEST                  *
@@ -60,7 +63,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -74,14 +77,14 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -93,37 +96,37 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DPMVScrFld    E DS                  EXTNAME(SEDMWIPD)
       ** SEDPMV Transaction Details in screen format
      D   Screen1             350    505A
      D***Screen2             506   1908A                                                      CSW210
      D   Screen2             506   1889A                                                      CSW210
- 
+
      D DSSTD         E DS                  OCCURS(2) EXTNAME(STDSED)
       ** Data structure for standard settlement instructions
- 
+
      D DSADD         E DS                  OCCURS(8) EXTNAME(STDADSED)
       ** Data structure for standard additional settlement details
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Array used to move right Swift Id.
      D ROU             S              1    DIM(12)
- 
+
      D WTimeStamp      S               Z                                                    BUG16739
      D WTIME           S             26A                                                    BUG16739
       ** +--------------------------------------+
@@ -660,6 +663,7 @@
      C                   EVAL      DSGDEL = *Blanks
      C                   EVAL      DSSROL = *Blanks
      C                   EVAL      DSFCOD = *Blanks
+     C                   EVAL      DSEUCL = *Blanks                                        AR1069662
      C                   ENDIF
       *
      C                   IF        CSE029 <> 'Y'
@@ -668,9 +672,9 @@
      C                   EVAL      DSCHID = *Blanks
      C                   ENDIF
       *
-     C                   IF        CSW202 = 'Y'
-     C                   EVAL      DSEUCL = *Blanks
-     C                   ENDIF
+     C**********         IF        CSW202 = 'Y'                                            AR1069662
+     C**********         EVAL      DSEUCL = *Blanks                                        AR1069662
+     C**********         ENDIF                                                             AR1069662
       *
       ** Screen 2
       *

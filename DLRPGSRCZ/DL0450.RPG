@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025993           Date 19Aug14               *
+      *  Last Amend No. AR1072832          Date 26Dec12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD025993           Date 19Aug14               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
       *                 CFC006             Date 06Aug12               *
@@ -82,6 +83,7 @@
 0010 F*                                                                  *
 0010 F*----------------------------------------------------------------  *
 0010 F*                                                                  *
+      *  AR1072832 - CER051 Split Spot Revaluation issue              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025993 - Total Spot Revaluation and Profit / Loss fields   *
       *             were adjusted from 15 to 17 to avoid truncation   *
@@ -1714,6 +1716,8 @@
 0676 C*
 0677 C*    END OF CUSTOMER CALCULATIONS & OUTPUT
 0678 C                     EXSR ENDBR
+     C                     Z-ADD0         WPROF                                            AR1072832
+     C                     Z-ADD0         WLOSS                                            AR1072832
 0679 C*
 0680 C**** END OF PROCESSING FOR THIS CUSTOMER ***************************
 0681 C*
@@ -2000,6 +2004,14 @@
 0740 C*    SET D/C IND. FOR WHETHER PROFIT OR LOSS
 0741 C   71                Z-ADD1         DRCR    10       CREDIT  LOSS
 0742 C   72                Z-ADD0         DRCR             DEBIT   PROFIT
+      *                                                                                    AR1072832
+     C                     SELEC                                                           AR1072832
+     C           *IN72     WHEQ '1'                                                        AR1072832
+     C                     ADD  PROLO     WPROF  150                                       AR1072832
+     C           *IN71     WHEQ '1'                                                        AR1072832
+     C                     ADD  PROLO     WLOSS  150                                       AR1072832
+     C                     ENDSL                                                           AR1072832
+      *                                                                                    AR1072832
 0743 C*
 0744 C*    BRANCH TOTALS
 0745 C*    BRANCH TOTALS OF PROFIT/LOSS
@@ -2211,9 +2223,30 @@
      C*                                                                   S01408
 0814 C*
 0815 C*    REVERSE SIGN OF PROFIT/LOSS & PUT IN A NEW FIELD(PLREV1 TO 4)
-0816 C                     Z-SUBBRPRL     PLREV  150 787756
+0816 C**********           Z-SUBBRPRL     PLREV  150 787756                                AR1072832
+     C                     Z-SUBWPROF     PLREV  150 787756                                AR1072832
+     C                     MOVE 'N'       W56IN1  1                                        AR1072832
+     C           *IN56     IFEQ '1'                                                        AR1072832
+     C                     MOVE 'Y'       W56IN1                                           AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     Z-SUBWLOSS     PLREV  150 787756                                AR1072832
 0817 C***56                GOTO BREND                                     E10886
+     C                     MOVE 'N'       W56IN2  1                                        AR1072832
+     C           *IN56     IFEQ '1'                                                        AR1072832
+     C                     MOVE 'Y'       W56IN2                                           AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     MOVE '0'       *IN56                                            AR1072832
+     C           W56IN1    IFEQ 'Y'                                                        AR1072832
+     C           W56IN2    ANDEQ'Y'                                                        AR1072832
+     C                     MOVE '1'       *IN56                                            AR1072832
+     C                     ENDIF                                                           AR1072832
 0817 C   56                GOTO BLBPL                                     E10886
+     C                     MOVE '0'       *IN89                                            AR1072832
+     C           W56IN1    IFEQ 'Y'                                                        AR1072832
+     C                     MOVE '1'       *IN89                                            AR1072832
+     C                     ENDIF                                                           AR1072832
+     C   89                GOTO BLBP2                                                      AR1072832
+     C                     Z-SUBWPROF     PLREV      787756                                AR1072832
 0818 C*
 0819 C**   INCREMENT COUNT
 0820 C           COUNT     ADD  1         COUNT
@@ -2302,6 +2335,133 @@
       *                                                                                       202042
      C                     Z-ADDWC        WLOOP   30                                          202042
      C           WLOOP     ADD  1         WLOOP                                               202042
+     C           BLBP2     TAG                                                             AR1072832
+     C           W56IN2    IFEQ 'Y'                                                        AR1072832
+     C                     GOTO BLBP3                                                      AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     Z-SUBWLOSS     PLREV  150 787756                                AR1072832
+     C           COUNT     ADD  1         COUNT                                            AR1072832
+     C                     Z-ADD1         DRCR                                             AR1072832
+     C   78                Z-ADD0         DRCR                                             AR1072832
+     C                     Z-SUBPLREV     BPLMD  130                                       AR1072832
+     C   78                Z-ADDPLREV     BPLMD                                            AR1072832
+      *                                                                                    AR1072832
+     C           *IN78     IFEQ '0'                                                        AR1072832
+     C           EAT2      COMP 'R'                      73                                AR1072832
+     C   73                Z-ADD1         RIND                                             AR1072832
+     C  N73                Z-ADD0         RIND                                             AR1072832
+     C                     MOVE BLSRAC    ##ACOD                                           AR1072832
+     C                     MOVE 'GB00501' ##MGID                                           AR1072832
+     C                     ELSE                                                            AR1072832
+     C           EAT6      COMP 'R'                      73                                AR1072832
+     C   73                Z-ADD1         RIND                                             AR1072832
+     C  N73                Z-ADD0         RIND                                             AR1072832
+     C                     MOVE BLSLAC    ##ACOD                                           AR1072832
+     C                     MOVE 'GB00502' ##MGID                                           AR1072832
+     C                     ENDIF                                                           AR1072832
+      *                                                                                    AR1072832
+     C                     EXSR SRPNAR                                                     AR1072832
+      *                                                                                    AR1072832
+      ** Check if posting amount is too big                                                AR1072832
+      *                                                                                    AR1072832
+     C                     MOVE 'Y'       WREPT                                            AR1072832
+     C                     MOVE 'N'       WONCE                                            AR1072832
+     C                     Z-ADD1         WC      30                                       AR1072832
+      *                                                                                    AR1072832
+     C           WREPT     DOWEQ'Y'                                                        AR1072832
+      *                                                                                    AR1072832
+     C           WONCE     IFEQ 'N'                                                        AR1072832
+     C                     Z-SUBPLREV     WBPLA                                            AR1072832
+     C                     ENDIF                                                           AR1072832
+     C           *IN78     IFEQ '1'                                                        AR1072832
+     C           WONCE     ANDEQ'N'                                                        AR1072832
+     C                     Z-ADDPLREV     WBPLA  150                                       AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     MOVE 'Y'       WONCE                                            AR1072832
+     C                     Z-ADDWBPLA     WPREVA 150                                       AR1072832
+     C           WBPLA     SUB  WLMTPA    WBPLA                                            AR1072832
+     C           WBPLA     IFGT 0                                                          AR1072832
+     C           COUNT     ADD  1         COUNT                                            AR1072832
+     C                     Z-ADDWLMTPA    BPLMD                                            AR1072832
+     C                     Z-ADDWLMTPA    WBR,WC                                           AR1072832
+     C           WC        ADD  1         WC                                               AR1072832
+     C                     MOVE 'Y'       WREPT                                            AR1072832
+     C                     ELSE                                                            AR1072832
+     C                     Z-ADDWPREVA    BPLMD                                            AR1072832
+     C                     Z-ADDWPREVA    WBR,WC                                           AR1072832
+     C                     MOVE 'N'       WREPT                                            AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     SETON                     79                                    AR1072832
+      *                                                                                    AR1072832
+     C                     EXCPT                                                           AR1072832
+      *                                                                                    AR1072832
+     C                     SETOF                     79                                    AR1072832
+      *                                                                                    AR1072832
+      **   ADD POSTING AMOUNT TO HASH TOTAL                                                AR1072832
+      *                                                                                    AR1072832
+     C           BPLMD     DIV  1000      ZZAMT                                            AR1072832
+     C                     EXSR GLZADD                                                     AR1072832
+      *                                                                                    AR1072832
+     C                     ENDDO                                                           AR1072832
+      *                                                                                    AR1072832
+     C                     Z-ADDWC        WLOOP   30                                       AR1072832
+     C           WLOOP     ADD  1         WLOOP                                            AR1072832
+     C           BLBP3     TAG                                                             AR1072832
+     C                     Z-SUBBRPRL     PLREV  150 787756                                AR1072832
+     C                     Z-ADD1         DRCR                                             AR1072832
+     C   78                Z-ADD0         DRCR                                             AR1072832
+     C                     Z-SUBPLREV     BPLMD  130                                       AR1072832
+     C   78                Z-ADDPLREV     BPLMD                                            AR1072832
+      *                                                                                    AR1072832
+     C           *IN78     IFEQ '0'                                                        AR1072832
+     C           EAT2      COMP 'R'                      73                                AR1072832
+     C   73                Z-ADD1         RIND                                             AR1072832
+     C  N73                Z-ADD0         RIND                                             AR1072832
+     C                     MOVE BLSRAC    ##ACOD                                           AR1072832
+     C                     MOVE 'GB00501' ##MGID                                           AR1072832
+     C                     ELSE                                                            AR1072832
+     C           EAT6      COMP 'R'                      73                                AR1072832
+     C   73                Z-ADD1         RIND                                             AR1072832
+     C  N73                Z-ADD0         RIND                                             AR1072832
+     C                     MOVE BLSLAC    ##ACOD                                           AR1072832
+     C                     MOVE 'GB00502' ##MGID                                           AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     EXSR SRPNAR                                                     AR1072832
+      *                                                                                    AR1072832
+      ** Check if posting amount is too big                                                AR1072832
+      *                                                                                    AR1072832
+     C                     MOVE 'Y'       WREPT                                            AR1072832
+     C                     MOVE 'N'       WONCE                                            AR1072832
+     C                     Z-ADD1         WC      30                                       AR1072832
+      *                                                                                    AR1072832
+     C           WREPT     DOWEQ'Y'                                                        AR1072832
+      *                                                                                    AR1072832
+     C           WONCE     IFEQ 'N'                                                        AR1072832
+     C                     Z-SUBPLREV     WBPLA                                            AR1072832
+     C                     ENDIF                                                           AR1072832
+     C           *IN78     IFEQ '1'                                                        AR1072832
+     C           WONCE     ANDEQ'N'                                                        AR1072832
+     C                     Z-ADDPLREV     WBPLA  150                                       AR1072832
+     C                     ENDIF                                                           AR1072832
+     C                     MOVE 'Y'       WONCE                                            AR1072832
+     C                     Z-ADDWBPLA     WPREVA 150                                       AR1072832
+     C           WBPLA     SUB  WLMTPA    WBPLA                                            AR1072832
+     C           WBPLA     IFGT 0                                                          AR1072832
+     C           COUNT     ADD  1         COUNT                                            AR1072832
+     C                     Z-ADDWLMTPA    BPLMD                                            AR1072832
+     C                     Z-ADDWLMTPA    WBR,WC                                           AR1072832
+     C           WC        ADD  1         WC                                               AR1072832
+     C                     MOVE 'Y'       WREPT                                            AR1072832
+     C                     ELSE                                                            AR1072832
+     C                     Z-ADDWPREVA    BPLMD                                            AR1072832
+     C                     Z-ADDWPREVA    WBR,WC                                           AR1072832
+     C                     MOVE 'N'       WREPT                                            AR1072832
+     C                     ENDIF                                                           AR1072832
+      *                                                                                    AR1072832
+     C                     ENDDO                                                           AR1072832
+      *                                                                                    AR1072832
+     C                     Z-ADDWC        WLOOP   30                                       AR1072832
+     C           WLOOP     ADD  1         WLOOP                                            AR1072832
 0844 C*
 0845 C*    IF BANK DOESN'T MAINTAIN AN EQ.A/C CODE FOR BASE CURRENCY THEN
 0846 C*    SKIP PROCESSING RELATED TO ENTRIES 3 & 4 TO GESR

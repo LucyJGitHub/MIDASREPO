@@ -235,8 +235,8 @@
       * Fields defined for CSD012
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')
-     D BLKFLR          C                   CONST('            ')
-     D SCNSTR          C                   CONST('9999.9999999')
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200

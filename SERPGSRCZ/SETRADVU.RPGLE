@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056627           Date 02Sep20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD057789           Date 19May21               *
+      *  Prev Amend No. MD056627           Date 02Sep20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035243           Date 29Jul15               *
@@ -125,6 +126,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057789 - Charges details are not defaulted when Portfolio  *
+      *             reference is inserted                             *
+      *           - Exclude Portfolio Reference in DS/TranInChCm      *
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*
@@ -372,6 +376,7 @@
      D TranInSett    E DS                  EXTNAME(SETRSTPD)
      D DDCLTY2       E                     EXTFLD(DDCLTY)
      D TranInChCm    E DS                  EXTNAME(SETRCCPD)
+     D  TranInChC2             1    216                                                     MD057789
      D TranInSwfA    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(A)
      D TranInSwfB    E DS                  EXTNAME(SETRSWPD)
@@ -3192,7 +3197,8 @@
      C                             and DDPCOD = *blanks                                     MD056627
      C                             and DDAUTS = *blanks)                                    MD056627
      C**********                   and TranInChCm = *blanks                        BUG10021 MD049746
-     C                             or TranInChCm = *blanks                                  MD049746
+     C**********                   or TranInChCm = *blanks                         MD049746 MD057789
+     C                             OR TranInChC2 = *BLANKS                                  MD057789
                                                                                              BUG8690
      C                   IF        WDDCLTY2  <> *BLANKS                                     BUG11529
      C                   EVAL      DDCLTY2 = WDDCLTY2                                       BUG11529
@@ -3918,7 +3924,8 @@
      C                   ENDIF                                                              MD049746
 
       ** CHARGE/COMMISSION DEFAULTING
-     C                   IF        TranInChCm = *BLANKS                                     MD049746
+     C**********         IF        TranInChCm = *BLANKS                            MD049746 MD057789
+     C                   IF        TranInChC2 = *BLANKS                                     MD057789
 
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'

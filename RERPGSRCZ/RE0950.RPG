@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057229           Date 16Feb21               *
+      *  Prev Amend No. AR889865           Date 16Feb21               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD032198           Date 02Jun15               *
       *                 MD031034           Date 25Nov14               *
       *                 MD024292A          Date 19Mar14               *
@@ -25,6 +27,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057229 - Retail Interest Summary report is not showing all *
+      *             the rate changes that occur within capitalisation *
+      *             period.                                           *
+      *  AR889865 - Only the total debit was extracted in Retail      *
+      *             Interest Summary (Child:AR889866)                 *
+      *           - Applied for MD-57229.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -633,6 +641,7 @@
      C           *LIKE     DEFN CICT      ZIM1
      C           *LIKE     DEFN RUND      ZIREM
      C           *LIKE     DEFN CICT      ZIY1
+     C           *LIKE     DEFN FODIA     #FODIA                                            AR889865
       *
      C                     Z-ADD*ZEROS    ZICALC  20
       *
@@ -1558,7 +1567,8 @@
      C                     Z-ADDDHISD     W1HISD
       *
      C           DRCD      IFNE *ZEROS
-     C                     Z-ADDCLDID     WWDRCD
+     C**********           Z-ADDCLDID     WWDRCD                                            MD057229
+     C                     Z-ADDDRCD      WWDRCD                                            MD057229
      C                     ENDIF
       *
      C**********           ELSE                                                             AR796787
@@ -1885,7 +1895,8 @@
      C                     Z-ADDDHISD     W1HISD
       *
      C           CRCD      IFNE *ZEROS
-     C                     Z-ADDCLCID     WWCRCD
+     C**********           Z-ADDCLCID     WWCRCD                                            MD057229
+     C                     Z-ADDCRCD      WWCRCD                                            MD057229
      C                     ENDIF
       *
      C**********           ELSE                                                             AR796787
@@ -3050,10 +3061,17 @@
      C                     ENDIF
       *
      C                     Z-ADDWTOVR0    FODIN
+      *                                                                                     AR889865
+     C           ODIA      SUB  #TODIA    FODIA                                             AR889865
+      *                                                                                     AR889865
+     C                     ADD  FODIA     WSTDRI                                            AR889865
+     C                     Z-ADDODIA      #TODIA                                            AR889865
+     C                     Z-ADDFODIA     #FODIA                                            AR889865
       *
       ** Write extract file records
       *
      C           ODF       IFEQ 'Y'
+     C           FAODR     ORNE *ZEROS                                                      AR889865
       *
      C                     MOVE 'Y'       ODF
      C                     Z-ADD0         WTOVR0
@@ -3112,8 +3130,12 @@
       ** Set the debit interest amount
       *
      C           DRECI     IFEQ 'D'                        B004
+     C           DAID      SUB  #TDAID    FDRIA                                             AR889865
+     C                     SUB  #FODIA    FDRIA                                             AR889865
+     C                     Z-ADDDAID      #TDAID                                            AR889865
      C                     ELSE                            X004
      C           DRIP      SUB  #TDAID    FDRIA
+     C                     SUB  #FODIA    FDRIA                                             AR889865
      C                     Z-ADD0         #TDAID
      C                     ENDIF                           E004
       *
@@ -3233,7 +3255,9 @@
       *
       ** Set key sequence fields
       *
-     C                     MOVE Y@        FKEYS1
+     C**********           MOVE Y@        FKEYS1                                            MD057229
+     C           Y@        ADD  10        FKEYSN                                            MD057229
+     C                     MOVE FKEYSN    FKEYS1                                            MD057229
      C                     MOVE PRCRIV    FKEYS2
      C                     Z-ADD5         FRECT
       *

@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103  *CREATE    Date 10Aug20               *
+      *  Last Amend No. MD058103           Date 19May21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058103 - ARR Daily Rates History content for NCCR SARR     *
+      *             and SAVG are not correct                          *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer Standing Data     *
       *                                                               *
@@ -49,13 +52,26 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)                                MD058103
+      ** External DS for currency details                                                   MD058103
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                   MD058103
+      ** Second DS for Access Programs, Long Data Structure                                 MD058103
+
      D pDSSDY          S            200A
 
       ** Parameters for ZDATE2
      D ZDayNo          S              5P 0
      D ZDate           S              6P 0
      D ZADate          S              7A
-
+      ** Parameters for ZSEDIT                                                              MD058103
+     D PRTCD           S              7                                                     MD058103
+     D POPTN           S              7                                                     MD058103
+     D ZFLD15          S             15  0                                                  MD058103
+     D ZDECS           S              1  0                                                  MD058103
+     D ZECODE          S              1                                                     MD058103
+     D ZOUT21          S             21                                                     MD058103
+     D  ARR            DS            14                                                     MD058103
+                                                                                            MD058103
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
      D  ErrorOnFl             35     35
@@ -63,6 +79,7 @@
 
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
+     D CFLR            C                   CONST(9999.9999999)                              MD058103
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -82,7 +99,10 @@
      D Dobdy                          5p 0
      D Dbrfr                         17p12
      D Drtap                         17p12
+     D Dcalm                          4a                                                    MD058103
      D Davcr                         17p12
+     D Dcmrt                         17p12                                                  MD058103
+     D Dsmav                         17p12                                                  MD058103
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -126,6 +146,7 @@
       ** Process Report Lines
       *
      C     BLRT          IFEQ      'Y'
+     C     RECI          ANDEQ     'D'                                                      MD058103
      C                   EXSR      SRPrint
      C                   ENDIF
       *
@@ -177,7 +198,7 @@
      C                   PARM      *BLanks       ZADate
       *
      C                   EVAL      P1VLDT = ZADate
-     C                   EVAL      P1INFR = IPFR
+     C**********         EVAL      P1INFR = IPFR                                            MD058103
       *
      C                   EVAL      ZDayNo = MDAT
      C                   CALLB     'ZDATE2'
@@ -189,7 +210,26 @@
      C                   EVAL      P1MTDT = ZADate
      C                   EVAL      P1CCY  = CCY
      C                   EVAL      P1BRAT = BRTT
-     C                   EVAL      P1CUPR = CPAM
+     C**********         EVAL      P1CUPR = CPAM                                            MD058103
+      ** Format amount                                                                      MD058103
+                                                                                            MD058103
+     C                   CALL      'AOCURRR0'                                               MD058103
+     C                   PARM      *BLANKS       PRTCD                                      MD058103
+     C                   PARM      '*KEY   '     POPTN                                      MD058103
+     C                   PARM                    CCY                                        MD058103
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD058103
+                                                                                            MD058103
+     C                   EVAL      ZFLD15 = CPAM                                            MD058103
+     C                   EVAL      ZDECS = A6NBDP                                           MD058103
+                                                                                            MD058103
+     C                   CALLB     'ZSEDIT'                                                 MD058103
+     C                   PARM                    ZFLD15                                     MD058103
+     C                   PARM                    ZDECS                                      MD058103
+     C                   PARM      'J'           ZECODE                                     MD058103
+     C                   PARM                    ZOUT21                                     MD058103
+                                                                                            MD058103
+     C                   EVAL      P1CUPR  = ZOUT21                                         MD058103
+
      C                   EVAL      P1RTSP = RTSP
      C                   EVAL      P1SPRD = SPIN
      C                   EVAL      P1BADJ = BADJ
@@ -215,7 +255,21 @@
       *
      C                   EVAL      P1OBSP = OPSH
      C                   EVAL      P1RAKI = RTKN
-     C                   EVAL      P1FLOR = FLOR
+     C**********         EVAL      P1FLOR = FLOR                                            MD058103
+     C                   IF        FLOR = CFLR                                              MD058103
+     C                   EVAL      P1FLOR = *BLANKS                                         MD058103
+     C                   ELSE                                                               MD058103
+     C                   MOVE      FLOR          ARR                                        MD058103
+     C                   MOVE      ARR           ZFLD15                                     MD058103
+     C                   EVAL      ZDECS = 7                                                MD058103
+                                                                                            MD058103
+     C                   CALLB     'ZSEDIT'                                                 MD058103
+     C                   PARM                    ZFLD15                                     MD058103
+     C                   PARM                    ZDECS                                      MD058103
+     C                   PARM      'L'           ZECODE                                     MD058103
+     C                   PARM                    ZOUT21                                     MD058103
+     C                   MOVE      ZOUT21        P1FLOR                                     MD058103
+     C                   ENDIF                                                              MD058103
       *
       ** Daily Details
       *
@@ -231,7 +285,10 @@
      C+ , COBPDY
      C+ , CPBRFR
      C+ , CRTEAP
-     C+ , CAVCRT
+     C+ , CCALCM                                                                            MD058103
+     C+ , CAVCRT                                                                            MD058103
+     C+ , CDCMRT                                                                            MD058103
+     C+ , CSMPAV                                                                            MD058103
      C+ from SDHSDRTD
      C+ where
      C+     CMODID = 'LE'
@@ -270,6 +327,8 @@
      C                   PARM      *BLanks       ZADate
       *
      C                   EVAL      P1STDT = ZADate
+     C                   EVAL      P1CALM = Dcalm                                           MD058103
+     C                   EVAL      P1INFR = IPFR                                            MD058103
       *
      C                   EVAL      ZDayNo = DintEnd
      C                   CALLB     'ZDATE2'
@@ -314,7 +373,16 @@
      C                   EVAL      P1OBDY = Dobdy
      C                   EVAL      P1PRFR = Dbrfr
      C                   EVAL      P1RTAP = Drtap
-     C                   EVAL      P1AVCM = Davcr
+     C                   SELECT                                                             MD058103
+     C                   WHEN      Dcalm = 'CCR'                                            MD058103
+     C                   EVAL      P1AVCM = Davcr                                           MD058103
+     C                   WHEN      Dcalm = 'NCCR'                                           MD058103
+     C                   EVAL      P1AVCM = Dcmrt                                           MD058103
+     C                   WHEN      Dcalm = 'SAVG'                                           MD058103
+     C                   EVAL      P1AVCM = Dsmav                                           MD058103
+     C                   WHEN      Dcalm = 'SARR'                                           MD058103
+     C                   EVAL      P1AVCM = Drtap                                           MD058103
+     C                   ENDSL                                                              MD058103
      C                   WRITE     SD001110D3
       *
      C/exec SQL

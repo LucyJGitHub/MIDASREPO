@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058050           Date 10May21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. MD058050           Date 10May21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
@@ -135,6 +136,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank floor in calling ARR Calculator     *
       *  MD058050 - CLE172 fields are reflected in LE0310P1 Report    *
       *             when CLE172 off. Switch off *IN21 if CLE172 is    *
       *             off.                                              *
@@ -1053,6 +1055,11 @@
      I                                       11  11 SSF                   S01117
      I                                       12  12 DATF                  S01117
      I                                       13  13 MBIN                  S01117
+     I              9999.9999999          C         CFLR                                    MD057871
+      *                                                                                     MD057871
+     I            DS                                                                        MD057871
+     I                                        1  14 ARR                                     MD057871
+      *
      C                     MOVEACPY@      BIS@   80
 0372 C*
      C*
@@ -4047,7 +4054,22 @@ STOP  *                                                                   CLE004
      C                     MOVELRFRR      RRFRR                                               CLE172
      C                     MOVELCALM      RCALM                                               CLE172
      C                     MOVELBADJ      RBADJ                                               CLE172
-     C                     MOVELFLOR      RFLOR                                               CLE172
+      *                                                                                     MD057871
+     C                     MOVE FLOR      ARR                                               MD057871
+     C           FLOR      IFEQ CFLR                                                        MD057871
+     C                     MOVEL*BLANKS   RFLOR                                             MD057871
+     C                     ELSE                                                             MD057871
+     C                     MOVE ARR       ZFLD15                                            MD057871
+     C                     Z-ADD7         ZDECS                                             MD057871
+     C                     CALL 'ZSEDIT'                                                    MD057871
+     C                     PARM           ZFLD15 150                                        MD057871
+     C                     PARM           ZDECS   10                                        MD057871
+     C                     PARM 'L'       ZECODE  1                                         MD057871
+     C                     PARM *BLANKS   ZOUT21 21                                         MD057871
+     C                     MOVE ZOUT21    RFLOR                                             MD057871
+     C                     ENDIF                                                            MD057871
+      *                                                                                     MD057871
+     C**********           MOVELFLOR      RFLOR                                      CLE172 MD057871
      C                     MOVELLBDY      RLBDY                                               CLE172
      C                     MOVELLODY      RLODY                                               CLE172
      C                     MOVELOPSH      ROPSH                                               CLE172
@@ -4064,7 +4086,22 @@ STOP  *                                                                   CLE004
      C                     MOVELNRFRR     RNRFRR                                              CLE172
      C                     MOVELNCALM     RNCALM                                              CLE172
      C                     MOVELNBADJ     RNBADJ                                              CLE172
-     C                     MOVELNFLOR     RNFLOR                                              CLE172
+      *                                                                                     MD057871
+     C                     MOVE NFLOR     ARR                                               MD057871
+     C           NFLOR     IFEQ CFLR                                                        MD057871
+     C                     MOVEL*BLANKS   RNFLOR                                            MD057871
+     C                     ELSE                                                             MD057871
+     C                     MOVE ARR       ZFLD15                                            MD057871
+     C                     Z-ADD7         ZDECS                                             MD057871
+     C                     CALL 'ZSEDIT'                                                    MD057871
+     C                     PARM           ZFLD15 150                                        MD057871
+     C                     PARM           ZDECS   10                                        MD057871
+     C                     PARM 'J'       ZECODE  1                                         MD057871
+     C                     PARM *BLANKS   ZOUT21 21                                         MD057871
+     C                     MOVE ZOUT21    RNFLOR                                            MD057871
+     C                     ENDIF                                                            MD057871
+      *                                                                                     MD057871
+     C**********           MOVELNFLOR     RNFLOR                                     CLE172 MD057871
      C                     MOVELNLBDY     RNLBDY                                              CLE172
      C                     MOVELNLODY     RNLODY                                              CLE172
      C                     MOVELNOPSH     RNOPSH                                              CLE172
@@ -4902,7 +4939,8 @@ STOP  *                                                                   CLE004
      O                         RBADJ     40 '  0 .       -'                                   CLE172
      O        D  1     30    21                                                               CLE172
      O                                   10 'FLOOR'                                           CLE172
-     O                         RFLOR     40 '  0 .       -'                                   CLE172
+     O**********               RFLOR     40 '  0 .       -'                          CLE172 MD057871
+     O                         RFLOR     40                                                 MD057871
      O        D  1     30    21                                                               CLE172
      O                                   18 'LOOKBACK DAYS'                                   CLE172
      O                         RLBDY     37                                                   CLE172
@@ -5321,7 +5359,8 @@ STOP  *                                                                   CLE004
      O                         RNBADJ    45 '  0 .       -'                                   CLE172
      O        D  1     30    21                                                               CLE172
      O                                   15 'NEXT FLOOR'                                      CLE172
-     O                         RNFLOR    45 '  0 .       -'                                   CLE172
+     O**********               RNFLOR    45 '  0 .       -'                          CLE172 MD057871
+     O                         RNFLOR    45                                                 MD057871
      O        D  1     30    21                                                               CLE172
      O                                   23 'NEXT LOOKBACK DAYS'                              CLE172
      O                         RNLBDY    37                                                   CLE172

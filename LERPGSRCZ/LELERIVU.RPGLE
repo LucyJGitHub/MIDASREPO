@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -247,6 +249,8 @@
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
@@ -365,6 +369,7 @@
       ** LERI Backward-Looking Rate Fields                                                    CLE172
       *                                                                                       CLE172
      D LeriScnBlrt     DS            98                                                       CLE172
+     D NewLibor        S             98A                                                    MD057871
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
@@ -478,6 +483,7 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                  MD057871
 
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
@@ -611,6 +617,15 @@
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
      C                   ENDIF
+      *                                                                                     MD057871
+     C                   EVAL       NewLibor = LeriScnBlrt                                  MD057871
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
+     C                   IF         Pos <> 0                                                MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:LeriScnBlrt:Pos:-
+     C                              12)                                                     MD057871
+     C                   EVAL       LeriScnBlrt = NewLibor                                  MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                     MD057871
 
       ** If action is for update, get the correct record information from file               BUG8145
       ** Only for TranInLERI part of screen formats                                          BUG8145

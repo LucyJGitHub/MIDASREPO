@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
@@ -145,6 +146,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
@@ -440,6 +442,8 @@
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
@@ -462,6 +466,7 @@
      D                                     PREFIX(Q)                                          CER049
       ** Incoming Backward-Looking Rate Screen Fields                                         CLE172
      D TranScnBlrt     DS            50                                                       CLE172
+     D NewLibor        S             50A                                                    MD057871
 
       * Valid Customer Loans CL layout
      D ValidClil     E DS                  EXTNAME(LEVCLILPD)
@@ -918,6 +923,7 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                  MD057871
 
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
@@ -1544,7 +1550,14 @@
      C                   Move      @DDPREM       DDPREM                                       CER050
      C                   Endif                                                                CER050
      C                   Endif                                                                CER050
-
+      *                                                                                     MD057871
+     C                   EVAL       NewLibor = TranScnBlrt                                  MD057871
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
+     C                   IF         Pos <> 0                                                MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)            MD057871
+     C                   EVAL       TranScnBlrt = NewLibor                                  MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                     MD057871
       ** If action is for Update, get the correct record information                         BUG4685
       ** from file                                                                           BUG4685
       ** so long as no errors on update                                                      BUG6108

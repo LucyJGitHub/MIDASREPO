@@ -146,7 +146,7 @@
       ** Process Report Lines
       *
      C     BLRT          IFEQ      'Y'
-     C     RECI          ANDNE     'M'                                                      MD058103
+     C     RECI          ANDEQ     'D'                                                      MD058103
      C                   EXSR      SRPrint
      C                   ENDIF
       *

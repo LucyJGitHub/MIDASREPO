@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
@@ -119,6 +120,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD024812A - Consider new maturity date if non-blanks and     *
@@ -674,6 +676,7 @@
      D W_CLRSTS        S                   LIKE(K_CLRSTS)                                     CLE030
       ** ReAuthorise constant value                                                          BUG6926
      D W_ReAutho       S             16    Inz('REAUTHORISE REQ.')                           BUG6926
+     D WFLOOR          S             11P 7 INZ(9999.9999999)                                MD057871
                                                                                              BUG6926
                                                                                               CLE030
      D CLE031          S              1                                                       CLE031
@@ -9018,64 +9021,78 @@
       *                                                                                       CLE172
       ** New Backward Looking Rate Indicator                                                  CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNBLRTB      L_CLNBLR                                     CLE172
+     C**********         MOVEL     DDNBLRTB      L_CLNBLR                            CLE172 MD057871
+     C                   MOVEL     DDNBLRT       L_CLNBLR                                   MD057871
       *                                                                                       CLE172
       ** New Risk Free Rate                                                                   CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNRFRRB      L_CLNRFR                                     CLE172
+     C**********         MOVEL     DDNRFRRB      L_CLNRFR                            CLE172 MD057871
+     C                   MOVEL     DDNRFRR       L_CLNRFR                                   MD057871
       *                                                                                       CLE172
       ** New Calculation Method                                                               CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNCALMB      L_CLNCAL                                     CLE172
+     C**********         MOVEL     DDNCALMB      L_CLNCAL                            CLE172 MD057871
+     C                   MOVEL     DDNCALM       L_CLNCAL                                   MD057871
       *                                                                                       CLE172
       ** New Benchmark Adjustment                                                             CLE172
       *                                                                                       CLE172
-     C                   MOVE      *BLANKS       ZFIELD                                       CLE172
-     C                   MOVE      DDNBADJB      ZFIELD                                       CLE172
-     C                   Z-ADD     7             ZADEC                                        CLE172
-     C                   Z-ADD     4             ZADIG                                        CLE172
-     C                   EXSR      ZALIGN                                                     CLE172
-     C     ZALIGNok      IFEQ      'Y'                                                        CLE172
-     C                   MOVE      ZFIELD        VNBADJ                                       CLE172
-     C                   Z-ADD     VNBADJ        L_CLNBAD                                     CLE172
-     C                   ELSE                                                                 CLE172
-     C                   Z-ADD     *ZEROS        L_CLNBAD                                     CLE172
-     C                   ENDIF                                                                CLE172
+     C**********         MOVE      *BLANKS       ZFIELD                              CLE172 MD057871
+     C**********         MOVE      DDNBADJB      ZFIELD                              CLE172 MD057871
+     C**********         Z-ADD     7             ZADEC                               CLE172 MD057871
+     C**********         Z-ADD     4             ZADIG                               CLE172 MD057871
+     C**********         EXSR      ZALIGN                                            CLE172 MD057871
+     C*****ZALIGNok      IFEQ      'Y'                                               CLE172 MD057871
+     C**********         MOVE      ZFIELD        VNBADJ                              CLE172 MD057871
+     C**********         Z-ADD     VNBADJ        L_CLNBAD                            CLE172 MD057871
+     C**********         ELSE                                                        CLE172 MD057871
+     C**********         Z-ADD     *ZEROS        L_CLNBAD                            CLE172 MD057871
+     C**********         ENDIF                                                       CLE172 MD057871
+     C                   EVAL      L_CLNBAD = %DEC(DDNBADJ:11:7)                            MD057871
       *                                                                                       CLE172
       ** New Floor                                                                            CLE172
       *                                                                                       CLE172
      C                                                                                        CLE172
-     C                   MOVE      *BLANKS       ZFIELD                                       CLE172
-     C                   MOVE      DDNFLORB      ZFIELD                                       CLE172
-     C                   Z-ADD     7             ZADEC                                        CLE172
-     C                   Z-ADD     4             ZADIG                                        CLE172
-     C                   EXSR      ZALIGN                                                     CLE172
-     C     ZALIGNok      IFEQ      'Y'                                                        CLE172
-     C                   MOVE      ZFIELD        VNFLOR                                       CLE172
-     C                   Z-ADD     VNFLOR        L_CLNFLR                                     CLE172
-     C                   ELSE                                                                 CLE172
-     C                   Z-ADD     *ZEROS        L_CLNFLR                                     CLE172
-     C                   ENDIF                                                                CLE172
+     C                   IF        DDNFLOR = *BLANKS                                        MD057871
+     C                   Z-ADD     WFLOOR        L_CLNFLR                                   MD057871
+     C                   ELSE                                                               MD057871
+     C                   EVAL      L_CLNFLR = %DEC(DDNFLOR:11:7)                            MD057871
+     C**********         MOVE      *BLANKS       ZFIELD                              CLE172 MD057871
+     C**********         MOVE      DDNFLORB      ZFIELD                              CLE172 MD057871
+     C**********         Z-ADD     7             ZADEC                               CLE172 MD057871
+     C**********         Z-ADD     4             ZADIG                               CLE172 MD057871
+     C**********         EXSR      ZALIGN                                            CLE172 MD057871
+     C*****ZALIGNok      IFEQ      'Y'                                               CLE172 MD057871
+     C**********         MOVE      ZFIELD        VNFLOR                              CLE172 MD057871
+     C**********         Z-ADD     VNFLOR        L_CLNFLR                            CLE172 MD057871
+     C**********         ELSE                                                        CLE172 MD057871
+     C**********         Z-ADD     *ZEROS        L_CLNFLR                            CLE172 MD057871
+     C**********         ENDIF                                                       CLE172 MD057871
+     C                   ENDIF                                                              MD057871
       *                                                                                       CLE172
       ** New Lookback Days                                                                    CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNLBDYB      L_CLNLBD                                     CLE172
+     C**********         MOVEL     DDNLBDYB      L_CLNLBD                            CLE172 MD057871
+     C                   MOVEL     DDNLBDY       L_CLNLBD                                   MD057871
       *                                                                                       CLE172
       ** New Lockout Days                                                                     CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNLODYB      L_CLNLOD                                     CLE172
+     C**********         MOVEL     DDNLODYB      L_CLNLOD                            CLE172 MD057871
+     C                   MOVEL     DDNLODY       L_CLNLOD                                   MD057871
       *                                                                                       CLE172
       ** New Observation Period Shift                                                         CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNOPSHB      L_CLNPSH                                     CLE172
+     C**********         MOVEL     DDNOPSHB      L_CLNPSH                            CLE172 MD057871
+     C                   MOVEL     DDNOPSH       L_CLNPSH                                   MD057871
       *                                                                                       CLE172
       ** New Rate Rounding Decimal Places                                                     CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNRRDPB      L_CLNRRD                                     CLE172
+     C**********         MOVEL     DDNRRDPB      L_CLNRRD                            CLE172 MD057871
+     C                   MOVEL     DDNRRDP       L_CLNRRD                                   MD057871
       *                                                                                       CLE172
       ** New Day Basis for Average                                                            CLE172
       *                                                                                       CLE172
-     C                   MOVEL     DDNDBAVB      L_CLNDBA                                     CLE172
+     C**********         MOVEL     DDNDBAVB      L_CLNDBA                            CLE172 MD057871
+     C                   MOVEL     DDNDBAV       L_CLNDBA                                   MD057871
       *                                                                                       CLE172
      C                   ENDSR                                                              AR702532
       *****************************************************************            AR820729 MD055380

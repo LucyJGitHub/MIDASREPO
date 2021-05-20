@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057930           Date 26Apr21               *
-      *  Prev Amend No. MD057934           Date 23Apr21               *
+      *  Last Amend No. MD057871           Date 08Apr21               *
+      *  Prev amend No. MD057930           Date 26Apr21               *
+      *                 MD057934           Date 23Apr21               *
       *                 MD057889           Date 19Apr21               *
       *                 MD057794           Date 24Mar21               *
       *                 MD057790           Date 23Mar21               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  MD057930 - Calculation basis 4 not mapped to actual/365 on   *
       *             Day Basis for Average field.                      *
       *  MD057934 - Serious Midas Error encountered on BSRT and CLIP  *
@@ -227,6 +229,7 @@
      D KSCRFLD         S                   LIKE(SCRFLD)
      D KINTVAL         S                   LIKE(INTVAL)
      D BSRTRecFound    S              1A                                                      CLE172
+     D WFLOOR          S             11P 7 INZ(9999.9999999)                                MD057871
 
       ** OK fields
      D DDBLRTOK        S              1A
@@ -717,7 +720,19 @@
      C     SRFLOR        BEGSR
 
      C                   EVAL      WNumFLOR = 0
+     C                   IF        DDFLOR = %CHAR(WFLOOR)                                   MD057871
+     C                   EVAL      VFLOR    = WFLOOR                                        MD057871
+     C                   LEAVESR                                                            MD057871
+     C                   ENDIF                                                              MD057871
      C                   IF        DDFLOR = *BLANKS                                           CLE172
+      ** Default value for no floor (BSRT)                                                  MD057871
+     C                   IF        (ApiName = 'BSRT' and DDBLRT = 'Y')                      MD057871
+     C                   EVAL      DDFLOR   = %CHAR(WFLOOR)                                 MD057871
+     C                   EVAL      VFLOR    = WFLOOR                                        MD057871
+     C                   LEAVESR                                                            MD057871
+                                                                                            MD057871
+     C                   ELSE                                                               MD057871
+
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
@@ -730,6 +745,7 @@
      C                   EVAL      WNumFLOR = CLFLOR                                          CLE172
                                                                                               CLE172
      C                   ENDSL                                                                CLE172
+     C                   ENDIF                                                              MD057871
      C                   ENDIF                                                                CLE172
 
       ** Value must be numeric not exceeding 3 int and 6 decimal places
@@ -809,8 +825,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDFLOR <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDFLOR) <> '0'                                    MD057770
-     C                             (WNumFLOR <> 0                                           MD057770
-     C                             or @@ERCD <> *ZERO)                                      MD057770
+     C                             (  WNumFLOR <> 0                                         MD057770
+     C                             or @@ERCD <> *ZERO )                                     MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172

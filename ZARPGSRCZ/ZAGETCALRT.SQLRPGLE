@@ -12,10 +12,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CSD103  *CREATE    Date 10Aug20               *
+      *  Last Amend No. MD058040           Date 11May21               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058040 - Calculator returned the same rates causing        *
+      *             duplicate interest entries generated on HISTSHQ.  *
+      *             Write to LELIBEPD only if interest period date    *
+      *             and extracted rate not yet exist on SDHSDRTD.     *
+      *  MD057871 - Allow a blank floor in calling ARR Calculator     *
       *  CSD103 - LIBOR Deregulation - Common Layer Standing Data     *
       *                                                               *
       *****************************************************************
@@ -215,6 +222,8 @@
      D QUO             c                   const('''')
      D SDHSDRTD        c                   const(0)
      D UPDATE          c                   const(1)
+     D BLANK_FLOOR     c                   const('9999.9999999')                            MD057871
+     D SDHSDRTD2       c                   const(2)                                         MD058040
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -272,6 +281,7 @@
      D writeLogs       S              1a
      D strDate         s              5s 0
      D endDate         s              5s 0
+     D writeRecord     s              1a                                                    MD058040
 
       *---------------*
       ** JSON Details *
@@ -648,29 +658,57 @@
 
        begsr buildParameter;
 
-                   RestAPIParm =    %trim(CalcMetURL) +
-                                 QUE + 'interestPeriodStartDate=' +
-                                    %trim(intPrdStartDt) +
-                                 AMP + 'interestPeriodEndDate=' +
-                                    %trim(intPrdEndDt) +
-                                 AMP + 'riskFreeRate=' +
-                                    %trim(riskFreeRate) +
-                                 AMP + 'lookBackDays=' +
-                                    %trim(lookBackDays)  +
-                                 AMP + 'rateRoundingDecimalPoints=' +
-                                    %trim(RateRndDecPts) +
-                                 AMP + 'dayCountConvention=' +
-                                    %trim(dayCntConvent) +
-                                 AMP + 'observationPeriodShift=' +
-                                    %trim(obserPrdShift) +
-                                 AMP + 'lockoutDays=' +
-                                    %trim(lockOutDays) +
-                                 AMP + 'showDailyDetails=' +
-                                    %trim(showDailyDeta) +
-                                 AMP + 'calculateTillDate=' +
-                                    %trim(callTillDate) +
-                                 AMP + 'riskFreeRateFloor=' +
-                                    %trim(riskFreeRatFl);
+                   if not(riskFreeRatFl = BLANK_FLOOR);                                   //MD057871
+
+                      RestAPIParm =    %trim(CalcMetURL) +
+                                    QUE + 'interestPeriodStartDate=' +
+                                      %trim(intPrdStartDt) +
+                                    AMP + 'interestPeriodEndDate=' +
+                                      %trim(intPrdEndDt) +
+                                    AMP + 'riskFreeRate=' +
+                                      %trim(riskFreeRate) +
+                                    AMP + 'lookBackDays=' +
+                                      %trim(lookBackDays)  +
+                                    AMP + 'rateRoundingDecimalPoints=' +
+                                      %trim(RateRndDecPts) +
+                                    AMP + 'dayCountConvention=' +
+                                      %trim(dayCntConvent) +
+                                    AMP + 'observationPeriodShift=' +
+                                      %trim(obserPrdShift) +
+                                    AMP + 'lockoutDays=' +
+                                       %trim(lockOutDays) +
+                                    AMP + 'showDailyDetails=' +
+                                      %trim(showDailyDeta) +
+                                    AMP + 'calculateTillDate=' +
+                                      %trim(callTillDate) +
+                                    AMP + 'riskFreeRateFloor=' +
+                                      %trim(riskFreeRatFl);
+
+                   else;                                                                  //MD057871
+                                                                                          //MD057871
+                      RestAPIParm =    %trim(CalcMetURL) +                                //MD057871
+                                    QUE + 'interestPeriodStartDate=' +                    //MD057871
+                                      %trim(intPrdStartDt) +                              //MD057871
+                                    AMP + 'interestPeriodEndDate=' +                      //MD057871
+                                      %trim(intPrdEndDt) +                                //MD057871
+                                    AMP + 'riskFreeRate=' +                               //MD057871
+                                      %trim(riskFreeRate) +                               //MD057871
+                                    AMP + 'lookBackDays=' +                               //MD057871
+                                      %trim(lookBackDays)  +                              //MD057871
+                                    AMP + 'rateRoundingDecimalPoints=' +                  //MD057871
+                                      %trim(RateRndDecPts) +                              //MD057871
+                                    AMP + 'dayCountConvention=' +                         //MD057871
+                                      %trim(dayCntConvent) +                              //MD057871
+                                    AMP + 'observationPeriodShift=' +                     //MD057871
+                                      %trim(obserPrdShift) +                              //MD057871
+                                    AMP + 'lockoutDays=' +                                //MD057871
+                                       %trim(lockOutDays) +                               //MD057871
+                                    AMP + 'showDailyDetails=' +                           //MD057871
+                                      %trim(showDailyDeta) +                              //MD057871
+                                    AMP + 'calculateTillDate=' +                          //MD057871
+                                      %trim(callTillDate);                                //MD057871
+                                                                                          //MD057871
+                   endif;                                                                 //MD057871
 
        endsr;
 
@@ -1029,6 +1067,14 @@
                                   'where LDLNRF = ' + QUO + transactREF + QUO +
                                   ' and LDINDT = ' +
                                     %char(result.list(i).intPDMidas);
+                   elseif fileToCheck = SDHSDRTD2;                                        //MD058040
+                        wSQLStr = 'select * from SDHSDRTD ' +                             //MD058040
+                                  'where CMODID = '  + QUO + moduleID + QUO +             //MD058040
+                                  ' and CTRNID = ' + QUO + transactREF + QUO +            //MD058040
+                                  ' and CINPDT = ' +                                      //MD058040
+                                    %char(result.list(i).intPDMidas) +                    //MD058040
+                                  ' and CINPDT < '  + %char(BJRDNB)  +                    //MD058040
+                                  ' and CRORED <> ' + %char(BJRDNB);                      //MD058040
                    endif;
 
                    exec sql prepare P1 from :wSQLStr;
@@ -1038,6 +1084,8 @@
                         exec sql fetch next From P1 into :DailyHistDS;
                    elseif fileToCheck = LELIBEPD;
                         exec sql fetch next From P1 into :ExtractFLDS;
+                   elseif fileToCheck = SDHSDRTD2;                                        //MD058040
+                        exec sql fetch next From P1 into :DailyHistDS;                    //MD058040
                    endif;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
@@ -1054,6 +1102,38 @@
                    else;
                       action = UPDATE;
                    endif;
+
+                   // If extracted rate is different to ARR History File,                 //MD058040
+                   // write record to Extract File                                        //MD058040
+                   writeRecord = 'N';                                                     //MD058040
+                   if sqlCod = NO_RECORD and fileToCheck = SDHSDRTD2;                     //MD058040
+                      writeRecord = 'Y';                                                  //MD058040
+                   endif;                                                                 //MD058040
+                                                                                          //MD058040
+                   if sqlCOD <> NO_RECORD and fileToCheck = SDHSDRTD2;                    //MD058040
+                      select;                                                             //MD058040
+                         when calcMethod = 'NCCR'                                         //MD058040
+                          and DailyHistDS.CDCMRT <>                                       //MD058040
+                               %dec(Result.List(i).dlyCompRate:11:7);                     //MD058040
+                            writeRecord = 'Y';                                            //MD058040
+                                                                                          //MD058040
+                         when calcMethod = 'CCR'                                          //MD058040
+                          and DailyHistDS.CAVCRT <>                                       //MD058040
+                               %dec(Result.List(i).aveCompRate:11:7);                     //MD058040
+                            writeRecord = 'Y';                                            //MD058040
+                                                                                          //MD058040
+                         when calcMethod = 'SARR'                                         //MD058040
+                          and DailyHistDS.CRTEAP <>                                       //MD058040
+                               %dec(Result.List(i).rateApplied:11:7);                     //MD058040
+                            writeRecord = 'Y';                                            //MD058040
+                                                                                          //MD058040
+                         when calcMethod = 'SAVG'                                         //MD058040
+                          and DailyHistDS.CSMPAV<>                                        //MD058040
+                               %dec(Result.List(i).simpleAve:11:7);                       //MD058040
+                            writeRecord = 'Y';                                            //MD058040
+                      endsl;                                                              //MD058040
+                   endif;                                                                 //MD058040
+                                                                                          //MD058040
                    exec sql close P1;
 
        endsr;
@@ -1091,6 +1171,8 @@
                       DailyHistDS.CRFRAP = 'N';
                    endif;
                    DailyHistDS.CTIMST = %timestamp();
+                   DailyHistDS.CRORED = BJRDNB;                                           //MD058040
+                   DailyHistDS.CRLCDT = BJRDNB;                                           //MD058040
 
                    select;
                         when calcMethod = 'NCCR';
@@ -1254,14 +1336,19 @@
 
        begsr writeToExtractFile;
 
-                   fileToCheck = LELIBEPD;
+       //**********fileToCheck = LELIBEPD;                                                //MD058040
+       // Check if the interest period date and rate is already                           //MD058040
+       // inserted in ARR History File from the previous COB run                          //MD058040
+       // (it means that the rate have already BR event record)                           //MD058040
+                   fileToCheck = SDHSDRTD2;                                               //MD058040
                    exsr checkExist;
 
-                   if action = INSERT;
+       //**********if action = INSERT;                                                    //MD058040
+                   if writeRecord = 'Y';                                                  //MD058040
                         exsr insertExtractFile;
 
-                   elseif action = UPDATE;
-                        exsr updateExtractFile;
+       //**********elseif action = UPDATE;                                                //MD058040
+       //**********     exsr updateExtractFile;                                           //MD058040
 
                    endif;
 
@@ -1362,6 +1449,7 @@
                    DailyHistDS.COBPDY = result.list(i).obsPrdDays;
                    DailyHistDS.CPBRFR = result.list(i).pubRskFrRt;
                    DailyHistDS.CRTEAP = result.list(i).rateApplied;
+                   DailyHistDS.CRLCDT = BJRDNB;                                           //MD058040
                    if result.list(i).rskFrRtFlAp = 'true';
                       DailyHistDS.CRFRAP = 'Y';
                    else;
@@ -1416,6 +1504,8 @@
                               ' , ' +
                               'A.CTIMST = ' + QUO + %char(DailyHistDS.CTIMST) +
                               QUO +
+                              ' , ' +                                                     //MD058040
+                              'A.CRLCDT = ' + %char(DailyHistDS.CRLCDT) +                 //MD058040
                               ' where A.CMODID = ' +
                                 QUO + %trim(moduleID) + QUO +
                               ' and   A.CTRNID = ' +

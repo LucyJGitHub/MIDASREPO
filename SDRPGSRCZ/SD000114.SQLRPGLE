@@ -17,13 +17,23 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058040           Date 11May21               *
-      *  Prev Amend No. MD057946           Date 27Apr21               *
+      *  Last Amend No. MD058138           Date 18May21               *
+      *  Prev Amend No. MD058106           Date 18May21               *
+      *                 MD058040           Date 11May21               *
+      *                 MD057946           Date 27Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058138 - Interest accrual and settlement is less one day   *
+      *             for loan with ADDI = L-Last. Set IntPerSDATE      *
+      *             equal to transaction start date/last int pay date *
+      *             and IntPerEDATE to next int pay date-1 for ADDI=L.*
+      *  MD058106 - Rates Known Flag not updated. If within the rates *
+      *             known period, pass calcTillDate = int. end date   *
+      *             when calc method is SARR. Also, use the actual    *
+      *             int. payment date to determine rates known date.  *
       *  MD058040 - Rates Known Flag not set to Y. Condition update   *
       *             based on event control date instead of rundate.   *
       *  MD057946 - Floor rate passed as 10000000 instead of          *
@@ -202,6 +212,7 @@
      D IntPerEDATE     S                   LIKE(TrNIDT)
      D RTKNDate        S                   LIKE(TrNIDT)
      D WrkDATE         S                   LIKE(TrNIDT)
+     D IntPayDate      S                   LIKE(TrNIDT)                                     MD058106
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
@@ -321,6 +332,13 @@
      C                   IF        RatesKnown = 'Y'
      C
      C                   EVAL      CalcTillDate = *BLANKS
+                                                                                            MD058106
+      ** CalcTillDate is required for SARR calc method, set it                              MD058106
+      ** equal to Interest Period End Date                                                  MD058106
+     C                   IF        CalcMethod = 'SARR'                                      MD058106
+     C                   EVAL      CalcTillDate = IntPrdEndDt                               MD058106
+     C                   ENDIF                                                              MD058106
+                                                                                            MD058106
      C                   EVAL      RatesKnownInd = 'Y'
      C                   EXSR      SRCallARRC
 
@@ -510,11 +528,11 @@
 
       ** Determine Interest Period Start Date
      C                   EVAL      IntPerSDATE = 0
-     C                   IF        TrADDI = 'L'
-     C                   EVAL      IntPerSDATE = WrkDATE + 1
-     C                   ELSE
+     C**********         IF        TrADDI = 'L'                                             MD058138
+     C**********         EVAL      IntPerSDATE = WrkDATE + 1                                MD058138
+     C**********         ELSE                                                               MD058138
      C                   EVAL      IntPerSDATE = WrkDATE
-     C                   ENDIF
+     C**********         ENDIF                                                              MD058138
 
       ** Get the Next Interest Payment Date
      C                   EVAL      WrkDATE = 0
@@ -533,13 +551,16 @@
 
      C                   ENDSL
 
+      ** Save the actual interest payment date to a work variable                           MD058106
+     C                   EVAL      IntPayDate = WrkDATE                                     MD058106
+                                                                                            MD058106
       ** Determine Interest Period End Date
      C                   EVAL      IntPerEDATE = 0
-     C                   IF        TrADDI = 'L'
-     C                   EVAL      IntPerEDATE = WrkDATE
-     C                   ELSE
+     C**********         IF        TrADDI = 'L'                                             MD058138
+     C**********         EVAL      IntPerEDATE = WrkDATE                                    MD058138
+     C**********         ELSE                                                               MD058138
      C                   EVAL      IntPerEDATE = WrkDATE - 1
-     C                   ENDIF
+     C**********         ENDIF                                                              MD058138
 
       ** If the Additional Day Indicator is B-Both, the last interest                         CLE172
       ** period will be extended by 1 day to include the maturity date                        CLE172
@@ -581,7 +602,8 @@
 
      C                   MOVEL     TrCCY         ZCCY              3
      C                   MOVEL     *BLANKS       ZLOC              3
-     C                   Z-ADD     IntPerEDATE   ZDAYNO            5 0
+     C**********         Z-ADD     IntPerEDATE   ZDAYNO            5 0                      MD058106
+     C                   Z-ADD     IntPayDate    ZDAYNO            5 0                      MD058106
      C                   Z-ADD     SumLBLO       ZNRDYS            2 0
      C                   Z-ADD     *ZEROS        ZDYNBR            5 0
      C                   EXSR      ZBKDT
@@ -598,7 +620,7 @@
       ** Set the Rates Known flag if the computed Rates Known Date has
       ** passed the system date and the reference rate publication time
      C**********         IF        RTKNDate <= BJRDNB and                                   MD058040
-     C                   IF        RTKNDate <= EventCtrlDate and
+     C                   IF        RTKNDate <= EventCtrlDate and                            MD058040
      C                             RTKNDate <> 0
      C                   EVAL      RatesKnown = 'Y'
      C                   EVAL      CurrTime = %char(%time():*HMS)

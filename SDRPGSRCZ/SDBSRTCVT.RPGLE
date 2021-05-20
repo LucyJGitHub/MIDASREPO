@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  240065 - Allow negative base rates to be displayed.          *
@@ -145,6 +147,7 @@
      D  DDOPSH                        1A                                                      CSD103
      D  DDRRDP                        2A                                                      CSD103
      D  DDDBAV                        1A                                                      CSD103
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
                                                                                               CSD103
      D PSARD           S              6                                                       CSD103
                                                                                               CSD103
@@ -393,7 +396,8 @@
       *                                                                                       CSD103
       * Floor                                                                                 CSD103
       *                                                                                       CSD103
-     C                   IF        BAFLOR <> *ZEROS                                           CSD103
+     C**********         IF        BAFLOR <> *ZEROS                                  CSD103 MD057871
+     C                   IF        BAFLOR <> 9999.999999                                    MD057871
      C                   Z-ADD     BAFLOR        WWFlor                                       CSD103
      C                   Z-ADD     *ZEROS        @@AMTW                                       CSD103
      C                   MOVE      WWFlor        @@AMTW                                       CSD103

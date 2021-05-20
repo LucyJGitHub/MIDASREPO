@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG4660 - Current Base Rate must not be updated during amend.*
@@ -89,6 +91,7 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                  MD057871
 
       **-----------------------------------------------------------------------
 
@@ -101,6 +104,8 @@
       * Fields defined for CSD012
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200
@@ -111,6 +116,7 @@
 
       * LIBOR Fields                                                                          CSD103
      D LiborFlds       DS            49                                                       CSD103
+     D NewLibor        S             49A                                                    MD057871
 
      D AAuth           S              1A                                                      CSD103
 
@@ -167,6 +173,14 @@
 
       * Build buffer with required output
      C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
+      *                                                                                     MD057871
+     C                   EVAL       NewLibor = LiborFlds                                    MD057871
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
+     C                   IF         Pos <> 0                                                MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)            MD057871
+     C                   EVAL       LiborFlds = NewLibor                                    MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                     MD057871
      C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
      C                                      + ExtData                                         CSD103

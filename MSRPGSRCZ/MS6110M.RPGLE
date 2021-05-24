@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051624           Date 23Sep20               *
-      *  Prev Amend No. AR989496           Date 13Jun12               *
+      *  Last Amend No. MD058137           Date 18May21               *
+      *  Prev Amend No. MD051624           Date 23Sep20               *
+      *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
       *                 MD048231           Date 17Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -82,6 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058137 - Midas is not generating unique MQ MessageID if    *
+      *             via MGOREF message generation                     *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
       *             Details Enquiry Screen are dated incorrectly.     *
       *           - Introduced system value 'MachineDateforTRAN' to   *
@@ -705,6 +708,7 @@
 
       ** Send message
      C                   Z-ADD     MQPUT         CID
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C                   CALL      'QMQM'
      C                   PARM                    CID               9 0
      C                   PARM                    HCONN             9 0

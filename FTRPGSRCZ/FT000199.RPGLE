@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056683           Date 14Sep20               *
-      *  Prev Amend No. MD056303           Date 18Jul20               *
+      *  Last Amend No. MD057056           Date 19May21               *
+      *  Prev Amend No. MD056683           Date 14Sep20               *
+      *                 MD056303           Date 18Jul20               *
       *                 MD056187           Date 02Jul20               *
       *                 MD056170           Date 30Jun20               *
       *                 MD055939           Date 03Jun20               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
       *  MD056303 - Format error for Field 79 Line 3                  *
@@ -262,7 +264,8 @@
       *
      D WTag121Val      S             36A
      D WTag20Val       S             16A
-     D WTag21Val       S             15A
+     D***WTag21Val       S             15A                                                  MD057056
+     D WTag21Val       S             16A                                                    MD057056
      D WTag79L1Val     S             17A
      D WTag79L2Val     S             11A
      D***WTag79L3Val     S             27A                                                  MD056303

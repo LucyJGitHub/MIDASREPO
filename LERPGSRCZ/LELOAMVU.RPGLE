@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD024811           Date 24Jan20               *
+      *  Last Amend No. MD057922           Date 04May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD024811           Date 24Jan20               *
       *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057922 - SSI details are not defaulted on Loan Events.     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
@@ -929,9 +931,11 @@
       ** before trying to default from loan. Placed another call for ZASETINDFT             MD029046
       ** for Principal increase insert.                                                     MD029046
       *                                                                                     MD029046
-     C                   IF        (CLE134 = 'N')                                           MD029046
+     C**********         IF        (CLE134 = 'N')                                  MD029046 MD057922
      C                   IF        DDACTN = 'I'                                             MD029046
      C                             AND DDATYP = 'PI'                                        MD029046
+     C                   IF        (DDPSTM = '  ' AND ##PPAY <> 'Y') OR                     MD057922
+     C                             (DDRSTM = '  ' AND ##PREC <> 'Y')                        MD057922
      C                   MOVEL     LO_CNUM       ##CSNM                                     MD029046
      C                   CALLB     'ZASETINDFT'                                             MD029046
       *                                                                                     MD029046
@@ -980,18 +984,20 @@
       *                                                                                     MD029046
       ***  FRA/IRS instructions                                                             MD029046
      C                   PARM                    F_FRI                                      MD029046
+     C                   ENDIF                                                              MD057922
      C                   ENDIF                                                              MD029046
-     C                   ENDIF                                                              MD029046
+     C**********         ENDIF                                                     MD029046 MD057922
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066
      C                   IF        (DDACTN = 'I')                                             TDA066
      C     PType         IFNE      'PTSO'                                                     TDA066
-     C     CLE134        ANDEQ     'Y'                                                      MD029046
-     C     PType         ORNE      'PTSO'                                                   MD029046
+     C*****CLE134        ANDEQ     'Y'                                             MD029046 MD057922
+     C*****PType         ORNE      'PTSO'                                          MD029046 MD057922
      C     FLPSTM        ANDEQ     *ZERO                                                    MD029046
+     C     DDPSTM        ANDEQ     '  '                                                     MD057922
      C     ##PPAY        ANDNE     'Y'                                                      MD029046
-     C     CLE134        ANDEQ     'N'                                                      MD029046
+     C*****CLE134        ANDEQ     'N'                                             MD029046 MD057922
      C                   CLEAR                   FLREC                          BUG1373
      C                   Z-ADD     0             FLRSTM                         BUG1373
      C                   MOVE      *BLANKS       FLRONS                         BUG1373
@@ -1014,11 +1020,12 @@
       *
       ** If part sold, receive branch is our start date branch
      C     PType         IFEQ      'PTSO'
-     C     CLE134        ANDEQ     'Y'                                                      MD029046
-     C     PType         OREQ      'PTSO'                                                   MD029046
+     C*****CLE134        ANDEQ     'Y'                                             MD029046 MD057922
+     C*****PType         OREQ      'PTSO'                                          MD029046 MD057922
      C     FLRSTM        ANDEQ     *ZERO                                                    MD029046
+     C     DDRSTM        ANDEQ     '  '                                                     MD057922
      C     ##PREC        ANDNE     'Y'                                                      MD029046
-     C     CLE134        ANDEQ     'N'                                                      MD029046
+     C*****CLE134        ANDEQ     'N'                                             MD029046 MD057922
      C                   CLEAR                   FLPAY                          BUG1373
      C                   Z-ADD     0             FLPSTM                         BUG1373
      C                   MOVE      *BLANKS       FLPONS                         BUG1373
@@ -1087,8 +1094,10 @@
       ***  and payment/receipt dates aren't in the past, default them           BUG1373
      C     FLPSTM        IFEQ      *ZERO                                        BUG1373
      C     ##PPAY        ANDNE     'Y'                                          BUG1373
+     C     DDPSTM        ANDEQ     '  '                                                     MD057922
      C     FLRSTM        OREQ      *ZERO                                        BUG1373
      C     ##PREC        ANDNE     'Y'                                          BUG1373
+     C     DDRSTM        ANDEQ     '  '                                                     MD057922
      C                   MOVEL     LO_CNUM       ##CSNM                         BUG1373
      C                   CALLB     'ZASETINDFT'
       *

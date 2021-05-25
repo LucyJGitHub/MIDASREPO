@@ -1041,7 +1041,7 @@
                         includeRecord = 'Y';
                    endif;
 
-                   if result.list(i).intPDMidas <= controlDate;                           //MD058182
+                   if result.list(i).intPDMidas <= %dec(controlDate:5:0);                 //MD058182
                         includeRecord = 'Y';                                              //MD058182
                    else;                                                                  //MD058182
                         includeRecord = 'N';                                              //MD058182

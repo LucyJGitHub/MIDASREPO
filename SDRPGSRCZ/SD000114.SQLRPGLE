@@ -31,9 +31,10 @@
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Pass a Control Date to   *
       *             ZAGETCALRT (used in writing records on SDHSDRTD). *
-      *  MD058040A - Duplicate records still found in HISTSHQ. On     *
-      *              rollover, only apply  places used in checking    *
-      *              whether the returned rate is changed or not.     *
+      *  MD058040A - Duplicate records still found in HISTSHQ. Remove *
+      *              deletion of records on SDHSDRTD so that for NCCR *
+      *              and SARR, program will only extract the new rate *
+      *              not yet applied on Midas.                        *
       *  MD058138 - Interest accrual and settlement is less one day   *
       *             for loan with ADDI = L-Last. Set IntPerSDATE      *
       *             equal to transaction start date/last int pay date *
@@ -833,7 +834,7 @@
      C                   EVAL      EventCtrlDate = BKAPDT                                   MD058040
      C                   ENDIF                                                              MD058040
                                                                                             MD058040
-     C                   IF        BKANWD = 0 or BKANWD = 1                                 MD058182
+     C                   IF        BKANWD = '0' or BKANWD = '1'                             MD058182
      C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD058182
      C                   ENDIF                                                              MD058182
      C                                                                                      MD058182

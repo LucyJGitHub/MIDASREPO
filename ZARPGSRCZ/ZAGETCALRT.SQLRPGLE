@@ -1031,8 +1031,10 @@
 
        begsr writeToARRDailyHistory;
 
-                   includeRecord = 'N';
+               includeRecord = 'N';
 
+               if result.list(i).intPDMidas <= %dec(controlDate:5:0);                     //MD058182
+                                                                                          //MD058182
                    if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
                    and  result.list(i).intPDMidas > transactDate;
                         includeRecord = 'Y';
@@ -1041,11 +1043,6 @@
                         includeRecord = 'Y';
                    endif;
 
-                   if result.list(i).intPDMidas <= %dec(controlDate:5:0);                 //MD058182
-                        includeRecord = 'Y';                                              //MD058182
-                   else;                                                                  //MD058182
-                        includeRecord = 'N';                                              //MD058182
-                   endif;                                                                 //MD058182
 
                    fileToCheck = SDHSDRTD;
                    if includeRecord = 'Y';
@@ -1057,6 +1054,8 @@
                       endif;
                    endif;
 
+               endif;                                                                     //MD058182
+                                                                                          //MD058182
        endsr;
        //*************************************************************
        /EJECT

@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR1095148          Date 07May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057760           Date 01Apr21               *
+      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *                 AR1095148          Date 07May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 MD040602           Date 19Aug16               *
       *                 MD025865           Date 20Mar14               *
@@ -34,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057760 - Add error details in GL001601P1 report.           *
+      *  MD056838 - Amend SFNUM type to packed decimal                *
       *  AR1095148 - Verify that currencies are in balance.           *
       *              Batches are accepted even though out of balance. *
       *              (Child:AR1095149)                                *
@@ -207,7 +211,8 @@
       ** Array for the error
       *
      D ErrFlg          S              1A   DIM(3)
-     D Err_Dtl         S             25A   DIM(4) CTDATA PERRCD(1)
+     D*Err_Dtl**       S             25A   DIM(4) CTDATA PERRCD(1)                          MD057760
+     D Err_Dtl         S             37A   DIM(5) CTDATA PERRCD(1)                          MD057760
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -257,7 +262,8 @@
       *
      D ZSfile          S             10A   INZ(*BLANKS)
      D*ZSnum****       S              1B 0 INZ(0)                                           BUG23217
-     D ZSnum           S              6B 0 INZ(0)                                           BUG23217
+     D**ZSnum***        S              6B 0 INZ(0)                                 BUG23217 MD056838
+     D ZSnum           S              6  0                                                  MD056838
       *
      D KBcno           S                   LIKE(BRBTNB)
       *
@@ -441,6 +447,7 @@
      C                   PARM                    WOBcno
      C                   PARM                    PSbcno
      C                   PARM                    PBatchParm
+     C                   PARM                    ItemErr           1                        MD057760
       *
      C                   IF        %ERROR
      C                   EXSR      *PSSR
@@ -733,7 +740,8 @@
      C                   EVAL      WFirst = 'Y'
       *
      C                   EVAL      ZSfile = SFILE1
-     C                   EVAL      ZSnum  = SFNUM1
+     C**********         EVAL      ZSnum  = SFNUM1                                          MD056838
+     C                   Z-ADD     SFNUM1        ZSnum                                      MD056838
       *
      C                   EXSR      SRZSfile
      C                   ENDIF
@@ -757,6 +765,9 @@
      C                   ENDIF
       *
      C                   EVAL      RBSTAT = Err_Dtl(WCnt)
+     C                   If        ItemErr ='Y' and WCnt = 3                                MD057760
+     C                   EVAL      RBSTAT = Err_Dtl(5)                                      MD057760
+     C                   Endif                                                              MD057760
      C                   EXSR      SRPrint
      C                   EVAL      WPrtCnt = 'Y'
      C                   EVAL      WCnt = WCnt + 1
@@ -849,7 +860,8 @@
      C                   IF        NOT %OPEN(GL001601AU)                                      CER059
      C                   OPEN      GL001601AU                                                 CER059
      C                   EVAL      ZSfile = SFILEU
-     C                   EVAL      ZSnum  = SFNUMU
+     C**********         EVAL      ZSnum  = SFNUMU                                          MD056838
+     C                   Z-ADD     SFNUMU        ZSnum                                      MD056838
      C                   EXSR      SRZSfile
      C                   ENDIF
       *
@@ -1004,3 +1016,4 @@ Error in Branch
 Error in Dept Code
 Error in Batch
 Successful Transfer
+Error in Batch, check GL0150P1 report

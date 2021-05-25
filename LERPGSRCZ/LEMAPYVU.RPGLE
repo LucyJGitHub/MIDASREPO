@@ -21,6 +21,7 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055652           Date 13Jul20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051892           Date 22Sep18               *
@@ -102,6 +103,13 @@
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD055652 - Error LEM0215 occurs when authorising a manual    *
+      *             repayment attached to PD. In the codes introduced *
+      *             by CLE164, add condition to check if expected     *
+      *             details are blank before executing SR/ValidateTr. *
+      *           - Save pay settlement details for MR with PTYP 67   *
+      *             in new settlement details DS so projections are   *
+      *             generated for discount part sold.                 *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051892 - Proj settlement amnt calculated at defaulted rate *
@@ -846,6 +854,7 @@
 
      C                   If        DDACTN <> 'R'                                              CLE164
      C                             and CLE134 = 'Y'                                           CLE164
+     C                             AND DDEVAL = *BLANKS AND DDESEQ = *BLANKS                MD055652
      C                   EXSR      ValidateTr                                                 CLE164
      C                   EndIf                                                                CLE164
                                                                                               CLE164
@@ -2110,6 +2119,7 @@
       *
      C*****MR_PTYP       IFEQ      66                                                        BUG4502
      C     V_MRPTYP      IFEQ      66                                                        BUG4502
+     C     V_MRPTYP      OREQ      67                                                       MD055652
      C     CLE005        OREQ      'Y'
      C*****MR_PTYP       ANDEQ     69                                                        BUG4502
      C     V_MRPTYP      ANDEQ     69                                                        BUG4502
@@ -2123,6 +2133,7 @@
       *
      C*****MR_PTYP       IFEQ      66                                                        BUG4502
      C     V_MRPTYP      IFEQ      66                                                        BUG4502
+     C     V_MRPTYP      OREQ      67                                                       MD055652
      C     CLE005        OREQ      'Y'
      C*****MR_PTYP       ANDEQ     69                                                        BUG4502
      C     V_MRPTYP      ANDEQ     69                                                        BUG4502

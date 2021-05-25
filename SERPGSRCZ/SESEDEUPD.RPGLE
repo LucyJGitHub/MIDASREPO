@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 260191A            Date 22May20               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 03Apr16               *
       *                 CRE073             Date 06Dec10               *
@@ -46,8 +48,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260191A - Incorrect dividend position settlement generated.  *
+      *           Correct the validation of action 'D'elete.          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *
@@ -241,6 +248,7 @@
      D WOlSDPP         S             15P 0
      D WSvSDTA         S             15P 0
      D WOrSDTA         S             15P 0
+     D WWPDUD          S              5P 0                                                   260191A
       *
       ** Work parameters
      D PPROT           S              1A
@@ -643,6 +651,7 @@
       *                                                                                       CAP084
      C                             PSJobName <> 'QZDASOINIT'
      C                             AND PSJobName <> 'QSQSRVR'                                 247277
+     C                             AND PSJobName <> 'QZDASSINIT'                           AR1088819
      C                   MOVE      '*FRONT'      PMode
      C                   ELSE
      C                   MOVE      *BLANKS       PMode
@@ -1068,9 +1077,19 @@
      C     S2SDSN        READE     POSETDF                                02
 
      C                   DOW       EndofFile = False
-     C                   IF        S2SDED = F2PDUD AND
-     C                             S2SDET = F2PEVT AND
+      *                                                                                      260191A
+     C                   If        S2SDET = 'MP' or                                          260191A
+     C                             S2SDET = 'DV' and S01512 <> 'Y'                           260191A
+     C                   Eval      WWPDUD = S2SDPD                                           260191A
+     C                   Else                                                                260191A
+     C                   Eval      WWPDUD = S2SDED                                           260191A
+     C                   Endif                                                               260191A
+      *                                                                                      260191A
+     C**********         IF        S2SDED = F2PDUD AND                                       260191A
+     C**********                   S2SDET = F2PEVT AND                                       260191A
      C**********                   F2RECI = 'D'                                             MD037742
+     C                   If        WWPDUD = F2PDUD and                                       260191A
+     C                             S2SDET = F2PEVT and                                       260191A
      C                             F2RECI = 'D' AND S2RECI = 'D'                            MD037742
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   RETURN
@@ -1330,6 +1349,19 @@
      C                   KFLD                    S2SDSN
      C                   KFLD                    S2SDED
      C                   KFLD                    S2SDET
+      *                                                                                      260191A
+      ** Check if S01512 is installed                                                        260191A
+      *                                                                                      260191A
+     C                   CALL      'AOSARDR0'                                                260191A
+     C                   PARM      *BLANKS       @RTCD             7                         260191A
+     C                   PARM      '*VERIFY'     @OPTN             7                         260191A
+     C                   PARM      'S01512'      @SARD             6                         260191A
+      *                                                                                      260191A
+     C                   IF        @RTCD = *BLANKS                                           260191A
+     C                   MOVE      'Y'           S01512            1                         260191A
+     C                   ELSE                                                                260191A
+     C                   MOVE      'N'           S01512                                      260191A
+     C                   ENDIF                                                               260191A
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

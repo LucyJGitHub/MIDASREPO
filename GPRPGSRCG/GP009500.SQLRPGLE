@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056783           Date 22Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +28,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056783 - System Values helptext improvments                *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
@@ -743,6 +747,7 @@
      C                   PARM      ZAMSGF        WQ0007           10            Message file
      C                   PARM      '2'           WQ0008            1            Second level text
      C                   PARM      'GP009500'    WQ0009           10            Calling Pgm
+     C                   PARM      #1SVAL        WQ0004                                     MD056783
       *
      C     *IN90         IFEQ      '1'
       *

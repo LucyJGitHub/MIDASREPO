@@ -21,6 +21,7 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056838           Date 01Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -65,6 +66,7 @@
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD056838 - Amend SFNUM type to packed decimal                *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -450,7 +452,8 @@
       ** ZSFile parameters
      D ZSEQ            S              5A
      D ZSENTY          S              3A
-     D ZSNUM           S              6S 0
+     D**ZSNUM***        S              6S 0                                                 MD056838
+     D ZSNUM           S              6  0                                                  MD056838
      D ZSERR           S              1A
      D P1OPEN          S              1A   INZ('N')
      D P2OPEN          S              1A   INZ('N')

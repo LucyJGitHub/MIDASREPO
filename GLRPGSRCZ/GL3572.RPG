@@ -11,7 +11,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD057246           Date 08Jan21               *
+      *                 BUG25122A          Date 02Sep09               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039072           Date 25Jul16               *
       *                 MD034725           Date 27Jul16               *
@@ -86,6 +88,9 @@
       *****************************************************************
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057246 - Multiple calls to UTCHOBJEX. Move call to         *
+      *             AOSARDR0 after GOTO START.                        *
+      *  BUG25122A - Applied missing FOKFIX functionality             *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039072 - GL3572AU is empty and no GL03572P1 report when    *
@@ -234,6 +239,12 @@
       *                                Audit report
      FGL3572P1O   E                    PRINTER      KINFDS SPOOL      UC
       *                                Account details report
+     FGLNW94L5IF  E           K        DISK                                                BUG25122A
+     F*                                Network Transaction                                 BUG25122A
+     FGLNWACL5IF  E           K        DISK                                                BUG25122A
+     F*                                Network accounts - Account Number                   BUG25122A
+     FSDNWRKL1IF  E           K        DISK                                                BUG25122A
+     F*                                Message Network Details                             BUG25122A
      FREAPRHI0IF  E           K        DISK                                                   CER050
      FREAPRHI1IF  E           K        DISK                                                   CER050
      F            REAPRHD0                          KRENAMEREAPRHD1                           CER050
@@ -348,6 +359,11 @@
      E/COPY WNCPYSRC,GL3572EEPG                                           S01408
      E*                                                                   S01408
       *-------------------------------------------------------------------
+     IGLNW94D0                                                                             BUG25122A
+      ** SAR File Details Accessed via access program AOSARDR0                             BUG25122A
+      *                                                                                    BUG25122A
+     I              QQACCD                          QQACCS                                 BUG25122A
+      *                                                                                    BUG25122A
      E**
      I*    ACCOUNT MASTER DETAIL RECORD
      I**
@@ -852,68 +868,68 @@
      C*    DEFINE LDA
      C           *NAMVAR   DEFN           LDA
      C*
-      ** Check if Switchable Feature ULX004 is installed                                      CER001
-      *                                                                                       CER001
-     C                     CALL 'AOSARDR0'                                                    CER001
-     C                     PARM *BLANKS   PRTCD                                               CER001
-     C                     PARM '*VERIFY' POPTN                                               CER001
-     C                     PARM 'ULX004'  PSARD                                               CER001
-     C           SCSARD    PARM SCSARD    DSSDY                                               CER001
-      *                                                                                       CER001
-     C           PRTCD     IFEQ *BLANKS                                                       CER001
-     C                     MOVE 'Y'       ULX004  1                                           CER001
-     C                     ELSE                                                               CER001
-     C                     MOVE 'N'       ULX004                                              CER001
-     C                     ENDIF                                                              CER001
-      *                                                                                       CER001
-     C           PRTCD     IFNE *BLANK                                                        CER001
-     C           PRTCD     ANDNE'*NRF   '                                                     CER001
-     C                     SETON                     U7U8LR                                   CER001
-     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
-     C                     MOVELPRTCD     DBKEY                                               CER001
-     C                     MOVE '029'     DBASE                                               CER001
-     C                     EXSR *PSSR                                                         CER001
-     C                     GOTO END                                                           CER001
-     C                     END                                                                CER001
-      *                                                                                       CER001
-      ** Check if Switchable Feature CAP205 is installed.                                     CAP205
-      *                                                                                       CAP205
-     C                     CALL 'AOSARDR0'                                                    CAP205
-     C                     PARM *BLANKS   PRTCD                                               CAP205
-     C                     PARM '*VERIFY' POPTN                                               CAP205
-     C                     PARM 'CAP205'  PSARD                                               CAP205
-     C           SCSARD    PARM SCSARD    DSSDY                                               CAP205
-      *                                                                                       CAP205
-     C           PRTCD     IFEQ *BLANKS                                                       CAP205
-     C                     MOVE 'Y'       CAP205  1                                           CAP205
-     C                     ELSE                                                               CAP205
-     C                     MOVE 'N'       CAP205                                              CAP205
-     C                     ENDIF                                                              CAP205
-      *                                                                                       CAP205
-     C           PRTCD     IFNE *BLANK                                                        CAP205
-     C           PRTCD     ANDNE'*NRF   '                                                     CAP205
-     C                     SETON                     U7U8LR                                   CAP205
-     C                     MOVEL'SCSARDPD'DBFILE                                              CAP205
-     C                     MOVELPRTCD     DBKEY                                               CAP205
-     C                     MOVE '062'     DBASE                                               CAP205
-     C                     EXSR *PSSR                                                         CAP205
-     C                     GOTO END                                                           CAP205
-     C                     END                                                                CAP205
-      *                                                                                       CAP205
-      ** Check if Switchable Feature CER050 is installed                                      CER050
-      *                                                                                       CER050
-     C                     CALL 'AOSARDR0'                                                    CER050
-     C                     PARM *BLANKS   PRTCD                                               CER050
-     C                     PARM '*VERIFY' POPTN                                               CER050
-     C                     PARM 'CER050'  PSARD                                               CER050
-     C           SCSARD    PARM SCSARD    DSSDY                                               CER050
-      *                                                                                       CER050
-     C           PRTCD     IFEQ *BLANKS                                                       CER050
-     C                     MOVE 'Y'       CER050  1                                           CER050
-     C                     ELSE                                                               CER050
-     C                     MOVE 'N'       CER050                                              CER050
-     C                     ENDIF                                                              CER050
-      *                                                                                       CER050
+      ***Check*if*Switchable*Feature*ULX004*is*installed***************              CER001 MD057246
+      **********                                                                     CER001 MD057246
+     C**********           CALL 'AOSARDR0'                                           CER001 MD057246
+     C**********           PARM *BLANKS   PRTCD                                      CER001 MD057246
+     C**********           PARM '*VERIFY' POPTN                                      CER001 MD057246
+     C**********           PARM 'ULX004'  PSARD                                      CER001 MD057246
+     C********** SCSARD    PARM SCSARD    DSSDY                                      CER001 MD057246
+      **********                                                                     CER001 MD057246
+     C********** PRTCD     IFEQ *BLANKS                                              CER001 MD057246
+     C**********           MOVE 'Y'       ULX004  1                                  CER001 MD057246
+     C**********           ELSE                                                      CER001 MD057246
+     C**********           MOVE 'N'       ULX004                                     CER001 MD057246
+     C**********           ENDIF                                                     CER001 MD057246
+      **********                                                                     CER001 MD057246
+     C********** PRTCD     IFNE *BLANK                                               CER001 MD057246
+     C********** PRTCD     ANDNE'*NRF   '                                            CER001 MD057246
+     C**********           SETON                     U7U8LR                          CER001 MD057246
+     C**********           MOVEL'SCSARDPD'DBFILE                                     CER001 MD057246
+     C**********           MOVELPRTCD     DBKEY                                      CER001 MD057246
+     C**********           MOVE '029'     DBASE                                      CER001 MD057246
+     C**********           EXSR *PSSR                                                CER001 MD057246
+     C**********           GOTO END                                                  CER001 MD057246
+     C**********           END                                                       CER001 MD057246
+      **********                                                                     CER001 MD057246
+      ***Check*if*Switchable*Feature*CAP205*is*installed.**************              CAP205 MD057246
+      **********                                                                     CAP205 MD057246
+     C**********           CALL 'AOSARDR0'                                           CAP205 MD057246
+     C**********           PARM *BLANKS   PRTCD                                      CAP205 MD057246
+     C**********           PARM '*VERIFY' POPTN                                      CAP205 MD057246
+     C**********           PARM 'CAP205'  PSARD                                      CAP205 MD057246
+     C********** SCSARD    PARM SCSARD    DSSDY                                      CAP205 MD057246
+      **********                                                                     CAP205 MD057246
+     C********** PRTCD     IFEQ *BLANKS                                              CAP205 MD057246
+     C**********           MOVE 'Y'       CAP205  1                                  CAP205 MD057246
+     C**********           ELSE                                                      CAP205 MD057246
+     C**********           MOVE 'N'       CAP205                                     CAP205 MD057246
+     C**********           ENDIF                                                     CAP205 MD057246
+      **********                                                                     CAP205 MD057246
+     C********** PRTCD     IFNE *BLANK                                               CAP205 MD057246
+     C********** PRTCD     ANDNE'*NRF   '                                            CAP205 MD057246
+     C**********           SETON                     U7U8LR                          CAP205 MD057246
+     C**********           MOVEL'SCSARDPD'DBFILE                                     CAP205 MD057246
+     C**********           MOVELPRTCD     DBKEY                                      CAP205 MD057246
+     C**********           MOVE '062'     DBASE                                      CAP205 MD057246
+     C**********           EXSR *PSSR                                                CAP205 MD057246
+     C**********           GOTO END                                                  CAP205 MD057246
+     C**********           END                                                       CAP205 MD057246
+      **********                                                                     CAP205 MD057246
+      ***Check*if*Switchable*Feature*CER050*is*installed***************              CER050 MD057246
+      **********                                                                     CER050 MD057246
+     C**********           CALL 'AOSARDR0'                                           CER050 MD057246
+     C**********           PARM *BLANKS   PRTCD                                      CER050 MD057246
+     C**********           PARM '*VERIFY' POPTN                                      CER050 MD057246
+     C**********           PARM 'CER050'  PSARD                                      CER050 MD057246
+     C********** SCSARD    PARM SCSARD    DSSDY                                      CER050 MD057246
+      **********                                                                     CER050 MD057246
+     C********** PRTCD     IFEQ *BLANKS                                              CER050 MD057246
+     C**********           MOVE 'Y'       CER050  1                                  CER050 MD057246
+     C**********           ELSE                                                      CER050 MD057246
+     C**********           MOVE 'N'       CER050                                     CER050 MD057246
+     C**********           ENDIF                                                     CER050 MD057246
+      **********                                                                     CER050 MD057246
      C*    PERFORM FIRST CYCLE OPERATIONS.
      C   40                GOTO START
      C                     MOVEACPY@      BIS@   80
@@ -951,6 +967,68 @@
      C*
      C                     MOVE *INU3     *IN30
      C                     MOVE *INU1     *IN31
+      *                                                                                     MD057246
+      ** Check if Switchable Feature ULX004 is installed                                    MD057246
+      *                                                                                     MD057246
+     C                     CALL 'AOSARDR0'                                                  MD057246
+     C                     PARM *BLANKS   PRTCD                                             MD057246
+     C                     PARM '*VERIFY' POPTN                                             MD057246
+     C                     PARM 'ULX004'  PSARD                                             MD057246
+     C           SCSARD    PARM SCSARD    DSSDY                                             MD057246
+      *                                                                                     MD057246
+     C           PRTCD     IFEQ *BLANKS                                                     MD057246
+     C                     MOVE 'Y'       ULX004  1                                         MD057246
+     C                     ELSE                                                             MD057246
+     C                     MOVE 'N'       ULX004                                            MD057246
+     C                     ENDIF                                                            MD057246
+      *                                                                                     MD057246
+     C           PRTCD     IFNE *BLANK                                                      MD057246
+     C           PRTCD     ANDNE'*NRF   '                                                   MD057246
+     C                     SETON                     U7U8LR                                 MD057246
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD057246
+     C                     MOVELPRTCD     DBKEY                                             MD057246
+     C                     MOVE '029'     DBASE                                             MD057246
+     C                     EXSR *PSSR                                                       MD057246
+     C                     GOTO END                                                         MD057246
+     C                     END                                                              MD057246
+      *                                                                                     MD057246
+      ** Check if Switchable Feature CAP205 is installed.                                   MD057246
+      *                                                                                     MD057246
+     C                     CALL 'AOSARDR0'                                                  MD057246
+     C                     PARM *BLANKS   PRTCD                                             MD057246
+     C                     PARM '*VERIFY' POPTN                                             MD057246
+     C                     PARM 'CAP205'  PSARD                                             MD057246
+     C           SCSARD    PARM SCSARD    DSSDY                                             MD057246
+      *                                                                                     MD057246
+     C           PRTCD     IFEQ *BLANKS                                                     MD057246
+     C                     MOVE 'Y'       CAP205  1                                         MD057246
+     C                     ELSE                                                             MD057246
+     C                     MOVE 'N'       CAP205                                            MD057246
+     C                     ENDIF                                                            MD057246
+      *                                                                                     MD057246
+     C           PRTCD     IFNE *BLANK                                                      MD057246
+     C           PRTCD     ANDNE'*NRF   '                                                   MD057246
+     C                     SETON                     U7U8LR                                 MD057246
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD057246
+     C                     MOVELPRTCD     DBKEY                                             MD057246
+     C                     MOVE '062'     DBASE                                             MD057246
+     C                     EXSR *PSSR                                                       MD057246
+     C                     GOTO END                                                         MD057246
+     C                     END                                                              MD057246
+      *                                                                                     MD057246
+      ** Check if Switchable Feature CER050 is installed                                    MD057246
+      *                                                                                     MD057246
+     C                     CALL 'AOSARDR0'                                                  MD057246
+     C                     PARM *BLANKS   PRTCD                                             MD057246
+     C                     PARM '*VERIFY' POPTN                                             MD057246
+     C                     PARM 'CER050'  PSARD                                             MD057246
+     C           SCSARD    PARM SCSARD    DSSDY                                             MD057246
+      *                                                                                     MD057246
+     C           PRTCD     IFEQ *BLANKS                                                     MD057246
+     C                     MOVE 'Y'       CER050  1                                         MD057246
+     C                     ELSE                                                             MD057246
+     C                     MOVE 'N'       CER050                                            MD057246
+     C                     ENDIF                                                            MD057246
       *                                                                   CRE001
       ** Access Midas Modules Details                                     CRE001
       *                                                                   CRE001
@@ -1373,9 +1451,79 @@
      C                     KFLD           ACSQ
      C                     KFLD           BRCA                            CRE001
      C*
+     C*
+     C           KACNBY    KLIST                                                           BUG25122A
+     C                     KFLD           BRCA                                             BUG25122A
+     C                     KFLD           CNUM                                             BUG25122A
+     C                     KFLD           CCY                                              BUG25122A
+     C                     KFLD           ACOD                                             BUG25122A
+     C                     KFLD           ACSQ                                             BUG25122A
+      *                                                                                    BUG25122A
+     C           KNW94     KLIST                                                           BUG25122A
+     C                     KFLD           NANWRK                                           BUG25122A
+     C                     KFLD           NABRCH                                           BUG25122A
+     C                     KFLD           NACNUM                                           BUG25122A
+     C                     KFLD           NACCY                                            BUG25122A
+     C                     KFLD           NAACOD                                           BUG25122A
+     C                     KFLD           NAACSQ                                           BUG25122A
+      *                                                                                    BUG25122A
+     C           KSDWK1    KLIST                                                           BUG25122A
+     C                     KFLD           NANWRK                                           BUG25122A
+      *                                                                                    BUG25122A
+     C*
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3572CCPG                                           S01408
      C*                                                                   S01408
+      *                                                                                    BUG25122A
+      **  Initialize internal switch indicator CGL013                                      BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'N'       CGL013  1                                        BUG25122A
+      *                                                                                    BUG25122A
+      **  Check for SAR CGL013                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C                     CALL 'AOSARDR0'                                                 BUG25122A
+     C                     PARM *BLANKS   @RTCD                                            BUG25122A
+     C                     PARM '*VERIFY' @OPTN                                            BUG25122A
+     C                     PARM 'CGL013'  @SARD   6                                        BUG25122A
+     C                     PARM           UFFDY 200                                        BUG25122A
+      *                                                                                    BUG25122A
+      **  If record found                                                                  BUG25122A
+      *                                                                                    BUG25122A
+     C           @RTCD     IFEQ *BLANKS                                                    BUG25122A
+      *                                                                                    BUG25122A
+      **  Set on internal switch indicator CGL013                                          BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'Y'       CGL013                                           BUG25122A
+      *                                                                                    BUG25122A
+     C                     ENDIF                                                           BUG25122A
+      *                                                                                    BUG25122A
+      **  Initialize internal switch indicator CER030                                      BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'N'       CER030  1                                        BUG25122A
+      *                                                                                    BUG25122A
+      **  Check for SAR CER030                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C                     CALL 'AOSARDR0'                                                 BUG25122A
+     C                     PARM *BLANKS   @RTCD                                            BUG25122A
+     C                     PARM '*VERIFY' @OPTN                                            BUG25122A
+     C                     PARM 'CER030'  @SARD                                            BUG25122A
+     C           SCSARD    PARM SCSARD    DSFDY                                            BUG25122A
+      *                                                                                    BUG25122A
+      **  If record found                                                                  BUG25122A
+      *                                                                                    BUG25122A
+     C           @RTCD     IFEQ *BLANKS                                                    BUG25122A
+      *                                                                                    BUG25122A
+      **  Set on internal switch indicator CER030                                          BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'Y'       CER030                                           BUG25122A
+      *                                                                                    BUG25122A
+     C                     ENDIF                                                           BUG25122A
+      *                                                                                    BUG25122A
+     C           CGL013    IFEQ 'Y'                                                        BUG25122A
+     C           CER030    OREQ 'Y'                                                        BUG25122A
+     C                     MOVEL'Y'       MTFLAG  1                                        BUG25122A
+     C                     ENDIF                                                           BUG25122A
+      *                                                                                    BUG25122A
      C                     Z-ADD0         CINUAF
      C                     Z-ADD0         COCLAF
      C                     Z-ADD0         COCFAF
@@ -2163,6 +2311,31 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3572CPDR                                           S01408
      C*                                                                   S01408
+      ** Incorporate FOKFIX                                                                BUG25122A
+      **                                                                                   BUG25122A
+     C           MTFLAG    IFEQ 'Y'                                                        BUG25122A
+      **Check if customers account record is in the Network Details File                   BUG25122A
+     C           KACNBY    SETLLGLNWACL5                                                   BUG25122A
+     C           KACNBY    READEGLNWACL5                 27                                BUG25122A
+     C*                                                                                    BUG25122A
+      **Check if Multicash                                                                 BUG25122A
+     C           *IN27     DOWEQ'0'                                                        BUG25122A
+     C           KSDWK1    CHAINSDNWRKL1             28                                    BUG25122A
+     C*                                                                                    BUG25122A
+     C           *IN28     IFEQ '0'                                                        BUG25122A
+     C           EDMCNW    ANDEQ'Y'                                                        BUG25122A
+     C                     MOVEL'Y'       MTCASH  1                                        BUG25122A
+     C*                                                                                    BUG25122A
+     C           KNW94     CHAINGLNW94L5             29                                    BUG25122A
+     C           *IN29     IFEQ '0'                                                        BUG25122A
+     C                     MOVE '1'       *IN38                                            BUG25122A
+     C                     MOVE N40SFR    PFSTFQ                                           BUG25122A
+     C                     ENDIF                                                           BUG25122A
+     C                     ENDIF                                                           BUG25122A
+     C                     LEAVE                                                           BUG25122A
+     C           KACNBY    READEGLNWACL5                 27                                BUG25122A
+     C                     ENDDO                                                           BUG25122A
+     C                     ENDIF                                                           BUG25122A
       ** If Yellow book feature is 'on'                                                      LLN022A
       *                                                                                      LLN022A
      C           LLN007    IFEQ 'Y'                                                          LLN022A

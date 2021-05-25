@@ -17,6 +17,7 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD034915           Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -50,6 +51,9 @@
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -365,6 +369,7 @@
       ***  Funding Spread/Rate
       *
      C     FSRP          IFNE      *ZEROS
+     C                   IF        FSRP > 0                                                 MD034915
      C                   MOVEL     *BLANKS       ZFIELD
      C                   MOVE      FSRP          ZFIELD
      C                   Z-ADD     7             ZDEC
@@ -377,6 +382,11 @@
      C                   ELSE                                                              BUG10391R
      C                   MOVE      ZFIELD        DDFRSP
      C                   ENDIF                                                             BUG10391R
+     C                   ELSE                                                               MD034915
+     C                   MOVEL     *BLANKS       ZFIELD12         12                        MD034915
+     C                   EVAL      ZFIELD12 = %CHAR(FSRP)                                   MD034915
+     C                   MOVE      ZFIELD12      DDFRSP                                     MD034915
+     C                   ENDIF                                                              MD034915
      C                   ENDIF
       *
       ***  Original Maturity Date

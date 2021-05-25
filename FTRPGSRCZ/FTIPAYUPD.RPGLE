@@ -20,7 +20,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *                 AR1088819          Date 03Jun20               *
+      *                 MD020135           Date 03Jun20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -97,6 +100,14 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD048586 - Remove conditions for executing SRCLR             *
+      *           - Applied for MD-57430.                             *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
+      *  MD020135 - Duplicate records in INPAYDQD. Write to INPAYDQD  *
+      *             file only if not from Java screen.                *
+      *            - Applied for MD050405                             *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
@@ -749,13 +760,13 @@
       *
      C/COPY WNCPYSRC,FTH00450
       *                                                                                       CFT157
-     C     @CFT157       IFEQ      'Y'                                                        CFT157
-     C     IPCHTP        ANDEQ     'S'                                                        CFT157
-     C                   ELSE                                                                 CFT157
+     C*****@CFT157       IFEQ      'Y'                                               CFT157 MD048586
+     C*****IPCHTP        ANDEQ     'S'                                               CFT157 MD048586
+     C**********         ELSE                                                        CFT157 MD048586
       *                                                                                       CFT157
      C                   EXSR      SRClr
      C/COPY WNCPYSRC,FTH00451
-     C                   ENDIF                                                                CFT157
+     C**********         ENDIF                                                       CFT157 MD048586
       *
       ** Blank out temporary variable for Change Type.
       *
@@ -793,15 +804,15 @@
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,FTIPAYDC04
       *
-     C     @CFT157       IFEQ      'Y'                                                        CFT157
-     C     IPCHTP        ANDEQ     'S'                                                        CFT157
-     C                   ELSE                                                                 CFT157
+     C*****@CFT157       IFEQ      'Y'                                               CFT157 MD048586
+     C*****IPCHTP        ANDEQ     'S'                                               CFT157 MD048586
+     C**********         ELSE                                                        CFT157 MD048586
       *                                                                                       CFT157
       ** Clear all positions in store.
       *
      C                   EXSR      SRClr
      C/COPY WNCPYSRC,FTH00453
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
       *
       ** Call CL program to deallocate this reference to a dataarea                           261468
       *                                                                                       261468
@@ -854,6 +865,7 @@
      C     IPCHTP        IFEQ      'I'                                          193883
      C     PSJobName     ANDNE     'QZDASOINIT'                                               CAP084
      C     PSJobName     ANDNE     'QSQSRVR'                                                  247277
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
      C                   MOVE      '*FRONT'      PModeX
      C                   ELSE
      C                   MOVE      *BLANKS       PModeX
@@ -1178,6 +1190,9 @@
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      IPFRID = IPFRNT                                            257487
      C                   WRITE     INPAYQD0                             99                    257487
       *                                                                                       257487
@@ -1187,6 +1202,7 @@
      C                   Z-ADD     031           DBase                                        257487
      C                   EXSR      *PSSR                                                      257487
      C                   ENDIF                                                                257487
+     C                   ENDIF                                                              MD020135
       *****************************************************************               BUG4776 260326
       ****If*new*record*was*successfully*writen*to*INPAYDD,*add*new*record*to         BUG4776 260326
       ****FT*Payment*Reference*Control*file*-*FTPREFPD*****************               BUG4776 260326

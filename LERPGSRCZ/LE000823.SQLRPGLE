@@ -16,6 +16,8 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057078           Date 03Mar21               *
+      *                 MD056223           Date 15Jul20               *
       *                 MD054245           Date 09Sep19               *
       *                 MD051883           Date 04Apr19               *
       *                 MD051944           Date 22Sep18               *
@@ -32,6 +34,17 @@
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057078 - Fee settlement amount not converted to settlement *
+      *             currency and there are missing postings for the   *
+      *             cross-currency keys. Use settlement currency      *
+      *             instead of fee currency.                          *
+      *  MD056223 - CLE031: Incorrect Posting narratives in           *
+      *             Fee postings with conversion                      *
+      *           - The amount and currency of the posting narratives *
+      *             of Cross currency settlements P and S records     *
+      *             whose narrative codes defined as 03 are now       *
+      *             formatted based on the format string defined in   *
+      *             Narrative Codes File SDNARRPD.                    *
       *  MD054245 - Missing P and S settlement entries on Loan Fee    *
       *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  MD051944 - Settlement entries from Principal Increase        *
@@ -253,6 +266,13 @@
      D WKLSAL          S              3A                                                    MD051242
      D KVDAT           S              5P 0                                                  MD049363
      D KLASN           S              3S 0                                                  MD049363
+      *                                                                                     MD056223
+     D wPAMT           S             15P 0 INZ(*ZEROS)                                      MD056223
+     D wTransAmt       S             15P 0 INZ(*ZEROS)                                      MD056223
+     D wTransCCY       S              3A   INZ(*BLANKS)                                     MD056223
+     D wSettleAmt      S             15P 0 INZ(*ZEROS)                                      MD056223
+     D wSettleCCY      S              3A   INZ(*BLANKS)                                     MD056223
+     D wSETTLE         S              1S 0 INZ(*ZEROS)                                      MD056223
 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -461,10 +481,18 @@
      C                   ENDIF
 
      C                   ELSE
+     C                   IF        wSETTLE = 2 AND L2_LKEXRT > 0                            MD057078
+     C                             AND L2_LKOTHC <> *BLANKS                                 MD057078
+     C                             AND L2_LKSCCY <> *BLANKS                                 MD057078
+     C                   EVAL      WCCY1 = L2_LKSCCY                                        MD057078
+     C                   EVAL      WRATE = L2_LKEXRT                                        MD057078
+     C                   MOVEL     L2_LKOTHC     WIND1                                      MD057078
+     C                   ELSE                                                               MD057078
      C                   EVAL      WCCY1 = FESCCY
      C                   EVAL      WRATE = FEREXR
      C**********         EVAL      WREXI = FEREXI                                           MD051242
      C                   EVAL      WIND1 = FEREXI                                           MD051242
+     C                   ENDIF                                                              MD057078
      C                   ENDIF
      C                   ENDIF
 
@@ -556,16 +584,23 @@
      C                   EVAL      WFILE = 'LEPK1DPD'                                       MD051242
      C                   MOVEA     L1_AKEY       AKP                                        MD051242
      C                   MOVEA     L1_AKEY       AKY                                        MD051242
+     C                   MOVEA     AKY           SAVOKEY          14                        MD056223
 
      C                   MOVE      'S'           AKY(3)
      C                   MOVEA     '    '        AKY(6)
       *
      C     L1_SECATC     IFEQ      'OLINT'
+     C     L1_SECATC     OREQ      'OLINM'                                                  MD056223
      C                   MOVE      'I'           AKY(8)
      C                   ENDIF
+      *                                                                                     MD056223
+     C                   EVAL      wSETTLE = 1                                              MD056223
+     C                   EXSR      SrConvert                                                MD056223
 
       ** Format xxSyybbbFB or xxSyybbbBB key for amount in purchase ccy
 
+     C                   EVAL      wSettleAmt = L1_EAMT                                     MD056223
+     C                   EVAL      wSettleCCY = L1_ECCY                                     MD056223
      C*****L1_ECCY       IFEQ      BJCYCD                                                   MD051242
      C     WKLPUR        IFEQ      BJCYCD                                                   MD051242
      C                   MOVEA     'BB'          AKY(9)
@@ -574,7 +609,10 @@
      C                   ENDIF
 
      C                   MOVEA     AKY           L1_AKEY
+     C                   MOVEL     SAVOKEY       L1_OKEY                                    MD056223
 
+     C                   EVAL      L1_OTHA = wTransAmt                                      MD056223
+     C                   EVAL      L1_OTHC = wTransCCY                                      MD056223
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
 
@@ -594,21 +632,22 @@
      C*****KLOANK        CHAIN     CLOANL4                                         MD048558 MD051242
      C**********         ENDIF                                                              MD051242
 
-     C                   EVAL      WINAMT = L1_EAMT
-     C                   EXSR      SRCvtAmt
-     C                   CLEAR                   KeyStr                                     MD051242
-     C                   IF        L1_PAMT <> 0                                             MD051242
-     C                   MOVEA     'XP'          AKP(09)                                    MD051242
-     C                   ELSE                                                               MD051242
-     C                   MOVEA     'XI'          AKP(09)                                    MD051242
-     C                   ENDIF                                                              MD051242
-     C                   MOVEA     AKP           KeyStr                                     MD051242
-     C                   EXSR      CheckPDCL                                                MD051242
-     C                   IF        NOT(PDCL)                                                MD051242
-     C                   EVAL      L1_EAMT = L1_OTHA                                        MD051242
-     C                   ELSE                                                               MD051242
-     C                   EVAL      L1_EAMT = WOUTAMT
-     C                   ENDIF                                                              MD051242
+     C**********         EVAL      WINAMT = L1_EAMT                                         MD056223
+     C**********         EXSR      SRCvtAmt                                                 MD056223
+     C**********         CLEAR                   KeyStr                            MD051242 MD056223
+     C**********         IF        L1_PAMT <> 0                                    MD051242 MD056223
+     C**********         MOVEA     'XP'          AKP(09)                           MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         MOVEA     'XI'          AKP(09)                           MD051242 MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
+     C**********         MOVEA     AKP           KeyStr                            MD051242 MD056223
+     C**********         EXSR      CheckPDCL                                       MD051242 MD056223
+     C**********         IF        NOT(PDCL)                                       MD051242 MD056223
+     C**********         EVAL      L1_EAMT = L1_OTHA                               MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         EVAL      L1_EAMT = WOUTAMT                                        MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
+     C                   EVAL      L1_EAMT = wTransAmt                                      MD056223
 
       ** Format xxSyybbbFC or xxSyybbbBC key for amount in purchase ccy
 
@@ -621,6 +660,9 @@
 
      C                   EVAL      L1_ECCY = CCY
      C                   MOVEA     AKY           L1_AKEY
+     C                   MOVEL     SAVOKEY       L1_OKEY                                    MD056223
+     C                   EVAL      L1_OTHA = wSettleAmt                                     MD056223
+     C                   EVAL      L1_OTHC = wSettleCCY                                     MD056223
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
 
@@ -677,6 +719,9 @@
      C                   MOVE      BJCYCD        L1_ECCY
      C                   Z-ADD     BSAMT         L1_EAMT
      C                   MOVEA     AKY           L1_AKEY
+     C                   MOVEL     SAVOKEY       L1_OKEY                                    MD056223
+     C                   EVAL      L1_OTHA = wTransAmt                                      MD056223
+     C                   EVAL      L1_OTHC = wTransCCY                                      MD056223
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
 
@@ -688,6 +733,9 @@
      C**********         MOVEA     SCCY          AKY(6)                                     MD051242
      C                   MOVEA     WKLSAL        AKY(6)                                     MD051242
      C                   MOVEA     AKY           L1_AKEY
+     C                   MOVEL     SAVOKEY       L1_OKEY                                    MD056223
+     C                   EVAL      L1_OTHA = wSettleAmt                                     MD056223
+     C                   EVAL      L1_OTHC = wSettleCCY                                     MD056223
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
      C**********         EVAL      L1NORE = L1NORE + 4                             MD048557 MD051242
@@ -736,6 +784,9 @@
      C                   ENDIF
 
      C                   MOVEA     L2_LKAKEY     AKY
+      *                                                                                     MD056223
+     C                   EVAL      wSETTLE = 2                                              MD056223
+     C                   EXSR      SrConvert                                                MD056223
 
      C**********         MOVE      'S'           AKY(4)                                     MD051242
      C                   IF        FELOAN > *BLANKS                                         MD051242
@@ -759,6 +810,15 @@
      C                   Z-ADD     FEREXR        WRKEXR
      C                   MOVE      FEREXI        WRKEXI
      C                   ENDIF
+      *                                                                                     MD057078
+     C                   IF        L2_LKEXRT > 0 AND L2_LKOTHC <> *BLANKS                   MD057078
+     C                             AND L2_LKSCCY <> *BLANKS                                 MD057078
+     C                   EVAL      WRKCCY = L2_LKSCCY                                       MD057078
+     C                   EVAL      WRKEXR = L2_LKEXRT                                       MD057078
+     C                   MOVEL     L2_LKOTHC     WRKEXI                                     MD057078
+     C                   EVAL      L2_LKEXRT = *ZEROS                                       MD057078
+     C                   EVAL      L2_LKOTHC = *BLANKS                                      MD057078
+     C                   ENDIF                                                              MD057078
       *                                                                                     MD051242
      C                   IF        WRKCCY = *BLANKS                                         MD051242
      C                   LEAVESR                                                            MD051242
@@ -771,6 +831,9 @@
      C                   ENDIF                                                              MD051883
      C                   MOVE      'V'           AKY(10)                                    MD051883
      C                   MOVEA     AKY           L2_LKAKEY                                  MD051883
+     C                   MOVEA     AKY           SAVOKEY                                    MD056223
+     C                   EVAL      L2_LKOTHA = *ZEROS                                       MD056223
+     C                   EVAL      L2_LKOTHC = *BLANKS                                      MD056223
      C                   UPDATE    LKEY2DPF                                                 MD051883
      C                   IF        FELOAN = *BLANKS                                         MD051883
      C                   MOVE      SAV4          AKY(4)                                     MD051883
@@ -792,6 +855,8 @@
      C                   ENDIF
 
      C                   MOVE      'B'           AKY(10)
+     C                   EVAL      wSettleAmt = L2_LKEAMT                                   MD056223
+     C                   EVAL      wSettleCCY = L2_LKECCY                                   MD056223
 
       ** Format nnnSbbFffB or nnnSbbBffB for Amount in Purchase Ccy
 
@@ -803,7 +868,10 @@
 
      C                   MOVE      WRKPCY        L2_LKECCY
      C                   MOVEA     AKY           L2_LKAKEY
+     C                   MOVEL     SAVOKEY       L2_LKOKEY                                  MD056223
 
+     C                   EVAL      L2_LKOTHA = wTransAmt                                    MD056223
+     C                   EVAL      L2_LKOTHC = wTransCCY                                    MD056223
      C                   WRITE     LKEY2DPF
      C                   EXSR      SRHASH                                                   MD051242
 
@@ -816,19 +884,23 @@
      C                   MOVE      'F'           AKY(7)
      C                   ENDIF
 
-     C                   EVAL      WINAMT = L2_LKEAMT
-     C                   EXSR      SRCvtAmt
-     C                   MOVEA     'D'           AKP(10)                                    MD051242
-     C                   MOVEA     AKP           KeyStr                                     MD051242
-     C                   EXSR      CheckPDCL                                                MD051242
-     C                   IF        NOT(PDCL)                                                MD051242
-     C                   EVAL      L2_LKEAMT = L2_LKOTHA                                    MD051242
-     C                   ELSE                                                               MD051242
-     C                   EVAL      L2_LKEAMT = WOUTAMT
-     C                   ENDIF                                                              MD051242
+     C**********         EVAL      WINAMT = L2_LKEAMT                                       MD056223
+     C**********         EXSR      SRCvtAmt                                                 MD056223
+     C**********         MOVEA     'D'           AKP(10)                           MD051242 MD056223
+     C**********         MOVEA     AKP           KeyStr                            MD051242 MD056223
+     C**********         EXSR      CheckPDCL                                       MD051242 MD056223
+     C**********         IF        NOT(PDCL)                                       MD051242 MD056223
+     C**********         EVAL      L2_LKEAMT = L2_LKOTHA                           MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         EVAL      L2_LKEAMT = WOUTAMT                                      MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
+     C                   EVAL      L2_LKEAMT = wTransAmt                                    MD056223
 
      C                   MOVE      WRKSCY        L2_LKECCY
      C                   MOVEA     AKY           L2_LKAKEY
+     C                   MOVEL     SAVOKEY       L2_LKOKEY                                  MD056223
+     C                   EVAL      L2_LKOTHA = wSettleAmt                                   MD056223
+     C                   EVAL      L2_LKOTHC = wSettleCCY                                   MD056223
      C                   WRITE     LKEY2DPF
      C                   EXSR      SRHASH                                                   MD051242
                                                                                             MD051883
@@ -840,6 +912,9 @@
      C                   MOVE      ' '           AKY(7)                                     MD051883
      C                   MOVE      'J'           AKY(10)                                    MD051883
      C                   MOVEA     AKY           L2_LKAKEY                                  MD051883
+     C                   MOVEL     SAVOKEY       L2_LKOKEY                                  MD056223
+     C                   EVAL      L2_LKOTHA = *ZEROS                                       MD056223
+     C                   EVAL      L2_LKOTHC = *BLANKS                                      MD056223
      C                   WRITE     LKEY2DPF                                                 MD051883
      C                   EXSR      SRHASH                                                   MD051883
 
@@ -903,6 +978,9 @@
      C                   MOVE      BJCYCD        L2_LKECCY
      C                   Z-ADD     BSAMT         L2_LKEAMT
      C                   MOVEA     AKY           L2_LKAKEY
+     C                   MOVEL     SAVOKEY       L2_LKOKEY                                  MD056223
+     C                   EVAL      L2_LKOTHA = wTransAmt                                    MD056223
+     C                   EVAL      L2_LKOTHC = wTransCCY                                    MD056223
      C                   WRITE     LKEY2DPF
      C                   EXSR      SRHASH                                                   MD051242
 
@@ -919,6 +997,9 @@
      C                   MOVEA     '  '          AKY(8)                                     MD051242
      C                   ENDIF                                                              MD051242
      C                   MOVEA     AKY           L2_LKAKEY
+     C                   MOVEL     SAVOKEY       L2_LKOKEY                                  MD056223
+     C                   EVAL      L2_LKOTHA = wSettleAmt                                   MD056223
+     C                   EVAL      L2_LKOTHC = wSettleCCY                                   MD056223
      C                   WRITE     LKEY2DPF
      C                   EXSR      SRHASH                                                   MD051242
      C**********         ADD       4             L2NORE                            MD051242 MD051883
@@ -967,6 +1048,9 @@
      C                   ENDIF
 
      C                   MOVEA     L3_LKAKEY     AKY
+      *                                                                                     MD056223
+     C                   EVAL      wSETTLE = 3                                              MD056223
+     C                   EXSR      SrConvert                                                MD056223
 
      C**********         MOVE      'S'           AKY(4)                                     MD051242
      C                   IF        FELOAN > *BLANKS                                         MD051242
@@ -1007,6 +1091,9 @@
      C                   ENDIF                                                              MD051883
      C                   MOVE      'V'           AKY(10)                                    MD051883
      C                   MOVEA     AKY           L3_LKAKEY                                  MD051883
+     C                   MOVEA     AKY           SAVOKEY                                    MD056223
+     C                   EVAL      L3_LKOTHA = *ZEROS                                       MD056223
+     C                   EVAL      L3_LKOTHC = *BLANKS                                      MD056223
      C                   UPDATE    LKEY3DPF                                                 MD051883
      C                   IF        FELOAN = *BLANKS                                         MD051883
      C                   MOVE      SAV4          AKY(4)                                     MD051883
@@ -1028,6 +1115,8 @@
      C                   ENDIF
 
      C                   MOVE      'B'           AKY(10)
+     C                   EVAL      wSettleAmt = L3_LKEAMT                                   MD056223
+     C                   EVAL      wSettleCCY = L3_LKECCY                                   MD056223
 
       ** Format xxSyybbbFB or xxSyybbbBB key for amount in purchase ccy
 
@@ -1039,7 +1128,10 @@
 
      C                   MOVE      WKPURC        L3_LKECCY
      C                   MOVEA     AKY           L3_LKAKEY
+     C                   MOVEL     SAVOKEY       L3_LKOKEY                                  MD056223
 
+     C                   EVAL      L3_LKOTHA = wTransAmt                                    MD056223
+     C                   EVAL      L3_LKOTHC = wTransCCY                                    MD056223
      C                   WRITE     LKEY3DPF
      C                   EXSR      SRHASH                                                   MD051242
 
@@ -1052,19 +1144,23 @@
      C                   MOVE      'F'           AKY(7)
      C                   ENDIF
 
-     C                   EVAL      WINAMT = L3_LKEAMT
-     C                   EXSR      SRCvtAmt
-     C                   MOVEA     'D'           AKP(10)                                    MD051242
-     C                   MOVEA     AKP           KeyStr                                     MD051242
-     C                   EXSR      CheckPDCL                                                MD051242
-     C                   IF        NOT(PDCL)                                                MD051242
-     C                   EVAL      L3_LKEAMT = L3_LKOTHA                                    MD051242
-     C                   ELSE                                                               MD051242
-     C                   EVAL      L3_LKEAMT = WOUTAMT
-     C                   ENDIF                                                              MD051242
+     C**********         EVAL      WINAMT = L3_LKEAMT                                       MD056223
+     C**********         EXSR      SRCvtAmt                                                 MD056223
+     C**********         MOVEA     'D'           AKP(10)                           MD051242 MD056223
+     C**********         MOVEA     AKP           KeyStr                            MD051242 MD056223
+     C**********         EXSR      CheckPDCL                                       MD051242 MD056223
+     C**********         IF        NOT(PDCL)                                       MD051242 MD056223
+     C**********         EVAL      L3_LKEAMT = L3_LKOTHA                           MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         EVAL      L3_LKEAMT = WOUTAMT                                      MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
+     C                   EVAL      L3_LKEAMT = wTransAmt                                    MD056223
 
      C                   MOVE      WKSALC        L3_LKECCY
      C                   MOVEA     AKY           L3_LKAKEY
+     C                   MOVEL     SAVOKEY       L3_LKOKEY                                  MD056223
+     C                   EVAL      L3_LKOTHA = wSettleAmt                                   MD056223
+     C                   EVAL      L3_LKOTHC = wSettleCCY                                   MD056223
      C                   WRITE     LKEY3DPF
      C                   EXSR      SRHASH                                                   MD051242
                                                                                             MD051883
@@ -1076,6 +1172,9 @@
      C                   MOVE      ' '           AKY(7)                                     MD051883
      C                   MOVE      'J'           AKY(10)                                    MD051883
      C                   MOVEA     AKY           L3_LKAKEY                                  MD051883
+     C                   MOVEL     SAVOKEY       L3_LKOKEY                                  MD056223
+     C                   EVAL      L3_LKOTHA = *ZEROS                                       MD056223
+     C                   EVAL      L3_LKOTHC = *BLANKS                                      MD056223
      C                   WRITE     LKEY3DPF                                                 MD051883
      C                   EXSR      SRHASH                                                   MD051883
 
@@ -1138,6 +1237,9 @@
      C                   MOVE      BJCYCD        L3_LKECCY
      C                   Z-ADD     BSAMT         L3_LKEAMT
      C                   MOVEA     AKY           L3_LKAKEY
+     C                   MOVEL     SAVOKEY       L3_LKOKEY                                  MD056223
+     C                   EVAL      L3_LKOTHA = wTransAmt                                    MD056223
+     C                   EVAL      L3_LKOTHC = wTransCCY                                    MD056223
      C                   WRITE     LKEY3DPF
      C                   EXSR      SRHASH                                                   MD051242
       *
@@ -1154,6 +1256,9 @@
      C                   MOVEA     '  '          AKY(8)
      C                   ENDIF                                                              MD051242
      C                   MOVEA     AKY           L3_LKAKEY
+     C                   MOVEL     SAVOKEY       L3_LKOKEY                                  MD056223
+     C                   EVAL      L3_LKOTHA = wSettleAmt                                   MD056223
+     C                   EVAL      L3_LKOTHC = wSettleCCY                                   MD056223
      C                   WRITE     LKEY3DPF
      C                   EXSR      SRHASH                                                   MD051242
      C**********         ADD       4             L3NORE                            MD051242 MD051883
@@ -1519,6 +1624,46 @@
        Endsr;
       /end-free
 
+      *****************************************************************                     MD056223
+     C/EJECT                                                                                MD056223
+      *****************************************************************                     MD056223
+      *    SRConvert                                                  *                     MD056223
+      *****************************************************************                     MD056223
+     C     SRConvert     BEGSR                                                              MD056223
+     C                   IF        wSETTLE = 1                                              MD056223
+     C                   EVAL      WINAMT = L1_EAMT                                         MD056223
+     C                   EVAL      wPAMT  = L1_PAMT                                         MD056223
+     C                   ELSEIF    wSETTLE = 2                                              MD056223
+     C                   EVAL      WINAMT = L2_LKEAMT                                       MD056223
+     C                   ELSEIF    wSETTLE = 3                                              MD056223
+     C                   EVAL      WINAMT = L3_LKEAMT                                       MD056223
+     C                   ENDIF                                                              MD056223
+     C                   EXSR      SRCvtAmt                                                 MD056223
+     C                   CLEAR                   KeyStr                                     MD056223
+     C                   IF        wSETTLE = 1                                              MD056223
+     C                   IF        wPAMT <> 0                                               MD056223
+     C                   MOVEA     'XP'          AKP(09)                                    MD056223
+     C                   ELSE                                                               MD056223
+     C                   MOVEA     'XI'          AKP(09)                                    MD056223
+     C                   ENDIF                                                              MD056223
+     C                   ELSE                                                               MD056223
+     C                   MOVEA     'D'           AKP(10)                                    MD056223
+     C                   ENDIF                                                              MD056223
+     C                   MOVEA     AKP           KeyStr                                     MD056223
+     C                   EXSR      CheckPDCL                                                MD056223
+     C                   IF        NOT(PDCL)                                                MD056223
+     C                   IF        wSETTLE = 1                                              MD056223
+     C                   EVAL      wTransAmt = L1_OTHA                                      MD056223
+     C                   ELSEIF    wSETTLE = 2                                              MD056223
+     C                   EVAL      wTransAmt = L2_LKOTHA                                    MD056223
+     C                   ELSEIF    wSETTLE = 3                                              MD056223
+     C                   EVAL      wTransAmt = L3_LKOTHA                                    MD056223
+     C                   ENDIF                                                              MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      wTransAmt = WOUTAMT                                      MD056223
+     C                   ENDIF                                                              MD056223
+     C                   EVAL      wTransCCY  =  wCCY2                                      MD056223
+     C                   ENDSR                                                              MD056223
       *****************************************************************
      C/EJECT
       *****************************************************************

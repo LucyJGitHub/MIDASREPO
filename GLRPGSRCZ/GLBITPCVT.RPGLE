@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL135A            Date 10Jul13               *
+      *  Last Amend No. AR574704           Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL135A            Date 10Jul13               *
       *                 CSF011A            Date 28Nov11               *
       *                 CAP207             Date 10Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR574704 - If item is sent via API, which uses a RE account  *
+      *             that has blank BTRACN, account detail is not      *
+      *             shown. Ensure that full account detail will be    *
+      *             shown on screen.                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL135A - Accounting Rules Process                           *
       *            Added hooks: CGL135_047, CGL135_048, CGL135_049,   *
@@ -67,49 +72,49 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D BITPFilFmt    E DS                  EXTNAME(GLJENPPD)
       ** Batch Header Transaction Details in File Format
       *                                                                                       246418
      D BITPXFilFmt   E DS                  EXTNAME(GLJENXPD)                                  246418
       ** JE Additional Info Data for CGL013 - File format of GLJENXPD                         246418
- 
+
      D BITPDets      E DS                  EXTNAME(GLBITPPD)
       *                                                                                       246418
       ** JE Additional Info Data for CGL013 - Screen format of GLBITPXPD                      246418
@@ -117,23 +122,23 @@
       *                                                                                       246418
      D*QQACC1********E                     EXTFLD(QQACCD)                              CGL029 BG9185
       ** Batch Header Transaction Details in Screen Format
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Retail Details                                                                      BUG5208
      D SDRETL        E DS                  EXTNAME(SDRETLPD)                                 BUG5208
      D QQACC2        E                     EXTFLD(QQACCD)                                    BUG5208
@@ -143,46 +148,52 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       **************************************************************
       /EJECT
       **************************************************************
- 
+
       ** Blank outputs
      C                   MOVEL     *BLANK        BITPDets
- 
+
       ** Set screen fields
      C                   EXSR      SCREEN
- 
+
       ** Return
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SCREEN - SET SCREEN FIELDS
       *****************************************************************
      C     SCREEN        BEGSR
- 
+
       * Account Details
      C     BTACTY        IFEQ      'R'
      C     BMRANR        ANDEQ     'Y'                                                       BUG5208
       *
      C     BTRACN        IFEQ      *ZERO
-     C                   MOVEL     *BLANKS       DDACID
+     C**********         MOVEL     *BLANKS       DDACID                                     AR574704
+     C                   EVAL      DDACID = BTCUST                                          AR574704
+     C                   EVAL      DDCYCD = BTCYCD                                          AR574704
+     C                   EVAL      DDACCD = BTACCD                                          AR574704
+     C                   EVAL      DDACSN = BTACSN                                          AR574704
+     C                   EVAL      DDIBCA = BTIBCA                                          AR574704
      C                   ELSE
      C                   MOVE      BTRACN        DDACID
-     C                   ENDIF
+     C**********         ENDIF                                                              AR574704
       *
      C                   EVAL      DDCYCD = *BLANKS
      C                   EVAL      DDIBCA = *BLANKS
      C                   EVAL      DDACSN = *BLANKS
      C                   EVAL      DDIBCA = *BLANKS
+     C                   ENDIF                                                              AR574704
       *
      C                   ELSE
      C                   EVAL      DDACID = BTCUST
@@ -191,9 +202,9 @@
      C                   EVAL      DDACSN = BTACSN
      C                   EVAL      DDIBCA = BTIBCA
      C                   ENDIF
- 
+
       * Posting Amount
- 
+
      C     BTPTAM        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDPTAM
      C                   ELSE
@@ -216,23 +227,23 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDPTAM
      C                   ENDIF
- 
+
       * DR/CR
      C                   EVAL      DDDCIN = BTDCIN
- 
+
       * Narrative
      C                   IF        BTNVCD = *BLANKS                                          BUG5923
      C                   EVAL      DDNARR = BTNRDC
      C                   ELSE                                                                BUG5923
      C                   EVAL      DDNARR = BTNVCD                                           BUG5923
      C                   ENDIF                                                               BUG5923
- 
+
       * Transaction Type
      C                   EVAL      DDTRTY = BTTRTY
- 
+
       * Transaction Sub-Type
      C                   EVAL      DDTSTY = BTTSTY
- 
+
       * Value Date
      C                   IF        BTVLDT = *ZERO
      C                   EVAL      DDVLDT = *BLANKS
@@ -242,25 +253,25 @@
      C                   EVAL      DDVLDT = *BLANKS
      C                   MOVEL     ZDATE         DDVLDT
      C                   ENDIF
- 
+
       * Cheque Number
      C                   EVAL      DDCQNB = BTCQNB
- 
+
       * Swift Reference
      C                   EVAL      DDSWCR = BTSWCR
- 
+
       * Profit Centre
      C                   EVAL      DDPRCN = BTPRCN
- 
+
       * Associated Customer
      C                   EVAL      DDACNB = BTACNB
- 
+
       * Book Code
      C                   EVAL      DDBKCD = BTBKCD
- 
+
       * Reverse/Void Indicator
      C                   EVAL      DDRVDI = BTRVDI
- 
+
       * No of items
      C     BTNITM        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDNITM
@@ -271,13 +282,13 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDNITM
      C                   ENDIF
- 
+
       * Retail Indicator Override
      C                   EVAL      DDRINO = BTRINO
- 
+
       * Original Currency
      C                   EVAL      DDOCCY = BTOCCY
- 
+
       * Original Amount
      C     BTOAMT        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDOAMT
@@ -301,10 +312,10 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDOAMT
      C                   ENDIF
- 
+
       * Batch Header Number
      C                   EVAL      DDBTNB = BTBTNB
- 
+
       * Batch Item Number
      C     BTBINB        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDBINB
@@ -328,7 +339,7 @@
       *                                                                                       246418
      C/COPY OFCPYSRCZ,CGL135_048                                                             CGL135A
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -337,13 +348,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -353,11 +364,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -385,17 +396,17 @@
      C                   PARM                    CGL013            1                          246418
       *
       * Output Parameters
- 
+
       * Batch Header Details Screen Format
      C                   PARM                    BITPDets
- 
+
       * Batch Item Additional Information Screen Format                                       246418
      C                   PARM                    BITPXScnFmt                                  246418
      C/COPY OFCPYSRCZ,CGL135_049                                                             CGL135A
       ** Initialise program name
- 
+
      C                   EVAL      DBPGM = 'GLBITPCVT'
- 
+
       ** Access Bank Details
       *
      C                   CALL      'AOBANKR0'
@@ -429,7 +440,7 @@
      C                   ENDIF                                                               BUG5208
       *                                                                                      BUG5208
      C/COPY OFCPYSRCZ,CGL135_050                                                             CGL135A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

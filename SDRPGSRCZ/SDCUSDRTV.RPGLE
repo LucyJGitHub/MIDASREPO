@@ -30,8 +30,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD048748           Date 16Dec19               *
+      *  Last Amend No. 254109             Date 01Jun20               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 260405             Date 04Apr20               *
+      *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
@@ -151,6 +153,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254109 - Introduce new err msgs; one for the 'D' action code *
+      *           and another one for 'C' and 'R' action codes ( when *
+      *           CSD007 feauture is switched on) just to indicate the*
+      *           reason why action code is invalid.                  *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -2259,16 +2268,28 @@
      C*****DDACTN        ANDEQ     'D'                                                        CSD007
      C     DDACTN        IFEQ      'C'                                                        CSD007
      C     DDACTN        OREQ      'R'                                                        CSD007
-     C     DDACTN        OREQ      'D'                                                        CSD007
-      *  Delete Action is not allowed
+	
+     C*****DDACTN        OREQ      'D'                                                 CSD007 254109
+      ***Delete*Action*is*not*allowed**********************************                       254109
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   MOVEL     'USR0553'     MsgIdArr(Ix)
+     C**********         MOVEL     'USR0553'     MsgIdArr(Ix)                                 254109
+     C                   MOVEL     '5049396'     MsgIdArr(Ix)                                 254109
      C                   GOTO      EVAL
       *
      C                   ENDIF
       *                                                                                       CSD007
+     C     DDACTN        IFEQ      'D'                                                        254109
+      *                                                                                       254109
+     C                   MOVEL     'N'           OKACTN                                       254109
+     C                   ADD       1             Ix                                           254109
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                               254109
+     C                   MOVEL     '5049395'     MsgIdArr(Ix)                                 254109
+     C                   GOTO      EVAL                                                       254109
+      *                                                                                       254109
+     C                   ENDIF                                                                254109
+      *                                                                                       254109
      C                   ENDIF                                                                CSD007
       *                                                                                       CSD012
       * If Authorisation check is on,                                                         CSD012
@@ -2407,6 +2428,7 @@
                                                                                             BUG27866
      C                   IF        WJOBTP = 'I' AND                                         BUG27866
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
+     C                             AND WWJOB <> 'QZDASSINIT'                               AR1088819
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
       *

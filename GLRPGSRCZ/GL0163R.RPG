@@ -12,8 +12,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. AR1016396          Date 01Jun20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057743           DATE 16MAR21               *
+      *                 MD057157           Date 16Nov20               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD050992           Date 26Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027587           Date 19Jun14               *
@@ -64,8 +67,15 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  AR1016396 - Error message for locked journal batch displays  *
+      *              the job name instead of the user ID. Use user ID *
+      *              to indicate lock. (Child: AR1016397)             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057743 - GLC26 01001 fails during COB                      *
+      *  MD057157 - Java Journal Entry screen not showing all batches *
+      *           - Write record in BITH extension tables T_GZBITHEX  *
+      *             and GLJENHQD.                                     *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD028234                               *
       *  MD050992 - SP17: General Ledger Errors CLE051 Switched OFF   *
@@ -164,6 +174,17 @@
      FGLJENPL1IF  E           K        DISK                                                   CRE020
       ** Midas GL Journal Entry Posting by Batch No/Item No                                   CRE020
       *                                                                                       CRE020
+     FGLJEHQL0O   E           K        DISK                                                 MD057157
+     F                                              KCOMIT                                  MD057157
+      *                                                                                     MD057157
+      ** GL journal entry header                                                            MD057157
+      *                                                                                     MD057157
+     FTGZBTEX1O   E           K        DISK                                                 MD057157
+     F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD057157
+     F                                              KCOMIT                                  MD057157
+      *                                                                                     MD057157
+      ** UDF Table for Journal Entry                                                        MD057157
+      *                                                                                     MD057157
      F/COPY WNCPYSRC,GL0163RF01
       *
      E                    CPY@    1   1 80               Copyright     array
@@ -1813,7 +1834,8 @@
      C                     MOVEL#1BTNB    BRBTNB           Batch number
      C                     MOVEL#1BCDA    BRBCDA           Branch Code - A
      C                     MOVEL#1DPCD    BRDPCD           Dept Code
-     C                     MOVEL#1WSID    BRWSID           Workstation id.
+     C**********           MOVEL#1WSID    BRWSID           Workstation id.                 AR1016396
+     C                     MOVELWUUSID    BRWSID                                           AR1016396
      C                     Z-ADD#1HICC    BRHICC           Hash integer ca
      C                     Z-ADD#1HDCC    BRHDCC           Hash decimal ca
      C                     Z-ADD#1HINC    BRHINC           Hash item no.ca
@@ -1870,6 +1892,29 @@
      C                     GOTO SBEXIT
      C                     END
       *
+      ** Write record to T_GZBITHEX                                                         MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOBRCHR1'                                                  MD057157
+     C                     PARM *BLANKS   UUAPRC                                            MD057157
+     C                     PARM '*KEY'    UUAPOP                                            MD057157
+     C                     PARM BRBCDA    WWBRCD  3                                         MD057157
+     C           D@BRCH    PARM D@BRCH    UUSDY                                             MD057157
+      *                                                                                     MD057157
+     C                     MOVE A8ZONE    ZONE                                              MD057157
+     C                     MOVE BRBTNB    DDBTNB                                            MD057157
+     C                     MOVE BJRDNB    DDBEDT                                            MD057157
+     C                     WRITETGZBTHD0                                                    MD057157
+      *                                                                                     MD057157
+      ** Write record to GLJENHQD if CGL125 is ON                                           MD057157
+      *                                                                                     MD057157
+     C           CGL125    IFEQ 'Y'                                                         MD057157
+     C                     MOVELBRBTNB    HQBTCH                                            MD057157
+     C                     MOVELBRBCDA    HQBRCD                                            MD057157
+     C                     MOVEL*BLANKS   HQFRID                                            MD057157
+     C                     MOVEL'R'       HQJETP                                            MD057157
+     C                     WRITEGLJEHQD0                                                    MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
      C                     WRITE@BRREAG                91  *
       *
      C           *IN91     IFEQ '1'
@@ -2201,7 +2246,8 @@
       * Move non-key fields to @BRREAG
      C                     MOVEL#1BCDA    BRBCDA           Branch Code - A
      C                     MOVEL#1DPCD    BRDPCD           Dept Code
-     C                     MOVEL#1WSID    BRWSID           Workstation id.
+     C**********           MOVEL#1WSID    BRWSID           Workstation id.                 AR1016396
+     C                     MOVELWUUSID    BRWSID                                           AR1016396
      C                     Z-ADD#1HICC    BRHICC           Hash integer ca
      C                     Z-ADD#1HDCC    BRHDCC           Hash decimal ca
      C                     Z-ADD#1HINC    BRHINC           Hash item no.ca
@@ -3546,6 +3592,36 @@
       *================================================================
       * Error message if Account Allocated From not entered
       * CASE: DTL.Account Identifier is Not Entered
+     C           #DACID    IFEQ *BLANK                                              MD057743
+     C                     MOVEL#DACID    ZA0030           Customer                 MD057743
+     C                     MOVEL'CGL0017' ZAMSID                                    MD057743
+     C                     EXSR ZASNMS                                              MD057743
+     C                     SETON                     9938                           MD057743
+     C                     ENDIF                                                    MD057743
+     C           #1CYCF    IFEQ *BLANK                                              MD057743
+     C                     MOVEL#1CYCF    ZA0031           Currency                 MD057743
+     C                     MOVEL'GLX0123' ZAMSID                                    MD057743
+     C                     EXSR ZASNMS                                              MD057743
+     C                     SETON                     9939                           MD057743
+     C                     ENDIF                                                    MD057743
+     C           #1ACCF    IFEQ *BLANK                     Account Code             MD057743
+     C                     MOVEL#1ACCF    ZA0032                                    MD057743
+     C                     MOVEL'GLX0124' ZAMSID                                    MD057743
+     C                     EXSR ZASNMS                                              MD057743
+     C                     SETON                     9940                           MD057743
+     C                     ENDIF                                                    MD057743
+     C           #1ACSF    IFEQ *BLANK                                              MD057743
+     C                     MOVEL#1ACSF    ZA0033           Account Seq No.          MD057743
+     C                     MOVEL'GLX0122' ZAMSID                                    MD057743
+     C                     EXSR ZASNMS                                              MD057743
+     C                     SETON                     9941                           MD057743
+     C                     ENDIF                                                    MD057743
+     C           #1IBCF    IFEQ *BLANK                                              MD057743
+     C                     MOVEL#1IBCF    ZA0048           Input Branch Cd          MD057743
+     C                     MOVEL'GLX0201' ZAMSID                                    MD057743
+     C                     EXSR ZASNMS                                              MD057743
+     C                     SETON                     9942                           MD057743
+     C                     ENDIF                                                    MD057743
      C           #DACID    IFEQ *BLANK                     *IF
       * CASE: DTL.Currency Code    Alloc Fm is blank
      C           #1CYCF    IFEQ *BLANK                     *IF
@@ -3904,14 +3980,14 @@
      C                     END                             *FI
      C                     END                             *FI
      C                     END                             *FI
-     C                     ELSE
-      * CASE: *OTHERWISE
-      * Setup message data for message
-     C                     MOVEL#1IBCF    ZA0048           Input Branch Cd
-      * Send message 'Branch Code Required'
-     C                     MOVEL'GLX0201' ZAMSID
-     C                     EXSR ZASNMS
-     C                     SETON                     9942  *
+     C**********           ELSE                                                             MD057743
+      **CASE:**OTHERWISE***********************************************                     MD057743
+      **Setup*message*data*for*message*********************************                     MD057743
+     C**********           MOVEL#1IBCF    ZA0048           Input Branch Cd                  MD057743
+      **Send*message*'Branch*Code*Required'****************************                     MD057743
+     C**********           MOVEL'GLX0201' ZAMSID                                            MD057743
+     C**********           EXSR ZASNMS                                                      MD057743
+     C**********           SETON                     9942  *                                MD057743
       *
      C                     END                             *FI
       *================================================================
@@ -3951,6 +4027,36 @@
       *================================================================
       * Validate Allocated To A/c
       *================================================================
+     C           #DAIDT    IFEQ *BLANK                                                      MD057743
+     C                     MOVEL#DAIDT    ZA0058           Customer                         MD057743
+     C                     MOVEL'CGL0017' ZAMSID                                            MD057743
+     C                     EXSR ZASNMS                                                      MD057743
+     C                     SETON                     9946                                   MD057743
+     C                     ENDIF                                                            MD057743
+     C           #1CYCT    IFEQ *BLANK                                                      MD057743
+     C                     MOVEL#1CYCT    ZA0059           Currency                         MD057743
+     C                     MOVEL'GLX0123' ZAMSID                                            MD057743
+     C                     EXSR ZASNMS                                                      MD057743
+     C                     SETON                     9947                                   MD057743
+     C                     ENDIF                                                            MD057743
+     C           #1ACCT    IFEQ *BLANK                     Account Code                     MD057743
+     C                     MOVEL#1ACCT    ZA0060                                            MD057743
+     C                     MOVEL'GLX0124' ZAMSID                                            MD057743
+     C                     EXSR ZASNMS                                                      MD057743
+     C                     SETON                     9948                                   MD057743
+     C                     ENDIF                                                            MD057743
+     C           #1ASNT    IFEQ *BLANK                                                      MD057743
+     C                     MOVEL#1ASNT    ZA0061           Account Seq No.                  MD057743
+     C                     MOVEL'GLX0122' ZAMSID                                            MD057743
+     C                     EXSR ZASNMS                                                      MD057743
+     C                     SETON                     9949                                   MD057743
+     C                     ENDIF                                                            MD057743
+     C           #1IBCT    IFEQ *BLANK                                                      MD057743
+     C                     MOVEL#1IBCT    ZA0050           Input Branch Cd                  MD057743
+     C                     MOVEL'GLX0201' ZAMSID                                            MD057743
+     C                     EXSR ZASNMS                                                      MD057743
+     C                     SETON                     9950                                   MD057743
+     C                     ENDIF                                                            MD057743
       * Check Account Identifier To
       * CASE: DTL.Account Identifier To is entered
      C           #DAIDT    IFNE *BLANK                     *IF
@@ -4595,14 +4701,14 @@
      C                     END                             *FI
      C                     END                             *FI
      C                     END                             *FI
-     C                     ELSE
-      * CASE: *OTHERWISE
-      * Setup message data for message
-     C                     MOVEL#1IBCT    ZA0076           Input Branch Cd
-      * Send message 'Branch Code Required'
-     C                     MOVEL'GLX0201' ZAMSID
-     C                     EXSR ZASNMS
-     C                     SETON                     9950  *
+     C**********           ELSE                                                             MD057743
+      **CASE:**OTHERWISE***********************************************                     MD057743
+      **Setup*message*data*for*message*********************************                     MD057743
+     C**********           MOVEL#1IBCT    ZA0076           Input Branch Cd                  MD057743
+      **Send*message*'Branch*Code*Required'****************************                     MD057743
+     C**********           MOVEL'GLX0201' ZAMSID                                            MD057743
+     C**********           EXSR ZASNMS                                                      MD057743
+     C**********           SETON                     9950  *                                MD057743
       *
      C                     END                             *FI
       *================================================================
@@ -5353,6 +5459,20 @@
      C                     MOVE 'N'       CGL148                                              CGL148
      C                     ENDIF                                                              CGL148
       *                                                                                       CGL148
+      *                                                                                     MD057157
+      **  Access SAR details file to see if CGL125 SAR is installed.                        MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOSARDR0'                                                  MD057157
+     C                     PARM *BLANKS   @RTCD                                             MD057157
+     C                     PARM '*VERIFY' @OPTN                                             MD057157
+     C                     PARM 'CGL125'  @SARD                                             MD057157
+      *                                                                                     MD057157
+     C           @RTCD     IFEQ *BLANK                                                      MD057157
+     C                     MOVE 'Y'       CGL125  1                                         MD057157
+     C                     ELSE                                                             MD057157
+     C                     MOVE 'N'       CGL125                                            MD057157
+     C                     END                                                              MD057157
+      *                                                                                     MD057157
       ****Access*SAR*details*file*to*see*if*CAP032*SAR*is*installed.***************   186206 BUG2798
       **********                                                                      186206 BUG2798
      C**********           CALL 'AOSARDR0'                                            186206 BUG2798

@@ -13,7 +13,8 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD045010           Date 05Apr17               *
@@ -56,6 +57,9 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
       *            ZFREQ/ZFRQ*.                                       *

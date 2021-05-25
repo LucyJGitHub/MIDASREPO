@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057038           Date 11Nov20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1075388          Date 21Nov13               *
       *                 AR845655           Date 06Oct11               *
       *                 CRE067             Date 05Oct10               *
@@ -22,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057038 - Added two new fields for Debit and Credit         *
+      *             Associated Customer (Recompile)                   *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *

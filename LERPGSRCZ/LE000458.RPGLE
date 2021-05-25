@@ -21,7 +21,9 @@
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD048575           Date 07Mar18               *
+      *  Prev Amend No. MD057616           Date 05Mar21               *
+      *                 MD057275           Date 20Jan21               *
+      *                 MD048575           Date 07Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1097202          Date 28Mar13               *
@@ -35,6 +37,11 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057616 - LERC20 00001 failed during COB                    *
+      *           - Clear temporary account detail and nostro field   *
+      *             variables                                         *
+      *  MD057275 - Multiple UTCHOBJEX calls by LEC06A 00010. Removed *
+      *             SETON INLR.                                       *
       *  MD048575 - LE: MR amount transfered to PDCL                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -221,6 +228,14 @@
      C                   CLEAR                   IACOD
      C                   CLEAR                   IACSQ
      C                   CLEAR                   IATYP                                      AR741212
+     C                   CLEAR                   @CUSN                                      MD057616
+     C                   CLEAR                   @CURR                                      MD057616
+     C                   CLEAR                   @ACCD                                      MD057616
+     C                   CLEAR                   @ACSN                                      MD057616
+     C                   CLEAR                   @BRCA                                      MD057616
+     C                   CLEAR                   @CSSN                                      MD057616
+     C                   CLEAR                   @NONB                                      MD057616
+     C                   CLEAR                   @PNOI                                      MD057616
 
      C                   MOVE      ILNRF         WLNRF
      C                   MOVE      IFCNUM        WFCNUM
@@ -237,7 +252,7 @@
 
      C                   EXSR      POSTR2
 
-     C                   EVAL      *INLR = *ON
+     C**********         EVAL      *INLR = *ON                                              MD057275
 
      C                   RETURN
 

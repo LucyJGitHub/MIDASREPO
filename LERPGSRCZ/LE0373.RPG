@@ -16,7 +16,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057550           Date 29Apr21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046162           Date 15Aug17               *
@@ -58,7 +59,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057550 - Component LEC08 10008 in MSGW due to CPF5004 in   *
+      *             LE0373P1. Change value of RQDLN1 from 1 to 7.     *
+      *           - Reset WCOUNT to zero upon change of branch to     *
+      *             show total matured loans reactivated per branch.  *
+      *           - Recompiled due to changes in LE0373P1.            *
+      *           - Instead of LELOAML0, use LOAMSL1 that has branch  *
+      *             code as primary key so records per branch are     *
+      *             consolidated in a single report.                  *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
+      *  MD057550 - Component LEC08 10008 in MSGW due to CPF5004 in   *
+      *             LE0373P1. Change value of RQDLN1 from 1 to 7.     *
+      *           - Reset WCOUNT to zero upon change of branch to     *
+      *             show total matured loans reactivated per branch.  *
+      *           - Recompiled due to changes in LE0373P1.            *
+      *           - Instead of LELOAML0, use LOAMSL1 that has branch  *
+      *             code as primary key so records per branch are     *
+      *             consolidated in a single report.                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -108,7 +125,10 @@
       *****************************************************************
       *
       ** Loan amendments file
-     FLELOAML0IF  E           K        DISK         KINFSR *PSSR
+     F***LELOAML0IF  E           K        DISK         KINFSR *PSSR                         MD057550
+     FLOAMSL1 IF  E           K        DISK         KINFSR *PSSR                            MD057550
+     F            LOAMSDHF                          KIGNORE                                 MD057550
+     F            LOAMSZ1F                          KIGNORE                                 MD057550
       *
       ** Live Loans Details
      FCLOAN   UF  E           K        DISK         KINFSR *PSSR
@@ -392,8 +412,10 @@
       *
       **  Read first record from File.
       *
-     C           *LOVAL    SETLLLELOAML0
-     C                     READ LELOAML0                 89
+     C********** *LOVAL    SETLLLELOAML0                                                    MD057550
+     C**********           READ LELOAML0                 89                                 MD057550
+     C           *LOVAL    SETLLLOAMSDKF                                                    MD057550
+     C                     READ LOAMSDKF                 89                                 MD057550
       *
       **  Do Until End of File.
       *
@@ -402,9 +424,11 @@
      C           AMTP      IFEQ 'MR'
      C           PAST      ANDEQ'Y'
      C           PRAM      ANDLT0
+     C           RECI      ANDEQ'D'                                                         MD057550
      C           AMTP      OREQ 'MR'                                                          251331
      C           PAST      ANDEQ'Y'                                                           251331
      C           INTA      ANDLT0                                                             251331
+     C           RECI      ANDEQ'D'                                                         MD057550
       *
      C                     MOVE LNRF      K1LNRF
      C                     MOVE 'A'       K1RCDT
@@ -511,7 +535,8 @@
       *
       **  Read next record.
       *
-     C                     READ LELOAML0                 89
+     C**********           READ LELOAML0                 89                                 MD057550
+     C                     READ LOAMSDKF                 89                                 MD057550
       *
       **  End of Do Until End of Valid Records.
       *
@@ -552,6 +577,7 @@
      C                     EXSR SRCFP1
      C                     MOVE 'Y'       OPNIND  1
      C                     MOVE BRCA      PREVB
+     C                     Z-ADD0         WCOUNT                                            MD057550
       *
       **  Access Branch Details
       *
@@ -576,7 +602,8 @@
       *
      C                     WRITEHEADP1
      C                     ELSE
-     C                     Z-ADD1         RQDLN1
+     C**********           Z-ADD1         RQDLN1                                            MD057550
+     C                     Z-ADD7         RQDLN1                                            MD057550
      C           OFLLN1    SUB  PRTLN1    DIFLN1
      C           DIFLN1    IFLE RQDLN1
      C                     WRITEHEADP1
@@ -669,7 +696,8 @@
       **  Check that sufficient lines remain for the Format. If not,
       **  write out the Main Headings on a new page.
       *
-     C                     Z-ADD1         RQDLN1
+     C**********           Z-ADD1         RQDLN1                                            MD057550
+     C                     Z-ADD7         RQDLN1                                            MD057550
      C           OFLLN1    SUB  PRTLN1    DIFLN1
      C           DIFLN1    IFLE RQDLN1
      C                     WRITEHEADP1

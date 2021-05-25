@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055518           Date 22Apr20               *
+      *  Prev Amend No. MD057038           Date 11Nov20               *
+      *                 MD055518           Date 22Apr20               *
       *                 MD051765           Date 18Jul19               *
       *                 MD043945A          Date 20Feb17               *
       *                 MD043945           Date 07Feb17               *
@@ -55,6 +56,7 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057038 - Amend ASOC values for transaction accounts.       *
       *  MD055518 - Profit Centre assigned to TI postings is different*
       *             between MidasPlus and FBMidas. Profit Centre of   *
       *             TI postings will be defaulted based on the TI ICD *
@@ -961,7 +963,8 @@
      C                   EVAL      PNAR = R1DBSN                                            MD029951
      C                   ENDIF                                                              MD029951
                                                                                             MD029951
-     C                   EVAL      ASOC = R1CRCU
+     C**********         EVAL      ASOC = R1CRCU                                            MD057038
+     C                   EVAL      ASOC = R1CASC                                            MD057038
      C                   EVAL      BRCA = R1DBBR
      C**********         EVAL      CHQN = R1CHNO                                            BUG27561
      C                   Z-ADD     R1CHNO        CHQN                                       BUG27561
@@ -1001,7 +1004,8 @@
      C                   EVAL      PNAR = R1CRSN                                            MD029951
      C                   ENDIF                                                              MD029951
                                                                                             MD029951
-     C                   EVAL      ASOC = R1DBCU
+     C**********         EVAL      ASOC = R1DBCU                                            MD057038
+     C                   EVAL      ASOC = R1DASC                                            MD057038
      C                   EVAL      BRCA = R1CRBR
      C                   BITON     '0'           PRIN
      C                   EVAL      ACOD = R1CRAC
@@ -1577,11 +1581,13 @@
       ** Store fee paying customer details
 
      C                   IF        R1FPAY = 'D'
-     C                   EVAL      WPayCust = R1DBCU
+     C**********         EVAL      WPayCust = R1DBCU                                        MD057038
+     C                   EVAL      WPayCust = R1DASC                                        MD057038
      C                   EVAL      WPayBrch = R1DBBR
      C                   EVAL      WPayCcy = R1DBCY
      C                   ELSE
-     C                   EVAL      WPayCust = R1CRCU
+     C**********         EVAL      WPayCust = R1CRCU                                        MD057038
+     C                   EVAL      WPayCust = R1CASC                                        MD057038
      C                   EVAL      WPayBrch = R1CRBR
      C                   EVAL      WPayCcy = R1CRCY
      C                   ENDIF
@@ -2377,6 +2383,7 @@
      C                   EVAL      RRNARR = R1DBSN
      C                   EVAL      RRCCY = R1DBCY
      C                   EVAL      PCust = R1DBCU
+     C                   EVAL      RRASOC = R1DASC                                          MD057038
      C                   MOVE      R1DAMT        PZField
      C                   ELSE
      C                   MOVE      R1CRAC        RRACNO
@@ -2384,6 +2391,7 @@
      C                   EVAL      RRCCY = R1CRCY
      C**********         EVAL      PCust = R1DBCU                                           MD034016
      C                   EVAL      PCust = R1CRCU                                           MD034016
+     C                   EVAL      RRASOC = R1CASC                                          MD057038
      C                   MOVE      R1CAMT        PZField
      C                   ENDIF
 
@@ -2955,7 +2963,8 @@
      C                   EVAL      VALD = R1DRVL                                              CRE072
      C                   MOVE      R1DRTT        TRAT                                         CRE072
      C                   EVAL      DRCR = 0                                                   CRE072
-     C                   EVAL      ASOC = R1CRCU                                              CRE072
+     C**********         EVAL      ASOC = R1CRCU                                    CRE072  MD057038
+     C                   EVAL      ASOC = R1CASC                                            MD057038
      C                   EVAL      BRCA = R1DBBR                                              CRE072
      C                   Z-ADD     R1CHNO        CHQN                                         CRE072
      C                   BITON     '0'           PRIN                                         CRE072

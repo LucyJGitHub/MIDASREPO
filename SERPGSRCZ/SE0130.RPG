@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. 260191A            Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -83,6 +84,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  260191A- System should not allow deletion of LIVE/MATURED    *
+      *           security diary event if ALL generated position      *
+      *           settlements are still unsettled/live records.       *
+      *           Hence, system will not generate reversal position   *
+      *           settlements.                                        *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -2405,6 +2411,12 @@
      C* Deletions
      C*
      C           ACTC      IFEQ 'D'
+      *                                                                                      260191A
+      ** Use temporary variable to determine if all position settlements                     260191A
+      ** are settled or not.                                                                 260191A
+      *                                                                                      260191A
+     C                     MOVE 'N'       NOTALL  1                                          260191A
+     C                     MOVE 'N'       LIVREC  1                                          260191A
       *                                                                   057220
       * If there are any live position settlements for this security      057220
       * event, output message to screen, and prevent deletion.            057220
@@ -2423,16 +2435,29 @@
      C********** SDED      IFEQ PDUD                                                   057220 260331
      C           WWPDUD    IFEQ PDUD                                                          260331
      C           SDET      ANDEQPEVT                                      057220
-     C           RECI      ANDEQ'D'                                       057220
-     C           WRECI     ANDEQ'D'                                                           260331
+     C********** RECI      ANDEQ'D'                                                   057220 260191A
+     C********** WRECI     ANDEQ'D'                                                   260191 260191A
+     C           RECI      IFEQ 'M'                                                          260191A
+     C                     MOVE 'Y'       NOTALL                                             260191A
+     C                     ELSE                                                              260191A
+     C           RECI      IFEQ 'D'                                                          260191A
+     C                     MOVE 'Y'       LIVREC                                             260191A
+     C                     ENDIF                                                             260191A
+     C                     ENDIF                                                             260191A
+     C                     ENDIF                                                             260191A
+     C  N31      SDSN      READEPOSETDF                  31                                  260191A
+     C                     ENDDO                                                             260191A
+      *                                                                                      260191A
+     C           NOTALL    IFEQ 'N'                                                          260191A
+     C           LIVREC    ANDEQ'Y'                                                          260191A
      C                     SETON                     0931                 057220
      C                     SETOF                     4403                 057220
      C                     MOVEAINF,2     ERRMSG                          057220
      C                     Z-ADD01021     STATUS                          057220
      C                     EXSR INFSR                                     057220
      C                     END                                            057220
-     C  N31      SDSN      READEPOSETDF                  31               057220
-     C                     END                                            057220
+     C**N31***** SDSN      READEPOSETDF                  31                           057220 260191A
+     C**********           END                                                        057220 260191A
      C*                                                                   057220
      C           DEVKA     CHAINSEDEVDF              31
      C           TNLU      IFNE STNLU
@@ -2454,6 +2479,12 @@
      C                     Z-ADD0         SDDT                                                260331
      C                     ENDIF                                                              260331
       *                                                                                       260331
+     C                     ELSE                                                              260191A
+     C           RECI      IFEQ 'M'                                                          260191A
+     C           NOTALL    ANDEQ'N'                                                          260191A
+     C                     Z-ADD0         SDDT                                               260191A
+     C                     ENDIF                                                             260191A
+      *                                                                                      260191A
      C                     ENDIF                                                              260331
      C                     MOVE 'C'       RECI
      C                     Z-ADDRUND      LCD

@@ -19,7 +19,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. MD055528           Date 13Aug20               *
+      *                 MD052075           Date 07Jun19               *
       *                 CGL150             Date 13Jul18               *
       *                 CGL149             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -44,6 +45,10 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD055528 - Corrective Batches value dates are overwritten by *
+      *             Booking Date.                                     *
+      *           - When corrective batches value dates are equal to  *
+      *             *BLANKS defaults value date to Booking Date       *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CGL150 - Value date to back value date if prior to           *
@@ -71,6 +76,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *
+     FGLJEHQL0  IF   E           K DISK                                                     MD055528
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -191,7 +197,15 @@
      C                   Z-ADD     *ZERO         Idx
      C                   Z-ADD     *ZERO         WIx                                        MD052075
      C                   Z-ADD     *ZERO         WVLDT             5 0
+     C                   Z-ADD     *ZERO         TMPVLDT           5 0                      MD055528
      C                   MOVEL     *BLANK        WNRFD             1
+      *                                                                                     MD055528
+      ** Chain to batch number of Journal Entry Header                                      MD055528
+      *                                                                                     MD055528
+     C     DDBTNB        CHAIN     GLJEHQL0                                                 MD055528
+     C                   IF        %FOUND                                                   MD055528
+     C                   Z-ADD     HQBDTE        TMPVLDT                                    MD055528
+     C                   ENDIF                                                              MD055528
       *
       ** Validate Value Date.
       *
@@ -201,12 +215,12 @@
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
       *
-     C     CGL150        IFEQ      'Y'                                                        CGL150
+     C*****CGL150        IFEQ      'Y'                                               CGL150 MD055528
      C                   EVAL      ZDAYNO = WVLDT                                             CGL150
      C                   EXSR      ZDATE2                                                     CGL150
      C                   EVAL      DDVLDT = *BLANKS                                           CGL150
      C                   MOVEL     ZDATE         DDVLDT                                       CGL150
-     C                   ENDIF                                                                CGL150
+     C**********         ENDIF                                                       CGL150 MD055528
      C                   Z-ADD     WVLDT         B2VLDT
       *
      C                   RETURN
@@ -221,6 +235,19 @@
       *
      C     SRProc        BEGSR
       *
+      *                                                                                     MD055528
+      ** If CSC054 is switched on and if DDVLDT is BLANKS                                   MD055528
+      **  and Booking Date <> 0.                                                            MD055528
+      *                                                                                     MD055528
+     C                   IF        CSC054 = 'Y' AND DDVLDT = *BLANKS                        MD055528
+     C                             AND TMPVLDT <> 0                                         MD055528
+     C                   Z-ADD     TMPVLDT       WVLDT                                      MD055528
+     C                   EVAL      ZDAYNO = WVLDT                                           MD055528
+     C                   EXSR      ZDATE2                                                   MD055528
+     C                   EVAL      DDVLDT = *BLANKS                                         MD055528
+     C                   MOVE      ZDATE         DDVLDT                                     MD055528
+     C                   ELSE                                                               MD055528
+      *                                                                                     MD055528
      C     DDVLDT        IFEQ      *BLANKS
      C                   Z-ADD     BJRDNB        WVLDT
      C                   EVAL      ZDAYNO = WVLDT                                             244251
@@ -232,7 +259,9 @@
       ** Verify if entry is numeric.
       *
      C                   EXSR      SRValNum
+      *                                                                                     MD055528
      C                   ENDIF
+     C                   ENDIF                                                              MD055528
       *
       ** If entry is numeric and is in valid format, perform
       ** Value Date Account validation.
@@ -474,6 +503,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
+     C                   PARM                    DDBTNB            3                        MD055528
       *
       ** STANDING DATA
       ** =============
@@ -557,6 +587,21 @@
      C                   ELSE                                                                 CGL150
      C                   MOVE      'N'           CGL150                                       CGL150
      C                   ENDIF                                                                CGL150
+      *                                                                                     MD055528
+      ** Access Switchable Features file to check if CSC054 is                              MD055528
+      ** installed                                                                          MD055528
+      *                                                                                     MD055528
+     C                   CALL      'AOSARDR0'                                               MD055528
+     C                   PARM      *Blanks       @Rtcd                                      MD055528
+     C                   PARM      '*KEY   '     @Optn                                      MD055528
+     C                   PARM      'CSC054'      WSard                                      MD055528
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055528
+      *                                                                                     MD055528
+     C                   IF        @Rtcd = *Blank                                           MD055528
+     C                   MOVE      'Y'           CSC054            1                        MD055528
+     C                   ELSE                                                               MD055528
+     C                   MOVE      'N'           CSC054                                     MD055528
+     C                   ENDIF                                                              MD055528
       *                                                                         CGL010
       ** Access General Ledger details                                          CGL010
       *                                                                         CGL010

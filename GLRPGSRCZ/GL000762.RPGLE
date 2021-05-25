@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056237           Date 20Jul20               *
-      *  Prev Amend No. MD054905           Date 04Dec19               *
+      *  Last Amend No. CGL194             Date 01Aug20               *
+      *  Prev Amend No. MD056237           Date 20Jul20               *
+      *                 MD054905           Date 04Dec19               *
       *                 MD040841           Date 26Aug16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
       *             correctly get data from file.                     *
@@ -303,8 +305,10 @@
      C                   WHEN      MGELMT = 'MessageRefId'
      C                   EVAL      DMRFID = MGDATA
 
-     C                   WHEN      MGELMT = 'CorrMessageRefID'
-     C                   EVAL      DCMRID = MGDATA
+     C**********         WHEN      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         EVAL      DCMRID = MGDATA                                            CGL194
+     C                   WHEN      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   EVAL      DCMIND = MGDATA                                            CGL194
 
      C                   WHEN      MGELMT = 'ReportingPeriod'
      C                   EVAL      DRPTPD = MGDATA

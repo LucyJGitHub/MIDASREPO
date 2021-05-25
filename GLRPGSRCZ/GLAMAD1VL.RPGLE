@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. 250822             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250822 - Next Statement date is incorrect.  Ensure that      *
+      *           DnxtSDat is always called to calculate value based  *
+      *           on Frequency and/or Next Statement Day.             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -204,6 +208,7 @@
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD012
       * RTV : Authorisation Log - by Key                                                      CSD012
 
+
      FACCNTL0   IF   E           K DISK    INFSR(*PSSR)                                     BUG16622
      F                                     PREFIX(A1)                                       BUG16622
       ** Account details                                                                    BUG16622
@@ -217,6 +222,7 @@
       ** Midas SD Country of Tax Codes                                                      BUG23886
       *                                                                                     BUG23886
      FSDBRCHL0  IF   E           K DISK    INFSR(*PSSR)                                       262025
+
 
       *****************************************************************
       ** +--------------------------------------+
@@ -237,12 +243,15 @@
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
 
+
      D/COPY ZACPYSRC,STD_D_SPEC
+
 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
+
 
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
@@ -250,7 +259,9 @@
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
 
+
      D/COPY ZACPYSRC,PROCPARMS
+
 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
@@ -258,50 +269,63 @@
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
 
+
       *****************************************************************
       /EJECT
       *****************************************************************
+
 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
+
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
+
 
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
+
 
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
+
 
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
@@ -344,11 +368,13 @@
      D  DDEFDTOK                      1A                                                      CRE075
      D  DDAprcOK                      1A                                                      CER050
 
+
      D KCNUM           S                   LIKE(DDCUSN)                                     BUG16622
      D KCCY            S                   LIKE(DDCCY)                                      BUG16622
      D KACOD           S             10S 0                                                  BUG16622
      D KACSQ           S              2S 0                                                  BUG16622
      D KBRCA           S                   LIKE(DDBRCA)                                     BUG16622
+
 
       *                                                                                     BUG22747
       ** External data structures for Location Details                                      BUG22747
@@ -363,21 +389,27 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
 
+
      D RETABLE       E DS                  EXTNAME(TABTBRE)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
+
 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
+
 
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  RLACCD       E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR RETAIL DETAILS
 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
+
 
                                                                                               CDL013
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CDL013
@@ -386,18 +418,23 @@
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** Portfolio Management ICD Details
 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
 
+
      D ValidAccn     E DS                  EXTNAME(GLVAMADPD)
       * Valid Account layout -> ACCNTAB
+
 
      D ValidExBX     E DS                  EXTNAME(GLVAMBXPD)
      D  GBACCD       E                     EXTFLD(QQACOD)                                     CGL029
       * Valid Extn. Account layout -> ACCNTBXC
 
+
      D TranIn        E DS                  EXTNAME(GLAMADPD)
       * Incoming Transaction
+
 
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
@@ -409,9 +446,11 @@
       * ZMUSER data layout
      D  DBRN                  11     13
 
+
      D RUNDAT          DS            13
       * Rundate data area
      D  AGMBIN                13     13
+
 
      D*PKEY*****       DS            20                                                CSD012 CGL029
      D PKEY            DS            26                                                       CGL029
@@ -429,14 +468,18 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
+
 
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
+
 
       ** Fields defined for Enhancement CSC011                                                CSC011
      D CSC011          S              1A                                                      CSC011
@@ -475,11 +518,13 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
+
 
       *****************************************************************
       /EJECT
@@ -626,6 +671,7 @@
      C     BGN4ST        Ifeq      'Y'                                          180721
      C     DDNSTD        Andeq     *blanks                                      180721
      C     DDCcyOK       Andeq     'Y'                                                        225892
+     C                   Eval      DDNSTD = *blank                                            250822
      C                   EXSR      DNxtSDat                                     180721
      C                   Endif                                                  180721
       *                                                                         180721
@@ -783,6 +829,7 @@
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -798,7 +845,9 @@
       *****************************************************************
      C     VACCNTKY      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -839,7 +888,9 @@
      C                   Parm                    DDACCNOK
      C                   Parm                    DDRFRAOK
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -851,7 +902,9 @@
       *****************************************************************
      C     VBRANCH       BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -887,7 +940,9 @@
       ** Branch code - OK
      C                   Parm                    DDBrcaOK                         action code
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -899,7 +954,9 @@
       *****************************************************************
      C     VCUSTNO       BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -928,7 +985,9 @@
       ** Customer - OK
      C                   PARM                    DDCUSNOK                       customer
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -940,7 +999,9 @@
       *****************************************************************
      C     VCURRENCY     BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -964,7 +1025,9 @@
       ** Currency - OK
      C                   PARM                    DDCcyOK                          action code
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -976,7 +1039,9 @@
       *****************************************************************
      C     VACSQ         BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1013,7 +1078,9 @@
      C                   Parm                    DDACodOk                       customer
      C                   Parm                    DDAcSqOk                       customer
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1025,7 +1092,9 @@
       *****************************************************************
      C     VACCOUNT      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1085,7 +1154,9 @@
      C                   PARM                    WMsgIDXAr                                   BUG4615
      C                   PARM                    WMsgDtXAr                                   BUG4615
 
+
       * Update error info with that returned from the validation module
+
 
      C     RetCodeOut    IFNE      *BLANKS                                                    262025
      C                   MOVE      *ON           *IN11                                        262025
@@ -1103,7 +1174,9 @@
       *****************************************************************
      C     VACCNTNM      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1127,7 +1200,9 @@
       ** Account Name - Ok
      C                   Parm                    DDANamOK
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1139,7 +1214,9 @@
       *****************************************************************
      C     VDATACOP      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1173,7 +1250,9 @@
       ** Date Account Open - Ok
      C                   Parm                    DDDAcOOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1388,7 +1467,9 @@
       *****************************************************************
      C     VNXTSDAT      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1426,7 +1507,9 @@
       ** Next Statement Date - Ok
      C                   Parm                    DDNStDOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1437,6 +1520,7 @@
       ** VFQNCNSD - Validate Freq, No of Copies and Next Statement Day no.
       *****************************************************************
      C     VFQNCNSD      BEGSR
+
 
      C                   MoveL     *Blanks       WDAY              2
      C     BJDFIN        IfEq      'D'
@@ -1455,6 +1539,7 @@
      C                   EndIf                                                             AR1021393
       *
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1505,7 +1590,9 @@
      C                   PARM                    WMsgIDXAr                                 AR1021393
      C                   PARM                    WMsgDtXAr                                 AR1021393
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1517,7 +1604,9 @@
       *****************************************************************
      C     VPTADREF      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1545,7 +1634,9 @@
      C                   Parm                    DDRefOk
      C                   Parm                    DDPtAdOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1557,7 +1648,9 @@
       *****************************************************************
      C     VRFRNBLK      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1590,7 +1683,9 @@
      C                   Parm                    DDBADOk
      C                   Parm                    DDBACOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1602,7 +1697,9 @@
       *****************************************************************
      C     VTIACCNT      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1654,7 +1751,9 @@
      C                   Parm                    Idx                                         BUG5340
      C                   Parm                    WIdx                                        BUG5340
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1666,7 +1765,9 @@
       *****************************************************************
      C     VEUSBMFQ      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1700,7 +1801,9 @@
      C                   Parm                    DDEUSBOk
      C                   Parm                    DDMFFQOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1712,7 +1815,9 @@
       *****************************************************************
      C     VPRFCPTF      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -1764,7 +1869,9 @@
      C                   Parm                    DDPTFROk
      C                   Parm                    DDACODOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -1838,7 +1945,9 @@
       *****************************************************************
      C     VITAXFLG      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *                                                                                       CDL013
@@ -1982,7 +2091,9 @@
      C                   Parm                    DDITAXOk
      C/COPY WNCPYSRC,GLAMA1VC06
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -2077,7 +2188,9 @@
       *****************************************************************
      C     VSTCIFLG      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -2101,7 +2214,9 @@
       ** Statement Charge - OK
      C                   Parm                    DDSTCIOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -2113,7 +2228,9 @@
       *****************************************************************
      C     VCHINFLG      BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -2141,7 +2258,9 @@
       ** Subject to account charge - Ok
      C                   Parm                    DDCHINOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -2153,7 +2272,9 @@
       *****************************************************************
      C     VCHAM         BEGSR
 
+
       * Reset variables updated by each module
+
 
      C                   EXSR      RESETERRS
       *
@@ -2181,7 +2302,9 @@
       ** Account Charge Amount - Ok
      C                   Parm                    DDCHAMOk
 
+
       * Update error info with that returned from the validation module
+
 
      C                   EXSR      UPDATERRS
       *
@@ -2242,6 +2365,7 @@
       *                                                               *
       *****************************************************************
 
+
      C     SETUPVALID    BEGSR
       *
      C                   MOVE      DDCUSN        AMCNUM
@@ -2264,11 +2388,13 @@
      C                   MOVE      DDNSDN        AMSTDY
      C                   MOVE      DDEUSB        AMEUSB
 
+
      C     DDPTAD        IFEQ      'Y'
      C                   BITON     '2'           AMGLBT
      C                   ELSE
      C                   BITOFF    '2'           AMGLBT
      C                   ENDIF
+
 
      C     DDRAD         IFEQ      'Y'
      C                   BITON     '0'           AMRETB
@@ -2276,11 +2402,13 @@
      C                   BITOFF    '0'           AMRETB
      C                   ENDIF
 
+
      C     DDRAC         IFEQ      'Y'
      C                   BITON     '1'           AMRETB
      C                   ELSE
      C                   BITOFF    '1'           AMRETB
      C                   ENDIF
+
 
      C     DDBAD         IFEQ      'Y'
      C                   BITON     '2'           AMRETB
@@ -2288,11 +2416,13 @@
      C                   BITOFF    '2'           AMRETB
      C                   ENDIF
 
+
      C     DDBAC         IFEQ      'Y'
      C                   BITON     '3'           AMRETB
      C                   ELSE
      C                   BITOFF    '3'           AMRETB
      C                   ENDIF
+
 
      C                   MOVEL     DDREF         AMADREF1
      C                   MOVE      DDREF         AMADREF2
@@ -2435,7 +2565,9 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
 
+
      C     *INZSR        BEGSR
+
 
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
@@ -2801,10 +2933,12 @@
      C                   EVAL      #MsgFile = 'DRSMM'
      C/COPY WNCPYSRC,GLAMA1VC07
 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
+
 
      C                   ENDSR
       *****************************************************************
@@ -2814,7 +2948,9 @@
       *    from each validation module.                               *
       *****************************************************************
 
+
      C     RESETERRS     BEGSR
+
 
      C                   EVAL      RetCodeOut = *Blanks
       *
@@ -2826,6 +2962,7 @@
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2833,6 +2970,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
+
 
      C     UPDATERRS     BEGSR
       *

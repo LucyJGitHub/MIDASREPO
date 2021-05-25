@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056838           Date 01Oct20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056838 - Amend SFNUM type to packed decimal                *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -205,7 +207,8 @@
       *
      D ZSEQ            S              5A
      D ZSENTY          S              3A
-     D ZSNUM           S              6S 0
+     D**ZSNUM***        S              6S 0                                                 MD056838
+     D ZSNUM           S              6  0                                                  MD056838
      D ZSERR           S              1A
       *****************************************************************
       /EJECT

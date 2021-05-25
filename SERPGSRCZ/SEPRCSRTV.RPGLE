@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047196           Date 08Aug17               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047196           Date 08Aug17               *
       *                 MD037408           Date 25May16               *
       *                 AR1092524          Date 12Mar13               *
       *                 255418             Date 13Nov12               *
@@ -56,6 +57,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
+      *              Recompiled. (Child: AR1075402)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047196 - Authority Validation not working.                 *
       *  MD037408 - SE PRICES Input Insert New Security Shortname not *

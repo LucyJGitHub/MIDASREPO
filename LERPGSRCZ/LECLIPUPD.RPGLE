@@ -14,6 +14,7 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
@@ -167,6 +168,9 @@
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  207964 - Incorrect exposure if loan is in base currency. Do  *
+      *           not change ZMD to 'M'. Amendment to CLE023.         *
+      *         - Applied for MD-10504(artf1087794)                   *
       *  MD031292 - Initialize CLOANCK when inserting to avoid        *
       *             update with data from previous loan.              *
       *  MD025836 - Loan principal increase causing excess. Remove    *
@@ -6092,8 +6096,14 @@
      C                   EXSR      ZXRATE
      C                   Z-ADD     ZRATEX        ZEXCH                                        CLE023
      C                   MOVE      ZMDIX         ZMD                                          CLE023
+      * If loan is in base currency, use spot rate.                                           207964
      C     ZCCYI         IFEQ      BJCYCD                                                     CLE023
+     C                   Z-ADD     ZRATE2        ZEXCH                                        207964
+     C     ZMDI2         IFEQ      'D'                                                        207964
      C                   MOVE      'M'           ZMD                                          CLE023
+     C                   ELSE                                                                 207964
+     C                   MOVE      'D'           ZMD                                          207964
+     C                   ENDIF                                                                207964
      C                   ENDIF                                                                CLE023
      C                   ENDIF                                                                CLE023
 

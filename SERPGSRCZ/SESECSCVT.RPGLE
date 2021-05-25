@@ -20,7 +20,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -64,6 +65,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD056949 - SE0045 is dumping on security with no coupon      *
+      *             date array - which is not an error                *
+      *           - skip ZNCD if coupon date array is empty to        *
+      *             prevent SE0045 from dumping                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding                              *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -1108,6 +1113,7 @@
      C                   MOVEL     PLCPN         DDLCPN                                       CSE031
       *
       ** Next coupon date.
+     C                   IF        CRArr <> *BLANKS                                         MD056949
      C                   CALLB     'ZNCD'
      C                   PARM                    ITLD
      C                   PARM                    FCPN
@@ -1131,6 +1137,7 @@
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    NCD
+     C                   ENDIF                                                              MD056949
  
      C                   IF        NCD <> *ZEROS
      C                   Z-ADD     NCD           PDateIn

@@ -16,10 +16,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+     F*  Last Amend No. 261862             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 095907             Date 30Jan07               *
+      *                 095907             Date 30Jan07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -33,6 +34,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  261862 - Check POSET2 file to see if there are any           *
+      *           corresponding records before dropping from SEPCCD.  *
+      *           Check CDEPPD before dropping record in SEPCCD.      *
       *  MD046248 - Finastra Rebranding                               *
      F*  095907 - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
      F*  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -52,6 +56,8 @@
      FCPOSN   IF  E           K        DISK
      FSEPCA   UF  E           K        DISK
      FCLIAB   IF  E           K        DISK                               070852
+     FPOSET2  IF  E           K        DISK                                                   261862
+     FCDEPF   IF  E           K        DISK                                                   261862
      FSE2590AUO   E                    PRINTER
      F/COPY WNCPYSRC,SE2590F001
      F*
@@ -140,6 +146,8 @@
      I                                       11  11 SSF
      I                                       12  12 DATF
      I                                       13  13 MBIN
+     ISDMMOD    E DSSDMMODPD                                                                  261862
+      ** Module fields.                                                                       261862
       *
      ISDBANK    E DSSDBANKPD
      I              BJURPT                          TITLE                 048927
@@ -302,6 +310,26 @@
      C           *IN80     IFEQ '1'                                       070852
      C           CKEY1     CHAINCLIABDF              80                   070852
      C                     END                                            070852
+      *                                                                                       261862
+      **  If PM or PV is on. Check CDEPPD.                                                    261862
+      *                                                                                       261862
+     C           FCDEP     IFEQ 'Y'                                                           261862
+     C           *IN80     IFEQ '1'                                                           261862
+     C                     MOVELBRCA      CDPA                                                261862
+     C                     MOVELSESN      CDSN                                                261862
+     C                     MOVELCNUM      CDCN                                                261862
+     C           CDPK1     CHAINCDEPPDF             N80                                       261862
+     C                     ENDIF                                                              261862
+     C                     ENDIF                                                              261862
+      *                                                                                       261862
+      ** Check if any existing records on POSETD                                              261862
+      *                                                                                       261862
+     C           *IN80     IFEQ '1'                                                           261862
+     C                     MOVELBRCA      PBCA                                                261862
+     C                     MOVELSESN      PSSH                                                261862
+     C                     MOVELCNUM      PCPY                                                261862
+     C           PSTK1     CHAINPOSETDF             N80                                       261862
+     C                     ENDIF                                                              261862
       *
      C           *IN80     IFEQ '1'
       *
@@ -344,6 +372,20 @@
      C                     KFLD           @CSSC                           070852
      C                     KFLD           @CSBA                           070852
      C                     KFLD           @CSCN                           070852
+      *                                                                                       261862
+      ** Define key list for file POSET2                                                      261862
+      *                                                                                       261862
+     C           PSTK1     KLIST                                                              261862
+     C                     KFLD           PBCA                                                261862
+     C                     KFLD           PSSH                                                261862
+     C                     KFLD           PCPY                                                261862
+      *                                                                                       261862
+      ** Define key list for file CDEPF.                                                      261862
+      *                                                                                       261862
+     C           CDPK1     KLIST                                                              261862
+     C                     KFLD           CDPA                                                261862
+     C                     KFLD           CDCN                                                261862
+     C                     KFLD           CDSN                                                261862
       *
       ** Define key list for BKPHD file
       *
@@ -396,6 +438,25 @@
      C                     EXSR *PSSR
      C                     RETRN
      C                     END
+      *                                                                                       261862
+      ** Check Portfolio Management is On or Off.                                             261862
+      *                                                                                       261862
+     C                     CALL 'AOMMODR0'                                                    261862
+     C                     PARM *BLANKS   XXRTCD  7                                           261862
+     C                     PARM '*FIRST ' WWOPTN  7                                           261862
+     C           SDMMOD    PARM SDMMOD    DSFDY                                               261862
+     C           XXRTCD    IFNE *BLANKS                                                       261862
+     C           *LOCK     IN   LDA                        ***************                    261862
+     C                     MOVE '3'       DBASE            **DB ERROR 03**                    261862
+     C                     MOVE 'SDMMODPD'DBFILE           ***************                    261862
+     C                     MOVELWWOPTN    DBKEY                                               261862
+     C                     MOVELWWOPTN    DBOPTN  7                                           261862
+     C                     OUT  LDA                                                           261862
+     C                     ENDIF                                                              261862
+     C           BGPFMG    IFEQ 'Y'                                                           261862
+     C           BGN4ST    OREQ 'Y'                                                           261862
+     C                     MOVEL'Y'       FCDEP   1                                           261862
+     C                     ENDIF                                                              261862
      C/COPY WNCPYSRC,SE2590C004
       *
      C                     ENDSR

@@ -51,6 +51,8 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD026171           Date 07Apr14               *
+      *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 CER050             Date 16Jun19               *
       *                 CLE168             Date 26Feb18               *
@@ -80,6 +82,13 @@
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD026171 - Decimal data error occurred. Initialise field     *
+      *             INMAAN to zero this will prevent the DBERR.       *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate. (Recompile)               *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -331,7 +340,8 @@
      D  INFSEQ                36     37  0
      D  INACAJ                68     74P 0
      D  INCASN                75     75
-     D  INMAAN                76     82P 0
+     D**INMAAN**              76     82P 0                                                  MD026171
+     D  INMAAN                76     82P 0 INZ(0)                                           MD026171
      D  INMASN                83     83
      D  INUDTM               188    193  0
      D  NAVT                 194    196  0

@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CUP040             Date 06Mar14               *
-      *  Prev Amend No. MD024412           Date 20Jan14               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. CUP040             Date 06Mar14               *
+      *                 MD024412           Date 20Jan14               *
       *                 AR1090366          Date 21Feb13               *
       *                 CCB022A *REWRITE   Date 06Aug12               *
       *                 CCB022  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - Restructure of deliverable data files.              *
       *  MD024412 - Additional changes for COM processing             *
       *  AR1090366 - Deliverable data for SCCOMMTD and SCCOMXTD       *
@@ -111,7 +113,7 @@
      FSDMMIDL0  IF   E           K DISK
 
       ** Midas Switchable Features
-     FSCSARSL0  IF   E           K DISK
+     F*SCSARSL0* IF   E           K DISK                                                    MD055681
 
       ** Midas Components
      FCBCMPNL0  IF   E           K DISK
@@ -187,6 +189,7 @@
      D FstDel          S              1
 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
+     D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D***ComDS**     E DS                  EXTNAME(SCCOMJK0)                                  CUP040
      D ComDS         E DS                  EXTNAME(SCCOMJW0)                                  CUP040
@@ -758,8 +761,15 @@
 
      C     KMod          CHAIN     SDMMIDL0
      C                   IF        NOT %FOUND(SDMMIDL0)
-     C     KFeat         CHAIN     SCSARSL0
-     C                   IF        NOT %FOUND(SCSARSL0)
+     C*****KFeat         CHAIN     SCSARSL0                                                 MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ SELECT *                                                                            MD055681
+     C+ into :SCSARS                                                                        MD055681
+     C+ from SCSRSJW0                                                                       MD055681
+     C+ where AXSARN = :KFeat and AXMODE = 'C'                                              MD055681
+     C/END-EXEC                                                                             MD055681
+     C**********         IF        NOT %FOUND(SCSARSL0)                                     MD055681
+     C                   IF        SQLCODE <> 0                                             MD055681
      C                   EVAL      ErrInd = 'Y'
      C                   EVAL      ZAMSID = 'CBM0287'
      C                   EXSR      ZASNMS

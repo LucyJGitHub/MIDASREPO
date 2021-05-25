@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD026969           Date 23Oct19              */
-/*       Prev Amend No. MD052216           Date 04Apr19              */
+/*       Last Amend No. MD053375           Date 10Oct19              */
+/*       Prev Amend No. MD026969           Date 23Oct19              */
+/*                      MD052216           Date 04Apr19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD052961           Date 18Mar19              */
 /*                      MD049309           Date 14Feb18              */
@@ -39,6 +40,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053375 - Incorrect fee settlement amount in LER170 report.*/
+/*                  Maintain security copy of LEFECPPD.              */
 /*       MD026969 - New Processing for Fee Settlement.               */
 /*                - Applied for MD054354                             */
 /*       MD052216 - Lending Fee's Payment Due and Taken Day          */
@@ -250,6 +253,10 @@
                           MBROPT(*REPLACE)                                              /*MD052216*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(LEFEEDQD))                                               /*MD052216*/
+                                                                                        /*MD053375*/
+            CPYF FROMFILE(XLEFECPPD) TOFILE(LEFECPPD) MBROPT(*REPLACE)                  /*MD053375*/
+            MONMSG MSGID(CPF2817) CMPDTA(CPF2869) +
+                   EXEC(CLRPFM FILE(LEFECPPD))                                          /*MD053375*/
                                                                                         /*MD052216*/
              IF         COND(&RERUN *NE 'NEWCOB') THEN(DO)                                /*CLE134*/
             CPYF FROMFILE(XLOAMSDK) TOFILE(LOAMSDK) MBROPT(*REPLACE)                      /*CLE139*/
@@ -315,6 +322,9 @@
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLKEYFD))
      CPYF       FROMFILE(LKEYFEZ) TOFILE(XLKEYFZ) MBROPT(*REPLACE)
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLKEYFZ))
+                                                                                        /*MD053375*/
+     CPYF       FROMFILE(LEFECPPD) TOFILE(XLEFECPPD) MBROPT(*REPLACE)                   /*MD053375*/
+     MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLEFECPPD))                 /*MD053375*/
              CPYF       FROMFILE(LEFEEDQD) TOFILE(XLEFEEDQD) +
                           MBROPT(*REPLACE)                                              /*MD052216*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +

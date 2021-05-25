@@ -15,7 +15,9 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD030964           Date 06Mar17               *      
+      *                 MD039655           Date 03Sep19               *
+      *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
@@ -53,6 +55,10 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD030964 - Convert settlement details to screen format.      *      
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -147,6 +153,10 @@
       *                                                                                     BUG10093
       ** Receive settlement instructions in screen format                                   BUG10093
       *                                                                                     BUG10093
+     D InFRASttmt    E DS                  EXTNAME(SDESSFPD)                                MD030964
+      *									                                                    MD030964
+      ** FRA/IRS settlement instructions in screen format				                    MD030964
+      *									                                                    MD030964
      D ExtData       E DS                  EXTNAME(LEFCEXPD)                                BUG10093
       *                                                                                     BUG10093
       ** Facility Input Extra Data Layout                                                   BUG10093
@@ -180,6 +190,9 @@
       *                                                                                       CER001
       ** Switchable features description                                                      CER001
       *                                                                                       CER001
+     D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)                                MD030964
+     D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)                                MD030964
+     D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)                                MD030964
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
       ** External DS for Customer Details                                                     CSF011
 
@@ -311,6 +324,11 @@
      C                   ELSE                                                                 CER001
      C                   CLEAR                   RegData                                      CER001
      C                   ENDIF                                                                CER001
+      *                                                                                     MD030964
+     C                   IF        CLE106 = 'Y' and DDSYIN = 'Y'                            MD030964
+     C                   EXSR      ZASETINCVT                                               MD030964
+     C                   ENDIF                                                              MD030964
+      *                                                                                     MD030964
      C                   ENDIF
 
      C                   ENDIF
@@ -338,6 +356,7 @@
      C                                           + InRecSttmt + InPaySttmt                  BUG10093
      C**********                                 + RegData + ExtData               BUG10093 MD044880
      C                                           + ExtData                                  MD044880
+     C                                           + @ACTRV                                   MD039655
      C                                           + RegData                                  MD044880
 
      C                   SETON                                        LR
@@ -423,6 +442,10 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
      C                   PARM                    DDPATH          200                       BUG13297A
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV            1                        MD039655
       *                                                                                      LLN022A
       ** Access SAR details file to determine if LLN007                                      LLN022A
       ** Bank of England Yellow Book Changes is installed.                                   LLN022A
@@ -578,6 +601,10 @@
      C                   PARM                    DDFCNO            2
       * (Midas) Branch
      C                   PARM                    DDBRCA            3
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV                                     MD039655
      C/COPY WNCPYSRC,LEH00356
 
       * OUTPUTS
@@ -666,5 +693,71 @@
      C                   PARM                    RegData                                      CER001
      C                   ENDSR                                                                CER001
       *****************************************************************                       CER001
+      /EJECT                                                                                MD030964
+      *****************************************************************                     MD030964
+     C     ZASETINCVT    BEGSR                                                              MD030964
+      *                                                                                     MD030964
+     C                   MOVEL     FMPSTM        FLPSTM                                     MD030964
+     C                   MOVEL     FMPONS        FLPONS                                     MD030964
+     C                   MOVEL     FMPIBN        FLPIBN                                     MD030964
+     C                   MOVEL     FMPIBA        FLPIBA                                     MD030964
+     C                   MOVEL     FMPOBN        FLPOBN                                     MD030964
+     C                   MOVEL     FMPOCN        FLPOCN                                     MD030964
+     C                   MOVEL     FMRCRN        FLRCRN                                     MD030964
+     C                   MOVEL     FMRCRA        FLRCRA                                     MD030964
+     C                   MOVEL     FMRVNO        FLRVNO                                     MD030964
+     C                   MOVEL     FMAWBN        FLAWBN                                     MD030964
+     C                   MOVEL     FMAWBA        FLAWBA                                     MD030964
+     C                   MOVEL     FMBENN        FLBENN                                     MD030964
+     C                   MOVEL     FMBENA        FLBENA                                     MD030964
+     C                   MOVEL     FMDTP1        FLDTP1                                     MD030964
+     C                   MOVEL     FMDTP2        FLDTP2                                     MD030964
+     C                   MOVEL     FMDTP3        FLDTP3                                     MD030964
+     C                   MOVEL     FMDTP4        FLDTP4                                     MD030964
+     C                   MOVEL     FMDCHG        FLDCHG                                     MD030964
+     C                   MOVEL     FMBTB1        FLBTB1                                     MD030964
+     C                   MOVEL     FMBTB2        FLBTB2                                     MD030964
+     C                   MOVEL     FMBTB3        FLBTB3                                     MD030964
+     C                   MOVEL     FMBTB4        FLBTB4                                     MD030964
+     C                   MOVEL     FMBTB5        FLBTB5                                     MD030964
+     C                   MOVEL     FMBTB6        FLBTB6                                     MD030964
+     C                   MOVEL     FMOMDB        FLPOBR                                     MD030964
+     C                   MOVEL     FMCVMR        FLCVMR                                     MD030964
+     C                   MOVEL     FMPSCY        FLPSCY                                     MD030964
+     C                   MOVEL     FMICCY        FLIC72                                     MD030964
+     C                   Z-ADD     FMPEXR        FLPEXR                                     MD030964
+     C                   MOVEL     FMPEXI        FLPEXI                                     MD030964
+      *                                                                                     MD030964
+     C                   MOVEL     FMRSTM        FLRSTM                                     MD030964
+     C                   MOVEL     FMRONS        FLRONS                                     MD030964
+     C                   MOVEL     FMRIBN        FLRIBN                                     MD030964
+     C                   MOVEL     FMRIBA        FLRIBA                                     MD030964
+     C                   MOVEL     FMROBN        FLROBN                                     MD030964
+     C                   MOVEL     FMROCN        FLROCN                                     MD030964
+     C                   MOVEL     FMOSDB        FLROBR                                     MD030964
+     C                   MOVEL     FMSCCY        FLRSCY                                     MD030964
+     C                   Z-ADD     FMREXR        FLREXR                                     MD030964
+     C                   MOVEL     FMREXI        FLREXI                                     MD030964
+      *                                                                                     MD030964
+     C                   CALLB     'ZASETINCVT'                                             MD030964
+      *                                                                                     MD030964
+      ** Inputs                                                                             MD030964
+      ** Settlement Instructions in file format                                             MD030964
+      *                                                                                     MD030964
+     C                   PARM                    DBPaySttmt                                 MD030964
+     C                   PARM                    DBRecSttmt                                 MD030964
+     C                   PARM      *BLANK        DBFRASttmt                                 MD030964
+      *                                                                                     MD030964
+      ** Outputs                                                                            MD030964
+      ** Settlement Instruction in screen format                                            MD030964
+      *                                                                                     MD030964
+     C                   PARM      *BLANK        InPaySttmt                                 MD030964
+     C                   PARM      *BLANK        InRecSttmt                                 MD030964
+     C                   PARM      *BLANK        InFRASttmt                                 MD030964
+      *                                                                                     MD030964
+     C                   ENDSR                                                              MD030964
+      *****************************************************************                     MD030964
+      /EJECT                                                                                MD030964
+      *****************************************************************                     MD030964
 **  CPY@
 (c) Finastra International Limited 2003

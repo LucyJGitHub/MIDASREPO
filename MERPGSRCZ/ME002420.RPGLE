@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD051648           Date 11Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,11 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD051648 - Network AC MT942 Schedules Maint. -wrong formatted*
+      *             start and end time.                               *
+      *             Convert time attribute from numeric to alpha-     *
+      *             numeric. Also, validate the time field and display*
+      *             the error in this program.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -145,14 +151,37 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS (long) used as output parameter for Access Objects
       *
+     D                 DS                                                                   MD051648
+     D  DSHH                   1      2S 0                                                  MD051648
+     D  DSCHAR3                3      3A                                                    MD051648
+     D  DSMN                   4      5S 0                                                  MD051648
+     D  DSHHMN                 1      5A                                                    MD051648
+      *                                                                                     MD051648
+      ** Data structure for time format 'HH:MN'                                             MD051648
+      *                                                                                     MD051648
+     D DSTIME          DS                                                                   MD051648
+     D  DSTIMEHH               1      2S 0                                                  MD051648
+     D  DSTIMEMN               3      4S 0                                                  MD051648
+      *                                                                                     MD051648
+      ** Data structure for time format 'HHMN'                                              MD051648
+      *                                                                                     MD051648
 
       ** Declared variables
       ** ------------------
       *
+     D WValidTime      S              1A                                                    MD051648
+     D WX              S              1S 0                                                  MD051648
+     D WY              S              1S 0                                                  MD051648
+     D WZ              S              1S 0                                                  MD051648
+     D WSPOS           S              1S 0                                                  MD051648
+     D WEPOS           S              1S 0                                                  MD051648
 
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
+     D AHHMN           S              1    DIM(5)                                           MD051648
+     D AHHMN2          S              1    DIM(5)                                           MD051648
+     D DIGITS          S              1    DIM(10) CTDATA PERRCD(10)                        MD051648
 
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
@@ -287,10 +316,22 @@
 
       ** Start Time: default is the current system time
       *
-     C                   IF        F1STIM = 0
+     C**********         IF        F1STIM = 0                                               MD051648
+     C                   IF        F1STIM = *BLANKS                                         MD051648
+     C                             OR F1STIM = '00:00'                                      MD051648
      C                   TIME                    WFld6N0           6 0
-     C                   MOVEL     WFld6N0       F1STIM
+     C**********         MOVEL     WFld6N0       F1STIM                                     MD051648
+     C                   MOVEL     WFld6N0       DSTIME                                     MD051648
+     C                   EVAL      DSCHAR3 = ':'                                            MD051648
+     C                   EXSR      HHMN_HHCMN                                               MD051648
+     C                   EVAL      F1STIM = DSHHMN                                          MD051648
      C                   ENDIF
+      *                                                                                     MD051648
+      ** Initialize to 00:00                                                                MD051648
+      *                                                                                     MD051648
+     C                   IF        F1ETIM = *BLANKS                                         MD051648
+     C                   EVAL      F1ETIM = '00:00'                                         MD051648
+     C                   ENDIF                                                              MD051648
       *    ----------    ------
      C     @FldDflt      ENDSR
 
@@ -302,12 +343,36 @@
       ** Call the keys and details screen validation module if Insert
       *
      C                   IF        ActionCode = 'I'
+     C                   EVAL      DSHHMN = F1STIM                                          MD051648
+     C                   EXSR      ValidateTime                                             MD051648
+     C                   IF        WValidTime = 'Y'                                         MD051648
+     C                   IF        AHHMN(3) <> *BLANK                                       MD051648
+     C                   MOVEA     AHHMN         F1STIM                                     MD051648
+     C                   ENDIF                                                              MD051648
+     C                   EVAL      DSHHMN = F1ETIM                                          MD051648
+     C                   EXSR      ValidateTime                                             MD051648
+     C                   IF        WValidTime = 'Y'                                         MD051648
+     C                   IF        AHHMN(3) <> *BLANK                                       MD051648
+     C                   MOVEA     AHHMN         F1ETIM                                     MD051648
+     C                   ENDIF                                                              MD051648
      C                   CALLB     'ME002440'
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      ZAPGM         CallerOut        10
      C                   PARM                    ScrLayout
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
+     C                   ELSE                                                               MD051648
+      *                                                                                     MD051648
+      ** Set on reverse image and cursor position for end time                              MD051648
+      *                                                                                     MD051648
+     C                   EVAL      IN40_TO_70(6) = '1'                                      MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ELSE                                                               MD051648
+      *                                                                                     MD051648
+      ** Set on reverse image and cursor position for start time                            MD051648
+      *                                                                                     MD051648
+     C                   EVAL      IN40_TO_70(5) = '1'                                      MD051648
+     C                   ENDIF                                                              MD051648
      C                   ENDIF
 
       ** Set up error indicators
@@ -377,8 +442,19 @@
      C                   EVAL      F0ANAM = AC_ANAM
       *------------------
      C                   EVAL      F1SPRD = GSSPRD
-     C                   EVAL      F1STIM = GSSTIM
-     C                   EVAL      F1ETIM = GSETIM
+     C**********         EVAL      F1STIM = GSSTIM                                          MD051648
+     C**********         EVAL      F1ETIM = GSETIM                                          MD051648
+      *                                                                                     MD051648
+      ** Convert from HHMN to HH:MN                                                         MD051648
+      *                                                                                     MD051648
+     C                   EVAL      DSCHAR3 = ':'                                            MD051648
+     C                   MOVE      GSSTIM        DSTIME                                     MD051648
+     C                   EXSR      HHMN_HHCMN                                               MD051648
+     C                   EVAL      F1STIM = DSHHMN                                          MD051648
+      **                                                                                    MD051648
+     C                   MOVE      GSETIM        DSTIME                                     MD051648
+     C                   EXSR      HHMN_HHCMN                                               MD051648
+     C                   EVAL      F1ETIM = DSHHMN                                          MD051648
 
  B1  C                   IF        GSSDTE <> 0
      C                   MOVEL(P)  GSSDTE        @IDate
@@ -502,10 +578,23 @@
      C     $ScrToFile    BEGSR
       *    ----------    ------
      C                   EVAL      GSSDTE = 0
-     C                   EVAL      GSSTIM = F1STIM
+     C**********         EVAL      GSSTIM = F1STIM                                          MD051648
+      *                                                                                     MD051648
+      ** Convert from HH:MM to HHMN                                                         MD051648
+      *                                                                                     MD051648
+     C                   EVAL      DSHHMN = F1STIM                                          MD051648
+     C                   EXSR      HHCMN_HHMN                                               MD051648
+     C                   MOVE      DSTIME        GSSTIM                                     MD051648
+      *                                                                                     MD051648
      C                   EVAL      GSSPRD = F1SPRD
      C                   EVAL      GSEDTE = 0
-     C                   EVAL      GSETIM = F1ETIM
+     C***********        EVAL      GSETIM = F1ETIM                                          MD051648
+      *                                                                                     MD051648
+      ** Convert from HH:MM to HHMN                                                         MD051648
+      *                                                                                     MD051648
+     C                   EVAL      DSHHMN = F1ETIM                                          MD051648
+     C                   EXSR      HHCMN_HHMN                                               MD051648
+     C                   MOVE      DSTIME        GSETIM                                     MD051648
 
  B1  C                   IF        F1SDTE <> 0
      C                   MOVEL(P)  F1SDTE        @IDate
@@ -544,6 +633,157 @@
  E1  C                   ENDIF
       *    ----------    ------
      C     @ScrToFile    ENDSR
+                                                                                            MD051648
+      *========================================================================*            MD051648
+      * HHMN_HHCMN : Convert from HHMN to HH:MN                                *            MD051648
+      *========================================================================*            MD051648
+     C     HHMN_HHCMN    BEGSR                                                              MD051648
+      *    ----------    ------                                                             MD051648
+     C                   EVAL      DSHH = DSTIMEHH                                          MD051648
+     C                   EVAL      DSMN = DSTIMEMN                                          MD051648
+      *    ----------    ------                                                             MD051648
+     C                   ENDSR                                                              MD051648
+                                                                                            MD051648
+      *========================================================================*            MD051648
+      * HHCMN_HHMN : Convert from HH:MN to HHMN                                *            MD051648
+      *========================================================================*            MD051648
+     C     HHCMN_HHMN    BEGSR                                                              MD051648
+      *    ----------    ------                                                             MD051648
+     C                   EVAL      DSTIMEHH = DSHH                                          MD051648
+     C                   EVAL      DSTIMEMN = DSMN                                          MD051648
+      *    ----------    ------                                                             MD051648
+     C                   ENDSR                                                              MD051648
+                                                                                            MD051648
+      *========================================================================*            MD051648
+      * ValidateTime : Validate Time Inputs                                    *            MD051648
+      *========================================================================*            MD051648
+     C     ValidateTime  BEGSR                                                              MD051648
+      *    ----------    ------                                                             MD051648
+     C                   EVAL      WValidTime = 'Y'                                         MD051648
+     C                   MOVEA     DSHHMN        AHHMN                                      MD051648
+     C                   EVAL      AHHMN2 = *BLANKS                                         MD051648
+      *                                                                                     MD051648
+      ** Check position 1, 3 and 5, this is invalid 'N---N'                                 MD051648
+      *                                                                                     MD051648
+     C                   EVAL      WX = 1                                                   MD051648
+     C     AHHMN(1)      LOOKUP    DIGITS                                 86                MD051648
+     C                   EVAL      WY = 1                                                   MD051648
+     C     ':'           LOOKUP    AHHMN(WY)                              87                MD051648
+     C                   EVAL      WY = 1                                                   MD051648
+     C     ' '           LOOKUP    AHHMN(WY)                              87                MD051648
+     C                   EVAL      WZ = 5                                                   MD051648
+     C     AHHMN(5)      LOOKUP    DIGITS                                 88                MD051648
+      *                                                                                     MD051648
+      ** Check 5 position and get start and end position                                    MD051648
+      ** sample time entered '--25-'                                                        MD051648
+      *                                                                                     MD051648
+     C                   EVAL      WSPOS = 1                                                MD051648
+     C                   IF        AHHMN(5) = ' '                                           MD051648
+     C                   EVAL      WSPOS = 1                                                MD051648
+     C                   ELSE                                                               MD051648
+     C                   IF        AHHMN(1) = ' '                                           MD051648
+     C                   EVAL      WSPOS = 2                                                MD051648
+     C                   ELSE                                                               MD051648
+     C                   IF        AHHMN(3) <> ':'                                          MD051648
+     C                   EVAL      WValidTime = 'N'                                         MD051648
+     C                   EVAL      ZAMSID = 'ME00088'                                       MD051648
+     C                   EXSR      ZaSndMsg                                                 MD051648
+     C                   EVAL      IN40_TO_70(1) = '1'                                      MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ENDIF                                                              MD051648
+      *                                                                                     MD051648
+      ** Replace blanks by '0' of time entered if 'NN:NN'                                   MD051648
+      *                                                                                     MD051648
+     C                   IF        AHHMN(3) = ':'                                           MD051648
+     C                   EVAL      WX = 0                                                   MD051648
+     C                   DOW       WX < 5                                                   MD051648
+     C                   EVAL      WX+=1                                                    MD051648
+      *                                                                                     MD051648
+     C                   IF        AHHMN(WX) = ' '                                          MD051648
+     C                   EVAL      AHHMN(WX) = '0'                                          MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ENDDO                                                              MD051648
+      *                                                                                     MD051648
+     C                   ELSE                                                               MD051648
+      *                                                                                     MD051648
+      ** move 'bHHNN', 'HHNN' to 'HH:MN'                                                    MD056148
+      *                                                                                     MD051648
+     C                   EVAL      WX = 0                                                   MD051648
+     C                   EVAL      WY = WSPOS                                               MD051648
+     C                   EVAL      WZ = WEPOS                                               MD051648
+     C                   DOW       WX < 5                                                   MD051648
+     C                   EVAL      WX+=1                                                    MD051648
+      *                                                                                     MD051648
+     C                   IF        WX <> 3                                                  MD051648
+     C                   IF        AHHMN(WSPOS) = ' '                                       MD051648
+     C                   EVAL      AHHMN2(WX) = '0'                                         MD051648
+     C                   ELSE                                                               MD051648
+     C                   EVAL      AHHMN2(WX) = AHHMN(WSPOS)                                MD051648
+     C                   ENDIF                                                              MD051648
+     C                   EVAL      WSPOS+=1                                                 MD051648
+     C                   ELSE                                                               MD051648
+     C                   EVAL      AHHMN2(WX) = ':'                                         MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ENDDO                                                              MD051648
+     C                   EVAL      AHHMN = AHHMN2                                           MD051648
+      *                                                                                     MD051648
+     C                   ENDIF                                                              MD051648
+      *                                                                                     MD051648
+      ** Replace blanks by '0' of time entered                                              MD051648
+      *                                                                                     MD051648
+      ** another validation if time entered is valid                                        MD051648
+      *                                                                                     MD051648
+     C                   EVAL      WX = 0                                                   MD051648
+     C                   DOW       WX < 5                                                   MD051648
+     C                   EVAL      WX+=1                                                    MD051648
+      *                                                                                     MD051648
+      ** Check entered time (valid 0-9), positions 1, 2,4 and 5                             MD051648
+      *                                                                                     MD051648
+     C                   IF        WX <> 3                                                  MD051648
+     C     AHHMN(WX)     LOOKUP    DIGITS                                 89                MD051648
+     C                   IF        *IN89 = '0'                                              MD051648
+     C                   EVAL      WValidTime = 'N'                                         MD051648
+     C                   EVAL      ZAMSID = 'ME00088'                                       MD051648
+     C                   EXSR      ZaSndMsg                                                 MD051648
+     C                   EVAL      IN40_TO_70(1) = '1'                                      MD051648
+     C                   LEAVE                                                              MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ELSE                                                               MD051648
+      *                                                                                     MD051648
+      ** Check 3rd position of time entered                                                 MD051648
+      *                                                                                     MD051648
+     C                   IF        AHHMN(WX) <> ':'                                         MD051648
+     C                             AND AHHMN(WX) <> ' '                                     MD051648
+     C                   EVAL      WValidTime = 'N'                                         MD051648
+     C                   EVAL      ZAMSID = 'ME00088'                                       MD051648
+     C                   EXSR      ZaSndMsg                                                 MD051648
+     C                   EVAL      IN40_TO_70(1) = '1'                                      MD051648
+     C                   LEAVE                                                              MD051648
+     C                   ENDIF                                                              MD051648
+      *                                                                                     MD051648
+      ** Check 3rd position of time entered                                                 MD051648
+      *                                                                                     MD051648
+     C                   ENDIF                                                              MD051648
+     C                   ENDDO                                                              MD051648
+      *    ----------    ------                                                             MD051648
+     C                   ENDSR                                                              MD051648
+      *                                                                                     MD051648
+      *========================================================================*            MD051648
+      * ZaSndMsg : Send message to the program message queue                   *            MD051648
+      *------------------------------------------------------------------------*            MD051648
+     C     ZaSndMsg      BEGSR                                                              MD051648
+      *    ----------    ------                                                             MD051648
+                                                                                            MD051648
+     C                   CALL      'Y2SNMGC'                                                MD051648
+     C                   PARM                    ZAPGM                                      MD051648
+     C                   PARM                    ZAPGRL                                     MD051648
+     C                   PARM                    ZAMSID                                     MD051648
+     C                   PARM                    ZAMSGF                                     MD051648
+     C                   PARM                    ZAMSDA                                     MD051648
+     C                   PARM                    ZAMSTP                                     MD051648
+      *    ----------    ------                                                             MD051648
+     C                   ENDSR                                                              MD051648
 
       *========================================================================*
       * *INZSR    : Init Processing                                            *
@@ -568,6 +808,10 @@
      C                   ENDIF
 
      C                   MOVEL     '*SAME'       ZAPGRL            5
+     C                   MOVEL     'MEMSG'       ZAMSGF           10                        MD051648
+     C                   MOVEL     *Blanks       ZAMSID            7                        MD051648
+     C                   MOVEL     *Blanks       ZAMSDA          132                        MD051648
+     C                   MOVEL     *Blanks       ZAMSTP            7                        MD051648
 
       ** Retrieve RUNDAT
       *
@@ -605,3 +849,5 @@
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002
+**   DIGITS                                                                                 MD051648
+0123456789

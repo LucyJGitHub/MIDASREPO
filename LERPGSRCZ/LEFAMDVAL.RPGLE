@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027429           Date 26Jun14               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024398           Date 11May14               *
       *                 AR693564           Date 08Oct12               *
       *                 CLE134             Date 01Aug12               *
@@ -39,6 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027429 - Tranches exceeded facility amount of Credit       *
+      *             Agreement. Display message when facility amount   *
+      *             of TR's exceeded facility amount of Credit        *
+      *             Agreement.                                        *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API Performance Optimisation                      *
@@ -98,6 +103,24 @@
                                                                                               CLE041
      FLEAGAML2  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
      F                                     RENAME(LEFCAMPF:LEAGAMD4)                          CLE041
+                                                                                            MD027429
+      ** Midas Facility File                                                                MD027429
+     FLEFCLTLK  IF   E           K DISK    INFSR(*PSSR)                                     MD027429
+     F                                     IGNORE(FCLTYHHF)                                 MD027429
+     F                                     IGNORE(FCLTYFNF)                                 MD027429
+     F                                     RENAME(FCLTYFMF:FCLTYFLK)                        MD027429
+     F                                     PREFIX(FC_)                                      MD027429
+                                                                                            MD027429
+      ** Midas Facility File by Credit Agreement                                            MD027429
+     FLEFCLTL9  IF   E           K DISK    INFSR(*PSSR)                                     MD027429
+     F                                     RENAME(FCLTYFMF:FCLTYFL9)                        MD027429
+     F                                     PREFIX(TR_)                                      MD027429
+                                                                                            MD027429
+      ** Midas Live Facility Amendment - FI/FD                                              MD027429
+     FLEFCAML7  IF   E           K DISK    INFSR(*PSSR)                                     MD027429
+     F                                     RENAME(LEFCAMPF:LEFCAMP7)                        MD027429
+     F                                     PREFIX(FA_)                                      MD027429
+                                                                                            MD027429
      F/COPY WNCPYSRC,LEH00239
  
      FLEVFAMDL2 IF   E           K DISK    INFSR(*PSSR)                                     AR693564
@@ -179,6 +202,11 @@
      D  @OAM                   1    130  0
      D                                     DIM(10)
  
+      ** Currency                                                                           MD027429
+     DCYA              S              3    DIM(150)                                         MD027429
+                                                                                            MD027429
+      ** Curreny No. of Decimal Place                                                       MD027429
+     DNDP              S              1  0 DIM(150)                                         MD027429
  
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -308,6 +336,18 @@
       * Validate Amendment Amount
       *
      C                   EXSR      VLAAMT
+      *                                                                                     MD027429
+      ** Amendment Amount still ok, further validate amount                                 MD027429
+      ** for Tranche or Credit Agreement                                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        S#AAMTok = 'Y'                                           MD027429
+      *                                                                                     MD027429
+     C                   IF        (FctrTRCA = 'CA' OR FctrTRCA = 'TR')                     MD027429
+     C                             and (S#FATP = 'FI' OR S#FATP = 'FD')                     MD027429
+     C                   EXSR      VTCAMT                                                   MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
       *
       * Validate Revolving Credit indicator
       *
@@ -567,6 +607,429 @@
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                     MD027429
+      * Validate Tranche/Credit Agreement Amount                                            MD027429
+      *****************************************************************                     MD027429
+     C     VTCAMT        BEGSR                                                              MD027429
+      *                                                                                     MD027429
+      ** Define Fields                                                                      MD027429
+      *                                                                                     MD027429
+     C     *LIKE         DEFINE    BRCA          K#BRCA1                                    MD027429
+     C     *LIKE         DEFINE    CNUM          K#CNUM1                                    MD027429
+     C     *LIKE         DEFINE    FACT          K#FACT1                                    MD027429
+     C     *LIKE         DEFINE    FCNO          K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C     *LIKE         DEFINE    FC_CANM       K#CANM                                     MD027429
+     C     *LIKE         DEFINE    FC_CAFT       K#CAFT                                     MD027429
+     C     *LIKE         DEFINE    FC_CAFN       K#CAFN                                     MD027429
+      *                                                                                     MD027429
+     C     *LIKE         DEFINE    CNUM          S#CNUM1                                    MD027429
+     C     *LIKE         DEFINE    FACT          S#FACT1                                    MD027429
+     C     *LIKE         DEFINE    FCNO          S#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     S#CSSN        K#CNUM1                                    MD027429
+     C                   MOVEL     S#FACT        K#FACT1                                    MD027429
+     C                   MOVEL     S#FCNO        K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     S#CSSN        S#CNUM1                                    MD027429
+     C                   MOVEL     S#FACT        S#FACT1                                    MD027429
+     C                   MOVEL     S#FCNO        S#FCNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Keylist for Facility                                                               MD027429
+      *                                                                                     MD027429
+     C     KFcty         KLIST                                                              MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+     C                   KFLD                    K#VLDT1           5 0                      MD027429
+     C                   KFLD                    K#SQNO1           3 0                      MD027429
+      *                                                                                     MD027429
+     C     KFctyP        KLIST                                                              MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Keylist for Facility Amendment                                                     MD027429
+      *                                                                                     MD027429
+     C     KFcAm         KLIST                                                              MD027429
+     C                   KFLD                    K#BRCA1                                    MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+     C                   KFLD                    K#VLDT1                                    MD027429
+     C                   KFLD                    K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+     C     KFcAmP        KLIST                                                              MD027429
+     C                   KFLD                    K#BRCA1                                    MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Keylist for Credit Agreement - Tranche Facility                                    MD027429
+      *                                                                                     MD027429
+     C     KCaFc         KLIST                                                              MD027429
+     C                   KFLD                    K#CANM                                     MD027429
+     C                   KFLD                    K#CAFT                                     MD027429
+     C                   KFLD                    K#CAFN                                     MD027429
+      *                                                                                     MD027429
+      **  Initialised working variables                                                     MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             WSqNoN            4 0                      MD027429
+     C                   Z-ADD     0             WTRAmt           13 0                      MD027429
+     C                   Z-ADD     0             WCAAmt           13 0                      MD027429
+     C                   Z-ADD     0             WTRAmtX          13 0                      MD027429
+     C                   Z-ADD     0             WCAAmtX          13 0                      MD027429
+     C                   Z-ADD     0             WTRAmtD          13 0                      MD027429
+     C                   Z-ADD     0             WCAAmtD          13 0                      MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR'                                          MD027429
+     C     KFctyP        CHAIN     FCLTYFLK                                                 MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Save value of Credit Agreement Facility details                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA'                                          MD027429
+     C                   MOVEL     S#CSSN        K#CANM                                     MD027429
+     C                   MOVEL     S#FACT        K#CAFT                                     MD027429
+     C                   MOVEL     S#FCNO        K#CAFN                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVEL     FC_CANM       K#CANM                                     MD027429
+     C                   MOVEL     FC_CAFT       K#CAFT                                     MD027429
+     C                   MOVEL     FC_CAFN       K#CAFN                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Check for total facility amount of TR's up to value                                MD027429
+      ** date of facility amendment                                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR'                                          MD027429
+     C                   Z-ADD     0             WSqNoN                                     MD027429
+     C                   MOVE      S#SQNO        WSqNoN                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     1000          WSqNoN                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KCaFc         SETLL     FCLTYFL9                                                 MD027429
+     C     KCaFc         READE     FCLTYFL9                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCLTL9)                                       MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     TR_BRCA       K#BRCA1                                    MD027429
+     C                   MOVEL     TR_CNUM       K#CNUM1                                    MD027429
+     C                   Z-ADD     TR_FACT       K#FACT1                                    MD027429
+     C                   Z-ADD     TR_FCNO       K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_RECI = 'D'                                            MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   ADD       TR_FAMT       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     TR_FAMT       ZAMTCI                                     MD027429
+     C                   Z-ADD     TR_CAXR       ZEXCH                                      MD027429
+     C                   MOVE      TR_CMDI       ZMD                                        MD027429
+     C                   MOVEL     TR_FCCY       ZCCYI                                      MD027429
+     C                   MOVEL     TR_CACY       ZCCYO                                      MD027429
+      *                                                                                     MD027429
+     C                   EVAL      X = %LOOKUP(TR_FCCY:CYA)                                 MD027429
+     C                   EVAL      ZCDPI = NDP(X)                                           MD027429
+     C                   EVAL      X = %LOOKUP(TR_CACY:CYA)                                 MD027429
+     C                   EVAL      ZCDPO = NDP(X)                                           MD027429
+      *                                                                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmtX                                    MD027429
+      *                                                                                     MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+      ** Check for facility re-activation                                                   MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             WTRAmtX                                    MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+     C     KFcty         SETLL     LEFCAML6                                                 MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML6)                                       MD027429
+      *                                                                                     MD027429
+     C                   IF        CNUM = K#CNUM1 AND FACT = K#FACT1                        MD027429
+     C                             AND FCNO = K#FCNO1 AND FATP = 'FR'                       MD027429
+     C                   Z-ADD     AAMT          WTRAmtX                                    MD027429
+     C                   LEAVE                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        WTRAmtX = 0                                              MD027429
+     C                   Z-ADD     TR_FAMT       WTRAmtX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     WTRAmtX       ZAMTCI                                     MD027429
+     C                   Z-ADD     TR_CAXR       ZEXCH                                      MD027429
+     C                   MOVE      TR_CMDI       ZMD                                        MD027429
+     C                   MOVEL     TR_FCCY       ZCCYI                                      MD027429
+     C                   MOVEL     TR_CACY       ZCCYO                                      MD027429
+      *                                                                                     MD027429
+     C                   EVAL      X = %LOOKUP(TR_FCCY:CYA)                                 MD027429
+     C                   EVAL      ZCDPI = NDP(X)                                           MD027429
+     C                   EVAL      X = %LOOKUP(TR_CACY:CYA)                                 MD027429
+     C                   EVAL      ZCDPO = NDP(X)                                           MD027429
+      *                                                                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmtX                                    MD027429
+      *                                                                                     MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Check for FI/FD against the Tranche Facility                                       MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Check if Tranche is the facility of amendment events                               MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR' AND TR_CNUM = S#CNUM1                    MD027429
+     C                             AND TR_FACT = S#FACT1  AND                               MD027429
+     C                             TR_FCNO = S#FCNO1                                        MD027429
+     C                   MOVE      'Y'           WSmFc             1                        MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVE      'N'           WSmFc                                      MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAm         SETLL     LEFCAMP7                                                 MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML7)                                       MD027429
+      *                                                                                     MD027429
+      ** Include FI/FD of tranche facility up to value date and not equal                   MD027429
+      ** to sequence no. of facility amendment                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_VLDT < W#VLDT OR (FA_VLDT = W#VLDT                    MD027429
+     C                             AND FA_SQNO <> WSqNoN)                                   MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   Z-ADD     FA_AAMT       WTRAmtX                                    MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     FA_AAMT       ZAMTCI                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmtX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_FATP = 'FI'                                           MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+      ** If facility amendment is for Tranche and action not reverse,                       MD027429
+      ** include FI/FD on total amount                                                      MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR' AND WSmFc = 'Y'                          MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   Z-ADD     W#AAMT        WTRAmtX                                    MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     W#AAMT        ZAMTCI                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmTX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        S#ACTN <> 'D'                                            MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FI'                                            MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FD'                                            MD027429
+     C                   Z-ADD     WTRAmtX       WTRAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KCaFc         READE     FCLTYFL9                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR'                                          MD027429
+     C     WTRAmt        SUB       WTRAmtD       WTRAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Check for total facility amount of Credit Agreement                                MD027429
+      ** up to value date of facility amendment                                             MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     K#CANM        K#CNUM1                                    MD027429
+     C                   MOVEL     K#CAFT        K#FACT1                                    MD027429
+     C                   MOVEL     K#CAFN        K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA'                                          MD027429
+     C                   Z-ADD     0             WSqNoN                                     MD027429
+     C                   MOVE      S#SQNO        WSqNoN                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     1000          WSqNoN                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFctyP        CHAIN     FCLTYFLK                                                 MD027429
+      *                                                                                     MD027429
+     C                   IF        FC_RECI = 'D'                                            MD027429
+     C                   ADD       FC_FAMT       WCAAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+      ** Check for facility re-activation                                                   MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             WCAAmtX                                    MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+     C     KFcty         SETLL     LEFCAML6                                                 MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML6)                                       MD027429
+      *                                                                                     MD027429
+     C                   IF        CNUM = K#CNUM1 AND FACT = K#FACT1                        MD027429
+     C                             AND FCNO = K#FCNO1 AND FATP = 'FR'                       MD027429
+     C                   Z-ADD     AAMT          WCAAmtX                                    MD027429
+     C                   LEAVE                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        WCAAmtX = 0                                              MD027429
+     C                   Z-ADD     FC_FAMT       WCAAmtX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ADD       WCAAmtX       WCAAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     FC_BRCA       K#BRCA1                                    MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Check if Credit Agreement is the facility of amendment events                      MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA' AND FC_CNUM = S#CNUM1                    MD027429
+     C                             AND FC_FACT = S#FACT1 AND                                MD027429
+     C                             FC_FCNO = S#FCNO1                                        MD027429
+     C                   MOVE      'Y'           WSmFc                                      MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVE      'N'           WSmFc                                      MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAm         SETLL     LEFCAMP7                                                 MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML7)                                       MD027429
+      *                                                                                     MD027429
+      ** Include FI/FD of tranche facility up to value date and not equal                   MD027429
+      ** to sequence no. of facility amendment                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_VLDT < W#VLDT OR (FA_VLDT = W#VLDT                    MD027429
+     C                             AND FA_SQNO <> WSqNoN)                                   MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_FATP = 'FI'                                           MD027429
+     C                   ADD       FA_AAMT       WCAAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       FA_AAMT       WCAAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+      ** If facility amendment is for Credit Agreement and action                           MD027429
+      ** not reverse, include FI/FD on total amount                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA' AND WSmFc = 'Y'                          MD027429
+      *                                                                                     MD027429
+     C                   IF        S#ACTN <> 'D'                                            MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FI'                                            MD027429
+     C                   ADD       W#AAMT        WCAAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       W#AAMT        WCAAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FI'                                            MD027429
+     C                   Z-ADD     W#AAMT        WCAAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA'                                          MD027429
+     C     WCAAmt        ADD       WCAAmtD       WCAAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** If total facility amount of TR's exceed facility amount of                         MD027429
+      ** Credit Agreement, send message as follows:                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        WTRAmt > WCAAmt                                          MD027429
+      *                                                                                     MD027429
+      ** Error message when below amendment type for type of facility                       MD027429
+      ** will cause facility amount of TR's exceed the facility                             MD027429
+      ** amount of Credit Agreement                                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        (FctrTRCA = 'TR' AND S#FATP = 'FI'                       MD027429
+     C                             AND S#ACTN <> 'D') OR                                    MD027429
+     C                             (FctrTRCA = 'CA' AND S#FATP = 'FD'                       MD027429
+     C                             AND S#ACTN <> 'D')                                       MD027429
+      *                                                                                     MD027429
+     C                   MOVE      'N'           S#AAMTok                                   MD027429
+     C                   Add       1             Ix                                         MD027429
+     C                   MOVEL     'S#AAMT'      FldNameArr(Ix)                             MD027429
+     C                   MOVEL     'LEF0144'     MsgIdArr(Ix)                               MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+      ** Warning Message:                                                                   MD027429
+      ** a) Reversal of FD for TR or FI for CA will caused the facility                     MD027429
+      ** amount of TR's exceed facility amount of Credit Agreement                          MD027429
+      ** b) Facility amount of TR's still has exceeded the facility                         MD027429
+      ** amount of Credit Agreement with inserted/amended/reversed                          MD027429
+      ** facility amendment amount                                                          MD027429
+      *                                                                                     MD027429
+     C                   Add       1             Wx                                         MD027429
+     C                   MOVEL     'S#AAMT'      WFldNamArr(Wx)                             MD027429
+      *                                                                                     MD027429
+     C                   IF        (FctrTRCA = 'TR' AND S#FATP = 'FD'                       MD027429
+     C                             AND S#ACTN = 'D'                                         MD027429
+     C                             AND WTRAmtD <= WCAAmt) OR                                MD027429
+     C                             (FctrTRCA = 'CA' AND S#FATP = 'FI'                       MD027429
+     C                             AND S#ACTN = 'D'                                         MD027429
+     C                             AND WCAAmtD >= WTRAmt)                                   MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     'LEF0145'     WMsgIdArr(Wx)                              MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVEL     'LEF0146'     WMsgIdArr(Wx)                              MD027429
+     C                   ENDIF                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDSR                                                              MD027429
+      *****************************************************************                     MD027429
+      /SPACE 5                                                                              MD027429
       *****************************************************************
       * Validate Revolving Credit indicator
       *****************************************************************
@@ -1052,6 +1515,20 @@
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                     MD027429
+     C     ZCONVZ1       BEGSR                                                              MD027429
+     C                   CALLB     'ZCONVZ1'                                                MD027429
+     C                   PARM                    ZAMTCI           15 0                      MD027429
+     C                   PARM                    ZEXCH            13 8                      MD027429
+     C                   PARM                    ZMD               1                        MD027429
+     C                   PARM                    ZCCYI             3                        MD027429
+     C                   PARM                    ZCCYO             3                        MD027429
+     C                   PARM                    ZCDPI             1 0                      MD027429
+     C                   PARM                    ZCDPO             1 0                      MD027429
+     C                   PARM                    ZAMTCO           15 0                      MD027429
+     C                   ENDSR                                                              MD027429
+      *****************************************************************                     MD027429
+      /SPACE 5                                                                              MD027429
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
@@ -1339,6 +1816,34 @@
      C                   ENDIF                                                                CLE106
      C/COPY WNCPYSRC,LEH00246
       *                                                                                       CLE106
+      ** Access Currency Files                                                              MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     1             X                 3 0                      MD027429
+      *                                                                                     MD027429
+     C                   CALLB     'AOCURRR0'                                               MD027429
+     C                   PARM      *BLANKS       @RTCD                                      MD027429
+     C                   PARM      '*FIRST '     @OPTN                                      MD027429
+     C                   PARM                    @CYCD             3                        MD027429
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD027429
+      *                                                                                     MD027429
+     C                   MOVE      A6CYCD        CYA(X)                                     MD027429
+     C                   MOVE      A6NBDP        NDP(X)                                     MD027429
+      *                                                                                     MD027429
+     C     @RTCD         DOWNE     '*EOF    '                                               MD027429
+     C                   ADD       1             X                                          MD027429
+      *                                                                                     MD027429
+     C                   CALLB     'AOCURRR0'                                               MD027429
+     C                   PARM      *BLANKS       @RTCD                                      MD027429
+     C                   PARM      '*NEXT  '     @OPTN                                      MD027429
+     C                   PARM                    @CYCD                                      MD027429
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD027429
+      *                                                                                     MD027429
+     C     @RTCD         IFNE      '*EOF    '                                               MD027429
+     C                   MOVE      A6CYCD        CYA(X)                                     MD027429
+     C                   MOVE      A6NBDP        NDP(X)                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDDO                                                              MD027429
  
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT

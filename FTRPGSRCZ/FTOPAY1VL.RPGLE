@@ -15,7 +15,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD057597           Date 19Feb21               *
+      *                 MD057498           Date 26Jan21               *
+      *                 254841B            Date 14May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
       *                 CFT142             Date 20Feb15               *
@@ -107,6 +110,17 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057597 - Move re-execution of VSETCA after DFTCHG to       *
+      *             validate settle amount defaulted from pay amount. *
+      *  MD057498 - Unable to complete OPAY transaction due error     *
+      *             MMA0932 in SWIFT MT202 indicator field. Change    *
+      *             error displayed to be a warning if sender's       *
+      *             correspondent and destination are not the same    *
+      *             entity and MT202 indicator remains unticked.      *
+      *  254841B - Reexecute the validation of Settle Amount when     *
+      *            field is left blank and gets defaulted from Pay    *
+      *            Amount.                                            *
+      *          - Applied for MD055654.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -514,6 +528,8 @@
                                                                                               CFT032
      D WODMT18         S             18A                                                      CFT032
                                                                                               CFT032
+     D WsmamInd        S              1  0                                                   254841B
+     D Wsmamnum        S             13  0                                                   254841B
       ** Work fields for ZALIGN                                                             BUG15032
      D ZAlignOk        S              1A                                                    BUG15032
      D ZFIELD          S             16A                                                    BUG15032
@@ -840,7 +856,21 @@
 
       * Validate entered amounts agree
      C                   If        Idx = 0
+      *                                                                                      254841B
+      ** When Settle Amount is not entered but rather defaulted from                         254841B
+      ** Pay Amount, execute the validation of Settle amount.                                254841B
+      *                                                                                      254841B
+     C                   Move      SSMAM         WsmamNum                                    254841B
+     C                   If        SSMAM = *Blanks Or                                        254841B
+     C                             WsmamNum = 0                                              254841B
+     C                   eval      WsmamInd = 1                                              254841B
+     C                   else                                                                254841B
+     C                   eval      WsmamInd = 0                                              254841B
+     C                   Endif                                                               254841B
      C                   Exsr      VEUXCHK
+     c**********         If        WsmamInd = 1                                     254841B MD057597
+     c**********         EXSR      VSETCA                                           254841B MD057597
+     c**********         Endif                                                      254841B MD057597
      C                   End
 
       * Validate Book Code
@@ -1008,6 +1038,9 @@
      C                   If        SACTION = 'I'                                              258229
      C                   Eval      NEWPMTSCN4A = *Blanks                                      259767
      C                   EXSR      DFTCHG                                       CFT009
+     C                   IF        WsmamInd = 1                                             MD057597
+     C                   EXSR      VSETCA                                                   MD057597
+     C                   ENDIF                                                              MD057597
      C                   EndIf                                                                258229
       * Check if charges fields were entered or previously defaulted                         BUG6280
       * If so then do not default                                                            BUG6280
@@ -2228,6 +2261,13 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
+
+      *                                                                                     MD057498
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD057498
+      *                                                                                     MD057498
+     C                   Parm                    WFldNmXAr                                  MD057498
+     C                   Parm                    WMsgIDXAr                                  MD057498
+     C                   Parm                    WMsgDtaXAr                                 MD057498
 
       * OK Flags
      C                   Parm                    OKFlagsDS

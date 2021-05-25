@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. AR968075           Date 04Jun12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 08Oct07               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 03Mar10               *
@@ -36,6 +37,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR968075 - Top sweep for UPM INTGBP not happenning in CoB    *
+      *             CAP204 changed PGM to stop using Lf/ACPO1         *
+      *             Need to use ACPO1 as Sweep process looking at     *
+      *             GE-CX entries added to Pf/GECXPD as part of       *
+      *             REC100816 PGMs. (Child: AR968077)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -61,7 +67,8 @@
      FRECMLCL3  IF   E           K DISK    INFSR(*PSSR)
      F***ACPO1**   IF   F  400    18AIDISK    KEYLOC(2) USROPN                                CGL029
      F***ACPO1     IF   F  400    24AIDISK    KEYLOC(2) USROPN                         CGL029 CAP204
-     FGLACPML0  IF   F  400    24AIDISK    KEYLOC(2) USROPN                                   CAP204
+     F***GLACPML0  IF   F  400    24AIDISK    KEYLOC(2) USROPN                       CAP204 AR968075
+     FACPO1     IF   F  620    24AIDISK    KEYLOC(2) USROPN                                 AR968075
      FRSACMTL6  IF   E           K DISK    USROPN
      F                                     PREFIX(E_)
      FREICSDL6  IF   E           K DISK    INFSR(*PSSR)                         216421
@@ -135,8 +142,10 @@
  
  
      I***ACPO1     NS                                                                         CAP204
-     IGLACPML0  NS                                                                            CAP204
-     I                                  1  400  INREC
+     I***GLACPML0  NS                                                                CAP204 AR968075
+     I**********                        1  400  INREC                                       AR968075
+     IACPO1     NS                                                                          AR968075
+     I                                  1  620  INREC                                       AR968075
  
      IRSACMTPO      01
      I              PTDT                        E_PSTD
@@ -175,7 +184,8 @@
      C                   CLOSE     RSACMTL6
      C                   ELSE
      C**********         CLOSE     ACPO1                                                      CAP204
-     C                   CLOSE     GLACPML0                                                   CAP204
+     C**********         CLOSE     GLACPML0                                          CAP204 AR968075
+     C                   CLOSE     ACPO1                                                    AR968075
      C                   ENDIF
      C                   MOVEL     'Y'           PgmEnded          1
      C                   ENDIF
@@ -276,7 +286,8 @@
      C     RSACMTK       SETLL     RSACMTL6
      C                   ELSE
      C*****ACPOK         SETLL     ACPO1                                                      CAP204
-     C     ACPOK         SETLL     GLACPML0                                                   CAP204
+     C*****ACPOK         SETLL     GLACPML0                                          CAP204 AR968075
+     C     ACPOK         SETLL     ACPO1                                                    AR968075
      C                   ENDIF
  
      C                   EXSR      READ_ENTRY
@@ -484,13 +495,15 @@
      C                   ELSE
  
      C*****ACPOK         READE     ACPO1                                  60    *             CAP204
-     C     ACPOK         READE     GLACPML0                               60    *             CAP204
+     C*****ACPOK         READE     GLACPML0                               60    *    CAP204 AR968075
+     C     ACPOK         READE     ACPO1                                  60    *           AR968075
      C  N60              MOVEL     INREC         I_ENTRY
      C     *IN60         DOWEQ     '0'
      C     E_RECI        ANDNE     'P'
      C     E_RECI        ANDNE     'D'
      C*****ACPOK         READE     ACPO1                                  60    *             CAP204
-     C     ACPOK         READE     GLACPML0                               60    *             CAP204
+     C*****ACPOK         READE     GLACPML0                               60    *    CAP204 AR968075
+     C     ACPOK         READE     ACPO1                                  60    *           AR968075
      C  N60              MOVEL     INREC         I_ENTRY
      C                   ENDDO
  
@@ -1559,7 +1572,8 @@
      C                   OPEN      RSACMTL6
      C                   ELSE
      C**********         OPEN      ACPO1                                                      CAP204
-     C                   OPEN      GLACPML0                                                   CAP204
+     C**********         OPEN      GLACPML0                                          CAP204 AR968075
+     C                   OPEN      ACPO1                                                    AR968075
      C                   ENDIF
  
       * Register P1 printer file with RCF

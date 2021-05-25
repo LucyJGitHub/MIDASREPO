@@ -19,7 +19,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD057083           Date 20Jan21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024980           Date 26Mar14               *
       *                 MD000091           Date 08May13               *
       *                 MD020266           Date 07May13               *
@@ -45,6 +46,9 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057083 - Journal entry overrides for Retail accounts not   *
+      *             working. Amend to check user authorise to         *
+      *             Override for Retail Accounts.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024980 - Incomplete error description for Blocked and      *
       *             Refer DR and CR, Inactive, Bad debt, Bankrupt     *
@@ -243,8 +247,9 @@
       ** If Block GL Accounts feature is switched on and account
       ** type is GL, check overrideable GL errors.
       *
-     C     CGL002        IFEQ      'Y'
-     C     B2ACTY        ANDEQ     'G'
+     C*****CGL002        IFEQ      'Y'                                                      MD057083
+     C*****B2ACTY        ANDEQ     'G'                                                      MD057083
+     C     B2ACTY        IFEQ      'G'                                                      MD057083
      C                   EXSR      SRAcSt
      C                   ENDIF
       *
@@ -271,8 +276,13 @@
      C     WRRE01        IFNE      'Y'
      C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
+     C     CGL002        ANDEQ     'Y'                                                      MD057083
+     C     WRRE01        ORNE      'Y'                                                      MD057083
+     C     B2ACTY        ANDEQ     'G'                                                      MD057083
+     C     CGL002        ANDNE     'Y'                                                      MD057083
      C     WRRE01        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
+     C     WUAUTH        ANDNE     'Y'                                                      MD057083
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -288,8 +298,13 @@
      C     WRRE02        IFNE      'Y'
      C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
+     C     CGL002        ANDEQ     'Y'                                                      MD057083
+     C     WRRE02        ORNE      'Y'                                                      MD057083
+     C     B2ACTY        ANDEQ     'G'                                                      MD057083
+     C     CGL002        ANDNE     'Y'                                                      MD057083
      C     WRRE02        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
+     C     WUAUTH        ANDNE     'Y'                                                      MD057083
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -305,8 +320,13 @@
      C     WRRE03        IFNE      'Y'
      C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
+     C     CGL002        ANDEQ     'Y'                                                      MD057083
+     C     WRRE03        ORNE      'Y'                                                      MD057083
+     C     B2ACTY        ANDEQ     'G'                                                      MD057083
+     C     CGL002        ANDNE     'Y'                                                      MD057083
      C     WRRE03        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
+     C     WUAUTH        ANDNE     'Y'                                                      MD057083
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -322,8 +342,13 @@
      C     WRRE04        IFNE      'Y'
      C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
+     C     CGL002        ANDEQ     'Y'                                                      MD057083
+     C     WRRE04        ORNE      'Y'                                                      MD057083
+     C     B2ACTY        ANDEQ     'G'                                                      MD057083
+     C     CGL002        ANDNE     'Y'                                                      MD057083
      C     WRRE04        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
+     C     WUAUTH        ANDNE     'Y'                                                      MD057083
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd

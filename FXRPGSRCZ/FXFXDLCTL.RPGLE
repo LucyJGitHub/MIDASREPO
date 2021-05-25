@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 251029             Date 22May20               *
+      *  Prev Amend No. MD031031           Date 23Feb15               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -101,10 +103,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251029 - Handle file locking properly. Patterned after fix   *
+      *           231306.                                             *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *      
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompile)                                         *
@@ -1717,7 +1724,8 @@
      C                   WRITE     FXVFXDLD0
 
       ** Insert DLDLDBQD record for CLE025 processing                                         247888
-     C                   IF        DDACTN = 'I' AND CLE025 = 'Y'                              247888
+     C**********         IF        DDACTN = 'I' AND CLE025 = 'Y'                     247888 MD031031
+     C                   IF        DDACTN = 'I'                                             MD031031
      C     DDDLNO        CHAIN     DLDLDBD0                           12                      247888
      C     *IN12         IFEQ      *ON                                                        247888
      C                   EVAL      DX_F1DLNO = DDDLNO                                         247888
@@ -1779,10 +1787,37 @@
      C                   EXSR      CallMsgHdl
      C                   ENDIF
 
+      *  Check for exception error from any program lower in the stack                        251029
+      *  If error detected, roll back any updates, send message to system                     251029
+      *  operator and return error back to calling program                                    251029
+     C                   IN        APDUMP                                                     251029
+      *                                                                                       251029
+     C     ARERRMOD      IFNE      *BLANK                                                     251029
+     C                   ROLBK                                                                251029
+      *                                                                                       251029
+     C                   EVAL      MQErrlong  = *blank                                        251029
+     C                   MOVEL     ProcErr       MQError                                      251029
+     C                   MOVE      ARERRMOD      MQError          28                          251029
+     C                   MOVEL     MQError       MQErrlong                                    251029
+      *                                                                                       251029
+     C                   CALLB     'ZAMSGTOOPR'                                               251029
+     C                   PARM                    MQReturn         10                          251029
+     C                   PARM                    MQErrlong       132                          251029
+     C                   PARM                    DummyMsgID                                   251029
+     C                   PARM                    DummyMsgF                                    251029
+      *                                                                                       251029
+     C                   MOVEL     ARERRMOD      APRETCODE                                    251029
+     C     *LOCK         IN        APDUMP                                                     251029
+     C                   EVAL      ARERRMOD = *BLANK                                          251029
+     C                   OUT       APDUMP                                                     251029
+     C                   RETURN                                                               251029
+     C                   ELSE                                                                 251029
+      *                                                                                       251029
      C                   If        CSC022 = 'N'                                               CSC022
      C                             Or (CSC022 = 'Y' and WSkpCom = 'N')                        CSC022
      C                   COMMIT
      C                   Endif                                                                CSC022
+     C                   ENDIF                                                                251029
 
      C                   ENDSR
       *****************************************************************

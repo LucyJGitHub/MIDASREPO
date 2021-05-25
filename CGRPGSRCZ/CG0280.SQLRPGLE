@@ -1,5 +1,6 @@
      H DEBUG
-     H CVTOPT (*GRAPHIC)                                                                    MD054955
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
+     H*CVTOPT*(*GRAPHIC)***********************************************            MD054955 MD056543
       *****************************************************************
 /*S*DF***RPGBASE*******************************************************                       CSD053
 /**** *  RPGBNOCVT                                                    *              CSD053 MD054955
@@ -21,7 +22,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055928           Date 02Jun20               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD055928           Date 02Jun20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -63,6 +65,9 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
       *  MD055928 - Schedule cannot be inserted for Primary recipient.*
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *

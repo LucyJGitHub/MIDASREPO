@@ -10,8 +10,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD055685           Date 24Apr20              */
-/*       Prev Amend No. 258246             Date 18Sep19              */
+/*       Last Amend No. MD056889           Date 11Oct20              */
+/*       Prev Amend No. MD057158           Date 10Nov20              */
+/*                      MD055685           Date 24Apr20              */
+/*                      258246             Date 18Sep19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CLE134             Date 01Aug12              */
 /*                      BUG27747A          Date 28Jun10              */
@@ -29,6 +31,12 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056889 - Deliverable Data Split for SDJARFPD              */
+/*       MD057158 - Incorrect update of facility amount and drawn    */
+/*                  amount in FACHISA during ANWD COB for a facility */
+/*                  with backvalued MR. Clear FACACT for non-working */
+/*                  day processing and CLE025 is ON (which means     */
+/*                  LEC000030 runs during COB and before LERC30).    */
 /*       MD055685 - Double posting of Retail Account Debit Balance   */
 /*                  on FCLTYFN and FACHISA. Do not process RSACMTPD  */
 /*                  records on ANWD run. Set job switch 4 to ON to   */
@@ -82,7 +90,8 @@
              DCL        VAR(&JAVA_PATH) TYPE(*CHAR) LEN(1024)                             /*CLE040*/
              DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)                          /*BUG27747A*/
       /*     DCLF       FILE(SDJARFPD)        */                               /*CLE040*/ /*CSD028*/
-             DCLF       FILE(SDJARFL0)                                                    /*CSD028*/
+/**********  DCLF       FILE(SDJARFL0) */                                       /*CSD028**MD056889*/
+             DCLF       FILE(SDJARJW1)                                                  /*MD056889*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2003')
@@ -414,7 +423,8 @@
 /**********               A/logs:+                                                        /*CLE040*/
 /**********               A/calmancl')                                            /*BUG3523 CLE040*/
                                                                                           /*CLE040*/
- SETUP_PATH: RCVF       RCDFMT(SDJARFD0)                                                  /*CLE040*/
+/*SETUP_PATH: RCVF       RCDFMT(SDJARFD0) */                                    /*CLE040**MD056889*/
+ SETUP_PATH: RCVF       RCDFMT(SDJARJT1)                                                /*MD056889*/
                                                                                           /*CLE040*/
              /* END OF FILE */                                                            /*CLE040*/
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))                      /*CLE040*/
@@ -438,8 +448,10 @@
              MONMSG     MSGID(CPFA0A0)                                                 /*BUG27747A*/
 
 /* If ANWD run, set job switch 4 to ON */                                               /*MD055685*/
+/* and clear FACACT file */                                                             /*MD057158*/
                                                                                         /*MD055685*/
              IF         COND(&CSEQ = 00002) THEN(DO)                                    /*MD055685*/
+                CLRPFM     FILE(FACACT)                                                 /*MD057158*/
                 CHGJOB     SWS(XXX1XXXX)                                                /*MD055685*/
              ENDDO                                                                      /*MD055685*/
                                                                                         /*MD055685*/

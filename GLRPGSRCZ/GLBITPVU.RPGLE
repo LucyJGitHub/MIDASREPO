@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. AR574704           Date 01Jun20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056412           Date 11Aug20               *
+      *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048370           Date 29Nov17               *
@@ -96,8 +98,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR574704 - Cannot delete item if account is invalid. Neglect *
+      *             validation for action code Delete.                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD056412 - BITP API message not shows in Repair              *
+      *             Queue - Batch Details. Pass BRBTNB to DDBTNB      *
+      *             after reading GLJENHL3.                           *
+      *           - Applied for MD-57214                              *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -617,6 +625,7 @@
       *                                                                                       249585
      C     *IN31         IFEQ      *OFF                                                     MD043023
      C                   EVAL      HeaderFound = 'Y'                                        MD043023
+     C                   MOVE      BRBTNB        DDBTNB                                     MD056412
      C                   ENDIF                                                              MD043023
       ** Retrieve original batch item details                                                 249585
       *                                                                                       249585
@@ -764,13 +773,20 @@
       ** If errors exist, set Valid Indicator to 'N'; otherwise, set
       ** Valid Indicator to 'Y' and Transaction Status to S (Success).
       *
+     C     B2VALI        IFNE      '*'                                                      AR574704
      C     Idx           IFGT      *ZERO
      C                   EVAL      B2VALI = 'N'
      C                   ELSE
       ** Take into account whether item is to be deleted
-     C     B2VALI        IFNE      '*'
+     C*****B2VALI        IFNE      '*'                                                      AR574704
      C                   EVAL      B2VALI = 'Y'
      C                   ENDIF
+     C                   ELSE                                                               AR574704
+     C                   CLEAR                   PFlagsOK                                   AR574704
+     C                   CLEAR                   FldNameArr                                 AR574704
+     C                   CLEAR                   MsgIDArr                                   AR574704
+     C                   CLEAR                   MsgDtaArr                                  AR574704
+     C                   CLEAR                   Idx                                        AR574704
      C                   ENDIF
                                                                                             AR994585
       ** Do not write when User has pressed Cancel                                          AR994585

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055267           Date 16Mar20              */
-/*       Prev Amend No. CSW051             Date 15Mar18              */
+/*       Last Amend No. MD056206           Date 24Sep20              */
+/*       Prev Amend No. MD055267           Date 16Mar20              */
+/*                      CSW051             Date 15Mar18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
 /*                      AR796078           Date 28Jun11              */
@@ -46,6 +47,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD056206 - CFCONTROL job for London SpA ends abruptly.      */
+/*                - TRAMSWFT.DAT in use during Copy To PC Documemt   */
+/*                  command. Issue monitor message and retry the     */
+/*                  copy command. Based from fix 098361.             */
 /*       MD055267 - CFC0181 locks during COB on a daily basis.       */
 /*       CSW051 - Send confirmation from MMM to TRAM via MQ Series.  */
 /*                Also include fix 262207 - Commit transactions      */
@@ -517,9 +522,17 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                           CMDLBL(ABNOR))                            /* E42976 */
 
-             CPYTOPCD   FROMFILE(CFWICMPD) TOFLR(&FLR) +
+/*           CPYTOPCD   FROMFILE(CFWICMPD) TOFLR(&FLR) +
                           TODOC(TRAMSWFT.DAT) REPLACE(*YES) +
-                          TRNFMT(*NOTEXT) /*S01304*/
+                          TRNFMT(*NOTEXT)                            */          /*S01304 MD056206*/
+ RETCPY:     CPYTOPCD   FROMFILE(CFWICMPD) TOFLR(&FLR) +
+                          TODOC(TRAMSWFT.DAT) REPLACE(*YES) +
+                          TRNFMT(*NOTEXT)                                               /*MD056206*/
+             MONMSG     MSGID(CPF8A80 IWS16B9 IWS1612) +
+                          EXEC(DO)                                                      /*MD056206*/
+             DLYJOB     DLY(30)                                                         /*MD056206*/
+             GOTO       RETCPY                                                          /*MD056206*/
+             ENDDO                                                                      /*MD056206*/
                                                                                         /*MD055267*/
              DLCOBJ     OBJ((CFWICMPD *FILE *EXCL *FIRST))                              /*MD055267*/
                                                                                         /*MD055267*/

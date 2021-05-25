@@ -19,8 +19,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053007           Date 30Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249492A            Date 22May20               *
+      *  Prev Amend No. 249492             Date 22May20               *
+      *                 MD053007           Date 30Oct19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -63,6 +65,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  249492A - SE1130P1 Report Issue, increase printed lines      *
+      *  249492 - SE1130P1 Report Issue and Printer Overflow Problem  *
       *  MD053007 - REPO Balance is truncated in report. Recompiled   *
       *             due to changes in SE1130P1 printer file.          *
       *  MD046248 - Finastra Rebranding                               *
@@ -377,9 +381,13 @@
      C           PREC      IFNE 0
       ** Check if need to write header before writing trailer to prevent  191697
       ** printer over flow.                                               191697
-     C                     ADD  3         LCNT                            191697
-     C           LCNT      IFGT 44                                        191697
-     C                     Z-ADD0         LCNT                            191697
+      ** printer over flow.                                               191697
+     C**********           ADD  3         LCNT                                         191697 249492
+     C********** LCNT      IFGT 44                                                     191697 249492
+     C********** LCNT      IFGE 52                                                    249492 249492A
+     C           LCNT      IFGE 59                                                           249492A
+     C**********           Z-ADD0         LCNT                                         191697 249492
+     C                     Z-ADD12        LCNT                                                249492
      C                     WRITEHEAD1                                     191697
      C                     WRITEHEAD2                                     191697
      C                     WRITEHEAD3                                     191697
@@ -495,9 +503,12 @@
      C           WDSBA     IFNE *BLANKS                                   S01117
       ** Check if need to write header before writing trailer to prevent  191697
       ** printer over flow.                                               191697
-     C                     ADD  3         LCNT                            191697
-     C           LCNT      IFGT 44                                        191697
-     C                     Z-ADD0         LCNT                            191697
+     C**********           ADD  3         LCNT                                         191697 249492
+     C********** LCNT      IFGT 44                                                     191697 249492
+     C********** LCNT      IFGE 52                                                    249492 249492A
+     C           LCNT      IFGE 59                                                           249492A
+     C**********           Z-ADD0         LCNT                                         191697 249492
+     C                     Z-ADD12        LCNT                                                249492
      C                     WRITEHEAD1                                     191697
      C                     WRITEHEAD2                                     191697
      C                     WRITEHEAD3                                     191697
@@ -530,8 +541,10 @@
      C           WDSBA     IFNE DSBA                                      S01117
      C           WDDPT     ORNE DDPT
      C***********LCNT      ORGT 22                                        077441
-     C           LCNT      ORGT 44                                        077441
-     C                     Z-ADD0         LCNT
+     C********** LCNT      ORGT 44                                                     077441 249492
+     C********** LCNT      ORGE 52                                                    249492 249492A
+     C           LCNT      ORGE 59                                                           249492A
+     C**********           Z-ADD0         LCNT                                                249492
      C*
      C**  OBTAIN CUSTOMER REPORT NAME FOR NEW DEPOT
      C*
@@ -554,6 +567,7 @@
      C***********          MOVE DSBR      HDBR                            S01117
      C                     MOVE DSBA      HDBA                            S01117
      C                     MOVELBRNM      HDBRNM
+     C                     Z-ADD12        LCNT                                                249492
      C                     WRITEHEAD1
      C                     WRITEHEAD2
      C                     WRITEHEAD3
@@ -640,21 +654,28 @@
      C**  WRITE DETAIL LINE
       ** Check if need to write header before writing trailer to prevent                      208281
       ** printer over flow.                                                                   208281
-     C                     ADD  3         LCNT                                                208281
-     C           LCNT      IFGT 44                                                            208281
-     C                     Z-ADD0         LCNT                                                208281
+     C**********           ADD  3         LCNT                                         208281 249492
+     C********** LCNT      IFGT 44                                                     208281 249492
+     C********** LCNT      IFGE 52                                                    249492 249492A
+     C           LCNT      IFGE 59                                                           249492A
+     C**********           Z-ADD0         LCNT                                         208281 249492
+     C                     Z-ADD12        LCNT                                                249492
      C                     WRITEHEAD1                                                         208281
      C                     WRITEHEAD2                                                         208281
      C                     WRITEHEAD3                                                         208281
      C                     WRITEHEAD4                                                         208281
      C                     ENDIF                                                              208281
      C*
-     C                     WRITEDETAIL1
+     C**********           WRITEDETAIL1                                                       249492
      C*
      C**  INCREMENT RECORD COUNT AND LINE COUNT
      C*
      C                     ADD  1         PREC
      C                     ADD  1         LCNT
+     C           *IN55     IFEQ '1'                                                           249492
+     C                     ADD  1         LCNT                                                249492
+     C                     ENDIF                                                              249492
+     C                     WRITEDETAIL1                                                       249492
      C*
      C           EPR01     ENDSR
       *

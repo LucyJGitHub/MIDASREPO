@@ -17,7 +17,11 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *  Prev Amend No. BUG7555            Date 16Feb21               *
+      *                 AR921987           Date 23Mar12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036089           Date 23Oct15               *
       *                 AR1090283          Date 10Aug16               *
@@ -106,6 +110,19 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  BUG7555 - When an incoming message is routed to incoming     *
+      *            payment, default payment value date to the date    *
+      *            on field 32A.                                      *
+      *          - Applied for MD-57425.                              *
+      *  AR921987 - If Sender's Correspondent is decoded it must be   *
+      *             placed in Receiver's Correspondent for IN (if     *
+      *             Receiver's Correspondent is blank and Sender's    *
+      *             Correspondent is non-blank). (Child: AR921990)    *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -9406,15 +9423,19 @@
       *
       ** MMDDYY format display.
       *
+      ** Also default pay value date with the date on field 32A.                             BUG7555
+      *                                                                                      BUG7555
      C     BJDFIN        IFEQ      'M'
       *
      C                   EVAL      ODDSLDT = WD2 + WD3 + WD1
+     C                   EVAL      ODDPYDT = WD2 + WD3 + WD1                                 BUG7555
       *
      C                   ELSE
       *
       ** DDMMYY format display.
       *
      C                   EVAL      ODDSLDT = WD3 + WD2 + WD1
+     C                   EVAL      ODDPYDT = WD3 + WD2 + WD1                                 BUG7555
       *
      C                   ENDIF
       *
@@ -9510,8 +9531,14 @@
       ** Receiver's Correspondent.
       *
      C     P54           IFNE      *BLANKS
+     C     P54           OREQ      *BLANKS                                                  AR921987
+     C     P53           ANDNE     *BLANKS                                                  AR921987
       *
+     C     P54           IFNE      *BLANKS                                                  AR921987
      C                   MOVEL     P54           DSTRAN
+     C                   ELSE                                                               AR921987
+     C                   MOVEL     P53           DSTRAN                                     AR921987
+     C                   ENDIF                                                              AR921987
      C*****              MOVEL     TMLIN1        ODDRCCO                        CFT014
      C                   MOVEL     TMLIN1        ODDRCO1                        CFT014
      C                   MOVEL     TMLIN2        ODDRCO2                        CFT014
@@ -11761,42 +11788,62 @@
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
-     C                   MOVE      *BLANKS       ODDSND1
-     C                   MOVE      *BLANKS       ODDSND2
-     C                   MOVE      *BLANKS       ODDSND3
-     C                   MOVE      *BLANKS       ODDSND4
-     C                   MOVEL     WWACNO        ODDSND1
+     C**********         MOVE      *BLANKS       ODDSND1                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND2                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND3                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND4                                    AR921987
+     C**********         MOVEL     WWACNO        ODDSND1                                    AR921987
+      *                                                                                     AR921987
+      ** Map the Retail Account to Receiver's Correspondent                                 AR921987
+      *                                                                                     AR921987
+     C                   MOVE      *BLANKS       ODDRCO1                                    AR921987
+     C                   MOVEL     WWACNO        ODDRCO1                                    AR921987
       *
       ** If Currency the same as Settle and Nostro, use Nostro.
       *
      C     WWNCCY        WHENEQ    ODDSMCY
      C     WWNONB        ANDNE     *BLANKS
-     C                   MOVE      *BLANKS       ODDSND1
-     C                   MOVE      *BLANKS       ODDSND2
-     C                   MOVE      *BLANKS       ODDSND3
-     C                   MOVE      *BLANKS       ODDSND4
-     C     WWNCCY        CAT(P)    WWNONB        ODDSND1
+     C**********         MOVE      *BLANKS       ODDSND1                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND2                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND3                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND4                                    AR921987
+     C*****WWNCCY        CAT(P)    WWNONB        ODDSND1                                    AR921987
+      *                                                                                     AR921987
+      ** Map the Nostro to Receiver's Correspondent                                         AR921987
+      *                                                                                     AR921987
+     C                   MOVE      *BLANKS       ODDRCO1                                    AR921987
+     C     WWNCCY        CAT(P)    WWNONB        ODDRCO1                                    AR921987
       *
       ** If Currency the same, use GL Account.
       *
      C     WRCYCD        WHENEQ    ODDSMCY
-     C                   MOVE      *BLANKS       ODDSND1
-     C                   MOVE      *BLANKS       ODDSND2
-     C                   MOVE      *BLANKS       ODDSND3
-     C                   MOVE      *BLANKS       ODDSND4
+     C**********         MOVE      *BLANKS       ODDSND1                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND2                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND3                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND4                                    AR921987
      C     BGMBIN        IFNE      'Y'
      C                   MOVE      '   '         TRCODE
      C                   ENDIF
-     C                   MOVEL     TRCODE        ODDSND1
+      *                                                                                     AR921987
+      ** Map the GL Account to Receiver's Correspondent                                     AR921987
+      *                                                                                     AR921987
+     C**********         MOVEL     TRCODE        ODDSND1                                    AR921987
+     C                   MOVE      *BLANKS       ODDRCO1                                    AR921987
+     C                   MOVEL     TRCODE        ODDRCO1                                    AR921987
       *
       ** Use Customer Number.
       *
      C                   OTHER
-     C                   MOVE      *BLANKS       ODDSND1
-     C                   MOVE      *BLANKS       ODDSND2
-     C                   MOVE      *BLANKS       ODDSND3
-     C                   MOVE      *BLANKS       ODDSND4
-     C                   MOVEL     WRCNUM        ODDSND1
+     C**********         MOVE      *BLANKS       ODDSND1                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND2                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND3                                    AR921987
+     C**********         MOVE      *BLANKS       ODDSND4                                    AR921987
+     C**********         MOVEL     WRCNUM        ODDSND1                                    AR921987
+      *                                                                                     AR921987
+      ** Map the Customer Number to Receiver's Correspondent                                AR921987
+      *                                                                                     AR921987
+     C                   MOVE      *BLANKS       ODDRCO1                                    AR921987
+     C                   MOVEL     WRCNUM        ODDRCO1                                    AR921987
       *
      C                   ENDSL
       *

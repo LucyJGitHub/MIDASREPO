@@ -22,6 +22,13 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057048           Date 24Nov20               *
+      *                 AR375891A          Date 26Aug20               *
+      *                 MD028351           Date 14Aug14               *
+      *                 MD053375           Date 11Oct19               *
+      *                 MD055481           Date 04Sep20               *
+      *                 MD055733           Date 03Jul20               *
+      *                 MD056223           Date 15Jul20               *
       *                 MD026969           Date 23Oct19               *
       *                 MD052216           Date 04Apr19               *
       *                 CER050             Date 16Jun19               *
@@ -213,6 +220,29 @@
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057048 - LEFEED.ROBN is being reset to zero for several    *
+      *             fees. Remove code moving zeros to LEFEED fields.  *
+      *             Instead of move, zeroise LEFHST fields.           *      
+      *  AR375891A - Fee attached to parts sold posted to the suspense*
+      *              account. Move PSTM and PONS to LKSETP and LKOSAC *
+      *              (Child: AR375892).                               *
+      *  MD028351 - Condition 248821 to CLE122 if switched on.        *
+      *  MD053375 - Incorrect fee settlement amount in LER170 report. *
+      *             Write copy of fee record in LEFECPPD each time the*
+      *             non-calculated fee is updated.                    *
+      *  MD055481 - Show the original borrower on the report for loan *
+      *             fees attached to a participation purchased if the *
+      *             system value 'LoanCustOriginPurch' is equal to 'O'*
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
+      *  MD056223 - CLE031: Incorrect Posting narratives in           *
+      *             Fee postings with conversion                      *
+      *           - The amount and currency of the posting narratives *
+      *             of Cross currency settlements P and S records     *
+      *             whose narrative codes defined as 03 are now       *
+      *             formatted based on the format string defined in   *
+      *             Narrative Codes File SDNARRPD.                    *
       *  MD026969 - New Processing for Fee Settlement.                *
       *           - Applied for MD054354                              *
       *  MD052216 - Lending Fee's Payment Due and Taken Day           *
@@ -672,6 +702,8 @@
      FLEPXTAA O   E                    DISK         KINFSR *PSSR      UC  CLE007
      FLEPXTAB O   E                    DISK         KINFSR *PSSR      UC  CLE007
      FLEPXTAC O   E                    DISK         KINFSR *PSSR      UC  CLE007
+     FLEFECPPDO   E                    DISK         KINFSR *PSSR                            MD053375
+     F            LEFEEDF                           KRENAMELEFECPD0                         MD053375
      F***LEHISTV3IF  E           K        DISK                                     AR317401 MD046294
      FLEPK3DPDO   E                    DISK         KINFSR *PSSR                              CLE134
      F            LKEYFEDF                          KRENAMELKEYF3DF                           CLE134
@@ -793,6 +825,9 @@
      I              PCOB                            TPPCOB                156041
      I              LSWC                            TPLSWC                156041
      I              LSWS                            TPLSWS                156041
+     I              FRNT                            TPFRNT                                  MD055481
+     I              AFRT                            TPAFRT                                  MD055481
+     I              REPA                            TPREPA                                  MD055481
      ICLOANPE                                                                                 260961
      I              IUSR                            PEIUSR                                    260961
      I              AUSR                            PEAUSR                                    260961
@@ -834,6 +869,9 @@
      I              PCOB                            PEPCOB                                    260961
      I              LSWC                            PELSWC                                    260961
      I              LSWS                            PELSWS                                    260961
+     I              FRNT                            PEFRNT                                  MD055481
+     I              AFRT                            PEAFRT                                  MD055481
+     I              REPA                            PEREPA                                  MD055481
       *                                                                                       260961
      IMCLONCLF                                                                                260961
      I              IUSR                            MCIUSR                                    260961
@@ -876,6 +914,9 @@
      I              PCOB                            MCPCOB                                    260961
      I              LSWC                            MCLSWC                                    260961
      I              LSWS                            MCLSWS                                    260961
+     I              FRNT                            MCFRNT                                  MD055481
+     I              AFRT                            MCAFRT                                  MD055481
+     I              REPA                            MCREPA                                  MD055481
       *****************************************************************            AR317401 MD046294
      I***HISTSHPF                                                                  AR317401 MD046294
       *****************************************************************            AR317401 MD046294
@@ -1813,6 +1854,8 @@
       *                                                                                     MD046294
      I              'ZAAMLSETLE'          C         AMLPRI                                    CGL020
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I              'LoanCustOriginPurch' C         WPARM                                   MD055481
+      *                                                                                     MD055481
      I/COPY WNCPYSRC,LER130IIP1                                           S01408
       *****************************************************************
      C/TITLE MAIN PROCESSING
@@ -2594,6 +2637,10 @@
       *
      C                     ADD  1         WNORE
      C                     UPDATLEFEEDF
+      *                                                                                     MD053375
+     C           FECALT    IFEQ *BLANKS                                                     MD053375
+     C                     WRITELEFECPD0                                                    MD053375
+     C                     ENDIF                                                            MD053375
       *
      C           CLE034    IFEQ 'Y'                                                           CLE034
      C           FESTAL    ANDEQ'Y'                                                           CLE034
@@ -3350,18 +3397,22 @@
      C                     MOVE RIBN      HIRIBN                                              CSW208
      C                     MOVE RIBA      HIRIBA                                              CSW208
      C**********           MOVE *ZERO     ROBN                                       CSW208 MD025212
-     C                     MOVE *BLANK    ROBN                                              MD025212
-     C                     MOVE ROBN      HIROBN                                              CSW208
-     C                     MOVE *ZERO     ROCN                                                CSW208
-     C                     MOVE ROCN      HIROCN                                              CSW208
+     C**********           MOVE *BLANK    ROBN                                     MD025212 MD057048
+     C**********           MOVE ROBN      HIROBN                                     CSW208 MD057048
+     C                     MOVE *ZERO     HIROBN                                            MD057048
+     C**********           MOVE *ZERO     ROCN                                       CSW208 MD057048
+     C**********           MOVE ROCN      HIROCN                                     CSW208 MD057048
+     C                     MOVE *ZERO     HIROCN                                            MD057048
      C                     Z-ADDPSTM      HIPSTM                                              CSW208
      C                     MOVE PONS      HIPONS                                              CSW208
      C                     MOVE PIBN      HIPIBN                                              CSW208
      C                     MOVE PIBA      HIPIBA                                              CSW208
-     C                     MOVE *ZERO     POBN                                                CSW208
-     C                     MOVE POBN      HIPOBN                                              CSW208
-     C                     MOVE *ZERO     POCN                                                CSW208
-     C                     MOVE POCN      HIPOCN                                              CSW208
+     C**********           MOVE *ZERO     POBN                                       CSW208 MD057048
+     C**********           MOVE POBN      HIPOBN                                     CSW208 MD057048
+     C                     MOVE *ZERO     HIPOBN                                            MD057048
+     C**********           MOVE *ZERO     POCN                                       CSW208 MD057048
+     C**********           MOVE POCN      HIPOCN                                     CSW208 MD057048
+     C                     MOVE *ZERO     HIPOCN                                            MD057048
      C                     MOVE RCRN      HIRCRN                                              CSW208
      C                     MOVE RCRA      HIRCRA                                              CSW208
      C                     MOVE RVNO      HIRVNO                                              CSW208
@@ -3735,6 +3786,12 @@
      C                     MOVE LTYP      FELTYP
      C**********           MOVE SUTP      FESUTP                                            AR317401
      C                     MOVE CLAS      FECLAS                                              CLE042
+      *                                                                                     MD055481
+     C                     MOVE '0'       *IN36                                             MD055481
+     C           PPCUST    IFEQ 'O'                                                         MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
      C                     END
      C**********           END                                                         0103 MD045509
      C***********          END                                            E25573
@@ -4017,8 +4074,20 @@
      C           CLE004    IFEQ 'N'                                       CLE005
      C           CLE004    OREQ 'Y'                                       CLE005
      C           PTFI      ANDEQ*BLANK                                    CLE005
+     C           FELOAN    IFNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ66                                                         AR375891A
+     C           FELOAN    ORNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ67                                                         AR375891A
+     C           FELOAN    ORNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ69                                                         AR375891A
+     C           FELOAN    ORNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ72                                                         AR375891A
+     C                     MOVE PONS      LKOSAC                                           AR375891A
+     C                     MOVE PSTM      LKSETP                                           AR375891A
+     C                     ELSE                                                            AR375891A
      C                     MOVE RONS      LKOSAC                          CLE005
      C                     MOVE RSTM      LKSETP                          CLE005
+     C                     ENDIF                                                           AR375891A
       *                                                                                       CGL020
       ** Determine AML Pay/Receive Instructions                                               CGL020
       *                                                                                       CGL020
@@ -4078,7 +4147,12 @@
      C**********           ENDIF                                                     CLE025 BUG13031
      C           FEPEND    IFLE WAPDAT                                    248821
      C********** FEPEND    ANDLEBJRDNB                                            MD023863 MD029938A
+     C           FEPEND    ANDGT0                                                           MD028351
+     C           CLE122    IFEQ 'Y'                                                         MD028351
      C                     Z-ADDBJRDNB    LKEDAT                          248821
+     C                     ELSE                                                             MD028351
+     C                     Z-ADDFEPEND    LKEDAT                                            MD028351
+     C                     ENDIF                                                            MD028351
      C                     ENDIF                                          248821
       *                                                                   CLE005
       ** Write record to account key file then report details
@@ -4194,6 +4268,25 @@
      C***********          ENDIF                                   CLE005 141462
       *
      C                     ENDSR
+      *****************************************************************                     MD055481
+      *  ORIGB - Display Original Borrower on report                  *                     MD055481
+      *                                                               *                     MD055481
+      *  Called by: SETTLE and ACCRUE                                 *                     MD055481
+      *  Calls: None                                                  *                     MD055481
+      *****************************************************************                     MD055481
+     C           ORIGB     BEGSR                                                            MD055481
+      *                                                                                     MD055481
+      ** If participation purchased and system value is using Original                      MD055481
+      ** Borrower.                                                                          MD055481
+      *                                                                                     MD055481
+     C           PTYP      IFEQ 64                                                          MD055481
+     C           PTYP      OREQ 65                                                          MD055481
+     C           PTYP      OREQ 68                                                          MD055481
+     C           PTYP      OREQ 71                                                          MD055481
+     C                     MOVE '1'       *IN36                                             MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
+     C                     ENDSR                                                            MD055481
       *
       ********************************************************************
      C/TITLE SR/UPDAT
@@ -4564,6 +4657,12 @@
      C                     MOVE LTYP      FELTYP
      C**********           MOVE SUTP      FESUTP                                            AR317401
      C                     MOVE CLAS      FECLAS                                              CLE042
+      *                                                                                     MD055481
+     C                     MOVE '0'       *IN36                                             MD055481
+     C           PPCUST    IFEQ 'O'                                                         MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
      C                     END
      C**********           ENDD                                                               232319
       *
@@ -4730,9 +4829,22 @@
      C           CLE004    IFEQ 'N'                                       CLE005
      C           CLE004    OREQ 'Y'                                       CLE005
      C           PTFI      ANDEQ*BLANK                                    CLE005
+     C           FELOAN    IFNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ66                                                         AR375891A
+     C           FELOAN    ORNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ67                                                         AR375891A
+     C           FELOAN    ORNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ69                                                         AR375891A
+     C           FELOAN    ORNE *BLANK                                                     AR375891A
+     C           PTYP      ANDEQ72                                                         AR375891A
+     C                     MOVE OMDB      LKOSBR                                           AR375891A
+     C                     MOVE PONS      LKOSAC                                           AR375891A
+     C                     MOVE PSTM      LKSETP                                           AR375891A
+     C                     ELSE                                                            AR375891A
      C                     MOVE OSDB      LKOSBR                          CLE005
      C                     MOVE RONS      LKOSAC                          CLE005
      C                     MOVE RSTM      LKSETP                          CLE005
+     C                     ENDIF                                                           AR375891A
       *                                                                                       CGL020
       ** Determine AML Pay/Receive Instructions                                               CGL020
       *                                                                                       CGL020
@@ -4986,6 +5098,10 @@
      C                     ENDIF                                                              CLE134
       *                                                                                     MD025519
      C                     ELSE                                                             MD025519
+     C           PROCES    IFEQ 'Y'                                                         MD056223
+     C                     MOVE 'V'       AKY,10                                            MD056223
+     C                     MOVEAAKY       LKAKEY                                            MD056223
+     C                     ENDIF                                                            MD056223
      C                     WRITELKEYFEDF                                                    MD025519
      C                     MOVE 'N'       WNEWF                                             MD025519
      C                     ENDIF                                                              CLE134
@@ -6591,6 +6707,45 @@
      C                     MOVEL'Y'       CLE141                                              CLE141
      C                     ENDIF                                                              CLE141
       *                                                                                       CLE141
+      *                                                                                     MD055481
+      ** Check System Value: Use Original Borrower or Purchased From?                       MD055481
+      ** Set up parameter so access object checks LoanCustOriginPurch                       MD055481
+      *                                                                                     MD055481
+     C                     MOVELWPARM     SVALK1                                            MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOSVALR0'                                                  MD055481
+     C                     PARM           RTNCDE  7                                         MD055481
+     C                     PARM           SVALK1 20                                         MD055481
+     C                     PARM           SVAL1 200                                         MD055481
+     C                     PARM           SVALK2 20                                         MD055481
+     C                     PARM           SVAL2 200                                         MD055481
+     C                     PARM           SVALK3 20                                         MD055481
+     C                     PARM           SVAL3 200                                         MD055481
+     C                     PARM           SVALK4 20                                         MD055481
+     C                     PARM           SVAL4 200                                         MD055481
+     C                     PARM           SVALK5 20                                         MD055481
+     C                     PARM           SVAL5 200                                         MD055481
+     C                     PARM           SVALK6 20                                         MD055481
+     C                     PARM           SVAL6 200                                         MD055481
+     C                     PARM           SVALK7 20                                         MD055481
+     C                     PARM           SVAL7 200                                         MD055481
+     C                     PARM           SVALK8 20                                         MD055481
+     C                     PARM           SVAL8 200                                         MD055481
+     C                     PARM           SVALK9 20                                         MD055481
+     C                     PARM           SVAL9 200                                         MD055481
+     C                     PARM           SVALK0 20                                         MD055481
+     C                     PARM           SVAL10200                                         MD055481
+      *                                                                                     MD055481
+      ** If the system value is not found then default value to 'P'                         MD055481
+      *                                                                                     MD055481
+     C           RTNCDE    IFNE *BLANKS                                                     MD055481
+     C                     MOVE 'P'       PPCUST                                            MD055481
+     C                     ELSE                                                             MD055481
+      *                                                                                     MD055481
+      ** Isolate the first character of SVAL1 which = 'P' or 'O'.                           MD055481
+      *                                                                                     MD055481
+     C                     MOVELSVAL1     PPCUST  1                                         MD055481
+     C                     ENDIF                                                            MD055481
      C/COPY WNCPYSRC,LEH01260
       *                                                                                       CAS009
      C           CAS009    IFEQ 'Y'                                                           CAS009
@@ -6661,6 +6816,28 @@
      C                     MOVEL'Y'       CLE159                                              CLE159
      C                     ENDIF                                                              CLE159
       *                                                                                       CLE159
+      ** Determine if SAR CLE122 is installed                                               MD028351
+      *                                                                                     MD028351
+     C                     CALL 'AOSARDR0'                                                  MD028351
+     C                     PARM *BLANKS   WRTCD                                             MD028351
+     C                     PARM '*VERIFY 'WOPTN                                             MD028351
+     C                     PARM 'CLE122'  WSARD                                             MD028351
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD028351
+      *                                                                                     MD028351
+     C           WRTCD     IFNE *BLANKS                                                     MD028351
+     C           WRTCD     ANDNE'*NRF   '                                                   MD028351
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD028351
+     C                     Z-ADD55        DBASE                                             MD028351
+     C                     MOVEL'CLE122'  DBKEY                                             MD028351
+     C                     EXSR *PSSR                                                       MD028351
+     C                     ENDIF                                                            MD028351
+      *                                                                                     MD028351
+     C           WRTCD     IFEQ *BLANKS                                                     MD028351
+     C                     MOVE 'Y'       CLE122  1                                         MD028351
+     C                     ELSE                                                             MD028351
+     C                     MOVE 'N'       CLE122                                            MD028351
+     C                     ENDIF                                                            MD028351
+      *                                                                                     MD028351
       ***Key*list*for*LEACCNL6*****************************************              AR574425 CLE164
       *****************************************************************              AR574425 CLE164
      C********** ZLEACC    KLIST                                                     AR574425 CLE164
@@ -7331,11 +7508,16 @@
      C                     ENDIF                                                              CLE031
      C           WKPURT    IFEQ 'F'                                                           CLE031
      C                     Z-ADDWRKAMT    LKEAMT                                              CLE031
+     C                     Z-ADDSETAMT    SALAMT 130                                        MD056223
      C                     ELSE                                                               CLE031
      C                     Z-ADDSETAMT    LKEAMT                                              CLE031
+     C                     Z-ADDWRKAMT    SALAMT                                            MD056223
      C                     ENDIF                                                              CLE031
      C                     MOVE WKPURC    LKECCY                                              CLE031
      C                     MOVEAAKY       LKAKEY                                              CLE031
+     C                     MOVELWKSALC    SALCCY  3                                         MD056223
+     C                     Z-ADDSALAMT    LKOTHA                                            MD056223
+     C                     MOVELSALCCY    LKOTHC                                            MD056223
      C                     WRITELKEYFEDF                                                      CLE031
      C                     EXSR PRINEV                                                        CLE031
       *                                                                                       CLE031
@@ -7349,11 +7531,16 @@
      C                     ENDIF                                                              CLE031
      C           WKPURT    IFEQ 'F'                                                           CLE031
      C                     Z-ADDSETAMT    LKEAMT                                              CLE031
+     C                     Z-ADDWRKAMT    PURAMT 130                                        MD056223
      C                     ELSE                                                               CLE031
      C                     Z-ADDWRKAMT    LKEAMT                                              CLE031
+     C                     Z-ADDSETAMT    PURAMT                                            MD056223
      C                     ENDIF                                                              CLE031
      C                     MOVE WKSALC    LKECCY                                              CLE031
      C                     MOVEAAKY       LKAKEY                                              CLE031
+     C                     MOVELWKPURC    PURCCY  3                                         MD056223
+     C                     Z-ADDPURAMT    LKOTHA                                            MD056223
+     C                     MOVELPURCCY    LKOTHC                                            MD056223
      C                     WRITELKEYFEDF                                                      CLE031
      C                     EXSR PRINEV                                                        CLE031
      C           GENKY     IFEQ 'Y'                                                         MD051883
@@ -7369,6 +7556,8 @@
      C                     MOVE ' '       AKY,7                                             MD051883
      C                     MOVE 'J'       AKY,10                                            MD051883
      C                     MOVEAAKY       LKAKEY                                            MD051883
+     C                     Z-ADD0         LKOTHA                                            MD056223
+     C                     MOVEL*BLANKS   LKOTHC                                            MD056223
      C                     WRITELKEYFEDF                                                    MD051883
      C                     MOVE SAV10     AKY,10                                            MD051883
      C                     MOVE SAV7      AKY,7                                             MD051883
@@ -7411,6 +7600,8 @@
      C                     MOVE BJCYCD    LKECCY                                              CLE031
      C                     Z-ADDBASAMT    LKEAMT                                              CLE031
      C                     MOVEAAKY       LKAKEY                                              CLE031
+     C                     Z-ADDSALAMT    LKOTHA                                            MD056223
+     C                     MOVELSALCCY    LKOTHC                                            MD056223
      C                     WRITELKEYFEDF                                                      CLE031
      C                     EXSR PRINEV                                                        CLE031
       *                                                                                       CLE031
@@ -7426,6 +7617,8 @@
      C                     MOVEA'  '      AKY,8                                               CLE031
      C                     ENDIF                                                            MD051242
      C                     MOVEAAKY       LKAKEY                                              CLE031
+     C                     Z-ADDPURAMT    LKOTHA                                            MD056223
+     C                     MOVELPURCCY    LKOTHC                                            MD056223
      C                     WRITELKEYFEDF                                                      CLE031
      C                     EXSR PRINEV                                                        CLE031
       *                                                                                       CLE031
@@ -7439,6 +7632,8 @@
      C                     MOVE *BLANK    LKSIND                                              CLE031
      C                     MOVE *BLANKS   LKOKEY                                              CLE031
      C                     ENDIF                                                              CLE031
+     C                     Z-ADD0         LKOTHA                                            MD056223
+     C                     MOVEL*BLANKS   LKOTHC                                            MD056223
       *                                                                                       CLE031
      C                     ENDSR                                                              CLE031
       *                                                                                       CLE031

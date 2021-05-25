@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD026969           Date 23Oct19              */
-/*       Prev Amend No. CLE159             Date 18Jul18              */
+/*       Last Amend No. MD053375           Date 10Oct19              */
+/*       Prev Amend No. MD026969           Date 23Oct19              */
+/*                      CLE159             Date 18Jul18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD025212           Date 10May14              */
 /*                      263074             Date 01Aug12              */
@@ -37,6 +38,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053375 - Incorrect fee settlement amount in LER170 report.*/
+/*                  Clear LEFECPPD before call to LER130.            */
 /*       MD026969 - New Processing for Fee Settlement.               */
 /*                - Applied for MD054354                             */
 /*       CLE159 - LE Fee Amortisation Enhancement                    */
@@ -325,6 +328,10 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
                CLRPFM     FILE(LEPK3HH)                                                   /*CLE134*/
              ENDDO                                                                        /*CLE134*/
 /**/                                                                                      /*CLE134*/
+                                                                                        /*MD053375*/
+             CLRPFM     FILE(LEFECPPD)                                                  /*MD053375*/
+                                                                                        /*MD053375*/
+                                                                                        /*MD053375*/
 /**********  CALL       LER130                                */                          /*CLE139*/
              CALL       PGM(LER130) PARM(&CCAP)                                           /*CLE139*/
  

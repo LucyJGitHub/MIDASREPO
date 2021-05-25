@@ -18,6 +18,8 @@
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD047582           Date 13Jul20               *
+      *                 MD055065           Date 24Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -80,6 +82,13 @@
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD047582 - Unable to authorise/reject a manual repayment     *
+      *             for discount loan. Allow MR with value date equal *
+      *             to loan's maturity date but not attached to a     *
+      *             past due record.                                  *
+      *           - Applied for MD055652                              *
+      *  MD055065 - Incorrect feature being checked in AOSARDR0.      *
+      *             Check CSC054 instead.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -1306,6 +1315,23 @@
      C                   If        CL_PTYP=63 or CL_PTYP=65 or CL_PTYP = 67
      C**********         if        DDACTN <> 'I' or DDEVAL = *BLANKS                          242276
      C                   if        DDACTN <> 'I' and DDEVAL = *BLANKS                         242276
+     C                             and  DDACTN <> 'E' and PD_AMTP <> 'PD'                   MD047582
+      *                                                                                     MD047582
+      ** Check if maturity date of the loan is not equal to the value                       MD047582
+      ** date of the manual repayment. If yes, send an error message.                       MD047582
+      *                                                                                     MD047582
+     C                   MOVE      *BLANKS       ZDATE                                      MD047582
+     C                   MOVE      *BLANKS       ZDATFM                                     MD047582
+     C                   MOVE      DDVALD        ZDATE                                      MD047582
+     C                   MOVE      BJDFIN        ZDATFM                                     MD047582
+     C                   CALL      'ZDATE1'                                                 MD047582
+     C                   PARM      *BLANKS       ZERR                                       MD047582
+     C                   PARM                    ZDATE                                      MD047582
+     C                   PARM                    ZDATFM                                     MD047582
+     C                   PARM                    ZDAYNO                                     MD047582
+      *                                                                                     MD047582
+     C                   IF        ZDAYNO <> CL_MDAT                                        MD047582
+      *                                                                                     MD047582
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
@@ -1314,6 +1340,7 @@
       *
      C                   MOVEL     'LEM0102'     MsgIdArr(Ix)
      C                   GOTO      EVAL
+     C                   ENDIF                                                              MD047582
      C                   Endif
      C                   Endif
       **********                                                                   BUG11240 BUG12002
@@ -1779,6 +1806,22 @@
       *
      C                   If        CL_PTYP = 63 or CL_PTYP = 65 or CL_PTYP = 67
      C                   if        AL_AMTP <> 'PD'
+      *                                                                                     MD047582
+      ** Check if maturity date of the loan is not equal to the value                       MD047582
+      ** date of the manual repayment. If yes, send an error message.                       MD047582
+      *                                                                                     MD047582
+     C                   MOVE      *BLANKS       ZDATE                                      MD047582
+     C                   MOVE      *BLANKS       ZDATFM                                     MD047582
+     C                   MOVE      DDVALD        ZDATE                                      MD047582
+     C                   MOVE      BJDFIN        ZDATFM                                     MD047582
+     C                   CALL      'ZDATE1'                                                 MD047582
+     C                   PARM      *BLANKS       ZERR                                       MD047582
+     C                   PARM                    ZDATE                                      MD047582
+     C                   PARM                    ZDATFM                                     MD047582
+     C                   PARM                    ZDAYNO                                     MD047582
+      *                                                                                     MD047582
+     C                   IF        ZDAYNO <> CL_MDAT                                        MD047582
+      *                                                                                     MD047582
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
@@ -1791,6 +1834,7 @@
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
      C                   MOVEL     *BLANKS       MsgIdArr(Ix)
      C                   GOTO      EVAL
+     C                   ENDIF                                                              MD047582
      C                   endif
      C                   endif
       *
@@ -1841,6 +1885,22 @@
      C                   When      CL_PTYP=63 or CL_PTYP=65 or CL_PTYP=67
       *
      C                   if        AL_AMTP <> 'PD'
+      *                                                                                     MD047582
+      ** Check if maturity date of the loan is not equal to the value                       MD047582
+      ** date of the manual repayment. If yes, send an error message.                       MD047582
+      *                                                                                     MD047582
+     C                   MOVE      *BLANKS       ZDATE                                      MD047582
+     C                   MOVE      *BLANKS       ZDATFM                                     MD047582
+     C                   MOVE      DDVALD        ZDATE                                      MD047582
+     C                   MOVE      BJDFIN        ZDATFM                                     MD047582
+     C                   CALL      'ZDATE1'                                                 MD047582
+     C                   PARM      *BLANKS       ZERR                                       MD047582
+     C                   PARM                    ZDATE                                      MD047582
+     C                   PARM                    ZDATFM                                     MD047582
+     C                   PARM                    ZDAYNO                                     MD047582
+      *                                                                                     MD047582
+     C                   IF        ZDAYNO <> CL_MDAT                                        MD047582
+      *                                                                                     MD047582
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
@@ -1853,6 +1913,7 @@
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
      C                   MOVEL     *BLANKS       MsgIdArr(Ix)
      C                   GOTO      EVAL
+     C                   ENDIF                                                              MD047582
      c                   Endif                                                  AMTP <> 'PD'
       *
      C                   When      CL_PTYP = 61 or CL_PTYP = 62 or
@@ -2467,18 +2528,21 @@
       *                                                                                      BUG3760
      C                   ENDIF                                                               BUG3760
                                                                                               CSC024
-      ** Check if enhancement CSC024 (Open Month End) is on                                   CSC024
+      ***Check*if*enhancement*CSC024*(Open*Month*End**is*on                          CSC024 MD055065
+      ** Check if enhancement CSC054 (Period End Adjustment) is on                          MD055065
                                                                                               CSC024
      C                   CALLB     'AOSARDR0'                                                 CSC024
      C                   PARM      *BLANKS       @RTCD                                        CSC024
      C                   PARM      '*VERIFY'     @OPTN                                        CSC024
-     C                   PARM      'CSC024'      @SARD                                        CSC024
+     C**********         PARM      'CSC024'      @SARD                               CSC024 MD055065
+     C                   PARM      'CSC054'      @SARD                                      MD055065
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSC024
                                                                                               CSC024
      C                   IF        @RTCD <> *BLANKS AND                                       CSC024
      C                             @RTCD <> '*NRF   '                                         CSC024
      C                   EVAL      DBFile = 'SCSARDPD'                                        CSC024
-     C                   EVAL      DBKey  = 'CSC024'                                          CSC024
+     C**********         EVAL      DBKey  = 'CSC024'                                 CSC024 MD055065
+     C                   EVAL      DBKey  = 'CSC054'                                        MD055065
      C                   EVAL      DBase  = 3                                                 CSC024
      C                   EXSR      *PSSR                                                      CSC024
      C                   ENDIF                                                                CSC024

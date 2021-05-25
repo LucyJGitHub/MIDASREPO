@@ -13,10 +13,15 @@
       *                                                               *
       *  ((c) Finastra International Limited 2013                     *
       *                                                               *
-      *  Last Amend No. MD021351  *CREATE  Date 19Jul13               *
+      *  Last Amend No. MD057519           Date 10Mar21               *
+      *  Prev Amend No. MD021351  *CREATE  Date 19Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057519 - Issue with high number of locks.                  *
+      *           - Remove the use of array in retrieving the User    *
+      *             Space details of the List Object Locks (QWCLOBJL) *
+      *             API.                                              *
       *  MD021351 - Design for Kill object locks                      *
       *                                                               *
       *****************************************************************
@@ -54,6 +59,7 @@
       ** Returned information from object lock API (QWCLOBJL)
       ** The OBJL0100 format
 
+     D ListPtr         S               *                                                    MD057519
      D LockInfo        DS                  BASED(ListPtr)
      D JobName                       10
      D JobUser                       10
@@ -68,14 +74,50 @@
       ** Parameters for finding the pointer to the userspace (QUSPTRUS)
       ** filled by QWCLOBJL
 
-     D Ptr             S               *
-     D SpaceDS         DS                  BASED(Ptr)
-     D SpaceField                 32767
-     D SpaceArray                     1    OVERLAY(SpaceField) DIM(32767)
-     D SpaceOffset                    9B 0 OVERLAY(SpaceField:125)
-     D NumberEntry                    9B 0 OVERLAY(SpaceField:133)
-     D SizeEntry                      9B 0 OVERLAY(SpaceField:137)
+     D*Ptr******       S               *                                                    MD057519
+     D*SpaceDS         DS                  BASED(Ptr)                                       MD057519
+     D*SpaceField                 32767                                                     MD057519
+     D*SpaceArray                     1    OVERLAY(SpaceField) DIM(32767)                   MD057519
+     D*SpaceOffset                    9B 0 OVERLAY(SpaceField:125)                          MD057519
+     D*NumberEntry                    9B 0 OVERLAY(SpaceField:133)                          MD057519
+     D*SizeEntry                      9B 0 OVERLAY(SpaceField:137)                          MD057519
 
+      *                                                                                     MD057519
+      *****************************************************                                 MD057519
+      * List API generic header data structure                                              MD057519
+      *****************************************************                                 MD057519
+      *                                                                                     MD057519
+     D P_UsrSpc        S               *
+     D DSLH            DS                   BASED(P_UsrSpc)                                 MD057519
+      *                                                                                     MD057519
+     D  DSLHFill1                   103A                                                    MD057519
+      ** Filler                                                                             MD057519
+      *                                                                                     MD057519
+     D  DSLHStatus                    1A                                                    MD057519
+      ** Status (I=Incomplete,C=Complete F=Partially Complete)                              MD057519
+      *                                                                                     MD057519
+     D  DSLHFill2                    12A                                                    MD057519
+      ** Filler                                                                             MD057519
+      *                                                                                     MD057519
+     D  DSLHHdrOff                   10I 0                                                  MD057519
+      ** Header Offset                                                                      MD057519
+      *                                                                                     MD057519
+     D  DSLHHdrSiz                   10I 0                                                  MD057519
+      ** Header Size                                                                        MD057519
+      *                                                                                     MD057519
+     D  DSLHLstOff                   10I 0                                                  MD057519
+      ** List Offset                                                                        MD057519
+      *                                                                                     MD057519
+     D  DSLHLstSiz                   10I 0                                                  MD057519
+      ** List Size                                                                          MD057519
+      *                                                                                     MD057519
+     D  DSLHEntCnt                   10I 0                                                  MD057519
+      ** Count of Entries in List                                                           MD057519
+      *                                                                                     MD057519
+     D  DSLHEntSiz                   10I 0                                                  MD057519
+      ** Size of a single entry                                                             MD057519
+      *                                                                                     MD057519
+                                                                                            MD057519
       ** The following data structure is returned by the
       ** QUSRJOBI api using JOBIO600
 
@@ -95,6 +137,7 @@
      D                                     Cycle will ')
      D w@msg3          S             52A   inz('continue after locks have been -
      D                                     removed.')
+     D Entry           S             10I 0                                                  MD057519
 
       ** Main Process
       ** Open the files
@@ -204,16 +247,23 @@
 
      C                   CALL      'QUSPTRUS'
      C                   PARM                    SpaceName
-     C                   PARM                    Ptr
+     C**********         PARM                    Ptr                                        MD057519
+     C                   PARM                    P_UsrSpc                                   MD057519
 
       ** Spacefield now contains the info stored in the userspace, we need to access it
 
-     C                   EVAL      SpaceOffset = SpaceOffset + 1
-     C                   EVAL      listPtr = %Addr(SpaceArray(SpaceOffset))
+     C**********         EVAL      SpaceOffset = SpaceOffset + 1                            MD057519
+     C**********         EVAL      listPtr = %Addr(SpaceArray(SpaceOffset))                 MD057519
 
       ** If there are still locks then need to tell the user
 
-     C                   DO        NumberEntry
+     C**********         DO        NumberEntry                                              MD057519
+      *                                                                                     MD057519
+     C                   FOR       Entry = 0 to (DSLHEntCnt-1)                              MD057519
+      *                                                                                     MD057519
+     C                   EVAL      ListPtr = P_UsrSpc +                                     MD057519
+     C                                 (DSLHLstOff + (DSLHEntSiz*Entry))                    MD057519
+      *                                                                                     MD057519
 
       ** Set up the parameters for the QUSRJOBI api
 
@@ -239,9 +289,11 @@
 
       ** Get the next job
 
-     C                   EVAL      SpaceOffset = SpaceOffset + SizeEntry
-     C                   EVAL      listPtr = %Addr(SpaceArray(SpaceOffset))
-     C                   ENDDO
+     C*********          EVAL      SpaceOffset = SpaceOffset + SizeEntry                    MD057519
+     C*********          EVAL      listPtr = %Addr(SpaceArray(SpaceOffset))                 MD057519
+     C*********          ENDDO                                                              MD057519
+      *                                                                                     MD057519
+     C                   ENDFOR                                                             MD057519
 
       ** Get the next record
 

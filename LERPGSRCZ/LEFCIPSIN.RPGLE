@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CLE134             Date 01Aug12               *
@@ -48,6 +49,9 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -907,6 +911,10 @@
      C                   PARM                    F1AUSR           10
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM      *BLANK        @ACTRV                                     MD039655
 
       * OUTPUTS
       * Field OK flags (DS) from/to caller
@@ -1085,6 +1093,10 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
+                                                                                            MD039655
+      ** Reject Action Code                                                                 MD039655
+                                                                                            MD039655
+     C                   PARM      *BLANK        @ACTRV                                     MD039655
 
       * OUTPUTS
       * Field OK flags (DS) from/to caller
@@ -1482,6 +1494,10 @@
      C                   PARM                    DDFCNO            2
       * (Midas) Branch
      C                   PARM                    DDBRCA            3
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM      *BLANK        @ACTRV            1                        MD039655
      C/COPY WNCPYSRC,LEH00358
 
       * OUTPUTS

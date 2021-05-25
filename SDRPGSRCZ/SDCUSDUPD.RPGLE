@@ -7,12 +7,17 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *
+
       *  SDCUSDUPD - STANDING DATA CUSTOMERS DATABASE UPDATE          *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD026746           Date 05Feb20               *
+      *  Last Amend No. 252069             Date 22May20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056982           Date 12Oct20               *
+      *                 MD056719           Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
       *                 MD055446           Date 04Apr20               *
       *                 260405             Date 04Apr20               *
@@ -153,8 +158,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252069 - Database error message occurs when there is a       *
+      *           record locking issue.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
+      *             file SDCRSHL0 for update                          *
+      *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
+      *             Messages.                                         *
+      *           - Include A_PMAPBC field under AR1049708 fix.       *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from SDCUSDVU.                                    *
       *  MD026746 - File control out of balance due to customer       *
       *             closure. Extend fix MD025022 to cover scenario    *
       *             where customer has been closed or released.       *
@@ -163,7 +178,7 @@
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
-      *           - Added BRT DOB century as *ENTRY parameter.        *     
+      *           - Added BRT DOB century as *ENTRY parameter.        *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -367,6 +382,7 @@
 
       * UPD : Midas SD Customer Details Master File
      FSDCUSTL0  UF A E           K DISK    COMMIT
+     F                                     INFDS(DSPDS)                                       252069
      F/COPY WNCPYSRC,SDH00749
 
       ** UPD : Midas SD Customer Ext Details File                                             CGL132
@@ -1033,6 +1049,14 @@
      D  BR3DBC                        2S 0                                                  MD055446
      D  BR4DBC                        2S 0                                                  MD055446
      D  BR5DBC                        2S 0                                                  MD055446
+      *                                                                                     MD055373
+      ** Insert User (DDIUSR) and Amend User (DDAUSR) details layout                        MD055373
+     D SDVTransUser    DS                                                                   MD055373
+     D  SDIUSER                      10A                                                    MD055373
+     D  SDAUSER                      10A                                                    MD055373
+      *                                                                                     MD055373
+     D  SDAAUTH        S              1A                                                    MD055373
+      *                                                                                     MD055373
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -1117,6 +1141,11 @@
      D  LCHGDA                 1     30
      D  LCHD                   1     30P 0 INZ(0)
      D                                     DIM(10)                              LIAB.CHG. DTE ARR
+      *                                                                                       252069
+      ** File information data structure                                                      252069
+      *                                                                                       252069
+     DDSPDS            DS                                                                     252069
+     D STATUS            *STATUS                                                              252069
                                                                                               CGL132
       ** Parameter variables for AOSVALR0 string                                              CGL132
      D SValK1          S             20                                                       CGL132
@@ -2156,6 +2185,7 @@
      C     A_PMS8VR      ORNE      *BLANKS                                                   BG12238
      C     A_PMS8VR      ANDNE     'N'                                                     AR1049708
      C     A_PMAPBC      ORNE      *BLANKS                                                   BG12238
+     C     A_PMAPBC      ANDNE     'N'                                                      MD056719
      C     A_PMPPCS      ORNE      *BLANKS                                                   BG12238
      C     A_PMPPCS      ANDNE     'N'                                                     AR1049708
      C     A_PMDFPO      ORNE      *BLANKS                                                   BG12238
@@ -2979,7 +3009,9 @@
      C**********         MOVE      WKUSER        BBIUSR                           AR679445 MD027492A
                                                                                            MD027492A
      C                   EVAL      BBIUSR = WLUSER                                         MD027492A
+     C                   IF        SDAAUTH <> 'Y'                                           MD055373
      C                   EVAL      BBXUSR = WKUSER                                         MD027492A
+     C                   ENDIF                                                              MD055373
       *
       ** Update the SWIFT 2007 field details when CSW207 is on                                CSW207
      C**********         IF        CSW207 = 'Y' OR BGN4ST = 'Y'                      CSW207 BUG15138
@@ -3002,6 +3034,8 @@
      C                   ENDIF                                                                CSW207
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
+     C                   EVAL      BBIUSR = SDIUSER                                         MD055373
+      *                                                                                     MD055373
       ** WRITE NEW CUSTOMER
 
      C                   WRITE     @BBREBG
@@ -3745,7 +3779,9 @@
 
       ** ACCESS CUSTOMER DETAILS RECORD
 
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99                      252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
 
       ** DATABASE ERROR
 
@@ -4178,7 +4214,9 @@
      C**********         MOVE      WKUSER        BBAUSR                           AR679445 MD027492A
                                                                                            MD027492A
      C                   EVAL      BBAUSR = WLUSER                                         MD027492A
+     C                   IF        SDAAUTH <> 'Y'                                           MD055373
      C                   EVAL      BBXUSR = WKUSER                                         MD027492A
+     C                   ENDIF                                                              MD055373
       *
       ** Update the SWIFT 2007 field details when CSW207 is on                                CSW207
      C**********         IF        CSW207 = 'Y' OR BGN4ST = 'Y'                      CSW207 BUG15138
@@ -4222,6 +4260,8 @@
      C                   ENDIF                                                                CSW207
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
+     C                   EVAL      BBAUSR = SDAUSER                                         MD055373
+      *                                                                                     MD055373
       ** UPDATE RECORD
 
      C                   IF        CSD028 = 'Y' AND PTransType = 'AUTH'                       CSD028
@@ -5250,7 +5290,9 @@
 
       ** ACCESS CUSTOMER
 
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99                      252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
 
       ** DATABASE ERROR
 
@@ -5523,7 +5565,9 @@
                                                                                               CSD007
       ** ACCESS CUSTOMER                                                                      CSD007
                                                                                               CSD007
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99                      CSD007
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -5672,7 +5716,9 @@
                                                                                               CSD007
       ** ACCESS CUSTOMER                                                                      CSD007
                                                                                               CSD007
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99                      CSD007
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -6897,6 +6943,20 @@
      C                   ENDIF                                                                CGP001
                                                                                               CGP001
      C                   ENDSR                                                                CGP001
+     C****************************************************************                        252069
+      /EJECT                                                                                  252069
+      ********************************************************************                    252069
+      *                                                                  *                    252069
+      * ChkChain - Exit SDCUSDUPD if there is record locking in SDCUSTL0 *                    252069
+      *                                                                  *                    252069
+      ********************************************************************                    252069
+     C     ChkChain      BEGSR                                                                252069
+     C     *IN97         IFEQ      *ON                                                        252069
+     C     STATUS        ANDEQ     01218                                                      252069
+     C                   EVAL      @@RTCD = '*LOCKED'                                         252069
+     C                   GOTO      EXIT                                                       252069
+     C                   ENDIF                                                                252069
+     C                   ENDSR                                                                252069
       ****************************************************************                        CGP001
       /EJECT
       *****************************************************************
@@ -6992,6 +7052,8 @@
      C                   PARM                    DACTN             1                          CSD028
      C                   PARM                    CTI006            1                        MD030956
      C                   PARM                    SDVCUBRCENT                                MD055446
+     C                   PARM                    SDVTransUser                               MD055373
+     C                   PARM                    SDAAUTH                                    MD055373
       ** Acceptance Mode                                                                      CSD031
      C**********         PARM                    PAccMde                             CSD031 BUG13525
       ** Update (Y/N)                                                                         CSD031
@@ -10459,7 +10521,7 @@ OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                               
 ** CMDCS                                                                                    MD027115
 OVRDBF FILE(SDFTCSL0) TOFILE(SDFTCSL0) SHARE(*NO)                                           MD027115
 ** CMDCR                                                                                    MD051230
-OVRDBF FILE(SDCRSHL1) TOFILE(SDCRSHL1) SHARE(*NO)                                           MD051230
+OVRDBF FILE(SDCRSHL0) TOFILE(SDCRSHL0) SHARE(*NO)                                  MD051230 MD056982
 **  ARRTAG                                                                                    CSD015
 <Customer Name>                                                                               CSD015
 </Customer Name>                                                                              CSD015

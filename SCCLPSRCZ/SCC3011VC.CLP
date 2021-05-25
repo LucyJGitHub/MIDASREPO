@@ -9,26 +9,28 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC007  *CREATE    Date 10Oct98              */
+/*                      CSC007  *CREATE    Date 10Oct98              */
 /*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC007 - New program                                        */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&SARDESC &SARNUMBER &CORE &PROGRAM)
- 
+
 /*/COPY WNCPYSRC,SCC3011INT                                          */
- 
+
              DCL        VAR(&SARNUMBER) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SARDESC) TYPE(*CHAR) LEN(50)
              DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
@@ -41,30 +43,33 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
-             DCLF       FILE(SCSARSPD)
- 
+/**********  DCLF       FILE(SCSARSPD) */                                               /*MD055681*/
+             DCLF       FILE(SCSRSJW0)                                                  /*MD055681*/
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* If core mode then file to be checked is SCSARZPD                 */
- 
+
              IF         COND(&CORE *EQ 'N') THEN(DO)
-               OVRDBF     FILE(SCSARSPD) TOFILE(SCSARZPD)
+/**********    OVRDBF     FILE(SCSARSPD) TOFILE(SCSARZPD) */                            /*MD055681*/
                CHGVAR     VAR(&CMSG) VALUE('Non-core')
-               CHGVAR     VAR(&FILE) VALUE('SCSARZPD')
+/**********    CHGVAR     VAR(&FILE) VALUE('SCSARZPD') */                               /*MD055681*/
+               CHGVAR     VAR(&FILE) VALUE('SCSRSJW0')                                  /*MD055681*/
                ENDDO
              ELSE       CMD(DO)
                CHGVAR     VAR(&CMSG) VALUE('Core')
-               CHGVAR     VAR(&FILE) VALUE('SCSARSPD')
+/**********    CHGVAR     VAR(&FILE) VALUE('SCSARSPD') */                               /*MD055681*/
+               CHGVAR     VAR(&FILE) VALUE('SCSRSJW0')                                  /*MD055681*/
              ENDDO
- 
- 
+
+
 /* Check if Switchable Feature actually exists                      */
- 
+
  RCVF:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
@@ -80,7 +85,7 @@
              IF         COND(&AXSARN *EQ &SARNUMBER) THEN(GOTO +
                           CMDLBL(CONT))
              GOTO       CMDLBL(RCVF)
- 
+
  CONT:
              CHKOBJ     OBJ(&PROGRAM) OBJTYPE(*PGM)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -90,23 +95,23 @@
                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
                           MSGDTA(&MSGTXT) MSGTYPE(*DIAG)
                ENDDO
- 
+
 /*  Send message to cause CPF to pass earlier messages back         */
- 
+
              IF         COND(&ERROR *EQ 'Y') THEN(SNDPGMMSG +
                           MSGID(CPF0002) MSGF(QCPFMSG) +
                           MSGTYPE(*ESCAPE))
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SCC3011VC ended abnormally - see job +
                           log') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

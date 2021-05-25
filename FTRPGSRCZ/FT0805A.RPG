@@ -1,0 +1,905 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Checking for insufficient funds')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module.                               *
+      *                                                               *
+      *                                                               *
+      *  FT0805A- Checking for Insufficient Funds                     *
+      *                                                               *
+      *  Function:  To check if the Vostro Accnt of the Payment       *
+      *             being authorised has enough funds.                *
+      *                                                               *
+      *  Called by: FTVSECY- Midas FT Validate Settle Ccy and Amount  *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last Amend No. 254841B            Date 14May20               *
+      *  Prev Amend No. 254841A *Create    Date 14May20               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  254841B - Redelivery of all affected objects.                *
+      *          - Applied for MD055654.                              *
+      *  254841A- Retail Account Balance Checking.                    *
+      *           Based on FT0805.                                    *
+      *          - Applied for MD055654.                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FMEMOSL1 IF  E           K        DISK
+      *
+     FRSACMTL1IF  E           K        DISK
+     F            APOSTPDF                          KIGNORE
+      *
+      ** Include Shadow Post movements only
+      *
+     FOTPAY   IF  E           K        DISK                           UC
+      *
+      ** Check for Unauthorised Outgoing Payments
+      *
+     FINPAY   IF  E           K        DISK                           UC
+      *
+      ** Check for Unauthorised Incoming Payments
+      *
+     FGLACNTL3IF  E           K        DISK
+      *
+      ** GL Account Master Extension File
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    20    Chain to MEMOS file                                  *
+      *    21    Insufficient Funds                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT  -  Initialisation routine                           *
+      *   #HATYP  -  Determine Accnt Type                             *
+      *   #HNOST  -  Processing for Nostro Accnt                      *
+      *   #HRETL  -  Processing for Retail Accnt                      *
+      *   #HPART  -  Processing for Partial Accnt                     *
+      *   #HFULL  -  Processing for full Accnt                        *
+      *   #HNCDE  -  Processing for Nostro Code                       *
+      *   #HFCHK  -  Fund Calculation and Insufficient Fund Checking  *
+      *   SRADJB  -  Fund Calculation and Insufficient Fund Checking  *
+      *   CHKRAB  -  Check if account is included in Fund Checking    *
+      *   *PSSR   -  Error handling                                   *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      *
+      ** Copyright notice for inclusion in all programs
+     E                    CPY@    1   1 80               Midas copyright
+     E                    DB1        29  1
+     E                    CMD@    1   1 80
+      *
+      **  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      ** Rename booking branch of payment to avoid corruption of the
+      ** account branch code
+      *
+     IOTPAYDDF
+     I              BRCA                            PBRCA
+     IINPAYDDF
+     I              BRCA                            IBRCA
+      *
+      ** Data structure for the Account being passed
+      *
+     I            DS
+     I                                        1  21 @ACCNT
+     I                                        1   3 @ACCY
+     I                                        4   5 @NOST
+     I                                        6  12 @W612
+     I                                        1   6 @CNUM
+     I                                        7  16 @ACOD
+     I                                       17  18 @ASEQ
+     I                                        1  10 @RETN
+     I                                       11  12 @WK12
+     I                                        7   9 @FCCY
+     I                                       10  19 @FACD
+     I                                       20  21 @FSEQ
+     I                                        1   2 @NSTR
+     I                                       19  21 @PBRC
+      *
+      ** Data structure for MEMO Dbase error key
+      *
+     I            DS
+     I                                        1  24 EMEMO
+     I                                        1   6 ECNNM
+     I                                        7   9 ECUCD
+     I                                       10  19 EACCD
+     I                                       20  21 EACSQ
+     I                                       22  24 EBRCD
+      *
+      ** Data Structure for Dbase Error
+      *
+     ILDA         DS                            256
+     I                                      131 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDNOST    E DSSDNOSTPD
+      *
+      ** NOSTRO DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** CUSTOMER DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     ID@ACCT    E DSACCNTAB
+      *
+      ** Account Details DS for assigning data from Access
+      ** Programs to work fields
+      *
+     I/EJECT
+      *
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls     #HINIT  Initialisation routine                    *
+      *             #HATYP  Determine Account Type                    *
+      *             #HNOST  Processing for Nostro Accnt               *
+      *             #HRETL  Processing for Retail Accnt               *
+      *             #HPART  Processing for Partial Accnt              *
+      *             #HFCHK  Fund Calculation and Insufficient Funds   *
+      *             CHKRAB  Check if account is included in Fund      *
+      *                     Checking                                  *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Call Initial Routine
+      *
+     C                     EXSR #HINIT
+      *
+      **  Determine Accnt Type
+      *
+     C                     EXSR #HATYP
+      *
+      **  Process according to Accnt Type
+      *
+     C           @ATYP     CASEQ'N'       #HNOST
+     C           @ATYP     CASEQ'R'       #HRETL
+     C           @ATYP     CASEQ'P'       #HPART
+     C           @ATYP     CASEQ'F'       #HFULL
+     C           @ATYP     CASEQ'M'       #HNCDE
+     C                     END
+      *
+     C           ATYP      IFEQ 'R'
+     C                     EXSR CHKRAB
+      *
+      ** Check if account is included for Balance Checking.
+      *
+     C           F1IABC    IFEQ 'Y'
+     C                     EXSR #HFCHK
+     C                     ELSE
+     C                     MOVE 'N'       @RTCE
+     C                     END
+      *
+     C                     END
+      *
+      **  Exit program
+      *
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HINIT   : Initialisation Routine                           *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HINIT    BEGSR
+      *
+      ** Copyright insertion
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Declare Entry Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @ACNT  21
+     C                     PARM           @SCCY   3
+     C                     PARM           @BRCA   3
+     C                     PARM           @SMAM  130
+     C                     PARM           @SDAT   50
+     C                     PARM           @RTCE   1
+     C                     PARM           W@MODE  3
+      *
+     C                     MOVE *BLANK    ATYP
+     C                     MOVE @ACNT     @ACCNT
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FT0805'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM           @OPTN   7        B:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * Open file OTPAY
+      *
+     C           FIL001    IFEQ *BLANKS
+      *
+      *  Override file OTPAY to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'OTPAY   'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN OTPAY
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      * Open file INPAY
+      *
+     C           FIL002    IFEQ *BLANKS
+      *
+      *  Override file INPAY to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'INPAY   'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN INPAY
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HATYP   : Subroutine to Determine the Accnt type           *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HATYP    BEGSR
+      *
+     C                     MOVE *BLANKS   @ATYP   1
+     C                     Z-ADD22        @X      20
+     C                     MOVE *BLANKS   @TMP1   1
+      *
+     C           @TMP1     DOWEQ' '
+     C                     SUB  1         @X
+     C           1         SUBST@ACCNT:@X @TMP1
+     C                     END
+      *
+     C           @X        IFEQ 21
+      *
+      ** Check if position 7 to 9 of @ACNT is equal to the settlement
+      ** currency.  If not equal, it is a partial account with the
+      ** branch code in position 13-25.
+      *
+     C           @FCCY     IFEQ @SCCY
+     C                     MOVE 'F'       @ATYP
+     C                     ELSE
+     C                     MOVE 'P'       @ATYP
+     C                     MOVE @PBRC     @BRCA
+     C                     END
+      *
+     C                     END
+      *
+     C           @X        IFEQ 18
+     C                     MOVE 'P'       @ATYP
+     C                     END
+      *
+     C           @X        IFEQ 10
+     C                     MOVE 'R'       @ATYP
+     C                     END
+      *
+     C           @X        IFEQ 5
+     C                     MOVE 'N'       @ATYP
+     C                     END
+      *
+     C           @X        IFEQ 2
+     C                     MOVE 'M'       @ATYP
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HNOST   : Processing for Nostro Accnt                      *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HNOST    BEGSR
+      *
+      **  Check for Nostro Accnt using Access object.
+      *
+     C                     MOVE @ACCY     @KEYB
+     C                     MOVE @NOST     @KEYE
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANK    @KEYA   6
+     C                     PARM           @KEYB   3
+     C                     PARM *BLANK    @KEYC  10
+     C                     PARM *BLANK    @KEYD   2
+     C                     PARM           @KEYE   2
+     C                     PARM *BLANKS   @KEYG   3
+     C                     PARM *BLANKS   @KEYH  10
+     C                     PARM *BLANKS   @KEYI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'001'     DBASE            * DBERR 001 *
+     C                     MOVEL@KEYB     DBKEY            *************
+     C                     MOVE @KEYE     DBKEY
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+      ** Record found. Determine Overdraft Limit and Relative Rec No.
+      ** in MEMOS.
+      *
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     MOVE A7ACSN    @ACSQ
+     C                     MOVEAA7CUST    DB1,6
+     C                     MOVEA@SCCY     DB1,9
+     C                     MOVEAA7ACCD    DB1,19
+     C                     MOVEA@ACSQ     DB1,21
+     C                     MOVEA@BRCA     DB1,24
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM A7CUST    @CNNM   6        I:Customer Number
+     C                     PARM @SCCY     @CUCD   3        I:Currency Code
+     C                     PARM A7ACCD    @ACCD  10
+     C                     PARM           @ACSQ   2        I:Account Sequence
+     C                     PARM A7BRCD    @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'002'     DBASE            * DBERR 002 *
+     C                     MOVEADB1       DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA  3
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HRETL   : Processing for Retail Accnt                      *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HRETL    BEGSR
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM @RETN     @RETL  10        I:Account Identifier
+     C                     PARM *BLANKS   @CNNM   6        I:Customer Number
+     C                     PARM *BLANKS   @CUCD   3        I:Currency Code
+     C                     PARM *BLANKS   @ACCD
+     C                     PARM *BLANKS   @ACSQ   2        I:Account Sequence
+     C                     PARM *BLANKS   @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      **  If nor record found, output dbase error and return to
+      **  calling program.
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'003'     DBASE            * DBERR 003 *
+     C                     MOVEL@RETN     DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HPART   : Processing for Partial Accnt                     *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HPART    BEGSR
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM @CNUM     @CNNM   6        I:Customer Number
+     C                     PARM @SCCY     @CUCD   3        I:Currency Code
+     C                     PARM @ACOD     @ACCD
+     C                     PARM @ASEQ     @ACSQ   2        I:Account Sequence
+     C                     PARM @BRCA     @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      **  If nor record found, output dbase error and return to
+      **  calling program.
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'004'     DBASE            * DBERR 004 *
+     C                     MOVE @ACCNT    DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HFULL   : Processing for Full Accnt                        *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HFULL    BEGSR
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM @CNUM     @CNNM   6        I:Customer Number
+     C                     PARM @FCCY     @CUCD   3        I:Currency Code
+     C                     PARM @FACD     @ACCD
+     C                     PARM @FSEQ     @ACSQ   2        I:Account Sequence
+     C                     PARM @BRCA     @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      **  If nor record found, output dbase error and return to
+      **  calling program.
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'005'     DBASE            * DBERR 005 *
+     C                     MOVE @ACCNT    DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HNCDE   : Processing for Nostro Code                       *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HNCDE    BEGSR
+      *
+      **  Check for Nostro Accnt using Access object.
+      *
+     C                     MOVE @SCCY     @KEYB
+     C                     MOVE @NSTR     @KEYE
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANK    @KEYA
+     C                     PARM           @KEYB
+     C                     PARM *BLANK    @KEYC
+     C                     PARM *BLANK    @KEYD
+     C                     PARM           @KEYE
+     C                     PARM *BLANKS   @KEYG
+     C                     PARM *BLANKS   @KEYH
+     C                     PARM *BLANKS   @KEYI
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'006'     DBASE            * DBERR 006 *
+     C                     MOVEL@KEYB     DBKEY            *************
+     C                     MOVE @KEYE     DBKEY
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+      ** Record found. Determine Overdraft Limit and Relative Rec No.
+      ** in MEMOS.
+      *
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     MOVE A7ACSN    @ACSQ
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            B:Option
+     C                     PARM *BLANKS   @RETL            I:Account Identifier
+     C                     PARM A7CUST    @CNNM            I:Customer Number
+     C                     PARM @SCCY     @CUCD            I:Currency Code
+     C                     PARM A7ACCD    @ACCD            I:Account Code Num
+     C                     PARM           @ACSQ            I:Account Sequence
+     C                     PARM A7BRCD    @BRCD            I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'008'     DBASE            * DBERR 008 *
+     C                     MOVEADB1       DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HFCHK   : Fund Caluclation and Insufficient Fund Checking  *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HFCHK    BEGSR
+      *
+      ** Define and set key for MEMOSL1
+      *
+     C           KMEMO     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+      **  Chain to MEMOS file to get the Shadow cleared balance.
+      *
+     C           KMEMO     CHAINMEMOSL1              20
+      *
+      **  If record not found issue a dbase errorr and return to
+      **  calling program.
+      *
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'MEMOSL1' DBFILE           *************
+     C                     MOVEL'007'     DBASE            * DBERR 007 *
+     C                     MOVE CNUM      ECNNM            *************
+     C                     MOVE CCY       ECUCD
+     C                     MOVE ACOD      EACCD
+     C                     MOVE ACSQ      EACSQ
+     C                     MOVE BRCA      EBRCD
+     C                     MOVELEMEMO     DBKEY
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+      ** Adjust Balance for unauthorised transactions
+      *
+     C                     MOVELW@MODE    ##MODE  3
+     C           ##MODE    IFEQ 'YES'
+     C                     EXSR SRADJB
+     C                     ENDIF
+     C                     MOVEL'YES'     ##MODE
+      *
+      ** Access settlement currency decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM @SCCY     @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'009'     DBASE            * DBERR 009 *
+     C                     MOVEL@SCCY     DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Convert overdraft limit to same factor as cleared balance from MEMOS
+      **  (ODLN is in whole currency units whereas CLBLN is unformatted full
+      **  amount with decimal places)
+      *
+     C           *LIKE     DEFN ODLN      WODLN +03
+     C                     SELEC
+     C           A6NBDP    WHEQ 0
+     C                     Z-ADDODLN      WODLN
+     C           A6NBDP    WHEQ 1
+     C           ODLN      MULT 10        WODLN
+     C           A6NBDP    WHEQ 2
+     C           ODLN      MULT 100       WODLN
+     C           A6NBDP    WHEQ 3
+     C           ODLN      MULT 1000      WODLN
+     C                     OTHER
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'010'     DBASE            * DBERR 010 *
+     C                     MOVELA6NBDP    DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDSL
+      *
+      **  Compute for Insufficient fund.
+      *
+     C           WODLN     SUB  CLBLN     @HRES  150
+     C           @HRES     COMP 0                    21
+      *
+      **  If transaction is forward valued.
+      **  Note in ##MODE amount has already been adjusted
+      *
+     C           @SDAT     IFGT BJRDNB
+     C           ##MODE    OREQ 'YES'
+     C           @HRES     SUB  @SMAM     @HRES        21
+     C                     END
+      *
+      ** If less than zero, return 'Y'
+      *
+     C           *IN21     IFEQ '0'
+     C                     MOVE 'N'       @RTCE
+     C                     ELSE
+     C                     MOVE 'Y'       @RTCE
+     C                     END
+      *
+      **  Pass back the full account to calling program
+      *
+     C                     MOVE *BLANKS   @ACCNT
+     C                     MOVE CNUM      @CNUM
+     C                     MOVE CCY       @FCCY
+     C                     MOVE ACOD      @FACD
+     C                     MOVE ACSQ      @FSEQ
+     C                     MOVE @ACCNT    @ACNT
+     C                     MOVE W0BRCA    @BRCA
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   SRADJB - Adjust Balance for Un-authorised Transactions      *
+      *   Called by - #HFCHK Check Sufficient Funds                   *
+      *****************************************************************
+      *
+     C           SRADJB    BEGSR
+      *
+      ** Define Key for RSACMTL1
+      *
+     C           KRSAC     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+     C                     MOVEL*BLANKS   ##FUND
+      *
+      ** SETLL and read all entries
+      *
+     C           KRSAC     SETLLRSACMTL1
+     C           KRSAC     READERSACMTL1                 91
+     C           *IN91     DOWEQ'0'
+      *
+      ** If FUND not blank find if OP or IN
+      *
+     C           FUND      IFNE *BLANKS
+     C           2         SUBSTFUND:12   ##002A  2
+      *
+      ** Check Outgoing
+      *
+     C           ##002A    IFEQ 'OP'
+     C           ##FUND    ANDNEFUND
+     C                     MOVELFUND      KFUND  15
+     C           KFUND     CHAINOTPAY                92
+     C                     ENDIF
+      *
+      ** Check Incoming
+      *
+     C           ##002A    IFEQ 'IN'
+     C           ##FUND    ANDNEFUND
+     C                     MOVELFUND      KFUND
+     C           KFUND     CHAININPAY                92
+     C                     ENDIF
+      *
+      ** Check Incoming
+      *
+     C           *IN92     IFEQ *OFF
+     C           AUIN      ANDEQ*BLANKS
+      *
+      ** Adjust balances only back-valued or today
+      ** If Debit, decrease balance towards credit (negative)
+      *
+     C           DORC      IFEQ 0
+     C           VUDT      ANDLEBJRDNB
+     C           CLBLN     SUB  MVAM      CLBLN
+     C                     ENDIF
+      *
+      ** If Credit, increase balance towards debit (positive)
+      *
+     C           DORC      IFEQ 1
+     C           VUDT      ANDLEBJRDNB
+     C           CLBLN     ADD  MVAM      CLBLN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Save reference
+      *
+     C           *LIKE     DEFN FUND      ##FUND
+     C                     MOVELFUND      ##FUND
+      *
+     C                     ENDIF
+      *
+      ** Read Next Record
+      *
+     C           KRSAC     READERSACMTL1                 91
+     C                     ENDDO
+      *
+     C           EXADJB    ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   CHKRAB   : Check if account should be included for RABC     *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           CHKRAB    BEGSR
+      *
+     C           KGLAC     KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY    3
+     C                     KFLD           WACOD  100
+     C                     KFLD           WACSQ   20
+     C                     KFLD           WBRCA   3
+      *
+     C                     MOVE CNUM      WCNUM   6
+     C                     MOVE CCY       WCCY
+     C                     MOVE ACOD      WACOD
+     C                     MOVE ACSQ      WACSQ
+     C                     MOVE BRCA      WBRCA
+      *
+     C           KGLAC     CHAINGLACNTL3             20
+      *
+      **  If record not found issue a dbase errorr and return to
+      **  calling program.
+      *
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'GLACNTL3'DBFILE           *************
+     C                     MOVEL'011'     DBASE            * DBERR 007 *
+     C                     MOVE CNUM      ECNNM            *************
+     C                     MOVE CCY       ECUCD
+     C                     MOVE ACOD      EACCD
+     C                     MOVE ACSQ      EACSQ
+     C                     MOVE BRCA      EBRCD
+     C                     MOVE *BLANKS   DBKEY
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - anywhere within the program                     *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+      *
+** CPY@   Object Copyright
+(c) Finastra International Limited 2020
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

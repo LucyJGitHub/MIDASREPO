@@ -10,7 +10,8 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD055683           Date 21May20              */
+/*       Prev Amend No. MD039086           Date 24Oct16              */
+/*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
@@ -50,6 +51,8 @@
 /*********************************************************************/
 /*                                                                   */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
+/*       MD039086 - Submit GO_ONL_ABC background updater             */
+/*                  Applied for MD-57273.                            */
 /*       MD055683 - SWIFT jobs will now run based on configurations  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */

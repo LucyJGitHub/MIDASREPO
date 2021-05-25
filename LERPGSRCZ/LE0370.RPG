@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD058108           Date 18May21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD058182           Date 25May21               *
+      *  Prev Amend No. MD058108           Date 18May21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR932611           Date 06Aug13               *
       *                 AR927395           Date 06Nov19               *
@@ -164,6 +165,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058182 - Missing BR event on LOAC despite calculator       *
+      *             returned complete rates. Set LDFLAG = Y to        *
+      *             LELIBEPD rates processed by this program.         *
       *  MD058108 - Missing BR event. Create a temporary variable so  *
       *             indicator 95 will not be overridden by ZDATE2     *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -519,7 +523,8 @@
      F            CLOANCLF                          KRENAMECLOAN1F                            CAS016
       *                                                                                       CAS016
       ** Loans LIBOR Deregulation Extract File                                                CLE172
-     FLELIBEL0IF  E           K        DISK         KINFSR *PSSR                              CLE172
+     F***LELIBEL0IF  E           K        DISK         KINFSR *PSSR                  CLE172 MD058182
+     FLELIBEL0UF  E           K        DISK         KINFSR *PSSR                            MD058182
       *                                                                                       CLE172
      FSDBSRTPDIF  E                    DISK                               S01194
 0015 F*TABLED**IF**F      96 12AI     2 DISK                              S01194
@@ -1830,6 +1835,7 @@
 0719 C  N30                GOTO BYE2
      C                     MOVE ' '       WLIBE   1                                           CLE172
      C           CLE172    IFEQ 'Y'                                                           CLE172
+     C           WPNAM     ANDEQ' '                                                         MD058182
      C                     MOVE *OFF      *IN46                                               CLE172
      C           LNRF      CHAINCLOANLC              88                                       CLE172
      C           *IN88     IFEQ *OFF                                                          CLE172
@@ -1837,11 +1843,19 @@
      C                     READ LELIBEL0                 88                                   CLE172
      C           LNRF      DOWEQLDLNRF                                                        CLE172
      C           *IN88     ANDEQ'0'                                                           CLE172
+      *                                                                                     MD058182
+     C           LDVDAT    IFLE ECD                                                         MD058182
+     C           LDFLAG    ANDEQ*BLANKS                                                     MD058182
+      *                                                                                     MD058182
      C                     MOVE *ON       *IN46                                               CLE172
      C                     MOVE 'Y'       WLIBE                                               CLE172
      C                     MOVE LDVDAT    AB2,D                                               CLE172
      C                     GOTO LIBT                                                          CLE172
      C           LIBS      TAG                                                                CLE172
+     C                     MOVE 'Y'       LDFLAG                                            MD058182
+     C                     UPDATLELIBED0                                                    MD058182
+     C                     ENDIF                                                            MD058182
+      *                                                                                     MD058182
      C                     MOVE ' '       WLIBE                                               CLE172
      C                     MOVE '     '   AB2,D                                               CLE172
      C                     READ LELIBEL0                 88                                   CLE172

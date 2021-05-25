@@ -12,12 +12,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058040           Date 11May21               *
-      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *  Last Amend No. MD058182           Date 25May21               *
+      *  Prev Amend No. MD058040A          Date 25May21               *
+      *                 MD058040           Date 11May21               *
+      *                 MD057871           Date 30Apr21               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058182 - Missing BR event on LOAC despite calculator       *
+      *             returned complete rates. Write returned rates     *
+      *             to SDHSDRTD with Int Period Date <= Control Date. *
+      *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
+      *              the number of decimal places used in checking    *
+      *              whether the returned rate is changed or not.     *
       *  MD058040 - Calculator returned the same rates causing        *
       *             duplicate interest entries generated on HISTSHQ.  *
       *             Write to LELIBEPD only if interest period date    *
@@ -132,6 +140,8 @@
       ** Benchmark Adjustment
      D  ratesKnownInd                 1a
       ** Rates Known Indicator
+     D  controlDate                   5a                                                    MD058182
+      ** Event Control Date                                                                 MD058182
      D  returnCD                     20a
       ** Return Code
 
@@ -182,6 +192,8 @@
       ** Benchmark Adjustment
      D  ratesKnownInd                 1a
       ** Rates Known Indicator
+     D  controlDate                   5a                                                    MD058182
+      ** Event Control Date                                                                 MD058182
      D  returnCD                     20a
       ** Return Code
 
@@ -1027,8 +1039,13 @@
 
                    elseif  (calcMethod = 'CCR' or calcMethod  = 'SAVG');
                         includeRecord = 'Y';
-
                    endif;
+
+                   if result.list(i).intPDMidas <= controlDate;                           //MD058182
+                        includeRecord = 'Y';                                              //MD058182
+                   else;                                                                  //MD058182
+                        includeRecord = 'N';                                              //MD058182
+                   endif;                                                                 //MD058182
 
                    fileToCheck = SDHSDRTD;
                    if includeRecord = 'Y';
@@ -1114,22 +1131,26 @@
                       select;                                                             //MD058040
                          when calcMethod = 'NCCR'                                         //MD058040
                           and DailyHistDS.CDCMRT <>                                       //MD058040
-                               %dec(Result.List(i).dlyCompRate:11:7);                     //MD058040
+                   //**********%dec(Result.List(i).dlyCompRate:11:7);           //MD058040 MD058040A
+                               %dec(Result.List(i).dlyCompRate:17:12);                   //MD058040A
                             writeRecord = 'Y';                                            //MD058040
                                                                                           //MD058040
                          when calcMethod = 'CCR'                                          //MD058040
                           and DailyHistDS.CAVCRT <>                                       //MD058040
-                               %dec(Result.List(i).aveCompRate:11:7);                     //MD058040
+                   //**********%dec(Result.List(i).aveCompRate:11:7);           //MD058040 MD058040A
+                               %dec(Result.List(i).aveCompRate:17:12);                   //MD058040A
                             writeRecord = 'Y';                                            //MD058040
                                                                                           //MD058040
                          when calcMethod = 'SARR'                                         //MD058040
                           and DailyHistDS.CRTEAP <>                                       //MD058040
-                               %dec(Result.List(i).rateApplied:11:7);                     //MD058040
+                   //**********%dec(Result.List(i).rateApplied:11:7);           //MD058040 MD058040A
+                               %dec(Result.List(i).rateApplied:17:12);                   //MD058040A
                             writeRecord = 'Y';                                            //MD058040
                                                                                           //MD058040
                          when calcMethod = 'SAVG'                                         //MD058040
                           and DailyHistDS.CSMPAV<>                                        //MD058040
-                               %dec(Result.List(i).simpleAve:11:7);                       //MD058040
+                   //**********%dec(Result.List(i).simpleAve:11:7);             //MD058040 MD058040A
+                               %dec(Result.List(i).simpleAve:17:12);                     //MD058040A
                             writeRecord = 'Y';                                            //MD058040
                       endsl;                                                              //MD058040
                    endif;                                                                 //MD058040

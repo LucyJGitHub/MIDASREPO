@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. MD046998A          Date 15Apr21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046998A - Reversed GEMS 226449                             *
+      *            - Applied fix for MD057480                         *
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Wrong interest calculated due to wrong number of    *
       *           days in interest used for divisor basis 3. Fix is to*
@@ -79,12 +82,12 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
       ***INPUT***
       * day basis from sectyd
      D  DYBS           S              1A
@@ -116,11 +119,11 @@
      D ECD             S              5P 0
       ** Date format indicator
      D  BJDFIN         S              1A
- 
+
       ***OUTPUT***
       * NO OF DAYS IN INTEREST YEAR
      D  ZINTDD         S              5P 0
- 
+
       ***Internal Work Variables.***
       * start date (before call module ZDATE2)
      D  ZDAYNO         S              5P 0
@@ -134,15 +137,15 @@
      D ZECD            S              5P 0
       ** Last Coupon Date (Output)
      D ZZLCD           S              5P 0
- 
+
       ***Internal Work Variables.***
      D  ZWRK4          S              4P 0
      D  ZS             S              2P 0
- 
- 
+
+
       ** +-----------------------------------------------------------------+
- 
- 
+
+
       ** +--- The merged & converted ZDYYRZ1 & ZDYYRZ2 start here --------+
      D CRDS            DS
      D  CR01                   1      1
@@ -160,7 +163,7 @@
      D  CR                     1     12
      D                                     DIM(12)                              CR01-12 ARRAY
       ** +--- The merged & converted ZDYYRZ1 & ZDYYRZ2 end here ----------+
- 
+
       ** For 180056 - module version - to compile requires various defns **                   180056
                                                                                               180056
       ** taken from ZNCD module source                                                        180056
@@ -203,29 +206,29 @@
                                                                                               180056
       ** END 180056 - module version - to compile requires various defns **                   180056
       * Set indicator 98 from BJDFIN
- 
+
      C     BJDFIN        IFEQ      'M'
      C                   SETON                                        98
      C                   ELSE
      C                   SETOFF                                       98
      C                   END
- 
+
       ** Set up coupon indicator array
- 
+
      C                   MOVEA     CRarr         CR
- 
+
       ** For 180056 - set up coupon date array                                                180056
      C                   MOVEA     CDArr         CDnn                                         180056
      C                   Do        12            XX                2 0                        180056
      C                   Move      CDnn(xx)      CD(xx)                                       180056
      C                   Enddo                                                                180056
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZDYYR
- 
+
      C                   RETURN
       /EJECT
- 
+
       ** +--- The converted ZDYYRZ3  starts here --------------------------+
      C**********************************************************************
      C**
@@ -324,11 +327,12 @@
      C* DOES THIS YEAR ALSO CONTAIN FEB29, IE IS IT A LEAP YEAR?
      C*
      C*  MAT MONTH GT FEB
-     C     ZMATM         IFGT      02
-     C                   Z-ADD     ZNCDY         ZEOY                                         226449
-     C                   ELSE                                                                 226449
-     C     ZNCDY         SUB       1             ZEOY              2 0                        226449
-     C                   ENDIF                                                                226449
+     C*****ZMATM         IFGT      02                                                      MD046998A
+     C**********         Z-ADD     ZNCDY         ZEOY                               226449 MD046998A
+     C                   Z-ADD     ZNCDY         ZEOY              2 0                     MD046998A
+     C**********         ELSE                                                       226449 MD046998A
+     C*****ZNCDY         SUB       1             ZEOY              2 0              226449 MD046998A
+     C**********         ENDIF                                                      226449 MD046998A
      C     ZEOY          DIV       4             ZWK               2 0
      C                   MVR                     ZREM              1 0
      C     ZREM          IFNE      0
@@ -413,7 +417,7 @@
      C*
      C**************************************************************E14496100228
       ** +--- The converted ZDYYRZ3 ends here ----------------------------+
- 
+
       /EJECT
       **********************************************************************
       *                                                                    *
@@ -424,13 +428,13 @@
       *   the module that contains subroutine ZDATE2                       *
       *                                                                    *
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -443,7 +447,7 @@
       *   the module that contains subroutine ZNCD                         *
       *                                                                    *
      C     ZNCD          BEGSR
- 
+
      C                   CALLB     'ZNCD'
      C                   PARM                    ITLD
      C                   PARM                    FCPN
@@ -472,7 +476,7 @@
      C                   PARM                    HCY8              3                          CSE071
      C                   PARM                    HCY9              3                          CSE071
      C                   PARM                    NCD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -485,7 +489,7 @@
       *   the module that contains subroutine ZLCD                         *
       *                                                                    *
      C     ZLCD          BEGSR
- 
+
      C                   CALLB     'ZLCD'
      C                   PARM                    ISSD
      C                   PARM                    ITLD
@@ -514,7 +518,7 @@
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    ZZLCD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -527,7 +531,7 @@
       *   the module that contains subroutine ZDAYS                        *
       *                                                                    *
      C     ZDAYS         BEGSR
- 
+
      C                   CALLB     'ZDAYS'
      C                   PARM                    ZSDATE
      C                   PARM                    ZEDATE
@@ -545,7 +549,7 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ZDDAYS
      C                   PARM                    ZODNAT            2 0          149162
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -558,13 +562,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Security details
      C                   PARM                    DYBS
      C                   PARM                    DVBS
@@ -577,10 +581,10 @@
      C                   PARM                    CDArr
      C                   PARM                    CRArr
      C                   PARM                    CPNR                           149162
- 
+
       * interest days adjustment
      C                   PARM                    DADJN
- 
+
       * Next coupon date
      C                   PARM                    NCD
       *
@@ -599,16 +603,16 @@
      C                   PARM                    HCY7                                         CSE071
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
- 
+
       * OUTPUTS
- 
+
       ** No. of days in interest year
       ** Last Coupon date for div basis 5
      C                   PARM                    ZINTDD
      C                   PARM                    LCDD5
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *****************************************************************                       180056
       *    SUBROUTINE- ZD5DYS                                         *                       180056

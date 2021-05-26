@@ -622,6 +622,10 @@
              CALL       PGM(REC001500)                                                    /*CAP205*/
              RTVDTAARA  DTAARA(GLFRATMSTS (1 1)) RTNVAR(&FRSTAT)                       /*BUG27831A*/
              IF         COND(&FRSTAT *EQ ' ') THEN(CALL PGM(GLC004607))                /*BUG27831A*/
+/* Submit GO_ONL_ABC background updater */                                              /*MD039086*/
+                                                                                        /*MD039086*/
+             CALL       PGM(GLC007011)                                                  /*MD039086*/
+                                                                                        /*MD039086*/
              ENDDO                                                                        /*CAP205*/
                                                                                           /*CAP205*/
 /*/COPY OFCPYSRCZ,CGL155_006                                         */                   /*CGL155*/

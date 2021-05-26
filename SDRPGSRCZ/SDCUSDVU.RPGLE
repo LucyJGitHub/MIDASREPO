@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *  Last Amend No. MD057294           Date 12May21               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD052432           Date 18Dec18               *
       *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
@@ -153,6 +154,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057294 - Missing Customer's Authority Holders Link after   *
+      *             amend.                                            *
+      *             Applied for MD-57680.                             *
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
       *             issues.                                           *
@@ -4560,6 +4564,9 @@
      C                   IF        @RTCD = *BLANKS                                          MD053634
      C                             AND (DDACTN <> 'D'                                       MD053634
      C                             AND DDACTN <> 'C')                                       MD053634
+     C                   IF        V_CUAHArr(1) = *Blanks                                   MD057294
+     C                   EVAL      V_CUAHArr(1) = DDCUSN                                    MD057294
+     C                   ENDIF                                                              MD057294
      C                   EXSR      SrUpdCUAH                                                MD053634
      C                   ENDIF                                                              MD053634
                                                                                             MD053634

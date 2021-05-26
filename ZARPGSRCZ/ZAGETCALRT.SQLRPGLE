@@ -1044,7 +1044,6 @@
                         includeRecord = 'Y';
                    endif;
 
-
                    fileToCheck = SDHSDRTD;
                    if includeRecord = 'Y';
                       exsr checkExist;

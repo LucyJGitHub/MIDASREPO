@@ -26,6 +26,7 @@
       *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
       *              the number of decimal places used in checking    *
       *              whether the returned rate is changed or not.     *
+      *              Only check if rate is changed for CCR and SAVG.  *
       *  MD058040 - Calculator returned the same rates causing        *
       *             duplicate interest entries generated on HISTSHQ.  *
       *             Write to LELIBEPD only if interest period date    *
@@ -1128,28 +1129,26 @@
                                                                                           //MD058040
                    if sqlCOD <> NO_RECORD and fileToCheck = SDHSDRTD2;                    //MD058040
                       select;                                                             //MD058040
-                         when calcMethod = 'NCCR'                                         //MD058040
-                          and DailyHistDS.CDCMRT <>                                       //MD058040
-                   //**********%dec(Result.List(i).dlyCompRate:11:7);           //MD058040 MD058040A
-                               %dec(Result.List(i).dlyCompRate:17:12);                   //MD058040A
-                            writeRecord = 'Y';                                            //MD058040
+       //**********      when calcMethod = 'NCCR'                               //MD058040 MD058040A
+       //**********       and DailyHistDS.CDCMRT <>                             //MD058040 MD058040A
+       //**********            %dec(Result.List(i).dlyCompRate:11:7);           //MD058040 MD058040A
+       //**********         writeRecord = 'Y';                                  //MD058040 MD058040A
                                                                                           //MD058040
                          when calcMethod = 'CCR'                                          //MD058040
-                          and DailyHistDS.CAVCRT <>                                       //MD058040
-                   //**********%dec(Result.List(i).aveCompRate:11:7);           //MD058040 MD058040A
-                               %dec(Result.List(i).aveCompRate:17:12);                   //MD058040A
+       //**********       and DailyHistDS.CAVCRT <>                             //MD058040 MD058040A
+                          and %dec(DailyHistDS.CAVCRT:11:7) <>                           //MD058040A
+                               %dec(Result.List(i).aveCompRate:11:7);                     //MD058040
                             writeRecord = 'Y';                                            //MD058040
                                                                                           //MD058040
-                         when calcMethod = 'SARR'                                         //MD058040
-                          and DailyHistDS.CRTEAP <>                                       //MD058040
-                   //**********%dec(Result.List(i).rateApplied:11:7);           //MD058040 MD058040A
-                               %dec(Result.List(i).rateApplied:17:12);                   //MD058040A
-                            writeRecord = 'Y';                                            //MD058040
+       //**********      when calcMethod = 'SARR'                               //MD058040 MD058040A
+       //**********       and DailyHistDS.CRTEAP <>                             //MD058040 MD058040A
+       //**********            %dec(Result.List(i).rateApplied:11:7);           //MD058040 MD058040A
+       //**********         writeRecord = 'Y';                                  //MD058040 MD058040A
                                                                                           //MD058040
                          when calcMethod = 'SAVG'                                         //MD058040
-                          and DailyHistDS.CSMPAV<>                                        //MD058040
-                   //**********%dec(Result.List(i).simpleAve:11:7);             //MD058040 MD058040A
-                               %dec(Result.List(i).simpleAve:17:12);                     //MD058040A
+       //**********       and DailyHistDS.CSMPAV<>                              //MD058040 MD058040A
+                          and %dec(DailyHistDS.CSMPAV:11:7) <>                           //MD058040A
+                               %dec(Result.List(i).simpleAve:11:7);                       //MD058040
                             writeRecord = 'Y';                                            //MD058040
                       endsl;                                                              //MD058040
                    endif;                                                                 //MD058040

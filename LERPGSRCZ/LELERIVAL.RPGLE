@@ -9016,6 +9016,7 @@
      C                   MOVEL     DDNFSNB       L_CLNFSN                                   AR702532
      C                   ENDIF                                                              AR702532
       *                                                                                     AR702532
+     C                   IF        CLE172 = 'Y'                                             MD057871
       ** Return Backward-Looking Rate Fields to original value                                CLE172
       *                                                                                       CLE172
       *                                                                                       CLE172
@@ -9047,13 +9048,21 @@
      C**********         ELSE                                                        CLE172 MD057871
      C**********         Z-ADD     *ZEROS        L_CLNBAD                            CLE172 MD057871
      C**********         ENDIF                                                       CLE172 MD057871
+     C                   IF        DDNBADJ <> *BLANKS                                       MD057871
      C                   EVAL      L_CLNBAD = %DEC(DDNBADJ:11:7)                            MD057871
+     C                   ELSE                                                               MD057871
+     C                   EVAL      L_CLNBAD = *ZEROS                                        MD057871
+     C                   ENDIF                                                              MD057871
       *                                                                                       CLE172
       ** New Floor                                                                            CLE172
       *                                                                                       CLE172
      C                                                                                        CLE172
      C                   IF        DDNFLOR = *BLANKS                                        MD057871
+     C                   IF        DDNBLRT = 'Y'                                            MD057871
      C                   Z-ADD     WFLOOR        L_CLNFLR                                   MD057871
+     C                   ELSE                                                               MD057871
+     C                   EVAL      L_CLNFLR = *ZEROS                                        MD057871
+     C                   ENDIF                                                              MD057871
      C                   ELSE                                                               MD057871
      C                   EVAL      L_CLNFLR = %DEC(DDNFLOR:11:7)                            MD057871
      C**********         MOVE      *BLANKS       ZFIELD                              CLE172 MD057871
@@ -9094,6 +9103,7 @@
      C**********         MOVEL     DDNDBAVB      L_CLNDBA                            CLE172 MD057871
      C                   MOVEL     DDNDBAV       L_CLNDBA                                   MD057871
       *                                                                                       CLE172
+     C                   ENDIF                                                              MD057871
      C                   ENDSR                                                              AR702532
       *****************************************************************            AR820729 MD055380
       */EJECT***                                                                   AR820729 MD055380

@@ -781,6 +781,8 @@
      C                   MOVE      *BLANKS       DDTOTI                                    AR1079461
      C                   MOVE      '0.00'        DDTOTI                                    AR1079461
      C                   ENDIF                                                             AR1079461
+                                                                                           AR1079461
+     C                   EXSR      RESETERRS                                                MD023258
      C                   CALLB     'ZAVTOTINT'                                              BUG10810
      C                   PARM                    ReturnCode                                 BUG10810
      C                   PARM                    MSG1                                       BUG10810

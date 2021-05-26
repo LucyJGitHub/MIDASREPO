@@ -19,10 +19,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD024826           Date 07Feb14               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR1095995          Date 08Apr13               *
-      *                 AR1095995          Date 18Mar13               *
+      *  Last Amend No. MD037019           Date 05Apr16               *
+      *  Prev Amend No. MD024826           Date 07Feb14               *
+      *                 252436             Date 13Feb12               *
+      *                 235062             Date 09Feb12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR1095995C         Date 08Apr13               *
+      *                 AR1095995A         Date 18Mar13               *
       *                 CLE148             Date 23Jul12               *
       *                 AR888911           Date 26Jan12               *
       *                 AR864714B          Date 28Mar12               *
@@ -221,10 +224,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037019 - Failed COB component CGC2050 00005 due to Charge  *
+      *             Code not found. Review validation of Charge and   *
+      *             Commission Codes to use Nominal currency (instead *
+      *             Settlement Currency).                             *
       *  MD024826 - Cannot amend position settlement in BFM PEA.      *
       *             Remove unnecessary condition which enables access *
       *             to portfolio reference, so POSETD gets updated    *
-      *             during amendment.                                 *      
+      *             during amendment.                                 *
+      *  252436 - Position settlements not showing on the screen.     *
+      *           Make sure that correct Portfolio Ref is use when    *
+      *           as key in SETLL to POSETX.                          *
+      *  235062 - Delete and Amend not possible when portfolio is NONP*
+      *           Fix is to use the correct key when CHAIN to POSETD. *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1095995C - Generate projected movement when authorising    *
       *               position settlements with no amendments during  *
@@ -1481,6 +1493,18 @@
      C                     KFLD           PEVT                            S01486
      C                     KFLD           PTFR                            S01486
      C                     KFLD           TNL1                            S01486
+     C*                                                                                       235062
+     C**  DEFINE KEY LIST FOR CHAINING TO POSET FILE WITH PORTFOLIO                           235062
+     C**   MANAGEMENT INSTALLED AND WHEN PTFR IS '9997'                                       235062
+     C*                                                                                       235062
+     C           PTFRK1    KLIST                                                              235062
+     C                     KFLD           PBCA                                                235062
+     C                     KFLD           PSSH                                                235062
+     C                     KFLD           PCPY                                                235062
+     C                     KFLD           PDUD                                                235062
+     C                     KFLD           PEVT                                                235062
+     C                     KFLD           WPTFR   4                                           235062
+     C                     KFLD           TNL1                                                235062
       *                                                                   CSE023
       ** Define key list for chaining to Position Settlements file        CSE023
       ** POSET6 when enhancement CSE023 is installed.                     CSE023
@@ -1548,7 +1572,8 @@
      C**  DEFINE KEY LIST FOR CHAINING TO SECGT FILE                      S01169
      C*                                                                   S01169
      C           SECGTK    KLIST                                          S01169
-     C                     KFLD           PSCU                            S01169
+     C**********           KFLD           PSCU                            S01169            MD037019
+     C                     KFLD           SPNCY                                             MD037019
      C                     KFLD           CCDK                            S01169
      C*
      C*  DEFINE KEY LIST FOR READING INVTP
@@ -3431,6 +3456,7 @@
      C                     MOVELWSTXBS    TXBS                            186055
      C                     MOVELWSBNFO    BNFO                            186055
      C                     MOVELWSEXCD    EXCD                            186055
+     C                     MOVELWSVTFR    SPPTFR                                              252436
      C           CSE023    IFEQ 'Y'                                       186055
      C           PTXBSK    SETLLPOSETX                                    186055
      C                     ELSE                                           186055
@@ -11021,7 +11047,15 @@
       *                                                                   CSE023
      C           BGPFMG    WHEQ 'Y'                                       CSE023
      C           BGN4ST    OREQ 'Y'                                       CSE023
+      *                                                                                       235062
+      ** If portfolio in screen is 'NONP', use '9997' when chain to POSETD                    235062
+      *                                                                                       235062
+     C           SPPTFR    IFEQ FCR997                                                        235062
+     C                     MOVE '9997'    WPTFR                                               235062
+     C           PTFRK1    CHAINPOSETDF              60                                       235062
+     C                     ELSE                                                               235062
      C           PTFRK     CHAINPOSETDF              60                   CSE023
+     C                     ENDIF                                                              235062
       *                                                                   CSE023
      C                     OTHER                                          CSE023
      C********** POSETK    CHAINPOSETDF              60            CSE023 203678
@@ -11281,7 +11315,15 @@
       *                                                                   CSE023
      C           BGPFMG    WHEQ 'Y'                                       CSE023
      C           BGN4ST    OREQ 'Y'                                       CSE023
+      *                                                                                       235062
+      ** If portfolio in screen is 'NONP', use '9997' when chain to POSETD                    235062
+      *                                                                                       235062
+     C           SPPTFR    IFEQ FCR997                                                        235062
+     C                     MOVE '9997'    WPTFR                                               235062
+     C           PTFRK1    CHAINPOSETDF              60                                       235062
+     C                     ELSE                                                               235062
      C           PTFRK     CHAINPOSETDF              60                   CSE023
+     C                     ENDIF                                                              235062
       *                                                                   CSE023
      C                     OTHER                                          CSE023
      C********** POSETK    CHAINPOSETDF              60            CSE023 169067
@@ -11447,7 +11489,15 @@
       *                                                                   CSE023
      C           BGPFMG    WHEQ 'Y'                                       CSE023
      C           BGN4ST    OREQ 'Y'                                       CSE023
+      *                                                                                       235062
+      ** If portfolio in screen is 'NONP', use '9997' when chain to POSETD                    235062
+      *                                                                                       235062
+     C           SPPTFR    IFEQ FCR997                                                        235062
+     C                     MOVE '9997'    WPTFR                                               235062
+     C           PTFRK1    CHAINPOSETDF              60                                       235062
+     C                     ELSE                                                               235062
      C           PTFRK     CHAINPOSETDF              60                   CSE023
+     C                     ENDIF                                                              235062
       *                                                                   CSE023
      C                     OTHER                                          CSE023
      C********** POSETK    CHAINPOSETDF              60            CSE023 203678
@@ -11586,7 +11636,15 @@
      C********** PTXBSK    CHAINPOSETDF              60                              186055 BUG12729
      C           PTXBS6    CHAINPOSETDF6             60                                     BUG12729
      C                     ELSE                                           186055
+      *                                                                                       235062
+      ** If portfolio in screen is 'NONP', use '9997' when chain to POSETD                    235062
+      *                                                                                       235062
+     C           SPPTFR    IFEQ FCR997                                                        235062
+     C                     MOVE '9997'    WPTFR                                               235062
+     C           PTFRK1    CHAINPOSETDF              60                                       235062
+     C                     ELSE                                                               235062
      C           PTFRK     CHAINPOSETDF              60    *              S01496
+     C                     ENDIF                                                              235062
      C                     ENDIF                                          186055
      C************IN60     IFEQ *OFF                               S01496 082738
      C************         Z-ADDPCPY      SVPCPY                   S01496 082738

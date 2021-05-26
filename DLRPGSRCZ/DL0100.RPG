@@ -10,8 +10,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD023765           Date 07Jan14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -84,6 +85,9 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD023765 - Incorrect projected movements for Adjustment to   *
+      *             Accrued Interest. Call AOOUMMU0 in projecting     *
+      *             interest adjustment. Patterned after AR1044820.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -233,6 +237,10 @@
      F            DLAIAUD0                          KRENAMEDLAIAUDR                          BUG6696
       * Midas DL Accrued Interest Adjustments Unauthorised (Rtv)                             BUG6696
      F*                                                                                      BUG6696
+     FMMDEAULLIF  E           K        DISK                                                 MD023765
+     F            MMDENSP0                          KIGNORE                                 MD023765
+     F            MMDENBP0                          KIGNORE                                 MD023765
+      *                                                                                     MD023765
      F/COPY WNCPYSRC,DL0100F001
 0019 F***TABLE   IF  F      96 12AI     2 DISK                            S01194
 0020 F***SNAME   IF  F     256 10AI    39 DISK                            S01194
@@ -851,6 +859,49 @@
      I***********                            51 102 LOTSCN         CIR002 CAC001
      I**********                             51 117 LOTSCN                             CAC001 CAS005
      I                                       51 147 LOTSCN                                    CAS005
+      *                                                                                     MD023765
+      ** DS for DEALSDC - Before being updated by a program.                                MD023765
+      *                                                                                     MD023765
+     IBEDEDC      DS                           2139                                         MD023765
+      *                                                                                     MD023765
+      ** DS for DEALSDC - After being updated by a program.                                 MD023765
+      *                                                                                     MD023765
+     IAFDEDC      DS                           2139                                         MD023765
+      *                                                                                     MD023765
+     IDETLDC    E DSDEALSDC                                                                 MD023765
+     I              RECI                            RECI1                                   MD023765
+     I              DLNO                            DLNO1                                   MD023765
+     I              CNUM                            CNUM1                                   MD023765
+     I              BRCA                            BRCA1                                   MD023765
+     I              DTYP                            DTYP1                                   MD023765
+     I              CCY                             CCY1                                    MD023765
+     I              LCD                             LCD1                                    MD023765
+     I              TNLU                            TNLU1                                   MD023765
+     I              FSGN                            FSGN1                                   MD023765
+     I              OSDA                            OSDA1                                   MD023765
+     I              OMDA                            OMDA1                                   MD023765
+      *                                                                                     MD023765
+     IMMDELD    E DSMMDELDPP                                                                MD023765
+     I              QQDORI                          QQDOR1                                  MD023765
+     I              QQMORI                          QQMOR1                                  MD023765
+     I              QQDOPI                          QQDOP1                                  MD023765
+     I              QQMOPI                          QQMOP1                                  MD023765
+     I              QQRONS                          QQRON1                                  MD023765
+     I              QQPONS                          QQPON1                                  MD023765
+     I              QQINSA                          QQINS1                                  MD023765
+      *                                                                                     MD023765
+     IZ#BSTS    E DSZ#BST                                                                   MD023765
+     IZ#ASTS    E DSZ#AST                                                                   MD023765
+     IZ#WSTS    E DSZ#WST                                                                   MD023765
+     IDLDLQD    E DSDLSTMPPD                                                                MD023765
+      *                                                                                     MD023765
+      ** File - Payment Further Settlement Instructions                                     MD023765
+      *                                                                                     MD023765
+     I#FPAYF    E DSSDFSFPPD                                                                MD023765
+      *                                                                                     MD023765
+      ** File - Receive Further Settlement Instructions                                     MD023765
+      *                                                                                     MD023765
+     I#FRECF    E DSSDFSFRPD                                                                MD023765
      I*                                                                   S01408
      I/COPY WNCPYSRC,DL0100IIP3                                           S01408
      I*                                                                   S01408
@@ -1215,6 +1266,8 @@
      C*                                                          S01203
 0466 C***KA***
 0467 C*OR*KE**
+     C                     CLEARBEDEDC                                                      MD023765
+     C                     CLEARAFDEDC                                                      MD023765
 0466 C   KC
 0467 COR KL
      C*
@@ -1344,6 +1397,8 @@
 0518 C*OR*KE**             GOTO ENDINS
 0517 C   KC
 0518 COR KL                GOTO ENDINS
+      *                                                                                     MD023765
+     C                     CLEARDETLDC                                                      MD023765
      C*                                                          S01203
 0519 C**
 0520 C** VALIDATE DEAL NO.VALUE DATE MUST BE LESS THAN RUN DATE
@@ -2227,6 +2282,10 @@
 0721 C   06                SETON                     44
 0722 C   44                SETON                     U7U8
 0723 C   44                GOTO ENDD
+      *                                                                                     MD023765
+     C           RCDT      IFEQ 'C'                                                         MD023765
+     C                     MOVE DETLDC    BEDEDC                                            MD023765
+     C                     ENDIF                                                            MD023765
 0724 C*
 0725 C*    CHECK IF RECORD CHANGED
 0726 C           LUD       COMP LUDSV                8181
@@ -2346,6 +2405,30 @@
 0793 C                     SETON                     79
 0794 C                     EXSR TIME
 0795 C                     EXSR EXCPTN
+      *                                                                                     MD023765
+      ** Chain to DEALSDC after successfull update to get after details                     MD023765
+      *                                                                                     MD023765
+     C           *IN46     IFEQ '1'                                                         MD023765
+     C           RCDT      ANDEQ'C'                                                         MD023765
+     C           DLKEY     CHAINDEALS                44                                     MD023765
+     C           *IN44     IFEQ '1'                                                         MD023765
+     C                     MOVEL'DEALSDC' DBFILE                                            MD023765
+     C                     MOVELDLKEY     DBKEY                                             MD023765
+     C                     MOVEL'11'      DBASE                                             MD023765
+     C                     MOVE *ON       *INU7                                             MD023765
+     C                     MOVE *ON       *INU8                                             MD023765
+     C                     EXSR *PSSR                                                       MD023765
+     C                     GOTO ENDPR                                                       MD023765
+     C                     ELSE                                                             MD023765
+     C                     MOVE DETLDC    AFDEDC                                            MD023765
+     C                     ENDIF                                                            MD023765
+     C                     ENDIF                                                            MD023765
+      *                                                                                     MD023765
+      ** Generate Interest Projection for RCDT = 'C'                                        MD023765
+      *                                                                                     MD023765
+     C           RCDT      IFEQ 'C'                                                         MD023765
+     C                     EXSR PROJDC                                                      MD023765
+     C                     ELSE                                                             MD023765
       *                                                                                       256960
       ** Process Account Movement for Interest adjustment                                     256960
       *                                                                                       256960
@@ -2377,6 +2460,7 @@
      C                     PARM           P1MDAT           in                                 256960
       *                                                                                       256960
      C                     ENDIF                                                              256960
+     C                     ENDIF                                                            MD023765
       *                                                                                       CDL026
      C                     ENDIF                                                              CDL026
       *                                                                                       CDL026
@@ -2498,6 +2582,52 @@
 0863 C                     SETON                     69
 0864 C**
 0865 C           ENDD      ENDSR
+      *****************************************************************                     MD023765
+      /EJECT                                                                                MD023765
+      *****************************************************************                     MD023765
+      *                                                               *                     MD023765
+      * PROJDC - Account Movement Projection for DEALSDC              *                     MD023765
+      *                                                               *                     MD023765
+      * Called by: SRINS                                              *                     MD023765
+      *                                                               *                     MD023765
+      * Calls: None                                                   *                     MD023765
+      *                                                               *                     MD023765
+      *****************************************************************                     MD023765
+     C           PROJDC    BEGSR                                                            MD023765
+      *                                                                                     MD023765
+      ** CALLER specifies the program that calls AOOUMMU0.                                  MD023765
+      *                                                                                     MD023765
+     C                     MOVEL'DL0100'  CALLER 10                                         MD023765
+      *                                                                                     MD023765
+     C                     CLEARZ#BSTS                                                      MD023765
+     C                     CLEARZ#ASTS                                                      MD023765
+     C                     CLEARZ#WSTS                                                      MD023765
+      *                                                                                     MD023765
+     C                     CLEARMMDELD                                                      MD023765
+     C           DLNO      CHAINMMDELDP0             31                                     MD023765
+     C           *IN31     IFEQ '0'                                                         MD023765
+     C                     MOVELMMDELD    Z#BSTS                                            MD023765
+     C                     MOVELMMDELD    Z#ASTS                                            MD023765
+     C                     ENDIF                                                            MD023765
+      *                                                                                     MD023765
+     C                     CALL 'AOOUMMU0'                                                  MD023765
+     C                     PARM *BLANK    ##RTCD  7                                         MD023765
+     C                     PARM           Z#BSTS                                            MD023765
+     C                     PARM           Z#ASTS                                            MD023765
+     C                     PARM           Z#WSTS                                            MD023765
+     C                     PARM *BLANK    @@AURO  1                                         MD023765
+     C                     PARM           #FPAYF                                            MD023765
+     C                     PARM           #FRECF                                            MD023765
+     C                     PARM *BLANK    PBFRCD100                                         MD023765
+     C                     PARM *BLANK    PAFRCD100                                         MD023765
+     C                     PARM *BLANK    DLDLQD                                            MD023765
+     C                     PARM           BEDEDC                                            MD023765
+     C                     PARM           AFDEDC                                            MD023765
+     C                     PARM 'DL0100'  CALLER 10                                         MD023765
+      *                                                                                     MD023765
+     C                     ENDSR                                                            MD023765
+      *****************************************************************                     MD023765
+      /EJECT                                                                                MD023765
      C********************************************************************
      C**
      C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.

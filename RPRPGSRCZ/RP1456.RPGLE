@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. AR981194           Date 29May12               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -57,6 +58,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR981194 - PBS Compatibility with BankFusion Midas 2.00      *
+      *             Split take-on for Future Value.                   *
+      *             (Child:AR981196)                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -327,6 +331,9 @@
       *                                                               *
       *****************************************************************
 
+     C     *ENTRY        PLIST                                                              AR981194
+     C                   PARM                    DateMode          1                        AR981194
+                                                                                            AR981194
       **  Perform initialization subroutine as program remains in memory.
      C                   Exsr      #Init
 
@@ -397,6 +404,14 @@
 
       **  Do while FX Deals to be processed for required selection.
      C     *in82         Doweq     False                                        Begin Do_W_N82
+                                                                                            AR981194
+      **  DateMode '1' ==> Transactions until Value Date                                    AR981194
+      **  DateMode '2' ==> Transactions on Future Value                                     AR981194
+     C     DateMode      IFEQ      '1'                                                      AR981194
+     C     VDAT          ANDLT     BJRDNB                                                   AR981194
+                                                                                            AR981194
+     C     DateMode      OREQ      '2'                                                      AR981194
+     C     VDAT          ANDGE     BJRDNB                                                   AR981194
 
      C                   If        RECI <> 'M'
 
@@ -422,6 +437,8 @@
      C                   Exsr      #Report
 
      C                   Endif                                                  End RECI
+                                                                                            AR981194
+     C                   ENDIF                                                              AR981194
 
       **  Read next FX Deals record.
      C     K_FXDeal      Reade     CUSDL1                                 82

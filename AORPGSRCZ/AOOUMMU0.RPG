@@ -10,8 +10,14 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053472           Date 27Oct20               *
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Last Amend No. MD054503           Date 06Jun20               *
+      *  Prev Amend No. MD050068           Date 25Mar18               *
+      *                 MD023792A          Date 29Jan14               *
+      *                 MD023765           Date 07Jan14               *
+      *                 AR1063117          Date 07Jan14               *
+      *                 MD023792           Date 16Dec12               *
+      *                 MD053472           Date 27Oct20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD055501           Date 29Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
@@ -122,6 +128,25 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054503 - Available Balance wrong                           *
+      *  MD050068 - Projected movements with wrong name.              *
+      *             Ensure the customer number parm, when calling     *
+      *             AOCUSTR1, contains the correct Cust No value      *
+      *             depending on the record type i.e. HKCNUM if       *
+      *             MMDELDPP record or HNCNUM if MMDEAMPP (for deal   *
+      *             amendment) etc.                                   *
+      *  MD023792A - Incorrect rounding of tax projection when deal   *
+      *              currency is equal to base currency. Added CDL081 *
+      *              processing in projecting Tiered Withholding Tax. *
+      *  MD023765 - Incorrect projected movements for Adjustment to   *
+      *             Accrued Interest. Include AIAN in the Interest    *
+      *             computation, and added parameters BEDEDC, AFDEDC, *
+      *             and CALLER in the PLIST. Patterned after fix      *
+      *             AR1044820.                                        *
+      *  AR1063117 - Fix several errors on projections. Applied for   *
+      *              MD023765.                                        *
+      *  MD023792 - Include the computed tax ammount for taxable MM   *
+      *             deals. Patterned after AR854478.                  *
       *  MD053472 - Payment settlement details cleared for Early      *
       *             Maturity                                          *
       *  MD055446 - There are parties and fields missing from the BRT *
@@ -381,7 +406,7 @@
       *                                                                                    AR1044820
       ** Calling Program                                                                   AR1044820
       *                                                                                    AR1044820
-     E                    CALPGM  1   1 10                                                 AR1044820
+     E                    CALPGM  1   1 10                                                 AR1044820 
      E/COPY WNCPYSRC,AOH00053
      I/SPACE 5
      IZ#BSTS    E DSZ#BST
@@ -1718,11 +1743,16 @@
      C                     Z-ADD0         TAXA                                                220013
      C           HKMTAX    IFEQ 'Y'                                                           220013
      C           ##LOD     ANDEQ'D'                                                           220013
+     C           HKMTAX    ORNE ' '                                                         MD023792
+     C           HKMTAX    ANDNE'0'                                                         MD023792
+     C           HKMTAX    ANDNE'N'                                                         MD023792
+     C           ##LOD     ANDEQ'D'                                                         MD023792
       *                                                                                       220013
      C                     Z-ADD##INTD    WINTD  150                                          220013
      C/COPY WNCPYSRC,AOH00067
       *                                                                                       220013
      C           S01383    IFEQ 'Y'                                                           220013
+     C           CDL013    OREQ 'Y'                                                         MD023792
       *                                                                                       220013
      C                     Z-ADD##VDAT    WKMDAT  50                                          220013
      C                     EXSR CALTAX                                                        220013
@@ -1949,6 +1979,7 @@
       *
      C                     Z-ADD002       ##RPNB           * 2 = int. date
      C                     MOVEL##NAR,2   ##NARR
+     C                     MOVE 'F'       ##MTYP                                            MD054503
       *
       **  Multiple account details exist                                                      CDL018
      C           CDL018    IFEQ 'Y'                                                           CDL018
@@ -2004,7 +2035,8 @@
      C           ##INTB    IFEQ *BLANKS                                                       220013
      C********** ##INPR    IFEQ 'R'                                                  220013 MD023265
      C           ##INPR    IFEQ 'P'                                                         MD023265
-     C                     MOVELHKROBR    ##INTB           * rec branch                       220013
+     C**********           MOVELHKROBR    ##INTB           * rec branch              220013 MD023792
+     C                     MOVELHKPOBR    ##INTB                                            MD023792
      C                     END                                                                220013
      C                     END                                                                220013
       *                                                                                       220013
@@ -2178,6 +2210,7 @@
       *                                                                                       247555
      C                     Z-ADD002       ##RPNB           * 2 = int. date                    247555
      C                     MOVEL##NAR,2   ##NARR                                              247555
+     C                     MOVE 'F'       ##MTYP                                            MD054503
       *                                                                                     MD023401
       **  Multiple account details exist                                                    MD023401
       *                                                                                     MD023401
@@ -2187,6 +2220,30 @@
      C                     EXSR SRMLAD                                                      MD023401
      C                     ELSE                                                             MD023401
      C                     EXSR SRMOVE                                                        247555
+      *                                                                                     MD023792
+      ** Validate for need to calculate tax                                                 MD023792
+      *                                                                                     MD023792
+     C                     Z-ADD0         TAXA                                              MD023792
+     C           HKMTAX    IFEQ 'Y'                                                         MD023792
+     C           ##LOD     ANDEQ'D'                                                         MD023792
+     C           HKMTAX    ORNE ' '                                                         MD023792
+     C           HKMTAX    ANDNE'0'                                                         MD023792
+     C           HKMTAX    ANDNE'N'                                                         MD023792
+     C           ##LOD     ANDEQ'D'                                                         MD023792
+      *                                                                                     MD023792
+     C                     Z-ADD#MTINT    WINTD                                             MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+      *                                                                                     MD023792
+     C                     Z-ADD##VDAT    WKMDAT  50                                        MD023792
+     C                     EXSR CALTAX                                                      MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+      *                                                                                     MD023792
+     C           WINTD     MULT BNHKTR    TAXA      H                                       MD023792
+     C           TAXA      DIV  100       TAXA      H                                       MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+     C                     ENDIF                                                            MD023792
      C                     ENDIF                                                            MD023401
       *                                                                                     MD023401
      C                     EXSR CALTXM                                                      MD023401
@@ -2197,6 +2254,9 @@
      C           ##AMT     ANDNE*ZEROS                                                        CER049
      C                     EXSR SRSTAX                                                        CER049
      C                     ENDIF                                                              CER049
+      *                                                                                     MD023792
+     C                     EXSR VALTAX                                                      MD023792
+     C                     MOVE *BLANK    MATINT                                            MD023792
       *                                                                                       247555
      C                     END                                                                247555
       *
@@ -2935,8 +2995,23 @@
       *                                                                                    BUG25226A
      C           ##RPNB    IFEQ 1                                                          BUG25226A
       *                                                                                    BUG25226A
+      ** set up the correct customer number based on the record type                        MD050068
+      *                                                                                     MD050068
+     C                     MOVEL*BLANKS   WKCNUM  6                                         MD050068
+     C                     SELEC                                                            MD050068
+     C           #ARCID    WHEQ 'HK'                                                        MD050068
+     C                     MOVELHKCNUM    WKCNUM                                            MD050068
+     C           #ARCID    WHEQ 'HN'                                                        MD050068
+     C                     MOVELHNCNUM    WKCNUM                                            MD050068
+     C           #ARCID    WHEQ 'HL'                                                        MD050068
+     C                     MOVELHLCNUM    WKCNUM                                            MD050068
+     C           #ARCID    WHEQ 'HM'                                                        MD050068
+     C                     MOVELHMCNUM    WKCNUM                                            MD050068
+     C                     ENDSL                                                            MD050068
+      *                                                                                     MD050068
      C                     MOVE *BLANKS   C#NARR                                           BUG25226A
-     C                     MOVELHKCNUM    @KEY1  10                                        BUG25226A
+     C**********           MOVELHKCNUM    @KEY1  10                               BUG25226A MD050068
+     C                     MOVELWKCNUM    @KEY1  10                                         MD050068
      C                     CALL 'AOCUSTR1'                                                 BUG25226A
      C                     PARM '*MSG   ' @RTCD                                            BUG25226A
      C                     PARM '*KEY   ' @OPTN                                            BUG25226A
@@ -3421,6 +3496,34 @@
       *                                                                                       249910
      C                     Z-ADD##VDAT    WMDAT   50                                          249910
      C                     MOVE 'M'       ##MIID  1          Mat/Int ind.                     249910
+      *                                                                                     MD023765
+      ** Check rundate is in between 5 days before maturity.                                MD023765
+      *                                                                                     MD023765
+     C                     MOVEL*BLANKS   P1OPTN  6                                         MD023765
+     C                     MOVE *BLANKS   P1KEY1 20 P                                       MD023765
+     C                     MOVE *BLANK    P1SIGN  1                                         MD023765
+     C                     MOVE *ZEROS    P1AMNT 130                                        MD023765
+     C                     MOVE *BLANKS   P1CCY   3                                         MD023765
+     C                     MOVE ##VDAT    P1MDT5  50                                        MD023765
+      *                                                                                     MD023765
+     C                     CALL 'MM0100'                                                    MD023765
+     C                     PARM           P1OPTN           In                               MD023765
+     C                     PARM           P1KEY1                                            MD023765
+     C                     PARM           P1SIGN                                            MD023765
+     C                     PARM           P1AMNT                                            MD023765
+     C                     PARM           P1CCY                                             MD023765
+     C                     PARM           P1MDT5           Out                              MD023765
+      *                                                                                     MD023765
+     C           BJRDNB    IFLE ##VDAT                                                      MD023765
+     C           BJRDNB    ANDGEP1MDT5                                                      MD023765
+     C                     Z-ADDAIAP      ##AIAP 130                                        MD023765
+     C                     Z-ADDAIAN      ##AIAN 130                                        MD023765
+      *                                                                                     MD023765
+     C           CALLER    IFEQ CALPGM,1                                                    MD023765
+     C                     Z-ADDWKAIAN    ##AIAN                                            MD023765
+     C                     ENDIF                                                            MD023765
+      *                                                                                     MD023765
+     C                     ENDIF                                                            MD023765
      C                     END                                                                249910
       *                                                                                       249910
       *
@@ -4016,6 +4119,112 @@
      C           @RTCD     IFEQ *BLANKS                                                      BUG4613
      C                     MOVE 'Y'       CDL018                                             BUG4613
      C                     ENDIF                                                             BUG4613
+      *                                                                                     MD023792
+      ** Check if CDL013 is installed                                                       MD023792
+      *                                                                                     MD023792
+     C                     CALL 'AOSARDR0'                                                  MD023792
+     C                     PARM *BLANKS   @RTCD   7                                         MD023792
+     C                     PARM '*VERIFY' @OPTN   7                                         MD023792
+     C                     PARM 'CDL013'  @SARD   6                                         MD023792
+     C                     PARM           DSFDY                                             MD023792
+      *                                                                                     MD023792
+      ** If CDL013 NOT installed, set CAR indicator to '0'                                  MD023792
+      *                                                                                     MD023792
+     C           @RTCD     IFNE *BLANKS                                                     MD023792
+     C                     MOVE 'N'       CDL013  1                                         MD023792
+      *                                                                                     MD023792
+      ** If CDL013 installed                                                                MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+      *                                                                                     MD023792
+      ** Set CAR indicator to 'Y', set Tax Indicator ON and                                 MD023792
+      ** declare work field to access WHT ICD extension file.                               MD023792
+      *                                                                                     MD023792
+     C                     MOVE 'Y'       CDL013                                            MD023792
+     C                     MOVEL'RETAIL'  WTYPE  10 P                                       MD023792
+      *                                                                                     MD023792
+      ** Open & access WHT ICD extension file to retrieve WHT rate                          MD023792
+      *                                                                                     MD023792
+     C                     OPEN SDSTAAL1                                                    MD023792
+     C           WTYPE     CHAINSDSTAAL1             18                                     MD023792
+      *                                                                                     MD023792
+      ** If CHAIN failed                                                                    MD023792
+      *                                                                                     MD023792
+     C           *IN18     IFEQ '1'                                                         MD023792
+     C           *LOCK     IN   LDA                                                         MD023792
+     C                     MOVEL'SDSTAAL1'DBFILE           ************                     MD023792
+     C                     MOVELWTYPE     DBKEY            * DBERR 18 *                     MD023792
+     C                     MOVEL'18'      DBASE            ************                     MD023792
+     C                     OUT  LDA                                                         MD023792
+     C                     EXSR SRERR                                                       MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                    MD023792A
+      ** Check if CDL081 is installed                                                      MD023792A
+      *                                                                                    MD023792A
+     C                     MOVE 'N'       CDL081  1                                        MD023792A
+     C                     CALL 'AOSARDR0'                                                 MD023792A
+     C                     PARM *BLANKS   @RTCD                                            MD023792A
+     C                     PARM '*VERIFY' @OPTN                                            MD023792A
+     C                     PARM 'CDL081'  @SARD                                            MD023792A
+     C           SCSARD    PARM SCSARD    DSFDY                                            MD023792A
+      *                                                                                    MD023792A
+     C           @RTCD     IFNE *BLANKS                                                    MD023792A
+     C           @RTCD     ANDNE'*NRF   '                                                  MD023792A
+     C                     MOVEL'SCSARDPD'DBFILE           ************                    MD023792A
+     C                     Z-ADD19        DBASE            * DBERR 19 *                    MD023792A
+     C                     MOVEL'CDL081'  DBKEY            ************                    MD023792A
+     C                     EXSR SRERR                                                      MD023792A
+     C                     ENDIF                                                           MD023792A
+      *                                                                                    MD023792A
+     C           @RTCD     IFEQ *BLANKS                                                    MD023792A
+     C                     MOVE 'Y'       CDL081                                           MD023792A
+     C                     ENDIF                                                           MD023792A
+      *                                                                                    MD023792A
+      ** Access withholding tax round down system values if CDL081 is on                   MD023792A
+      *                                                                                    MD023792A
+     C           CDL081    IFEQ 'Y'                                                        MD023792A
+     C                     CALL 'AOSVALR0'                                                 MD023792A
+     C                     PARM *BLANKS   @RTCD                                            MD023792A
+     C                     PARM C#BASE    SVALK1 20                                        MD023792A
+     C                     PARM           SVAL1 200                                        MD023792A
+     C                     PARM C#NBAS    SVALK2 20                                        MD023792A
+     C                     PARM           SVAL2 200                                        MD023792A
+     C                     PARM *BLANK    SVALK3 20                                        MD023792A
+     C                     PARM           SVAL3 200                                        MD023792A
+     C                     PARM *BLANK    SVALK4 20                                        MD023792A
+     C                     PARM           SVAL4 200                                        MD023792A
+     C                     PARM *BLANK    SVALK5 20                                        MD023792A
+     C                     PARM           SVAL5 200                                        MD023792A
+     C                     PARM *BLANK    SVALK6 20                                        MD023792A
+     C                     PARM           SVAL6 200                                        MD023792A
+     C                     PARM *BLANK    SVALK7 20                                        MD023792A
+     C                     PARM           SVAL7 200                                        MD023792A
+     C                     PARM *BLANK    SVALK8 20                                        MD023792A
+     C                     PARM           SVAL8 200                                        MD023792A
+     C                     PARM *BLANK    SVALK9 20                                        MD023792A
+     C                     PARM           SVAL9 200                                        MD023792A
+     C                     PARM *BLANK    SVALK0 20                                        MD023792A
+     C                     PARM           SVAL10200                                        MD023792A
+      *                                                                                    MD023792A
+     C           @RTCD     IFNE *BLANKS                                                    MD023792A
+     C           SVAL1     IFEQ '*NRF'                                                     MD023792A
+     C                     MOVELSVALK1    DBKEY                                            MD023792A
+     C                     ENDIF                                                           MD023792A
+     C           SVAL2     IFEQ '*NRF'                                                     MD023792A
+     C                     MOVELSVALK2    DBKEY                                            MD023792A
+     C                     ENDIF                                                           MD023792A
+     C                     Z-ADD20        DBASE            ************                    MD023792A
+     C                     MOVE 'SDSVALPD'DBFILE           * DBERR 20 *                    MD023792A
+     C                     EXSR SRERR                      ************                    MD023792A
+     C                     ENDIF                                                           MD023792A
+      *                                                                                    MD023792A
+      ** Setup tax amount rounding down indicators                                         MD023792A
+      *                                                                                    MD023792A
+     C                     MOVELSVAL1     W#BSRD  1                                        MD023792A
+     C                     MOVELSVAL2     W#NBRD  1                                        MD023792A
+     C                     ENDIF                                                           MD023792A
      C*                                                                   CEU003
      C***  Access Bank Details File                                       CEU003
      C*                                                                   CEU003
@@ -5608,6 +5817,8 @@
       ********************************************************************                    220013
       *                                                                                       220013
      C           CALTAX    BEGSR                                                              220013
+      *                                                                                     MD023792
+     C           S01383    IFEQ 'Y'                                                         MD023792
       *                                                                                       220013
       ** CALCULATE TAX AMOUNT USING BRT RATES                                                 220013
       *                                                                                       220013
@@ -5647,6 +5858,55 @@
      C           WINTD     MULT WPBRTR    TAXA      H                                         220013
      C           TAXA      DIV  100       TAXA      H                                         220013
      C                     END                                                                220013
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+      *                                                                                     MD023792
+      ** If CDL013 installed, calculate WHT amount                                          MD023792
+      *                                                                                     MD023792
+     C           CDL013    IFEQ 'Y'                                                         MD023792
+      *                                                                                     MD023792
+      ** Set WHT rate                                                                       MD023792
+      *                                                                                     MD023792
+     C                     SELEC                                                            MD023792
+     C           HKMTAX    WHEQ '1'                                                         MD023792
+     C                     Z-ADDETXR1     WRATE   52                                        MD023792
+     C           HKMTAX    WHEQ '2'                                                         MD023792
+     C                     Z-ADDETXR2     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '3'                                                         MD023792
+     C                     Z-ADDETXR3     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '4'                                                         MD023792
+     C                     Z-ADDETXR4     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '5'                                                         MD023792
+     C                     Z-ADDETXR5     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '6'                                                         MD023792
+     C                     Z-ADDETXR6     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '7'                                                         MD023792
+     C                     Z-ADDETXR7     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '8'                                                         MD023792
+     C                     Z-ADDETXR8     WRATE                                             MD023792
+     C           HKMTAX    WHEQ '9'                                                         MD023792
+     C                     Z-ADDETXR9     WRATE                                             MD023792
+     C                     ENDSL                                                            MD023792
+      *                                                                                     MD023792
+      ** If WHT rate is 0, set Tax Amount to 0                                              MD023792
+      *                                                                                     MD023792
+     C           WRATE     IFEQ 0                                                           MD023792
+     C                     Z-ADD0         TAXA                                              MD023792
+      *                                                                                     MD023792
+      ** Otherwise, call subroutine #UTWHT                                                  MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+      *                                                                                     MD023792
+      ** Set event date first                                                               MD023792
+      *                                                                                     MD023792
+     C                     Z-ADDWKMDAT    WEVTDT  50                                        MD023792
+      *                                                                                     MD023792
+     C                     EXSR #UTWHT                                                      MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+     C                     ENDIF                                                            MD023792
       *                                                                                       220013
      C                     ENDSR                                                              220013
       *****************************************************************                       220013
@@ -6134,6 +6394,162 @@
      C                     MOVE *BLANK    MATINT                                            MD023265
      C                     ENDSR                                                            MD023265
      ******************************************************************                     MD023265
+      /EJECT                                                                                MD023792
+      *****************************************************************                     MD023792
+      *                                                               *                     MD023792
+      *  #UTWHT - Tiered WHT Calculation                              *                     MD023792
+      *                                                               *                     MD023792
+      *****************************************************************                     MD023792
+      *                                                                                     MD023792
+     C           #UTWHT    BEGSR                                                            MD023792
+      *                                                                                     MD023792
+      ** If Deal Ccy = Base Ccy, calculate WHT rounded down                                 MD023792
+      *                                                                                     MD023792
+     C           ##CCY     IFEQ BJCYCD                                                      MD023792
+     C           CDL081    ANDEQ'N'                                                        MD023792A
+      *                                                                                     MD023792
+      ** Details of BJCYCD (base currency)                                                  MD023792
+      *                                                                                     MD023792
+     C                     CALL 'AOCURRR0'                                                  MD023792
+     C                     PARM '*MSG   ' @RTCD                                             MD023792
+     C                     PARM '*KEY   ' @OPTN                                             MD023792
+     C                     PARM ##CCY     WKEY1   3                                         MD023792
+     C           SDCURR    PARM SDCURR    DSSDY                                             MD023792
+      *                                                                                     MD023792
+     C           @RTCD     IFNE *BLANKS                                                     MD023792
+     C           *LOCK     IN   LDA                                                         MD023792
+     C                     Z-ADD005       DBASE            ************                     MD023792
+     C                     MOVEL##CCY     DBKEY            * DBERR 05 *                     MD023792
+     C                     MOVEL'SDCURRPD'DBFILE           ************                     MD023792
+     C                     MOVEL'AOOUMMU0'DBPGM                                             MD023792
+     C                     OUT  LDA                                                         MD023792
+     C                     EXSR SRERR                                                       MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+      ** Set work adjustment field according to decimal places.                             MD023792
+      *                                                                                     MD023792
+     C                     SELEC                                                            MD023792
+     C           A6NBDP    WHEQ 0                                                           MD023792
+     C                     Z-ADD1         WADJ    40                                        MD023792
+     C           A6NBDP    WHEQ 1                                                           MD023792
+     C                     Z-ADD10        WADJ                                              MD023792
+     C           A6NBDP    WHEQ 2                                                           MD023792
+     C                     Z-ADD100       WADJ                                              MD023792
+     C           A6NBDP    WHEQ 3                                                           MD023792
+     C                     Z-ADD1000      WADJ                                              MD023792
+     C                     ENDSL                                                            MD023792
+      *                                                                                     MD023792
+      ** Round down Interest Amount                                                         MD023792
+      *                                                                                     MD023792
+     C           WINTD     DIV  WADJ      WINT   150                                        MD023792
+     C                     MULT WADJ      WINT                                              MD023792
+      *                                                                                     MD023792
+      ** Calculate WHT                                                                      MD023792
+      *                                                                                     MD023792
+     C           WINT      MULT WRATE     WWHT   150                                        MD023792
+     C                     DIV  100       WWHT                                              MD023792
+      *                                                                                     MD023792
+      ** Round down WHT                                                                     MD023792
+      *                                                                                     MD023792
+     C                     DIV  WADJ      WWHT                                              MD023792
+     C           WWHT      MULT WADJ      TAXA                                              MD023792
+      *                                                                                     MD023792
+      ** If Deal Ccy NOT Base Ccy, calculate half-adjusted WHT                              MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+     C           WINTD     MULT WRATE     TAXA                                              MD023792
+      *                                                                                    MD023792A
+      ** Check if tax amount is to be rounded down                                         MD023792A
+      *                                                                                    MD023792A
+     C           ##CCY     IFEQ BJCYCD                                                     MD023792A
+     C           CDL081    ANDEQ'Y'                                                        MD023792A
+     C           W#BSRD    ANDEQ'Y'                                                        MD023792A
+     C           ##CCY     ORNE BJCYCD                                                     MD023792A
+     C           CDL081    ANDEQ'Y'                                                        MD023792A
+     C           W#NBRD    ANDEQ'Y'                                                        MD023792A
+     C                     DIV  100       TAXA                                             MD023792A
+     C                     ELSE                                                            MD023792A
+     C                     DIV  100       TAXA      H                                       MD023792
+     C                     ENDIF                                                           MD023792A
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDSR                                                            MD023792
+      *                                                                                     MD023792
+      *****************************************************************                     MD023792
+      /EJECT                                                                                MD023792
+      *****************************************************************                     MD023792
+      *                                                               *                     MD023792
+      *  VALTAX - Validate if Tax Amount is present                   *                     MD023792
+      *                                                               *                     MD023792
+      *****************************************************************                     MD023792
+      *                                                                                     MD023792
+     C           VALTAX    BEGSR                                                            MD023792
+      *                                                                                     MD023792
+     C           TAXA      IFNE 0                                                           MD023792
+      *                                                                                     MD023792
+     C                     Z-SUBTAXA      ##AMT                                             MD023792
+      *                                                                                     MD023792
+     C           HKIPDS    IFEQ 'Y'                                                         MD023792
+     C           HKIMET    ANDNE'00'                                                        MD023792
+     C           HKIMET    ANDNE*BLANKS                                                     MD023792
+     C           ##LOD     IFEQ 'D'                                                         MD023792
+     C                     MOVE 'P'       ##INPR                                            MD023792
+     C                     ELSE                                                             MD023792
+     C                     MOVE *BLANKS   ##INPR                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     MOVE HKIMET    ##INTM                                            MD023792
+      *                                                                                     MD023792
+     C           ##INTM    IFEQ '04'                                                        MD023792
+     C                     CALL 'AORETLR0'                                                  MD023792
+     C                     PARM '*DBERR ' @RTCD   7                                         MD023792
+     C                     PARM '*FIRST ' @OPTN   7                                         MD023792
+     C           SDRETL    PARM SDRETL    DSFDY                                             MD023792
+      *                                                                                     MD023792
+     C                     MOVELHKCNUM    @@ACNT                                            MD023792
+     C                     MOVE BMACCD    @@ACNT                                            MD023792
+     C                     MOVEL@@ACNT    ##INTA                                            MD023792
+     C                     MOVE HKACSQ    ##INTA                                            MD023792
+     C                     MOVE *BLANKS   ##INTB                                            MD023792
+     C                     ELSE                                                             MD023792
+     C                     MOVELHKINSA    ##INTA                                            MD023792
+     C                     MOVE HKINSA    ##INTB                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C           ##INTB    IFEQ *BLANKS                                                     MD023792
+     C           ##INPR    IFEQ 'P'                                                         MD023792
+     C                     MOVELHKPOBR    ##INTB                                            MD023792
+     C                     ENDIF                                                            MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     MOVEL##INTS    ##SETD                                            MD023792
+     C                     MOVELHKISCY    ##STCY                                            MD023792
+      *                                                                                     MD023792
+     C                     ELSE                                                             MD023792
+      *                                                                                     MD023792
+      ** If interest is not paid separately use maturity details                            MD023792
+      ** Pass movement to write program (with appropriate instructions)                     MD023792
+      *                                                                                     MD023792
+     C           ##LOD     IFEQ 'D'                                                         MD023792
+     C                     MOVEL##PAYD    ##SETD                                            MD023792
+     C                     MOVEL'P'       ##PYRC                                            MD023792
+     C                     ELSE                                                             MD023792
+     C                     MOVE *BLANKS   ##SETD                                            MD023792
+     C                     ENDIF                                                            MD023792
+     C                     MOVELHKSTCY    ##STCY                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     Z-ADD004       ##RPNB                                            MD023792
+     C                     MOVEL##NAR,4   ##NARR                                            MD023792
+      *                                                                                     MD023792
+     C                     EXSR SRMOVE                                                      MD023792
+      *                                                                                     MD023792
+     C                     ENDIF                                                            MD023792
+      *                                                                                     MD023792
+     C                     ENDSR                                                            MD023792
+      *                                                                                     MD023792
+      *****************************************************************                     MD023792
      C/COPY WNCPYSRC,AOH00056
       /EJECT                                                              CDL006
      C/COPY ZSRSRC,ZCONVNZ1                                               CDL006

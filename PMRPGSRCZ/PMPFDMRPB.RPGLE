@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041294           Date 19Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027553           Date 21Aug14               *
+      *  Prev Amend No. MD041294           Date 19Sep16               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027553 - Field Portfolio Management Type from TOF not      *
+      *             considerd in BF Midas.                            *
+      *           - Don't default Manage Indicator.                   *
       *  MD041294 - Customer extension details is missing in          *
       *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -574,6 +578,7 @@
       ** and SARs).
       *
      C     PMCUST        IFNE      'Y'
+     C     PMCUST        ANDNE     'P'                                                      MD027553
       *
      C     CAC003        IFEQ      'Y'
      C     BGN0ST        ANDEQ     'Y'

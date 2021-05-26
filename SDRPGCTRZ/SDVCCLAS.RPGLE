@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. MD050947           Date 04Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 AR579505           Date 16Jul10               *
       *                 AR551811           Date 09Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050947 - SEC0601 00005. DBase Error in SE0325, File        *
+      *             TRADSDY1, Key 312181, at 140. Fix is to not allow *
+      *             changes of classification if customer has trades  *
+      *             or position (for market customer).                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR579505 - SE customer classification should not be amendable*
@@ -46,7 +51,7 @@
       *  CAP039 - Conversion of SD inputs to modular structure        *
       *           to use as APIs                                      *
       *****************************************************************
- 
+
       ***Midas*SE customer position by customer number                             BUG12946 AR551811
       **********                                                                   BUG12946 AR551811
      F**CPOSCS**  IF   E           K DISK    INFSR(*PSSR)                          BUG12946 AR551811
@@ -68,7 +73,10 @@
       ** Midas SD securities clients by customer number                                     BUG12946
                                                                                             BUG12946
      FSDSECSL4  IF   E           K DISK    INFSR(*PSSR)                                     BUG12946
- 
+      *                                                                                     MD050947
+      ** Midas SE Trades by Customer                                                        MD050947
+     FTRADCU    IF   E           K DISK                                                     MD050947
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -80,59 +88,59 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Data structure for Portfolio Management indicator using SESTAT
      D SESTAT          DS           133
      D  WKPOMG                64     64
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                     AR551811
@@ -144,7 +152,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -159,16 +167,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       *
       ** VALIDATION
       *
@@ -189,7 +197,7 @@
       ** VALIDATION
       *****************************************************************
      C     VCLAS         BEGSR
- 
+
       ** Query processing
      C                   MOVEL     DDCLAS        QueryFld          1
      C     QueryFld      IFEQ      '?'
@@ -198,37 +206,37 @@
      C                   PARM      1101775       ListNumber        7 0
      C     DDCLAS        PARM      DDCLAS        ExtValue         20
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
       ** When classification is blank
      C                   WHEN      DDCLAS = *BLANKS
- 
+
       ** Err: 'Value required'
      C                   Eval      DDCLASOK = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDCLAS    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0220'
- 
+
       ***When*classification*is*not*S*D*M*I*X*E*C*K*or*blank***********                       CSE022
       ** When classification is not S D M I X E C or blank                                    CSE022
- 
+
      C                   WHEN      DDCLAS <> 'S' and DDCLAS <> 'D' and
      C                             DDCLAS <> 'M' and DDCLAS <> 'I' and
      C                             DDCLAS <> 'X' and DDCLAS <> 'E' and
      C**********                   DDCLAS <> 'C' and DDCLAS <> 'K' and                        CSE022
      C**********                   DDCLAS <> *BLANKS                                          CSE022
      C                             DDCLAS <> 'C' and DDCLAS <> *BLANKS                        CSE022
- 
+
       ** Err: 'The classification entered is invalid'
      C                   Eval      DDCLASOK = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDCLAS    '
      C                   Eval      MsgIdXAr(Idx) = 'USR1491'
- 
+
       ** When portfolio management licensed indicator is N or blank
      C                   WHEN      WKPOMG = 'N' or WKPOMG = *BLANKS
- 
+
       ** If classificiation is D or S
      C                   IF        DDCLAS = 'D' or DDCLAS = 'S'
      C
@@ -238,7 +246,7 @@
      C                   Eval      FldNamXAr(Idx) = 'DDCLAS    '
      C                   Eval      MsgIdXAr(Idx) = 'USR0575'
      C                   ENDIF
- 
+
      C                   ENDSL
                                                                                             BUG12946
      C                   IF        DDCLASOK <> 'N'                                          BUG12946
@@ -274,6 +282,26 @@
      C                   EVAL      WUPOSN = 'N'                                             AR551811
      C                   ENDIF                                                              AR551811
       *                                                                                     AR551811
+      ** Check customer for live Trades                                                     MD050947
+      *                                                                                     MD050947
+     C     DDCUSN        SETLL     TRADCU                                                   MD050947
+     C                   IF        %EQUAL()                                                 MD050947
+     C     DDCUSN        READE     TRADCU                                                   MD050947
+     C                   DOU       %EOF(TRADCU)                                             MD050947
+     C                   IF        RECI   <> '*'                                            MD050947
+      *                                                                                     MD050947
+      ** Err: 'Customer classification can not be amended. Customer has existing trade.'    MD050947
+      *                                                                                     MD050947
+     C                   Eval      DDCLASOK = 'N'                                           MD050947
+     C                   Eval      Idx = Idx + 1                                            MD050947
+     C                   Eval      FldNamXAr(Idx) = 'DDCLAS    '                            MD050947
+     C                   Eval      MsgIdXAr(Idx) = '5049252'                                MD050947
+     C                   LEAVE                                                              MD050947
+     C                   ENDIF                                                              MD050947
+     C     DDCUSN        READE     TRADCU                                                   MD050947
+     C                   ENDDO                                                              MD050947
+     C                   ENDIF                                                              MD050947
+      *                                                                                     MD050947
      C                   ENDIF                                                              AR551811
      C                   ENDIF                                                              AR551811
      C                   ENDIF                                                              AR551811
@@ -306,6 +334,27 @@
       *                                                                                     AR551811
                                                                                             BUG12946
      C                   ENDIF                                                              BUG12946
+      *                                                                                     MD050947
+      ** Check customer for live Trades                                                     MD050947
+      *                                                                                     MD050947
+     C     DDCUSN        SETLL     TRADCU                                                   MD050947
+     C                   IF        %EQUAL()                                                 MD050947
+     C     DDCUSN        READE     TRADCU                                                   MD050947
+     C                   DOU       %EOF(TRADCU)                                             MD050947
+     C                   IF        RECI   <> '*'                                            MD050947
+      *                                                                                     MD050947
+      ** Err: 'Customer classification can not be amended. Customer has existing trade.'    MD050947
+      *                                                                                     MD050947
+     C                   Eval      DDCLASOK = 'N'                                           MD050947
+     C                   Eval      Idx = Idx + 1                                            MD050947
+     C                   Eval      FldNamXAr(Idx) = 'DDCLAS    '                            MD050947
+     C                   Eval      MsgIdXAr(Idx) = '5049252'                                MD050947
+     C                   LEAVE                                                              MD050947
+     C                   ENDIF                                                              MD050947
+     C     DDCUSN        READE     TRADCU                                                   MD050947
+     C                   ENDDO                                                              MD050947
+     C                   ENDIF                                                              MD050947
+      *                                                                                     MD050947
      C                   ENDIF                                                              BUG12946
       *                                                                                     AR551811
      C                   IF        WUPOSN = 'Y'                                             AR551811
@@ -344,7 +393,7 @@
       *                                                                                     AR551811
      C                   ENDIF                                                              BUG12946
      C                   ENDIF                                                              BUG12946
- 
+
      C     ENDVAL        ENDSR
       *****************************************************************
       /EJECT
@@ -352,7 +401,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -387,9 +436,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

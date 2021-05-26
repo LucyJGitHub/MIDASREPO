@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR903401           Date 30Jan12               *
+      *  Last Amend No. AR1041752          Date 23Oct12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR903401           Date 30Jan12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSF011             Date 12Sep11               *
       *                 CER049             Date 06Dec10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1041752 - Return blank if PB Order Number is 999999 or 0.  *
+      *              (Child:AR1041753)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  AR903401 - Incorrect Customer Name details during enquiry    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -85,12 +88,12 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -106,36 +109,36 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
       * Securities screen format
       ** Securities screen 1 details from incoming transaction
       ** - screen format
- 
+
       * New Trade in Screen Format - Primary Details
      D NewTrPrim     E DS                  EXTNAME(SETRPRPD)
       * New Trade in Screen Format - Secondary Details
@@ -162,11 +165,11 @@
       * New TradeX2  Screen Format - SWIFT Details
      D NewX2SwftB    E DS                  EXTNAME(SETESDPD)
      D                                     PREFIX(B_)
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
       * Current Trade in File Format
      D CrTrFilFmt    E DS                  EXTNAME(TRADSD)
      D                                     PREFIX(C_)
@@ -190,7 +193,7 @@
      D RegData       E DS                  EXTNAME(SETDRXPD)                                  CER001
       ** Stamp Tax                                                                            CER049
      D StampTax      E DS                  EXTNAME(TRADSDQD)                                  CER049
- 
+
       ** Externally described DS for midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Externally described DS for bank details                                             CAP087
@@ -198,11 +201,11 @@
                                                                                               CAP087
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
      D  QQDFA2       E                     EXTFLD(QQDFAC)                                     CSF011
       ** Externally described DS for customer details                                         CSF011
- 
+
       ** Security Details
      D SECTY         E DS                  EXTNAME(SECTYD)
      D SEC_RECI      E                     EXTFLD(RECI)
@@ -217,32 +220,32 @@
      D SEC_SEZONE    E                     EXTFLD(SEZONE)
      D  CDArr                183    230                                                       CAP087
      D  CRArr                231    242                                                       CAP087
- 
+
      D INVTP         E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
      D INV_LCD       E                     EXTFLD(LCD)
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
      D INV_NDEC      E                     EXTFLD(NDEC)
- 
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** Externally described DS for securities trading ICD details
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for access programs - long data structure
- 
+
      D InfData       E DS                  EXTNAME(SETRIFPD)                                 BUG9584
       *                                                                                      BUG9584
       ** SE Other Data - File (D/B) format                                                   BUG9584
@@ -252,13 +255,13 @@
      D                                     PREFIX(NO_)                                        CSF011
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CSF011
      D                                     PREFIX(AC_)                                        CSF011
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       **-----------------------------------------------------------------------
       *
      D CSW003          S              1A
@@ -281,7 +284,7 @@
      D Trade_Value     S             15  0                                                    CAP087
      D Out_Value       S             15A                                                      CAP087
      D CGL031          S              1A                                                      CGL031
- 
+
       *
      D @FTRED          S             20A
      D @RDFWD          S              1A
@@ -324,10 +327,10 @@
      D C#KYST          S              7                                                       CSF011
      D W@Abc           S              1                                                       CSF011
      D WBrch           S              3                                                       CSF011
- 
- 
+
+
       ** +--- Start of main processing -----------------------------------+
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   CrTrFilFmt
      C                   CLEAR                   CT1AFilFmt
@@ -335,7 +338,7 @@
      C                   CLEAR                   TX2AFilFmt
      C                   CLEAR                   TX2BFilFmt
      C                   MOVE      *BLANKS       ReturnCode
- 
+
      C     DDACTN        IFEQ      *BLANK
      C     AuthComp      IFEQ      'X'
      C                   MOVEL     'X'           DDACTN
@@ -343,7 +346,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -356,7 +359,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      SETRADRED
@@ -379,14 +382,22 @@
       * Convert to screeen format
      C     Idx           IFEQ      0
      C                   EXSR      SETRADCVT
+      *                                                                                    AR1041752
+      ** Return blank as ORDE, if ORDE is 999999 or 0 in file                              AR1041752
+      *                                                                                    AR1041752
+     C                   IF        C_ORDE = 999999 OR                                      AR1041752
+     C                             C_ORDE = 0                                              AR1041752
+     C                   EVAL      DDORDE = ''                                             AR1041752
+     C                   ENDIF                                                             AR1041752
+      *                                                                                    AR1041752
      C                   IF        ULX603 = 'Y'                                               CER001
      C                   EXSR      SETRAD2CT                                                  CER001
      C                   ENDIF                                                                CER001
      C                   EXSR      RtNetCpn                                                 BUG6496R
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        ReturnCode <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDTDRF'      FldNameArr(1)
@@ -401,7 +412,7 @@
      C                   EXSR      SrCustName                                                 CSF011
      C                   EXSR      SrCustName2                                               CSF011A
                                                                                               CSF011
- 
+
       * Build buffer with required output
       ** RegData is being used for regional enhancement and therefore should                BUG10202
       ** always be the last data to form the buffer if no ExtData included                  BUG10202
@@ -452,7 +463,7 @@
      C                                    + SITP   + DDPRICN                                 CSF011A
      C                                    + DDHACR + Out_Value + Out_DaysYear                CSF011A
      C                                    + DDFRNT + StampTax + AAuth + Regdata              CSF011A
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -497,11 +508,11 @@
       *
       * Front Office ID READ
      C                   PARM      *BLANK        @FTRED
- 
+
      C                   ENDSR
       **********************************************************************
      C     SETRADRTV     BEGSR
- 
+
      C                   MOVE      *BLANKS       ReturnCode
      C                   EVAL      Idx = 0
      C                   CLEAR                   FldNameArr
@@ -547,9 +558,9 @@
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *ZERO         Idx
- 
+
       * Get TRADSDX2 records
- 
+
      C                   CALLB     'SETRADRTV2'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -561,11 +572,11 @@
       * (Current) TRADSDX2 in file format
      C                   PARM                    TX2AFilFmt
      C                   PARM                    TX2BFilFmt
- 
+
      C                   ENDSR
       **********************************************************************
      C     SETRADCVT     BEGSR
- 
+
      C                   MOVE      *BLANKS       ReturnCode
       *
      C                   CALLB     'SETRADCVT'
@@ -578,12 +589,12 @@
      C                   PARM                    CT1AFilFmt
      C                   PARM                    CT1BFilFmt
       ** Hedge Accounting Phase B
- 
+
      C                   PARM                    CAS006
                                                                                               CGL031
       ** Taxation of Savings Income                                                           CGL031
      C                   PARM                    CGL031                                       CGL031
- 
+
       * OUTPUTS
       * Trade - screen formats
      C                   PARM                    NewTrPrim
@@ -594,15 +605,15 @@
      C                   PARM                    NewTrChCm
      C                   PARM                    NewTrSwftA
      C                   PARM                    NewTrSwftB
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
- 
+
       ** Settlement Currency Details
      C                   PARM                    SetCcyDts
       *
@@ -646,9 +657,9 @@
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
      C                   PARM                    DDFRNT                                    AR698195B
- 
+
       * Converse TRADSDX2 into Screen Format
- 
+
      C                   CALLB     'SETRADCVT2'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -661,7 +672,7 @@
       * (Screen) TRADSDX2
      C                   PARM                    NewX2SwftA
      C                   PARM                    NewX2SwftB
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1204,12 +1215,12 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       ** Entry parameters.
       *
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -1221,12 +1232,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'SEUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,SETRADM01
       *
@@ -1293,13 +1304,13 @@
      C                   END
       *
       ** Check if enhancement CAS006 (Hedge Accounting Phase B) is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       ReturnCode
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CAS006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        ReturnCode = *BLANKS
      C                   EVAL      CAS006 = 'Y'
      C                   ELSE
@@ -1376,9 +1387,9 @@
      C                   ELSE                                                                 CSW210
      C                   EVAL      CSW210 = 'N'                                               CSW210
      C                   ENDIF                                                                CSW210
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                     BUG6496R
       *                                                               *                     BUG6496R
       *  RtNetCpn - Retrieve Net Treasury Coupon Rate                 *                     BUG6496R

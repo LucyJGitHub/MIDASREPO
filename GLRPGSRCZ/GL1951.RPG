@@ -1,7 +1,7 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas GL Cust. Serv. Fees - MG Fees Accruals Gen.')
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - MG Fees Accruals Gen.')    *
       *****************************************************************
       *                                                               *
       *  Midas - General Ledger Module                                *
@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. MD031137           Date 27Nov14               *
+      *  Prev Amend No. AR1049859          Date 05Nov12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +38,26 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031137 - Decimals Hash Total strictly equal to 1000        *
+      *             cause GLC30 to fail out of Balance of 1000        *
+      *  AR1049859 - Applied fixes 216532, 211778, 191287             *
+      *              (Child:AR1049860)                                *
+      *  216532 - Database error in file SDCURRPD due to blank CCY.   *
+      *           Since there is no holding for the customer, no      *
+      *           record is extracted in file GLHOLDPD.  Program      *
+      *           should check first if the customer has a holding    *
+      *           before processing the record.                       *
+      *  211778 - Incorrect Accrued Amount in FEAA and settled amount *
+      *           on settlement date due to incorrect F6ACDT being    *
+      *           stored in PF/GLFEACPD through variable WWCFAC.      *
+      *           Fix is to half adjust WWCFAC for every addition of  *
+      *           accrued amount.                                     *
+      *  193925 - Incorrect Accrued Amount in the Fee Accrued Today   *
+      *           Details Report (SEU982P1) due to wrong accumulation *
+      *           of customer fee amount.  PSTA should hold the       *
+      *           accumulated fee amount to generate the correct      *
+      *           posting amount for GEFEPP.                          *
+      *  191287 - Narratives on postings are not Multilanguage.       *
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Wrong interest calculated due to wrong number of    *
       *           days in interest used for divisor basis 3. Fix is to*
@@ -61,6 +83,10 @@
      FGLHOLDL0IF  E           K        DISK         KINFSR *PSSR
       ** Extract Holding Details (Source of Holding)     Prefix - F8
       *
+     FGLHOLDL1IF  E           K        DISK         KINFSR *PSSR                              216532
+      ** Extract Holding Details                         Prefix - F8                          216532
+     F            GLHOLDD0                          KRENAMEGLHOLDD1                           216532
+      *                                                                                       216532
      FSDRTCDL0IF  E           K        DISK         KINFSR *PSSR
       ** Fee rate code file                              Prefix - F3
       *
@@ -177,6 +203,15 @@
      I                                       22  22 WWLBRK
      I                                       23  26 WWPORT
      I                                       27  27 WWRBRK
+      *                                                                                       191287
+     ICGPNAR    E DSCGPNARPD                                                                  191287
+      * UDC Multi Language Narrative Data Structure                                           191287
+      *                                                                                       191287
+     I##PRM1      DS                                                                          191287
+      **  Data Structure for Customer and Branch                                              191287
+      *                                                                                       191287
+     I                                        1   6 A#CUST                                    191287
+     I                                        7   9 A#BRCA                                    191287
       *
      I***DSACNT*     DS                             18                                        CGL029
      IDSACNT      DS                             24                                           CGL029
@@ -274,6 +309,9 @@
       ** Do while records exist on GLCUFEL2
       *
      C           *IN44     DOWEQ*OFF
+      *                                                                                       216532
+     C           F0CNUM    CHAINGLHOLDL1             45                                       216532
+     C           *IN45     IFEQ '0'                                                           216532
       *
      C                     MOVE 'Y'       WWDATA
       *
@@ -319,6 +357,7 @@
       ** Read New fee to accrue
       *
      C                     ADD  1         RCOUNT
+     C                     ENDIF                                                              216532
       *
      C                     READ GLCUFEL2                 44
       *
@@ -358,6 +397,11 @@
      C           SRFEEP    BEGSR
       *
      C                     Z-ADD*ZEROS    WWFACT 185
+      *                                                                                       193925
+      ** Initialise variable which will hold the accrual amount                               193925
+      ** of the day.                                                                          193925
+      *                                                                                       193925
+     C                     Z-ADD*ZEROS    WWFACD 183                Fees Accrued              193925
       *
       ** PART 1 )
       ** A) Access LF/GLFEACL0 with branch code, customer number,
@@ -556,11 +600,25 @@
       *
      C           WWCACD    ADD  WWAAFH    WWCACD
      C           WWCACD    SUB  WWCFAC    WWFACT
-     C           WWCFAC    ADD  WWFACT    WWCFAC
+     C                     Z-ADDWWAAFH    WHAAFH 130H                                         193925
+     C                     ADD  WHAAFH    WWFACD                                              193925
+     C********** WWCFAC    ADD  WWFACT    WWCFAC                                              211778
+      *                                                                                       211778
+      ** Sum of the current accrued amount (WWCFAC) and                                       211778
+      ** calculated fee amount (WWAAFH) should be half                                        211778
+      ** adjusted to correctly update F6ACDT.                                                 211778
+      *                                                                                       211778
+     C           WWCFAC    ADD  WWAAFH    WWCFAC    H      Current Fee Accrued                211778
       *
      C                     ENDIF
       *
      C                     ENDIF
+      *                                                                                       193925
+      ** Move the accumulated fee amount to be posted                                         193925
+      *                                                                                       193925
+     C           WWFACD    IFNE *ZERO                                                         193925
+     C                     Z-ADDWWFACD    WWFACT                                              193925
+     C                     ENDIF                                                              193925
       *
       ** 3) Access PF/GLFEACL0 to update Fee Accrued To date
       **          KPBRCA+KPCNUM+KPPTFR+KPFETP
@@ -699,7 +757,8 @@
       *
      C           F2RECI    WHEQ '3'
      C                     MOVELDSACNT    F2ACAC
-     C                     Z-ADDWWFACT    F2ACAM
+     C**********           Z-ADDWWFACT    F2ACAM                                              193925
+     C                     Z-ADDWWFACD    F2ACAM           Accruals Amount                    193925
      C                     Z-ADDZFMDAT    F2FRPE
      C                     Z-ADDZTODAT    F2TOPE
      C                     ENDSL
@@ -1129,6 +1188,7 @@
       ** Write a record to PF/GEFEPD (Accruals)
       *
      C           PSTA      IFNE 0
+     C                     EXSR SRPNAR                                                        191287
      C                     WRITEAPOSTPDF
       *
       ** Total posting amount
@@ -1171,6 +1231,7 @@
       ** Write another record to PF/GEFEPD
       *
      C           PSTA      IFNE 0
+     C                     EXSR SRPNAR                                                        191287
      C                     WRITEAPOSTPDF
       *
       ** Total Posting Amount
@@ -1247,7 +1308,8 @@
      C                     ADD  WWHRWN    HRWN
      C           HRDC      ADD  WWHRDC    WWHRDC
       *
-     C           WWHRDC    IFGT 1000
+     C           WWHRDC    IFGE 1000                                                        MD031137
+     C********** WWHRDC    IFGT 1000                                                        MD031137
      C           WWHRDC    SUB  1000      HRDC
      C                     ADD  1         HRWN
      C                     ELSE
@@ -1499,7 +1561,8 @@
       ** Write OUtput detail of Charge calculation
       *
      C                     MOVE '1'       F2RECI
-     C                     Z-ADDZCHGA     WWCHAG 150
+     C**********           Z-ADDZCHGA     WWCHAG 150                                          193925
+     C                     Z-ADDZCHGA     WWCHAG 150H                                         193925
      C                     Z-ADDWZAMTS    F2RANG
      C                     EXSR SRTAHI
       *
@@ -1577,7 +1640,8 @@
       ** Write Output detail of Charge calculations
       *
      C                     MOVE '1'       F2RECI
-     C                     Z-ADDZCHGA     WWCHAG
+     C**********           Z-ADDZCHGA     WWCHAG                                              193925
+     C                     Z-ADDZCHGA     WWCHAG    H                                         193925
      C                     Z-ADDWZAMTS    F2RANG
      C                     EXSR SRTAHI
       *
@@ -1684,7 +1748,8 @@
       ** Write Output detail of Charge calculation for this loop
       *
      C                     MOVE '1'       F2RECI
-     C                     Z-ADDZZ154     WWCHAG
+     C**********           Z-ADDZZ154     WWCHAG                                              193925
+     C                     Z-ADDZZ154     WWCHAG    H                                         193925
      C                     EXSR SRTAHI
       *
      C                     ENDDO
@@ -2093,6 +2158,20 @@
      C           BJDFIN    IFEQ 'M'
      C                     MOVE '1'       *IN98
      C                     ENDIF
+      *                                                                                       191287
+      ** Check Multi-Language Posting Narratives (Securities)                                 191287
+      *                                                                                       191287
+     C                     MOVE 'N'       SEPNAR  1                                           191287
+      *                                                                                       191287
+     C                     CALL 'AOSARDR0'                                                    191287
+     C                     PARM '       ' P@RTCD  7                                           191287
+     C                     PARM '*VERIFY' P@OPTN  7                                           191287
+     C                     PARM 'SEPNAR'  P@SARD  6                                           191287
+      *                                                                                       191287
+     C           P@RTCD    IFEQ *BLANK                                                        191287
+     C                     MOVE 'Y'       SEPNAR                                              191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
       *
       ** Clear Today Accrued Holding Items Format
       *
@@ -2102,6 +2181,56 @@
      C                     Z-ADD01        DSACSQ
       *
      C                     ENDSR
+      /EJECT                                                                                  191287
+      *****************************************************************                       191287
+      *   SRPNAR : Determines Multilanguage Narratives                *                       191287
+      *  -------                                                      *                       191287
+      *  Called by : #POST                                            *                       191287
+      *  Calls     :                                                  *                       191287
+      *****************************************************************                       191287
+     C           SRPNAR    BEGSR                                                              191287
+      *                                                                                       191287
+     C                     CLEARCGPNAR                                                        191287
+     C                     CLEAR##PRM1                                                        191287
+      *                                                                                       191287
+      * If the facility is switched off or unavailable,                                       191287
+      *  or UDC is not installed, exit this subroutine:                                       191287
+      *                                                                                       191287
+     C           SEPNAR    IFNE 'Y'                                                           191287
+     C                     GOTO EXPNAR                                                        191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+      * Determine the value for the narrative using AOPNARR0                                  191287
+      *                                                                                       191287
+     C                     MOVE 'GL'      MNMODI                                              191287
+     C                     MOVE BRCA      MNBRCA                                              191287
+     C                     MOVE CNUM      MNCUST                                              191287
+     C                     MOVE CCY       MNCYCD                                              191287
+     C                     MOVE ACOD      MNACCD                                              191287
+     C                     MOVE ACSQ      MNACSQ                                              191287
+     C                     MOVE F0FETP    MNFCDE                                              191287
+     C                     MOVE F0PRTP    MNBOKC                                              191287
+     C                     MOVE ACNO      MNRACN                                              191287
+     C                     MOVE F0CNUM    MNASOC                                              191287
+      *                                                                                       191287
+     C           F0FECP    IFEQ 'P'                                                           191287
+     C           '('       CAT  F0PTFR:0  MNNARR    P                                         191287
+     C                     CAT  ')'       MNNARR                                              191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+     C                     CALL 'AOPNARR0'                                                    191287
+     C                     PARM           ##RTN   7                                           191287
+     C                     PARM 'GBCFE02' ##MGID  7                                           191287
+     C                     PARM           ##PRM1                                              191287
+     C                     PARM           CGPNAR                                              191287
+     C                     PARM           ##NARR 50                                           191287
+      *                                                                                       191287
+     C           ##RTN     IFEQ *BLANKS                                                       191287
+     C                     MOVEL##NARR    PNAR      P                                         191287
+     C                     ENDIF                                                              191287
+      *                                                                                       191287
+     C           EXPNAR    ENDSR                                                              191287
+     C********************************************************************                    191287
       /EJECT
       *****************************************************************
       *  *PSSR  - Dump routine in case of error                       *

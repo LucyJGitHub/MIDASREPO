@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD023765           Date 07Jan14               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -112,6 +113,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023765 - Incorrect projected movements for Adjustment to   *
+      *             Accrued Interest. Added parameters BEDEDC,        *
+      *             AFDEDC and CALLER for AOOUMMU0. Patterned after   *
+      *             fix AR1044820.                                    *
       *  MD057049 - Moved IKRRAT to HKRRAT                            *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -2724,7 +2729,8 @@
       *                                                                                    AR1044820
       ** Calling Program                                                                   AR1044820
       *                                                                                    AR1044820
-     C                   PARM      *BLANKS       CALLER           10                       AR1044820
+     C**********         PARM      *BLANKS       CALLER           10              AR1044820 MD023765
+     C                   PARM      'MMLDNIUPM'   CALLER           10                        MD023765
       *                                                                                       CDL033
      C/COPY WNCPYSRC,MMLDNIMC12
      C     @RTCD         IFEQ      '*ERROR*'

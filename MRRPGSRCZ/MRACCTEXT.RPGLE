@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250976             Date 18Oct07               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CRN001             Date 20Jul05               *
       *                 CDL038             Date 10May05               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250976 - Do not issue DBASE error if customer is closed      *
+      *           Applied for AR986197 (Child:AR986200)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -127,6 +130,7 @@
  
       ** Long Access Object Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                     250976
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -673,14 +677,17 @@
       *****************************************************************
      C     SRSetCusDet   BEGSR
  
-     C                   CALL      'AOCUSTR0'
+     C**********         CALL      'AOCUSTR0'                                                 250976
+     C                   CALL      'AOCUSTR1'                                                 250976
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCust
      C                   PARM      *BLANKS       PStKey
-     C     SDCUST        PARM      *BLANKS       DSSDY
+     C*****SDCUST        PARM      *BLANKS       DSSDY                                        250976
+     C     SDCUST        PARM      *BLANKS       DSLDY                                        250976
  
      C                   IF        PRetCode <> *BLANKS
+     C                             AND BBCLST <> 'Y'                                          250976
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust

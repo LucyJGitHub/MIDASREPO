@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027553           Date 21Aug14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 209092             Date 04Sep02               *
       *                 CSW037A            Date 02May05               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027553 - Field Portfolio Management Type from TOF not      *
+      *             considerd in BF Midas.                            *
+      *           - Don't default Manage Indicator.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -693,6 +697,13 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                     MD027553
+      ** If PB and not PM set PMCUST to 'P'                                                 MD027553
+      *                                                                                     MD027553
+     C     BBPRBA        IFEQ      'Y'                                                      MD027553
+     C     PMCUST        ANDNE     'Y'                                                      MD027553
+     C                   EVAL      PMCUST = 'P'                                             MD027553
+     C                   ENDIF                                                              MD027553
       *
       ** Error if Portfolio Reference is blank.
       *

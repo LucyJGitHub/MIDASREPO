@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 215959             Date 21Mar16               *
+      *  Last Amend No. AR1049997          Date 11Nov12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 215959             Date 21Mar16               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -88,6 +89,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR1049997 - Applied fixes 181027 and 130460 (Child:AR1049998)*
+      *  181027   Create additional CN a/c key on Settlement Date     *
+      *  130460   Wrong BASE CURRENCY EQUIV. calculated               *
+      *           102779 Removed and re-coded                         *
       *  MD046248 - Finastra Rebranding                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
       *           Recompiled due to changes in PF/SEKEYD.             *
@@ -1529,17 +1534,21 @@
      C*      - ACCESS TABTG10 FOR INPUT CURRENCY FOR EXCHANGE RATE AND
      C*           MULTIPLY/DIVIDE IND
      C*
-     C                     MOVELWNMCY     WK4     4
+     C**********           MOVELWNMCY     WK4     4                                           130460
+     C                     MOVELSETC      WK4     4                                           130460
      C                     EXSR TBGCHN
      C           *INU7     IFEQ '1'
      C                     GOTO ECVAL
      C                     END
      C*
-     C                     Z-ADDTCTR      ZAMTCI
-     C                     MOVE WNMCY     ZCCYI
+     C**********           Z-ADDTCTR      ZAMTCI                                              130460
+     C**********           MOVE WNMCY     ZCCYI                                               130460
+     C                     Z-ADDEVAM      ZAMTCI                                              130460
+     C                     MOVE SETC      ZCCYI                                               130460
      C                     MOVE BCCY      ZCCYO
      C*********************Z-ADDSPOT      ZEXCH                           102779
-     C                     Z-ADDTDER      ZEXCH                           102779
+     C**********           Z-ADDTDER      ZEXCH                                        102779 130460
+     C                     Z-ADDTBCR      ZEXCH                                               130460
      C*                                                                   S01117
      C**  Set up input currency decimal places parameter for SR.ZCONV     S01117
      C**  input currency is nominal currency                              S01117
@@ -1587,6 +1596,20 @@
      C                     EXSR W01
      C                     END
      C*
+      *                                                                                       181027
+      ** Generate additional CN a/c Key on Settlement Date                                    181027
+      *                                                                                       181027
+     C                     MOVE 'CN'      AMCD                                                181027
+     C                     MOVE '  '      CHGT                                                181027
+     C                     Z-ADDTCTR      EVAM                                                181027
+     C                     MOVE *ZEROS    KNCA                                                181027
+     C                     MOVE TNMC      KCCY                                                181027
+     C                     MOVE *ZEROS    KBCA                                                181027
+     C                     MOVE TNMC      EVCY                                                181027
+     C           EVAM      IFNE 0                                                             181027
+     C                     EXSR W01                                                           181027
+     C                     ENDIF                                                              181027
+     C*                                                                                       181027
      C           ECVAL     ENDSR
       *
       *****************************************************************
@@ -1628,7 +1651,8 @@
      C                     MOVE SETC      ZCCYI
      C                     MOVE BCCY      ZCCYO
      C*********************Z-ADDSPOT      ZEXCH                           102779
-     C                     Z-ADDTDER      ZEXCH                           102779
+     C**********           Z-ADDTDER      ZEXCH                                        102779 130460
+     C                     Z-ADDTBCR      ZEXCH                                               130460
      C           MDIN      IFEQ 0
      C                     MOVE 'D'       ZMD
      C                     ELSE

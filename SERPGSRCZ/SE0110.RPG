@@ -18,8 +18,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD039572           Date 14Jan20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 114468             Date 18Jan13               *
+      *  Prev Amend No. MD039572           Date 14Jan20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD043337           Date 25Jul17               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -52,6 +53,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  114468 - Optionally, accept key from Account key generator   *
+      *           Applied for AR1079856                               *
       *  MD039572 - Failed component during COB - COMPONENT DLC0606C  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043337 - Failed Component SEC0601 00017 during COB         *
@@ -421,6 +424,7 @@
      I                                        1   1 NCDCH1
      I                                        2   2 NCDCH2
      IPSDS       SDS
+     I                                       37  390WNOPMS                                    114468
      I                                      244 246 WSID
      I                                      245 246 WSID2
      I                                      254 263 USRID
@@ -552,6 +556,18 @@
      C*
      C**  FIRST CYCLE PROCESSING ONLY
      C*
+     C** If program is called with 3 parms, skip 1st Screen                                   114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C                     MOVE SACT      ACTCD                                               114468
+     C                     MOVE SAKY      SAKEY                                               114468
+     C                     MOVEASAKY      ACKY                                                114468
+     C                     MOVE 'N'       RDSPLY                                              114468
+     C                     MOVE '0'       *INKJ                                               114468
+     C                     MOVE '0'       *INKL                                               114468
+     C                     MOVEA'10000'   *IN,01                                              114468
+     C                     MOVEA'00000'   *IN,51                                              114468
+     C                     END                                                                114468
+     C*                                                                                       114468
      C  N07                SETON                     07
      C           *NAMVAR   DEFN           LDA                             S01117
      C           *LOCK     IN   LDA                                       S01117
@@ -662,6 +678,10 @@
      C*
      C***********          MOVE '1'       ACODKY  5                       S01117
      C*
+     C           *ENTRY    PLIST                                                              114468
+     C                     PARM           SAKY   20        A/c Key                            114468
+     C                     PARM           SACT    1        Action Code                        114468
+     C                     PARM           RTNCD   1        Return code                        114468
      C/COPY WNCPYSRC,SE0110C001
      C           ENDFC     TAG                             ** ENDFC TAG **
      C*                                                                   S01117
@@ -747,6 +767,12 @@
      C**  OUTPUT INITIAL SCREEN, ID SF.
      C*
      C           SFOUT     TAG                             ** SFOUT TAG **
+     C** If program is called with 3 parms, return to calling program                         114468
+     C**  and reset indicator                                                                 114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C                     MOVE '0'       *IN07                                               114468
+     C                     RETRN                                                              114468
+     C                     END                                                                114468
      C                     SETON                     404181
      C                     SETON                     82
      C   KL                SETOF                     20
@@ -781,6 +807,11 @@
      C                     MOVELERRMSG,1  ERMSG                                               CSD031
      C                     SETON                     428182
      C                     SETOF                     8384
+     C**  Redisplay 1st screen if called with 3 Parms                                         114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C                     MOVE '1'       *IN80                                               114468
+     C                     MOVEA'0000'    *IN,52                                              114468
+     C                     END                                                                114468
      C                     GOTO SCNOUT
      C*
      C**  ENSURE ACCOUNT KEY FOR INSERT CONTAINS NO INVALID CHARACTERS .
@@ -815,6 +846,11 @@
      C                     MOVELERRMSG,7  ERMSG                                               CSD031
      C                     SETON                     428182               S01117
      C                     SETOF                     8384                 S01117
+     C**  Redisplay 1st screen if called with 3 Parms                                         114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C                     MOVE '1'       *IN80                                               114468
+     C                     MOVEA'0000'    *IN,52                                              114468
+     C                     END                                                                114468
      C                     GOTO SCNOUT                                    S01117
      C                     END                                            S01117
      C                     ELSE                                           S01117
@@ -832,6 +868,11 @@
      C                     MOVELERRMSG,7  ERMSG                           S01117              CSD031
      C                     SETON                     428182               S01117
      C                     SETOF                     8384                 S01117
+     C**  Redisplay 1st screen if called with 3 Parms                                         114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C                     MOVE '1'       *IN80                                               114468
+     C                     MOVEA'0000'    *IN,52                                              114468
+     C                     END                                                                114468
      C                     GOTO SCNOUT                                    S01117
      C                     END                                            S01117
      C                     END                                            S01117
@@ -986,6 +1027,11 @@
      C                     SETON                     428182
      C                     SETOF                     83
      C                     SETOF                     84
+     C**  Protect Input key fields if called with 3 Parms                                     114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C                     MOVE '1'       *IN80                                               114468
+     C                     MOVEA'0000'    *IN,52                                              114468
+     C                     END                                                                114468
      C                     GOTO SCNOUT
      C*
      C**  VALID ACTION CODE AND ACCOUNT KEY FOUND.
@@ -998,6 +1044,20 @@
      C  N52                SETON                     44
      C  N52N53             SETON                     82
      C                     GOTO SCNOUT
+     C*                                                                                       114468
+     C**  IF Called with 3 Parms, don't Confirm deletion of Blank Record                      114468
+     C*                                                                                       114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C           *IN54     ANDEQ'1'                                                           114468
+     C           *IN34     ANDEQ'0'                                                           114468
+     C           *IN35     ANDEQ'0'                                                           114468
+     C           *IN36     ANDEQ'0'                                                           114468
+     C           *IN37     ANDEQ'0'                                                           114468
+     C           *IN38     ANDEQ'0'                                                           114468
+     C           *IN39     ANDEQ'0'                                                           114468
+     C                     MOVE '1'       *IN04                                               114468
+     C                     GOTO UDLOG                                                         114468
+     C                     END                                                                114468
      C*
      C**  HANDLE INSERTIONS AND AMENDMENTS.
      C*
@@ -1403,8 +1463,12 @@
      C                     END
      C                     Z-ADDRUND      LCD
      C                     MOVELNATN      TNLU
+     C           *IN04     IFEQ '1'                                                           114468
+     C           SAKEY     DELETSEACKDF              69                                       114468
+     C                     ELSE                                                               114468
      C   69                WRITESEACKDF
      C  N69                UPDATSEACKDF
+     C                     END                                                                114468
       *                                                                                       CSD031
       **  Called from central level                                                           CSD031
       *                                                                                       CSD031
@@ -1469,6 +1533,12 @@
      C*
      C                     SETON                     404181
      C                     SETON                     82
+     C**  Return to calling Program after sucessful update                                    114468
+     C**  and reset indicators                                                                114468
+     C           WNOPMS    IFGT 1                                                             114468
+     C                     MOVE '0'       *IN07                                               114468
+     C                     RETRN                                                              114468
+     C                     END                                                                114468
      C*
      C**  OBTAIN TIME FOR SCREEN DISPLAY.
      C*
@@ -1482,6 +1552,10 @@
       *                                                               *
      C   KC
      COR U8                SETON                     LR
+     C**  Exit to calling Program and exit to menu if Cmd 3 Entered                           114468
+     C           WNOPMS    IFGE 3                                                             114468
+     C   LR                MOVE '1'       RTNCD                                               114468
+     C                     END                                                                114468
      C/COPY WNCPYSRC,SE0110C014
       *                                                               *
       *================================================================

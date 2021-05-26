@@ -12,8 +12,9 @@
       *  (c) Finastra International Limited 2001                      *
 0009 F*      1990,1993                                                *
 0009 F*                                                               *
-      *  Last Amend No. 257012             Date 12Mar20               *
-      *  Prev Amend No. MD050628           Date 26Jul18               *
+      *  Last Amend No. MD030963           Date 22Jul17               *
+      *  Prev Amend No. 257012             Date 12Mar20               *
+      *                 MD050628           Date 26Jul18               *
       *                 MD043946           Date 08Feb17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030959A          Date 17Jun15               *
@@ -83,8 +84,12 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD030963 - Currency imbalance in GECEPD when DR branch is    *
+      *             equal to CR branch but they are not equal to the  *
+      *             transaction branch.                               *
+      *           - Applied for MD040939.                             *
       *  257012 - Handle correctly 'C' and 'D' charges sign.          *
-      *           Applied for MD-23223.                               *     
+      *           Applied for MD-23223.                               *
       *  MD050628 - FX Margin generated even if DCIN is BLANK         *
       *  MD043946 - Post to suspense account when the dr/cr account   *
       *             is flagged as Blocked debit/credit.               *
@@ -1642,6 +1647,7 @@
      C*                                                                   S01117
      C*  SET UP DEBIT AND CREDIT BRANCH DETAILS                           S01117
      C*    SINGLE BRANCH EXCHANGE                                         S01117
+     C                     MOVE '0'       *IN83                                             MD030963
      C           MBEI      IFEQ 'N'                        *B1            S01117
      C                     MOVE TBCI      DBCI                            S01117
      C                     MOVE TBCI      CBCI                            S01117
@@ -1677,7 +1683,16 @@
 0300 C*  IF DR BRANCH NOT EQUAL TO CR BRANCH GENERATE INTERBRANCH A/C'S   S01117
 0301 C*                                                                   S01117
 0303 C           DRBR      COMP CBRC                     80               S01117
-     C  N80                GOTO BRDIFF                                    S01117
+      *                                                                                     MD030963
+     C                     MOVE '0'       *IN84                                             MD030963
+      *                                                                                     MD030963
+     C           TRBR      IFNE DRBR                                                        MD030963
+     C           TRBR      ANDNECBRC                                                        MD030963
+     C                     MOVE '1'       *IN84                                             MD030963
+     C                     ENDIF                                                            MD030963
+     C**N80*****           GOTO BRDIFF                                               S01117 MD030963
+     C   84                                                                                 MD030963
+     CORN80                GOTO BRDIFF                                                      MD030963
      C*                                                                   S01117
      C* DR BRANCH = CR BRANCH                                             S01117
      C*                                                                   S01117
@@ -2066,6 +2081,7 @@
      C                     EXCPTPOST8                                     S01117
      C   83      CRAM      DIV  1000      W153                            S01117
      C  N83      DRAM      DIV  1000      W153                            S01117
+     C   84      CRAM      DIV  1000      W153                                              MD030963
      C                     ADD  W153      ZZAMT                           S01117
      C                     ADD  2         NORE                            S01117
      C/COPY WNCPYSRC,RE0350C025
@@ -2191,7 +2207,32 @@
      C  N83      DRAM      DIV  1000      W153                            S01117
      C                     ADD  W153      ZZAMT                           S01117
      C                     ADD  2         NORE                            S01117
+      *                                                                                     MD030963
+     C           *IN84     IFEQ '1'                                                         MD030963
+     C                     EXCPTPOST12                                                      MD030963
+     C           CRAM      DIV  1000      W153                                              MD030963
+     C                     ADD  W153      ZZAMT                                             MD030963
+     C*                                                                                     MD030963
+     C                     EXCPTPOST11                                                      MD030963
+     C           CRAM      DIV  1000      W153                                              MD030963
+     C                     ADD  W153      ZZAMT                                             MD030963
+     C                     ADD  2         NORE                                              MD030963
+     C                     ENDIF                                                            MD030963
+      *                                                                                     MD030963
      C                     END                                            S01117
+      *                                                                                     MD030963
+     C           *IN84     IFEQ '1'                                                         MD030963
+      *                                                                                     MD030963
+     C                     EXCPTPOST14                                                      MD030963
+     C           CRAM      DIV  1000      W153                                              MD030963
+     C                     ADD  W153      ZZAMT                                             MD030963
+      *                                                                                     MD030963
+     C                     EXCPTPOST13                                                      MD030963
+     C           DRAM      DIV  1000      W153                                              MD030963
+     C                     ADD  W153      ZZAMT                                             MD030963
+     C                     ADD  2         NORE                                              MD030963
+      *                                                                                     MD030963
+     C                     ENDIF                                                            MD030963
       *                                                                   CAC001
       **  If Analytical Accounting is installed, setup output fields      CAC001
       **  for FX Margin Posting                                           CAC001
@@ -4149,6 +4190,7 @@
 0833 O                N55      CBICN      7                               S01117
 0834 O                 83      CRCY      10                               S01117
 0834 O                N83      DRCY      10                               S01117
+     O                 84      DRCY      10                                                 MD030963
 0835 O**********               DADTO     14                                            S01117 CGL029
 0836 O                                   16 '01'                          S01117
 0837 O                         ZERO10    32                               S01117
@@ -4163,6 +4205,7 @@
      O                         O#PNA2    73                               S01522
 0844 O                 83      CRAM      80P                              S01117
 0844 O                N83      DRAM      80P                              S01117
+     O                 84      DRAM      80P                                                MD030963
 0847 O                                   81 '1'                           S01117
 0848 O                         ZERO6     87                               S01117
 0849 O                         ZERO8     95                               S01117
@@ -4233,6 +4276,7 @@
 0833 O                N55      DBICN      7                               S01117
 0834 O                 83      CRCY      10                               S01117
 0834 O                N83      DRCY      10                               S01117
+     O                 84      CRCY      10                                                 MD030963
 0835 O**********               CADFR     14                                            S01117 CGL029
 0836 O                                   16 '01'                          S01117
 0837 O                         ZERO10    32                               S01117
@@ -4247,6 +4291,7 @@
      O                         O#PNA4    73                               S01522
 0844 O                 83      CRAM      80P                              S01117
 0844 O                N83      DRAM      80P                              S01117
+     O                 84      CRAM      80P                                                MD030963
 0847 O                                   81 '0'                           S01117
 0848 O                         ZERO6     87                               S01117
 0849 O                         ZERO8     95                               S01117
@@ -4466,6 +4511,260 @@
      O                         LTAI     147                                                 AR894859
      O                         ORAMT    316P                                                  CGL120
      O                         XRFN     329                                                 AR894859
+      *                                                                                     MD030963
+     O        E                POST12                                                       MD030963
+      *                                           ***  Posting 12 ***                       MD030963
+     O                                    1 'P'                                             MD030963
+     O                         CBICN      7                                                 MD030963
+     O                         CRCY      10                                                 MD030963
+     O                                   16 '01'                                            MD030963
+     O                         ZERO10    32                                                 MD030963
+     O                         RUND      35P                                                MD030963
+     O                         RUND      38P                                                MD030963
+     O                                   43 '91020'                                         MD030963
+     O                         O#PNA4    73                                                 MD030963
+     O                         CRAM      80P                                                MD030963
+     O                                   81 '1'                                             MD030963
+     O                         ZERO6     87                                                 MD030963
+     O                         ZERO8     95                                                 MD030963
+     O                                  102 'GE-CE'                                         MD030963
+     O                         BKMABR   105                                                 MD030963
+     O                                  106 '0'                                             MD030963
+     O                         ZERO3    108P                                                MD030963
+     O                                  111 '   '                                           MD030963
+     O                         ZERO5    114P                                                MD030963
+     O                         MTYPTO   124                                                 MD030963
+     O                         OFF      128                                                 MD030963
+     O                                  129 'E'                                             MD030963
+     O                         ONE      130                                                 MD030963
+     O                 47      PRFC     134                                                 MD030963
+     O                 47 36   FTPRFP   134                                                 MD030963
+     O                                  140 '235959'                                        MD030963
+     O                                  141 '0'                                             MD030963
+     O                         MSECTO   146                                                 MD030963
+     O                         IPDN     160                                                 MD030963
+     O                         SWCR     176                                                 MD030963
+     O                         ZERO6    200                                                 MD030963
+     O                         OTST     240                                                 MD030963
+     O                         OTTP     250                                                 MD030963
+     O                         SDCB     258P                                                MD030963
+     O                         SDLB     266P                                                MD030963
+     O                         BOKC     268                                                 MD030963
+     O                         ZERO5    271P                                                MD030963
+     O                         ZERO13   279P                                                MD030963
+     O                         WACKEY   351                                                 MD030963
+     O                                  352 ' '                                             MD030963
+     O                         ZERO13   359P                                                MD030963
+     O                         ZERO5    364                                                 MD030963
+     O                         RORACT   384                                                 MD030963
+     O                         RORCTY   386                                                 MD030963
+     O                         RORBNK   406                                                 MD030963
+     O                         RORCDE   417                                                 MD030963
+     O                         PORACT   437                                                 MD030963
+     O                         PORCTY   439                                                 MD030963
+     O                         PORBNK   459                                                 MD030963
+     O                         PORCDE   470                                                 MD030963
+     O                         DSTACT   505                                                 MD030963
+     O                         DSTCTY   507                                                 MD030963
+     O                         DSTBNK   527                                                 MD030963
+     O                         SETDAT   530P                                                MD030963
+     O                         TICKER   540                                                 MD030963
+     O                         EXCHNG   560                                                 MD030963
+     O                         NOMINL   573                                                 MD030963
+     O                         FDTRID   589                                                 MD030963
+     O                         MADTO    599                                                 MD030963
+     O                         OTRF     620                                                 MD030963
+      *                                                                                     MD030963
+     O        E                POST11                                                       MD030963
+      *                                           ***  Posting 11 ***                       MD030963
+     O                                    1 'P'                                             MD030963
+     O                         DBICN      7                                                 MD030963
+     O                         CRCY      10                                                 MD030963
+     O                                   16 '01'                                            MD030963
+     O                         ZERO10    32                                                 MD030963
+     O                         RUND      35P                                                MD030963
+     O                         RUND      38P                                                MD030963
+     O                                   43 '91020'                                         MD030963
+     O                         O#PNA2    73                                                 MD030963
+     O                         CRAM      80P                                                MD030963
+     O                                   81 '0'                                             MD030963
+     O                         ZERO6     87                                                 MD030963
+     O                         ZERO8     95                                                 MD030963
+     O                                  102 'GE-CE'                                         MD030963
+     O                         BKMABR   105                                                 MD030963
+     O                                  106 '0'                                             MD030963
+     O                         ZERO3    108P                                                MD030963
+     O                                  111 '   '                                           MD030963
+     O                         ZERO5    114P                                                MD030963
+     O                         MTYPFR   124                                                 MD030963
+     O                         OFF      128                                                 MD030963
+     O                                  129 'E'                                             MD030963
+     O                         ONE      130                                                 MD030963
+     O                 47      PRFC     134                                                 MD030963
+     O                 47 36   FTPRFP   134                                                 MD030963
+     O                                  140 '235959'                                        MD030963
+     O                                  141 '0'                                             MD030963
+     O                         MSECFR   146                                                 MD030963
+     O                         IPDN     160                                                 MD030963
+     O                         SWCR     176                                                 MD030963
+     O                         ZERO6    200                                                 MD030963
+     O                         OTST     240                                                 MD030963
+     O                         OTTP     250                                                 MD030963
+     O                         SDCB     258P                                                MD030963
+     O                         SDLB     266P                                                MD030963
+     O                         BOKC     268                                                 MD030963
+     O                         ZERO5    271P                                                MD030963
+     O                         ZERO13   279P                                                MD030963
+     O                         WACKEY   351                                                 MD030963
+     O                                  352 ' '                                             MD030963
+     O                         ZERO13   359P                                                MD030963
+     O                         ZERO5    364                                                 MD030963
+     O                         RORACT   384                                                 MD030963
+     O                         RORCTY   386                                                 MD030963
+     O                         RORBNK   406                                                 MD030963
+     O                         RORCDE   417                                                 MD030963
+     O                         PORACT   437                                                 MD030963
+     O                         PORCTY   439                                                 MD030963
+     O                         PORBNK   459                                                 MD030963
+     O                         PORCDE   470                                                 MD030963
+     O                         DSTACT   505                                                 MD030963
+     O                         DSTCTY   507                                                 MD030963
+     O                         DSTBNK   527                                                 MD030963
+     O                         SETDAT   530P                                                MD030963
+     O                         TICKER   540                                                 MD030963
+     O                         EXCHNG   560                                                 MD030963
+     O                         NOMINL   573                                                 MD030963
+     O                         FDTRID   589                                                 MD030963
+     O                         MADFR    599                                                 MD030963
+     O                         OTRF     620                                                 MD030963
+      *                                                                                     MD030963
+     O        E                POST14                                                       MD030963
+      *                                           ***  Posting 14  ***                      MD030963
+     O                                    1 'P'                                             MD030963
+     O                 55      MBICN      7                                                 MD030963
+     O                N55      CBICN      7                                                 MD030963
+     O                         DRCY      10                                                 MD030963
+     O                                   16 '01'                                            MD030963
+     O                         ZERO10    32                                                 MD030963
+     O                         RUND      35P                                                MD030963
+     O                         RUND      38P                                                MD030963
+     O                                   43 '91020'                                         MD030963
+     O                         O#PNA2    73                                                 MD030963
+     O                         DRAM      80P                                                MD030963
+     O                                   81 '0'                                             MD030963
+     O                         ZERO6     87                                                 MD030963
+     O                         ZERO8     95                                                 MD030963
+     O                                  102 'GE-CE'                                         MD030963
+     O                         TRBR     105                                                 MD030963
+     O                                  106 '0'                                             MD030963
+     O                         ZERO3    108P                                                MD030963
+     O                                  111 '   '                                           MD030963
+     O                         ZERO5    114P                                                MD030963
+     O                         TTYPTO   124                                                 MD030963
+     O                         OFF      128                                                 MD030963
+     O                                  129 'E'                                             MD030963
+     O                         ONE      130                                                 MD030963
+     O                 47      PRFC     134                                                 MD030963
+     O                 47 36   FTPRFP   134                                                 MD030963
+     O                                  140 '235959'                                        MD030963
+     O                                  141 '0'                                             MD030963
+     O                         TSECTO   146                                                 MD030963
+     O                         IPDN     160                                                 MD030963
+     O                         SWCR     176                                                 MD030963
+     O                         ZERO6    200                                                 MD030963
+     O                         OTST     240                                                 MD030963
+     O                         OTTP     250                                                 MD030963
+     O                         SDCB     258P                                                MD030963
+     O                         SDLB     266P                                                MD030963
+     O                         BOKC     268                                                 MD030963
+     O                         ZERO5    271P                                                MD030963
+     O                         ZERO13   279P                                                MD030963
+     O                         WACKEY   351                                                 MD030963
+     O                                  352 ' '                                             MD030963
+     O                         ZERO13   359P                                                MD030963
+     O                         ZERO5    364                                                 MD030963
+     O                         RORACT   384                                                 MD030963
+     O                         RORCTY   386                                                 MD030963
+     O                         RORBNK   406                                                 MD030963
+     O                         RORCDE   417                                                 MD030963
+     O                         PORACT   437                                                 MD030963
+     O                         PORCTY   439                                                 MD030963
+     O                         PORBNK   459                                                 MD030963
+     O                         PORCDE   470                                                 MD030963
+     O                         DSTACT   505                                                 MD030963
+     O                         DSTCTY   507                                                 MD030963
+     O                         DSTBNK   527                                                 MD030963
+     O                         SETDAT   530P                                                MD030963
+     O                         TICKER   540                                                 MD030963
+     O                         EXCHNG   560                                                 MD030963
+     O                         NOMINL   573                                                 MD030963
+     O                         FDTRID   589                                                 MD030963
+     O                         TADTO    599                                                 MD030963
+     O                         OTRF     620                                                 MD030963
+      *                                                                                     MD030963
+     O        E                POST13                                                       MD030963
+      *                                           ***  Posting 13 ***                       MD030963
+     O                                    1 'P'                                             MD030963
+     O                 55      MBICN      7                                                 MD030963
+     O                N55      DBICN      7                                                 MD030963
+     O                         CRCY      10                                                 MD030963
+     O                                   16 '01'                                            MD030963
+     O                         ZERO10    32                                                 MD030963
+     O                         RUND      35P                                                MD030963
+     O                         RUND      38P                                                MD030963
+     O                                   43 '91020'                                         MD030963
+     O                         O#PNA4    73                                                 MD030963
+     O                         CRAM      80P                                                MD030963
+     O                                   81 '1'                                             MD030963
+     O                         ZERO6     87                                                 MD030963
+     O                         ZERO8     95                                                 MD030963
+     O                                  102 'GE-CE'                                         MD030963
+     O                         TRBR     105                                                 MD030963
+     O                                  106 '0'                                             MD030963
+     O                         ZERO3    108P                                                MD030963
+     O                                  111 '   '                                           MD030963
+     O                         ZERO5    114P                                                MD030963
+     O                         TTYPFR   124                                                 MD030963
+     O                         OFF      128                                                 MD030963
+     O                                  129 'E'                                             MD030963
+     O                         ONE      130                                                 MD030963
+     O                 47      PRFC     134                                                 MD030963
+     O                 47 36   FTPRFP   134                                                 MD030963
+     O                                  140 '235959'                                        MD030963
+     O                                  141 '0'                                             MD030963
+     O                         TSECFR   146                                                 MD030963
+     O                         IPDN     160                                                 MD030963
+     O                         SWCR     176                                                 MD030963
+     O                         ZERO6    200                                                 MD030963
+     O                         OTST     240                                                 MD030963
+     O                         OTTP     250                                                 MD030963
+     O                         SDCB     258P                                                MD030963
+     O                         SDLB     266P                                                MD030963
+     O                         BOKC     268                                                 MD030963
+     O                         ZERO5    271P                                                MD030963
+     O                         ZERO13   279P                                                MD030963
+     O                         WACKEY   351                                                 MD030963
+     O                                  352 ' '                                             MD030963
+     O                         ZERO13   359P                                                MD030963
+     O                         ZERO5    364                                                 MD030963
+     O                         RORACT   384                                                 MD030963
+     O                         RORCTY   386                                                 MD030963
+     O                         RORBNK   406                                                 MD030963
+     O                         RORCDE   417                                                 MD030963
+     O                         PORACT   437                                                 MD030963
+     O                         PORCTY   439                                                 MD030963
+     O                         PORBNK   459                                                 MD030963
+     O                         PORCDE   470                                                 MD030963
+     O                         DSTACT   505                                                 MD030963
+     O                         DSTCTY   507                                                 MD030963
+     O                         DSTBNK   527                                                 MD030963
+     O                         SETDAT   530P                                                MD030963
+     O                         TICKER   540                                                 MD030963
+     O                         EXCHNG   560                                                 MD030963
+     O                         NOMINL   573                                                 MD030963
+     O                         FDTRID   589                                                 MD030963
+     O                         TADFR    599                                                 MD030963
+     O                         OTRF     620                                                 MD030963
      O*                                                                   S01408
      O/COPY WNCPYSRC,RE0350OOP2                                           S01408
      O/COPY WNCPYSRC,RE0350C026                                           S01408

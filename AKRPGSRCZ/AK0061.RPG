@@ -1,22 +1,23 @@
      H        1                                                           S01315
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas AK A/c key generation - generate keys')
+/*EXI *  TEXT('Midas AK A/c key generation - generate keys')          *
      H********1   DD                                                      S01315
      F*****************************************************************
      F*                                                               *
-     F*  Midas - Account Key Generator                            *
+     F*  Midas - Account Key Generator                                *
      F*                                                               *
      F*  AK0061  -  SE Account Key Generation Main Processing         *
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 114468             Date 18Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE065             Date 08Nov04               *
       *                 CAS007             Date 26Apr04               *
@@ -66,6 +67,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  114468 - Template processing enhancement - Use SEACKD as     *
+      *           Template, also cater for S01446 group charge codes  *
+      *           Applied for AR1079856                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL031 - Taxation of Savings Income                          *
@@ -161,7 +165,7 @@
      F*BOOKD   IF  E           K        DISK                              S01315
      FSDBOOKL1IF  E           K        DISK                               S01315
      FSEACKD  IF  E           K        DISK
-     FTSEACK  IF  E           K        DISK                               E40664
+     F***TSEACK  IF  E           K        DISK                                         E40664 114468
      F*TABSE   IF  E           K        DISK                              S01315
      F************TABLETAF                          KIGNORE               S01315
      F************TABTB10F                          KIGNORE               S01315
@@ -199,6 +203,7 @@
       *   22      Use Classification array DS2
       *   23      Use Classification array DS3
       *   24      Use Classification array DS4
+      *   96      Lookup found                                                                114468
       *   97      Chain fail/End-of-file                                  E40664
       *   98      Chain fail/End-of-file
       *   99      Chain fail/End-of-file
@@ -325,9 +330,11 @@
      I              FC02                            FC02X
      I              FC03                            FC03X                 S01445
       *                                                                   066211
-      *   Rename TSEACKD fields, as same as XSEACKD.                      066211
+      ****Rename*TSEACKD*fields,*as*same*as*XSEACKD.                                   066211 114468
+      *   Rename SEACKD fields, as same as XSEACKD.                                           114468
       *                                                                   066211
-     ITSEACKDF                                                            066211
+     I***TSEACKDF                                                                      066211 114468
+     ISEACKDF                                                                                 114468
      I              RECI                            TRECI                 066211
      I              ACKE                            TACKE                 066211
      I              ACD1                            TACD1                 066211
@@ -357,8 +364,8 @@
      I              LCD                             TLCD                  066211
      I              CHTP                            TCHTP                 066211
      I              TNLU                            TTNLU                 066211
-     I              ETYPA                           TETYPA                066211
-     I              ATYPA                           TATYPA                066211
+     I**********    ETYPA                           TETYPA                             066211 114468
+     I**********    ATYPA                           TATYPA                             066211 114468
       *                                                                   S01315
      I*LDA        UDS                            256                      S01315
      I************                          134 138 DBFILE                S01315
@@ -687,6 +694,19 @@
      C                     ELSE                                           S01445
      C                     MOVE 'N'       S01445                          S01445
      C                     END                                            S01445
+      *                                                                                       114468
+      ** Check S01446 has been installed                                                      114468
+      *                                                                                       114468
+     C                     CALL 'AOSARDR0'                                                    114468
+     C                     PARM *BLANKS   @RTCD                                               114468
+     C                     PARM '*VERIFY' @OPTN                                               114468
+     C                     PARM 'S01446'  @SARD                                               114468
+      *                                                                                       114468
+     C           @RTCD     IFEQ *BLANK                                                        114468
+     C                     MOVE 'Y'       S01446  1                                           114468
+     C                     ELSE                                                               114468
+     C                     MOVE 'N'       S01446                                              114468
+     C                     ENDIF                                                              114468
       *
       **  Access SAR details file to see if S01447 SAR is installed.      S01447
       *                                                                   S01447
@@ -2348,8 +2368,26 @@
      C           *IN99     IFEQ '0'
      C           RECI      ANDEQ'D'
      C           CCY       ANDEQCURR
+      *                                                                                       114468
+      ** If Autocharges is switched on and 114468 is on then                                  114468
+      *                                                                                       114468
+     C           BVACOP    IFEQ 'Y'                                                           114468
+     C           S01446    ANDEQ'Y'                                                           114468
+      *                                                                                       114468
+      ** Access Charges Codes file                                                            114468
+      *                                                                                       114468
+     C                     MOVE '0'       *IN96                                               114468
+     C                     Z-ADD1         I       20                                          114468
+     C           GCCO      LOKUPCCD,I                    96                                   114468
+     C           *IN96     IFEQ *OFF                                                          114468
+     C                     ADD  1         X                                                   114468
+     C                     MOVE GCCO      CCD,X                                               114468
+     C                     ENDIF                                                              114468
+     C                     ELSE                                                               114468
+      *                                                                                       114468
      C                     ADD  1         X
      C                     MOVE CCOM      CCD,X
+     C                     ENDIF                                                              114468
      C                     END
      C                     END
       *
@@ -4804,7 +4842,12 @@
      C           TEMPB     ANDNE'  '                                      100986
      C                     MOVE TEMPB     TMPBOK                          100986
      C                     END                                            100986
-     C           TMPKEY    CHAINTSEACK               97                   E40664
+     C********** TMPKEY    CHAINTSEACK               97                                E40664 114468
+     C           TMPKEY    CHAINSEACKD               97                                       114468
+     C           *IN97     IFEQ '1'                                                           114468
+     C           TRECI     ANDEQ'*'                                                           114468
+     C                     MOVE '0'       *IN97                                               114468
+     C                     ENDIF                                                              114468
      C           *IN97     IFEQ '0'                                       E40664
      C                     MOVE RACCTG    ACCTG                           E40664
      C*                                                                   068174

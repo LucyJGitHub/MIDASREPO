@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 258638             Date 30Aug19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR403524           Date 06Jan14               *
+      *  Prev Amend No. 258638             Date 30Aug19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
       *                 261324             Date 24Apr13               *
       *                 CRE073             Date 06Dec10               *
@@ -41,6 +42,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR403524 - GOC0020 00011 - INVALID MATURITY DATE EVENT.      *
+      *             Non-working day indicator is not considered during*
+      *             processing of security record with maturity date  *
+      *             on holiday.                                       *
+      *           - Applied for MD024214                              *
       *   258638 - GOC0020 00011 failed with various dumps due to     *
       *            blank Interest Calculation Method.                 *
       *          - Applied for MD-53803.                              *
@@ -114,7 +120,7 @@
 
 
       ** The size of the detail arrays
-     D ArrSizDet       C                   CONST(360) 
+     D ArrSizDet       C                   CONST(360)
 
       * WORK ARRAYS OF EVENT DATES AND DATA
      D #arevdt_WK    E DS                  EXTNAME(DEEVDTPD) PREFIX(WK)
@@ -347,6 +353,11 @@
       * it has a date >= the initial position date
      C     E_EVTP        IFEQ      'MT'
      C     E_PRDT        ANDLT     InitialPDAT
+     C     BKANWD        ANDNE     '2'                                                      AR403524
+     C     E_EVTP        OREQ      'MT'                                                     AR403524
+     C     E_PRDT        ANDLT     InitialPDAT                                              AR403524
+     C     E_PRDT        ANDLE     BJRDNB                                                   AR403524
+     C     BKANWD        ANDEQ     '2'                                                      AR403524
      C                   EVAL      Err_Mess = 'INVALID MATURITY DATE EVENT'
      C                   EXSR      *PSSR
      C                   ENDIF
@@ -1159,7 +1170,38 @@
      C     Diagnostics   IFEQ      'Y'
      C                   OPEN      GOWPOSNPD
      C                   ENDIF
-
+      *                                                                                     AR403524
+      ** Access general ledger details                                                      AR403524
+      *                                                                                     AR403524
+     C                   CALL      'AOGELRR1'                                               AR403524
+     C                   PARM      '*DBERR '     @RTCD             7                        AR403524
+     C                   PARM      '*FIRST '     @OPTN             7                        AR403524
+     C     SDGELR        PARM      SDGELR        DSSDY                                      AR403524
+      *                                                                                     AR403524
+      ** Database error                                                                     AR403524
+      *                                                                                     AR403524
+     C     @RTCD         IFNE      *BLANKS                                                  AR403524
+     C                   MOVEL     'SDGELRPD'    DBFILE                                     AR403524
+     C                   Z-ADD     1             DBASE                                      AR403524
+     C                   MOVEL     @OPTN         DBKEY                                      AR403524
+     C                   EXSR      *PSSR                                                    AR403524
+     C                   ENDIF                                                              AR403524
+      *                                                                                     AR403524
+      ** Access Bank Details ICD details                                                    AR403524
+      *                                                                                     AR403524
+     C                   CALL      'AOBANKR0'                                               AR403524
+     C                   PARM      '*DBERR '     @RTCD             7                        AR403524
+     C                   PARM      '*FIRST '     @OPTN             7                        AR403524
+     C     SDBANK        PARM      SDBANK        DSSDY                                      AR403524
+      *                                                                                     AR403524
+      ** Database error                                                                     AR403524
+      *                                                                                     AR403524
+     C     @RTCD         IFNE      *BLANKS                                                  AR403524
+     C                   MOVEL     'SDBANKPD'    DBFILE                                     AR403524
+     C                   Z-ADD     2             DBASE                                      AR403524
+     C                   MOVEL     @OPTN         DBKEY                                      AR403524
+     C                   EXSR      *PSSR                                                    AR403524
+     C                   ENDIF                                                              AR403524
       * Projection Cut-off Date + 1 year
      C     ProjCO_Dat    ADD       370           ProjCO_Dat_1Yr    5 0
 

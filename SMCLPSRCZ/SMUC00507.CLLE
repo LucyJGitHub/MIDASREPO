@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas Utility for MD-2359 ')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Replication                                         */
+/*                                                                   */
+/*       SMUC00507 - Midas Utility to create record in RPAPCIPD      */
+/*                   Member(MIDASTOF)                                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MDSC035352 *CREATE Date 03May21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD035352 - Utility for MD2359 ; calls program SMU00507      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2021')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)
+             CHGVAR     VAR(&LIB) VALUE('REPMIDAS' *TCAT &PRFX)
+
+             CHKOBJ     OBJ(QSYS/&LIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+
+             ADDLIBLE LIB(&LIB) POSITION(*LAST)
+             MONMSG     MSGID(CPF2103)
+
+             CHKOBJ     OBJ(&LIB/RPAPCIPD) OBJTYPE(*FILE) MBR(MIDASTOF)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+
+             OVRDBF     FILE(RPAPCIPD) MBR(MIDASTOF)
+             OVRDBF     FILE(RPAPCIL1) MBR(MIDASTOF)
+
+             CALL       PGM(SMU00507)
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+ ABNOR:
+
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+
+ /* Send the error message */
+
+             SNDPGMMSG  MSG('Program SMUC00507 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+
+ END:
+             RMVLIBLE   LIB(&LIB)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

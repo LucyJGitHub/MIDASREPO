@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. MD049512           Date 14Aug18               *
+      *  Last Amend No. MD038060           Date 18May16               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 MD049512           Date 14Aug18               *
       *                 MD045515           Date 20Jun17               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
@@ -92,10 +93,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038060 - Add field SDLB (Start of Day Ledger Balance) in   *
+      *             APOSTPD. Reinstate part of 181008 but avoid       *
+      *             incorrect interbranch entries due to BRCA being   *
+      *             overwritten.                                      *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  MD049512 - All real time postings are reprocessed everytime  *
       *             GLC450 runs causing imbalance in GLHIBL. Ensure   *
-      *             GLRTPD are processed once.                        *      
+      *             GLRTPD are processed once.                        *
       *  MD045515 - Real-time postings resulted in duplicate movements*
       *             Set on bit 6 to mark CLEARPD records output in IC.*
       *  MD046248 - Finastra Rebranding                               *
@@ -246,6 +251,7 @@
      F*  Midas GL Account Movements file                                                   AR1096223
      F*                                                                                    AR1096223
      F***GLACBTL0IF  E           K        DISK                                        181008 BUG5389
+     FGLACBTL0IF  E           K        DISK                                                 MD038060
      FCLEARPD O   E           K        DISK         KCOMIT                                  MD028392
      F            APOSTPDF                          KRENAMECLRPDF                           MD028392
      FCLEAR   UF  E           K        DISK         KCOMIT                                 MD028392A
@@ -382,6 +388,18 @@
      I**********    BRCA                            GBRCA                             181008 BUG5389
      I**********    LDBL                            GLDBL                             181008 BUG5389
      I**********    CLBL                            GCLBL                             181008 BUG5389
+     IGLACBLF                                                                               MD038060
+      *                                                                                     MD038060
+      * Fields renamed for reading GLACBTPD                                                 MD038060
+      *                                                                                     MD038060
+     I              RECI                            GRECI                                   MD038060
+     I              CNUM                            GCNUM                                   MD038060
+     I              CCY                             GCCY                                    MD038060
+     I              ACOD                            GACOD                                   MD038060
+     I              ACSQ                            GACSQ                                   MD038060
+     I              BRCA                            GBRCA                                   MD038060
+     I              LDBL                            GLDBL                                   MD038060
+     I              CLBL                            GCLBL                                   MD038060
       *
      ICPYR@#      DS
       *
@@ -1854,6 +1872,13 @@
      C**********           Z-ADDGCLBL     SDCB                                        181008 BUG5389
      C**********           END                                                        181008 BUG5389
       **********                                                                      181008 BUG5389
+      *  Update Start of day's ledger balance in APOSTPD taken from                         MD038060
+      *  the Ledger Balance in GLACBTPD.                                                    MD038060
+     C           KACKY     CHAINGLACBLF              20                                     MD038060
+     C           *IN20     IFEQ '0'                                                         MD038060
+     C                     Z-ADDGLDBL     SDLB                                              MD038060
+     C                     Z-ADDGCLBL     SDCB                                              MD038060
+     C                     END                                                              MD038060
       **  Write record to General Ledger Postings File
       *
      C                     WRITEAPOSTPDF

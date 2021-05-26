@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD023846           Date 28Nov13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -63,6 +64,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023846 - As it is a Forward Value Date greater than the    *
+      *             next coupon date it's not correct to find back in *
+      *             SNDEVD the last record for a coupon. Accrued      *
+      *             interest are then totally wrong. Applied fix      *
+      *             AR835450.                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  230608 - OPEN file with different format                     *
@@ -369,10 +375,13 @@
       *                                                                                     BUG11009
       ** Verify and retrieve the correct last coupon date from file                         BUG11009
       ** SNDEVD if CSE031 is off or CSE031 is on and BCNV is blank.                         BUG11009
+      ** and if Trade Value Date is still LT Next Coupon Date                               MD023846
+      ** (forward value date)                                                               MD023846
       *                                                                                     BUG11009
      C     CSE031        IFEQ      'N'                                                      BUG11009
      C     CSE031        OREQ      'Y'                                                      BUG11009
      C     BCNV          ANDEQ     'N'                                                      BUG11009
+     C     ECD           ANDLT     ZZLCD                                                    MD023846
       *                                                                                       209875
       ** Check if previous settlement generated to ensure that                                209875
       ** the correct last coupon is passed in case the coupon date                            209875

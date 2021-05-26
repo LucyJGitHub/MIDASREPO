@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. AR1049859          Date 05Nov12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1049859 - Review process for Closed Customer check.        *
+      *              Also applied fixes 241715, 231869, 216502,       *
+      *              224861, 204034 (Child:AR1049860)                 *
+      *  241715 - Apply 231869.                                       *
+      *  231869 - Bypass DBERR when processing closed customer.  Fix  *
+      *           patterned after 231112.                             *
+      *  216502 - For deleted/closed customers, do not cause database *
+      *           error. Continue but do not write record to GLCUFEPD *
+      *  224861 - Pass BJCYCD to ZCCY before call to ZBKDT.           *
+      *  204034 - Customer service fees are shown as "Overdue". Need  *
+      *           to check Outstanding Settlements file before        *
+      *           flagging CSF charge as Overdue.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -62,6 +75,9 @@
      FGLCUFEPDO   E                    DISK         KINFSR *PSSR
       ** Customer Service Fees to process
       *
+     FGLOTSTL6IF  E           K        DISK         KINFSR *PSSR                              204034
+      ** Fees Outstanding Settlement                                                          204034
+      *                                                                                       204034
      FGL1932AUO   E                    PRINTER      KINFSR *PSSR      UC
      F                                              KINFDS SPOOLU
       ** Customer Service Fees to process - Audit
@@ -129,6 +145,10 @@
      I                                      244 253 WSID
      I                                      254 263 USER
       *
+     IDSLDY     E DSDSLDY                                                                     216502
+     I*                                                                                       216502
+     I** Third DS for access programs, very long data structure                               216502
+     I*                                                                                       216502
      I/COPY ZSRSRC,ZHOLI
      I/COPY ZSRSRC,ZHOLDS
       *
@@ -245,7 +265,8 @@
       ** Calculate the nth working day back from settlement date
       *
      C           CHFNSD    IFNE *ZERO
-     C                     MOVE DFCCCY    ZCCY
+     C**********           MOVE DFCCCY    ZCCY                                                224861
+     C                     MOVE BJCYCD    ZCCY                                                224861
      C                     Z-ADDCHFNSD    ZDAYNO
      C                     MOVE *BLANKS   ZLOC
      C                     Z-ADDDFSEDA    ZNRDYS
@@ -278,8 +299,15 @@
       *
       ** Status Becomes 'O' if Status was 'G' and Run Date *GT Settle Dat
       *
+      ** Need to check GLOTSTL6 as well.                                                      204034
+      *                                                                                       204034
+     C                     MOVE CHREFE    KREFE   8                                           204034
+      *                                                                                       204034
+     C           KREFE     CHAINGLOTSTL6             89                                       204034
+      *                                                                                       204034
      C           CHSTAT    IFEQ 'G'
      C           CHFNSD    ANDGEBJRDNB
+     C           *IN89     ANDEQ'0'                                                           204034
      C                     MOVE 'O'       CHSTAT
      C                     ENDIF
       *
@@ -297,8 +325,14 @@
       *
      C                     EXSR SRCHKD
       *
+     C           BBDTDL    IFEQ 0                                                             216502
+     C********** BBCLST    ANDEQ' '                                                 216502 AR1049859
+     C           BBCLST    ANDNE'Y'                                                        AR1049859
+      *                                                                                       216502
      C                     WRITEGLCUFED0
      C                     UPDATGLCHRGD0
+      *                                                                                       216502
+     C                     ENDIF                                                              216502
      C                     ENDIF
      C                     ENDIF
       *                                                                                       CSD011
@@ -504,14 +538,30 @@
       ** Retrieve Customer branch
       *
      C                     MOVELF0CNUM    PKEYC  10 P
-     C                     CALL 'AOCUSTR0'
-     C                     PARM           PRTCD   7
-     C                     PARM '*KEY   ' POPTN   7
-     C                     PARM           PKEYC
-     C                     PARM           PKYST   7
-     C           SDCUST    PARM SDCUST    DSSDY
+     C**********           CALL 'AOCUSTR0'                                                    216502
+     C**********           PARM           PRTCD   7                                           216502
+     C**********           PARM '*KEY   ' POPTN   7                                           216502
+     C**********           PARM           PKEYC                                               216502
+     C**********           PARM           PKYST   7                                           216502
+     C********** SDCUST    PARM SDCUST    DSSDY                                               216502
+     C                     CALL 'AOCUSTR1'                                                    216502
+     C                     PARM           PRTCD   7                                           216502
+     C                     PARM '*KEY   ' POPTN   7                                           216502
+     C                     PARM           PKEYC                                               216502
+     C                     PARM           PKYST   7                                           216502
+     C           SDCUST    PARM SDCUST    DSLDY                                               216502
       *
      C           PRTCD     IFEQ *BLANKS
+     C           PRTCD     OREQ '*NRF'                                                        216502
+     C           BBDTDL    ANDNE0                                                             216502
+     C           PRTCD     OREQ '*NRF'                                                        216502
+     C           BBCLST    ANDNE' '                                                           216502
+     C********** BBCLST    ANDNE' '                                                 216502 AR1049859
+     C********** BBCLST    ANDEQ'Y'                                                 216502 AR1049859
+     C           BBCLST    OREQ 'Y'                                                        AR1049859
+     C           PRTCD     ORNE *BLANKS                                                       231869
+     C           PRTCD     ANDEQ'*CUSDEL'                                                     231869
+     C           CSD007    ANDEQ'Y'                                                           231869
      C                     MOVELBBBRCD    F0BRCA
      C                     ELSE
      C           *LOCK     IN   LDA
@@ -720,6 +770,18 @@
      C                     MOVE 'N'       CSD011                                              CSD011
      C                     ENDIF                                                              CSD011
       *                                                                                       CSD011
+      ** Check if CSD007 is switched ON.                                                      231869
+      *                                                                                       231869
+     C                     CALL 'AOSARDR0'                                                    231869
+     C                     PARM '       ' @RTCD   7                                           231869
+     C                     PARM '*VERIFY' @OPTN   7                                           231869
+     C                     PARM 'CSD007'  @SARD   6                                           231869
+     C           SCSARD    PARM SCSARD    DSFDY                                               231869
+      *                                                                                       231869
+     C                     MOVE 'N'       CSD007  1                                           231869
+     C           @RTCD     IFEQ *BLANKS                                                       231869
+     C                     MOVE 'Y'       CSD007                                              231869
+     C                     END                                                                231869
      C                     ENDSR
       *****************************************************************
       /EJECT

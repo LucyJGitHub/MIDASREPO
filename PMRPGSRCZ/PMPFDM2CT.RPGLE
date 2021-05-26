@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027553           Date 21Aug14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CPB002             Date 13Dec99               *
@@ -30,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027553 - Field Portfolio Management Type from TOF not      *
+      *             considerd in BF Midas.                            *
+      *           - Don't default Manage Indicator.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CPB002 - New Private Banking Customer Processing.            *
@@ -259,6 +263,14 @@
       ** Continue converting fields to their screen format only if
       ** customer is a Portfolio Management Customer.
       *
+     C     PMCUST        IFEQ      'P'                                                      MD027553
+      *                                                                                     MD027553
+      ** Managed Indicator                                                                  MD027553
+      *                                                                                     MD027553
+     C                   EVAL      DDMNGI = P1PNMNGI                                        MD027553
+      *                                                                                     MD027553
+     C                   ENDIF                                                              MD027553
+      *                                                                                     MD027553 
      C     PMCUST        IFEQ      'Y'
       *
       ** Investment details

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056996           Date 19Oct20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD029185B          Date 07Nov14               *
+      *  Prev Amend No. MD056996           Date 19Oct20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD020922           Date 26Jun13               *
       *                 AR1092084          Date 03Apr13               *
@@ -121,11 +122,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029185B - Upon trade insertion/authorisation, projected    *
+      *              should only be generated when auto-settled is    *
+      *              'Y'.                                             *
       *  MD056996 - In a 2 node system where trades are processed     *
       *             symulaneously, a duplicate record error was       *
       *             encountered in writing to BKPHPD file. Fix was to *
       *             ensure that the duplicate record will be ignored  *
-      *             and no database error will be encountered.        *      
+      *             and no database error will be encountered.        *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020922 - Serious Midas error encountered when authorising  *
@@ -773,7 +777,11 @@
 
       **  ... update on-line balances
 
+     C     A_CHTP        IFEQ      'I'                                                     MD029185B
+     C     A_AUTS        ANDNE     'Y'                                                     MD029185B
+     C                   ELSE                                                              MD029185B
      C                   EXSR      ONLNUP
+     C                   ENDIF                                                             MD029185B
 
       *   ... update book positions
 

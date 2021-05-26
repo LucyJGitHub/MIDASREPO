@@ -23,8 +23,12 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD057008           Date 27Oct20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. AR990362A          Date 03Jul13               *
+      *  Prev Amend No. AR1082761A         Date 31Jan13               *
+      *                 AR1083062          Date 30Jan13               *
+      *                 AR1082761          Date 29Jan13               *
+      *                 MD057008           Date 27Oct20               *
+      *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
@@ -190,6 +194,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR990362A - Incorrect tax amount at maturity. Tax amount must*
+      *              be calculated on remaining interest (##INTA) and *
+      *              not on total interest (TOTI). (Child: AR990363)  *
+      *  AR1082761A - Tax amount should be computed within the        *
+      *               interest period                                 *
+      *  AR1083062 - Early Maturity deal extract issues               *
+      *  AR1082761 - Tax amount is zero in CM interest payment        *
+      *              confirmation                                     *
       *  MD057008 - CGC2050 00007 fails during COB                    *
       *           - Do not execute SR/CGSTAT when WSTAT is blanks as  *
       *             it is only being populated when CGL031 is ON and  *
@@ -2358,6 +2370,10 @@
       *
       ** Branch Details
      C                   EXSR      BRANCH
+      *                                                                                    AR1083062
+      ** Maturity Date                                                                     AR1083062
+      *                                                                                    AR1083062
+     C                   EXSR      MATURD                                                  AR1083062
       *
       * If generating an interest advice, CDL096 is On and Amount                          CDL096I02
       * convention is 'A', move Interest Payment Date back to event                        CDL096I02
@@ -5572,7 +5588,8 @@
      C                   ENDIF                                                                CDL013
       *                                                                                       CDL013
       ** Round down Interest Amount.                                                          CDL013
-     C     TOTI          DIV       WADJ          WTOTAL           15 0                        CDL013
+     C*****TOTI*         DIV       WADJ          WTOTAL           15 0              CDL013 AR990362A
+     C     ##INTA        DIV       WADJ          WTOTAL           15 0                     AR990362A
      C                   MULT      WADJ          WTOTAL                                       CDL013
       *                                                                                       CDL013
       ** Calculate WHT                                                                        CDL013
@@ -5585,7 +5602,8 @@
       *                                                                                       CDL013
       ** If Deal Ccy NOT Base Ccy, calculate half-adjusted WHT                                CDL013
      C                   ELSE                                                                 CDL013
-     C     TOTI          MULT      WRATE         ##TAXA                                       CDL013
+     C*****TOTI*         MULT      WRATE         ##TAXA                             CDL013 AR990362A
+     C     ##INTA        MULT      WRATE         ##TAXA                                    AR990362A
       *                                                                                       CDL081
       ** Check if tax amount is to be rounded down                                            CDL081
       *                                                                                       CDL081
@@ -12054,6 +12072,126 @@
      C                   ADD       WNTAMT        ##TAXA                                       235126
      C                   ENDIF                                                              BUG23515
      C                   ENDIF                                                                235126
+      *                                                                                    AR1082761
+      ** If CDL013 is installed, calculate WHT amount                                      AR1082761
+      *                                                                                    AR1082761
+     C     CDL013        IFEQ      '1'                                                     AR1082761
+     C     TAXI          ANDNE     '0'                                                     AR1082761
+      *                                                                                    AR1082761
+      ** Proceed with WHT calculation only for deal types IT, CD or TD                     AR1082761
+      *                                                                                    AR1082761
+     C     DTYP          IFEQ      'IT'                                                    AR1082761
+     C     DTYP          OREQ      'CD'                                                    AR1082761
+     C     DTYP          OREQ      'TD'                                                    AR1082761
+      *                                                                                    AR1082761
+     C                   MOVE      *ON           *IN82                                     AR1082761
+      *                                                                                    AR1082761
+      ** Set WHT rate                                                                      AR1082761
+      *                                                                                    AR1082761
+     C                   SELECT                                                            AR1082761
+     C     TAXI          WHENEQ    '1'                                                     AR1082761
+     C                   Z-ADD     ETXR1         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '2'                                                     AR1082761
+     C                   Z-ADD     ETXR2         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '3'                                                     AR1082761
+     C                   Z-ADD     ETXR3         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '4'                                                     AR1082761
+     C                   Z-ADD     ETXR4         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '5'                                                     AR1082761
+     C                   Z-ADD     ETXR5         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '6'                                                     AR1082761
+     C                   Z-ADD     ETXR6         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '7'                                                     AR1082761
+     C                   Z-ADD     ETXR7         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '8'                                                     AR1082761
+     C                   Z-ADD     ETXR8         WRATE                                     AR1082761
+     C     TAXI          WHENEQ    '9'                                                     AR1082761
+     C                   Z-ADD     ETXR9         WRATE                                     AR1082761
+     C                   ENDSL                                                             AR1082761
+      *                                                                                    AR1082761
+      ** If WHT rate is 0, set Tax amount to 0                                             AR1082761
+      *                                                                                    AR1082761
+     C     WRATE         IFEQ      0                                                       AR1082761
+     C                   Z-ADD     0             ##TAXA                                    AR1082761
+      *                                                                                    AR1082761
+      ** Otherwise, calculate WHT                                                          AR1082761
+      *                                                                                    AR1082761
+     C                   ELSE                                                              AR1082761
+      *                                                                                    AR1082761
+      ** If Deal Ccy = Base Ccy, calculate WHT rounded down                                AR1082761
+      ** and CDL081 is off                                                                 AR1082761
+      *                                                                                    AR1082761
+     C     CCY           IFEQ      BJCYCD                                                  AR1082761
+     C     CDL081        ANDEQ     'N'                                                     AR1082761
+      *                                                                                    AR1082761
+      ** Set work adjustment field according to decimal places.                            AR1082761
+      *                                                                                    AR1082761
+     C     A6NBDP        COMP      2                                    8889               AR1082761
+     C     *IN88         IFEQ      *OFF                                                    AR1082761
+     C     *IN89         ANDEQ     *OFF                                                    AR1082761
+     C                   SETON                                        8889                 AR1082761
+     C                   ENDIF                                                             AR1082761
+     C     *IN88         IFEQ      *OFF                                                    AR1082761
+     C     *IN89         ANDEQ     *OFF                                                    AR1082761
+     C                   Z-ADD     1             WADJ                                      AR1082761
+     C                   ENDIF                                                             AR1082761
+     C     *IN88         IFEQ      *ON                                                     AR1082761
+     C     *IN89         ANDEQ     *OFF                                                    AR1082761
+     C                   Z-ADD     10            WADJ                                      AR1082761
+     C                   ENDIF                                                             AR1082761
+     C     *IN88         IFEQ      *OFF                                                    AR1082761
+     C     *IN89         ANDEQ     *ON                                                     AR1082761
+     C                   Z-ADD     100           WADJ                                      AR1082761
+     C                   ENDIF                                                             AR1082761
+     C     *IN88         IFEQ      *ON                                                     AR1082761
+     C     *IN89         ANDEQ     *ON                                                     AR1082761
+     C                   Z-ADD     1000          WADJ                                      AR1082761
+     C                   ENDIF                                                             AR1082761
+      *                                                                                    AR1082761
+      ** Round down Interest Amount.                                                       AR1082761
+      *                                                                                    AR1082761
+     C                   Z-ADD     0             WTOTAL                                    AR1082761
+     C********** TOTI      DIV  WADJ      WTOTAL                                AR1082761 AR1082761A
+     C     ##INTA        DIV       WADJ          WTOTAL                                   AR1082761A
+     C                   MULT      WADJ          WTOTAL                                    AR1082761
+      *                                                                                    AR1082761
+      ** Calculate WHT                                                                     AR1082761
+      *                                                                                    AR1082761
+     C                   Z-ADD     0             ##TAXA                                    AR1082761
+     C     WTOTAL        MULT      WRATE         ##TAXA                                    AR1082761
+     C                   DIV       100           ##TAXA                                    AR1082761
+      *                                                                                    AR1082761
+      ** Round down WHT                                                                    AR1082761
+      *                                                                                    AR1082761
+     C                   DIV       WADJ          ##TAXA                                    AR1082761
+     C                   MULT      WADJ          ##TAXA                                    AR1082761
+      *                                                                                    AR1082761
+      ** If Deal Ccy NOT Base Ccy, calculate half-adjusted WHT                             AR1082761
+      *                                                                                    AR1082761
+     C                   ELSE                                                              AR1082761
+     C                   Z-ADD     0             ##TAXA                                    AR1082761
+     C*****TOTI          MULT      WRATE         ##TAXA                         AR1082761 AR1082761A
+     C     ##INTA        MULT      WRATE         ##TAXA                                   AR1082761A
+      *                                                                                    AR1082761
+      ** Check if tax amount is to be rounded down                                         AR1082761
+      *                                                                                    AR1082761
+     C     CCY           IFEQ      BJCYCD                                                  AR1082761
+     C     CDL081        ANDEQ     'Y'                                                     AR1082761
+     C     W#BSRD        ANDEQ     'Y'                                                     AR1082761
+     C     CCY           ORNE      BJCYCD                                                  AR1082761
+     C     CDL081        ANDEQ     'Y'                                                     AR1082761
+     C     W#NBRD        ANDEQ     'Y'                                                     AR1082761
+     C                   DIV       100           ##TAXA                                    AR1082761
+     C                   ELSE                                                              AR1082761
+     C                   DIV(H)    100           ##TAXA                                    AR1082761
+     C                   ENDIF                                                             AR1082761
+     C                   ENDIF                                                             AR1082761
+      *                                                                                    AR1082761
+     C                   ENDIF                                                             AR1082761
+      *                                                                                    AR1082761
+     C                   ENDIF                                                             AR1082761
+      *                                                                                    AR1082761
+     C                   ENDIF                                                             AR1082761
       *
       ** If Tax value at Account level is 'A', this means the EU Tax                          CER069
       ** indicator at Customer level should be used to determine whether                      CER069

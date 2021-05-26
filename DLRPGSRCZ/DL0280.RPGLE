@@ -2,7 +2,7 @@
      F*****************************************************************
 /*S*D ***RPGBASE*******************************************************                      BUG6293
 /*STD *  RPGBASEBND                                                   *                      BUG6293
-/*EXI *  TEXT('Midas DL Deals update phase 2')                        *
+/*EXI *  TEXT('Midas DL Deals update phase 2' )                       *
       *****************************************************************
       *                                                               *
       *  Midas - Dealing Module                                       *

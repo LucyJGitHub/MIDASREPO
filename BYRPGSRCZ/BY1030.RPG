@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 1997                      *
       *                                                               *
-      *  Last Amend No. MD049900           Date 02Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057833           Date 18May21               *
+      *  Prev Amend No. MD049900           Date 02Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR681415           Date 01Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057833 - BOE Returns Loans Extract Maintenance – validation*
+      *             error.                                            *
+      *             Do not validate and do not display the Loan Class *
+      *             field if CLE042 is OFF.                           *
       *  MD049900 - Include loan class in validating loan type/stype  *
       *             combination                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -310,6 +315,7 @@
       *
       **  Loan class must be entered
      C           L#LNCL    IFEQ *BLANKS
+     C           CLE042    ANDEQ'Y'                                                         MD057833
      C                     MOVE 'BYM0303' ULMSID
      C                     MOVE *ON       *IN49
      C                     EXSR #LSNMG
@@ -1009,6 +1015,22 @@
      C                     MOVE *OFF      *IN66                           LLN021
      C                     ENDIF                                          LLN021
       *
+      *                                                                 MD057833
+      ** Check if CLE042 is ON                                          MD057833
+      *                                                                 MD057833
+     C                     CALL 'AOSARDR0'                              MD057833
+     C                     PARM *BLANK    @RTCD                         MD057833
+     C                     PARM '*VERIFY' @OPTN                         MD057833
+     C                     PARM 'CLE042'  @SARD                         MD057833
+      *                                                                 MD057833
+     C           @RTCD     IFEQ *BLANK                                  MD057833
+     C                     MOVE 'Y'       CLE042  1                     MD057833
+     C                     MOVE *ON       *IN70                         MD057833
+     C                     ELSE                                         MD057833
+     C                     MOVE 'N'       CLE042                        MD057833
+     C                     MOVE *OFF      *IN70                         MD057833
+     C                     ENDIF                                        MD057833
+      *                                                                 MD057833
      C                     ENDSR
       /EJECT
       ********************************************************************

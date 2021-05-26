@@ -12126,7 +12126,7 @@
       *                                                                                    AR1082761
       ** Set work adjustment field according to decimal places.                            AR1082761
       *                                                                                    AR1082761
-     C     A6NBDP        COMP      2                                  8889                 AR1082761
+     C     A6NBDP        COMP      2                                    8889               AR1082761
      C     *IN88         IFEQ      *OFF                                                    AR1082761
      C     *IN89         ANDEQ     *OFF                                                    AR1082761
      C                   SETON                                        8889                 AR1082761

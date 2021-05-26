@@ -12,12 +12,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058040           Date 11May21               *
-      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *  Last Amend No. MD058182           Date 25May21               *
+      *  Prev Amend No. MD058040A          Date 25May21               *
+      *                 MD058040           Date 11May21               *
+      *                 MD057871           Date 30Apr21               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058182 - Missing BR event on LOAC despite calculator       *
+      *             returned complete rates. Write returned rates     *
+      *             to SDHSDRTD with Int Period Date <= Control Date. *
+      *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
+      *              the number of decimal places used in checking    *
+      *              whether the returned rate is changed or not.     *
+      *              Only check if rate is changed for CCR and SAVG.  *
       *  MD058040 - Calculator returned the same rates causing        *
       *             duplicate interest entries generated on HISTSHQ.  *
       *             Write to LELIBEPD only if interest period date    *
@@ -132,6 +141,8 @@
       ** Benchmark Adjustment
      D  ratesKnownInd                 1a
       ** Rates Known Indicator
+     D  controlDate                   5a                                                    MD058182
+      ** Event Control Date                                                                 MD058182
      D  returnCD                     20a
       ** Return Code
 
@@ -182,6 +193,8 @@
       ** Benchmark Adjustment
      D  ratesKnownInd                 1a
       ** Rates Known Indicator
+     D  controlDate                   5a                                                    MD058182
+      ** Event Control Date                                                                 MD058182
      D  returnCD                     20a
       ** Return Code
 
@@ -1019,15 +1032,16 @@
 
        begsr writeToARRDailyHistory;
 
-                   includeRecord = 'N';
+               includeRecord = 'N';
 
+               if result.list(i).intPDMidas <= %dec(controlDate:5:0);                     //MD058182
+                                                                                          //MD058182
                    if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
                    and  result.list(i).intPDMidas > transactDate;
                         includeRecord = 'Y';
 
                    elseif  (calcMethod = 'CCR' or calcMethod  = 'SAVG');
                         includeRecord = 'Y';
-
                    endif;
 
                    fileToCheck = SDHSDRTD;
@@ -1040,6 +1054,8 @@
                       endif;
                    endif;
 
+               endif;                                                                     //MD058182
+                                                                                          //MD058182
        endsr;
        //*************************************************************
        /EJECT
@@ -1112,23 +1128,25 @@
                                                                                           //MD058040
                    if sqlCOD <> NO_RECORD and fileToCheck = SDHSDRTD2;                    //MD058040
                       select;                                                             //MD058040
-                         when calcMethod = 'NCCR'                                         //MD058040
-                          and DailyHistDS.CDCMRT <>                                       //MD058040
-                               %dec(Result.List(i).dlyCompRate:11:7);                     //MD058040
-                            writeRecord = 'Y';                                            //MD058040
+       //**********      when calcMethod = 'NCCR'                               //MD058040 MD058040A
+       //**********       and DailyHistDS.CDCMRT <>                             //MD058040 MD058040A
+       //**********            %dec(Result.List(i).dlyCompRate:11:7);           //MD058040 MD058040A
+       //**********         writeRecord = 'Y';                                  //MD058040 MD058040A
                                                                                           //MD058040
                          when calcMethod = 'CCR'                                          //MD058040
-                          and DailyHistDS.CAVCRT <>                                       //MD058040
+       //**********       and DailyHistDS.CAVCRT <>                             //MD058040 MD058040A
+                          and %dec(DailyHistDS.CAVCRT:11:7) <>                           //MD058040A
                                %dec(Result.List(i).aveCompRate:11:7);                     //MD058040
                             writeRecord = 'Y';                                            //MD058040
                                                                                           //MD058040
-                         when calcMethod = 'SARR'                                         //MD058040
-                          and DailyHistDS.CRTEAP <>                                       //MD058040
-                               %dec(Result.List(i).rateApplied:11:7);                     //MD058040
-                            writeRecord = 'Y';                                            //MD058040
+       //**********      when calcMethod = 'SARR'                               //MD058040 MD058040A
+       //**********       and DailyHistDS.CRTEAP <>                             //MD058040 MD058040A
+       //**********            %dec(Result.List(i).rateApplied:11:7);           //MD058040 MD058040A
+       //**********         writeRecord = 'Y';                                  //MD058040 MD058040A
                                                                                           //MD058040
                          when calcMethod = 'SAVG'                                         //MD058040
-                          and DailyHistDS.CSMPAV<>                                        //MD058040
+       //**********       and DailyHistDS.CSMPAV<>                              //MD058040 MD058040A
+                          and %dec(DailyHistDS.CSMPAV:11:7) <>                           //MD058040A
                                %dec(Result.List(i).simpleAve:11:7);                       //MD058040
                             writeRecord = 'Y';                                            //MD058040
                       endsl;                                                              //MD058040

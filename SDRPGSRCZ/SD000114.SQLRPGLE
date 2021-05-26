@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058138           Date 18May21               *
-      *  Prev Amend No. MD058106           Date 18May21               *
+      *  Last Amend No. MD058182           Date 25May21               *
+      *  Prev Amend No. MD058040A          Date 25May21               *
+      *                 MD058138           Date 18May21               *
+      *                 MD058106           Date 18May21               *
       *                 MD058040           Date 11May21               *
       *                 MD057946           Date 27Apr21               *
       *                 CLE172             Date 01Oct20               *
@@ -26,6 +28,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058182 - Missing BR event on LOAC despite calculator       *
+      *             returned complete rates. Pass a Control Date to   *
+      *             ZAGETCALRT (used in writing records on SDHSDRTD). *
+      *  MD058040A - Duplicate records still found in HISTSHQ. Remove *
+      *              deletion of records on SDHSDRTD so that for NCCR *
+      *              and SARR, program will only extract the new rate *
+      *              not yet applied on Midas.                        *
       *  MD058138 - Interest accrual and settlement is less one day   *
       *             for loan with ADDI = L-Last. Set IntPerSDATE      *
       *             equal to transaction start date/last int pay date *
@@ -207,6 +216,7 @@
      D CurrTime        S              8A
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
+     D ControlDate     S              5A                                                    MD058182
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -252,34 +262,34 @@
      C                   EVAL      WZeroMDATFlag = 'N'
      C                   EXSR      SRDetINTDATE
 
-      ** If the backward-looking rate parameters are changed via                              CLE172
-      ** Rollover, this will be applied to the whole interest period.                         CLE172
-      ** Thus, existing daily rates records should be deleted.                                CLE172
-     C/exec SQL                                                                               CLE172
-     C+ select count(*) into :NoOfRecs                                                        CLE172
-     C+ from LEROBLPD                                                                         CLE172
-     C+ where ROLNRF = :TrTRAN                                                                CLE172
-     C/end-exec                                                                               CLE172
-                                                                                              CLE172
-     C                   IF        NoOfRecs <> 0                                              CLE172
-                                                                                              CLE172
-     C/exec SQL                                                                               CLE172
-     C+ delete from SDHSDRTD                                                                  CLE172
-     C+ where CMODID = :TrMODI                                                                CLE172
-     C+   and CTRNID = :TrTRAN                                                                CLE172
-     C+   and CINPSD = :IntPerSDATE                                                           CLE172
-     C+   and CINPED = :IntPerEDATE                                                           CLE172
-     C/end-exec                                                                               CLE172
-     C                   IF        SQLCODE <> NO_ERROR and                                    CLE172
-     C                             SQLCODE <> NO_RECORD                                       CLE172
-     C                   EVAL      DBFILE = 'SQLERROR'                                        CLE172
-     C                   EVAL      DBKEY  = 'SQL ERROR'                                       CLE172
-     C                   EVAL      DBASE  = 004                                               CLE172
-     C                   EXSR      *PSSR                                                      CLE172
-     C                   ENDIF                                                                CLE172
-                                                                                              CLE172
-     C                   ENDIF                                                                CLE172
-                                                                                              CLE172
+      ***If*the*backward-looking*rate*parameters*are*changed*via******              CLE172 MD058040A
+      ***Rollover,*this*will*be*applied*to*the*whole*interest*period.*              CLE172 MD058040A
+      ***Thus,*existing*daily*rates*records*should*be*deleted.********              CLE172 MD058040A
+     C***/exec SQL                                                                  CLE172 MD058040A
+     C***+ select count(*) into :NoOfRecs                                           CLE172 MD058040A
+     C***+ from LEROBLPD                                                            CLE172 MD058040A
+     C***+ where ROLNRF = :TrTRAN                                                   CLE172 MD058040A
+     C***/end-exec                                                                  CLE172 MD058040A
+      ****************************************************************              CLE172 MD058040A
+     C**********         IF        NoOfRecs <> 0                                    CLE172 MD058040A
+      ****************************************************************              CLE172 MD058040A
+     C***/exec SQL                                                                  CLE172 MD058040A
+     C***+ delete from SDHSDRTD                                                     CLE172 MD058040A
+     C***+ where CMODID = :TrMODI                                                   CLE172 MD058040A
+     C***+   and CTRNID = :TrTRAN                                                   CLE172 MD058040A
+     C***+   and CINPSD = :IntPerSDATE                                              CLE172 MD058040A
+     C***+   and CINPED = :IntPerEDATE                                              CLE172 MD058040A
+     C***/end-exec                                                                  CLE172 MD058040A
+     C**********         IF        SQLCODE <> NO_ERROR and                          CLE172 MD058040A
+     C**********                   SQLCODE <> NO_RECORD                             CLE172 MD058040A
+     C**********         EVAL      DBFILE = 'SQLERROR'                              CLE172 MD058040A
+     C**********         EVAL      DBKEY  = 'SQL ERROR'                             CLE172 MD058040A
+     C**********         EVAL      DBASE  = 004                                     CLE172 MD058040A
+     C**********         EXSR      *PSSR                                            CLE172 MD058040A
+     C**********         ENDIF                                                      CLE172 MD058040A
+      ****************************************************************              CLE172 MD058040A
+     C**********         ENDIF                                                      CLE172 MD058040A
+                                                                                    CLE172 MD058040A
       ** Check if transaction has reached the Rates Known window
      C                   EVAL      RatesKnown = 'N'
      C                   IF        WZeroMDATFlag = 'N'
@@ -749,6 +759,7 @@
      C                   PARM                    CalcTillDate
      C                   PARM                    BenchMarkAdj
      C                   PARM                    RatesKnownInd
+     C                   PARM                    ControlDate                                MD058182
      C                   PARM      *BLANKS       ReturnCode
 
       ** End program if there's a connection error
@@ -823,6 +834,12 @@
      C                   EVAL      EventCtrlDate = BKAPDT                                   MD058040
      C                   ENDIF                                                              MD058040
                                                                                             MD058040
+     C                   IF        BKANWD = '0' or BKANWD = '1'                             MD058182
+     C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD058182
+     C                   ENDIF                                                              MD058182
+     C                                                                                      MD058182
+     C                   MOVEL     EventCtrlDate ControlDate                                MD058182
+                                                                                            MD058182
       ** Get setting of system value ARR Calculation Frequency
      C                   EVAL      ARRCalcFreq = *BLANKS
      C                   EVAL      PSysVal01 = 'ARRCalculationFreq'

@@ -22,7 +22,8 @@
       *                                                               *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
-      *             to SDHSDRTD with Int Period Date <= Control Date. *
+      *             to SDHSDRTD and LELIBEPD with Int Period Date     *                             
+      *             less than or equal Control Date.                  *
       *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
       *              the number of decimal places used in checking    *
       *              whether the returned rate is changed or not.     *
@@ -1227,7 +1228,7 @@
        // insertExtractFile                                          *
        // =================                                          *
        //                                                            *
-       // Called by: writeToHistoryFile                               *
+       // Called by: writeToHistoryFile                              *
        //                                                            *
        // Calls: None                                                *
        //                                                            *
@@ -1354,6 +1355,8 @@
 
        begsr writeToExtractFile;
 
+               if result.list(i).intPDMidas <= %dec(controlDate:5:0);                     //MD058182
+                                                                                          //MD058182
        //**********fileToCheck = LELIBEPD;                                                //MD058040
        // Check if the interest period date and rate is already                           //MD058040
        // inserted in ARR History File from the previous COB run                          //MD058040
@@ -1370,6 +1373,8 @@
 
                    endif;
 
+               endif;                                                                     //MD058182
+                                                                                          //MD058182
        endsr;
 
        //*************************************************************

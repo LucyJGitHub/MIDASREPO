@@ -9988,6 +9988,19 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE141
      C                   MOVE      'Y'           CLE141                                       CLE141
      C                   ENDIF                                                                CLE141
+      **********                                                                   MD034449 MD057191
+      ***Access*Dealing*Details****************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C**********         CALL      'AODEALR1'                                      MD034449 MD057191
+     C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
+     C**********         PARM      '*FIRST '     @OPTN                             MD034449 MD057191
+     C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034449 MD057191
+      ***********                                                                  MD034449 MD057191
+      **Database*Error*************************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
+     C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
+     C**********         ENDIF                                                     MD034449 MD057191
       *                                                                                       CLE172
       ** Determine if CLE172 is installed                                                     CLE172
       *                                                                                       CLE172
@@ -10001,19 +10014,6 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE172
      C                   MOVE      'Y'           CLE172                                       CLE172
      C                   ENDIF                                                                CLE172
-      *                                                                                     MD034449
-      ** Access Dealing Details                                                             MD034449
-      *                                                                                     MD034449
-     C                   CALL      'AODEALR1'                                               MD034449
-     C                   PARM      *BLANKS       @RTCD                                      MD034449
-     C                   PARM      '*FIRST '     @OPTN                                      MD034449
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034449
-      *                                                                                     MD034449
-      * Database Error                                                                      MD034449
-      *                                                                                     MD034449
-     C     @RTCD         IFNE      *BLANK                                                   MD034449
-     C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
-     C**********         ENDIF                                                     MD034449 MD057191
       *
       **  Key list for LELOAML0
       *

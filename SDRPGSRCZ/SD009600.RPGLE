@@ -115,8 +115,8 @@
 
      C                   EVAL      GenError = 'Y'
      C                   ADD       1             Idx
-     C**********         MOVEL     'USR9833'     MsgIDXArr(Idx)                               CLE172
-     C                   MOVEL     'USS0920'     MsgIDXArr(Idx)                               CLE172
+     C**********         MOVEL     'USR9833'     MsgIDXArr(Idx)                               CSD103
+     C                   MOVEL     'USS0920'     MsgIDXArr(Idx)                               CSD103
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C*

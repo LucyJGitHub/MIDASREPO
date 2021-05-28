@@ -9,14 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1014698          Date 30Oct12              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*                      193885             Date 17Sep01              */
+/*       Prev Amend No. 193885             Date 17Sep01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CDE002             Date 23May00              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -39,10 +38,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*   AR1014698 - Reconciliation issues with Midas R4 system          */
-/*              (Child: AR1014700). Upgrade LBM001 as part of        */
-/*              CDL086.                                              */
-/*              Add /copy CDL086_048, CDL086_049 and CDL086_050      */
 /*   MD046248 - Finastra Rebranding                                  */
 /*   193885 - Trap message CPF7301 generated when trying to remove   */
 /*            a member from an empty HISTEAA file so that the        */
@@ -89,7 +84,6 @@
                           2001')
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SCCLRDLMPS                                           /*S01408*/
-/*/COPY OFCPYSRCZ,CDL086_049                                                           /*AR1014698*/
                                                                       /*S01408*/
 /*                                                                            */
 /* CLEAR DEALING DAILY FILES                                                  */
@@ -192,7 +186,6 @@
              CLRPFM     FILE(DLCDAUPD)                                /*CCM002*/
              CLRPFM     FILE(DLOLACPD)                                /*CSW005*/
              CLRPFM     FILE(DLOLCFPD)                                /*CSW005*/
-/*/COPY OFCPYSRCZ,CDL086_050                                                           /*AR1014698*/
              CLRPFM     FILE(DEFAAKPD)                                /*CDE002*/
                                                                       /*073175*/
 /*** Remove added enquiry members from interest history          ***/ /*073175*/
@@ -203,7 +196,6 @@
                                                                       /*S01408*/
              CLRPFM     FILE(DLETVTPD)                                /*CCM003*/
 /*/COPY WNCPYSRC,SCCLRDLMPE                                           /*S01408*/
-/*/COPY OFCPYSRCZ,CDL086_048                                                           /*AR1014698*/
                                                                       /*S01408*/
 /*                                                                            */
              SNDPGMMSG  TOMSGQ(MRUNQ) MSG('Dealing Daily Files Cleared')

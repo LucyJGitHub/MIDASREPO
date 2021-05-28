@@ -11,11 +11,11 @@
       *****************************************************************
       *                                                                                   LUC110
       */OMITEND                                                                           LUC110
-     O                                          110 'TOTAL OF ACCOUNT CREDITS'            LUC110
-     O               30      PSTACR             132 '   ,   ,   ,   , 0 CR'               LUC110
-     O               31      PSTACR             132 '  ,   ,   ,   , 0 . CR'              LUC110
-     O               32      PSTACR             132 ' ,   ,   ,   , 0 .  CR'              LUC110
-     O               33      PSTACR             132 '   ,   ,   , 0 .   CR'               LUC110
+     O                                          106 'TOTAL OF ACCOUNT CREDITS'            LUC110
+     O               30      PSTACR             132 '   ,   ,   ,   ,   , 0 CR'           LUC110
+     O               31      PSTACR             132 '  ,   ,   ,   ,   , 0 . CR'          LUC110
+     O               32      PSTACR             132 ' ,   ,   ,   ,   , 0 .  CR'          LUC110
+     O               33      PSTACR             132 '   ,   ,   ,   , 0 .   CR'           LUC110
       *                                                                                   LUC110
       *****************************************************************
       *  End of /COPY LUC110_065                                      *

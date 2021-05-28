@@ -11,13 +11,13 @@
       *****************************************************************
       *                                                                                   LUC110
       */OMITEND                                                                           LUC110
-     O              N73      A5ACCN             106                                       LUC110
-     O               73      A5NARR             106                                       LUC110
-     O                                          110 'C/B'                                 LUC110
-     O               30      TACOD              132 '   ,   ,   ,   , 0 CR'               LUC110
-     O               31      TACOD              132 '  ,   ,   ,   , 0 . CR'              LUC110
-     O               32      TACOD              132 ' ,   ,   ,   , 0 .  CR'              LUC110
-     O               33      TACOD              132 '   ,   ,   , 0 .   CR'               LUC110
+     O              N73      A5ACCN             102                                       LUC110
+     O               73      A5NARR             102                                       LUC110
+     O                                          106 'C/B'                                 LUC110
+     O               30      TACOD              132 '   ,   ,   ,   ,   , 0 CR'           LUC110
+     O               31      TACOD              132 '  ,   ,   ,   ,   , 0 . CR'          LUC110
+     O               32      TACOD              132 ' ,   ,   ,   ,   , 0 .  CR'          LUC110
+     O               33      TACOD              132 '   ,   ,   ,   , 0 .   CR'           LUC110
       *                                                                                   LUC110
       *****************************************************************
       *  End of /COPY GL0340OOP9                                      *

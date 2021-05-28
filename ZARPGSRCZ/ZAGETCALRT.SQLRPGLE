@@ -1227,7 +1227,7 @@
        // insertExtractFile                                          *
        // =================                                          *
        //                                                            *
-       // Called by: writeToHistoryFile                               *
+       // Called by: writeToHistoryFile                              *
        //                                                            *
        // Calls: None                                                *
        //                                                            *
@@ -1354,6 +1354,8 @@
 
        begsr writeToExtractFile;
 
+               if result.list(i).intPDMidas <= %dec(controlDate:5:0);                     //MD058182
+                                                                                          //MD058182
        //**********fileToCheck = LELIBEPD;                                                //MD058040
        // Check if the interest period date and rate is already                           //MD058040
        // inserted in ARR History File from the previous COB run                          //MD058040
@@ -1370,6 +1372,8 @@
 
                    endif;
 
+               endif;                                                                     //MD058182
+                                                                                          //MD058182
        endsr;
 
        //*************************************************************

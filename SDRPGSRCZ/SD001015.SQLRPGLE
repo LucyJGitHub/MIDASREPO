@@ -72,14 +72,7 @@
      C                   SETON                                            91
      C                   EXSR      *PSSR
      C                   ENDIF
-      *
-     C/EXEC SQL
-     C+ EXECUTE IMMEDIATE :thisSQL2
-     C/END-EXEC
-     C/EXEC SQL
-     C+ EXECUTE IMMEDIATE :thisSQL3
-     C/END-EXEC
-      *
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

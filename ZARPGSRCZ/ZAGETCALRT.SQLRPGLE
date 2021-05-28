@@ -22,7 +22,8 @@
       *                                                               *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
-      *             to SDHSDRTD with Int Period Date <= Control Date. *
+      *             to SDHSDRTD and LELIBEPD with Int Period Date     *
+      *             less than or equal Control Date.                  *
       *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
       *              the number of decimal places used in checking    *
       *              whether the returned rate is changed or not.     *

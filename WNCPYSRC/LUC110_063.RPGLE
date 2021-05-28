@@ -11,11 +11,11 @@
       *****************************************************************
       *                                                                                   LUC110
       */OMITEND                                                                           LUC110
-     O                                          110 'TOTAL OF ACCOUNT  DEBITS'            LUC110
-     O               30      PSTADR             132 '   ,   ,   ,   , 0 CR'               LUC110
-     O               31      PSTADR             132 '  ,   ,   ,   , 0 . CR'              LUC110
-     O               32      PSTADR             132 ' ,   ,   ,   , 0 .  CR'              LUC110
-     O               33      PSTADR             132 '   ,   ,   , 0 .   CR'               LUC110
+     O                                          106 'TOTAL OF ACCOUNT  DEBITS'            LUC110
+     O               30      PSTADR             132 '   ,   ,   ,   ,   , 0 CR'           LUC110
+     O               31      PSTADR             132 '  ,   ,   ,   ,   , 0 . CR'          LUC110
+     O               32      PSTADR             132 ' ,   ,   ,   ,   , 0 .  CR'          LUC110
+     O               33      PSTADR             132 '   ,   ,   ,   , 0 .   CR'           LUC110
       *                                                                                   LUC110
       *****************************************************************
       *  End of /COPY LUC110_063                                      *

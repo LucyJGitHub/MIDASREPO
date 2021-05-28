@@ -11,11 +11,11 @@
       *****************************************************************
       *                                                                                   LUC110
       */OMITEND                                                                           LUC110
-     O                                          110 'RETAIL ACCOUNT  DEBITS'              LUC110
-     O               30      TPSTDR             132 '   ,   ,   ,   , 0 CR'               LUC110
-     O               31      TPSTDR             132 '  ,   ,   ,   , 0 . CR'              LUC110
-     O               32      TPSTDR             132 ' ,   ,   ,   , 0 .  CR'              LUC110
-     O               33      TPSTDR             132 '   ,   ,   , 0 .   CR'               LUC110
+     O                                          106 'RETAIL ACCOUNT  DEBITS'              LUC110
+     O               30      TPSTDR             132 '   ,   ,   ,   ,   , 0 CR'           LUC110
+     O               31      TPSTDR             132 '  ,   ,   ,   ,   , 0 . CR'          LUC110
+     O               32      TPSTDR             132 ' ,   ,   ,   ,   , 0 .  CR'          LUC110
+     O               33      TPSTDR             132 '   ,   ,   ,   , 0 .   CR'           LUC110
       *                                                                                   LUC110
       *****************************************************************
       *  End of /COPY LUC110_070                                      *

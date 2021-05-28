@@ -12,11 +12,11 @@
       *                                                                                   LUC110
       */OMITEND                                                                           LUC110
      O                                           20 'RETAIL ACCOUNTS'                     LUC110
-     O                                          110 'O/B'                                 LUC110
-     O               30      REBAL              132 '   ,   ,   ,   , 0 CR'               LUC110
-     O               31      REBAL              132 '  ,   ,   ,   , 0 . CR'              LUC110
-     O               32      REBAL              132 ' ,   ,   ,   , 0 .  CR'              LUC110
-     O               33      REBAL              132 '   ,   ,   , 0 .   CR'               LUC110
+     O                                          106 'O/B'                                 LUC110
+     O               30      REBAL              132 '   ,   ,   ,   ,   , 0 CR'           LUC110
+     O               31      REBAL              132 '  ,   ,   ,   ,   , 0 . CR'          LUC110
+     O               32      REBAL              132 ' ,   ,   ,   ,   , 0 .  CR'          LUC110
+     O               33      REBAL              132 '   ,   ,   ,   , 0 .   CR'           LUC110
       *                                                                                   LUC110
       *****************************************************************
       *  End of /COPY LUC110_068                                      *

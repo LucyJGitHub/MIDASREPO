@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 250822             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058101           Date 24May21               *
+      *  Prev Amend No. 250822             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR979910           Date 07Jun12               *
       *                 260405             Date 04Apr20               *
       *                 MD055514           Date 06Apr20               *
@@ -146,6 +147,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058101 - Default error Fixed commission default. Amend to  *
+      *             default only when account type is Retail Account. *
       *  250822 - Commented-out /cpy GLAMADSMV1 as this is irrelevant *
       *           since it was not changed for HUT003.                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1728,6 +1731,7 @@
      C*****DDACTN        IFNE      'I'                                                        240916
      C     DDACTN        IFEQ      'I'                                                        240916
      C     TIx           ANDEQ     0                                                          238839
+     C     A5ACTY        ANDEQ     'R'                                                      MD058101
      C                   EXSR      DFT@O
      C                   END
       *

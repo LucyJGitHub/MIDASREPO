@@ -77,7 +77,7 @@
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
       *  MD057605 - IPRD on MHISTHP and MHISTHQ was showing as        *
-      *             incorrect. Renamed IPRD field.                    *
+      *             incorrect. Renamed IPRD field                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055687 - Live COB - LEC10A failed                          *
       *           - File control error occurs in LE0860 as amount is  *

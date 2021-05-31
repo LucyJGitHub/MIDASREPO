@@ -741,7 +741,9 @@
      C                   EVAL      WNumFLOR = BAFLOR                                          CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
-     C                   WHEN      ApiName = 'LERI'                                           CLE172
+     C**********         WHEN      ApiName = 'LERI'                                  CLE172 MD057871
+     C                   WHEN      ApiName = 'LERI' and                                     MD057871
+     C                             DDBLRT = 'Y'                                             MD057871
      C                   EVAL      WNumFLOR = CLFLOR                                          CLE172
                                                                                               CLE172
      C                   ENDSL                                                                CLE172

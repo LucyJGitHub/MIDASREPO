@@ -1,0 +1,480 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO UDC Obtain Layout/Printer Profile')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  AOLYPPR0 - Obtain Layout/Printer Profile                     *
+      *                                                               *
+      *  Function:  This program obtains the Layout and Printer       *
+      *             Profile for an Item of Correspondence             *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD054955 *REDUNDANTDate 16Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 190022             Date 15Jan99               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCG009             Date 01Jun95               *
+      *                 089149             Date 15Jun95               *
+      *                 083688             DATE 22FEB95               *
+      *                 S01522             DATE 01JAN95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  190022 - Icreased the length of OVRPRTF string to accomodate *
+      *           more options for the OVRPRTF command.               *
+      *  CCG009 - Private Banking UDC                                 *
+      *  089149 - Correct extraction of account code from full        *
+      *           account is - branch at end, not start.              *
+      *  083688 - Ignore blank key fields                             *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50   -    No Record Found on LF/CGLASCL8                     *
+      *  51   -    No Record Found on LF/CGLAYOL1                     *
+      *  52   -    No Record Found on LF/CGPRTPL1                     *
+      *  90   -    General Purpose Error Indicator                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *................................................................
+      *
+     FCGLASCL8IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGLAYOL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGPRTPL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGPTYPL1IF  E           K        DISK                               CCG009
+     F                                              KINFSR SRFILE         CCG009
+      /EJECT
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+     E                    SRCH        6  1
+      *
+      *  Array for constructing search array
+      *
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+      *
+     E/COPY WNCPYSRC,AOLYPPR0E1
+     I##PARM    E DSCGPGENPD
+      **  External DS for parameters based on PF/CGPGENPD
+     I************************************** 64  67 B2ACCD                089149
+     I**********                             61  64 B2ACCD                             089149 CGL029
+     I                                      453 462 B2ACCD                                    CGL029
+     I                                       74  93 ##KEY
+      *                                                                   S03220
+     ICPYR        DS                                                      S03220
+      **  Data Structure for Compilation - Copyright Insertion            S03220
+     I                                        1  80 ##CPY                 S03220
+      /COPY CGCPYSRC,SRERRI
+      *
+      * Define occurrance data structure for valid combinations
+      *
+     ICOMBIN      DS                         20
+     I                                        1   6 ##COMB
+      *
+     I              20                    C         ##MAXC
+     I/COPY WNCPYSRC,AOLYPPR0I1
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SRLASC - Access Layout Association file LF/CGLASCL8         *
+      *   SRINZ  - Initialise Fields on Each Invocation               *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   *PSSR  - Exception/Error Handling                           *
+      *   SRFILE - File Exception/Error Handling                      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           ##PARM
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Detail process
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRLASC  - Access Layout Association File       *
+      *                SRERR   - Error Handling                       *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reset Match Found Flag.
+     C                     MOVE 'N'       ##MTCH  1
+      *
+      **  Access the Layout Association file
+      *
+     C                     Z-ADD1         ##005N  50
+     C                     DO   ##MAXC
+      *
+      * Search combination
+      *
+     C           ##005N    OCUR COMBIN
+     C                     MOVEA##COMB    SRCH
+      *
+      ** If combination blank exit
+     C           ##COMB    IFEQ *BLANKS                    IF
+     C                     LEAVE
+     C                     END                             FI
+      *
+      * Blank out key fields
+      *
+     C                     MOVE *BLANKS   ##PTYP
+     C                     MOVE *BLANKS   ##PSTP
+     C                     MOVE *BLANKS   ##LGID
+     C                     MOVE *BLANKS   ##BRCA
+     C                     MOVE *BLANKS   ##ACCD
+     C                     MOVE *BLANKS   ##CTYP
+     C                     MOVE *BLANKS   ##CORR
+     C                     MOVE *BLANKS   ##MACT
+      *
+      * Print item type and sub-type are mandatory
+      *
+     C                     MOVE B2PTYP    ##PTYP
+     C                     MOVE B2PSTP    ##PSTP
+      *
+      * Fill key as appropiate
+      *
+     C           SRCH,1    IFEQ 'Y'                        IF
+     C                     MOVE B2LGID    ##LGID
+     C                     END                             FI
+     C           SRCH,2    IFEQ 'Y'                        IF
+     C                     MOVE B2BRCA    ##BRCA
+     C                     END                             FI
+     C           SRCH,3    IFEQ 'Y'                        IF
+     C                     MOVE B2CTYP    ##CTYP
+     C                     END                             FI
+     C           SRCH,4    IFEQ 'Y'                        IF
+     C                     MOVE B2DCOR    ##CORR
+     C                     END                             FI
+     C           SRCH,5    IFEQ 'Y'                        IF
+     C           B2MACT    IFNE *BLANKS                                   083688
+     C                     MOVE B2MACT    ##MACT
+     C                     ELSE                                           083688
+     C                     ADD  1         ##005N                          083688
+     C                     ITER                                           083688
+     C                     ENDIF                                          083688
+     C                     END                             FI
+     C           SRCH,6    IFEQ 'Y'                        IF
+     C           B2ACCD    IFNE *BLANKS                                   083688
+     C                     MOVE B2ACCD    ##ACCD
+     C                     ELSE                                           083688
+     C                     ADD  1         ##005N                          083688
+     C                     ITER                                           083688
+     C                     ENDIF                                          083688
+     C                     END                             FI
+      *
+      **  Access the Layout Association file
+     C                     EXSR SRLASC
+      *
+      ** If match found exit
+     C           ##MTCH    IFEQ 'Y'                        IF
+     C                     LEAVE
+     C                     END                             FI
+      *
+     C                     ADD  1         ##005N
+     C                     ENDDO
+      *
+      **  If no record found, process database error.
+     C           ##MTCH    IFEQ 'N'
+     C                     MOVEL'CGLASCL8'W0FILE
+     C                     MOVEL##KEY     W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'CGD1665' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If no Printer Profile has been obtained yet ...
+     C           B2PRTF    IFEQ *BLANKS
+      *
+      **  Access the Layout Reference file to obtain Printer Profile
+     C           B2LAYO    CHAINCGLAYOL1             51
+      *
+      **  If no record found, process database error.
+     C           *IN51     IFEQ *ON
+     C                     MOVEL'CGLAYOL1'W0FILE
+     C                     MOVELB2LAYO    W0KEY            ***************
+     C                     Z-ADD02        W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Set up Printer Profile
+     C                     MOVE LYPRTF    B2PRTF
+     C                     ENDIF
+     C/COPY WNCPYSRC,AOLYPPR0C1
+      *
+      **  Access the Printer Profile Reference File to obtain the
+      **  associated details.
+     C           B2PRTF    CHAINCGPRTPL1             52
+      *
+      **  If no record found, process database error.
+     C           *IN52     IFEQ *ON
+     C                     MOVEL'CGPRTPL1'W0FILE
+     C                     MOVELB2PRTF    W0KEY            ***************
+     C                     Z-ADD02        W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Set up Printer Profile details
+     C                     MOVE FPPRTN    B2PRTN
+     C                     MOVE FPAPF     B2APF
+     C                     MOVE FPAPFS    B2APFS
+     C                     MOVE FPOVRP    B2OVRP
+     C                     MOVE FPOVR2    B2OVR2                          190022
+     C                     MOVE FPOVR3    B2OVR3                          190022
+     C                     MOVE FPOVR4    B2OVR4                          190022
+     C                     MOVE FPSPLF    B2SPLF
+      *                                                                   CCG009
+      **  Access the Print Item Type                                      CCG009
+     C           PTYPK     KLIST                                          CCG009
+     C                     KFLD           B2PTYP                          CCG009
+     C                     KFLD           B2PSTP                          CCG009
+     C                     MOVELB2PTYP    ##PTST 20                       CCG009
+     C                     MOVE B2PSTP    ##PTST                          CCG009
+     C           PTYPK     CHAINCGPTYPL1             52                   CCG009
+      *                                                                   CCG009
+      **  If no record found, process database error.                     CCG009
+     C           *IN52     IFEQ *ON                                       CCG009
+     C                     MOVEL'CGPTYPL1'W0FILE                          CCG009
+     C                     MOVEL##PTST    W0KEY            ***************CCG009
+     C                     Z-ADD03        W0ERNB           * DB ERROR 03 *CCG009
+     C                     MOVEL'MEM5004' W0MSGD           ***************CCG009
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG009
+     C                     EXSR SRERR                                     CCG009
+     C                     ENDIF                                          CCG009
+      *                                                                   CCG009
+      **  If part of group, set up Group Transaction Ref. & Seq.          CCG009
+     C           ITGPHD    IFNE *BLANK                                    CCG009
+     C                     MOVELB2MTRN    B2GPTR                          CCG009
+     C                     MOVE B2MODI    B2GPTR                          CCG009
+     C                     MOVE ITGPSQ    B2GPSQ                          CCG009
+     C                     END                                            CCG009
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRLASC                                         *
+      * Function    :  Access Layout Association file LF/CGLASCL8     *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRLASC    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRLASC'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access the Layout Association File
+     C           LASCL8    CHAINCGLASCL8             50
+      *
+      **  If a record found, set on Match Flag and set up details
+     C           *IN50     IFEQ *OFF
+     C                     MOVE 'Y'       ##MTCH
+      *
+      **  Set up Layout.
+     C                     MOVE LALAYO    B2LAYO
+      *
+      **  Set up Printer Profile if Overriding Printer Profile present
+     C           LAOPRT    IFNE *BLANKS
+     C                     MOVE LAOPRT    B2PRTF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXLASC    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise fields ........
+     C                     MOVE *BLANKS   B2LAYO
+     C                     MOVE *BLANKS   B2PRTF
+     C                     MOVE *BLANKS   B2PRTN
+     C                     MOVE *BLANKS   B2APF
+     C                     MOVE *BLANKS   B2APFS
+     C                     MOVE *BLANKS   B2OVRP
+     C                     MOVE *BLANKS   B2OVR2                          190022
+     C                     MOVE *BLANKS   B2OVR3                          190022
+     C                     MOVE *BLANKS   B2OVR4                          190022
+     C                     MOVE *BLANKS   B2SPLF
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Layout Association Key List (LF/CGLASCL8)
+     C           LASCL8    KLIST
+     C                     KFLD           ##PTYP
+     C                     KFLD           ##PSTP
+     C                     KFLD           ##LGID
+     C                     KFLD           ##BRCA
+     C                     KFLD           ##ACCD
+     C                     KFLD           ##CTYP
+     C                     KFLD           ##CORR
+     C                     KFLD           ##MACT
+      *
+      **  Define work fields
+     C           *LIKE     DEFN LAPTYP    ##PTYP
+     C           *LIKE     DEFN LAPSTP    ##PSTP
+     C           *LIKE     DEFN LALGID    ##LGID
+     C           *LIKE     DEFN LABRCA    ##BRCA
+     C           *LIKE     DEFN LAACCD    ##ACCD
+     C           *LIKE     DEFN LACTYP    ##CTYP
+     C           *LIKE     DEFN LACORR    ##CORR
+     C           *LIKE     DEFN LAMACT    ##MACT
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##ACT  80
+      *
+      *  Load search occurrance data structure
+      *
+      /COPY CGCPYSRC,CGLAYSRCH
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

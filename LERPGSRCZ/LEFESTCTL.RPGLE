@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CLE148             Date 23Jul12               *
@@ -58,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -899,6 +902,8 @@ c    C                   EXSR      DftSettmts                                   
  
       * Record status
      C                   PARM                    S#STAT           10
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
  
      C                   ENDSR
       *****************************************************************
@@ -1290,6 +1295,8 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    F5IUSR           10
      C                   PARM                    F5XUSR           10
      C                   PARM                    F5AUSR           10
+     C                   PARM                    FESTFilFmt                                 MD054354
+     C                   PARM                    P_SIGN                                     MD054354
       * Outputs
       *
       * Status                                                                                CAP084
@@ -1687,6 +1694,8 @@ c    C                   EXSR      DftSettmts                                   
  
       * Record status
      C                   PARM                    S#STAT           10
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
  
@@ -1734,6 +1743,7 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    InPaySttmt                                   CAP084
      C                   PARM                    InRecSttmt                                   CAP084
      C                   PARM                    InFraSttmt                                   CAP084
+     C                   PARM                    P_SIGN                                     MD054354
       ** Ultimate calling Program/Module/Procedure
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod

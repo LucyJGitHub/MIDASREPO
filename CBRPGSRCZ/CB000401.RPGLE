@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038993 *CREATE   Date 21Nov16               *
+      *  Last Amend No. MD055125           Date 20Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD038993 *CREATE   Date 21Nov16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055125 - Review the bank’s Auto-COB application            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038993 - Missing code functionality on CCB014.             *
       *             Define 10 jobs. COB will not run if one of the    *
@@ -46,7 +48,8 @@
       *
       ** Array containing Copyright statement
       *
-     D TEXT            S             60    DIM(5) CTDATA PERRCD(1)
+     D***TEXT***          S             60    DIM(5) CTDATA PERRCD(1)                       MD055125
+     D TEXT            S             60    DIM(6) CTDATA PERRCD(1)                          MD055125
       *
       ** Array containing Status statement
       *
@@ -118,14 +121,14 @@
      D WIDX4           S              3  0
      D PFRST           S              1
      D PJOBA           S              1
- 
+
      D                 DS
      D ACTJOB          C                   CONST('CBC000109')
       *
       ** File Job Structure
       *
      D DSJOBF        E DS                  EXTNAME(CBJOBLPD)
- 
+
      D DSJOBP          DS
      D  PJOBN                        10
      D  PJOBT                         1
@@ -193,7 +196,7 @@
       *
      D DSJOBA1         DS
      D JOBSTAT                        1    DIM(10)
- 
+
       /EJECT
       *****************************************************************
       *                   Index to subroutines                        *
@@ -227,6 +230,7 @@
       ** Control actual status of scheduling
       *
      C                   EXSR      #LINSC
+     C                   EXSR      #CHKST                                                   MD055125
       *
       ** Active job checking
       *
@@ -303,6 +307,7 @@
       ** Control actual status of scheduling
       *
      C                   EXSR      #LINSC
+     C                   EXSR      #CHKST                                                   MD055125
       *
      C                   ENDDO
       /EJECT
@@ -516,6 +521,39 @@
       *
      C                   ENDSR
       /EJECT
+      *****************************************************************                     MD055125
+      *                                                               *                     MD055125
+      *  #CHKST  -  Check is AUTCOB status is active                  *                     MD055125
+      *                                                               *                     MD055125
+      *****************************************************************                     MD055125
+      *                                                                                     MD055125
+     C     #CHKST        BEGSR                                                              MD055125
+      *                                                                                     MD055125
+     C                   IN        DLYCOB                                                   MD055125
+     C                   MOVE      'N'           COBACT            1                        MD055125
+     C                   MOVE      *BLANKS       WKSTS2           10                        MD055125
+     C                   MOVE      *BLANKS       WKSTSQ2          10                        MD055125
+      *                                                                                     MD055125
+      ** Check AUTOCOB status                                                               MD055125
+      *                                                                                     MD055125
+     C                   CALL      'CBC0002'                            90                  MD055125
+     C                   PARM                    COBNAM                                     MD055125
+     C                   PARM                    COBUSR                                     MD055125
+     C                   PARM                    COBNBR                                     MD055125
+     C                   PARM                    WKSTS2                                     MD055125
+     C                   PARM                    WKSTSQ2                                    MD055125
+      *                                                                                     MD055125
+      ** AUTOCOB job in active status                                                       MD055125
+      *                                                                                     MD055125
+     C     WKSTS2        IFEQ      '*ACTIVE'                                                MD055125
+     C     WKSTSQ2       ANDEQ     'RLS'                                                    MD055125
+     C                   MOVE      'Y'           COBACT                                     MD055125
+     C                   MOVEA     TEXT(6)       #0SCS1                                     MD055125
+     C                   MOVE      *BLANKS       #0SCS2                                     MD055125
+     C                   ENDIF                                                              MD055125
+      *                                                                                     MD055125
+     C                   ENDSR                                                              MD055125
+      /EJECT                                                                                MD055125
       *****************************************************************
       *                                                               *
       *  #ACJOB  -  Active job checking                               *
@@ -532,10 +570,10 @@
      C                   DO        10            WRRN
       *
      C     WRRN          CHAIN     CBJOBLPD                           95
- 
+
      C                   IF        %FOUND(CBJOBLPD)
      C                   EVAL      %SUBST(DSJOBS:WIDX:12) = DSJOBF
- 
+
      C     CBJOBA        IFEQ      'R'
      C                   EVAL      %SUBST(DSJOBA:WIDX2:10) = 'Running'
      C                   ELSE
@@ -578,6 +616,18 @@
       ** Validate Only if not F10 Stop Scheduling
       *
      C     *INKJ         IFNE      '1'
+      *                                                                                     MD055125
+      ** Validate if AUTOCOB is currently running                                           MD055125
+      *                                                                                     MD055125
+     C                   EXSR      #CHKST                                                   MD055125
+     C     COBACT        IFEQ      'Y'                                                      MD055125
+     C                   MOVEL     'SCH0010'     ZAMSID                                     MD055125
+     C                   EXSR      ZASNMS                                                   MD055125
+     C                   MOVE      '1'           *IN12                                      MD055125
+     C                   MOVE      '1'           *IN13                                      MD055125
+     C                   MOVE      '1'           *IN14                                      MD055125
+     C                   MOVE      '1'           @ERR                                       MD055125
+     C                   ENDIF                                                              MD055125
       *
       ** Validate Automatic Scheduling field
       *
@@ -745,15 +795,15 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   EVAL      WIDX = 1
      C                   EVAL      WIDX3 = 11
      C                   EVAL      WIDX4 = 12
      C                   EVAL      DSJINT = '0000000000'
      C                   EVAL      DSJINS = '0000000000'
- 
+
      C                   DO        10            WRRN
- 
+
      C                   IF        %SUBST(DSJOBS:WIDX:10) <> *BLANKS
       *
       ** Validate Job Type, valid values are B or I
@@ -780,13 +830,13 @@
       *
      C                   MOVEA     DSJINT        *IN(41)
      C                   MOVEA     DSJINS        *IN(51)
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX3 = WIDX3 + 12
      C                   EVAL      WIDX4 = WIDX4 + 12
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -817,13 +867,13 @@
      C                   DO        10            WRRN
       *
      C     WRRN          CHAIN     CBJOBLPD                           95
- 
+
      C                   IF        %FOUND(CBJOBLPD)
      C                   EVAL      DSJOBF = %SUBST(DSJOBS:WIDX:12)
      C                   EVAL      CBJOBA = JOBSTAT(WRRN)
      C                   UPDATE    CBJOBLD0
      C                   ENDIF
- 
+
      C                   EVAL      WIDX = WIDX + 12
      C                   ENDDO
       *
@@ -894,7 +944,7 @@
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX3 = WIDX3 + 12
      C                   EVAL      WIDX4 = WIDX4 + 12
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -921,7 +971,7 @@
      C                   EVAL      DSJOBP = %SUBST(DSJOBS:WIDX:12)
      C                   EXSR      #JOBST
      C                   EVAL      JOBSTAT(WRRN) = PJOBA
- 
+
      C     PJOBA         IFEQ      'R'
      C                   EVAL      %SUBST(DSJOBA:WIDX2:10) = 'Running'
      C                   ELSE
@@ -929,7 +979,7 @@
      C                   EVAL      %SUBST(DSJOBA:WIDX2:10) = 'Finished'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX2 = WIDX2 + 10
       *
@@ -1028,3 +1078,4 @@ Actual status is OK
 Actual status incorrect. Restart or Stop the scheduling
 COB not scheduled
 Scheduled date incompatible with system date
+AUTOCOB is currently running

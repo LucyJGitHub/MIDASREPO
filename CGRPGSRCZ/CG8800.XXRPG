@@ -1,0 +1,1080 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Display non-repeating data elements.')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG8800  - - - - Display non-repeating data elements.         *
+     F*                                                               *
+     F*  Function:   - - This program displays a screen which         *
+     F*                   lists non-repeating data elements.          *
+     F*                  One element may be selected and its          *
+     F*                   details returned to the caller.             *
+     F*                  Alternatively, if a data element is          *
+     F*                   passed to this program, it will             *
+     F*                   check that the element is valid at          *
+     F*                   the current level without display.          *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD054955 *REDUNDANTDate 16Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 087025             Date 03May95               *
+      *                 083679             Date 15Mar95               *
+     F*                 083679             DATE 22FEB95               *
+     F*                 083795             DATE 15FEB95               *
+     F*                 S01522             DATE 15FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  087025 - Ensure correct instance of RDE is returned in       *
+     F*           verify mode if incoming data contains path info     *
+     F*  083679 - Read by Repeating path absolute sequence            *
+     F*  083679 - Recompiled for CGWPRDE2 key change                  *
+     F*  083795 - Correct call to SRFILL subroutine                   *
+     F*  S01522 - User defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  03 -- F3 (Exit).                                             *
+     F*  12 -- F12 (Previous).                                        *
+     F*  25 -- Display SFLEND in message subfile.                     *
+     F*  29 -- Valid command key pressed.                             *
+     F*  80 -- Clear subfile.                                         *
+     F*  81 -- Display subfile control record.                        *
+     F*  82 -- Display subfile record.                                *
+     F*  83 -- EOF reached (hide plus sign; prevent roll up).         *
+     F*  90 -- Error detected.                                        *
+     F*  91 -- EOF detected in CGWPRDE1.                              *
+     F*  92 -- EOF detected in CGW1RDE2.                              *
+     F*  93 -- EOF detected in #SFLRCD.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SREXFM -- Display screen.                                    *
+     F*  SRSEL  -- Search for a marked subfile line.                  *
+     F*  SRPATH -- Load the path names.                               *
+     F*  SRIZSF -- Initialise subfile.                                *
+     F*  SRLDSF -- Load subfile.                                      *
+     F*  SRMDTA -- Move data to the subfile.                          *
+     F*  SRALIN -- Move data to a subfile record.                     *
+     F*  SRTEXT -- Retrieve command keys text.                        *
+     F*  SRSNMS -- Send a message to the program's queue.             *
+     F*  SREXPG -- Program exit processing.                           *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG8800FPG
+     F*===================================================================
+     FCG8800DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE #SFLRCD
+     F                                              KINFDS INFODS
+     F                                              KINFSR SRFILE
+     F* Window display file
+     F*-------------------------------------------------------------------
+     F*CGWPRDE2IF**E***********K        DISK         KINFSR SRFILE     UC
+     FCGW1RDE2IF  E           K        DISK         KINFSR SRFILE     UC
+     F* Non-repeating data elements
+     F*-------------------------------------------------------------------
+     FCGWPRDE1IF  E           K        DISK         KINFSR SRFILE     UC
+     F* Repeating data elements links
+     F*-------------------------------------------------------------------
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    PTH       100  6               Path names.
+     E                    PDS       100 30               Path descriptions
+     E                    RDE      1000 10               Data elements.
+     E                    RDD      1000100               Element data.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG8800EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CG8800IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IRUNDAT    E DSRUNDAT
+     I*
+     I* RUNDAT data area
+     I*
+     I*...................................................................
+     IINFODS    E DSY2I#DSP
+     I*
+     I* Display file information data structure
+     I*
+     I*...................................................................
+     IBIGLDA    E DSCGLDA
+     I*
+     I* Local data area
+     I*...................................................................
+     I#1LINE      DS
+     I*
+     I* Displayed line characters:
+     I                                        1  20 ##CTXT
+     I                                       22  51 ##PTXT
+     I                                        1  10 ##ELEM
+     I                                       12  41 ##ETXT
+     I*...................................................................
+     I* Returned data:
+     I*
+     IP0DATA      DS                            100
+     I                                        1   6 P0UPPR
+     I                                        7  12 P0LOWR
+     I                                       13  22 P0RDE
+     I                                       23  28 P0RPTH
+     I                                       29  34 P0NPTH
+     I                                       35  40 P0ETYP
+     I                                       41  50 P0FOPT
+     I                                       51  75 P0ETXT
+     I                                       76  800P0LEN
+      *                                                                   087025
+      ** Used to check path details                                       087025
+     IS0DATA      DS                            100                       087025
+     I                                       13  22 S0RDE                 087025
+     I                                       23  28 S0RPTH                087025
+     I                                       29  34 S0NPTH                087025
+     I*...................................................................
+     I* Job date and time:
+     I*
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0PTH1  6
+     C                     PARM           P0PTH2  6
+     C                     PARM           P0DATA
+     C*
+     C* Save the RDE:
+     C                     MOVE P0RDE     ##RDE
+      *                                                                   087025
+      ** Save the paths too                                               087025
+     C                     MOVE P0RPTH    ##RPTH  6                       087025
+     C                     MOVE P0NPTH    ##NPTH  6                       087025
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* If a new path, rebuild the list:
+     C*
+     C           P0PTH1    IFNE *BLANKS                                   083795
+     C           *LIKE     DEFN P0PTH1    ##PTHS                          083795
+     C                     MOVELP0PTH1    ##PTHS                          083795
+     C                     ELSE                                           083795
+     C                     MOVELP0PTH2    ##PTHS                          083795
+     C                     ENDIF                                          083795
+      *                                                                   083795
+     C***********P0PATH    IFNE @@PATH
+     C           ##PTHS    IFNE @@PATH                                    083795
+     C                     EXSR SRFILL
+     C***********          MOVE P0PATH    @@PATH                          083795
+     C                     MOVEL##PTHS    @@PATH                          083795
+     C                     ENDIF
+     C*
+     C* If an RDE, validate it; if not, display the list:
+     C*
+     C           ##RDE     CASNE*BLANKS   SRVAL
+     C                     CAS            SREXFM
+     C                     ENDCS
+     C*
+     C* Exit:
+     C                     EXSR SREXPG
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRVAL validates an entered report data element.    **
+     C********************************************************************
+     C           SRVAL     BEGSR                           * S R V A L   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRVAL '  @STK,Q
+      *                                                                   087025
+      ** Ensure correct instance of RDE is accessed                       087025
+     C                     MOVEL'N'       S0PATH  1                       087025
+     C                     Z-ADD1         #E      50                      087025
+      *                                                                   087025
+      ** Lookup each instance of the RDE. Continue until either           087025
+      ** the paths are OK, or the element cannot be found.                087025
+     C           S0PATH    DOUEQ'Y'                                       087025
+     C           *IN93     OREQ *OFF                                      087025
+     C           #E        ORGT #T                                        087025
+      *                                                                   087025
+     C           ##RDE     LOKUPRDE,#E                   93               087025
+     C           *IN93     IFEQ *ON                                       087025
+      *                                                                   087025
+     C                     MOVELRDD,#E    S0DATA                          087025
+      *                                                                   087025
+      ** If path details not passed, end loop  when the first             087025
+      ** RDE of this name is found                                        087025
+     C           ##RPTH    IFEQ *BLANKS                                   087025
+     C           ##NPTH    ANDEQ*BLANKS                                   087025
+     C                     MOVEL'Y'       S0PATH                          087025
+      *                                                                   087025
+      ** otherwise, keep going until paths are correct.                   087025
+     C                     ELSE                                           087025
+     C           ##RPTH    IFEQ S0RPTH                                    087025
+     C           ##NPTH    ANDEQS0NPTH                                    087025
+     C                     MOVEL'Y'       S0PATH                          087025
+     C                     ELSE                                           087025
+     C                     ADD  1         #E                              087025
+     C                     ENDIF                                          087025
+     C                     ENDIF                                          087025
+      *                                                                   087025
+     C                     ENDIF                                          087025
+      *                                                                   087025
+     C                     ENDDO                                          087025
+      *                                                                   087025
+     C           S0PATH    IFEQ 'Y'                                       087025
+     C                     MOVE RDD,#E    P0DATA                          087025
+     C                     ELSE                                           087025
+     C                     MOVE *BLANKS   P0RDE                           087025
+     C                     ENDIF                                          087025
+     C***********                                                         087025
+     C**Seek*the*RDE. If found, return the type; otherwise, clear the RDE:087025
+     C***********                                                         087025
+     C***********          Z-ADD1         #E      50                      087025
+     C***********##RDE     LOKUPRDE,#E                   93               087025
+     C************IN93     IFEQ *ON                                       087025
+     C***********          MOVE RDD,#E    P0DATA                          087025
+     C***********          ELSE                                           087025
+     C***********          MOVE *BLANKS   P0RDE                           087025
+     C***********          ENDIF                                          087025
+     C*
+     C           EXVAL     TAG                             <<<=== EXVAL
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXFM displays the screen.                        **
+     C********************************************************************
+     C           SREXFM    BEGSR                           * S R E X F M *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXFM'  @STK,Q
+     C*
+     C* Load the subfile:
+     C                     EXSR SRIZSF
+     C*
+     C* Do until F3 (exit), F12 (previous) or until a selection is made:
+     C*
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+     C           #MARKS    OREQ 1
+     C*
+     C* Update the screen time:
+     C*
+     C                     TIME           ##TME
+     C*
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT
+     C                     EXFMT#SFLCTL
+     C*
+     C* Update the job time:
+     C*
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C* Clear messages from the program's message queue:
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Reset "first message only" flag:
+     C*
+     C                     MOVE 'Y'       ZAFSMS  1
+     C*
+     C* If not F3 (exit) or F12 (previous),
+     C*  test for selection:
+     C*
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C                     EXSR SRSEL
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXEXFM    TAG                             <<<=== EXEXFM
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSEL handles record selection.                    **
+     C********************************************************************
+     C           SRSEL     BEGSR                           * S R S E L   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSEL '  @STK,Q
+     C*
+     C* Clear RRN and count:
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD*ZERO     #MARKS
+     C*
+     C* Read the subfile, looking for marked lines. If a marked line
+     C*  is found, move values to the entry parameter list:
+     C*
+     C           RRN       DOUEQ##RRMX
+     C           #MARKS    ORGE 2
+     C           *IN93     OREQ *ON
+     C                     ADD  1         RRN
+     C           RRN       CHAIN#SFLRCD              93
+     C           *IN93     IFEQ *OFF
+     C           #1SEL     ANDNE*BLANK
+     C                     ADD  1         #MARKS
+     C                     MOVEL#RGRPS    P0UPPR
+     C                     MOVEL#AGRPS    P0LOWR
+     C                     MOVEL#ARDE     P0RDE
+     C                     MOVEL#RRPTH    P0RPTH
+     C                     MOVEL#RNPTH    P0NPTH
+     C                     MOVEL#DELYP    P0ETYP
+     C                     MOVEL#RFOPT    P0FOPT
+     C                     MOVEL#DETXT    P0ETXT
+     C                     Z-ADD#DMAXL    P0LEN
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* If more than one selected, tell the user:
+     C*
+     C           #MARKS    IFGT 1
+     C                     MOVE 'CGD1285' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C* Reset RRN:
+     C                     Z-ADD##RRMX    RRN
+     C*
+     C           EXSEL     TAG                             <<<=== EXSEL
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRPATH loads the path stack and descriptions.      **
+     C********************************************************************
+     C           SRPATH    BEGSR                           * S R P A T H *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+     C*
+     C* Select the path:
+     C                     MOVE *BLANKS   P0PATH  6
+     C           P0PTH1    IFNE *BLANKS                    Repeating path
+     C*
+     C* Seek higher path:
+     C*
+     C           P0PTH1    CHAINCGWPRDE1             96
+     C           *IN96     IFEQ *OFF
+     C                     MOVEL#FPATH    P0PATH
+     C                     ENDIF
+     C                     ELSE                            Last repeating
+     C                     MOVELP0PTH2    P0PATH
+     C                     ENDIF
+     C*
+     C* Clear index:
+     C                     Z-ADD*ZERO     #P      30
+     C*
+     C* Default top path:
+     C                     MOVELP0PATH    #FPATH
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Load the path array until end of file:
+     C*
+     C           *IN91     DOUEQ*ON
+     C           P0PATH    CHAINCGWPRDE1             91
+     C           *IN91     IFEQ *OFF
+     C*
+     C* Move path name and description:
+     C*
+     C                     ADD  1         #P
+     C                     MOVEL#LPATH    PTH,#P
+     C                     MOVEL#GSDES    PDS,#P
+     C*
+     C* Use association description if not blank:
+     C*
+     C           #GADES    IFNE *BLANKS
+     C                     MOVEL#GADES    PDS,#P
+     C                     ENDIF
+     C*
+     C* Move higher path to "Current path" value:
+     C*
+     C                     MOVEL#FPATH    P0PATH
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* Values for top set:
+     C*
+     C                     ADD  1         #P
+     C                     MOVEL#FPATH    PTH,#P
+     C                     MOVEL#@LYDE    PDS,#P
+     C*
+     C           EXPATH    TAG                             <<<=== EXPATH
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRFILL loads the element list and data arrays.     **
+     C********************************************************************
+     C           SRFILL    BEGSR                           * S R F I L L *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRFILL'  @STK,Q
+     C*
+     C                     Z-ADD*ZERO     #T      50
+     C*
+     C* Load entries until end of the paths array:
+     C*
+     C                     DO   #P        #R      30
+     C                     MOVELPTH,#R    ##PATH
+     C*
+     C***********##PATH    SETLLCGWPRDE2                                  083679
+     C           ##PATH    SETLLCGW1RDE2                                  083679
+     C           *IN92     DOUEQ*ON
+     C***********##PATH    READECGWPRDE2                 92               083679
+     C           ##PATH    READECGW1RDE2                 92               083679
+     C           *IN92     IFEQ *OFF
+     C                     MOVEL#RGRPS    P0UPPR
+     C                     MOVEL#AGRPS    P0LOWR
+     C                     MOVEL#ARDE     P0RDE
+     C                     MOVEL#RRPTH    P0RPTH
+     C                     MOVEL#RNPTH    P0NPTH
+     C                     MOVEL#DELYP    P0ETYP
+     C                     MOVEL#RFOPT    P0FOPT
+     C                     MOVEL#DETXT    P0ETXT
+     C                     Z-ADD#DMAXL    P0LEN
+     C                     ADD  1         #T
+     C                     MOVE P0DATA    RDD,#T
+     C                     MOVEL#ARDE     RDE,#T
+     C                     ENDIF
+     C                     ENDDO
+     C* Next path:
+     C                     ENDDO
+     C*
+     C           EXFILL    TAG                             <<<=== EXFILL
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRIZSF initialises the subfile.                    **
+     C********************************************************************
+     C           SRIZSF    BEGSR                           * S R I Z S F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRIZSF'  @STK,Q
+     C*
+     C* Clear the subfile:
+     C                     SETOF                     81
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+     C                     SETON                     81
+     C*
+     C* Reset top RRN:
+     C                     Z-ADD*ZERO     ##RRMX  50
+     C*
+     C* /Copy point for subfile control initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8800DISC
+     C*
+     C* Load subfile:
+     C                     EXSR SRLDSF
+     C*
+     C           EXIZSF    TAG                             <<<=== EXIZSF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLDSF loads the subfile.                          **
+     C********************************************************************
+     C           SRLDSF    BEGSR                           * S R L D S F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLDSF'  @STK,Q
+     C*
+     C* Start at previous highest record in subfile:
+     C*
+     C                     Z-ADD##RRMX    RRN     50
+     C*
+     C* Reset subfile record number:
+     C*
+     C                     Z-ADD*ZERO     ##SFRC
+     C*
+     C* Load subfile lines until end of array:
+     C*
+     C                     DO   #P        #R      30
+     C                     MOVELPTH,#R    ##PATH
+     C*
+     C* Move descriptions for paths from the top path to the current path:
+     C*
+     C                     MOVE 'P'       #1TYPE            "Path" line
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE *BLANKS   #1LINE
+     C                     MOVELPDS,#P    ##PTXT
+     C                     MOVE *BLANKS   #RGRPS
+     C                     MOVE *BLANKS   #AGRPS
+     C                     MOVE *BLANKS   #ARDE
+     C                     MOVE *BLANKS   #RRPTH
+     C                     MOVE *BLANKS   #RNPTH
+     C                     MOVE *BLANKS   #DELYP
+     C                     MOVE *BLANKS   #RFOPT
+     C                     SETON                     31
+     C                     EXSR SRALIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           #R        IFLT #P
+     C                     Z-ADD#P        #S      30
+     C           #S        DOUEQ#R
+     C                     SUB  1         #S
+     C                     MOVE *BLANKS   #1LINE
+     C                     MOVEL##CONT    ##CTXT
+     C                     MOVELPDS,#S    ##PTXT
+     C*
+     C                     MOVE *BLANKS   #RGRPS
+     C                     MOVE *BLANKS   #AGRPS
+     C                     MOVE *BLANKS   #ARDE
+     C                     MOVE *BLANKS   #RRPTH
+     C                     MOVE *BLANKS   #RNPTH
+     C                     MOVE *BLANKS   #DELYP
+     C                     MOVE *BLANKS   #RFOPT
+     C*
+     C                     SETON                     31
+     C                     EXSR SRALIN
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move data to the subfile for the path currently in ##PATH:
+     C*
+     C                     EXSR SRMDTA
+     C                     ENDDO
+     C*
+     C* Set indicators 82 (display subfile) and 83 (EOF):
+     C*
+     C                     SETOF                     82
+     C           RRN       IFNE *ZERO
+     C                     SETON                     82
+     C                     ENDIF
+     C*
+     C                     SETON                     83
+     C*
+     C* Save highest RRN:
+     C                     Z-ADDRRN       ##RRMX
+     C*
+     C           EXLDSF    TAG                             <<<=== EXLDSF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRMDTA moves data to the subfile.                  **
+     C********************************************************************
+     C           SRMDTA    BEGSR                           * S R M D T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRMDTA'  @STK,Q
+     C*
+     C                     MOVE *BLANKS   @@SDES
+     C           *LIKE     DEFN ##SDES    @@SDES
+     C           *LIKE     DEFN ##SDES    #@SDES           083679
+     C*
+     C* Show elements for this set:
+     C*
+     C***********##PATH    SETLLCGWPRDE2                                  083679
+     C           ##PATH    SETLLCGW1RDE2                                  083679
+     C           *IN92     DOUEQ*ON
+     C***********##PATH    READECGWPRDE2                 92               083679
+     C           ##PATH    READECGW1RDE2                 92               083679
+     C           *IN92     IFEQ *OFF
+     C*
+     C* When the set description changes, show it;
+     C*  except that the association description is used if not blank:
+     C*
+     C                     MOVE ##SDES    #@SDES           083679
+     C           ##ADES    IFNE *BLANKS                    083679
+     C                     MOVE ##ADES    #@SDES           083679
+     C                     ENDIF                           083679
+     C*
+     C***********##SDES    IFNE @@SDES                     083679
+     C           #@SDES    IFNE @@SDES                     083679
+     C* Beware! #1LINE contains ##PTXT                     083679
+     C                     MOVE #@SDES    @@SDES           083679
+     C* Text line:
+     C                     MOVE 'T'       #1TYPE            "Text" line
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE *BLANKS   #1LINE
+     C                     MOVE @@SDES    ##PTXT           083679
+     C***********          MOVE ##SDES    ##PTXT           083679
+     C***********##ADES    IFNE *BLANKS                    083679
+     C***********          MOVE ##ADES    ##PTXT           083679
+     C***********          ENDIF                           083679
+     C                     SETON                     31
+     C                     EXSR SRALIN
+     C***********          MOVE ##SDES    @@SDES           083679
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C                     MOVE 'E'       #1TYPE            "Element" line
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE *BLANKS   #1LINE
+     C                     MOVEL#ARDE     ##ELEM
+     C                     MOVEL#RDDES    ##ETXT
+     C*
+     C* Use association description if not blank:
+     C*
+     C           #RADES    IFNE *BLANKS
+     C                     MOVEL#RADES    ##ETXT
+     C                     ENDIF
+     C*
+     C                     SETOF                     31
+     C                     EXSR SRALIN
+     C                     ENDIF
+     C                     ENDDO
+     C* Skip a line:
+     C                     MOVE 'B'       #1TYPE            "Blank" line
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE *BLANKS   #1LINE
+     C                     SETON                     31
+     C                     EXSR SRALIN
+     C*
+     C           EXMDTA    TAG                             <<<=== EXMDTA
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRALIN writes a line to the subfile.               **
+     C********************************************************************
+     C           SRALIN    BEGSR                           * S R A L I N *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRALIN'  @STK,Q
+     C*
+     C* Step the RRN:
+     C                     ADD  1         RRN
+     C*
+     C* If not done, set subfile position to show the current record:
+     C*
+     C           ##SFRC    IFEQ *ZERO
+     C                     Z-ADDRRN       ##SFRC
+     C                     ENDIF
+     C*
+     C* /Copy point for subfile record initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8800DISR
+     C*
+     C* Write the record:
+     C                     WRITE#SFLRCD
+     C*
+     C           EXALIN    TAG                             <<<=== EXALIN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTEXT retrieves heading and function key texts.   **
+     C********************************************************************
+     C           SRTEXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+     C*
+     C* Heading text:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1273' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##ONAM
+     C*
+     C* Function keys:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1274' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD
+     C*
+     C* Group set text:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1434' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CONT 20
+     C*
+     C           EXTEXT    TAG                             <<<=== EXTEXT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSNMS sends a message to the program's queue.     **
+     C********************************************************************
+     C           SRSNMS    BEGSR                           * S R S N M S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSNMS'  @STK,Q
+     C*
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVE ##PGM     ZAPGMQ
+     C                     ENDIF
+     C*
+     C* If no message file specified, use default:
+     C*
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVE ZADFMF    ZAMSGF
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C*
+     C* Clear all fields after use:
+     C*
+     C                     MOVE *BLANKS   ZAPGMQ
+     C                     MOVE *BLANKS   ZAPGRL
+     C                     MOVE *BLANKS   ZAMSID
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVE *BLANKS   ZAMSTP
+     C*
+     C           EXSNMS    TAG                             <<<=== EXSNMS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXPG exits the program.                          **
+     C********************************************************************
+     C           SREXPG    BEGSR                           * S R E X P G *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXPG'  @STK,Q
+     C* F3:
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'Y2U9999' P0RTN
+     C                     ENDIF
+     C* F12:
+     C           *IN12     IFEQ *ON
+     C                     MOVE 'USR0790' P0RTN
+     C                     ENDIF
+     C*
+     C* /Copy point for exit processing:
+     C*
+     C/COPY WNCPYSRC,CG8800DEPP
+     C*
+     C* Copy any undisplayed messages to the caller:
+     C*
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+     C*
+     C* Close files:
+     C*
+     C                     CLOSECGWPRDE1
+     C***********          CLOSECGWPRDE2                                  083679
+     C                     CLOSECGW1RDE2                                  083679
+     C*
+     C           EXEXPG    TAG                             <<<=== EXEXPG
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN                           Return.
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Clear error return code and returned data:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C                     MOVE *BLANKS   P0DATA
+     C                     Z-ADD*ZERO     P0LEN
+     C*
+     C           *LIKE     DEFN #FPATH    ##PATH
+     C           *LIKE     DEFN #FPATH    @@PATH
+     C*
+     C           *LIKE     DEFN P0RDE     ##RDE
+     C*
+     C* Open files:
+     C                     OPEN CGWPRDE1
+     C***********          OPEN CGWPRDE2                                  083679
+     C                     OPEN CGW1RDE2                                  083679
+     C*
+     C* Get the local data area (*LDA):
+     C*
+     C           *NAMVAR   DEFN *LDA      BIGLDA
+     C                     IN   BIGLDA
+     C                     MOVEL#@LYDE    ##ITYP
+     C*
+     C* Reset "marked records" counter:
+     C*
+     C                     Z-ADD*ZERO     #MARKS  10
+     C*
+     C* Initialise indicators for re-entry:
+     C*
+     C                     MOVE '0'       *IN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set job date and time and the screen time:
+     C*
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+     C                     Z-ADD##JTM     ##TME   60
+     C*
+     C* Define the default message file:
+     C*
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+     C*
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get the run-date:
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C                     MOVELAGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVELAGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* If return with an error (LR seton in called program),
+     C*  process as for database error.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVE 'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG8800DCPG
+     C*
+     C* Get the command-key text:
+     C                     EXSR SRTEXT
+     C*
+     C* Get the path names:
+     C                     EXSR SRPATH
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CG8800CPG
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CG8800DOPG
+     C*
+     O********************************************************************
+** CPY@ -- Copyright text.
+(c) Finastra International Limited 2001

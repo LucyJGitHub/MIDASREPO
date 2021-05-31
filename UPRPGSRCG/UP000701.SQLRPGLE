@@ -13,12 +13,32 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055469             Date 13Mar20             *
-      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *  Last Amend No. MD057288             Date 01Dec20             *
+      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *                 MD054733             Date 02Dec19             *
+      *                 MD056020             Date 18Jun20             *
+      *                 MD054955             Date 16Dec19             *
+      *                 MD055832             Date 14May20             *
+      *                 MD055829             Date 12May20             *
+      *                 MD055469             Date 13Mar20             *
+      *                 MD054605             Date 17Oct19             *
       *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057288 - During migration, some XTD files are on top of    *
+      *             LIBL causing incorrect update. Fix is to add      *
+      *             correct library while updating XTD.               *      
+      *  MD057231 - Add dump in case of error                         *
+      *             ACOF, BRCH and MLMTRAN are twice in GPWIPCTD and  *
+      *             this causes missing record in XTD for the zones.  *
+      *  MD054733 - Merge GPWPBCTD to GPWIPCTD.                       *
+      *  MD056020 - Dumps generated in PRCA because of SQL error      *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
+      *  MD055832 - Avoid deletion of bespoke records in extension    *
+      *             table                                             *
+      *  MD055829 - GPWIPBTD field WC_BOACAU should not be updated as *
+      *             it is linked to LE ICD configuration.             *
       *  MD055469 - Global APIs have WC_ZONE set to blank.            *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
@@ -31,19 +51,27 @@
      D KXINDEX         S             10A
      D KXSCHEMA        S             10A
      D KMSCHEMA        S             10A                                                    MD054605
+     D BINDEX          S             10A                                                    MD055832
+     D BSCHEMA         S             10A                                                    MD055832
      D KColumn         S             10A
      D KOrdinal        S              9  0
      D KeyArr          S             10A   DIM(12)
      D WIdx            S              3P 0
      D KeyFld          S            200A
-     D WHERE           S            300A
-     D PINSERT         S            300A
-     D PSELECT         S            300A
+     D*WHERE****       S            300A                                                    MD054955
+     D WHERE           S            600A                                                    MD054955
+     D*WHEREX***       S            300A                                           MD055832 MD054955
+     D WHEREX          S            600A                                                    MD054955
+     D*PINSERT**       S            300A                                                    MD054955
+     D PINSERT         S            600A                                                    MD054955
+     D*PSELECT**       S            300A                                                    MD054955
+     D PSELECT         S            600A                                                    MD054955
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D OFMbr           S             10A
      D OFMbrOpt        S              8A
      D First           S              1A
+     D xxBSTP          S             20A                                                    MD054733
      D FldData       E DS                  EXTNAME(UPFFDSTPD)
        /EJECT
       *****************************************************************
@@ -61,6 +89,7 @@
      C                   exsr      SR_RtvKeys
 
       * Delete from extension file if not found in core file
+      * and not found in bespoke file                                                       MD055832
      C                   exsr      SR_DltExt
 
       * Add missing record in extension file if found in core file but not in the extension
@@ -132,25 +161,40 @@
      C                   If        XINDEX <> 'GPWIPCTD'
 
      C                   eval      EXTINDEX = %SUBST(XINDEX:1:5) + 'XTD'
+     C                   eval      BINDEX = %SUBST(XINDEX:1:5) + 'BTD'                      MD055832
      C                   eval      WIdx = 1
      C                   eval      WHERE = *BLANKS
+     C                   eval      WHEREX = *BLANKS                                         MD055832
      C                   eval      WHERE = ' WHERE A.' + %trimr(KeyArr(WIdx)) +
      C                             ' = B.' + %trimr(KeyArr(WIdx))
+     C                   eval      WHEREX= ' WHERE A.' + %trimr(KeyArr(WIdx)) +             MD055832
+     C                             ' = X.' + %trimr(KeyArr(WIdx))                           MD055832
      C                   eval      WIdx = WIdx + 1
+     C                   eval      BSCHEMA = %subst(XSCHEMA:1:3) + 'MLIB'                   MD055832
 
      C     KeyArr(WIdx)  DOWNE     *BLANKS
      C     WIdx          ANDLT     13
      C                   eval      WHERE = %trimr(WHERE) + ' and A.' +
      C                             %trimr(KeyArr(WIdx)) +
      C                             ' = B.' + %trimr(KeyArr(WIdx))
+     C**********         eval      WHEREX = %trimr(WHERE) + ' and A.' +            MD055832 MD056020
+     C                   eval      WHEREX = %trimr(WHEREX) + ' and A.' +                    MD056020
+     C                             %trimr(KeyArr(WIdx)) +                                   MD055832
+     C                             ' = X.' + %trimr(KeyArr(WIdx))                           MD055832
      C                   eval      WIdx = WIdx + 1
      C                   ENDDO
 
      C                   eval      SQLDynStmt = *BLANKS
-     C                   eval      SQLDynStmt = 'delete from ' + EXTINDEX +
+     C**********         eval      SQLDynStmt = 'delete from ' + EXTINDEX +                 MD057288
+     C                   eval      SQLDynStmt = 'delete from ' +                            MD057288
+     C                             %trimr(BSCHEMA) + '/' + EXTINDEX +                       MD057288
      C                             ' A where not exists (select * from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX +
-     C                             ' B ' +  %trimr(WHERE) + ')'
+     C**********                   ' B ' +  %trimr(WHERE) + ')'                             MD055832
+     C                             ' B ' +  %trimr(WHERE) + ') and ' +                      MD055832
+     C                             '  not exists (select * from ' +                         MD055832
+     C                             %trimr(BSCHEMA) + '/' + BINDEX +                         MD055832
+     C                             ' X ' +  %trimr(WHEREX) + ')'                            MD055832
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -164,6 +208,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
      C                   ELSE
@@ -188,6 +233,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
       * Additional process for GPWIPBTD as the Bespoke records are the zonal WIP config
@@ -210,6 +256,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
      C                   ENDIF
@@ -275,14 +322,18 @@
      C                   eval      PINSERT = %trimr(PINSERT) + ')'
 
      C**********         eval      SQLDynStmt = 'insert into ' + KXINDEX +                  MD054605
-     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD054605
+     C**********         eval      SQLDynStmt = 'insert into ' + EXTINDEX +        MD054605 MD057288
+     C                   eval      SQLDynStmt = 'insert into ' +                            MD057288
+     C                             %trimr(KMSCHEMA) + '/' + EXTINDEX  +                     MD057288
      C**********                   %trimr(PINSERT) + ' select ' +                           MD054605
      C                             ' (select ' +                                            MD054605
      C                             %trimr(PSELECT) + ' from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX  +
      C                             ' A where not exists (select * from ' +
      C**********                   XINDEX +  ' B ' + %trimr(WHERE) + ')'                    MD054605
-     C                             EXTINDEX +  ' B ' + %trimr(WHERE) + '))'                 MD054605
+     C**********                   EXTINDEX +  ' B ' + %trimr(WHERE) + '))'        MD054605 MD057288
+     C                             %trimr(KMSCHEMA) + '/' + EXTINDEX  +                     MD057288
+     C                             ' B ' + %trimr(WHERE) + '))'                             MD057288
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -296,6 +347,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
      C                   ELSE
 
@@ -313,6 +365,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
       * Add GPWIPXTD records with blank zone for global API                                 MD055469
@@ -329,6 +382,7 @@
      C                   If        SQLCode <> 0                                             MD055469
      C                             and SQLCode <> 100                                       MD055469
      C                   eval      ERROR = '*Error'                                         MD055469
+     C                   Dump                                                               MD057231
      C                   Endif                                                              MD055469
                                                                                             MD055469
       * Add GPWIPBTD records with zone (bespoke) in case new API
@@ -341,7 +395,9 @@
      C+ WC_BOACAM, WC_BOACAU, WC_BOACCL, WC_BOACDE, WC_BOACRE,
      C+ WC_BOACCH, WC_AUTOA, WC_AUTLVL, ZOZONE as WC_ZONE,
      C+ WC_SYSTEM, WC_BOFLD1, WC_BOFLD2, WC_BOFLD3, WC_BOFLD4,
-     C+ WC_BOFLD5, 'B' FROM GPWIPCTD A, GPZONEPD
+     C**WC_BOFLD5,*'B'*FROM*GPWIPCTD*A,*GPZONEPD                                            MD054733
+     C+ WC_BOFLD5, 'B' , WCAN, WCAC, WCAT, WCBSTP                                           MD054733
+     C+ FROM GPWIPCTD A, GPZONEPD                                                           MD054733
      C+ where A.WC_ZONE = '*REFZONE' and not exists
      C+ (select * from GPWIPBTD B where A.WC_API = B.WC_API))
      C/end-exec
@@ -349,6 +405,7 @@
      C                   IF        SQLCODE <> 0
      C                             and SQLCode <> 100
      C                   EVAL      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   ENDIF
 
       * Add GPWIPXTD records with zone (bespoke) in case new API
@@ -360,11 +417,14 @@
      C+ WC_AUTLVL, WC_ZONE, 'B'
      C+ FROM GPWIPBTD A where
      C+ not exists (select * from GPWIPXTD B
-     C+ where A.WC_API = B.WC_API and B.WC_ZONE <> '*REFZONE'))
+     C**where*A.WC_API*=*B.WC_API*and*B.WC_ZONE*<>*'*REFZONE'))                             MD057231
+     C+ where A.WC_API = B.WC_API and B.WC_ZONE <> '*REFZONE' and                           MD057231
+     C+ WC_ZONE <> '        '))                                                             MD057231
      C/end-exec
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
       * update GPWIPBTD records (bespoke) in case of change in core fields
@@ -373,12 +433,14 @@
      C+ update GPWIPBTD b
      C+ set
      C+ (b.WC_CAT, b.WC_BOAC, b.WC_BOACNE,
-     C+ b.WC_BOACAM, b.WC_BOACAU, b.WC_BOACCL, b.WC_BOACDE, b.WC_BOACRE,
+     C**b.WC_BOACAM,*b.WC_BOACAU,*b.WC_BOACCL,*b.WC_BOACDE,*b.WC_BOACRE,                    MD055829
+     C+ b.WC_BOACAM, b.WC_BOACCL, b.WC_BOACDE, b.WC_BOACRE,                                 MD055829
      C+ b.WC_BOACCH, b.WC_AUTOA,
      C+ b.WC_SYSTEM, b.WC_BOFLD1, b.WC_BOFLD2, b.WC_BOFLD3, b.WC_BOFLD4,
      C+ b.WC_BOFLD5) =
      C+ (select c.WC_CAT, c.WC_BOAC, c.WC_BOACNE,
-     C+ c.WC_BOACAM, c.WC_BOACAU, c.WC_BOACCL, c.WC_BOACDE, c.WC_BOACRE,
+     C**c.WC_BOACAM,*c.WC_BOACAU,*c.WC_BOACCL,*c.WC_BOACDE,*c.WC_BOACRE,                    MD055829
+     C+ c.WC_BOACAM, c.WC_BOACCL, c.WC_BOACDE, c.WC_BOACRE,                                 MD055829
      C+ c.WC_BOACCH, c.WC_AUTOA,
      C+ c.WC_SYSTEM, c.WC_BOFLD1, c.WC_BOFLD2, c.WC_BOFLD3, c.WC_BOFLD4,
      C+ c.WC_BOFLD5 from GPWIPCTD c where c.WC_API = b.WC_API
@@ -390,8 +452,34 @@
      C                   IF        SQLCODE <> 0
      C                             and SQLCode <> 100
      C                   EVAL      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   ENDIF
 
+      * if CFT157 fields are left blank, then initialize them with values from CTD          MD054733
+     C/exec SQL                                                                             MD054733
+     C+ select WCBSTP into :xxBSTP from GPWIPBTD                                            MD054733
+     C+ where WC_API = 'OPAY'                                                               MD054733
+     C+ fetch first 1 row only                                                              MD054733
+     C/end-exec                                                                             MD054733
+     C                   If        xxBSTP = *blanks                                         MD054733
+     C/exec SQL                                                                             MD054733
+     C+ update GPWIPBTD b                                                                   MD054733
+     C+ set (b.WCAN, b.WCAC, b.WCAT, b.WCBSTP)  =                                           MD054733
+     C+ (select c.WCAN, c.WCAC, c.WCAT, c.WCBSTP                                            MD054733
+     C+ from GPWIPCTD c where c.WC_API = b.WC_API                                           MD054733
+     C+ and c.WC_ZONE = '*REFZONE')                                                         MD054733
+     C+ where exists (select * from GPWIPCTD c where c.WC_API = b.WC_API                    MD054733
+     C+ and c.WC_ZONE = '*REFZONE') and (b.WC_API = 'IPAY' or b.WC_API = 'OPAY')            MD054733
+     C/end-exec                                                                             MD054733
+                                                                                            MD054733
+     C                   IF        SQLCODE <> 0                                             MD054733
+     C                             and SQLCode <> 100                                       MD054733
+     C                   EVAL      ERROR = '*Error'                                         MD054733
+     C                   Dump                                                               MD057231
+     C                   ENDIF                                                              MD054733
+     C                                                                                      MD054733
+     C                   ENDIF                                                              MD054733
+                                                                                            MD054733
      C                   ENDIF
      C                   ENDSR
 

@@ -7,13 +7,13 @@
       *                                                               *
       *  Midas - Dealing Module                                       *
       *                                                               *
-      *  DL0280 - DEALS FILE UPDATE                                   *
+      *  DL0280 -  DEALS FILE UPDATE                                  *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
       *****************************************************************
-      *** Code Stripped ***                                           **
+      *** Code Stripped ***                                           *
       /COPY DLCPYSRC,DL0280FHD5                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD3                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD1
@@ -22,6 +22,7 @@
       /COPY DLCPYSRC,DL0280FHD4                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD2
       /COPY WNCPYSRC,DL0280F001
+      ** Comment to commit source to git                                                    MD056644
       *****************************************************************
      FDLOPOSPD  O  A E             DISK
      FCLINT     IF   E           K DISK                                         S01383
@@ -8110,6 +8111,10 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C129                                           S01408
       *                                                                                       CDL099
+      ** Initialize Purchase value date key generation flag.                                MD054752
+      *                                                                                     MD054752
+     C                   MOVE      'N'           GPVFLG            1                        MD054752
+      *                                                                                     MD054752
      C     CDL099        IFEQ      'Y'                                                        CDL099
       *                                                                                       CDL099
      C   47                                                                                   CDL099
@@ -8139,6 +8144,11 @@
      C   51              EXSR      EXCP                                                       CDL099
      C   51              SETOFF                                       30                      CDL099
      C                   BITON     '1'           ACEI                                         CDL099
+      *                                                                                     MD054752
+      ** Set Purchase value date key generation flag to 'Y'.                                MD054752
+      *                                                                                     MD054752
+     C                   MOVE      'Y'           GPVFLG                                     MD054752
+      *                                                                                     MD054752
      C                   TESTB     '4'           ACEI                     53                  CDL099
      C   53                                                                                   CDL099
      CANN47              MOVE      'E'           RECR                                         CDL099
@@ -8151,6 +8161,15 @@
      CANN53              GOTO      FXSWP2                                                     CDL099
      C  N47                                                                                   CDL099
      CANN53BSDT2         COMP      EVCD                               53                      CDL099
+      *                                                                                     MD054752
+      ** Perform switch on of *IN84 (next deal processing) and update of                    MD054752
+      ** file control when deal is Expired and Purchase value date keys                     MD054752
+      ** has generated.                                                                     MD054752
+      *                                                                                     MD054752
+     C                   IF        *IN47 = *OFF AND *IN53 = *ON                             MD054752
+     C                             AND RECR = 'E' AND GPVFLG = 'Y'                          MD054752
+     C                   GOTO      #UPDIFC                                                  MD054752
+     C                   ENDIF                                                              MD054752
      C  N47                                                                                   CDL099
      CAN 53              GOTO      FXSWP2                                                     CDL099
      C                   Z-ADD     BSDT2         KYDAT                                        CDL099
@@ -8160,6 +8179,7 @@
      C  N47                                                                                   CDL099
      CAN 53              MOVE      'E'           RECR                                         CDL099
      C  N47              BITON     '4'           ACEI                                         CDL099
+     C     #UPDIFC       TAG                                                                MD054752
      C  N47                                                                                   CDL099
      CAN 53              MOVE      '1'           *IN84                                        CDL099
       *                                                                                       CDL099
@@ -9810,6 +9830,9 @@
      C   71              SETON                                            12                   LN071
      C/COPY WNCPYSRC,DL0280C714
      C*
+     C     NRBRTT        IFEQ      '  '                                                     MD031017
+     C                   MOVE      '00'          BRTT                                       MD031017
+     C                   ENDIF                                                              MD031017
 2150 C                   EXCEPT
      C                   SETOFF                                       OF                       S0111
      C                   Z-ADD     0             RPAGE1                                        S0111
@@ -12772,6 +12795,7 @@
 2781 C* If Deposit Taken (IT,CD,TD) and System is Taxable                 080603
 2781 C*                                                                   080603
 2781 C     *IN25         IFEQ      *ON                                          B 001          08060
+     C     TAXI          ANDEQ     'Y'                                                      MD055158
       *                                                                   CDL006
       ** Or feature CDL006 installed.                                     CDL006
       *                                                                   CDL006
@@ -16531,21 +16555,21 @@
       *                                                                                       229628
       ** Check rate fix indicator                                                             229628
       *                                                                                       229628
-     C     CSW005        IFEQ      'Y'                                                        229628
-     C     CSW011        OREQ      'Y'                                                        229628
-     C     UINFD         IFGE      EVCD                                                       229628
-     C     UINFD         ANDLE     UNICD                                                      229628
-     C     URFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        URFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C     TINFD         IFGE      EVCD                                                       229628
-     C     TINFD         ANDLE     TNICD                                                      229628
-     C     TRFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        TRFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
+     C*****CSW005*****   IFEQ      'Y'                                               229628 MD056911
+     C*****CSW011*****   OREQ      'Y'                                               229628 MD056911
+     C*****UINFD******   IFGE      EVCD                                              229628 MD056911
+     C*****UINFD******   ANDLE     UNICD                                             229628 MD056911
+     C*****URFIN******   ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        URFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C*****TINFD******   IFGE      EVCD                                              229628 MD056911
+     C*****TINFD******   ANDLE     TNICD                                             229628 MD056911
+     C*****TRFIN******   ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        TRFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
      C*                                                                   CIR001
      C** If a buy-out is due, set the maturity date to the buy-out        CIR001
      C** value date.                                                      CIR001
@@ -20329,22 +20353,22 @@
      C                   ENDIF                                                                 CSW00
       *                                                                                       229628
       ** Check rate fix indicator                                                             229628
-      *                                                                                       229628
-     C     CSW005        IFEQ      'Y'                                                        229628
-     C     CSW011        OREQ      'Y'                                                        229628
-     C     UINFD         IFGE      EVCD                                                       229628
-     C     UINFD         ANDLE     UNICD                                                      229628
-     C     URFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        URFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C     TINFD         IFGE      EVCD                                                       229628
-     C     TINFD         ANDLE     TNICD                                                      229628
-     C     TRFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        TRFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
+      *                                                                              229628 MD056911
+     C*****CSW005******  IFEQ      'Y'                                               229628 MD056911
+     C*****CSW011        OREQ      'Y'                                               229628 MD056911
+     C*****UINFD         IFGE      EVCD                                              229628 MD056911
+     C*****UINFD         ANDLE     UNICD                                             229628 MD056911
+     C*****URFIN         ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        URFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C*****TINFD*******  IFGE      EVCD                                              229628 MD056911
+     C*****TINFD*******  ANDLE     TNICD                                             229628 MD056911
+     C*****TRFIN*******  ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        TRFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
      C*                                                                   CIR001
      C** If a buy-out is due, set the maturity date to the buy-out        CIR001
      C** value date.                                                      CIR001
@@ -24972,6 +24996,7 @@
      C     URFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         UEINR                                         S0111
      C                   Z-ADD     WBRTE         UBRTE                                         S0111
+     C                   MOVE      *BLANKS       URFIN                                      MD056911
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
@@ -25012,6 +25037,7 @@
      C     TRFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         TEINR                                         S0111
      C                   Z-ADD     WBRTE         TBRTE                                         S0111
+     C                   MOVE      *BLANKS       TRFIN                                      MD056911
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
@@ -25029,14 +25055,14 @@
      C                   END                                                                   S0111
       *                                                                   CSW005
       * Set Our/Their Rate Fixing Indicator to 'X' if CSW005 = 'Y'        CSW005
-     C     CSW005        IFEQ      'Y'                                                         CSW00
-     C     CSW011        OREQ      'Y'                                                         CSW01
-     C     DTLUT         IFEQ      'U'                                                         CSW00
-     C                   MOVE      'X'           URFIN                                         CSW00
-     C                   ELSE                                                                  CSW00
-     C                   MOVE      'X'           TRFIN                                         CSW00
-     C                   ENDIF                                                                 CSW00
-     C                   ENDIF                                                                 CSW00
+     C*****CSW005*****   IFEQ      'Y'                                                CSW00 MD056911
+     C*****CSW011*****   OREQ      'Y'                                                CSW01 MD056911
+     C*****DTLUT******   IFEQ      'U'                                                CSW00 MD056911
+     C**********         MOVE      'X'           URFIN                                CSW00 MD056911
+     C**********         ELSE                                                         CSW00 MD056911
+     C**********         MOVE      'X'           TRFIN                                CSW00 MD056911
+     C**********         ENDIF                                                        CSW00 MD056911
+     C**********         ENDIF                                                        CSW00 MD056911
      C*                                                                   S01119
      C     IRSEND        ENDSR                                                                 S0111
 2877 C********************************************************************S01119
@@ -25834,18 +25860,18 @@
      C                   Z-ADD     TFRFD         WFRFD                                        229628
      C                   ENDIF                                                                229628
       *                                                                                       229628
-     C     WINFD         IFGE      EVCD                                                       229628
-     C     WINFD         ANDLE     WINCD                                                      229628
-     C     WRFIN         ANDNE     *BLANK                                                     229628
-     C     CSW005        IFEQ      'Y'                                                        229628
-     C     CSW011        OREQ      'Y'                                                        229628
-     C     USRST         IFEQ      'P'                                                        229628
-     C                   MOVE      *BLANK        URFIN                                        229628
-     C                   ELSE                                                                 229628
-     C                   MOVE      *BLANK        TRFIN                                        229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
+     C*****WINFD*****    IFGE      EVCD                                              229628 MD056911
+     C*****WINFD*****    ANDLE     WINCD                                             229628 MD056911
+     C*****WRFIN*****    ANDNE     *BLANK                                            229628 MD056911
+     C*****CSW005****    IFEQ      'Y'                                               229628 MD056911
+     C*****CSW011****    OREQ      'Y'                                               229628 MD056911
+     C*****USRST*****    IFEQ      'P'                                               229628 MD056911
+     C**********         MOVE      *BLANK        URFIN                               229628 MD056911
+     C**********         ELSE                                                        229628 MD056911
+     C**********         MOVE      *BLANK        TRFIN                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
      C*                                                                   S01119
      C** RESET WORK FIELDS                                                S01119
      C*                                                                   S01119
@@ -28141,6 +28167,7 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C                   END                                                                   CIR00
+
      C*                                                                   CIR001
      C     RLSEND        ENDSR                                                                 S0111
 2877 C********************************************************************S01119
@@ -28483,7 +28510,7 @@
      C                   Z-ADD     SZEDAT        @@DAYN                                       CIR013
      C                   EXSR      ZDATE9                                                     CIR013
      C                   Z-ADD     @@VDT         ZZDATB                                       CIR013
-     C                   ENDIF                                                              MD051152     
+     C                   ENDIF                                                              MD051152
       *                                                                                       CIR013
       ** Check whether the period contains a 29th February                                  MD051152
       *                                                                                     MD051152
@@ -29412,6 +29439,9 @@
      C     @RTCD         IFNE      *BLANK                                                      S0148
      C                   SETON                                        U7U8LR                   S0148
      C                   MOVEL     '14'          DBASE             3             **DBERR 1**   S0148
+     C                   MOVEL     WWCUST        DBKEY                                      MD056629
+     C                   MOVEL     'SDPLCSPD'    DBFILE                                     MD056629
+     C                   EXSR      *PSSR                                                    MD056629
      C**********         EXCEPT    ERROR                                              S0148 AR547995
      C                   MOVE      'Y'           WWERRF                                        S0148
      C                   GOTO      P03END                                                      S0148

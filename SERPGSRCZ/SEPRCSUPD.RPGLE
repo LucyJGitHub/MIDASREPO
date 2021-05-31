@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054998           Date 16Sep20               *
+      *  Last Amend No. MD054998           Date 22Apr20               *
       *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043345           Date 05Jan17               *
@@ -53,7 +53,6 @@
       *           - Specify 'N' (not locked) operation extender when  *
       *             reading file PRICEA and introduced new LF of      *
       *             PRICEA for update mode.                           *
-      *             Applied for MD056743.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043345 - Security Prices does not have timestamp when      *

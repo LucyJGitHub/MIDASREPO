@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027087           Date 20May14               *
+      *  Last Amend No. MD049268           Date 02Aug18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027087           Date 20May14               *
       *                 MD026986           Date 16May14               *
       *                 CDL093             Date 07Apr14               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049268  - Enhanced interest calculation to be similar to   *
+      *              S/R GLINTC.                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027087 - revert back the changes for CDL093                *
       *  MD026986 - remove changes made by CDL093                     *
@@ -289,26 +292,31 @@
      C     ZZCALC        IFEQ      '6'
      C                   Z-ADD     36600         @@YEAR
      C                   END
+     C     @@AMT         MULT      @@RATE        ZIWRK1           30 9                      MD049268
       *                                                                                       191870
      C     ZZCALC        IFEQ      '6'                                                        191870
      C*****ZZCALC*****   OREQ      '9'                                               CDL093 MD026986
      C*****#29Feb*****   ANDEQ     'Y'                                               CDL093 MD026986
      C     ZZCALC        OREQ      '9'                                                      MD027087
      C     #29Feb        ANDEQ     'Y'                                                      MD027087
-     C     INT6DY        MULT      @@RATE        @@W157                                       191870
+     C*****INT6DY**      MULT      @@RATE        @@W157                              191870 MD049268
+     C     INT6DY        MULT      ZIWRK1        ZIWRK2           30 9                      MD049268
      C                   ELSE                                                                 191870
       *
      C*****ZZINDY        MULT      @@RATE        @@W157           15 7                        242286
-     C     ZZINDY        MULT      @@RATE        @@W157           15 9                        242286
+     C*****ZZINDY**      MULT      @@RATE        @@W157           15 9               242286 MD049268
+     C     ZZINDY        MULT      ZIWRK1        ZIWRK2                                     MD049268
      C                   END                                                                  191870
-     C     @@W157        MULT(H)   @@AMT         @@W210           21 0
+     C*****@@W157**      MULT(H)   @@AMT         @@W210           21 0                      MD049268
       *
      C**  ROUND DOWN IF ROUND DOWN INDICATOR IS 'Y'
       *
      C     @@RDFC        IFEQ      'Y'
-     C     @@W210        DIV       @@YEAR        @@INTR
+     C*****@@W210**      DIV       @@YEAR        @@INTR                                     MD049268
+     C     ZIWRK2        DIV       @@YEAR        @@INTR                                     MD049268
      C                   ELSE
-     C     @@W210        DIV(H)    @@YEAR        @@INTR           15 0
+     C*****@@W210*       DIV(H)    @@YEAR        @@INTR           15 0                      MD049268
+     C     ZIWRK2        DIV(H)    @@YEAR        @@INTR           15 0                      MD049268
      C                   END
      C***/COPY WNCPYSRC,MM0089C077
      C*

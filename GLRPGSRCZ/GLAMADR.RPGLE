@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -70,6 +71,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -146,43 +150,43 @@
       *  CAP084 - API Wrapper project                                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FTABTBRE   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(R_)
- 
+
       ** BRT Customer Details
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FRELINKL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FACCNTLXX  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FPMPORTLL  IF   E           K DISK    INFSR(*PSSR)  USROPN
      FACCPTFR   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACCPTFRF)
      F                                     PREFIX(AC_)
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
       * Incoming Transaction
      D AccnInMast    E DS                  EXTNAME(GLAMADPD)
      D AccnInDebi    E DS                  EXTNAME(GLAMDIPD)
@@ -195,11 +199,11 @@
      D AccnInPena1   E DS                  EXTNAME(GLAMPP1PD) PREFIX(P1:2)                    CRE015
      D AccnInPena2   E DS                  EXTNAME(GLAMPP2PD) PREFIX(P2:2)                    CRE015
      D/COPY OFCPYSRCZ,CRE101_017                                                              CRE101
- 
+
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D AccnFilFmt    E DS                  EXTNAME(ACCNTAB)
      D ExBXFilFmt    E DS                  EXTNAME(ACCNTBXC)
      D                                     PREFIX(A_)
@@ -243,11 +247,11 @@
      D PActn           S              1                                                      LLN022A
      D PFOTRID         S             40                                                      LLN022A
      D PRtlAcct        S             10                                                      LLN022A
- 
+
      D RUNDAT          DS            13
       * Rundate data area
      D  AGMBIN                13     13
- 
+
      D*WWLINK***       DS            18                                                       CGL029
      D WWLINK          DS            24                                                       CGL029
      D  WLTAB                  1      3
@@ -258,12 +262,12 @@
      D**WLTAS***              17     18  0                                                    CGL029
      D  WLTAC                 13     22  0                                                    CGL029
      D  WLTAS                 23     24  0                                                    CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CSC011          S              1A   INZ('N')
      D CRE015          S              1A   INZ('N')                                           CRE015
      D CRE010          S              1A   INZ('N')                                         MD028970
@@ -271,16 +275,16 @@
      D WProcDate       S                   LIKE(BJRDNB)
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Override Database Table
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX2           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX3           S              1    DIM(50) CTDATA PERRCD(50)
      D***##OX4           S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
- 
+
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -290,79 +294,79 @@
      D  I#BOOK                19     20
      D  I#PTFR                21     24
      D  I#CPGM                25     34
- 
+
       ** Output parameters on call to AOPLCSR1
      D O@PARM          S            256
      D DDEABC          S              1A                                                      CRE010
      D DDZINS          S              1A                                                    AR802610
      D TranStamp       S            124A                                                      CER049
      D GLFullAcct      S             24A                                                    MD026979
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D QQACC1        E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR RETAIL DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details
- 
+
      D RETABLE       E DS                  EXTNAME(TABTBRE)
      D                                     PREFIX(R_)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDACOD        E DS                  EXTNAME(SDACODPD)
      D QQACC2        E                     EXTFLD(QQACCD)                                     CGL029
       ** External DS for Account Code Details
- 
+
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
       ** External DS for Portfolio Customer Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** External DS for Customer Details
- 
+
       ** Externally described DS for Nostro Code details                                      CRE010
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  CRE010
      D SDNOSTACCD    E                     EXTFLD(QQACCD)                                     CRE010
                                                                                               CRE010
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       * Third DS for access programs, very long data structure
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
      D RegData       E DS                  EXTNAME(GLAMRXPD)                                  CER001
- 
+
      D InfData       E DS                  EXTNAME(GLAMIFPD) PREFIX(IF_)                    BUG10280
       ** GL Extra Data - Classe 1 Data - File (D/B) format                                  BUG10280
      D/COPY WNCPYSRC,GLH00639
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
      C                   CLEAR                   AcctLUXFilFmt                                CER001
      C                   CLEAR                   AccnFilFmt
      C                   CLEAR                   ExBXFilFmt
@@ -375,7 +379,7 @@
      C     DDACTN        IFEQ      *BLANK
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
- 
+
      C                   MOVE      *OFF          *IN30
      C     DDACTN        IFEQ      'I'
      C                   MOVE      *ON           *IN30
@@ -393,7 +397,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      GLAMADRED
@@ -418,10 +422,10 @@
      C**********         EVAL      DDACSQ = %SUBST(DDACRF:17:2)                               CGL029
      C                   EVAL      DDACOD = %SUBST(DDACRF:13:10)                              CGL029
      C                   EVAL      DDACSQ = %SUBST(DDACRF:23:2)                               CGL029
- 
+
       * Access Account type and suptype for conditioning screen display.
      C                   EXSR      GLVACSQ
- 
+
      C                   EXSR      GLAMADRTV
      C                   IF        ULX606='Y'                                                 CER001
      C                   EXSR      GLAMAD2RV                                                  CER001
@@ -452,9 +456,9 @@
      C                   IF        ULX606='Y'                                                 CER001
      C                   EXSR      GLAMAD2CT                                                  CER001
      C                   ENDIF                                                                CER001
- 
+
      C/COPY WNCPYSRC,GLAMADAC03
- 
+
      C                   IF        LLN007 = 'Y'                                              LLN022A
      C                   CALLB     'GLAMADCVT1'                                              LLN022A
      C                   PARM                    PRetCodeIn                                  LLN022A
@@ -471,19 +475,19 @@
       *
       * Validate miscellaneous screen fields.
      C                   EXSR      GLVALID
- 
+
      C                   ENDIF
                                                                                               CSF011
       ** Populate Customer or Account Details                                                 CSF011
                                                                                               CSF011
      C                   EXSR      SrPopCust                                                  CSF011
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDACRF     ' FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       ** Please ensure that when setting up the buffer, new core fields                      BUG6218
       ** are added before the data structure ExtData                                         BUG6218
                                                                                              BUG6218
@@ -529,7 +533,7 @@
      C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4924) +            AR946674 MD044880
      C***/COPY*OFCPYSRCZ,CRE101_068                                                  CRE101 MD044880
      C**********                                    RegData + ExtData                         CRE073
- 
+
      C     *IN28         IFEQ      *ON
      C                   CLOSE     PMPORTLL
      C                   ENDIF
@@ -589,7 +593,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    FwdBck            1
      C**********         PARM                    DDACRF_In        18                          CGL029
@@ -602,14 +606,14 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'REUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'SDUSRMSG'                                  CRE073
      C/COPY WNCPYSRC,GLH00641
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -746,7 +750,7 @@
       * Access SAR details file to determine if CSC011 switchable feature
       * is switched on
       ** CSC011 is a redundant Feature. No need to check                                    MD024398
- 
+
      C**********         CALLB     'AOSARDR0'                                               MD024398
      C**********         PARM      *BLANKS       @RTCD                                      MD024398
      C**********         PARM      '*VERIFY'     @OPTN                                      MD024398
@@ -937,7 +941,7 @@
      C                   KFLD                    CCY
      C                   KFLD                    LTAC
      C                   KFLD                    LTAS
- 
+
       **  Define key list to access ACCPTFR
      C     PTFRK         KLIST
      C                   KFLD                    WWPTFR            4
@@ -946,7 +950,7 @@
      C                   KFLD                    WWCCY             3
      C                   KFLD                    WWACOD           10 0
      C                   KFLD                    WWACSQ            2 0
- 
+
       * Overrride ACCNTL0
      C                   Z-ADD     50            MESLEN           15 5
      C                   CALL      'QCMDEXC'
@@ -990,18 +994,18 @@
       *                                                                  q
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,GLAMADM01
- 
+
      C                   IF        LLN007 = 'Y'                                              LLN022A
      C                   EVAL      MsgFArray (%LookUp(*Blanks:MsgFArray)) =                  LLN022A
      C                             'GBBYUSRMSG'                                              LLN022A
      C                   ENDIF                                                               LLN022A
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       **********************************************************************
      C     GLAMADRED     BEGSR
- 
+
      C                   CALLB     'GLAMADRED'
       *
       * INPUT PARAMETERS
@@ -1028,13 +1032,13 @@
      C**********         PARM      *BLANK        @ACRED           18                          CGL029
      C                   PARM      *BLANK        @ACRED           24                          CGL029
      C                   PARM      *BLANK        @RERED           10
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     GLAMADRTV     BEGSR
- 
+
      C                   CALLB     'GLAMADRTV'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -1097,13 +1101,13 @@
      C                   PARM                    AUTHRQ            1
       * Authorisation Mode
      C                   PARM                    AUTHMD            1
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     GLVACSQ       BEGSR
- 
+
      C                   CALLB     'GLVACSQ'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -1130,7 +1134,7 @@
       * Account Sequence - OK
      C                   PARM      *ZERO         DDACODOK          1
      C                   PARM      *ZERO         DDACSQOK          1
- 
+
       ** Access Account Code details via access program
       *  (database error handling done in access program)
      C                   CALL      'AOACODR0'
@@ -1147,13 +1151,13 @@
      C                   MOVEL     'DDACOD'      FldNameArr(Ix)
      C                   MOVEL     'RE71037'     MsgIdArr(Ix)
      C                   END
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     GLVALID       BEGSR
- 
+
      C                   MOVEL     'N'           INCST             1
       *
      C                   CALLB     'AOCURRR0'
@@ -1447,18 +1451,18 @@
       * INPUTS :
       * Response mode
      C                   PARM                    RetCodeIn
- 
+
       * Customer Retail Group
      C                   PARM                    BBCGRP
       *
       ** CCRM Revenue Analysis
      C                   PARM                    CDE002
- 
+
       * Account details (DS) in file format
      C                   PARM                    AccnFilFmt
      C                   PARM                    NABXFilFmt
      C                   PARM                    AccnInMast                                   222427
- 
+
       * OUTPUTS :
       * Screen 4 Output
      C                   PARM                    DDCEXA1          11
@@ -1471,13 +1475,13 @@
      C                   PARM                    DDDRMG1
      C                   PARM                    DDCRMG1
      C                   ENDIF                                                                260272
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     GLAMADCVT     BEGSR
- 
+
      C                   CALLB     'GLAMADCVT'
       *
       * INPUTS :
@@ -1539,7 +1543,7 @@
      C                   PARM                    DDCEXG1           8
      C                   PARM                    DDDRMG1          12
      C                   PARM                    DDCRMG1          12
- 
+
      C     DDAPRC        Ifeq      'N'                                                        CER050
      C     DDAPCR        Ifne      *Blanks                                                    CER050
      C                   move      *Blanks       DDAPCR                                       CER050

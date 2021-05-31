@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD054209           Date 31Aug19              */
+/*       Last Amend No. MD056103           Date 21Jun20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD054209           Date 31Aug19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CUP042             Date 02Jan15              */
 /*                      MD019986           Date 12Apr13              */
@@ -40,6 +41,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056103 - Avoid WIP configuration to be overridden after   */
+/*                  migration. Instead call UP000702 to synchronize  */
+/*                  GPWIPBTD and GPWIPXTD files                      */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD054209 - Deliverable Data Split for T_WIPCF               */
 /*       MD046248 - Finastra Rebranding                              */
@@ -100,6 +104,12 @@
 /**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                                */ /*CSM003*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0) VALUE(0)                    /*BG19128*/
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)                                 /*MD056103*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(10)                                /*MD056103*/
+             DCL        VAR(&OGPFX) TYPE(*CHAR) LEN(2)                                  /*MD056103*/
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)                                /*MD056103*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                /*MD056103*/
+             DCL        VAR(&MIGRATE) TYPE(*CHAR) LEN(1) VALUE('N')                     /*MD056103*/
 
 /**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
              DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
@@ -260,8 +270,39 @@ VALIDATE:                                                                       
 /**Call UP001704*to*initialise*T_WIPCF.**/                                       /*CSM007 MD054209*/
 /* Call UPC000701 to initialize GPWIPBTD and GPWIPXTD. */                               /*MD054209*/
 /**********  CALL       PGM(UP001704) */                                         /*CSM007 MD054209*/
-             CALL       PGM(UPC000701)                                                  /*MD054209*/
-             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)                                          /*CSM007*/
+/**********  CALL       PGM(UPC000701) */                                      /*MD054209*MD056103*/
+/* Retrieve BrgOldGlobalPrefix */                                                       /*MD056103*/
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                          'BrgOldGlobalPrefix' &SVAL1 +
+                          ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ')                                                      /*MD056103*/
+             IF         COND(&RTNCDE *NE ' ') THEN(DO)                                  /*MD056103*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+             CHGVAR     VAR(&OGPFX) VALUE(%SST(&SVAL1 1 2))                             /*MD056103*/
+             CHGVAR     VAR(&OLDLIB) VALUE(&OGPFX *TCAT 'GTALIB')                       /*MD056103*/
+/* Check that library exists */                                                         /*MD056103*/
+             CHKOBJ     OBJ(&OLDLIB) OBJTYPE(*LIB)                                      /*MD056103*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)                                 /*MD056103*/
+             CHGVAR     VAR(&MIGRATE) VALUE('N')                                        /*MD056103*/
+                GOTO       CMDLBL(UP000711)                                             /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+/* If not blank, check that T_WIPCF File exist in the old system */                     /*MD056103*/
+             CHKOBJ     OBJ(&OLDLIB/T_WIPCF) OBJTYPE(*FILE)                             /*MD056103*/
+/* If not found, assume no migration */                                                 /*MD056103*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)                                 /*MD056103*/
+             CHGVAR     VAR(&MIGRATE) VALUE('N')                                        /*MD056103*/
+                GOTO       CMDLBL(UP000711)                                             /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+                                                                                        /*MD056103*/
+             CHGVAR     VAR(&MIGRATE) VALUE('Y')                                        /*MD056103*/
+                                                                                        /*MD056103*/
+UP000711:                                                                               /*MD056103*/
+             CALL       PGM(UP000711) PARM(&SBSID &GSBSID &MIGRATE +
+                        &OLDLIB &ERROR)                                                 /*MD056103*/
+/**********  IF COND(%SWITCH(XXXXXXX1)) THEN(DO) */                              /*CSM007*MD056103*/
+             IF COND(&ERROR *NE ' ') THEN(DO)                                           /*MD056103*/
                 GOTO       CMDLBL(ABNOR)                                                  /*CSM007*/
              ENDDO                                                                        /*CSM007*/
 

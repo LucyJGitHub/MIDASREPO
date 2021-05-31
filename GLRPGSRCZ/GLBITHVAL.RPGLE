@@ -17,8 +17,7 @@
       *                                                               *
       *                                                               *
       *  Last Amend No. MD057194           Date 16Nov20               *
-      *  Prev Amend No. AR850162           Date 01Jun20               *
-      *                 MD054696           Date 29Oct19               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 246752             Date 29Oct15               *
@@ -70,12 +69,6 @@
       *             Hold/Accept Indicator = A.                        *
       *           - Validate for currency totals if Batch Number is   *
       *             found in GLJENSL1 file.                           *
-      *  AR850162 - Batches were not held due to wrong summary of     *
-      *             totals and wrong checking of multi-branch ind.    *
-      *             Applied fix 263436 and changed checking of        *
-      *             amended multi-branch ind. value only during       *
-      *             amendments. (Child: AR850163)                     *
-      *           - Applied for MD-35908                              *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD046248 - Finastra Rebranding                               *
@@ -831,8 +824,6 @@
       ** Multibranch Batch Indicator on File                                                 BUG2948
      C                   PARM                    H_BRMBRB                                    BUG2948
       *
-      ** Action Code of Transaction                                                         AR850162
-     C                   PARM                    DDACTN                                     AR850162
       ** OUTPUT
       ** ======
       *

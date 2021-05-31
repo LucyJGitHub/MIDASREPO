@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG27790 *CREATE   Date 18Jun10               *
+      *  Last Amend No. MD054955           Date 16Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG27790 *CREATE   Date 18Jun10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
       *                                                               *
@@ -74,8 +76,10 @@
      C                             FldNo(Ix)  <> 0
      C                   EVAL      IS = InpBufPos(Ix)
      C                   EVAL      IL = FldNo(Ix)
-     C                   IF        OS < 100 and
-     C                             (OS + IL) <= 100
+     C**********         IF        OS < 100 and                                             MD054955
+     C**********                   (OS + IL) <= 100                                         MD054955
+     C                   IF        OS < 200 and                                             MD054955
+     C                             (OS + IL) <= 200                                         MD054955
      C                   EVAL      %SUBST(CKKFLD:OS:IL) = %SUBST(Data:IS:IL)
      C                   EVAL      OS = OS + FldNo(Ix)
      C                   ENDIF

@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 259402             Date 06Jun20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7578            Date 14Jun05              */
+/*                      BUG7578            Date 14Jun05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -23,6 +24,14 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       259402 - No Reversal on first day of the month for          */
+/*                Forward Revaluation posted on last day of          */
+/*                previous month. Applied fix 220292 to address      */
+/*                the latter problem. Also applied 251998 as         */
+/*                Preventive fix, to correct the Account Section     */
+/*                passed when generating the Forward Revaluation     */
+/*                Reversal posting.                                  */
+/*              - Applied for MD-55899                               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG7578- No reversal FR posting. Accessing wrong positions  */
 /*                on SDDEALPD. Also map ACODQQ to 0 in OPNQRYF.      */
@@ -68,6 +77,11 @@
                           Fwd Revaluation Date? */
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200) /*        +
                           Return string */
+             DCL        VAR(&RUN) TYPE(*CHAR) LEN(1) VALUE('N')                           /*259402*/
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(1) VALUE(' ')                           /*259402*/
+             DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)                                  /*259402*/
+             DCL        VAR(&ACSC) TYPE(*CHAR) LEN(2)                                     /*259402*/
+             DCL        VAR(&ACSCD) TYPE(*CHAR) LEN(4)                                    /*259402*/
              DCLF       FILE(SDBANKPD) /* Bank ICD */
 /**/
 /* Global monitor message */
@@ -99,7 +113,7 @@
 /**/
              IF         COND(&PBAS *EQ 'P') THEN(CHGVAR VAR(&DEVD) +
                           VALUE(&PSTD))
- 
+
 /**/
 /* Access Dealing ICD for Foward Revaluation A/c and Contra */
 /**/
@@ -110,7 +124,14 @@
 /*           CHGVAR     VAR(&FRPL) VALUE(%SST(&DSFDY 132 10))  */                 /*CGL029 BUG7578*/
              CHGVAR     VAR(&FACC) VALUE(%SST(&DSFDY 133 10))                            /*BUG7578*/
              CHGVAR     VAR(&FRPL) VALUE(%SST(&DSFDY 143 10))                            /*BUG7578*/
- 
+                                                                                          /*259402*/
+/**/                                                                                      /*259402*/
+/* Access Account Codes for account section of contra Acc   */                            /*259402*/
+/**/                                                                                      /*259402*/
+             CALL       PGM(AOACODR0) PARM(&RTCD '*KEY' &FRPL +
+                          &DSSDY)                                                         /*259402*/
+             CHGVAR     VAR(&ACSC) VALUE(%SST(&DSSDY 72 2))                               /*259402*/
+
 /**/
 /* Access PCA ICD for Primary Mgmt A/c Control Group */
 /**/
@@ -128,9 +149,17 @@
              CHGVAR     VAR(&PDCT) VALUE(%SST(&DSFDY 2 2))
              CHGVAR     VAR(&PDYR) VALUE(%SST(&DSFDY 4 2))
              CHGVAR     VAR(&PDNY) VALUE(%SST(&DSFDY 6 2))
- 
+
+             CALL       PGM(CB0812) PARM(&RUN &RTN)                                       /*259402*/
+             IF         COND(&RUN *EQ 'Y') THEN(DO)                                       /*259402*/
+                CALL PGM(AORPERR0) PARM(&RTCD '*PREV' &PKEY 0 &DSFDY)                     /*259402*/
+                CHGVAR     VAR(&PDCT) VALUE(%SST(&DSFDY 2 2))                             /*259402*/
+                CHGVAR     VAR(&PDYR) VALUE(%SST(&DSFDY 4 2))                             /*259402*/
+                CHGVAR     VAR(&PDNY) VALUE(%SST(&DSFDY 6 2))                             /*259402*/
+             ENDDO                                                                        /*259402*/
+                                                                                          /*259402*/
 /* Set up OPNQRYF to Fwd Trade A/c balances */
- 
+
 /*********** OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +      *140486*/
 /***********              QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +    *140486*/
 /***********              ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +    *140486*/
@@ -228,7 +257,7 @@
 /**********               &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +      */                   /*CGL029*/
 /**********               VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +*/                   /*CGL029*/
 /**********               (&PSTD *CAT '235959')) (DRCR 0))           */        /*140486*/ /*CGL029*/
- 
+
 /**********  OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +     */                  /*CGL029*/
 /**********               QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +   */                  /*CGL029*/
 /**********               ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +   */                  /*CGL029*/
@@ -244,7 +273,24 @@
 /**********               VALUATION REVERSAL''') (EVDT &DEVD) (PDTM + */                  /*CGL029*/
 /**********               (&PSTD *CAT '235959')) (DRCR 0) (ACODQQ +   */                  /*CGL029*/
 /**********               '    '))                                    */                  /*CGL029*/
- 
+/**********                                                                               /*259402*/
+/**********  OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +                         /*259402*/
+/**********               QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +                       /*259402*/
+/**********               ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +                       /*259402*/
+/**********               ''' *AND HBPDNY *EQ ''' *CAT &PDNY *CAT +                       /*259402*/
+/**********               ''' *AND (HBACCD *EQ ''' *CAT &FACC *CAT +                      /*259402*/
+/**********               ''')') MAPFLD((BRCA HBBRCD) (CCY HBCYCD) +                      /*259402*/
+/**********               (ACOD &FRPL) (CNUM HBCUST) (ACSQ HBACSN) +                      /*259402*/
+/**********               (PRFC HBPCCD) (BOKC HBBKCD) (OTTP HBOTTP) +                     /*259402*/
+/**********               (OTST HBTSTY) (ASOC HBACNB) (ACSC HBACSC) +                     /*259402*/
+/**********               (PAMT 'HBPDCB * 1') (VOIN 1) (GETP +                            /*259402*/
+/**********               '''F''') (ATYP ''' ''') (CPNB (&PDCT *CAT +                     /*259402*/
+/**********               &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +                           /*259402*/
+/**********               VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +                     /*259402*/
+/**********               (&PSTD *CAT '235959')) (DRCR 0) (ACODQQ +                       /*259402*/
+/**********               0))                                                  /*CGL029*/ /*259402*/
+/**/                                                                                      /*259402*/
+             CHGVAR     VAR(&ACSCD) VALUE('''' *CAT &ACSC *CAT '''')                      /*259402*/
              OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +
                           QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +
                           ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +
@@ -253,13 +299,13 @@
                           ''')') MAPFLD((BRCA HBBRCD) (CCY HBCYCD) +
                           (ACOD &FRPL) (CNUM HBCUST) (ACSQ HBACSN) +
                           (PRFC HBPCCD) (BOKC HBBKCD) (OTTP HBOTTP) +
-                          (OTST HBTSTY) (ASOC HBACNB) (ACSC HBACSC) +
+                          (OTST HBTSTY) (ASOC HBACNB) (ACSC &ACSCD) +
                           (PAMT 'HBPDCB * 1') (VOIN 1) (GETP +
                           '''F''') (ATYP ''' ''') (CPNB (&PDCT *CAT +
                           &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +
                           VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +
                           (&PSTD *CAT '235959')) (DRCR 0) (ACODQQ +
-                          0))                                                             /*CGL029*/
+                          0))                                                             /*259402*/
 /**/
 /*  Copy OPNQRYF to MCFREXPD  */
 /**/

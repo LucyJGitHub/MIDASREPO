@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054906           Date 18Dec19               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. MD057437           Date 20Jan21               *
+      *  Prev Amend No. MD056546           Date 16Sep20               *
+      *                 MD044553           Date 08May17               *
+      *                 MD054906           Date 18Dec19               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 MD053400           Date 03Jul19               *
       *                 CSD102             Date 08Jan19               *
@@ -113,6 +116,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057437 - IRS - Their Details - Negative Principal Amount   *
+      *             Fix is to not allow CIRS transaction with         *
+      *             Principal change (Decrease) that will result to   *
+      *             zero or negative amount.                          *
+      *  MD056546 - Serious Midas Error encountered on CIRS Input     *
+      *             Reversed MD044553                                 *
+      *  MD044553 - Corrected buffer position for WIP timestamp       *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRSIRSR to ensure buffer is       *
@@ -1078,6 +1088,7 @@ RGC                                                                             
      D RIdx            S              3P 0                                                    CSW213
      D WRIdx           S              3P 0                                                    CSW213
      D DUpdateYN       S              1A                                                      CSW213
+     D********** @WIPTmst        S             26                                  MD044553 MD056546
       ** Action Code Reject                                                                 MD053400
      D ACTRJ           S              1                                                     MD053400
       *                                                                                     MD054117
@@ -1104,6 +1115,7 @@ RGC                                                                             
      D POP10           S             20A                                                    MD054117
      D PVL10           S            200A                                                    MD054117
      D PCIDCF          S              1A                                                    MD054117
+     D NewPrinAmt      S                   LIKE(RSUPAMT)                                    MD057437
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1417,15 +1429,34 @@ RGC                                                                             
      C**********         EVAL      TCFSAST=%SUBST(BufferEx4:7517)+BufferEx5+         CSW216 MD053400
      C**********                                       BufferEx6                     CSW216 MD053400
      C**********         EVAL      PCSAST=%SUBST(BufferEx6:719)+BufferEx7            CSW216 MD053400
-     C                   EVAL      ACTRJ=%SUBST(Buffer:5114)                                MD053400
-     C                   EVAL      ORDATEAST=%SUBST(Buffer:5115)+Buffer2                    MD053400
-     C                   EVAL      OPDATEAST=%SUBST(Buffer2:3915)+BufferEx2                 MD053400
-     C                   EVAL      TRDATEAST=%SUBST(BufferEx2:4716)                         MD053400
-     C                   EVAL      TPDATEAST=%SUBST(BufferEx2:9516)+BufferEx3               MD053400
-     C                   EVAL      OCFSAST=%SUBST(BufferEx3:4317)+BufferEx4                 MD053400
-     C                   EVAL      TCFSAST=%SUBST(BufferEx4:7518)+BufferEx5+                MD053400
-     C                                                 BufferEx6                            MD053400
-     C                   EVAL      PCSAST=%SUBST(BufferEx6:720)+BufferEx7                   MD053400
+     C**********         EVAL      ACTRJ=%SUBST(Buffer:5114)                       MD053400 MD044553
+     C**********         EVAL      ORDATEAST=%SUBST(Buffer:5115)+Buffer2           MD053400 MD044553
+     C**********         EVAL      OPDATEAST=%SUBST(Buffer2:3915)+BufferEx2        MD053400 MD044553
+     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:4716)                MD053400 MD044553
+     C**********         EVAL      TPDATEAST=%SUBST(BufferEx2:9516)+BufferEx3      MD053400 MD044553
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:4317)+BufferEx4        MD053400 MD044553
+     C**********         EVAL      TCFSAST=%SUBST(BufferEx4:7518)+BufferEx5+       MD053400 MD044553
+     C**********                                       BufferEx6                   MD053400 MD044553
+     C**********         EVAL      PCSAST=%SUBST(BufferEx6:720)+BufferEx7          MD053400 MD044553
+     C**********         EVAL      @WIPTmst=%SUBST(Buffer:5114)                    MD044553 MD056546
+     C**********         EVAL      ACTRJ=%SUBST(Buffer:5140)                       MD044553 MD056546
+     C**********         EVAL      ORDATEAST=%SUBST(Buffer:5141)+Buffer2           MD044553 MD056546
+     C**********         EVAL      OPDATEAST=%SUBST(Buffer2:3941)+BufferEx2        MD044553 MD056546
+     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:4742)                MD044553 MD056546
+     C**********         EVAL      TPDATEAST=%SUBST(BufferEx2:9542)+BufferEx3      MD044553 MD056546
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:4343)+BufferEx4        MD044553 MD056546
+     C**********         EVAL      TCFSAST=%SUBST(BufferEx4:7544)+BufferEx5+       MD044553 MD056546
+     C**********                                       BufferEx6                   MD044553 MD056546
+     C**********         EVAL      PCSAST=%SUBST(BufferEx6:746)+BufferEx7          MD044553 MD056546
+     C                   EVAL      ACTRJ=%SUBST(Buffer:5114)                                MD056546
+     C                   EVAL      ORDATEAST=%SUBST(Buffer:5115)+Buffer2                    MD056546
+     C                   EVAL      OPDATEAST=%SUBST(Buffer2:3915)+BufferEx2                 MD056546
+     C                   EVAL      TRDATEAST=%SUBST(BufferEx2:4716)                         MD056546
+     C                   EVAL      TPDATEAST=%SUBST(BufferEx2:9516)+BufferEx3               MD056546
+     C                   EVAL      OCFSAST=%SUBST(BufferEx3:4317)+BufferEx4                 MD056546
+     C                   EVAL      TCFSAST=%SUBST(BufferEx4:7518)+BufferEx5+                MD056546
+     C                                                 BufferEx6                            MD056546
+     C                   EVAL      PCSAST=%SUBST(BufferEx6:720)+BufferEx7                   MD056546
      C                   MOVEA     ORDATEAST     ORDATEA                        BUG4646
      C                   MOVEA     OPDATEAST     OPDATEA                        BUG4646
      C                   MOVEA     TRDATEAST     TRDATEA                        BUG4646
@@ -1694,6 +1725,7 @@ RGC                                                                             
      C                                      FORMULAOC + FORMULATC +             BUG4646
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
+     C**********                            @WIPTmst +                             MD044553 MD056546
      C**********                            OutSwift2013 + ORDATEAST                 CSW213 MD053400
      C                                      OutSwift2013 + ACTRJ +                          MD053400
      C                                      ORDATEAST                                       MD053400
@@ -1827,14 +1859,30 @@ RGC                                                                             
      C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2484)                    CSW216 MD053400
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST            CSW216 MD053400
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9282)                     CSW216 MD053400
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST                  MD053400
-     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST                 MD053400
-     C                                         +TPDATEAST                                   MD053400
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST                  MD053400
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST                   MD053400
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2483)                           MD053400
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST                   MD053400
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9281)                            MD053400
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST         MD053400 MD044553
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST        MD053400 MD044553
+     C**********                               +TPDATEAST                          MD053400 MD044553
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST         MD053400 MD044553
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST          MD053400 MD044553
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2483)                  MD053400 MD044553
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST          MD053400 MD044553
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9281)                   MD053400 MD044553
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:861)+OPDATEAST         MD044553 MD056546
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:60)+TRDATEAST        MD044553 MD056546
+     C**********                               +TPDATEAST                          MD044553 MD056546
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:459)+OCFSAST         MD044553 MD056546
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5658)+TCFSAST          MD044553 MD056546
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2457)                  MD044553 MD056546
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12456)+PCSAST          MD044553 MD056546
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9255)                   MD044553 MD056546
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST                  MD056546
+     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST                 MD056546
+     C                                         +TPDATEAST                                   MD056546
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST                  MD056546
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST                   MD056546
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2483)                           MD056546
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST                   MD056546
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9281)                            MD056546
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -3888,6 +3936,12 @@ RGC                                                                             
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
+      *                                                                                     MD057437
+      ** Reset working variable                                                             MD057437
+     C                   EVAL      NewPrinAmt = 0                                           MD057437
+      *                                                                                     MD057437
+      ** Get the original Principal Amount                                                  MD057437
+     C                   EVAL      NewPrinAmt = RSUPAMT                                     MD057437
      C                   DOW       I<X                                          BUG4646
                                                                                 BUG4646
      C                   EVAL      PCHGSCH=PCSA(I)                              BUG4646
@@ -4476,6 +4530,23 @@ RGC                                                                             
      C                   ELSE                                                   BUG5610
      C                   MOVE      @@ALPH        WZFIELD          16                          245692
      C                   MOVE      @@AMT         PZFIELD          16                          245692
+      *                                                                                     MD057437
+      ** Add/subtract principal change amount to original                                   MD057437
+     C                   IF        PCIDFLG = 'I'                                            MD057437
+     C                   Eval      NewPrinAmt = NewPrinAmt + @@AMT                          MD057437
+     C                   ENDIF                                                              MD057437
+     C                   IF        PCIDFLG = 'D'                                            MD057437
+     C                   Eval      NewPrinAmt = NewPrinAmt - @@AMT                          MD057437
+     C                   ENDIF                                                              MD057437
+      *                                                                                     MD057437
+      ** Resulting Principal amount should be greater than 0                                MD057437
+     C                   IF        NewPrinAmt <= 0 AND                                      MD057437
+     C                             PValType = 'P'                                           MD057437
+     C                   EVAL      Idx = Idx + 1                                            MD057437
+     C                   EVAL      MsgIDArr(Idx) = '5049480'                                MD057437
+     C                   EVAL      FldNameArr(Idx) = 'SAMTTPC'                              MD057437
+     C                   ENDIF                                                              MD057437
+      *                                                                                     MD057437
      C**********         CALLB     'ZEDIT'                                            BUG5610 245692
      C**********         PARM      PZFIELD       WZFIELD          16                  BUG5610 245692
      C**********         PARM                    PZADEC                               BUG5610 245692

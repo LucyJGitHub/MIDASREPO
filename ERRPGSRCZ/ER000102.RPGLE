@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER068             Date 25Feb14               *
+      *  Last Amend No. MD052779           Date 21Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 262700             Date 03Dec09               *
       *                 262095             Date 14Oct09               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052779 - Recompiled to fix buffer issue on ERCRCTPD file   *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *           (Recompile)                                         *

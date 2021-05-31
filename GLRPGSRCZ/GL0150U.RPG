@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054203           Date 18Oct19               *
-      *  Prev  mend No. MD051151           Date 22Oct18               *
+      *  Last Amend No. MD057157           Date 16Nov20               *
+      *  Prev Amend No. MD054702           Date 07Sep20               *
+      *                 MD054203           Date 18Oct19               *
+      *                 MD051151           Date 22Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044271           Date 20Mar17               *
       *                 CGL154             Date 13Oct14               *
@@ -82,6 +84,13 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057157 - Java Journal Entry screen not showing all batches *
+      *           - Write record in BITH extension table T_GZBITHEX   *
+      *             and move BTBTNB to DDBTNB of T_GZBITHEX.          *
+      *  MD054702 - Failed Component LEC000030 due to accepted batch  *
+      *             with Batch Item using non-existing account.       *
+      *             Valid indicator should be flagged with 'N' for    *
+      *             batch item with non-existing account.             *
       *  MD054203 - Set WRERST = 'O' for Refer Credits                *
       *  MD051151 - Failed Component LEC000030 due to accepted batch  *
       *              with Batch Item using non-existing account       *
@@ -254,6 +263,12 @@
       ** Midas GL MultiCash Narratives File                                                 BUG23742
       *                                                                                     BUG23742
      FGLMNARL2UF  E           K        DISK                      A                          BUG23742
+      *                                                                                     MD057157
+     FTGZBTEX1O   E           K        DISK                                                 MD057157
+     F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD057157
+      *                                                                                     MD057157
+      ** UDF Table for Journal Entry                                                        MD057157
+      *                                                                                     MD057157
      F/COPY WNCPYSRC,GLH00191
      E                    STAMP   1   1 26                                                    CPK015
       ** Array containing dummy timestamp                                                     CPK015
@@ -262,7 +277,8 @@
       ** Ok Flag runtime array                                                                CER046
       *                                                                                       CER046
      E**********          OKF        15  1                                           CER046 BUG25438
-     E                    OKF        16  1                                                  BUG25438
+     E**********          OKF        16  1                                         BUG25438 MD054702
+     E                    OKF        17  1                                                  MD054702
       *                                                                                       CER046
       ** Array for separating Integer and Decimal                                             CER046
       *                                                                                       CER046
@@ -273,7 +289,8 @@
       ** Ok Flag runtime array                                                                CER046
       *                                                                                       CER046
      E**********          ERMSG   1  15 25                                           CER046 BUG25438
-     E                    ERMSG   1  16 25                                                  BUG25438
+     E**********          ERMSG   1  16 25                                         BUG25438 MD054702
+     E                    ERMSG   1  17 25                                                  MD054702
      E                    WAR        20  1                                                    CER046
      E                    WCQAR       8  1                                                    CER046
      E                    PEX        22 35                                                  BUG25476
@@ -665,6 +682,8 @@
      C                     KFLD           BTBTNB                                            BUG23669
      C                     KFLD           BTCYCD                                            BUG23669
      C                     KFLD           BTIBCA                                            BUG23669
+      *                                                                                     MD057157
+     C                     MOVE 'N'       WWRITE  1                                         MD057157
       *                                                                   CGL016
       ** Access SAR details for Projected Movements Update Prior to Auth. CGL016
       *                                                                   CGL016
@@ -750,6 +769,19 @@
      C                     MOVE P@BHNO    BTBTNB           ¦              S01251
      C                     ENDIF                                                              CER046
       *                                                                                       CER046
+      ** Write record to T_GZBITHEX                                                         MD057157
+      *                                                                                     MD057157
+     C           WWRITE    IFEQ 'N'                                                         MD057157
+     C                     MOVE 'Y'       WWRITE                                            MD057157
+      *                                                                                     MD057157
+     C                     EXSR SRBRCH                                                      MD057157
+     C                     MOVE A8ZONE    ZONE                                              MD057157
+     C                     MOVE BTBTNB    DDBTNB                                            MD057157
+     C                     MOVE BJRDNB    DDBEDT                                            MD057157
+     C                     WRITETGZBTHD0                                                    MD057157
+      *                                                                                     MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
      C           CER046    IFEQ 'Y'                                                           CER046
       *                                                                                       CER046
      C                     Z-ADD0         ID                                                  CER046
@@ -782,7 +814,8 @@
      C                     SETON                     87                                       CER046
       *                                                                                       CER046
      C********** ID        DOWLE15                                                   CER046 BUG25438
-     C           ID        DOWLE16                                                          BUG25438
+     C********** ID        DOWLE16                                                 BUG25438 MD054702
+     C           ID        DOWLE17                                                          MD054702
       *                                                                                       CER046
      C           OKF,ID    IFEQ 'Y'                                                           CER046
       *                                                                                       CER046
@@ -4642,8 +4675,10 @@ E1   C                     ENDIF                                          CGL016
      C                     PARM           BTIBCA           I:Branch code                   BUG25186E
      C           D@ACCT    PARM *BLANK    UUSDY            O:Format                        BUG25186E
       *                                                                                    BUG25186E
+     C                     Z-ADD17        ID                                                MD054702
      C           UUAPRC    IFEQ '*NRF'                                                      MD051151
      C                     MOVE 'Y'       PERRF                                             MD051151
+     C                     MOVE 'Y'       OKF,ID                                            MD054702
      C                     ELSE                                                             MD051151
      C           ATYP      IFEQ 'R'                                                        BUG25186E
      C                     MOVE 'R'       BTACTY                                           BUG25186E

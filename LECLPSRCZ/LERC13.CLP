@@ -10,8 +10,10 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. CLE159             Date 18Jul18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD053375           Date 10Oct19              */
+/*       Prev Amend No. MD026969           Date 23Oct19              */
+/*                      CLE159             Date 18Jul18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD025212           Date 10May14              */
 /*                      263074             Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
@@ -36,6 +38,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053375 - Incorrect fee settlement amount in LER170 report.*/
+/*                  Clear LEFECPPD before call to LER130.            */
+/*       MD026969 - New Processing for Fee Settlement.               */
+/*                - Applied for MD054354                             */
 /*       CLE159 - LE Fee Amortisation Enhancement                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD025212 - Close of Business: LERC13 - file control         */
@@ -220,6 +226,9 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
             CPYF FROMFILE(XLOAMSZ1) TOFILE(LOAMSZ1) MBROPT(*REPLACE)                      /*CLE139*/
             MONMSG MSGID(CPF2817) CMPDTA(CPF2869) +
                    EXEC(CLRPFM FILE(LOAMSZ1))                                             /*CLE139*/
+            CPYF FROMFILE(XLEFZASPD) TOFILE(LEFZASPD) MBROPT(*REPLACE)                  /*MD026969*/
+            MONMSG MSGID(CPF2817) CMPDTA(CPF2869) +
+                   EXEC(CLRPFM FILE(LEFZASPD))                                          /*MD026969*/
 /*/COPY WNCPYSRC,LERC13MP1                                           */
    ENDDO
    ELSE CMD(DO)
@@ -285,6 +294,8 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLOAMSDK))                    /*CLE139*/
      CPYF       FROMFILE(LOAMSZ1) TOFILE(XLOAMSZ1) MBROPT(*REPLACE)                       /*CLE139*/
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLOAMSZ1))                    /*CLE139*/
+     CPYF       FROMFILE(LEFZASPD) TOFILE(XLEFZASPD) MBROPT(*REPLACE)                   /*MD026969*/
+     MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLEFZASPD))                 /*MD026969*/
 /*/COPY WNCPYSRC,LERC13MP2                                           */
  
 /* Set the status to failed (&STAT = Y) in case the program fails */
@@ -317,6 +328,10 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
                CLRPFM     FILE(LEPK3HH)                                                   /*CLE134*/
              ENDDO                                                                        /*CLE134*/
 /**/                                                                                      /*CLE134*/
+                                                                                        /*MD053375*/
+             CLRPFM     FILE(LEFECPPD)                                                  /*MD053375*/
+                                                                                        /*MD053375*/
+                                                                                        /*MD053375*/
 /**********  CALL       LER130                                */                          /*CLE139*/
              CALL       PGM(LER130) PARM(&CCAP)                                           /*CLE139*/
  

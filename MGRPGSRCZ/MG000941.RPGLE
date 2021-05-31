@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG006             Date 15Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. CMG006             Date 15Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
       *           Identification.                                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -87,6 +89,9 @@
      FMGOREFPD  O    E             DISK    COMMIT  PREFIX(Mr_)
       ** Midas MG Master Messages Reference file
  
+     FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                 CMG008
+      ** SWIFT Character Conversion file                                                      CMG008
+                                                                                              CMG008
      FMG000941AUO    E             PRINTER USROPN
       ** Midas MG Interim Transaction Report - Audit
  
@@ -258,7 +263,31 @@
      D ACFMTPGM        S             10A                                                      CMG006
      D FldDstn         S             20    INZ('MT94xFld25Dstn')                              CMG006
      D KDstn           S             10A                                                      CMG006
- 
+     D WConv           S              1A                                                      CMG008
+                                                                                              CMG008
+     D ValSwiftChr     C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ+                 CMG008
+     D                                            abcdefghijklmnopqrstuvwxyz+                 CMG008
+     D                                            0123456789+()?:-/,''. ')                    CMG008
+      ** Valid Swift Characters                                                               CMG008
+                                                                                              CMG008
+     D WBlank          C                   CONST(' ')                                         CMG008
+      ** Replacement Blank character                                                          CMG008
+                                                                                              CMG008
+     D WConvFld        S             65A                                                      CMG008
+      ** String to be converted                                                               CMG008
+                                                                                              CMG008
+     D To_Char         S            100A                                                      CMG008
+      ** TO character string                                                                  CMG008
+                                                                                              CMG008
+     D Fr_Char         S            100A                                                      CMG008
+      ** FROM character string                                                                CMG008
+                                                                                              CMG008
+     D WChrPos         S              3S 0                                                    CMG008
+      ** Work field for %CHECK and %REPLACE operation                                         CMG008
+                                                                                              CMG008
+     D WChrLen         S              3S 0                                                    CMG008
+      ** Work field for %SUBST operation                                                      CMG008
+                                                                                              CMG008 
      D/COPY MGCPYSRC,MGCMNFCTDC
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
  
@@ -504,7 +533,8 @@
      C                   ENDIF
  
      C                   EVAL      SAvNWRK = MGNWRK
- 
+      *                                                                                       CMG008
+     C                   EVAL      WConv = EDCONV                                             CMG008
      C                   ENDIF
  
       *    --------      -----
@@ -1161,7 +1191,15 @@
       ** Retrieve Field 86 details.
  
      C                   EVAL      DsResult = %TRIM(ArMGMIO(X))                 Additional Info.
- 
+      *                                                                                       CMG008
+      ** Convert non-SWIFT chars in Field 86 output fields                                    CMG008
+     C                   IF        CMG008 = 'Y' AND WConv = 'Y'                               CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = DsResult                                        CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      DsResult = WConvFld                                        CMG008
+     C                   ENDIF                                                                CMG008
+      *                                                                                       CMG008
       ** For Field 86 the maximum length is 65 characters,
       ** So, the result could be divided in 2 Occurances.
  
@@ -1462,7 +1500,70 @@
       *****************************************************************                       CGL029
       /EJECT                                                                                  CGL029
       *****************************************************************                       CGL029
- 
+      *========================================================================*              CMG008
+      * BldConvFil : Build Conversion Table for removing non-SWIFT characters  *              CMG008
+      *------------------------------------------------------------------------*              CMG008
+                                                                                              CMG008
+     C     BldConvFil    BEGSR                                                                CMG008
+      *    ----------    -----                                                                CMG008
+      *                                                                                       CMG008
+      ** Open Character conversion file                                                       CMG008
+     C                   Open      SDCONVPD                                                   CMG008
+      *                                                                                       CMG008
+      ** Initialise work fields                                                               CMG008
+     C                   Eval      Fr_Char = *Blanks                                          CMG008
+     C                   Eval      To_Char = *Blanks                                          CMG008
+     C                   Eval      WChrLen = 0                                                CMG008
+                                                                                              CMG008
+      ** Read file and collect characters in FROM and TO alpha fields                         CMG008
+     C     *Loval        Setll     SDCONVPD                                                   CMG008
+     C                   Read      SDCONVPD                                                   CMG008
+                                                                                              CMG008
+     C                   Dow       NOT %EOF                                                   CMG008
+     C                   Eval      Fr_Char = %SUBST(Fr_Char:1:WChrLen)+FRCHAR                 CMG008
+     C                   Eval      To_Char = %SUBST(To_Char:1:WChrLen)+TOCHAR                 CMG008
+     C                   Eval      WChrLen = WChrLen + 1                                      CMG008
+                                                                                              CMG008
+     C                   Read      SDCONVPD                                                   CMG008
+     C                   Enddo                                                                CMG008
+      *                                                                                       CMG008
+      ** Close file                                                                           CMG008
+     C                   Close     SDCONVPD                                                   CMG008
+      *                  -----                                                                CMG008
+     C                   ENDSR                                                                CMG008
+      *========================================================================*              CMG008
+      /EJECT                                                                                  CMG008
+      *========================================================================*              CMG008
+      * ConvChar : Convert Character and remove remove invalid non-SWIFT chars *              CMG008
+      *------------------------------------------------------------------------*              CMG008
+                                                                                              CMG008
+     C     ConvChar      BEGSR                                                                CMG008
+      *    --------      -----                                                                CMG008
+      *                                                                                       CMG008
+      ** Only process field if not blank                                                      CMG008
+     C                   If        WConvFld <> *BLANKS                                        CMG008
+                                                                                              CMG008
+      ** Convert all non-SWIFT characters based on conversion table                           CMG008
+     C                   Eval      WConvFld = %XLATE(%TRIM(Fr_Char)                           CMG008
+     C                                        :%TRIM(To_Char):WConvFld)                       CMG008
+                                                                                              CMG008
+      ** Convert all remaining non-SWIFT chars (not defined in the table)                     CMG008
+      ** into blanks. Use pre-defined 'Valid Swift Chars' field for comparison.               CMG008
+     C                   Eval      WChrPos = 0                                                CMG008
+     C                   Eval      WChrPos = %CHECK(ValSwiftChr:WConvFld)                     CMG008
+                                                                                              CMG008
+      ** Repeat process until all invalid chars are found and converted to blank              CMG008
+     C                   Dow       WChrPos > 0                                                CMG008
+     C                   Eval      WConvFld=%REPLACE(WBlank:WConvFld:WChrPos:1)               CMG008
+     C                   Eval      WChrPos = 0                                                CMG008
+     C                   Eval      WChrPos = %CHECK(ValSwiftChr:WConvFld)                     CMG008
+     C                   Enddo                                                                CMG008
+                                                                                              CMG008
+     C                   Endif                                                                CMG008
+      *                  -----                                                                CMG008
+     C                   ENDSR                                                                CMG008
+      *========================================================================*              CMG008
+      /EJECT                                                                                  CMG008
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
@@ -1554,6 +1655,27 @@
      C                   MOVEL     SVAL1         WDstn            10            Dstn Destn    CMG006
  
      C                   ENDIF                                                                CMG006
+                                                                                              CMG008
+      ** Check if feature CMG008 is installed                                                 CMG008
+                                                                                              CMG008
+     C                   EVAL      CMG008 = 'N'                                               CMG008
+                                                                                              CMG008
+     C                   CALL      'AOSARDR0'                                                 CMG008
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG008
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG008
+     C                   PARM      'CMG008 '     P@SARD                         Feature Ref   CMG008
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG008
+                                                                                              CMG008
+     C                   IF        P@RTCD = *BLANKS                                           CMG008
+     C                   MoveL     'Y'           CMG008            1                          CMG008
+     C                   ENDIF                                                                CMG008
+                                                                                              CMG008
+      * If CMG008 is ON, build the character conversion table                                 CMG008
+                                                                                              CMG008
+     C                   IF        CMG008 = 'Y'                                               CMG008
+     C                   EXSR      BldConvFil                                                 CMG008
+     C                   ENDIF                                                                CMG008
+                                                                                              CMG008
       ** Key to access Network Account or Posting details.
  
      C     Key           KLIST

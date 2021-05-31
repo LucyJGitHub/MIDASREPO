@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD053583           Date 10Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD050231           Date 25Mar18               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -355,6 +357,7 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDSVLCTD'    GLOB_SDSVALPD                              MD054605
      C     PFLNAME       CASEQ     'SDSVLBTD'    GLOB_SDSVALPD                              MD054605
      C     PFLNAME       CASEQ     'SDSVLXTD'    GLOB_SDSVALPD                              MD054605
+     C     PFLNAME       CASEQ     'SDCONVPD'    GLOB_SDCONVPD                                CMG008
      C                   ENDCS
      C                   ENDIF
 
@@ -1145,6 +1148,12 @@ O                                                                               
      C                   ENDSR                                                              MD050212
       *****************************************************************                       CGL155
       /SPACE 5                                                                                CGL155
+      *****************************************************************                       CMG008
+      * Global Updates - SWIFT Translation Table                                              CMG008
+      *****************************************************************                       CMG008
+     C     GLOB_SDCONVPD BEGSR                                                                CMG008
+      /COPY GPCPYSRCG,GPSDCONVPD                                                              CMG008
+     C                   ENDSR                                                                CMG008
       *****************************************************************
       * Determine Updates
       *****************************************************************

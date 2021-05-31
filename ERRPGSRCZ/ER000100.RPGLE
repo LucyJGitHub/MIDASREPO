@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055791           Date 04Jun20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 263480             Date 25Nov14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055791 - Populate Reference Number from Customer Record    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -1667,6 +1669,12 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
+     C                   IF        FCurrentPass = 2                                         MD055791
+     C                   MOVEL     OACNO         DF13RFN                                    MD055791
+     C                   ELSE                                                               MD055791
+     C                   MOVEL     *BLANKS       DF13RFN                                    MD055791
+     C                   ENDIF                                                              MD055791
+      *                                                                                     MD055791
      C                   ENDSR
       *
       *****************************************************************                     BUG24101
@@ -1735,6 +1743,12 @@
      C                   EXSR      *PSSR                                                    BUG24101
      C                   ENDIF                                                              BUG24101
       *                                                                                     BUG24101
+     C                   IF        FCurrentPass = 2                                         MD055791
+     C                   MOVEL     OACNO         DF13RFN                                    MD055791
+     C                   ELSE                                                               MD055791
+     C                   MOVEL     *BLANKS       DF13RFN                                    MD055791
+     C                   ENDIF                                                              MD055791
+      *                                                                                     MD055791
      C                   ENDSR                                                              BUG24101
       *                                                                                     BUG24101
       *****************************************************************

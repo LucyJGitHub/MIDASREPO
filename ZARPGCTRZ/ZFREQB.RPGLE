@@ -70,8 +70,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD050139           Date 23Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055733           Date 03Jul20               *
+      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 CLE064             Date 06Dec10               *
       *                 AR702741           Date 02Feb11               *
@@ -92,6 +93,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Remove call and condition to CGL184 on copy *
       *            sources.                                           *

@@ -13,8 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. MD056546           Date 16Sep20               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 MD044553           Date 08May17               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD030856           Date 06Nov19               *
+      *                 MD054354           Date 23Oct19               *
+      *                 MD055446           Date 04Apr20               *
+      *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -223,9 +229,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  260173 - Introduce new parameter in DEAM API to be used in   *
-      *           the validation of action code during reversal       *
-      *           authorization. Apply fix 258724.                    *
+      *  MD056546 - Serious Midas Error encountered on CIRS Input     *
+      *             Reversed MD044553                                 *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
+      *  MD044553 - Corrected buffer position for WIP timestamp       *
+      *  MD055373 - Audit trail not available                         *
+      *           - Include DDIUSR and DDAUSR fields on TransInEx2.   *
+      *  MD030856 - Introduced reject processing to FEEM              *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
+      *  MD055446 - There are parties and fields missing from the BRT *	
+      *             details tab in Customer Input plus date of birth  *	
+      *             issues.                                           *	
+      *           - Include BRT century fields on TransInEx2.         *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
@@ -664,6 +682,8 @@
      D  TransCUEX                          LIKE(SDCUEX)                                     MD044880
      D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
+     D  TransBRTCent                 10A                                                    MD055446
+     D  TransPROFUser                20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -796,6 +816,7 @@
      D MsgArrOUT       S           9999                                                       BG1105
      D APIRetC         S              1
      D @TimeStamp      S             26                                                      BUG1569
+     D*@WIPTmst*       S             26                                            MD044553 MD056546
      D NewButton       S              3                                                       255190
      D DDACTC          S              1                                                      BUG3684
      D DDFOID          S             20                                                       239400
@@ -811,7 +832,8 @@
      D @ACTRV          S              1                                                     AR910559
      D @DEPI           S              1                                                     MD030621
      D AuthUsers       S             20                                                       CFT163
-
+     D P_SIGN          S              1                                                     MD054354
+     D DRejFlg         S              1                                                     MD030856
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2270,9 +2292,6 @@ RGC  D RPIF4LN         S              4  0                                      
       **  Send Loan/Deposit indicator for settlement tab conditioning.                       BUG6534
      C     1             SUBST     BUFFER:Bfp    LONDEP                                      BUG6534
      C                   ADD       1             Bfp                                         BUG6534
-      **  Restore Authorise Reversal Action Code                                              260173
-     C     1             SUBST     BUFFER:Bfp    @ACTRV                                       260173
-     C                   ADD       1             Bfp                                          260173
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
@@ -2308,7 +2327,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4146
      C                   PARM                    LONDEP                                      BUG6534
      C                   PARM                    DDFOID                                       239400
-     C                   PARM                    @ACTRV                                       260173
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'MMDEAMUPD'                                       CRE020
@@ -2437,6 +2455,7 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                             BUG13174
      C     LEIFLn        SUBST     BUFFER:Bfp    DDPATH          200                        BUG13174
      C                   ADD       200           Bfp                                        BUG13174
+                                                                                            MD039655
                                                                                               CER049
       ** Stamp Tax fields                                                                     CER049
                                                                                               CER049
@@ -2466,6 +2485,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
+      ** Restore Authorise Reversal Action Code                                             MD039655
+                                                                                            MD039655
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
+     C                   ADD       1             Bfp                                        MD039655
+                                                                                            MD039655
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
@@ -2497,6 +2521,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
+     C                   PARM                    @ACTRV                                     MD039655
 
       * Loan Input
 
@@ -2896,6 +2921,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
      C     FEEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG1100
+     C                   ADD       FEEXLn        Bfp                                        MD030856
+      ** Add FEEM Reject Flag                                                               MD030856
+     C     1             SUBST     BUFFER:Bfp    DRejFlg                                    MD030856
+     C                   ADD       1             Bfp                                        MD030856
                                                                                              BUG1100
      C                   CALL      'LEFEEMVU'                                                BUG1100
                                                                                              BUG1100
@@ -2910,6 +2939,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    RecSttmt                                    BUG1100
      C                   PARM                    InfData                                      CAP086
      C                   PARM                    Extdata                                     BUG1100
+     C                   PARM                    DRejFlg                                    MD030856
      C                   PARM                    FldNameArr                                  BUG1100
      C                   PARM                    MsgIDArr                                    BUG1100
      C                   PARM                    MsgDtaArr                                   BUG1100
@@ -2990,7 +3020,9 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
-
+      ** Add P_Sign                                                                         MD054354
+     C     1             SUBST     BUFFER:Bfp    P_SIGN                                     MD054354
+     C                   ADD       1             Bfp                                        MD054354
      C                   CALL      'LEFESTVU'
 
       * Common header information (DS) from source system
@@ -3002,6 +3034,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    PaySttmt
      C                   PARM                    RecSttmt
      C                   PARM                    InfData                                      CAP086
+     C                   PARM                    P_SIGN                                     MD054354
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -3207,6 +3240,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     TempData#9    ExtData                                    MD029663
      C                   ADD       IRCSLn        Bfp                                        MD030454
      C                   ADD       168           Bfp                                        MD030454
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                          MD044553 MD056546
+     C**********         ADD       26            Bfp                               MD044553 MD056546
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
@@ -5132,6 +5167,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD056546
+     C**********         ADD       26            Bfp                                MD044553 MD056546
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 
@@ -7330,6 +7367,14 @@ RGC  D RPIF4LN         S              4  0                                      
       *** APR Calculation Required Field (CUSD)                                             MD054028
      C                   EVAL      TransCR50 = %SUBST(BufferEx2:Bfp:1)                      MD054028
      C                   EVAL      Bfp  += 1                                                MD054028
+      *** BRT Customer Details - Century                                                    MD055446
+     C                   EVAL      TransBRTCent = %SUBST(BufferEx2:Bfp:10)                  MD055446
+     C                   EVAL      Bfp  += 10                                               MD055446
+      *                                                                                     MD055373
+      ** Insert User and Amend User fields                                                  MD055373
+     C                   EVAL      TransPROFUser = %SUBST(BufferEx2:Bfp:20)                 MD055373
+     C                   EVAL      Bfp  += 20                                               MD055373
+      *                                                                                     MD055373
      C                                                                                      MD054028
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093

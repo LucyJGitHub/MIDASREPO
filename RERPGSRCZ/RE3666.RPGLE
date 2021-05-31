@@ -10,7 +10,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250390             Date 22May20               *
+      *  Last Amend No. MD055830           Date 25Jun20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD039111           Date 01Jun16               *
       *                 MD034990           Date 25May16               *
@@ -74,9 +74,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  250390 - In SR/SRPNAR, initialized field ##NARR for new      *
-      *           transaction and use MOVEL in moving DSPNAR to       *
-      *           ##NARR.  Applied fix 248456.                        *
+      *  MD055830 - Checked first if CRE100 is switched on considering*
+      *             system values RET_INTAC_CUST_LVL and RET_CHG_CUST_*
+      *             LVL would not be allocated when CRE100 is switched*
+      *             off.                                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039111 - REC3666 in MSGW during COB                        *
       *  MD034990 - Postings not posted against account sequence of   *
@@ -781,7 +782,21 @@
      C                   EXSR      *PSSR
 
      C                   ENDIF
-                                                                                              CRE100
+
+      *                                                                                     MD055830
+      ** Check if CRE100 is installed                                                       MD055830
+      *                                                                                     MD055830
+     C                   CALL      'AOSARDR0'                                               MD055830
+     C                   PARM      *BLANKS       PRTCD             7                        MD055830
+     C                   PARM      '*VERIFY'     POPTN             7                        MD055830
+     C                   PARM      'CRE100'      PSARD             6                        MD055830
+      *                                                                                     MD055830
+     C                   IF        PRTCD = *Blanks                                          MD055830
+     C                   MOVE      'Y'           CRE100            1                        MD055830
+     C                   ELSE                                                               MD055830
+     C                   MOVE      'N'           CRE100                                     MD055830
+     C                   ENDIF                                                              MD055830
+      *                                                                                     MD055830
       ** Determine system values whether internal postings for interest                       CRE100
       ** accrual should be posted at customer or bank level.                                  CRE100
                                                                                               CRE100
@@ -815,11 +830,13 @@
       *                                                                                       CRE100
      C                   If        W0RTCD = *Blanks                                           CRE100
       *                                                                                       CRE100
-     C                   If        PVAL1 = 'Y'                                                CRE100
+     C**********         IF        PVAL1 = 'Y'                                       CRE100 MD055830
+     C                   If        PVAL1 = 'Y' AND CRE100 = 'Y'                             MD055830
      C                   Eval      *IN38 = *On                                                CRE100
      C                   Endif                                                                CRE100
       *                                                                                       CRE100
-     C                   If        PVAL2 = 'Y'                                              MD034990
+     C**********         If        PVAL2 = 'Y'                                       CRE100 MD055830
+     C                   If        PVAL2 = 'Y' AND CRE100 = 'Y'                             MD055830
      C                   Eval      *IN39 = *On                                              MD034990
      C                   Endif                                                              MD034990
       *                                                                                     MD034990
@@ -2541,7 +2558,6 @@
       ** Define the narrative fields:
 
      C                   MOVE      *BLANKS       O#PNAR           30
-     C                   MOVE      *BLANKS       ##NARR
 
       ** If the facility is switched off or unavailable,
       ** or UDC is not installed, exit this subroutine:
@@ -2562,8 +2578,8 @@
      C                   MOVE      ACSQ          D#ACSQ
      C                   MOVE      BRCA          D#BRCA
      C                   ENDIF
-     C**********         MOVE      DSPNAR        O#PNAR                                       095479
-     C                   MOVEL     DSPNAR        O#PNAR
+     C                   MOVE      DSPNAR        O#PNAR
+
      C                   GOTO      EXPNAR
      C                   ENDIF
 
@@ -2616,8 +2632,7 @@
      C                   MOVE      BRCA          D#BRCA
      C                   MOVE      'GB00380'     ##MGID
      C                   ENDIF
-     C**********         MOVE DSPNAR    ##NARR                                       S01522 250390
-     C                   MOVEL     DSPNAR        ##NARR
+     C                   MOVE      DSPNAR        ##NARR
 
       ** Determine the value for the first narrative using AOPNARR0:
 

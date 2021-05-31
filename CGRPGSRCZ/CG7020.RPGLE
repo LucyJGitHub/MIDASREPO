@@ -1,4 +1,5 @@
      H DEBUG
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Retail Interest Summary - Extract')           *
@@ -16,8 +17,9 @@
       *                                                               *
       *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 MD031034           Date 25Nov14               *
       *                 CER070             Date 19Aug14               *
@@ -29,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -46,63 +51,62 @@
       *           (Upgrade of German Features FGE092)                 *
       *---------------------------------------------------------------*
      FACNUM     IF   E           K DISK
- 
+
      FREINSDPD  IF   E           K DISK
      F                                     INFSR(SRFILE)
- 
+
      FACCNTBJ0  IF   E           K DISK
- 
+
      FCGCORRL4  IF   E           K DISK
       ** Correspondent file by customer number
- 
+
      FACCRACJ   IF   E           K DISK
       **Joinfile for alternative accounts
- 
+
      FSDCSINL7  IF   E           K DISK    USROPN
- 
+
      F/COPY WNCPYSRC,CG7020FFP
- 
+
      D/COPY CGCPYSRC,CGPACKDLE
      D/COPY CGCPYSRC,SRERRDLE
- 
+
       **  ##GRP = Group/RDE Number             ##RDEA = RDE + Attributes
       *
      D ##GRP           S             10    DIM(94) CTDATA PERRCD(1)
      D ##RDEA          S             22    DIM(94) ALT(##GRP)
-      *
      D/COPY ZSRSRC,ZPOWERZ1IL
       *
       **  Array of Currencies accessed by program
      D ##CY            S              3    DIM(100)
- 
+
      D                 DS
      D  ##GRPX                 1     10
      D  ##GRPS                 1      6
      D  ##RDEN                 7     10  0
       **  Look-up string for RDE definition Array
       *
- 
+
      D                 DS
      D  ##W                    1     20
      D                                     DIM(20)
      D  ##WNUM                 1     20  0
       **  Number Field
- 
+
      D                 DS
      D  ##ITMA                 1      8
      D  ##ITEM                 1      8  0
- 
+
       ** String that contains the concatenated path
      D WPathStr        S            256A
- 
+
       ** Index for WMDsPath only
      D WPx             S              3P 0
- 
+
       ** General purpose variables
      D Wx1             S              3P 0
      D Wx2             S              3P 0
      D Wx3             S              3P 0
- 
+
       ** Parameter fields
      D PAction8        S              8A
      D PCustNumChr6    S              6A
@@ -140,7 +144,7 @@
      D @RTCD           S              7A
      D @OPTN           S              7A
      D @SARD           S              6A
- 
+
       ** Work fields
      D COLON           S             11A
      D C               S              3P 0
@@ -199,7 +203,7 @@
      D #2              S              6P 0
      D #3              S              6P 0
      D F6NBDP          S              1P 0
- 
+
       ** Key fields
      D KRUND           S              5P 0
      D KMODI           S              1A
@@ -208,7 +212,7 @@
      D KACOD           S             10P 0
      D KACSQ           S              2P 0
      D KBRCA           S              3A
- 
+
      D                 DS
       ** General data structure to define fields that need to share data
      D WGrp10                  1     10
@@ -217,13 +221,13 @@
      D  WAr20                 21     40    DIM(20)
      D  WNum20                21     40  0
      D  WAr29                 51     79    DIM(29)
- 
+
      D UFCCYX          DS
      D  UFFIL1                 1      6
      D  UFICCY                 7      9
      D**UFFIL2**              10     15                                                     AR807782
      D  UFFIL2                10     21                                                     AR807782
- 
+
      D                 DS
      D  UFACCI                 1     18
      D  ACNOK                  1     10  0
@@ -233,7 +237,7 @@
      D  #FACSQ                20     21  0
      D  #FBRCA                22     24
       **  Account identifier
- 
+
      D                 DS
      D  UFPI                   1     21
      D  ##CNUM                 1      6
@@ -241,7 +245,7 @@
      D  ##ACOD                10     19  0
      D  ##ACSQ                20     21  0
       **  A/c to post interest
- 
+
      D                 DS
      D  UFPOIN                 1     28
      D  BRCDUF                 1      3
@@ -262,54 +266,54 @@
      D  PHBRCA                22     24
      D  FLAC                   1     24
       * DS used to pass full A/C no to CG9010
- 
+
      D ##UDCR        E DS                  EXTNAME(CGUDCRPD)
       ** External DS for incomplete reference
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  External DS for bank details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       **  External DS for branch details
- 
+
      D SDLOCN        E DS                  EXTNAME(SDLOCNPD)
       **  External DS for Location Code
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       **  External DS for General Ledger Details
- 
+
      D SDCURR        E DS                  OCCURS(101) EXTNAME(SDCURRPD)
       **  External DS for currency details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFACSD     E                     EXTFLD(QQDFAC)
       **  External DS for Customer details
- 
+
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
       **  External DS for Additional Customer details
- 
+
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
       **  External DS for Account details
- 
+
      D SDACOF        E DS                  EXTNAME(SDACOFPD)
       **  External DS for Account officer details
- 
+
      D SDCTTX        E DS                  EXTNAME(SDCTTXPD)
       **  External DS for Account officer details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Second DS for access programs, long data structure
- 
+
      D W0FMT         E DS                  EXTNAME(CGUDTAPD)
       **  Record format of PF/CGUDTAPD for use as a parameter
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  QQACCDRE     E                     EXTFLD(QQACCD)
       **  External DS for Retail details
- 
+
      D ##SRDT          DS                  OCCURS(22)
       **  DS to store subroutine specific data.
       **  - Previous Bind
@@ -318,15 +322,15 @@
      D  ##PBIN                 1      5P 0
      D  ##TBIN                 6     10P 0
      D  ##SPAT                11     80
- 
+
      DSCSARD         E DS                  EXTNAME(SCSARDPD)
      D  LCDSCS       E                     EXTFLD(LCD)
- 
+
      D/COPY WNCPYSRC,CG7020I01
- 
+
      D DSPARM        E DS                  EXTNAME(REINSHPD)
       **  External DS for parameter passed from CG7010
- 
+
      D SDACTX        E DS                  EXTNAME(SDACTXPD)                                  CER069
       **  External DS for customer details by country of tax                                  CER069
                                                                                               CER069
@@ -939,7 +943,7 @@
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
      C                   Exsr      SrPackDta
- 
+
      C                   EXSR      POPGRS
       *
      C                   ENDIF
@@ -1577,7 +1581,7 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
- 
+
       * Get Additional Customer Details for Branch Internal Customer
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       ##RTCD
@@ -1642,19 +1646,19 @@
      C                   RESET                   ##RDEF
      C                   MOVEL     ' ZZBLCD'     ##RDE
      C                   MOVEL     ##RDEF        ##R(4)
- 
+
       **  Fax number
      C                   MOVEL     CDFAX         ##D(5)
      C                   RESET                   ##RDEF
      C                   MOVEL     ' ZZFAX'      ##RDE
      C                   MOVEL     ##RDEF        ##R(5)
- 
+
       **  Branch Internal Customer Number
      C                   MOVEL     A8BICN        ##D(6)
      C                   RESET                   ##RDEF
      C                   MOVEL     ' BICNBR'     ##RDE
      C                   MOVEL     ##RDEF        ##R(6)
- 
+
       **  Chips Id (Branch-Internal Customer)
      C     BBCHID        IFNE      *ZERO
      C                   MOVEL     BBCHID        ##D(7)
@@ -1664,7 +1668,7 @@
      C                   RESET                   ##RDEF
      C                   MOVEL     ' BCHIPS_ID'  ##RDE
      C                   MOVEL     ##RDEF        ##R(7)
- 
+
       **  Chips ABA (Branch-Internal Customer)
      C     BBCABA        IFNE      *ZERO
      C                   MOVEL     BBCABA        ##D(8)
@@ -1674,7 +1678,7 @@
      C                   RESET                   ##RDEF
      C                   MOVEL     ' BCHIPS_ABA' ##RDE
      C                   MOVEL     ##RDEF        ##R(8)
- 
+
       **  Chaps Sort Code (Branch-Internal Customer)
      C     BBCHSC        IFNE      *ZERO
      C                   MOVEL     BBCHSC        ##D(9)
@@ -1684,13 +1688,13 @@
      C                   RESET                   ##RDEF
      C                   MOVEL     ' BCHAPS_SRT' ##RDE
      C                   MOVEL     ##RDEF        ##R(9)
- 
+
       **  BOJ (Branch-Internal Customer)
      C                   MOVEL     BBBFIC        ##D(10)
      C                   RESET                   ##RDEF
      C                   MOVEL     ' BBOJ'       ##RDE
      C                   MOVEL     ##RDEF        ##R(10)
- 
+
       **  Fedwire (Branch-Internal Customer)
      C     BBFWCD        IFNE      *ZERO
      C                   MOVEL     BBFWCD        ##D(11)
@@ -1775,7 +1779,7 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Access Correspondent Details file
      C     A8BICN        CHAIN     CGCORRL4                           99
       *
@@ -1788,74 +1792,74 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Customer Address Line 1
      C                   MOVEL     BBCNA1        ##D(1)
- 
+
       **  Customer Address Line 2
      C                   MOVEL     BBCNA2        ##D(2)
- 
+
       **  Customer Address Line 3
      C                   MOVEL     BBCNA3        ##D(3)
- 
+
       **  Customer Address Line 4
      C                   MOVEL     BBCNA4        ##D(4)
- 
+
       **  Customer Name
      C                   MOVEL     BBCRNM        ##D(5)
- 
+
       **  Customer Number
      C                   MOVEL     BBCUST        ##D(6)
- 
+
       **  Customer Town
      C                   MOVEL     BBCRTN        ##D(7)
- 
+
       **  Customer BOJ
      C     BBBFIC        IFNE      *ZERO
      C                   MOVEL     BBBFIC        ##D(8)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(8)
      C                   ENDIF
- 
+
       **  Customer CHAPS Sort Code
      C     BBCHSC        IFNE      *ZERO
      C                   MOVEL     BBCHSC        ##D(9)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(9)
      C                   ENDIF
- 
+
       **  Customer CHIPS ABA
      C     BBCABA        IFNE      *ZERO
      C                   MOVEL     BBCABA        ##D(10)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(10)
      C                   ENDIF
- 
+
       **  Customer CHIPS ID
      C     BBCHID        IFNE      *ZERO
      C                   MOVEL     BBCHID        ##D(11)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(11)
      C                   ENDIF
- 
+
       **  Customer Fedwire
      C     BBFWCD        IFNE      0
      C                   MOVEL     BBFWCD        ##D(12)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(12)
      C                   ENDIF
- 
+
       **  Customer Bankleitzahl
      C                   MOVEL     BBBLCD        ##D(13)
- 
+
       **  Customer Fax Number
      C                   MOVEL     CDFAX         ##D(14)
- 
+
       **  Customer SWIFT ID
      C                   MOVEL     BBCSID        ##D(15)
- 
+
       **  Customer Telephone Number
      C                   MOVEL     BBCTNB        ##D(16)
       *
@@ -2586,7 +2590,6 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-      *
      C*-------------------------------------------------------
      C**  Accumulate RDE's and associated data and output to
      C**  PF/CGUDTAPD.
@@ -2969,7 +2972,7 @@
      C                   Z-ADD     S#PBIN        ##PBIN
      C                   Z-ADD     S#TBIN        ##TBIN
      C                   EXSR      PSHGRS
- 
+
       **  Chain to file SDCSINL7 for this interest posting:
       *
       ** Populate the key fields
@@ -2980,7 +2983,7 @@
      C                   Z-ADD     FACOD         KACOD
      C                   Z-ADD     FACSQ         KACSQ
      C                   MOVEL     FBRCA         KBRCA
- 
+
      C     KCSIN1        CHAIN     SDCSINL7                           87
      C     *IN87         IFEQ      *OFF
      C     TSSTAT        IFEQ      'T'
@@ -2994,14 +2997,14 @@
      C                   Z-ADD     0             WTXSC
      C                   Z-ADD     0             WSTDT
      C                   Z-ADD     0             WNINC
- 
+
       ** Third Tax fields
      C                   Z-ADD     0             WTTAXO
      C                   Z-ADD     0             WTTAXT
- 
+
      C     KCSIN1        SETLL     SDCSINL7
      C     KCSIN1        READE     SDCSINL7                               87
- 
+
      C     *IN87         DOWEQ     *OFF
      C                   ADD       TSGINT        WGINT
      C                   ADD       TSTXSR        WTXSR
@@ -3013,16 +3016,16 @@
      C                   ADD       TSTXSC        WTXSC
      C                   ADD       TSSTDT        WSTDT
      C                   ADD       TSNINC        WNINC
- 
+
       ** Also accumulate Third Tax if feature ON
      C     CER054        IFEQ      'Y'
      C                   ADD       TSTTDO        WTTAXO
      C                   ADD       TSTTDT        WTTAXT
      C                   ENDIF
- 
+
      C     KCSIN1        READE     SDCSINL7                               87
      C                   ENDDO
- 
+
       ** Retrieve Location Code
      C                   CALL      'AOLOCNR0'
      C                   PARM      *BLANKS       UFRTCD
@@ -3039,9 +3042,9 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Retrieve Threshold Method
- 
+
       ** 1st - attempt using Location Code
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       UFRTCD
@@ -3049,7 +3052,7 @@
      C                   PARM      DVCNCD        UFCTRT
      C                   PARM      BBCOLC        UFCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
- 
+
       ** 2nd - if not found using locn code, attempt using blank locn code
      C     UFRTCD        IFEQ      '*NRF   '
      C                   CALL      'AOCTTXR0'
@@ -3059,7 +3062,7 @@
      C                   PARM      *BLANKS       UFCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
- 
+
       **  Database Error
      C     UFRTCD        IFNE      *BLANK
      C     UFRTCD        ANDNE     '*NRF   '
@@ -3070,12 +3073,12 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       **  Initialise arrays to blanks
      C                   MOVEL     *BLANKS       ##R
      C                   MOVEL     *BLANKS       ##D
      C                   MOVEL     *BLANKS       ##S
- 
+
       **  Secondary Tax Amount (1)
      C                   MOVEL     WSTXA         ##D(1)
      C                   RESET                   ##RDEF
@@ -3085,21 +3088,21 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(1)
- 
+
       ** Secondary Tax Basket (2)
      C                   MOVEL     TSSTXB        ##D(2)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'SEC_TAXB'    ##RDE                                      AR864744
      C                   MOVEL     ' SEC_TAXB'   ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(2)
- 
+
       ** Secondary Tax Amount Code (3)
      C                   MOVEL     TSSTAC        ##D(3)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'SEC_TXAC'    ##RDE                                      AR864744
      C                   MOVEL     ' SEC_TXAC'   ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(3)
- 
+
       **  Secondary Tax Rate (4)
      C                   MOVEL     TSSTRA        ##D(4)
      C                   RESET                   ##RDEF
@@ -3108,21 +3111,21 @@
      C                   MOVEL     'Rate  '      ##RDEC
      C                   MOVEL     'L4'          ##RDET
      C                   MOVEL     ##RDEF        ##R(4)
- 
+
       ** CER048 switchable feature flag (5)
      C                   MOVEL     CER048        ##D(5)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'CER048  '    ##RDE                                      AR864744
      C                   MOVEL     ' CER048'     ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(5)
- 
+
       ** Threshold Method (6)
      C                   MOVEL     EWTHMD        ##D(6)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'THRSH_METH'  ##RDE                                      AR864744
      C                   MOVEL     ' THRSH_METH' ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(6)
- 
+
       **  Gross Interest In Deal Currency (7)
      C                   MOVEL     WGINT         ##D(7)
      C                   RESET                   ##RDEF
@@ -3132,7 +3135,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(7)
- 
+
       **  Gross Interest In Tax Currency (8)
      C                   MOVEL     WGINC         ##D(8)
      C                   RESET                   ##RDEF
@@ -3142,7 +3145,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSTCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(8)
- 
+
       ** Builld key for reading per deal / account
      C     KYACNT        KLIST
      C                   KFLD                    TSCUST
@@ -3150,27 +3153,27 @@
      C                   KFLD                    TSACOD
      C                   KFLD                    TSACSQ
      C                   KFLD                    TSBRCA
- 
+
      C     KYACNT        CHAIN     ACCNTBJ0                           87
                                                                                               CER069
      C                   IF        ATITAX = 'A'                                               CER069
      C                   EXSR      SRACTX                                                     CER069
      C                   ENDIF                                                                CER069
- 
+
      C                   MOVEL     *BLANKS       WCONV
      C                   Z-ADD     0             FPTHU
      C                   Z-ADD     0             FPTUT
- 
+
       ** Assign value according to taxable indicator
      C                   SELECT
      C                   WHEN      ATITAX = 'N'
      C                   Z-ADD     0             FPTHU
      C                   Z-ADD     0             FPTUT
- 
+
      C                   WHEN      ATITAX = 'Y'
      C                   Z-ADD     WGINT         FPTHU
      C                   Z-ADD     WGINC         FPTUT
- 
+
      C                   WHEN      ATITAX = 'T'
      C                   MOVEL     'Y'           WCONV
      C     TSOCCY        IFEQ      BJCYCD
@@ -3185,16 +3188,16 @@
      C                   PARM                    ZCCY
      C*****SDCURR        PARM      SDCURR        DSFDY                                      AR847634
      C     SDCURR        PARM      SDCURR        DSSDY                                      AR847634
- 
+
      C     A6MDIN        IFEQ      'D'
      C                   Z-ADD     A6SPRT        ZRATE1
      C                   ELSE
      C     A6SPRT        SUB       A6TCMP        WSPRT
      C     1             DIV(H)    WSPRT         ZRATE1
- 
+
      C                   MOVEL     'D'           ZMDI1
      C                   Z-ADD     A6NBDP        ZCDPI
- 
+
       ** Retrieve Deal Currency details
      C                   MOVEL     TSOCCY        ZCCY
      C                   CALL      'AOCURRR0'
@@ -3203,7 +3206,7 @@
      C                   PARM                    ZCCY
      C*****SDCURR        PARM      SDCURR        DSFDY                                      AR847634
      C     SDCURR        PARM      SDCURR        DSSDY                                      AR847634
- 
+
       ** Calculate conversion rate - Base vs Deal Ccy
      C     A6MDIN        IFEQ      'D'
      C                   Z-ADD     A6SPRT        ZRATE2
@@ -3211,10 +3214,10 @@
      C     A6SPRT        SUB       A6TCMP        WSPRT
      C     1             DIV(H)    WSPRT         ZRATE2
      C                   ENDIF
- 
+
      C                   MOVEL     'D'           ZMDI2
      C                   Z-ADD     A6NBDP        ZCDPO
- 
+
      C                   CALL      'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -3222,25 +3225,25 @@
      C                   PARM                    ZMDI2
      C                   PARM      *ZERO         ZRATEX
      C                   PARM      *BLANK        ZMDIX
- 
+
      C                   Z-ADD     ZRATEX        ZCRSRT
      C                   MOVE      ZMDI1         ZCRSMD
      C                   Z-ADD     ZCDPI         ZCDPF
      C                   Z-ADD     ZCDPO         ZCDPT
- 
+
      C                   Z-ADD     WPTHU         ZAMTF
      C                   Z-ADD     0             ZAMTT
      C                   EXSR      ZCCYXR
      C                   MOVE      ZAMTT         WPTHU
- 
+
      C     WGINT         SUB       WPTHU         FPTHU
      C     WGINC         SUB       WPTUT         FPTUT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
       ** Taxable Interest In Deal Currency (9)
      C                   MOVEL     FPTHU         ##D(9)
      C                   RESET                   ##RDEF
@@ -3250,7 +3253,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(9)
- 
+
       ** Taxable Interest In Tax Currency (10)
      C                   MOVEL     FPTUT         ##D(10)
      C                   RESET                   ##RDEF
@@ -3260,7 +3263,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSTCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(10)
- 
+
       ** Witholding Tax in Deal Currency (11)
      C                   MOVEL     WTXSR         ##D(11)
      C                   RESET                   ##RDEF
@@ -3270,7 +3273,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(11)
- 
+
       ** Witholding Tax in Tax Currency (12)
      C                   MOVEL     WTXSC         ##D(12)
      C                   RESET                   ##RDEF
@@ -3280,7 +3283,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSTCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(12)
- 
+
       ** Secondary Tax in Deal Currency (13)
      C                   MOVEL     WSTXA         ##D(13)
      C                   RESET                   ##RDEF
@@ -3290,7 +3293,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(13)
- 
+
       ** Secondary Tax in Deal Currency (14)
      C                   MOVEL     WSTXA         ##D(14)
      C                   RESET                   ##RDEF
@@ -3300,7 +3303,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSTCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(14)
- 
+
       ** Net Interest in Deal Currency (15)
      C                   MOVEL     WNINT         ##D(15)
      C                   RESET                   ##RDEF
@@ -3310,7 +3313,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(15)
- 
+
       ** Net Interest in Tax Currency (16)
      C                   MOVEL     WNINC         ##D(16)
      C                   RESET                   ##RDEF
@@ -3320,7 +3323,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSTCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(16)
- 
+
      C                   ENDIF
      C                   ENDIF
       *-----------------------------------------------------
@@ -3366,7 +3369,7 @@
      C                   Z-ADD     S#PBIN        ##PBIN
      C                   Z-ADD     S#TBIN        ##TBIN
      C                   EXSR      PSHGRS
- 
+
       ** Third Tax Amount In Deal Currency
      C                   MOVEL     WTTAXO        ##D(1)
      C                   RESET                   ##RDEF
@@ -3376,7 +3379,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSOCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(1)
- 
+
       ** Third Tax Amount In Tax Currency
      C                   MOVEL     WTTAXT        ##D(2)
      C                   RESET                   ##RDEF
@@ -3386,7 +3389,7 @@
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     TSTCDP        ##RDED
      C                   MOVEL     ##RDEF        ##R(2)
- 
+
       ** Third Tax Rate
      C                   MOVEL     TSTTRA        ##D(3)
      C                   RESET                   ##RDEF
@@ -3395,35 +3398,35 @@
      C                   MOVEL     'Rate  '      ##RDEC
      C                   MOVEL     'L5'          ##RDET
      C                   MOVEL     ##RDEF        ##R(3)
- 
+
       ** Third Tax Basket
      C                   MOVEL     TSTTXB        ##D(4)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'THD_TAXB'    ##RDE                                      AR864744
      C                   MOVEL     ' THD_TAXB'   ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(4)
- 
+
       ** Third Tax Account Code
      C                   MOVEL     TSTTAC        ##D(5)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'THD_TXAC'    ##RDE                                      AR864744
      C                   MOVEL     ' THD_TXAC'   ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(5)
- 
+
       ** State Code
      C                   MOVEL     TSSTCD        ##D(6)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'THD_STAC'    ##RDE                                      AR864744
      C                   MOVEL     ' THD_STAC'   ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(6)
- 
+
       ** Religious Affiliation Code
      C                   MOVEL     TSRLAF        ##D(7)
      C                   RESET                   ##RDEF
      C**********         MOVEL     'THD_RELA'    ##RDE                                      AR864744
      C                   MOVEL     ' THD_RELA'   ##RDE                                      AR864744
      C                   MOVEL     ##RDEF        ##R(7)
- 
+
       *-----------------------------------------------------
       *
       **  Accumulate RDE's and associated data and output to
@@ -3765,21 +3768,21 @@
       *                                                               *
       *****************************************************************
      C     SrPackDta     BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SrPackDta '  @STK(Q)
- 
+
       ** Reformat RDE data
- 
+
      C                   EXSR      SrFmtDta
- 
+
      C                   MOVEL     '*NEWARR '    PAction8
      C                   MOVEL     WPathStr      W0SPAT
- 
+
       ** Pack RDEs and associated data into data strings
- 
+
      C                   CALL      'CG3999'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PAction8
@@ -3790,7 +3793,7 @@
      C                   PARM                    ##RN
      C                   PARM                    ##DN
      C                   PARM                    ##FM
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   MOVEL     'CG3999'      W0File
      C                   MOVEL     PRtnCode      W0Key
@@ -3799,14 +3802,14 @@
      C                   MOVEL     'MIDAS  '     W0MsgF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   EXSR      WRTRDE
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3814,31 +3817,31 @@
       * SrFmtDta - Reformat data before packing it.                  *
       *****************************************************************
      C     SrFmtDta      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SrFmtDta  '  @STK(Q)
- 
+
       ** Loop through RDE's and data
- 
+
      C                   Z-ADD     0             Wx1
- 
+
      C     Wx1           DOUEQ     20
- 
+
       ** Move RDE's and its data to their templates
- 
+
      C                   ADD       1             Wx1
      C                   MOVEL     ##R(Wx1)      R#DEFN
      C                   MOVEL     ##D(Wx1)      R#DATA
- 
+
       ** Reformat only if data is present and RDE is edited
- 
+
      C     R#DATA        IFNE      *BLANK
      C     ##RDEC        ANDNE     *BLANK
- 
+
       ** Right-align amount
- 
+
      C                   MOVEA     ##NUMA        WAr29
      C                   Z-ADD     1             Wx2
      C     *BLANK        LOOKUP    WAr29(Wx2)                             61
@@ -3851,40 +3854,40 @@
      C                   MOVEL     WAr29(Wx2)    WAr20(Wx3)
      C                   SUB       1             Wx3
      C                   ENDDO
- 
+
       ** Sign
- 
+
      C     ##SIGN        IFEQ      '-'
      C                   Z-SUB     WNum20        ##NUMB
      C                   ELSE
      C                   Z-ADD     WNum20        ##NUMB
      C                   ENDIF
- 
+
       ** Edit type
- 
+
      C     ##EDTT        IFEQ      *BLANK
      C                   MOVEL     ##RDET        ##EDTT
      C                   ENDIF
- 
+
       ** Default decimal places
- 
+
      C     ##DCPA        IFEQ      *BLANK
      C                   MOVEL     ##RDED        ##DCPA
      C                   ENDIF
- 
+
       ** New RDE data
- 
+
      C                   MOVEL     R#DATA        ##D(Wx1)
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************                       CER069
       /EJECT                                                                                  CER069
@@ -4008,7 +4011,6 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
-     C*
      C*===========================================================
      C* EURO - CHECK FOR SAR CEU013
      C*===========================================================
@@ -4044,13 +4046,13 @@
      C                   ELSE
      C                   MOVE      'N'           CEU014
      C                   ENDIF
- 
+
       *===========================================================
       * CER048 - Secondary Tax
       *===========================================================
       *   Initialize internal switch indicator CER048
      C                   MOVE      'N'           CER048
- 
+
       *   Check for SAR CER048
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -4061,13 +4063,13 @@
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CER048
      C                   ENDIF
- 
+
       *===========================================================
       * CER054 - Third Tax
       *===========================================================
       *   Initialize internal switch indicator CER054
      C                   MOVE      'N'           CER054
- 
+
       *   Check for SAR CER054
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -4121,7 +4123,7 @@
      C                   ELSE
      C                   MOVE      'N'           CFT004
      C                   ENDIF
- 
+
       ** Build key for Customer Income file SDCSINPD
      C     KCSIN1        KLIST
      C                   KFLD                    KRUND

@@ -10,11 +10,15 @@
       *                                                               *
       *  (c)Finastra International Limited 2016                       *
       *                                                               *
-      *  Last Amend No. MD054017           Date 04Sep19               *
-      *  Prev Amend No. CER050  *CREATE    Date 16Jun19               *
+      *  Last Amend No. MD055733           Date 03Jul20               *
+      *  Prev Amend No. MD054017           Date 04Sep19               *
+      *                 CER050  *CREATE    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  MD054017-Change on validation of System Value "APR Formula"  *
       *  CER050 - Annualised Percentage Rate (APR)                    *
       *                                                               *

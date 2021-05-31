@@ -35,8 +35,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 BUG28052           Date 22Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CDL081             Date 14Dec09               *
@@ -59,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -81,12 +85,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FMMDEAMLL  IF   E           K DISK    INFSR(*PSSR)
      FSDSTAAL1  IF   E           K DISK    INFSR(*PSSR)                                      CDL013
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -105,46 +109,46 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Map variable names to indicators to allow use of names instead
       ** of numbers; base the following data structure on a pointer to
       ** the indicator array.
      D Indicators      DS                  BASED(pIndicator)
- 
+
       ** Set the indicator array pointer
      D pIndicator      S               *   INZ(%Addr(*In))
- 
+
      D                 DS
       **  Data structure for SR. MM1010 - Date field YYMMDD.
      D  HNDATE                 1      8  0
@@ -163,10 +167,10 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)                                    CDL013
                                                                                              CDL013
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                 CDL081
- 
+
      D @M              S              2  0 DIM(12) CTDATA PERRCD(12)
       **  Array for SR. MM1004 - Days in a month.  (Compile time array)
- 
+
       **  Data structure for SR. MM1004 - Manipulate date input.
      D @@WKDS          DS
      D  @@WKDT                 1      8  0
@@ -174,12 +178,12 @@
      D  @@WKY                  3      4  0
      D  @@WKM                  5      6  0
      D  @@WKD                  7      8  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Input field @@TINT - Total interest
      D @@TINT          S             15P 0
       * Input field @@INTD - Interest to date
@@ -217,18 +221,18 @@ C    D PBRTR           S              7P 5
       * I/P field IKCNUM (Converted Customer No.) from Cust. No. validation
 C    D*IKCNUM***       S              6S 0                                                    CSD027
 C    D IKCNUM          S              6A                                                      CSD027
- 
+
       * Input field ZCCY (Currency code) set up in calling routine
 C    D ZCCY            S              3A
       * Input field ZLOC (Location code) set up in calling routine
 C    D ZLOC            S              3A
- 
+
       * Output field @@INMT - Interest at Maturity
      D @@INMT          S             15P 0
- 
+
       * Work field @@INTR used for call to MM1030
      D @@INTR          S             15P 0
- 
+
       ** Work field @@TXAM used for Tax amount                                              BUG28052
      D @@TXAM          S             13P 0                                                  BUG28052
                                                                                             BUG28052
@@ -238,7 +242,7 @@ C    D ZLOC            S              3A
       *  being used.
      D IN80            S              1P 0
      D IN82            S              1P 0
- 
+
       * Work field @@STRT used for call to ZDATE9, defined here to make it
       *  signed (rather than packed) to avoid problems
      D @@STRT          S              8S 0
@@ -277,7 +281,7 @@ C    D ZLOC            S              3A
                                                                                               CDL081
      D C#BASE          C                   CONST('BasCcyTaxRoundDown')                        CDL081
      D C#NBAS          C                   CONST('NBasCcyTaxRoundDown')                       CDL081
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -285,7 +289,7 @@ C    D ZLOC            S              3A
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -293,7 +297,7 @@ C    D ZLOC            S              3A
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C*   MM1010 - CALCULATION OF INTEREST AT MATURITY                *
      C*                                                               *
      C*  FILES EXPECTED  -  SDDEALPD                                  *
@@ -588,13 +592,13 @@ C    D ZLOC            S              3A
      C                   Z-ADD     0             @@DLAM           15 0
      C                   Z-ADD     0             @@EIRT           11 7
      C                   MOVE      *BLANK        @@MTXI            1
- 
+
      C     M11010        TAG
- 
+
      C********************************************************************
- 
+
      C                   RETURN
- 
+
      C********************************************************************
      C*
      C* MM1004 - CALCULATE THE NEXT INTEREST PAYMENT DATE
@@ -778,7 +782,7 @@ C    D ZLOC            S              3A
       *
      C     M10049        ENDSR
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -790,9 +794,9 @@ C    D ZLOC            S              3A
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       *         Input field @@TINT - Total interest
      C                   PARM                    @@TINT
@@ -820,7 +824,7 @@ C    D ZLOC            S              3A
      C                   PARM                    @@BRMD
       *         Input field BNHKTR (Hong Kong Tax Rate) from Dealing ICD
      C                   PARM                    BNHKTR
- 
+
       *         Input field S01383 indicator
      C                   PARM                    S01383
       *         Input field BRTR (BRT Rate) from BRT ICD
@@ -831,21 +835,21 @@ C    D ZLOC            S              3A
      C                   PARM                    PBRTR
       * I/P field IKCNUM (Converted Customer No.) from Cust. No. validation
      C                   PARM                    IKCNUM
- 
+
       *         Input field ZCCY (Currency code) set up in calling routine
      C                   PARM                    ZCCY
       *         Input field ZLOC (Location code) set up in calling routine
      C                   PARM                    ZLOC
- 
+
       *         Output field @@INMT - Interest at Maturity
      C                   PARM                    @@INMT
      C                   PARM                    CDL013                                       CDL013
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
      C     CDL013        IFEQ      'Y'                                                        CDL013
       *                                                                                       CDL013
@@ -940,9 +944,9 @@ C    D ZLOC            S              3A
      C                   EVAL      W#BSRD = P@VL01                                            CDL081
      C                   EVAL      W#NBRD = P@VL02                                            CDL081
      C                   ENDIF                                                                CDL081
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

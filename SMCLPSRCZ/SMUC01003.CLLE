@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC048A            Date 06Aug12              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC048A            Date 06Aug12              */
 /*                      CSC048  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC048A - Journal Caching                                   */
 /*       CSC048 - Journal Caching                                    */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODE)
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7) VALUE(' ')
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
@@ -31,26 +33,26 @@
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
 /**********  DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                */                  /*CSC048A*/
 /**********  DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)                 */                  /*CSC048A*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2013')
- 
+
 /* Global monitor message.  */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Processing when mode is Upgrade */
- 
+
              IF         COND(&MODE *EQ '*UPG') THEN(DO)
                 CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSC048' +
                              &DSFDY)
                 IF         COND(&RTCD *EQ ' ') THEN(DO)
- 
+
 /* If CSC048 is installed, set System Value UseIBMJournalCache? to Y */
- 
+
                 CHGVAR     VAR(&SYSVAL) VALUE('UseIBMJournalCache?')
                 CHGVAR     VAR(&NEWSYSVAL) VALUE('Y')
                 CALL       PGM(SD009510) PARM(&SYSVAL &NEWSYSVAL ' ')
@@ -58,30 +60,40 @@
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                              /*CSC048A*/
                 GOTO       CMDLBL(ABNOR)                                                 /*CSC048A*/
                 ENDDO                                                                    /*CSC048A*/
- 
+
 /* Drop records for Switchable Features file */
- 
-                SCRUNSQL   SQL('delete from SCSARSPD where AXSARN = +
-                             ''CSC048''')
+
+/**********     SCRUNSQL   SQL('delete from SCSARSPD where AXSARN = +
+                             ''CSC048''') */                                            /*MD055681*/
+                SCRUNSQL   SQL('delete from SCSRSCTD where AXSARN = +
+                             ''CSC048''')                                               /*MD055681*/
                 MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from SCSRSXTD where AXSARN = +
+                             ''CSC048''')                                               /*MD055681*/
+                MONMSG     MSGID(SQL0100)                                               /*MD055681*/
                 SCRUNSQL   SQL('delete from SCPASSPD where P@SARN = +
                              ''CSC048''')
                 MONMSG     MSGID(SQL0100)
                 SCRUNSQL   SQL('delete from GPCSECPD where P@SARN = +
                            ''CSC048''')
                 MONMSG     MSGID(SQL0100)
-                SCRUNSQL   SQL('delete from SCSARDPD where SARN = +
-                             ''CSC048''')
+/*********      SCRUNSQL   SQL('delete from SCSARDPD where SARN = +
+                             ''CSC048''') */                                            /*MD055681*/
+                SCRUNSQL   SQL('delete from SCSRDCTD where SARN = +
+                             ''CSC048''')                                               /*MD055681*/
                 MONMSG     MSGID(SQL0100)
-                SCRUNSQL   SQL('delete from SCSARZPD where AXSARN = +
-                             ''CSC048''')
-                MONMSG     MSGID(SQL0100)
-                SCRUNSQL   SQL('delete from SCSAREPD where SARN = +
-                             ''CSC048''')
-                MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from SCSRDXTD where SARN = +
+                             ''CSC048''')                                               /*MD055681*/
+                MONMSG     MSGID(SQL0100)                                               /*MD055681*/
+/**********     SCRUNSQL   SQL('delete from SCSARZPD where AXSARN = +
+                             ''CSC048''') */                                            /*MD055681*/
+/**********     MONMSG     MSGID(SQL0100) */                                            /*MD055681*/
+/**********     SCRUNSQL   SQL('delete from SCSAREPD where SARN = +
+                             ''CSC048''') */                                            /*MD055681*/
+/**********     MONMSG     MSGID(SQL0100) */                                            /*MD055681*/
                 ENDDO
              ENDDO
- 
+
 /* Move Processing for Migration to PGM/SMC000086 */                                     /*CSC048A*/
 /**Processing*when*mode*is*Migration**/                                                  /*CSC048A*/
 /**********/                                                                             /*CSC048A*/
@@ -116,12 +128,12 @@
 /**********        CALL       PGM(SD009510) PARM(&SYSVAL &NEWSYSVAL ' ')                 /*CSC048A*/
 /**********     ENDDO                                                */                  /*CSC048A*/
 /**********  ENDDO                                                   */                  /*CSC048A*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL152             Date 02Dec13               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL152             Date 02Dec13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26393           Date 12Oct09               *
       *                 BUG25800A          Date 16Sep09               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL152 - Include Transaction Type Identification Code on     *
       *           MT940/MT950 (Recompile)                             *
@@ -173,6 +175,7 @@
      D PBasNw          S              6A                                                      CER030
      D PCopy           S              1A                                                      CER030
      D W1trtp          S              2A                                                    BUG22253
+     D CMG008          S              1A                                                      CMG008
       *                                                                                       CER030
       ** External DS for SAR Details                                                          CER030
       *                                                                                       CER030
@@ -389,6 +392,11 @@
      C                             (EDNWRK = 'SWIFT' OR D1MCNW =  'Y')                        CER030
      C                   EVAL      D1TRTP = '03'                                              CER030
      C                   ENDIF                                                                CER030
+      ** Allow Non-SWIFT Character Conversion: default is 'N'
+      *
+     C                   IF        D1CONV = *Blank
+     C                   EVAL      D1CONV = 'N'
+     C                   ENDIF
       *    ----------    ------
      C     @FldDflt      ENDSR
  
@@ -472,6 +480,7 @@
      C                   MOVEL     EDTRTP        D1TRTP                                       CER030
      C                   EVAL      D1ACNF = EDACNF                                            CER030
      C                   EVAL      D1MCNW = EDMCNW                                            CER030
+     C                   EVAL      D1CONV = EDCONV                                            CMG008
  
       ** Fields defaulting
       *
@@ -545,6 +554,7 @@
      C                   MOVE      W1trtp        EDTRTP                                     BUG22253
      C                   EVAL      EDACNF = D1ACNF                                            CER030
      C                   EVAL      EDMCNW = D1MCNW                                            CER030
+     C                   EVAL      EDCONV = D1CONV                                            CMG008
       *    ----------    ------
      C     @ScrToFile    ENDSR
  
@@ -619,6 +629,22 @@
      C                   KFLD                    KNwrk                                        CER030
      C                   KFLD                    KTrCd                                        CER030
       *                                                                                       CER030
+                                                                                              CMG008
+      ** Check if feature CMG008 is installed                                                 CMG008
+                                                                                              CMG008
+     C                   EVAL      CMG008 = 'N'                                               CMG008
+     C                   EVAL      *IN89 = *OFF                                               CMG008
+                                                                                              CMG008
+     C                   CALL      'AOSARDR0'                                                 CMG008
+     C                   PARM      *BLANKS       PRtcd                          Return Code   CMG008
+     C                   PARM      '*VERIFY'     POptn                          Option        CMG008
+     C                   PARM      'CMG008 '     PSard                          Feature Ref   CMG008
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG008
+                                                                                              CMG008
+     C                   IF        PRtcd = *BLANKS                                            CMG008
+     C                   EVAL      CMG008 = 'Y'                                               CMG008
+     C                   EVAL      *IN89 = *ON                                                CMG008
+     C                   ENDIF                                                                CMG008
       *    ----------    ------
      C     @INZSR        ENDSR
  

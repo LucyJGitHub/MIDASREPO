@@ -48,8 +48,12 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD054101           Date 08Aug19               *
+      *  Last Amend No. AR375891A          Date 26Aug20               *
+      *  Prev Amend No. AR325152A          Date 21May10               *
+      *                 MD055733           Date 03Jul20               *
+      *                 MD055146           Date 04Feb20               *
+      *                 AR674226           Date 04Dec19               *
+      *                 MD054101           Date 08Aug19               *
       *                 MD053873           Date 10Jul19               *
       *                 MD052216           Date 04Apr19               *
       *                 MD053295           Date 13Apr19               *
@@ -195,6 +199,16 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR375891A - Fee for parts sold was tagged as 'Incoming', it  *
+      *              should be 'Outgoing'. Check processing type of   *
+      *              loan. (Child: AR375892).                         *
+      *  AR325152A- Fee Loan Advice has zero amount. Applied fix      *
+      *             162991 for missing fee amount.                    *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -497,6 +511,8 @@
      F********SDCURRPDIF  E                    DISK                                           CSC042
      FSDCURRPDIF  E                    DISK                           UC                      CSC042
      FSDBRCHPDIF  E                    DISK
+     FPSOLDL1 IF  E           K        DISK                                                AR375891A
+     F            CLOANCLF                          KRENAMEPSOLDL1F                        AR375891A
      FLEFERCL3IF  E           K        DISK                                                   CLE071
      FSDCTRYL1IF  E           K        DISK                                                 CLE075AP
      F*LVENTZZ*UF  E                    DISK         KINFSR *PSSR         045634
@@ -655,7 +671,8 @@
      E                    TXDY      150  1 0             Telex Notice Days                    CSC042
      E                    INCY      150  1               In CCY ind                           CSC042
      E***********         BCA       150  6               BRCH INT. CUST   151104
-     E                    BCA       900  6               BRCH INT. CUST   151104
+     E**********          BCA       900  6               BRCH INT. CUST              151104 MD055146
+     E                    BCA       999  6               BRCH INT. CUST                     MD055146
      E***********         CDAT       15  5 0             FUTURE DATES     045634
      E                    CDAT       15  5 0A            FUTURE DATES     045634
      E                    FFAM       15 13 0A            FUTURE FACILITY AMTS
@@ -665,7 +682,8 @@
      E                    TTOD       99 13 0A            FUT. TOTAL DRAW  100517
      E                    INT         6 15 0             ZHASH INTEGERS
      E                    DEC         6  3 0             ZHASH DECIMALS
-     E                    #BCH      900  3               Branch Codes Array                 CLE075AP
+     E**********          #BCH      900  3               Branch Codes Array        CLE075AP MD055146
+     E                    #BCH      999  3               Branch Codes Array                 MD055146
      E                    #CTY      400  2               Country Codes Array                CLE075AP
      E                    #NOS      200 13 0             Settlement Allocations Array       CLE075AP
      E                    #NSS      200 13 0             Settlement Allocations Sorted      CLE075AP
@@ -718,6 +736,10 @@
      I              CLAS                            CLASL3                                    CLE042
      I/COPY WNCPYSRC,LE0492I003
       *
+     IPSOLDL1F                                                                             AR375891A
+      ** Redefine fields                                                                   AR375891A
+     I              LNRF                            PSLNRF                                 AR375891A
+     I              PTYP                            PSPTYP                                 AR375891A
      ILETLXZXF
       **  Redefined number of records on file field
      I              NORE                            NORE1
@@ -1221,7 +1243,8 @@
      ISDBANK    E DSSDBANKPD
       *
      I***SDBRCH*    E DSSDBRCHPD                                                            CLE075AP
-     ISDBRCH    E DSSDBRCHPD                900                                             CLE075AP
+     I***SDBRCH*   E DSSDBRCHPD                900                                 CLE075AP MD055146
+     ISDBRCH    E DSSDBRCHPD                999                                             MD055146
      I              A8CMCD                          CMPYM
       *
      ISDCUST    E DSSDCUSTPD
@@ -2281,7 +2304,8 @@
       ** Full Cache SDBRCHPD                                                                CLE075AP
       *                                                                                     CLE075AP
      C           1         SETLLSDBRCHPD                                                    CLE075AP
-     C                     Z-ADD900       A       30                                        CLE075AP
+     C**********           Z-ADD900       A       30                               CLE075AP MD055146
+     C                     Z-ADD999       A       30                                        MD055146
      C           A         OCUR SDBRCH                                                      CLE075AP
      C                     READ SDBRCHPD                 30                                 CLE075AP
      C                     MOVE A8BRCD    #BCH,A                                            CLE075AP
@@ -5310,8 +5334,19 @@
      C********** FELOAN    IFGT 0                                                      244804 CLE148
      C           FELOAN    IFNE *BLANKS                                                       CLE148
       *                                                                                       244804
+     C                     MOVEL'  '      PSPTYP                                           AR375891A
+     C           FELOAN    CHAINPSOLDL1F             35                                    AR375891A
+      *                                                                                    AR375891A
      C           PTFI      IFEQ 'P'                                                           244804
      C           PTFI      OREQ 'S'                                                           244804
+     C           PTFI      OREQ ' '                                                        AR375891A
+     C           PSPTYP    ANDEQ66                                                         AR375891A
+     C           PTFI      OREQ ' '                                                        AR375891A
+     C           PSPTYP    ANDEQ67                                                         AR375891A
+     C           PTFI      OREQ ' '                                                        AR375891A
+     C           PSPTYP    ANDEQ69                                                         AR375891A
+     C           PTFI      OREQ ' '                                                        AR375891A
+     C           PSPTYP    ANDEQ72                                                         AR375891A
      C                     MOVE 'O'       INOI                                                244804
      C                     ELSE                                                               244804
      C                     MOVE 'I'       INOI                                                244804
@@ -7573,6 +7608,7 @@
      C/COPY WNCPYSRC,LE0492C025
      C                     Z-ADDWFEE      INTA
      C                     MOVE FEBRCA    BRCA
+     C                     Z-ADDFEFAMT    FEAM                                             AR325152A
      C**********           Z-ADDFECNUM    CNUM                                                CSD027
      C**********           Z-ADD*ZEROS    FCUS                                                CSD027
      C                     MOVE FECNUM    CNUM                                                CSD027

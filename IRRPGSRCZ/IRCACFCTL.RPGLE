@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031031           Date 24Feb15               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 AR314712           Date 13Apr10               *
@@ -75,6 +76,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -1935,7 +1939,8 @@
      C                   ENDIF                                                                CAP043
                                                                                               CAP043
       ** Insert DLDLDGQD record for CLE025 processing                                         247888
-     C                   IF        #1ACTN = 'I' AND CLE025 = 'Y'                              247888
+     C**********         IF        #1ACTN = 'I' AND CLE025 = 'Y'                     247888 MD031031
+     C                   IF        #1ACTN = 'I'                                             MD031031
      C     #0DLNO        CHAIN     DLDLDGD0                           12                      247888
      C     *IN12         IFEQ      *ON                                                        247888
      C                   EVAL      DX_F1DLNO = #0DLNO                                         247888

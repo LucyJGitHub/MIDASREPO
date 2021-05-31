@@ -13,12 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG27790 *CREATE   Date 23Jun10               *
+      *  Last Amend No. MD054955           Date 16Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG27790 *CREATE   Date 23Jun10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
       *                                                               *
@@ -93,7 +95,7 @@
      C   02              IF        X2x = 0
      C                   EVAL      *INU8 = *ON
      C                   ENDIF
- 
+
      C                   ENDDO
      C*
      CL1 20              EXSR      MatchRec

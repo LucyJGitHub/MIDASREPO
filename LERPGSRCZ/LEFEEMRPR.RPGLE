@@ -13,8 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053607           Date 19Jul19               *
+      *  Last Amend No. MD050688           Date 26Aug20               *
+      *  Prev Amend No. AR375891B          Date 26Aug20               *
+      *                 AR375892           Date 26Aug20               *
+      *                 MD052696           Date 04Apr19               *
+      *                 MD031692           Date 12Mar20               *
+      *                 MD030856           Date 06Nov19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD053607           Date 19Jul19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
@@ -45,6 +51,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure protect indicator set correctly. *
+      *              (Child: AR375892)                                *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *
+      *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
+      *             after rejecting amendments to their maturity dates*
+      *  MD031692 - Incorrect accrual when fee rate is changed on     *
+      *             payment date. Add warning message parameters in   *
+      *             LEFEEMAMD.                                        *      
+      *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053607 - Matured Fee did not appear on fees screen.        *
       *           - Recompile due to changes in LEFHSTL1.             *
@@ -343,8 +362,10 @@
       ***  -------------------------------------------------------------------
                                                                                               244636
       ** Parameter for LEFEEMRTV                                                              244636
-     D PRcvParm        S             92                                                       244636
+     D*PRcvParm*       S             92                                              244636 MD050688
+     D PRcvParm        S            545                                                     MD050688
                                                                                               244636
+     D PPayParm        S           1045                                                     AR375892
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
      D WTRCcy          S              3A                                                     CSF011A
@@ -1008,6 +1029,17 @@
      C                   PARM                    ResetErrs         1
       *                                                                                       245099
      C                   PARM                    CLE006                                       245099
+     C                   PARM                    DRejFlg           1                        MD030856
+      *                                                                                     MD031692
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WFldNamArr                                 MD031692
+     C                   PARM                    WMsgIDArr                                  MD031692
+     C                   PARM                    WMsgDtaArr                                 MD031692
+      *                                                                                     MD031692
+      ** Array index (3P0) from/to caller                                                   MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WIdx                                       MD031692     
       *
      C                   END
       *
@@ -1077,6 +1109,7 @@
      C                   PARM                    WIdx
       * Valid Fee layout (DS) from/to caller
      C                   PARM                    ValidFeem
+     C                   PARM                    DRejFlg                                    MD052696
      C                   Endif
       *
       ***  If errors returned
@@ -1162,6 +1195,7 @@
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   AR375892
       *
       ***  Retrieve Branch code of the transaction
       *
@@ -1525,8 +1559,14 @@
      C                   ENDIF
       *
      C     WPTFI         IFEQ      *BLANK
+     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
+     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
+     C                   MOVE      'N'           ##PPAY                                    AR375891B
+     C                   MOVE      'Y'           ##PREC                                    AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVE      'Y'           ##PPAY
      C                   MOVE      'N'           ##PREC
+     C                   ENDIF                                                             AR375891B
      C                   ENDIF
       *
      C                   ENDIF

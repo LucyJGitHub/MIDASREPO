@@ -11,8 +11,31 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD055081             Date 17Jan20             *
-      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *  Last Amend No. MD056811             Date 20Sep20             *
+      *  Prev Amend No. MD056564             Date 24Aug20             *
+      *                 MD056807             Date 20Sep20             *
+      *                 MD056605             Date 05Sep20             *
+      *                 MD056609             Date 07Sep20             *
+      *                 MD056781             Date 20Sep20             *
+      *                 MD056889             Date 11OCt20             *
+      *                 MD056890             Date 11Oct20             *
+      *                 MD056887             Date 29Sep20             *
+      *                 MD056556             Date 31Aug20             *
+      *                 MD056559             Date 31Aug20             *
+      *                 MD056608             Date 08Sep20             *
+      *                 MD056558             Date 31Aug20             *
+      *                 MD056606             Date 07Sep20             *
+      *                 MD056610             Date 07Sep20             *
+      *                 MD057035             Date 21Oct20             *
+      *                 MD056694             Date 09Sep20             *
+      *                 MD055682             Date 31Jul20             *
+      *                 MD055681             Date 31Jul20             *
+      *                 MD055242             Date 10Feb20             *
+      *                 MD055265             Date 10Feb20             *
+      *                 MD055264             Date 31Mar20             *
+      *                 MD054955             Date 16Dec19             *
+      *                 MD055081             Date 17Jan20             *
+      *                 MD054605             Date 17Oct19             *
       *                 MD034724             Date 11Jun15             *
       *                 CUP042 *REWRITE    Date 04May15               *
       *                 CUP040             Date 09Aug13               *
@@ -33,6 +56,29 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056811 - Deliverable Data Split for SDRPCKTD and SDRPDFTD  *
+      *  MD056564 - Deliverable Data Split for No Display field cond  *
+      *  MD056807 - Deliverable Data Split for Compliance Watch       *
+      *  MD056605 - Deliverable Data Split for APDTAKPD/APUDTKPD      *
+      *  MD056609 - Deliverable Data Split for APMNEXPD               *
+      *  MD056781 - Deliverable Data Split for MESWACPD               *
+      *  MD056889 - Deliverable Data Split for SDJARFPD               *
+      *  MD056890 - Deliverable Data Split for SDMREFPD               *
+      *  MD056887 - Deliverable Data Split for SCNJRNPD               *
+      *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
+      *  MD056559 - Deliverable Data Split for SCSQLSPD               *
+      *  MD056608 - Deliverable Data Split for APFUNCPD               *
+      *  MD056558 - Deliverable Data Split for GODTACPD               *
+      *  MD056606 - Deliverable Data Split for APDBINFPD              *
+      *  MD056610 - Deliverable Data Split for APPGMSTD               *
+      *  MD057035 - Allow delivery of XTD                             *
+      *  MD056694 - New deliverable data file UPDDSFPD.               *
+      *  MD055682 - Deliverable Data Split for TRIG                   *
+      *  MD055681 - Deliverable Data Split for SAR                    *
+      *  MD055242 - Standardization of Deliverable Data Split         *
+      *  MD055265 - Deliverable Data Split for Report Control Facility*
+      *  MD055264 - Deliverable Data Split for Help Text              *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD055081 - New files added for Deliverable Data Split do     *
       *             not exist yet, hence layer cannot be found.       *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -893,6 +939,17 @@
       *********************************************************************
      C     ProcOther     BEGSR
       *
+      ** Check if file is not '*XTD'                                               MD055242 MD057035
+     C**********         If        %SUBST(Member:6:3) = 'XTD'                      MD055242 MD057035
+     C**********         EVAL      Char100 = '*XTD file cannot be +                MD055242 MD057035
+     C**********                   delivered, *CTD file must be delivered  : ' +   MD055242 MD057035
+     C**********                   Member                                          MD055242 MD057035
+     C**********         EXSR      InsertErrMsg                                    MD055242 MD057035
+     C**********         EVAL      NoWrite = 'N'                                   MD055242 MD057035
+     C**********         LEAVESR                                                   MD055242 MD057035
+     C**********         Endif                                                     MD055242 MD057035
+                                                                                   MD055242 MD057035
+     C                   If        %SUBST(Member:6:3) =  'CTD'                              MD057035
       ** Check if the file has an '*XTD' equivalent; this means it is using
       **  the new Deliverable Data Split.
      C                   EVAL      ChkFile = %SUBST(Member:1:5) + 'XTD'
@@ -908,12 +965,53 @@
      C                             or ChkFile = 'GPSVRXTD'                                  MD054605
      C                             or ChkFile = 'SDSVLXTD'                                  MD054605
      C                             or ChkFile = 'SDSVRXTD'                                  MD054605
+     C                             or ChkFile = 'CGCSHXTD'                                  MD054955
+     C                             or ChkFile = 'CGGSAXTD'                                  MD054955
+     C                             or ChkFile = 'CGPTNXTD'                                  MD054955
+     C                             or ChkFile = 'CGPTYXTD'                                  MD054955
+     C                             or ChkFile = 'CGRASXTD'                                  MD054955
+     C                             or ChkFile = 'CGRDEXTD'                                  MD054955
+     C                             or ChkFile = 'CGRDTXTD'                                  MD054955
+     C                             or ChkFile = 'CGSETXTD'                                  MD054955
+     C                             or ChkFile = 'SCHLPXTD'                                  MD055264
+     C                             or ChkFile = 'FCRCOXTD'                                  MD055265
+     C                             or ChkFile = 'FCREPXTD'                                  MD055265
+     C                             or ChkFile = 'FCRSFXTD'                                  MD055265
+     C                             or ChkFile = 'GPSRDXTD'                                  MD055681
+     C                             or ChkFile = 'GPSRSXTD'                                  MD055681
+     C                             or ChkFile = 'SCSRDXTD'                                  MD055681
+     C                             or ChkFile = 'SCSRSXTD'                                  MD055681
+     C                             or ChkFile = 'GPTRGXTD'                                  MD055682
+     C                             or ChkFile = 'GPSRTXTD'                                  MD055682
+     C                             or ChkFile = 'SCTRGXTD'                                  MD055682
+     C                             or ChkFile = 'SCSRTXTD'                                  MD055682
+     C                             or ChkFile = 'APPGSXTD'                                  MD056610
+     C                             or ChkFile = 'APDBIXTD'                                  MD056606
+     C                             or ChkFile = 'GODTCXTD'                                  MD056558
+     C                             or ChkFile = 'APFUNXTD'                                  MD056608
+     C                             or ChkFile = 'SCSQLXTD'                                  MD056559
+     C                             or ChkFile = 'GPGLFXTD'                                  MD056556
+     C                             or ChkFile = 'SCNJRXTD'                                  MD056887
+     C                             or ChkFile = 'SDMRFXTD'                                  MD056890
+     C                             or ChkFile = 'SDJARXTD'                                  MD056889
+     C                             or ChkFile = 'GPJARXTD'                                  MD056889
+     C                             or ChkFile = 'MESWAXTD'                                  MD056781
+     C                             or ChkFile = 'APMNXXTD'                                  MD056609
+     C                             or ChkFile = 'APDTKXTD'                                  MD056605
+     C                             or ChkFile = 'APUDKXTD'                                  MD056605
+     C                             or ChkFile = 'SDCWFXTD'                                  MD056807
+     C                             or ChkFile = 'SDCWMXTD'                                  MD056807
+     C                             or ChkFile = 'APNDCXTD'                                  MD056564
+     C                             or ChkFile = 'GPNDCXTD'                                  MD056564
+     C                             or ChkFile = 'SDRPCXTD'                                  MD056811
+     C                             or ChkFile = 'SDRPDXTD'                                  MD056811
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
      C                   EVAL      AUMBTP = 'DDSDATA'                                       MD054605
      C                   LEAVESR
      C                   ENDIF
+     C                   Endif                                                              MD057035
       *
       ** Check if the file has '_X' which means it is a delete version of an
       **  Extract File.
@@ -970,6 +1068,42 @@
      C                   PARM                    ObjectType
      C                   PARM                    ReturnCode
      C                   PARM                    ReturnData
+      ** If not found, try with 'old' name                                                  MD054955
+     C                   IF        ReturnCode = 'E'                                         MD054955
+     C                             and %SUBST(Member:6:3) = 'CTD'                           MD054955
+     C                   SELECT                                                             MD054955
+     C     Member        WHENEQ    'CGCSHCTD'                                               MD054955
+     C                   EVAL      Member = 'CGCSCHPD'                                      MD054955
+     C     Member        WHENEQ    'CGGSACTD'                                               MD054955
+     C                   EVAL      Member = 'CGGSASPD'                                      MD054955
+     C     Member        WHENEQ    'CGPTNCTD'                                               MD054955
+     C                   EVAL      Member = 'CGPTTNPD'                                      MD054955
+     C     Member        WHENEQ    'CGPTYCTD'                                               MD054955
+     C                   EVAL      Member = 'CGPTYPPD'                                      MD054955
+     C     Member        WHENEQ    'CGRASCTD'                                               MD054955
+     C                   EVAL      Member = 'CGRASCPD'                                      MD054955
+     C     Member        WHENEQ    'CGRDECTD'                                               MD054955
+     C                   EVAL      Member = 'CGRDECPD'                                      MD054955
+     C     Member        WHENEQ    'CGRDTCTD'                                               MD054955
+     C                   EVAL      Member = 'CGRDTAPD'                                      MD054955
+     C     Member        WHENEQ    'CGSETCTD'                                               MD054955
+     C                   EVAL      Member = 'CGGSETPD'                                      MD054955
+     C     Member        WHENEQ    'FCRCOCTD'                                               MD055265
+     C                   EVAL      Member = 'FCRCOMPD'                                      MD054955
+     C     Member        WHENEQ    'FCREPCTD'                                               MD055265
+     C                   EVAL      Member = 'FCREPTPD'                                      MD054955
+     C     Member        WHENEQ    'FCRSFCTD'                                               MD055265
+     C                   EVAL      Member = 'FCRSFXPD'                                      MD054955
+     C                   ENDSL                                                              MD054955
+                                                                                            MD054955
+     C                   CALL      'UTRTVOBJD'                                              MD054955
+     C                   PARM                    Member                                     MD054955
+     C                   PARM      '*LIBL'       Library                                    MD054955
+     C                   PARM                    ObjectType                                 MD054955
+     C                   PARM                    ReturnCode                                 MD054955
+     C                   PARM                    ReturnData                                 MD054955
+     C                   ENDIF                                                              MD054955
+                                                                                            MD054955
      C                   IF        ReturnCode = *blank
       ** Determine layer form the 3rd character of the returned library name.
      C                   IF        %SUBST(ReturnData:41:1) ='G'
@@ -980,13 +1114,46 @@
      C                   ENDIF
      C                   ELSE
      C                   IF        Member = 'GPWIPCTD'                                      MD055081
+     C                             or Member = 'GPSRDCTD'                                   MD055681
+     C                             or Member = 'GPSRSCTD'                                   MD055681
+     C                             or Member = 'GPTRGCTD'                                   MD055682
+     C                             or Member = 'GPSRTCTD'                                   MD055682
+     C                             or Member = 'UPDDSFPD'                                   MD056694
+     C                             or Member = 'GPGLFCTD'                                   MD056556
+     C                             or Member = 'GPJARCTD'                                   MD056889
+     C                             or Member = 'GPNDCCTD'                                   MD056564
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
+     C                   IF        Member = 'SCHLPCTD'                                      MD055264
+     C                             or Member = 'SCSRDCTD'                                   MD055681
+     C                             or Member = 'SCSRSCTD'                                   MD055681
+     C                             or Member = 'SCTRGCTD'                                   MD055682
+     C                             or Member = 'SCSRTCTD'                                   MD055682
+     C                             or Member = 'APPGSCTD'                                   MD056610
+     C                             or Member = 'APDBICTD'                                   MD056606
+     C                             or Member = 'GODTCCTD'                                   MD056558
+     C                             or Member = 'APFUNCTD'                                   MD056608
+     C                             or Member = 'SCSQLCTD'                                   MD056559
+     C                             or Member = 'SCNJRCTD'                                   MD056887
+     C                             or Member = 'SDMRFCTD'                                   MD056890
+     C                             or Member = 'SDJARCTD'                                   MD056889
+     C                             or Member = 'MESWACTD'                                   MD056781
+     C                             or Member = 'APMNXCTD'                                   MD056609
+     C                             or Member = 'APDTKCTD'                                   MD056605
+     C                             or Member = 'APUDKCTD'                                   MD056605
+     C                             or Member = 'SDCWFCTD'                                   MD056807
+     C                             or Member = 'SDCWMCTD'                                   MD056807
+     C                             or Member = 'APNDCCTD'                                   MD056564
+     C                             or Member = 'SDRPCCTD'                                   MD056811
+     C                             or Member = 'SDRPDCTD'                                   MD056811
+     C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
+     C                   Else                                                               MD055264
      C                   EVAL      AUDTLB = '*UNKNOWN'
      C                   EVAL      Char100 = 'Deliverable data - +
      C                             Unknown layer                           : ' +
      C                             Member + ObjectType
      C                   EXSR      InsertErrMsg
+     C                   Endif                                                              MD055264
      C                   Endif                                                              MD055081
      C                   ENDIF
       *

@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. MD034915           Date 26Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073C            Date 09Oct17               *
@@ -132,6 +133,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
       *  CER050 - Annualised Percentage Rate                          *
       *           Applied for MD-55510.
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -3514,9 +3518,26 @@ STOP  *                                                                   CLE004
       *                                                                   CLE004
      C                     Z-ADD7         ZADEC                           CLE004
      C                     MOVEL*BLANKS   ZFIELD                          CLE004
+      *                                                                                     MD034915
+      ** Display negative funding spread/rate in the report                                 MD034915
+      *                                                                                     MD034915
+     C           FSRP      IFLT 0                                                           MD034915
+     C                     MOVE 'Y'       WSUB    1                                         MD034915
+     C                     Z-SUBFSRP      FSRP                                              MD034915
+     C                     ENDIF                                                            MD034915
+      *                                                                                     MD034915
      C                     MOVE FSRP      ZFIELD                          CLE004
      C                     EXSR ZEDIT                                     CLE004
+      *                                                                                     MD034915
+     C           WSUB      IFEQ 'Y'                                                         MD034915
+     C                     MOVE *BLANKS   WSUB                                              MD034915
+     C                     MOVE ZFIELD    WFLD1  19                                         MD034915
+     C           WFLD1     CAT  '-'       WFLD2  20                                         MD034915
+     C                     MOVE WFLD2     RFSRP                                             MD034915
+     C                     Z-SUBFSRP      FSRP                                              MD034915
+     C                     ELSE                                                             MD034915
      C                     MOVE ZFIELD    RFSRP                           CLE004
+     C                     ENDIF                                                            MD034915
       *                                                                   CLE004
       ** Format Rollover Base Rate                                        CLE004
       *                                                                   CLE004
@@ -4792,7 +4813,8 @@ STOP  *                                                                   CLE004
      O                                   18 'TOWN'                        070711
      O                         SCRTN     33                               070711
      O                 15                58 'FUNDING SPREAD/RATE'         CAC001
-     O                 15      FSRP      73 '  0 .       '                CAC001
+     O**********       15      FSRP      73 '  0 .       '                           CAC001 MD034915
+     O                 15      FSRP      74 '  0 .       -'                                 MD034915
 1197 O********D**2*****30****************                          S01117 070711
      O********D  2     30N68N67                                    070711 S01518
      O*******OR  2     30 68 67                                    070711 S01518
@@ -4803,7 +4825,8 @@ STOP  *                                                                   CLE004
      O                 67                18 'TOWN'                        070711
      O                 67      SCRTN     33                               070711
      O                 15                58 'FUNDING SPREAD/RATE'         CAC001
-     O                 15      FSRP      73 '  0 .       '                CAC001
+     O**********       15      FSRP      73 '  0 .       '                           CAC001 MD034915
+     O                 15      FSRP      74 '  0 .       -'                                 MD034915
 1197 O********D  2     30                                          S01117 S01518
 1197 O        D  1     30                                                 S01518
      O/COPY WNCPYSRC,LE0310OOP8                                           S01408
@@ -4919,7 +4942,8 @@ STOP  *                                                                   CLE004
 1248 O                                   73 'NEXT ROLLOVER DATE'
 1249 O                 49      NRODO     89
      O                 15               118 'NEW FUNDING SPREAD/RATE'     CAC001
-     O                 15      NFRS     131 '  0 .       '                CAC001
+     O**********       15      NFRS     131 '  0 .       '                           CAC001 MD034915
+     O                 15      NFRS     132 '  0 .       -'                                 MD034915
      O*                                                                   S01408
      O/COPY WNCPYSRC,LE0310OOP2                                           S01408
      O*                                                                   S01408
@@ -5113,7 +5137,8 @@ STOP  *                                                                   CLE004
      O                                   57 'NEXT ROLLOVER DATE'          S01518
      O                 49      NRODO     75                               S01518
      O                 15               102 'NEW FUNDING SPREAD/RATE'     CAC001
-     O                 15      NFRS     115 '  0 .       '                CAC001
+     O**********       15      NFRS     115 '  0 .       '                           CAC001 MD034915
+     O                 15      NFRS     116 '  0 .       -'                                 MD034915
      O        D  1     30 80                                              S01518
      O                 87                22 'PAYMENT TAKEN DAY'           CLE004
      O                 87      RPTDI     37                               CLE004

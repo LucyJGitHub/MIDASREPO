@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD026658           Date 13May14               *
+      *  Prev Amend No. 233179             Date 05Mar20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -56,9 +58,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026658 - DLC0808 failed due to dbase error 02, pf/SDDLNOPD.*
+      *             Initialise key field with '0' if single digit.    *
+      *  233179 - Deals which are out of range are printed after the  *
+      *           next range.                                         *
+      *         - Applied for MD054395.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
-      *  CDL098 - Cancelled Deal Numbers                              *      
+      *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -275,6 +282,7 @@
       **  Read the record on file
       *
      C                     READ DLGAPNL0                 20
+     C                     EXSR #RNGRD                                                        233179
       *
       **  Loop
       *
@@ -731,7 +739,7 @@
       *
       ** Read in first range
       *
-     C                     EXSR #RNGRD
+     C**********           EXSR #RNGRD                                                        233179
       *
      C                     ENDSR
       *
@@ -818,6 +826,10 @@
      C                     EXSR ZEDIT
      C**********           MOVELZFIELD    ARRGNB                                              216316
      C                     MOVE ZFIELD    ARRGNB                                              216316
+     C           ARRGNB    CHAINSDDLNOL0            N99                                     MD026658
+     C           *IN99     IFEQ '1'                                                         MD026658
+     C                     MOVEL'0'       ARRGNB                                            MD026658
+     C                     ENDIF                                                            MD026658
      C                     ENDIF
      C                     ENDIF                                                             BUG2590
      C           ARRGNB    CHAINSDDLNOL0             99
@@ -906,6 +918,15 @@
      C                     ENDIF
       *
      C           *IN41     IFEQ *OFF
+     C           DLNO      DOWLTFDELR                                                         233179
+     C           DLNO      ANDNE*ZEROS                                                        233179
+     C           *IN20     ANDEQ*OFF                                                          233179
+     C                     EXSR #OVERF                                                        233179
+     C                     WRITEOUTRNG                                                        233179
+      *                                                                                       233179
+     C                     READ DLGAPNL0                 20                                   233179
+      *                                                                                       233179
+     C                     ENDDO                                                              233179
       *
       ** Write range details
       *

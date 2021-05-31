@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044271           Date 21Mar17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044271           Date 21Mar17               *
       *                 MD000091           Date 14May13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26840           Date 11Dec09               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044271 - (1) if MT940 is not to be generated, default      *
       *             network to PAPER                                  *

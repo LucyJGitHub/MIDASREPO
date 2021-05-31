@@ -15,8 +15,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD048586           Date 11Jan21               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
-      *                 HUT101             Date 27Mar20               *
+      *  Prev Amend No. MD023298A          Date 03Jun20               *
+      *                 MD020135           Date 03Jun20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -127,12 +128,14 @@
       *                                                               *
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
+      *  MD023298A - Front office ID already exists for OTPAYDQD.     *
+      *              Do not write to OTPAYDQD when jobname is         *
+      *              QZDASSINIT.                                      *
+      *            - Applied for MD050405                             *
+      *  MD020135 - Duplicate records in OTPAYDQD. Write to OTPAYDQD  *
+      *             file only if not from Java screen.                *
+      *            - Applied for MD050405                             *
       *  CSW220 - SWIFT Changes 2020                                  *
-      *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
-      *           Payment Authorisation for Funds Transfer            *
-      *           Upgraded with CAP211 functionality.                 *
-      *           Used hook: FTH00109                                 *
-      *           Added hooks: HUT101_013, HUT101_014, HUT101_015     *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1254,7 +1257,6 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_013                                                               HUT101
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
      C                   EVAL      AUP1 = INUSR1                                              CAP211
@@ -1294,6 +1296,9 @@
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           MD023298A
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      OTFRID = OTFRNT                                            257487
      C                   Write     OTPAYQD0                             99                    257487
                                                                                               257487
@@ -1303,6 +1308,7 @@
      C                   Movel     OTPREF        DBKEY                                        257487
      C                   Exsr      *PSSR                                                      257487
      C                   End                                                                  257487
+     C                   ENDIF                                                              MD020135
       **********                                                                    BUG4776 BUG4776R
       ****If*new*record*was*successfully*writen*to*OTPAYDD,*add*new*record*to***    BUG4776 BUG4776R
       ****FT*Payment*Reference*Control*file*-*FTPREFPD**************************    BUG4776 BUG4776R
@@ -1916,7 +1922,6 @@
      C                   Eval      OTTMESTMP = TimeStamp                                    BUG18500
 
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_014                                                               HUT101
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
      C                   EVAL      AUP1 = INUSR1                                              CAP211
@@ -5436,7 +5441,6 @@
      C                   Z-ADD     BJRDNB        DATE                                         CFT157
       *                                                                                       CFT157
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CFT157
-     C/COPY WNCPYSRC,HUT101_015                                                               HUT101
       *                                                                                       CFT157
      C                   IF        PUser = *Blanks                                            CFT157
      C                   EVAL      SAUS = SUSR                                                CFT157

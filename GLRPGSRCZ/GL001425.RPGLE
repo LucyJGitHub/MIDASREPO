@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026965           Date 16May14               *
+      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 MD028250           Date 28Jul14               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD026965           Date 16May14               *
       *                 CGL135A            Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22979A          Date 12Mar09               *
@@ -32,6 +35,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - (Reopen)Applied for AR973615 (Child: AR973617)      *
+      *           (Recompile)                                         *
+      *  223783 - Use IBAN when formatting field 86.                  *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  MD028250 - Output Field :86: from Details of Payment         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026965 - MT940 COB Extract Issue                           *
       *             Amended hook: CGL135_019                          *
@@ -73,6 +81,12 @@
      FGLUCTLPD  UF A E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Update Control file.
      F/COPY WNCPYSRC,GLH00518
+     FINPAY     IF   E           K DISK                      INFSR(*PSSR)                   MD028250
+     F                                     PREFIX(FT_)                                      MD028250
+      ** Midas FT Incoming Payments Transactions.                                           MD028250
+     FOTPAY     IF   E           K DISK                      INFSR(*PSSR)                   MD028250
+     F                                     PREFIX(FT_)                                      MD028250
+      ** Midas FT Outgoing Payments Transactions.                                           MD028250
  
       *========================================================================*
       *                                                                        *
@@ -139,6 +153,12 @@
                                                                                               CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)                       CRE008
       **  Data Structure for Switchable features descriptions.                                CRE008
+                                                                                              223783
+     D DSACCT        E DS                  EXTNAME(ACCNTAB) PREFIX(XG)                        223783
+      **  Data Structure for Account Details.                                                 223783
+                                                                                              223783
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                     223783
+      **  First DS for access programs, long data structure.                                  223783
                                                                                               CRE008
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CRE008
       **  Second DS for access programs, short data structure.                                CRE008
@@ -484,6 +504,16 @@
      C                   ENDIF
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00404
+     C     PREF          CHAIN     INPAY                              99                    MD028250
+     C     *IN99         IFEQ      '1'                                                      MD028250
+     C     PREF          CHAIN     OTPAY                              99                    MD028250
+     C                   ENDIF                                                              MD028250
+     C     *IN99         IFEQ      '0'                                                      MD028250
+     C                   EVAL      MGADI1   = FT_DTP1                                       MD028250
+     C                   EVAL      MGADI2   = FT_DTP2                                       MD028250
+     C                   EVAL      MGADI3   = FT_DTP3                                       MD028250
+     C                   EVAL      MGADI4   = FT_DTP4                                       MD028250
+     C                   ENDIF                                                              MD028250
  
       ** If the Posting is a Batch Input Item, the field SPOS contains the Batch Item
       ** and the Batch Number,
@@ -620,7 +650,29 @@
      C                   If        *IN31 = *Off                                               216937
      C                   If        AGSRNO <> 0                                                216937
      C                   Movel     AGSRNO        WWSRNO           10                          216937
+     C                   MOVEL     WWSRNO        @RETL                                        223783
+     C                   MOVEL     *BLANK        @CNUM                                        223783
+     C                   MOVEL     *BLANK        @CUCD                                        223783
+     C                   MOVEL     *BLANK        @ACCD                                        223783
+     C                   MOVEL     *BLANK        @ACSQ                                        223783
+     C                   MOVEL     *BLANK        @BRCA                                        223783
+     C                   CALL      'AOACCTR0'                           80                    223783
+     C                   PARM                    @RTCD             7                          223783
+     C                   PARM      '*KEY'        @OPTN             7                          223783
+     C                   PARM                    @RETL            10                          223783
+     C                   PARM                    @CNUM             6                          223783
+     C                   PARM                    @CUCD             3                          223783
+     C                   PARM                    @ACCD             4                          223783
+     C                   PARM                    @ACSQ             2                          223783
+     C                   PARM                    @BRCA             3                          223783
+     C     DSACCT        PARM      *BLANKS       DSSDY                                        223783
+     C     @RTCD         IFEQ      *BLANKS                                                    223783
+     C     XGRECI        ANDEQ     'D'                                                        223783
+     C     XGIBAN        ANDNE     *BLANKS                                                    223783
+     C                   EVAL      MGSRCA = 'ORIGINATING ACCOUNT ' + XGIBAN                   223783
+     C                   ELSE                                                                 223783
      C                   Eval      MGSRCA   = 'ORIGINATING ACCOUNT ' + WWSRNO                 216937
+     C                   ENDIF                                                                223783
      C                   Else                                                                 216937
      C                   Movel     AGSCUS        WWSCUS            6                          216937
      C**********         Movel     AGSACD        WWSACD            4                   216937 CGL029

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047971           Date 17Oct17               *
+      *  Last Amend No. MD056102           Date 30Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047971           Date 17Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
@@ -53,9 +54,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056102 - Split value date error during amend               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *      
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -691,6 +693,8 @@
       *                                                                                       CDL099
       ** Split Value Date                                                                     CDL099
      C     CDL099        IFEQ      'Y'                                                        CDL099
+     C     DDDLTP        ANDNE     'OP'                                                     MD056102
+     C     DDDLTP        ANDNE     'OT'                                                     MD056102
      C     DDSDAT        IFNE      @DDSDAT                                                    CDL099
      C                   ADD       1             Idx                                          CDL099
      C                   EVAL      FldNameArr(Idx) = 'DDSDAT'                                 CDL099

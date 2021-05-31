@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *  Last Amend No. MD034915           Date 26Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD044083           Date 12Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028338           Date 25Nov14               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Correct negative discount amount display          *
       *           - Applied for MD052515                              *
@@ -568,12 +572,15 @@
       *
       **  New funding spread/rate
      C     NFRS          IFNE      *ZERO
-     C                   MOVE      *BLANKS       ZFIELD
-     C                   MOVE      NFRS          ZFIELD
-     C                   Z-ADD     7             ZADEC
-     C                   EXSR      ZEDIT
+     C**********         MOVE      *BLANKS       ZFIELD                                     MD034915
+     C**********         MOVE      NFRS          ZFIELD                                     MD034915
+     C**********         Z-ADD     7             ZADEC                                      MD034915
+     C**********         EXSR      ZEDIT                                                    MD034915
      C**********         MOVE      ZFIELD        DDNFRSB                                      CAP084
-     C                   MOVE      ZFIELD        DDNFRS                                       CAP084
+     C**********         MOVE      ZFIELD        DDNFRS                              CAP084 MD034915
+     C                   MOVEL     *BLANKS       ZFIELD12         12                        MD034915
+     C                   EVAL      ZFIELD12 = %CHAR(NFRS)                                   MD034915
+     C                   MOVE      ZFIELD12      DDNFRS                                     MD034915
      C                   ENDIF
       *
       **  New funding spread indicator and profit centre

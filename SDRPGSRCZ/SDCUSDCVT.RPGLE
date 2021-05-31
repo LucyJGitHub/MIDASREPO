@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056548           Date 10Sep20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No  MD055446           Date 04Apr20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051191           Date 05Jun18               *
@@ -71,7 +72,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056548 - Customer Fees Maintenance is missing              * 	
+      *  MD055446 - There are parties and fields missing from the BRT *	
+      *             details tab in Customer Input plus date of birth  *	
+      *             issues.                                           *	
+      *           - Added BRT DOB century as output parameter and move*
+      *             the value of SDBCRTPD DOB century fields.         *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -197,6 +205,13 @@
                                                                                               CGL157
       * Base Rate Tax details - File Format
      D BrTxFilFmt    E DS                  EXTNAME(SDCBRTPD)
+     D  BrtTxCent1           718    719P 0                                                  MD055446
+     D  BrtTxCent2           720    721P 0                                                  MD055446
+     D  BrtTxCent3           722    723P 0                                                  MD055446
+     D  BrtTxCent4           724    725P 0                                                  MD055446
+     D  BrtTxCent5           726    727P 0                                                  MD055446
+     D  BrtTxCentP           718    727P 0                                                  MD055446
+      ** Base Rate Tax details - File Format (Century)                                      MD055446
 
       * Private Banking Details - File Format
      D PrivFilFmt    E DS                  EXTNAME(SDPBDSPD)
@@ -442,6 +457,15 @@
      D  WWACCZ1              148    149                                                     MD035388
      D  WWUTIN2              150    174                                                     MD035388
                                                                                             MD035388
+     D                                                                                      MD055446
+     D CuBrtxCent      DS                                                                   MD055446
+     D  CuBrtxCent1            1      2S 0                                                  MD055446
+     D  CuBrtxCent2            3      4S 0                                                  MD055446
+     D  CuBrtxCent3            5      6S 0                                                  MD055446
+     D  CuBrtxCent4            7      8S 0                                                  MD055446
+     D  CuBrtxCent5            9     10S 0                                                  MD055446
+     D  CuBrtxCentS            1     10S 0                                                  MD055446
+                                                                                            MD055446
      D CGP001          S              1A                                                      CGP001
                                                                                               CGP001
      D CFX001          S              1                                                       CFX001
@@ -488,8 +512,6 @@
      D #DDOBZ          S              4P 0                                                    CSD079
      D WUPMSC          S              1                                                       CSD079
                                                                                               CLE025
-      ** S01464
-     D S01464          S              1A   inz('N')                                         MD056548
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -565,9 +587,9 @@
                                                                                               CSD079
       ** Set Service Fees Screen Fields                                                       CSD079
                                                                                               CSD079
-     C*****CSD008        IFEQ      'Y'                                               CSD079 MD056548
+     C     CSD008        IFEQ      'Y'                                                        CSD079
      C                   EXSR      SCN_SFEE                                                   CSD079
-     C*****              ENDIF                                                       CSD079 MD056548
+     C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Set Cheques and Card Details Screen Fields                                           CSD079
                                                                                               CSD079
@@ -2191,6 +2213,11 @@
      C     H3NAME        IFNE      *BLANK
      C                   MOVEL     'Y'           DDFPAR
      C                   END
+     C                   MOVE      H1DOBC        CuBrtxCent1                                MD055446
+     C                   MOVE      H2DOBC        CuBrtxCent2                                MD055446
+     C                   MOVE      H3DOBC        CuBrtxCent3                                MD055446
+     C                   MOVE      H4DOBC        CuBrtxCent4                                MD055446
+     C                   MOVE      H5DOBC        CuBrtxCent5                                MD055446
 
      C                   ENDSR
       *****************************************************************
@@ -3140,14 +3167,8 @@
                                                                                               CSD079
       ** Settlement Account                                                                   CSD079
                                                                                               CSD079
-     C                   IF        (S01464 = 'Y' AND CSD008 = 'N') OR                       MD056548
-     C                             CSD008 = 'Y'                                             MD056548
      C                   EVAL      DDSMAC = E6SMAC                                            CSD079
-     C                   EVAL      DDSBCH = E6SBCH                                          MD056548
-     C                   EVAL      DDSCCY = E6SCCY                                          MD056548
-     C                   ENDIF                                                              MD056548
                                                                                               CSD079
-     C                   IF        CSD008 = 'Y'
       ** Hold Mail Indicator                                                                  CSD079
                                                                                               CSD079
      C                   EVAL      DDHMIN = E6HMIN                                            CSD079
@@ -3172,7 +3193,6 @@
                                                                                               CSD079
      C                   EVAL      DDTAIF = E6TAIF                                            CSD079
                                                                                               CSD079
-     C                   ENDIF
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
       *****************************************************************                       CSD079
@@ -4311,6 +4331,7 @@
                                                                                               CGL157
      C                   PARM                    PCrsdS                                       CGL157
                                                                                               CGL157
+     C                   PARM                    CuBrtxCent                                 MD055446
      C/COPY WNCPYSRC,SDCUSDNC02
 
       *
@@ -4876,19 +4897,6 @@
      C                   MOVEL     'N'           CER050                                       CER050
      C                   END                                                                  CER050
       *                                                                                       CER050
-      ** Check if enhancement S01464 is on                                                  MD056548
-      *                                                                                     MD056548
-     C                   CALLB     'AOSARDR0'                                               MD056548
-     C                   PARM      *BLANKS       PRTCD                                      MD056548
-     C                   PARM      '*VERIFY'     POPTN                                      MD056548
-     C                   PARM      'S01464'      PSARD                                      MD056548
-     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
-      *                                                                                     MD056548
-     C                   IF        PRTCD = *BLANKS                                          MD056548
-     C                   EVAL      S01464 = 'Y'                                             MD056548
-     C                   ELSE                                                               MD056548
-     C                   EVAL      S01464 = 'N'                                             MD056548
-     C                   ENDIF                                                              MD056548
      C                   ENDSR
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

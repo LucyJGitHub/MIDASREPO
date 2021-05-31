@@ -20,8 +20,10 @@
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034397           Date 13May15               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034397           Date 13May15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -53,6 +55,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034397 - Error messages are not reset when shifting from   *
       *             Incoming to Outgoing transfer                     *

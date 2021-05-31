@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD055571           Date 21May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD008008           Date 24Apr14               *
       *                 MD000091           Date 07May13               *
       *                 207288             Date 10Jun03               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055571 - Check new System Value when Validating OptnToDTE  *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  MD008008 - Deal Date validation does not take into account   *
@@ -70,7 +72,7 @@
       *                                                               *
       *****************************************************************
      FFDDTSTYT  IF   E           K DISK    INFSR(*PSSR)                                       207288
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -89,29 +91,29 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -120,7 +122,7 @@
       ** External DS for Midas modules details                                                207288
      D SDTOF         E DS                  EXTNAME(SDTOFPD)                                   207288
       ** External data structure for TOF ICD file.                                            207288
- 
+
       ** External data structure for branch codes file                                      MD008008
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                MD008008
       *                                                                                     MD008008
@@ -130,21 +132,21 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                 141077
@@ -156,8 +158,8 @@
                                                                                 141077
       ** Array of warning message data.                                         141077
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)        141077
- 
- 
+
+
      D*RelDealDts      DS           100                                                       248269
      D RelDealDts      DS           113                                                       248269
       ** Related Deal Details (when deal is option takedown or swap.
@@ -171,15 +173,15 @@
      D  RelDOEY               72     75  0                                      opt date - year
      D  RelDOEM               76     77  0                                      opt date - mnth
      D  RelDOED               78     79  0                                      opt date - day
- 
- 
+
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
- 
+
                                                                                 141077
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                    141077
       ** EXTERNAL DS FOR NOSTRO DETAILS                                         141077
@@ -189,26 +191,26 @@
       ** EXTERNAL DS FOR BANK DETAILS                                                         254420
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL099
       ** External DS Fof SAR Details
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of warning message ids etc                            141077
      D WIx             S              3P 0                                      141077
- 
- 
+
+
      D ZNRDYS          S              2S 0
- 
- 
+
+
      D RecSetCcy       S              3A
      D RecSetMeth      S              2S 0
      D***RecNostro       S             12A                                                    CGL029
@@ -221,13 +223,36 @@
      D @RTCDE          S              1A                                                      254420
      D BVDYNO          S                   LIKE(BJRDNB)                                       254420
      D @VDYNO          S              5P 0                                                    254420
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
- 
+
+     D PSYSVAL1        C                   CONST('AlwOptDteEqValDte')                       MD055571
+     D PRETURN         S              7A                                                    MD055571
+     D POP01           S             20A                                                    MD055571
+     D PVL01           S            200A                                                    MD055571
+     D POP02           S             20A                                                    MD055571
+     D PVL02           S            200A                                                    MD055571
+     D POP03           S             20A                                                    MD055571
+     D PVL03           S            200A                                                    MD055571
+     D POP04           S             20A                                                    MD055571
+     D PVL04           S            200A                                                    MD055571
+     D POP05           S             20A                                                    MD055571
+     D PVL05           S            200A                                                    MD055571
+     D POP06           S             20A                                                    MD055571
+     D PVL06           S            200A                                                    MD055571
+     D POP07           S             20A                                                    MD055571
+     D PVL07           S            200A                                                    MD055571
+     D POP08           S             20A                                                    MD055571
+     D PVL08           S            200A                                                    MD055571
+     D POP09           S             20A                                                    MD055571
+     D PVL09           S            200A                                                    MD055571
+     D POP10           S             20A                                                    MD055571
+     D PVL10           S            200A                                                    MD055571
+     D AODEVD          S              1A                                                    MD055571
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -242,11 +267,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -255,7 +280,7 @@
      C                   MOVE      *BLANK        WMsgIDXAr                      141077
      C                   MOVE      *BLANK        WMsgDtXAr                      141077
      C                   Z-ADD     0             WIx                            141077
- 
+
       *                                                                                     MD008008
       ** Get the Booking Branch Location Code                                               MD008008
       *                                                                                     MD008008
@@ -849,7 +874,10 @@
       *
       * Option to date can't be less than or equal to the value date
       *
-     C     OptoDtDN      IFLE      ValuDtDN
+     C*****OptoDtDN***** IFLE      ValuDtDN                                                 MD055571
+     C     OptoDtDN      IFLT      ValuDtDN                                                 MD055571
+     C     OptoDtDN      OREQ      ValuDtDN                                                 MD055571
+     C     AODEVD        ANDEQ     'N'                                                      MD055571
      C                   MOVE      'N'           DDOdatOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDODAT'      FldNamXAr(Idx)
@@ -1108,7 +1136,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -1199,8 +1227,42 @@
      C                   ELSE                                                                 CDL099
      C                   MOVE      'N'           CDL099                                       CDL099
      C                   ENDIF                                                                CDL099
+
+     C                   CALL      'AOSVALR0'                                               MD055571
+     C                   PARM      *BLANKS       PRETURN                                    MD055571
+     C                   PARM      PSYSVAL1      POP01                                      MD055571
+     C                   PARM      *BLANKS       PVL01                                      MD055571
+     C                   PARM      *BLANKS       POP02                                      MD055571
+     C                   PARM      *BLANKS       PVL02                                      MD055571
+     C                   PARM      *BLANKS       POP03                                      MD055571
+     C                   PARM      *BLANKS       PVL03                                      MD055571
+     C                   PARM      *BLANKS       POP04                                      MD055571
+     C                   PARM      *BLANKS       PVL04                                      MD055571
+     C                   PARM      *BLANKS       POP05                                      MD055571
+     C                   PARM      *BLANKS       PVL05                                      MD055571
+     C                   PARM      *BLANKS       POP06                                      MD055571
+     C                   PARM      *BLANKS       PVL06                                      MD055571
+     C                   PARM      *BLANKS       POP07                                      MD055571
+     C                   PARM      *BLANKS       PVL07                                      MD055571
+     C                   PARM      *BLANKS       POP08                                      MD055571
+     C                   PARM      *BLANKS       PVL08                                      MD055571
+     C                   PARM      *BLANKS       POP09                                      MD055571
+     C                   PARM      *BLANKS       PVL09                                      MD055571
+     C                   PARM      *BLANKS       POP10                                      MD055571
+     C                   PARM      *BLANKS       PVL10                                      MD055571
+      *                                                                                     MD055571
+     C                   EVAL      AODEVD = 'N'                                             MD055571
+     C                   IF        PRETURN <> *BLANKS                                       MD055571
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD055571
+     C                   EVAL      DBKEY = PSYSVAL1                                         MD055571
+     C                   EVAL      DBASE = 918                                              MD055571
+     C                   OUT       LDA                                                      MD055571
+     C                   EXSR      *PSSR                                                    MD055571
+     C                   ENDIF                                                              MD055571
+      *                                                                                     MD055571
+     C                   MOVEL     PVL01         AODEVD                                     MD055571
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

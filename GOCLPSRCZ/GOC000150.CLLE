@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Update GPFCAMPD file')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       GOC000150 - Midas GO Update GPFCAMPD file                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2018           */
+/*                                                                   */
+/*       Last Amend No. MD049445  *CREATE  Date 20Mar18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD049445 - Listview not displaying correct available amount.*/
+/*                  Added SFAMT and SAVAILAMT computation.           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN( 7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2018')
+
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             OVRDBF     FILE(GPFCAMPD) LVLCHK(*NO)                                                  
+                                                                                                    
+             CALL       PGM(GP000150) PARM(&ZOZONE)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+ ABNOR:            CHGJOB     SWS(XXXXXX11)
+                   DMPCLPGM
+                   SNDPGMMSG  MSG('GOC000150 - Program ended abnormally +
+                              - see job log') TOMSGQ(MOPERQ MRUNQ)
+                   MONMSG     MSGID(CPF0000)
+                   GOTO       CMDLBL(END)
+                   ENDDO
+ 
+ END:        CHGVAR   VAR(&CPYFLD) VALUE('(c) +
+                       Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

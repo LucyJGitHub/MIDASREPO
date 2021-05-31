@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR549926           Date 19Aug14               *
+      *  Last Amend No. 223783             Date 28May12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR549926           Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR549926 - GLPOSTPD and MGX950PD tables have a total size    *
       *             of about 1.4GB. These tables hold  records printed*

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR1095148          Date 07May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056838           Date 01Oct20               *
+      *  Prev Amend No. AR1095148          Date 07May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 MD040602           Date 19Aug16               *
       *                 MD025865           Date 20Mar14               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056838 - Amend SFNUM type to packed decimal                *
       *  AR1095148 - Verify that currencies are in balance.           *
       *              Batches are accepted even though out of balance. *
       *              (Child:AR1095149)                                *
@@ -257,7 +259,8 @@
       *
      D ZSfile          S             10A   INZ(*BLANKS)
      D*ZSnum****       S              1B 0 INZ(0)                                           BUG23217
-     D ZSnum           S              6B 0 INZ(0)                                           BUG23217
+     D**ZSnum***        S              6B 0 INZ(0)                                 BUG23217 MD056838
+     D ZSnum           S              6  0                                                  MD056838
       *
      D KBcno           S                   LIKE(BRBTNB)
       *
@@ -733,7 +736,8 @@
      C                   EVAL      WFirst = 'Y'
       *
      C                   EVAL      ZSfile = SFILE1
-     C                   EVAL      ZSnum  = SFNUM1
+     C**********         EVAL      ZSnum  = SFNUM1                                          MD056838
+     C                   Z-ADD     SFNUM1        ZSnum                                      MD056838
       *
      C                   EXSR      SRZSfile
      C                   ENDIF
@@ -849,7 +853,8 @@
      C                   IF        NOT %OPEN(GL001601AU)                                      CER059
      C                   OPEN      GL001601AU                                                 CER059
      C                   EVAL      ZSfile = SFILEU
-     C                   EVAL      ZSnum  = SFNUMU
+     C**********         EVAL      ZSnum  = SFNUMU                                          MD056838
+     C                   Z-ADD     SFNUMU        ZSnum                                      MD056838
      C                   EXSR      SRZSfile
      C                   ENDIF
       *

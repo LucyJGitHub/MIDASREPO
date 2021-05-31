@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP003             Date 10Aug10              */
+/*       Last Amend No. MD056350           Date 14Aug20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP003             Date 10Aug10              */
 /*                      BUG27944           Date 29Jul10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +22,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056350 - Program is called from SM000062 or SM000044.     */
+/*                  Review OVRDBF accordingly.                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP003 - Handle unique key problems better.                 */
 /*       BUG27944 - SQL migration problem                            */
@@ -29,7 +32,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&FILE &FROMLIB &TOLIB &MEMBER &RETURNCODE)
- 
+
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
@@ -37,12 +40,12 @@
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                                    /*CUP003*/
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                  /*CUP003*/
- 
+
              DCL        VAR(&SMC48RTN) TYPE(*CHAR) LEN(1)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2006')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
@@ -55,24 +58,28 @@
                              migration')
              ENDDO
              CALL       PGM(QCLRDTAQ) PARM('SM000044' 'QTEMP')
- 
+
 /* Set up member name if not a particular member. */
              IF         COND(&MEMBER *EQ '*SINGLE') THEN(DO)
                 CHGVAR     VAR(&MEMBER) VALUE('*FIRST')
              ENDDO
- 
+
 /* Delete intermediate version of file if it already exists. */
              DLTF       FILE(QTEMP/&FILE)
              MONMSG     MSGID(CPF0000)
- 
+
 /* Call program to create DDS for intermediate file. */
              OVRDBF     FILE(UPFFDSTPD) TOFILE(*LIBL/SM000040F)                         /*BUG27944*/
+             CHKOBJ     OBJ(QTEMP/SM000040F) OBJTYPE(*FILE)                             /*MD056350*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD056350*/
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(*LIBL/SM000062F)                         /*MD056350*/
+             ENDDO                                                                      /*MD056350*/
              CALL       PGM(SM000044) PARM(&FILE &RETURNCODE)
              DLTOVR     FILE(UPFFDSTPD)                                                 /*BUG27944*/
              IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Create intermediate version of file from newly created DDS. */
 /**********  CRTPF      FILE(QTEMP/&FILE) SRCFILE(QTEMP/RUNSQL) +                    */ /*BUG15709*/
 /**********               SRCMBR(RUNSQLSTM) MAXMBRS(*NOMAX)                          */ /*BUG15709*/
@@ -125,7 +132,7 @@
                 ENDDO                                                                     /*CUP003*/
                 GOTO       CMDLBL(ERROR)                                                  /*CUP003*/
              ENDDO                                                                        /*CUP003*/
- 
+
 /* Check for Customer fields and set them to blank if they are equal to 000000. */
              IF         COND(&MEMBER *NE '*FIRST') THEN(DO)
                 OVRDBF     FILE(&FILE) MBR(&MEMBER) OVRSCOPE(*JOB)
@@ -136,9 +143,9 @@
              IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              CHGVAR     VAR(&RETURNCODE) VALUE('*ERROR')
 ENDPGM:

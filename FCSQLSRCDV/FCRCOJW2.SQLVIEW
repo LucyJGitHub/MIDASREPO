@@ -1,0 +1,84 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Report Control Facility                                       */
+/*                                                                             */
+/*       FCRCOJW2 - Midas FC Join rep comp,COB &switch feature                 */
+/*                                                                             */
+/*       (c) Finastra International Limited 2020                               */
+/*                                                                             */
+/*       Last Amend No. MD056948           Date 12Oct20                        */
+/*       Prev Amend No. MD055681           Date 31Jul20                        */
+/*                      MD055265 *CREATE   Date 10Feb20                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD056948 - Missing selection when feature is disabled.                */
+/*       MD055681 - Deliverable Data Split for SAR                             */
+/*       MD055265 - Deliverable Data Split for Report Control Facility         */
+/*                                                                             */
+/*******************************************************************************/
+                                                                                :
+  create view                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+    D3RNAM                                                                      :
+  , AESARN                                                                      :
+  , AEAVAL                                                                      :
+**,*SARD************************************************************************:           MD055681
+  , SARN                                                                        :           MD055681
+  , D3COTT                                                                      :
+  , D3CSEQ                                                                      :
+  , D3MORQ                                                                      :
+  , D3CLPM                                                                      :
+  , D3PRPG                                                                      :
+  , D3ADTX                                                                      :
+  , D3BRTP                                                                      :
+  , DHCOTT                                                                      :
+  , DHCSEQ                                                                      :
+  , D3MODE                                                                      :
+  , ENABLD                                                                      :           MD055681
+  )                                                                             :
+  as                                                                            :
+  select                                                                        :
+       u.D3RNAM                                                                 :
+     , w.AESARN                                                                 :
+     , w.AEAVAL                                                                 :
+*****,*X.SARD*******************************************************************:           MD055681
+     , x.SARN                                                                   :           MD055681
+     , u.D3COTT                                                                 :
+     , u.D3CSEQ                                                                 :
+     , u.D3MORQ                                                                 :
+     , u.D3CLPM                                                                 :
+     , u.D3PRPG                                                                 :
+     , u.D3ADTX                                                                 :
+     , u.D3BRTP                                                                 :
+     , v.DHCOTT                                                                 :
+     , v.DHCSEQ                                                                 :
+     , u.D3MODE                                                                 :
+     , x.ENABLD                                                                 :           MD055681
+  FROM FCRCOJW0 u                                                               :
+  LEFT OUTER JOIN CBCMPNPD v on                                                 :
+  ( u.D3COTT = v.DHCOTT AND u.D3CSEQ = v.DHCSEQ)                                :
+  LEFT OUTER JOIN SCSARMPD w on                                                 :
+  ( u.D3RNAM = w.AERNAM AND u.D3COTT = w.AECOTT AND u.D3CSEQ = w.AECSEQ )       :
+**LEFT*OUTER*JOIN*SCSARDPD*x*on*************************************************:           MD055681
+  LEFT OUTER JOIN SCSRDXTD x on                                                 :           MD055681
+  ( w.AESARN = x.SARN )                                                         :
+                                                                                :
+  WHERE                                                                         :
+  ( v.DHCOTT IS NOT NULL AND v.DHCSEQ IS NOT NULL AND w.AESARN IS NULL) OR      :
+  ( v.DHCOTT IS NOT NULL AND v.DHCSEQ IS NOT NULL AND w.AESARN IS NOT NULL      :
+**AND*x.SARD*IS*NOT*NULL*AND*w.AEAVAL*=*'Y'*)*OR********************************:           MD055681
+  AND x.SARN IS NOT NULL AND w.AEAVAL = 'Y' and x.ENABLD = 'E' ) OR             :           MD055681
+  ( v.DHCOTT IS NOT NULL AND v.DHCSEQ IS NOT NULL AND w.AESARN IS NOT NULL      :
+**AND*x.SARD*IS*NULL*AND*w.AEAVAL*=*'N'*)***************************************:           MD055681
+  AND x.SARN IS NULL AND w.AEAVAL = 'N' )                                       :           MD055681
+  or ( v.DHCOTT IS NOT NULL AND v.DHCSEQ IS NOT NULL AND w.AESARN IS NOT NULL   :           MD056948
+  AND x.SARN IS NOT NULL AND w.AEAVAL = 'N' and x.ENABLD = 'D' )                :           MD056948
+                                                                                :
+  RCDFMT FCRCOJD2   ;                                                           :
+                                                                                :
+  label on table     **********/**********                                      :
+   is 'Midas FC Join rep comp,COB &switch feature' ;                            :
+                                                                                :
+/******************************************************************************/

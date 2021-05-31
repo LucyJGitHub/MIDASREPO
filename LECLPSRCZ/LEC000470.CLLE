@@ -1,0 +1,246 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Contngent Facl Acc Post for Retail IntCap')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000470 - Midas LE Contingent Facility Account Posting    */
+/*                   for Retail Interest Capitalisation              */
+/*                                                                   */
+/*       Function:   This function is based on program LEC0608A      */
+/*                   It calls: LE0470                                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD052994  *CREATE  Date 25Nov19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD052994 - CL Facility Event not Generated for Retail       */
+/*                  Account Debit Capitalised Interests              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &POST)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&POST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                             2019')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('LEC000470 - Contingent Facility Account +
+                          Posting for Retail Interest +
+                          Capitalisation') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Setup system prefix variable from SDSTAT data area */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DPLIB) VALUE(&SYSID *TCAT 'DPLIB')
+
+/** Call program CB0160 to get value of restart indicator */
+
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+/** Create back-up files if it is not a restart */
+
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+
+                DLTF       FILE(&DPLIB/ZGELEHH)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/ZGELEPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/ZGELEZZ)
+                MONMSG     MSGID(CPF2105)
+
+                IF         COND(&POST = '1') THEN(DO)
+                   CPYF       FROMFILE(GELEHH) +
+                                TOFILE(&DPLIB/ZGELEHH) +
+                                CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                   CPYF       FROMFILE(GELEPD) +
+                                TOFILE(&DPLIB/ZGELEPD) +
+                                CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                   CPYF       FROMFILE(GELEZZ) +
+                                TOFILE(&DPLIB/ZGELEZZ) +
+                                CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                ENDDO
+
+                IF         COND(&POST = '5') THEN(DO)
+                   CPYF       FROMFILE(GELE2HH) +
+                                TOFILE(&DPLIB/ZGELEHH) +
+                                CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                   CPYF       FROMFILE(GELE2PD) +
+                                TOFILE(&DPLIB/ZGELEPD) +
+                                CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                   CPYF       FROMFILE(GELE2ZZ) +
+                                TOFILE(&DPLIB/ZGELEZZ) +
+                                CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                ENDDO
+
+             ENDDO
+
+/** Restore back-up files if it is a restart */
+
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+
+                IF         COND(&POST = '1') THEN(DO)
+                   CPYF       FROMFILE(ZGELEHH) TOFILE(GELEHH) +
+                                MBROPT(*REPLACE)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                EXEC(CLRPFM FILE(GELEHH))
+                   CPYF       FROMFILE(ZGELEPD) TOFILE(GELEPD) +
+                                MBROPT(*REPLACE)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                EXEC(CLRPFM FILE(GELEPD))
+                   CPYF       FROMFILE(ZGELEZZ) TOFILE(GELEZZ) +
+                                MBROPT(*REPLACE)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                EXEC(CLRPFM FILE(GELEZZ))
+                ENDDO
+
+                IF         COND(&POST = '5') THEN(DO)
+                   CPYF       FROMFILE(ZGELEHH) TOFILE(GELE2HH) +
+                                MBROPT(*REPLACE)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                EXEC(CLRPFM FILE(GELE2HH))
+                   CPYF       FROMFILE(ZGELEPD) TOFILE(GELE2PD) +
+                                MBROPT(*REPLACE)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                EXEC(CLRPFM FILE(GELE2PD))
+                   CPYF       FROMFILE(ZGELEZZ) TOFILE(GELE2ZZ) +
+                                MBROPT(*REPLACE)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                EXEC(CLRPFM FILE(GELE2ZZ))
+                ENDDO
+
+             ENDDO
+
+/** Update restart indicator to 'Y' */
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/** Clear PF/GELEICxx Files */
+
+             CLRPFM     FILE(GELEICHH)
+             CLRPFM     FILE(GELEICPD)
+             CLRPFM     FILE(GELEICZZ)
+
+/** Override PF/GELExx Files*/
+
+             OVRDBF     FILE(GELEHH) TOFILE(GELEICHH)
+             OVRDBF     FILE(GELEPD) TOFILE(GELEICPD)
+             OVRDBF     FILE(GELEZZ) TOFILE(GELEICZZ)
+
+/** Override LF/LERKEY */
+
+             OVRDBF     FILE(LERKEY) TOFILE(LECFAKL0)
+
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+             IF         COND(%SUBSTRING(&MMOD 3 1) *EQ 'Y') THEN(DO)
+               CHGJOB     SWS(X1XXXXXX)
+             ENDDO
+
+/** Call program to generate postings */
+
+             CALL       PGM(LE0470) PARM(&CNAM)
+             DLTOVR     FILE(*ALL)
+
+/** If program run was successful, merge generated entries to */
+/** Customer Lending Postings File */
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+
+                IF         COND(&POST = '1') THEN(DO)
+                   CPYF       FROMFILE(GELEICPD) TOFILE(GELEPD) +
+                                MBROPT(*ADD)
+                   CALL       PGM(LE000470) PARM('GELEZZ')
+                ENDDO
+
+                IF         COND(&POST = '5') THEN(DO)
+                   CPYF       FROMFILE(GELEICPD) TOFILE(GELE2PD) +
+                                MBROPT(*ADD)
+                   CALL       PGM(LE000470) PARM('GELE2ZZ')
+                ENDDO
+
+             ENDDO
+
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+
+/** Clear PF/GELEICxx Files */
+
+                CLRPFM     FILE(GELEICHH)
+                CLRPFM     FILE(GELEICPD)
+                CLRPFM     FILE(GELEICZZ)
+                GOTO       CMDLBL(ABNOR)
+
+             ENDDO
+             ELSE          CMD(DO)
+
+/** If A/C Keys missing, then check DTAARA/LESTAT whether */
+/** to continue or not */
+
+                RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)
+
+                IF         COND(%SUBSTRING(&LESTAT 8 1) *EQ 'Y') +
+                             THEN(DO)
+
+                   SNDPGMMSG  MSG('CUSTOMER LENDING A/C KEYS MISSING +
+                                - PROCESSING CONTINUED') TOMSGQ(MRUNQ)
+                ENDDO
+                ELSE       CMD(DO)
+
+/** Call CB0175 to set halt after component flag ON  */
+/** so that COB will halt at the end of this component */
+
+                   SNDPGMMSG  MSG('CUSTOMER LENDING A/C KEYS MISSING +
+                                - PROCESSING HALTED') TOMSGQ(MOPERQ +
+                                MRUNQ)
+                   CALL       PGM(CB0175) PARM(&CNAM &CSEQ)
+
+                 ENDDO
+
+             ENDDO
+
+/** Update restart indicator to 'Y' */
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/** Abnormal processing */
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000470 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDPGM
+

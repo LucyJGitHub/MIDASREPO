@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 CER070             Date 24Nov14               *
       *                 MD030956           Date 09Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +39,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
+      *           - Recompile over changes in SDCBRTPD.               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -87,10 +92,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Account Keys Logical File
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Account Keys Logical File                                                          BUG12282
      F***SDCUSTL0  IF   E           K DISK    INFSR(*PSSR) Prefix(AF_)             BUG12282 BUG12362
      FSDCUSTL5  IF   E           K DISK    INFSR(*PSSR) Prefix(AF_)                         BUG12362
@@ -98,7 +103,7 @@
       ** Account Keys Acceptance File
      FSDACSTL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -106,23 +111,23 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program Status Data Structure
- 
+
       ** +-----------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
@@ -131,63 +136,63 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Override Commands Array
      D OVRC            S             50A   DIM(4) CTDATA
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Customer Details File
      D Ds_Customer   E DS                  ExtName(SDCUSTPD)
      D                                     PREFIX(SD_)
- 
+
       ** Customer Details File - Zoned Numeric Definition
      D Input_CustomerE DS                  ExtName(SDZCUSTPD)
- 
+
       ** Current Customer in File Format (Base Rate Tax Details)
      D CBrtFilFmt    E DS                  EXTNAME(SDCBRTPD)
      D                                     PREFIX(CB_)
- 
+
       ** Current Customer in File Format (Private Banking Details)
      D CPrbFilFmt    E DS                  EXTNAME(SDPBDSPD)
      D                                     PREFIX(CP_)
- 
+
       ** TI Customer Details in File Format
      D CuTIFilFmt    E DS                  EXTNAME(SDTICSPD)
      D                                     PREFIX(Z_)
- 
+
       ** Current Global Customer X-Reference in File Format
      D CGCuFilFmt    E DS                  EXTNAME(GPCUSTXPD)
      D                                     PREFIX(CG_)
- 
+
       ** External DS for Midas Modules Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for Midas Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @@MODE          S              6A
      D @@RSMD          S              1A
      D ACTN            S              1A
@@ -208,12 +213,12 @@
      D CFX001          S              1A
      D MidasTrNum      S              6A
      D Idx             S              3P 0
- 
+
       ** Entry Parameters
      D PDATA           S           4000A
      D PPROGRAM        S             10A
      D PRETCODE        S              7A
- 
+
       ** Parameter List
      D PCmd            S             13A   Inz('DLYJOB DLY(1)')
      D PCmdA           S             80A
@@ -222,14 +227,14 @@
      D PZfield         S             16
      D PZdecimals      S              1P 0
      D PZdigits        S              2P 0
- 
+
       ** Key Fields
      D KCustCode       S                   Like(BBCUST)
- 
+
       ** Working Variables
      D WIdx            S              2P 0
      D WCust           S              6A
- 
+
      D Upper           C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ')              BUG11946
      D Lower           C                   CONST('abcdefghijklmnopqrstuvwxyz')              BUG11946
       *****************************************************************
@@ -242,51 +247,51 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EVAL      Input_Customer = PDATA
- 
+
       ** Do overrides.
- 
+
      C                   FOR       WIdx = 1 TO %ELEM(OVRC)
- 
+
      C                   EVAL      PCmdA = OVRC(WIdx)
      C                   EVAL      PCmd_Len = %Len(PCmdA)
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCmdA
      C                   PARM                    PCmd_Len
- 
+
      C                   ENDFOR
- 
+
       ** Convert fields with incompatible definitions
- 
+
      C                   EXSR      SrConvert
- 
+
       ** Default fields.
- 
+
      C                   EXSR      SRDefault
- 
+
      C                   IF        BBAACC   = 'Y'   OR
      C                             PPROGRAM = 'SDC000061'
      C                   EXSR      SrCustDetl
      C                   ELSE
      C                   EXSR      SrAccp
      C                   ENDIF
- 
+
       ** Commit changes if there are no errors, otherwise rollback
- 
+
      C                   IF        PRETCODE   = *Blanks
      C                   COMMIT
      C                   ELSE
      C                   ROLBK
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -294,58 +299,58 @@
       *               Write/Update to Zonal files                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCustDetl    BEGSR
- 
+
      C                   EVAL      KCustCode = BBCUST
- 
+
      C     KCUSD         SETLL     SDCUSTL1
- 
+
      C                   IF        %EQUAL(SDCUSTL1)
- 
+
      C                   EXSR      SrRetrieve
- 
+
       ** Customer exists, update only central fields
- 
+
      C                   EXSR      SrCentral
- 
+
      C                   EVAL      SD_BBTYLC = 'A'
      C                   EVAL      SD_BBLCD  = BJRDNB
      C                   EVAL      SD_BBEACC = BJRDNB
      C                   EVAL      DACTN     = 'A'                                          BUG12690
      C                   EVAL      CB_XCHTP  = 'A'                                          BUG12690
      C                   EVAL      CB_XLCD   = BJRDNB                                       BUG12690
- 
+
      C                   EXSR      SrUpdater
- 
+
      C                   ELSE
- 
+
       ** Customer does not exist, add new customer details
- 
+
      C                   EXSR      SrNewCustomer
- 
+
      C                   EVAL      SD_BBTYLC = 'I'
      C                   EVAL      SD_BBLCD  = BJRDNB
      C                   EVAL      SD_BBEACC = BJRDNB
      C                   EVAL      DACTN     = 'I'                                          BUG12690
      C                   EVAL      CB_XCHTP  = 'I'                                          BUG12690
      C                   EVAL      CB_XLCD   = BJRDNB                                       BUG12690
- 
+
      C                   EXSR      SrUpdater
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrRetrieve - Retrieve Customer Detail Record                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRetrieve    BEGSR
- 
+
      C                   CALLB     'SDCUSDRTV'
       ** Input
      C                   PARM      *BLANK        RetCodeOut
@@ -376,9 +381,9 @@
      C                   PARM      *BLANK        MsgIdArr
      C                   PARM      *BLANK        MsgDtaArr
      C                   PARM      *ZERO         Idx
- 
+
       ** Error in retrieving customer details
- 
+
      C                   IF        Idx <> 0
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDCUSTPD'
@@ -391,24 +396,24 @@
      C                   EVAL      PRETCODE   = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrUpdater - Update Customer Details Records                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SrUpdater     BEGSR
- 
+
       ** Use Customer Number as Front Office ID
- 
+
      C                   EVAL      SD_BBFRNT   = SD_BBCUST
- 
+
      C                   DO        100
- 
+
      C                   CALLB     'SDCUSDUPD'
      C                   PARM      *blanks       @RTCD
      C                   PARM                    Ds_Customer
@@ -432,19 +437,19 @@
       ** PAccMde 'J' indicates job update                                                   BUG11935
      C                   PARM      'J'           PAccMde                                    BUG11935
      C                   PARM                    PUpdYN
- 
+
       ** If error encountered in update, retry until 100 attempts
- 
+
      C                   IF        @RTCD = '*ERROR'
      C                   EXSR      SrDelay
      C                   ELSE
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Error in updating customer details
- 
+
      C                   IF        @RTCD = '*ERROR'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDCUSTPD'
@@ -457,20 +462,20 @@
      C                   EVAL      PRETCODE   = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrNewCustomer - Moves Fields to Customer Data Structure      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrNewCustomer BEGSR
- 
+
      C                   CLEAR                   Ds_Customer
- 
+
      C                   EVAL      SD_BBCUST =   BBCUST
      C                   EVAL      SD_BBCSSN =   BBCSSN
      C                   EVAL      SD_BBCNA1 =   BBCNA1
@@ -518,7 +523,7 @@
      C                   EVAL      SD_BBXUSR =   BBXUSR
      C                   EVAL      SD_BBAACC =   BBAACC
      C                   EVAL      SD_BBGPDT =   BBGPDT
- 
+
      C                   EVAL      SD_BBCHID =   BBCHID
      C                   EVAL      SD_BBCHSC =   BBCHSC
      C                   EVAL      SD_BBCABA =   BBCABA
@@ -536,18 +541,18 @@
       ** Setup customer basic rate tax default during insert                                BUG12690
                                                                                             BUG12690
      C                   EVAL      CB_ACHLRT = BBTAIN                                       BUG12690
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrCentral - Moves Central Fields                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCentral     BEGSR
- 
+
       ** Shortname
      C                   EVAL      SD_BBCSSN = BBCSSN
       ** Name & address
@@ -581,105 +586,105 @@
      C                   EVAL      SD_BBLCCD = BBLCCD
       ** Designated In currency
      C                   EVAL      SD_BBDINC = BBDINC
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrConvert - Moves Zoned Numeric to Packed Fields             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrConvert     BEGSR
       *                                                                                     BUG11946
       ** Convert Lower Case to Upper Case                                                   BUG11946
       *                                                                                     BUG11946
      C                   Eval      WCust = %XLATE(Lower:Upper:CUGCUS)                       BUG11946
      C                   Eval      CUGCUS = WCust                                           BUG11946
- 
+
       ** Non-numeric, not compatible in length
- 
+
      C                   MOVEL     CUGCUS        BBCUST
      C                   MOVEL     CUGACO        BBACOC
      C                   MOVEL     CUGICD        BBLICD
- 
+
       ** Numeric fields
- 
+
      C                   IF        CUCHID = *Blanks
      C                   EVAL      BBCHID = *Zeros
      C                   ELSE
      C                   MOVE      CUCHID        BBCHID
      C                   ENDIF
- 
+
      C                   IF        CUCHSC = *Blanks
      C                   EVAL      BBCHSC = *Zeros
      C                   ELSE
      C                   MOVE      CUCHSC        BBCHSC
      C                   ENDIF
- 
+
      C                   IF        CUCABA = *Blanks
      C                   EVAL      BBCABA = *Zeros
      C                   ELSE
      C                   MOVE      CUCABA        BBCABA
      C                   ENDIF
- 
+
      C                   IF        CUABA2 = *Blanks
      C                   EVAL      BBABA2 = *Zeros
      C                   ELSE
      C                   MOVE      CUABA2        BBABA2
      C                   ENDIF
- 
+
      C                   IF        CUFWCD = *Blanks
      C                   EVAL      BBFWCD = *Zeros
      C                   ELSE
      C                   MOVE      CUFWCD        BBFWCD
      C                   ENDIF
- 
+
      C                   IF        CUDOIC = *Blanks
      C                   EVAL      BBDOIC = *Zeros
      C                   ELSE
      C                   MOVE      CUDOIC        BBDOIC
      C                   ENDIF
- 
+
      C                   IF        CUSSDT = *Blanks
      C                   EVAL      BBSSDT = *Zeros
      C                   ELSE
      C                   MOVE      CUSSDT        BBSSDT
      C                   ENDIF
- 
+
      C                   IF        CUDTDL = *Blanks
      C                   EVAL      BBDTDL = *Zeros
      C                   ELSE
      C                   MOVE      CUDTDL        BBDTDL
      C                   ENDIF
- 
+
      C                   IF        CULCD  = *Blanks
      C                   EVAL      BBLCD  = *Zeros
      C                   ELSE
      C                   MOVE      CULCD         BBLCD
      C                   ENDIF
- 
+
      C                   IF        CUDEDT = *Blanks
      C                   EVAL      BBDEDT = *Zeros
      C                   ELSE
      C                   MOVE      CUDEDT        BBDEDT
      C                   ENDIF
- 
+
      C                   IF        CUMGTP = *Blanks
      C                   EVAL      BBMGTP = *Zeros
      C                   ELSE
      C                   MOVE      CUMGTP        BBMGTP
      C                   ENDIF
- 
+
      C                   IF        CUEACC = *Blanks
      C                   EVAL      BBEACC = *Zeros
      C                   ELSE
      C                   MOVE      CUEACC        BBEACC
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -687,7 +692,7 @@
       *                                                               *
       *****************************************************************
      C     SrDefault     BEGSR
- 
+
      C                   CLEAR                   CBrtFilFmt
      C                   MOVE      'D'           CB_XRECI
      C                   MOVE      BBCUST        CB_XCNUM
@@ -697,55 +702,55 @@
      C                   CLEAR                   CuTIFilFMt
      C                   MOVE      BBCUST        Z_TCCUST
      C                   CLEAR                   CGCuFilFmt
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrAlign - Align Numeric Data                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAlign       BEGSR
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    PZreturn
      C                   PARM                    PZfield
      C                   PARM                    PZdecimals
      C                   PARM                    PZdigits
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrAccp - Acceptance File Update Routine                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAccp        BEGSR
- 
+
      C                   EVAL      KCustCode = BBCUST
- 
+
      C                   DO        100
- 
+
      C     KCUSD         CHAIN(E)  SDACSTL0
- 
+
       ** If record is locked to another job, retry after 1 second
- 
+
      C                   IF        %ERROR()
      C                   EXSR      SrDelay
      C                   ITER
- 
+
      C                   ELSE
      C                   IF        %FOUND(SDACSTL0)
- 
+
       ** Reload input data before updating acceptance file
- 
+
      C                   EVAL      Input_Customer = PDATA
      C                   EXSR      SrConvert
- 
+
       *                                                                                     BUG11886
       ** If Accept to zone is N, set branch code to blanks                                  BUG11886
       *                                                                                     BUG11886
@@ -763,7 +768,7 @@
      C                   ENDIF                                                              BUG12282
      C                   UPDATE    SDCUSTD0
      C                   ELSE
- 
+
       *                                                                                     BUG11886
       ** If Accept to zone is N, set branch code to blanks                                  BUG11886
       *                                                                                     BUG11886
@@ -783,9 +788,9 @@
      C                   ENDIF
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDACSTL0'
@@ -798,51 +803,51 @@
      C                   EVAL      PRETCODE   = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SrDelay - Delay Job for 1 second                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrDelay       BEGSR
- 
+
      C                   EVAL      PCmd_Len = %Len(PCmd)
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCmd
      C                   PARM                    PCmd_Len
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PDATA
      C                   PARM                    PRETCODE
      C                   PARM                    PPROGRAM
- 
+
      C     KCUSD         KLIST
      C                   KFLD                    KCustCode
- 
+
       ** Access Midas module details
- 
+
      C                   CALLB     'AOMMODR0'
      C                   PARM      '*DBERR  '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        @RTCD <> *blank
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY  =  @OPTN
@@ -852,15 +857,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if S01383 (Base Rate Tax) is switched on
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'S01383'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -870,23 +875,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      S01383 = 'Y'
      C                   ELSE
      C                   EVAL      S01383 = 'N'
      C                   ENDIF
- 
+
       ** Check if CGP001 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGP001'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (@RTCD <> *blanks) and
      C                             (@RTCD <> '*NRF   ')
      C     *LOCK         IN        LDA
@@ -897,23 +902,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CGP001 = 'Y'
      C                   ELSE
      C                   EVAL      CGP001 = 'N'
      C                   ENDIF
- 
+
       ** Check if CSW024 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSW024'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (@RTCD <> *blanks) and
      C                             (@RTCD <> '*NRF   ')
      C     *LOCK         IN        LDA
@@ -924,23 +929,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CSW024 = 'Y'
      C                   ELSE
      C                   EVAL      CSW024 = 'N'
      C                   ENDIF
- 
+
       ** Check if CLE025 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE025'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (@RTCD <> *blanks) and
      C                             (@RTCD <> '*NRF   ')
      C     *LOCK         IN        LDA
@@ -951,23 +956,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CLE025 = 'Y'
      C                   ELSE
      C                   EVAL      CLE025 = 'N'
      C                   ENDIF
- 
+
       ** Check if CFX001 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CFX001'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (@RTCD <> *blanks) and
      C                             (@RTCD <> '*NRF   ')
      C     *LOCK         IN        LDA
@@ -978,22 +983,22 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CFX001 = 'Y'
      C                   ELSE
      C                   EVAL      CFX001 = 'N'
      C                   ENDIF
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Datebase error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = '*FIRST'
@@ -1003,14 +1008,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger Details
- 
+
      C                   CALL      'AOGELRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = '*IFRST'
@@ -1021,14 +1026,14 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
      C                   CLEAR                   CBrtFilFmt
      C                   CLEAR                   CPrbFilFmt
      C                   CLEAR                   CuTIFilFMt
      C                   CLEAR                   CGCuFilFmt
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -1038,22 +1043,22 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
 ** CPY@

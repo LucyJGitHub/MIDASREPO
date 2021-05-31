@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CUP042             Date 12Dec14               *
-      *  Prev Amend No. CUP041   *REWRITE  Date 24Jun14               *
+      *  Last Amend No. MD056774           Date 16Sep20               *
+      *  Prev Amend No. CUP042             Date 12Dec14               *
+      *                 CUP041   *REWRITE  Date 24Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056774 - ZINZ contains error in spool after run.           *
+      *           - Applied for MD-56883.                             *
       *  CUP042 - Restructure of deliverable data files.              *
       *  CUP041 - New utility to remove Switchable Feature data.      *
       *  CUP002 - Make the report more user friendly                  *
@@ -132,7 +135,8 @@
       *
       ** If any messages were written then produce report.
      C                   IF        PReturnCode = 'W'
-     C                   CALL      'UP008010'
+     C**********         CALL      'UP008010'                                               MD056774
+     C                   CALL      'UP008011'                                               MD056774
      C                   PARM      '*REPORT'     Action
      C                   PARM                    RptPgm
      C                   PARM                    ErrMessage
@@ -157,7 +161,8 @@
      C                             SFFILE +
      C                             SFLIB2 +
      C                             SFMBNM
-     C                   CALL      'UP008010'
+     C**********         CALL      'UP008010'                                               MD056774
+     C                   CALL      'UP008011'                                               MD056774
      C                   PARM                    Action
      C                   PARM                    RptPgm
      C                   PARM                    ErrMessage

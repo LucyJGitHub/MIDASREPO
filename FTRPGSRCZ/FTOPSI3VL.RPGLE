@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD055503           Date 03Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 AR1097264          Date 27Mar13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,6 +44,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055503 - Not able to do webfacing authorisation for invalid*
+      *             outgoing payment that had been repaired.          *
+      *           - Added the missing parameter (InputUser) introduced*
+      *             by MD042042 in FTOPAY3VL.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -430,6 +435,7 @@
      C                   Parm                    NwPtFilFmX
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+     C                   PARM                    InputUser        10                        MD055503
       *
       **  Restore defaulted values
      C                   Movel     SSTRCT        STRCT

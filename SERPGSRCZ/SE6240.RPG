@@ -17,15 +17,8 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT117             Date 29Apr21               *
-      *  Prev Amend No. MD057480           Date 15Apr21               *
-      *                 MD046998A          Date 15Apr21               *
-      *                 MD057247           Date 01Feb21               *
-      *                 MD047331           Date 01Jun20               *
-      *                 AR1075401          Date 01Jun20               *
-      *                 248698             Date 01Jun20               *
-      *                 MD045517           Date 01Jun20               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050604           Date 21Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 226449             Date 24Jun15               *
       *                 MD034776           Date 08Jul15               *
       *                 AR1067108          Date 11Dec12               *
@@ -96,24 +89,8 @@
      F*                                                                  *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  HUT117 - SAFE CUSTODY FEE ACCRUAL POSTING CHANGE             *
-      *           Amend hooks SE6240C001, SE6240F001                  *
-      *           Add hooks HUT117_002, HUT117_003, HUT117_004,       *
-      *           HUT117_005                                          *
-      *  MD057480 - Used Next Accrual Date instead of Last Accrual    *
-      *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
-      *            - Applied fix for MD057480                         *
-      *  MD057247 - Multiple calls of UTCHOBJEX for several COB com-  *
-      *             ponents - Securities module.                      *
-      *           - Moved the call of AOSARDR0 from /copy ZLCDZ1.     *
-      *  MD047331 - Missing report headers in SE6240P1                *
-      *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
-      *              Recompiled. (Child: AR1075402)                   *
-      *  248698 - Rounding discrepancies on some SE reports. Applied  *
-      *           fix 228682.                                         *
-      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
-      *  MD045517 - Additional condition for Private Banking customers*
-      *             for Safe custody fee portfolio position processing*
+      *  MD050604 - Average price of position changed incorrectly.    *
+      *           - Recompiled due to changes in copy source ZCNSDZ1. *
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -598,14 +575,10 @@
      I** EXTERNAL DS FOR PM ICD                                           091522
      ISDMMOD    E DSSDMMODPD                                              091522
      I** EXTERNAL DS FOR MMOD                                             091522
-     ISDCUST    E DSSDCUSTPD                                                                MD045517
-     I** EXTERNAL DS FOR CUSTOMER DETAILS                                                   MD045517
      IDSFDY     E DSDSFDY                                                 091522
      I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                091522
      IDSSDY     E DSDSSDY                                                 091522
      I* DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                       091522
-     IDSLDY     E DSDSLDY                                                                   MD045517
-     I* DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE                                    MD045517
      I/COPY WNCPYSRC,SE6240I001
      I/EJECT
       *                                                                   179044
@@ -885,34 +858,6 @@
      C                     ELSE                                                               207543
      C                     MOVE 'N'       CEU018                                              207543
      C                     ENDIF                                                              207543
-      *                                                                                     MD057247
-      ** Access Switchable Features file to determine if CSE031 is                          MD057247
-      ** installed in the system.                                                           MD057247
-      *                                                                                     MD057247
-     C                     CALL 'AOSARDR0'                                                  MD057247
-     C                     PARM           URTNCD  7                                         MD057247
-     C                     PARM '*VERIFY' UOPTN   7                                         MD057247
-     C                     PARM 'CSE031'  UUKEY   6                                         MD057247
-     C                     PARM           UDSFDY 76                                         MD057247
-      *                                                                                     MD057247
-     C                     MOVE 'N'       CSE031  1                                         MD057247
-     C           URTNCD    IFEQ *BLANKS                                                     MD057247
-     C                     MOVE 'Y'       CSE031                                            MD057247
-     C                     ENDIF                                                            MD057247
-      *                                                                                     MD057247
-      ** Access Switchable Features file to determine if CSE071 is                          MD057247
-      ** installed in the system.                                                           MD057247
-      *                                                                                     MD057247
-     C                     CALL 'AOSARDR0'                                                  MD057247
-     C                     PARM           URTNCD                                            MD057247
-     C                     PARM '*VERIFY' UOPTN                                             MD057247
-     C                     PARM 'CSE071'  UUKEY                                             MD057247
-     C                     PARM           UDSFDY                                            MD057247
-      *                                                                                     MD057247
-     C                     MOVE 'N'       CSE071  1                                         MD057247
-     C           URTNCD    IFEQ *BLANKS                                                     MD057247
-     C                     MOVE 'Y'       CSE071                                            MD057247
-     C                     ENDIF                                                            MD057247
      C*
      C**   ACCESS ICD FILE SDBANKL1
      C           1         SETLLSDBANKPD
@@ -1300,32 +1245,9 @@
      C**   ACCESS PF/SDPLCSL0 WITH CUSTOMER NUMBER                        091522
      C           WWCUST    CHAINSDPLCSL0             45                   091522
      C*                                                                   091522
-      **  Access Customer Details by using Access Object,                                   MD045517
-      **  to retrieve Private Banking Customer Indicator.                                   MD045517
-     C                     MOVE *BLANKS   @CUST                                             MD045517
-     C                     MOVELWWCUST    @CUST                                             MD045517
-     C                     CALL 'AOCUSTR1'                                                  MD045517
-     C                     PARM '*MSG   ' @RTCD   7                                         MD045517
-     C                     PARM '*KEY   ' @OPTN   7                                         MD045517
-     C                     PARM           @CUST  10                                         MD045517
-     C                     PARM           @KYST   7                                         MD045517
-     C           SDCUST    PARM SDCUST    DSLDY                                             MD045517
-      *                                                                                     MD045517
-      **  If Customer Details do not exist, handle Database Error.                          MD045517
-     C           @RTCD     IFNE *BLANK                                                      MD045517
-     C                     MOVEL'SDCUSTPD'DBFILE                                            MD045517
-     C                     MOVEL@CUST     DBKEY                                             MD045517
-     C                     Z-ADD15        DBASE                                             MD045517
-     C                     EXSR *PSSR                                                       MD045517
-     C                     ENDIF                                                            MD045517
-      *                                                                                     MD045517
      C**   IF LIVE RECORD IS FOUND                                        091522
-     C********** *IN45     IFEQ '0'                                                  091522 MD045517
-     C           BGPFMG    IFEQ 'Y'                                                         MD045517
-     C           *IN45     ANDEQ'0'                                                         MD045517
+     C           *IN45     IFEQ '0'                                       091522
      C           QBRECI    ANDEQ'D'                                       091522
-     C           BGN4ST    OREQ 'Y'                                                         MD045517
-     C           BBPRBA    ANDEQ'Y'                                                         MD045517
      C*                                                                   091522
      C**   CALL SUBROUTINE TO DO PORTFOLIO POSITION PROCESSING            091522
      C                     EXSR #P04                                      091522
@@ -1559,16 +1481,6 @@
      C** SET PORTFOLIO REFERENCE                                          091522
      C                     MOVE '9999'    WWPTFR                          091522
      C*                                                                   091522
-     C*                                                                 MD047331
-     C** Print header and sub-header if detail line will                MD047331
-     C**    be greater than the overflow                                MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 52                                      MD047331
-     C                     WRITEHEADER1                                 MD047331
-     C                     WRITEHEADER2                                 MD047331
-     C                     WRITEHEADER3                                 MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C** WRITE PORTFOLIO CUSTOMER HEADING                                 091522
      C                     WRITEDETAIL1                                   091522
      C*                                                                   091522
@@ -2925,9 +2837,7 @@
      C*
      C** ACCOUNT CODE
      C***********          Z-ADDSAAACT    ACOD                            S01464
-     C/COPY WNCPYSRC,HUT117_002                                           HUT117
      C                     Z-ADDFBAACT    ACOD                            S01464
-     C/COPY WNCPYSRC,HUT117_003                                           HUT117
      C*
      C** ACCOUNT SEQUENCE
      C                     Z-ADD1         ACSQ
@@ -3120,9 +3030,7 @@
      C*
      C** SET ACCOUNT CODE
      C***********          Z-ADDSAINCA    ACOD                            S01464
-     C/COPY WNCPYSRC,HUT117_004                                           HUT117
      C                     Z-ADDFBINCA    ACOD                            S01464
-     C/COPY WNCPYSRC,HUT117_005                                           HUT117
      C*
      C** REVERSE DB/CR
      C           DRCR      IFEQ *ZEROS
@@ -3568,15 +3476,6 @@
      C                     MOVE BBACOC    WWACOC                          091522
      C*                                                                   091522
      C                     END                                            091522
-     C** Print header and sub-header if detail line will                MD047331
-     C**    be greater than the overflow                                MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 52                                      MD047331
-     C                     WRITEHEADER1                                 MD047331
-     C                     WRITEHEADER2                                 MD047331
-     C                     WRITEHEADER3                                 MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C** WRITE PORTFOLIO CUSTOMER HEADING                                 091522
      C                     WRITEDETAIL1                             R0131 091522
      C*                                                                   091522
@@ -3605,13 +3504,6 @@
      C                     MOVE 'J'       ZECODE                          091522
      C                     EXSR ZSEDIT                                    091522
      C                     MOVE ZOUT21    RRFATT                          091522
-     C*                                                                 MD047331
-     C**  Check for overflow and write the appropriate header           MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 55                                      MD047331
-     C                     EXSR #WRTHD                                  MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C                     WRITEDETAIL3                                   091522
      C*                                                                   091522
      C** IF 'OUTSTANDING ACCRUAL ADJUSTMENTS' > 0 WRITE REPORT LINE       091522
@@ -3624,13 +3516,6 @@
      C*                                                                   091522
      C** OUTPUT 'OUTSTANDING ADJUSTMENT SIGN' TO REPORT                   091522
      C                     MOVE SDOSAS    RROTAS                          091522
-     C*                                                                 MD047331
-     C**  Check for overflow and write the appropriate header           MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 55                                      MD047331
-     C                     EXSR #WRTHD                                  MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C                     WRITEDETAIL4                                   091522
      C*                                                                   091522
      C** UPDATE 'FEES ACCRUED TO DATE' AND GENERATE ACCRUAL ADJUSTMENT    091522
@@ -3707,13 +3592,6 @@
      C*                                                                   091522
      C** WRITE DETAIL LINE TO REPORT                                      091522
      C           QANOML    IFNE 0                                         091522
-     C*                                                                 MD047331
-     C**  Check for overflow and write the appropriate header           MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 55                                      MD047331
-     C                     EXSR #WRTHD                                  MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C                     WRITEDETAIL6                                   091522
      C                     END                                            091522
      C*                                                                   091522
@@ -3804,13 +3682,6 @@
      C*                                                                   091522
      C** WRITE DETAIL LINE TO REPORT                                      091522
      C           SGCLBL    IFNE 0                                         091522
-     C*                                                                 MD047331
-     C**  Check for overflow and write the appropriate header           MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 55                                      MD047331
-     C                     EXSR #WRTHD                                  MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C                     WRITEDETAIL7                                   091522
      C                     END                                            091522
      C*                                                                   091522
@@ -3916,13 +3787,6 @@
      C                     MOVE 'J'       ZECODE                          091522
      C                     EXSR ZSEDIT                                    091522
      C                     MOVE ZOUT21    RRFATD                          091522
-     C*                                                                 MD047331
-     C**  Check for overflow and write the appropriate header           MD047331
-     C*                                                                 MD047331
-     C           LINE      IFGT 55                                      MD047331
-     C                     EXSR #WRTHD                                  MD047331
-     C                     END                                          MD047331
-     C*                                                                 MD047331
      C                     WRITEDETAIL5                                   091522
      C*                                                                   091522
      C                     ENDSR                                          091522
@@ -3967,10 +3831,6 @@
      C                     WRITEHEADER3                                   083825
      C           FBCFCP    IFEQ 'C'                                       083825
      C                     WRITEDETAIL2                                   083825
-     C                     ELSE                                         MD047331
-     C           FBCFCP    IFEQ 'P'                                     MD047331
-     C                     WRITEDETAIL1                                 MD047331
-     C                     END                                          MD047331
      C                     END                                            083825
      C*                                                                   083825
      C                     ENDSR                                          083825
@@ -4068,8 +3928,7 @@
      C*
      C** DETERMINE THE NUMBER OF DAYS IN THE CHARGE YEAR
      C*
-     C**********           Z-ADDZFMDAT    NCD                                               MD057480
-     C                     Z-ADDFBCCRD    NCD                                               MD057480
+     C                     Z-ADDZFMDAT    NCD
      C                     MOVE ZDVBS     DVBS
      C                     Z-ADDZTODAT    MATY
      C                     Z-ADD*ZEROS    LCPN
@@ -4735,7 +4594,7 @@
      C**          ZDATE2                                             **   E20380
      C********************************************************************E20380
      C/EJECT                                                              E20380
-     C/COPY ZSRSRC,ZLCDZ1                                                            E20380 MD057247
+     C/COPY ZSRSRC,ZLCDZ1                                                 E20380
      C/EJECT                                                              E20380
      C/COPY ZSRSRC,ZCCYCN                                                 E20380
      C****/EJECT                                                    47719 E20380

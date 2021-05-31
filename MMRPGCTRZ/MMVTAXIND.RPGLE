@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER069             Date 03Jul14               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER069             Date 03Jul14               *
       *                 MD028368           Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR762349A          Date 08Jun11               *
@@ -58,6 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *  MD028368 - Taxable Indicator defaulted to 'T' if             *
@@ -97,7 +101,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Midas BRT Customer Details
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
@@ -109,7 +113,7 @@
       *                                                                                     BUG23887
       ** Midas SD Country of Tax Codes                                                      BUG23887
       *                                                                                     BUG23887
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -128,38 +132,38 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                       CRE007
       ** First DS for Access Programs, Long Date Structure                      CRE007
                                                                                 CRE007
@@ -197,12 +201,12 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
       *                                                                                       CER048
@@ -218,40 +222,40 @@
      D PBrca           S              3A                                                    BUG23048
      D KCust           S              6A                                                    BUG23048
      D KCtax           S              2A                                                    BUG23048
- 
+
       ** Midas Taxable indicator received as a parameter
      D DDMTAX          S              1A
       *                                                                                     BUG23048
       ** Branch of the transaction as entered on screen                                     BUG23048
      D DDBRCA          S              3A                                                    BUG23048
- 
+
       ** Basic Rate Tax SAR Flag - received as a parameter
      D BRTind          S              1A
- 
+
       ** Deal Type received as a parameter
      D DDType          S              2A
- 
+
       ** Deal Type OK received as a parameter
      D DDTypeOK        S              1A
- 
+
       ** CUSTOMER received as a parameter
      D DDCUST          S             10A
- 
+
       ** CUSTOMER OK received as a parameter
      D DDCUSTOK        S              1A
- 
+
       ** Customer Number
      D*IKCNum***       S              6S 0                                                    CSD027
      D IKCNum          S              6A                                                      CSD027
- 
+
       ** Taxable Indicator (SDCUSTPD) - received as a parameter
      D BBTAIN          S              1A
- 
+
       ** Allow direct call to SD2410 indicator - received as a parameter
      D AlwCali         S              1A
                                                                                 CDL006
      D CDL006          S              1A   IMPORT                               CDL006
- 
+
       ** Principal Amount - received as a parameter                             CRE007
      D IKAMNP          S             15P 0                                      CRE007
                                                                                 CRE007
@@ -284,14 +288,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -390,11 +394,11 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   ELSE                                                                 CER048
- 
+
       ** +----------------------------+
       ** * Validate Taxable Indicator *
       ** +----------------------------+
- 
+
       ** IF BRT SAR IS INSTALLED
       *  -----------------------
       *
@@ -432,7 +436,7 @@
      C     DDTYPE        OREQ      'FT'                                         CDL006
      C     CDL006        ANDEQ     'Y'                                          CDL006
       *
- 
+
      C     IKCNUM        CHAIN     SDCBRTL1                           65
       *                  ~~~~~
      C     *IN65         IFEQ      '1'
@@ -960,9 +964,9 @@
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                     BUG23048
@@ -1090,9 +1094,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    PWarnFnd                                     CER048
@@ -1113,9 +1117,9 @@
      C                   PARM                    BJLCCY                         CRE007
      C                   PARM                    BBCSTY                                      CDL013
      C                   PARM                    CDL013                                      CDL013
- 
+
      C                   OPEN      SDCBRTL1
- 
+
       *                                                                         CRE007
       ** Access SAR details to check if CRE007 is installed                     CRE007
       *                                                                         CRE007
@@ -1188,11 +1192,11 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

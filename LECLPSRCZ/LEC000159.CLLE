@@ -9,11 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2018                     */
 /*                                                                   */
-/*       Last Amend No. CLE159  *Create    Date 18Jul18              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Last Amend No. MD055472           Date 07May20              */
+/*       Prev Amend No. CLE159  *Create    Date 18Jul18              */
+/*                                                                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055472 - Descrepancy between lower release versus FBM2.1  */
+/*                  on the calculation of amortization due to half   */
+/*                  adjust and declaration of field. Use a system    */
+/*                  value to determine whether to use the FBM 11.06  */
+/*                  version or the FBM2.1 version of LE000160.       */
 /*       CLE159 - LE Fee Amortisation Enhancement                    */
 /*                                                                   */
 /*********************************************************************/
@@ -23,6 +29,26 @@
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*MD055472*/
+             DCL        VAR(&SVAL1)  TYPE(*CHAR) LEN(200)                               /*MD055472*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                /*MD055472*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                /*MD055472*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                               /*MD055472*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited 2018')
 
@@ -43,6 +69,15 @@
 
              CHGVAR     VAR(&STAT) VALUE('Y')
 
+/**/                                                                                    /*MD055472*/
+/** Retrieve system value*/                                                             /*MD055472*/
+/**/                                                                                    /*MD055472*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'AccrualHalfAdjust' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                        /*MD055472*/
+
 /* Call CB0150 to update restart indicator */
 
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
@@ -53,7 +88,16 @@
              CALL       PGM(LE000159)
              
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/                                                                                    /*MD055472*/
+/** Use the FBM 11.06 version if the system value is 'N'                                /*MD055472*/
+/**/                                                                                    /*MD055472*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'N')) THEN(DO)                                    /*MD055472*/
+             CALL       PGM(LE000160A)                                                  /*MD055472*/
+             ENDDO                                                                      /*MD055472*/
+             ELSE CMD(DO)                                                               /*MD055472*/
              CALL       PGM(LE000160)
+             ENDDO                                                                      /*MD055472*/
 
              ENDDO
 

@@ -1,0 +1,606 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Plane Manipulation')
+/*OVRF*: OVRDBF FILE(CGPDECL8) TOFILE(CGPDECL0)                     : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG0400 - Plane Manipulation                                  *
+     F*                                                               *
+     F*  Function:                                                    *
+     F*                                                               *
+     F*                                                               *
+     F*  Called By:                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD054955 *REDUNDANTDate 16Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 084416             Date 08Mar95               *
+      *                 S01522             Date 09Dec94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  084416 - Override CGPDECL0 to SHARE(*NO)                     *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,CG0400DFPG
+     FCGPDECL0IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGPDECPDO   E                    DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FCGPDECL8UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            @PDECL0                           KRENAME@PDECL8
+     F                                              KCOMIT
+     F/EJECT
+     E/COPY WNCPYSRC,CG0400DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E*  Array containing Copyright statement
+     E                    CPY@    1   1 80
+     E                    CMD@    1   3 80
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E/COPY WNCPYSRC,CG0400DEPG
+     E/EJECT
+     IP1PARM      DS
+     I                                        1  10 P1LAYO
+     I                                       11  20 P1PLAN
+     I                                       21  30 P1FLDN
+     I                                       31  380P1TCGP
+     I                                       39  460P1CID
+     IP2PARM      DS
+     I                                        1  10 P2NLAY
+     I                                       11  20 P2FMBR
+     I                                       21  30 P2TMBR
+     IO1PARM      DS
+     I                                        1  10 O1LAYO
+     I                                       11  20 O1PLAN
+     I                                       21  30 O1FLDN
+     I                                       31  380O1TCGP
+     I                                       39  460O1CID
+     IO2PARM      DS
+     I                                        1  10 O2NLAY
+     I                                       11  20 O2FMBR
+     I                                       21  30 O2TMBR
+     ISAVPRM      DS
+     I                                        1  10 S1NLAY
+     I                                       11  20 S1FMBR
+     I                                       21  30 S1TMBR
+     I/COPY CGCPYSRC,SRERRI
+      *
+     ICGLDA     E DSCGLDA                                                 S01194
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0ACT   8
+     C                     PARM           P1PARM
+     C                     PARM           P2PARM
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C           P2PARM    ORNE SAVPRM
+     C           W0ACT     ORNE SAVACT
+     C                     EXSR SRINIT
+     C                     END
+      *
+     C           *NAMVAR   DEFN *LDA      CGLDA
+     C                     IN   CGLDA
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Set up parameters for call to next program.
+      *
+     C           P1PLAN    IFEQ *BLANKS
+     C                     EXSR SRSET
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN   : Main processing                                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMAIN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+     C                     MOVEA'000'     *IN,51
+     C           W0ACT     CASEQ'*COPY'   SRCOPY
+     C           W0ACT     CASEQ'*LDELETE'SRLDEL
+     C           W0ACT     CASEQ'*PDELETE'SRPDEL
+     C                     ENDCS
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRSET    : Set up call to next program                       *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRSET     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSET'   @STK,Q
+      *
+     C                     CLEARO1PARM
+     C                     CLEARO2PARM
+      *
+     C           P2FMBR    IFEQ '*FIRST'
+     C           P2FMBR    OREQ 'CGPDECPD'
+     C                     MOVE *BLANKS   O2FMBR
+     C                     MOVEL'*FIRST  'O2FMBR
+     C                     ELSE
+     C                     MOVELP2FMBR    O2FMBR
+     C                     ENDIF
+      *
+     C           P2TMBR    IFEQ '*FIRST'
+     C           P2TMBR    OREQ 'CGPDECPD'
+     C                     MOVE *BLANKS   O2TMBR
+     C                     MOVEL'CGPDEFPD'O2TMBR
+     C                     ELSE
+     C                     MOVELP2TMBR    O2TMBR
+     C                     ENDIF
+      *
+      ** Set O1 parameters.
+     C                     MOVELP1LAYO    O1LAYO
+     C                     Z-ADDP1CID     O1CID
+     C                     Z-ADDP1TCGP    O1TCGP
+     C                     MOVELP1PLAN    O1PLAN
+     C                     MOVELP1FLDN    O1FLDN
+      *
+      ** Set O2 parameters.
+     C                     MOVELP2NLAY    O2NLAY
+      *
+      ** Call next program in sequence
+      *
+     C                     CALL 'CG0410'
+     C                     PARM           W0RTN
+     C                     PARM           W0ACT   8
+     C                     PARM           O1PARM
+     C                     PARM           O2PARM
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSET     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRCOPY   : Copy layout                                       *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRCOPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCOPY'  @STK,Q
+      *
+     C                     SELEC                           *SL
+      *
+      ** Position file is to number of parameters passed.
+      *
+     C           P1PLAN    WHNE *BLANKS
+      *
+     C           KKEY02    KLIST
+     C                     KFLD           P1LAYO
+     C                     KFLD           P1PLAN
+      *
+     C                     SETON                     53
+     C           KKEY02    SETLLCGPDECL0
+      *
+      ** Position file is to number of parameters passed.
+      *
+     C           P1PLAN    WHEQ *BLANKS
+      *
+     C                     SETON                     51
+     C           P1LAYO    SETLLCGPDECL0
+      *
+     C                     ENDSL
+      *
+      ** Process records
+      *
+     C   51      P1LAYO    READECGPDECL0                 98
+     C   53      KKEY02    READECGPDECL0                 98
+      *
+     C           *IN98     DOWEQ*OFF
+      *
+     C                     MOVELP2NLAY    LPLAYO
+DJU   *
+DJU   *  If copying in layout tool set repeating path
+DJU   *
+DJU  C           #@LAYO    IFEQ LPLAYO
+DJU  C           #@RPTH    ANDNE*BLANKS
+DJU  C           LPRPTH    ANDNE*BLANKS
+DJU   *
+DJU  C                     MOVEL#@RPTH    LPRPTH    P
+DJU   *
+DJU  C                     END
+      *
+     C                     WRITE@PDECPD
+      *
+     C   51      P1LAYO    READECGPDECL0                 98
+     C   53      KKEY02    READECGPDECL0                 98
+      *
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCOPY    TAG
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLDEL   : Logical delete                                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRLDEL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRLDEL'  @STK,Q
+      *
+     C                     SELEC                           *SL
+      *
+      ** Position file is to number of parameters passed.
+      *
+     C           P1PLAN    WHNE *BLANKS
+      *
+     C                     SETON                     53
+     C           KKEY02    SETLLCGPDECL8
+      *
+      ** Position file is to number of parameters passed.
+      *
+     C           P1PLAN    WHEQ *BLANKS
+      *
+     C                     SETON                     51
+     C           P1LAYO    SETLLCGPDECL8
+      *
+     C                     ENDSL
+      *
+     C                     MOVE *OFF      *IN98
+     C           *IN98     DOWEQ*OFF
+     C   51      P1LAYO    READECGPDECL8                 98
+     C   53      KKEY02    READECGPDECL8                 98
+     C           *IN98     IFEQ *OFF
+     C                     MOVEL'*'       LPRECI
+     C                     UPDAT@PDECL8
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           EXLDEL    TAG
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPDEL   : Permanant Delete                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRPDEL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPDEL'  @STK,Q
+      *
+     C                     SELEC                           *SL
+      *
+      ** Position file is to number of parameters passed.
+      *
+     C           P1PLAN    WHNE *BLANKS
+      *
+     C                     SETON                     53
+     C           KKEY02    SETLLCGPDECL8
+      *
+      ** Position file is to number of parameters passed.
+      *
+     C           P1PLAN    WHEQ *BLANKS
+      *
+     C                     SETON                     51
+     C           P1LAYO    SETLLCGPDECL8
+      *
+     C                     ENDSL
+      *
+     C                     MOVE *OFF      *IN98
+     C           *IN98     DOWEQ*OFF
+     C   53      KKEY02    READECGPDECL8                 98
+     C   51      P1LAYO    READECGPDECL8                 98
+     C           *IN98     IFEQ *OFF
+     C                     DELET@PDECL8
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           EXPDEL    TAG
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialisation                                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Store layout and too and from members.
+      *
+     C                     MOVELP2PARM    SAVPRM
+      *
+      ** Store action code.
+      *
+     C           *LIKE     DEFN W0ACT     SAVACT
+     C                     MOVELW0ACT     SAVACT
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Close files if open.
+      *
+     C           FIL001    IFEQ 'Y'
+     C                     MOVEL'N'       FIL001
+     C                     CLOSECGPDECL0
+     C                     ENDIF
+      *
+     C           FIL002    IFEQ 'Y'
+     C                     MOVEL'N'       FIL002
+     C                     CLOSECGPDECPD
+     C                     ENDIF
+      *
+     C           FIL003    IFEQ 'Y'
+     C                     MOVEL'N'       FIL003
+     C                     CLOSECGPDECL8
+     C                     ENDIF
+      *
+      ** Copy
+      *
+     C           W0ACT     IFEQ '*COPY'
+      *
+     C                     MOVEACMD@,1    EDT
+      *
+      ** Override input file
+      *
+     C                     MOVEL'CGPDECL0'U#FILE 10
+      *
+     C                     MOVEAU#FILE    EDT,13
+     C                     MOVELP2FMBR    U#MBR
+     C                     MOVEAU#MBR     EDT,29
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+     C                     OPEN CGPDECL0
+     C           *LIKE     DEFN *INLR     FIL001
+     C                     MOVEL'Y'       FIL001
+     C                     END
+      *
+      ** Override output file
+      *
+     C                     MOVEACMD@,2    EDT
+      *
+     C                     MOVEL'CGPDECPD'U#FILE
+      *
+     C                     MOVEAU#FILE    EDT,13
+     C                     MOVELP2TMBR    U#MBR  10
+     C                     MOVEAU#MBR     EDT,29
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+     C                     OPEN CGPDECPD
+     C           *LIKE     DEFN *INLR     FIL002
+     C                     MOVEL'Y'       FIL002
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Logical or Permanant delete
+      *
+     C           W0ACT     IFEQ '*LDELETE'
+     C           W0ACT     OREQ '*PDELETE'
+      *                                                                   084416
+     C                     MOVEACMD@,1    EDT                             084416
+      *                                                                   084416
+      ** Override input file                                              084416
+      *                                                                   084416
+     C                     MOVEL'CGPDECL0'U#FILE                          084416
+      *                                                                   084416
+     C                     MOVEAU#FILE    EDT,13                          084416
+     C                     MOVELP2FMBR    U#MBR                           084416
+     C                     MOVEAU#MBR     EDT,29                          084416
+     C                     MOVEAEDT       OVRDBF                          084416
+     C                     Z-ADD80        CMDLEN                          084416
+      *                                                                   084416
+     C                     CALL 'QCMDEXC'                9090             084416
+     C                     PARM           OVRDBF                          084416
+     C                     PARM           CMDLEN                          084416
+      *                                                                   084416
+     C           *IN90     IFEQ '1'                                       084416
+     C                     MOVEL'*CALL  ' W0FILE                          084416
+     C                     MOVEL'QCMDEXC' W0KEY                           084416
+     C                     Z-ADD4         W0ERNB                          084416
+     C                     MOVEL'MEM5003' W0MSGD                          084416
+     C                     MOVEL'MIDAS  ' W0MSGF                          084416
+     C                     EXSR SRERR                                     084416
+     C                     ELSE                                           084416
+     C                     OPEN CGPDECL0                                  084416
+     C                     MOVEL'Y'       FIL001                          084416
+     C                     END                                            084416
+      *
+      ** Override output file
+      *
+     C                     MOVEACMD@,3    EDT
+      *
+     C                     MOVEL'CGPDECL8'U#FILE
+      *
+     C                     MOVEAU#FILE    EDT,13
+     C                     MOVELP2FMBR    U#MBR  10
+     C                     MOVEAU#MBR     EDT,29
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD5         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+     C                     OPEN CGPDECL8
+     C           *LIKE     DEFN *INLR     FIL003
+     C                     MOVEL'Y'       FIL003
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/COPY CGCPYSRC,SRERRC
+**  CPY@
+(c) Finastra International Limited 2001
+** Command Arries
+OVRDBF FILE(XXXXXXXXXX) MBR(XXXXXXXXXX) SHARE(*NO)
+OVRDBF FILE(XXXXXXXXXX) MBR(XXXXXXXXXX) TOFILE(CGPDECPD) SHARE(*NO)
+OVRDBF FILE(XXXXXXXXXX) MBR(XXXXXXXXXX) TOFILE(CGPDECL0) SHARE(*NO)

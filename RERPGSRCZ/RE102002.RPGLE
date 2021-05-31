@@ -19,8 +19,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. 239476             Date 28May12               *
+      *  Prev Amend No. 223783             Date 28May12               *      
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -42,6 +46,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  239476 - Reverse fix 223783 for this program.                *
+      *         - Correct field 61 sub7 and field 86                  *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - Format field 61 and field 86.                       *
+      *         - Applied for AR973615 (Child: AR973617)              *      
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -159,6 +173,7 @@
      D WCusRef         S             30A
      D WSMSR           S             16
      D WSMIR           S             28
+     D*WCMSR****       S             34                                                223783 239476
      D WSNDR           S             11
      D WCCY            S              3
      D WVDATD          S              6
@@ -429,11 +444,17 @@
       *  Retrieve Message Transaction Reference
      C                   Movel     PH20          DSTRAN
      C                   Movel     TMLIN         WSMSR
+      *                                                                                       223783
+      ***Retrieve*Customer*Reference***********************************                223783 239476
+      *                                                                                       223783
+     C**********         Movel     PH21R         DSTRAN                                223783 239476
+     C**********         Movel     TMLIN         WCMSR                                 223783 239476
       *  Retrieve Message Sender
      C                   Movel     PSNDR         WSNDR
       *
       *  Retrieve Posting Value date
-     C                   Eval      WVDAT = %subst(PH30 : 25 : 6)
+     C**********         Eval      WVDAT = %subst(PH30 : 25 : 6)                           AR928996A
+     C                   Eval      WVDAT = %subst(PH30 : 31 : 6)                           AR928996A
      C                   Eval      WVDATD = DD + MM + YY
      C                   Movel     WVDATD        DateIn
      C                   Callb     'ZDATE1'                             90
@@ -454,7 +475,8 @@
      C                   Z-add     DayNoOut      @VALD
       *
       *  Retrieve Posting Currency
-     C                   Eval      WCCY  = %subst(P32B : 25 : 3)
+     C**********         Eval      WCCY  = %subst(P32B : 25 : 3)                           AR928996A
+     C                   Eval      WCCY  = %subst(P32B : 31 : 3)                           AR928996A
      C     WCCY          Chain     SDCURRLD                           60
      C                   If        *IN60 = *ON
      C     *LOCK         IN        LDA
@@ -466,7 +488,8 @@
      C                   Endif
  
       *  Retrieve Posting Amount
-     C                   Eval      WPSTA = %subst(P32B : 28 : 15)
+     C**********         Eval      WPSTA = %subst(P32B : 28 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(P32B : 34 : 15)                          AR928996A
      C                   Eval      X=%scan(',' : WPSTA)
       *
      C                   If        X > 0
@@ -844,11 +867,21 @@
      C                   Eval      X = %scan('/' : @DETP : 5)
      C                   If        X > 0
      C                   Eval      WCusRef = %subst(@DETP: X + 1 : 30)
-     C                   Movel     WCusRef       AZF617
+     C**********         Movel     WCusRef       AZF617                                       223783
+     C**********         Movel     WCMSR         AZF617                                223783 239476
+     C                   MOVEL     WCusRef       AZF617                                       239476
      C                   Endif
-     C                   If        WCusRef = *blank
+     C**********         If        WCusRef = *blank                                           223783
+     C**********         If        WCMSR = *blank                                      223783 239476
+     C                   IF        WCusRef = *blank                                           239476
      C                   Eval      AZF617 = 'NONREF'
      C                   Endif
+     C                   IF        %SUBST(ZLCNAR : 1 : 3)  = 'CMX'                            239476
+     C                   EVAL      AZF617 = 'NONREF'                                          239476
+     C                   ENDIF                                                                239476
+     C                   IF        %SUBST(ZLCNAR : 1 : 3) <> 'CMX'                            239476
+     C                   EVAL      AZF617 = ZLCNAR                                            239476
+     C                   ENDIF                                                                239476
       * MT94X Field 61 - 8
      C                   Eval      AZF618 = *Blank
       * MT94X Field 61 - 9  (get Fld 59 account name, line 2)
@@ -868,7 +901,10 @@
  
      C                   If        %Subst(AZF617 : 1 : 7) <> 'NONREF'
      C                   Cat       '/':0         WLongStr
-     C     WlongStr      Cat       WCusRef:0     WLongStr
+     C*****WlongStr      Cat       WCusRef:0     WLongStr                                     223783
+     C*****WlongStr      Cat       WCMSR:0       WLongStr                              223783 239476
+     C*****WlongStr      Cat       WCusRef:0     WLongStr                                     239476
+     C     WlongStr      CAT       AZF617:0      WLongStr                                     239476
      C                   Endif
  
      C     WlongStr      Cat       WString:0     WLongStr

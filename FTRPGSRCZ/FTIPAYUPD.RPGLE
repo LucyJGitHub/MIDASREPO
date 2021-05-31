@@ -19,12 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254361A            Date 15Feb21               *
-      *  Prev Amend No. 254361             Date 15Feb21               *
-      *                 MD048586           Date 11Jan21               *
-      *                 HUT101CC1          Date 06Nov20               *
+      *  Last Amend No. MD048586           Date 11Jan21               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
-      *                 HUT101             Date 12May20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -99,21 +97,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  254361A- Populate ZZAMT before call to SR/SRTrailer.         *
-      *         - Applied for MD-57585                                *
-      *  254361 - Update trailer right after update of inpaydd.       *
-      *         - Applied for MD-57585                                *
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
-      *  HUT101CC1 - Copy CSW220 processing from FT0060 here          *
-      *           so that SWIFT works in line with HUT101 feature     *
-      *           Addition of hook HUT101_016                         *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
+      *  MD020135 - Duplicate records in INPAYDQD. Write to INPAYDQD  *
+      *             file only if not from Java screen.                *
+      *            - Applied for MD050405                             *
       *  CSW220 - SWIFT Changes 2020                                  *
-      *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
-      *           Payment Authorisation for Funds Transfer            *
-      *           Upgraded with CAP211 functionality.                 *
-      *           Used hook: FTH00392, FTH00556                       *
-      *           Added hooks: HUT101_008 to HUT101_12                *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -870,6 +862,7 @@
      C     IPCHTP        IFEQ      'I'                                          193883
      C     PSJobName     ANDNE     'QZDASOINIT'                                               CAP084
      C     PSJobName     ANDNE     'QSQSRVR'                                                  247277
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
      C                   MOVE      '*FRONT'      PModeX
      C                   ELSE
      C                   MOVE      *BLANKS       PModeX
@@ -1166,7 +1159,6 @@
       ** Move valid file details to update file details.
       *
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_008                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1191,13 +1183,13 @@
      C                   Z-ADD     002           DBase
      C                   EXSR      *PSSR
      C                   ENDIF
-     C                   MOVE      SMAM          ZZAMT                                       254361A
-     C                   EXSR      SRTrailer                                                  254361
-                                                                                              254361   
      C/COPY WNCPYSRC,FTH00407
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      IPFRID = IPFRNT                                            257487
      C                   WRITE     INPAYQD0                             99                    257487
       *                                                                                       257487
@@ -1207,6 +1199,7 @@
      C                   Z-ADD     031           DBase                                        257487
      C                   EXSR      *PSSR                                                      257487
      C                   ENDIF                                                                257487
+     C                   ENDIF                                                              MD020135
       *****************************************************************               BUG4776 260326
       ****If*new*record*was*successfully*writen*to*INPAYDD,*add*new*record*to         BUG4776 260326
       ****FT*Payment*Reference*Control*file*-*FTPREFPD*****************               BUG4776 260326
@@ -1306,12 +1299,11 @@
       *
       ** Update Incoming Payments trailer with Payment Amount.
       *
-     C**********         MOVE      SMAM          ZZAMT                                       254361A
-     C**********         EXSR      SRTrailer                                                  254361
+     C                   MOVE      SMAM          ZZAMT
+     C                   EXSR      SRTrailer
       *
      C                   IF        CAP211 = 'Y' AND PAuth = 'Y' AND                           CAP211
      C                             SVGOP = 'Y' AND OPIN = 'Y'                                 CAP211
-     C/COPY WNCPYSRC,HUT101_009                                                               HUT101
       *                                                                                       CAP211
       ** Generate Outgoing Payment if CAP211 is ON, PAuth is 'Y', CAP211GenerateOP system     CAP211
       ** value is 'Y' and OPIN (Outgoing payment generated from incoming payemnt) flag is 'Y' CAP211
@@ -1560,7 +1552,6 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_010                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1780,7 +1771,6 @@
      C                   MOVEL     NwIpFilFmt    InPayUpdF
       *
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_011                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1923,7 +1913,6 @@
      C                   Z-ADD     BJRDNB        DATE                                         CFT157
       *                                                                                       CFT157
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CFT157
-     C/COPY WNCPYSRC,HUT101_012                                                               HUT101
       *                                                                                       CFT157
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CFT157
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CFT157
@@ -2711,7 +2700,6 @@ e1   C                   ENDIF                                                  
      C                             FTM199 <> 'Z'                                              CSW220
      C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
-      /COPY WNCPYSRC,HUT101_016                                                               HUT101
       *
       ** N.B. Audit Stamp details are determined in called program.
       *

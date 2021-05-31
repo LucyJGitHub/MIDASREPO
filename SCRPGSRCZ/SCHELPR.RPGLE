@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD055264           Date 31Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26787           Date 24Nov09               *
       *                 BUG27980           Date 05Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055264 - Deliverable Data Split for Help Text              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26787 - Error in Retrieving Help Information.  Increase   *
@@ -72,7 +74,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -80,7 +82,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -92,23 +94,23 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -117,16 +119,16 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -135,7 +137,7 @@
       ** Format of Openfiles file Header and Records
      D/COPY QSYSINC/QRPGLESRC,QWCATTR
       ** Format of Job Description Information
- 
+
       ** Error Data Structure for the Open File Call
      D   ERRC0100      DS
      D    BYTESPROV            1      4B 0 INZ(144)
@@ -146,21 +148,22 @@
                                                                                               CRE026
       ** DS for Access Objects - short data structure                                         CRE026
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CRE026
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
-     D SCHELP        E DS                  EXTNAME(SCHELPPD)
+     D*SCHELP***     E DS                  EXTNAME(SCHELPPD)                                MD055264
+     D SCHELP        E DS                  EXTNAME(SCHLPJW0)                                MD055264
                                                                                               CRE026
       ** Externally described DS for SAR details                                              CRE026
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE026
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D***ReceiverVar*****S           9999                                                     CRE026
      D*ReceiverVar     S          32764                                              CRE026 BUG26787
      D*ReceiverLen     S              4B 0 INZ(9999)                                        BUG26787
@@ -190,7 +193,7 @@
      D Root            S            200                                                      BG13727
      D Command         S             50                                                      BG13727
      D CommandLen      S             15  5 INZ(50)                                           BG13727
- 
+
       ** Parameters for call to access object modules                                         CRE026
      D PRtCd           S              7A                                                      CRE026
      D POptn           S              7A                                                      CRE026
@@ -202,7 +205,7 @@
      D AltHelpSysVal   S             20    INZ('AltRootHelpLocation')                        BG13727
      D AOHTMLPage      S            600
      D LinkRoot        S            207
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -213,7 +216,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -222,29 +225,29 @@
       *
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       *
       ** If the program was called from Webfacing
       *
      C                   If        Type = 'W'
      C                   EXSR      WebFac
      C                   EndIf
- 
+
       *
       ** If the program was called from a Java front end
       *
      C                   If        Type = 'J'
      C                   EXSR      AOHELP
      C                   EndIf
- 
+
       *
       ** Create the link to the page on the system
       *
      C                   EXSR      CrtLnk
- 
+
      C                   Eval      *INLR = *on
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -256,11 +259,11 @@
       * Calls: AOHELPR0                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     WebFac        BEGSR
- 
+
       * Set up the default variables for the call to the API
- 
+
      C                   Eval      ReceiverFmt = 'OPNF0100'
      C                   Eval      QWCJN02     = %SubSt(KeyInfo:17:10)
      C                   Eval      QWCJNBR00   = %SubSt(KeyInfo:1:6)
@@ -269,7 +272,7 @@
      C                   Eval      QWCERVED06  = X'0000'
      C                   Eval      QWCTI00     = 3
      C                   Eval      QWCTI01     = X'0000000000000000'
- 
+
      C                   CALL      'QDMLOPNF'
      C                   PARM                    ReceiverVar
      C                   PARM                    ReceiverLen
@@ -277,31 +280,31 @@
      C                   PARM                    QWCF0100
      C                   PARM                    JobIDFmt
      C     ERRC0100      PARM                    ERRC0100
- 
+
      C                   IF        BYTESAVAIL <> 0
      C                   MOVEL     'QDMLOPNF'    DBFile                         ************
      C                   MOVEL     '001'         DBase                          * DBERR 001*
      C                   MOVEL     Option        DBKey                          ************
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
       * Put the returned variable into the header record and retrieve the length of each record
      C                   Eval      QDMF0100 = ReceiverVar
      C                   Eval      FileLen = QDMLOFE
- 
+
       * Calculate the length of the returned file
      C                   Eval      RecLen = (QDMNOFA * FileLen) + QDMTLOOF
- 
+
       * Set the start position of the substring to the last record in the file and
       * put the value into the relevent format.  Calculate the number of open files remaining.
      C                   Eval      Start = RecLen - (FileLen - 1)
      C                   Eval      QDMOPNFE = %SubSt(ReceiverVar:Start:FileLen)
      C                   Eval      OpenFilRem = QDMNOFA - 1
      C                   Eval      DisplayFile = 'N'
- 
+
       * Do while the last record wasn't a display file and there are still records
      C                   DoW       (DisplayFile = 'N') and (OpenFilRem <> 0)
- 
+
       * If the last record was a display file and it was not a system display file set the
       * KeyInfo field to the file name and format and call the access object sub routine
       * Else read the previous record
@@ -311,17 +314,17 @@
      C                   Eval      DisplayFile = 'Y'
      C                   EXSR      AOHELP
      C                   Eval      OpenFilRem = 0
- 
+
      C                   Else
      C                   Eval      Start = Start - FileLen
      C                   Eval      QDMOPNFE = %SubSt(ReceiverVar:Start:FileLen)
      C                   Eval      OpenFilRem = OpenFilRem - 1
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -334,16 +337,17 @@
       * Calls: AOHELPR0                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     AOHELP        BEGSR
- 
-     C                   Eval      Option = '*KEY'
- 
+
+     C**********         Eval      Option = '*KEY'                                          MD055264
+     C                   Eval      Option = '*KEY1'                                         MD055264
+
       * Check for alternative help first; override to alternative help file.                 BG13727
-     C                   EVAL      Command = OVRDBFCmd                                       BG13727
-     C                   CALL      'QCMDEXC'                                                 BG13727
-     C                   PARM                    Command                                     BG13727
-     C                   PARM                    CommandLen                                  BG13727
+     C**********         EVAL      Command = OVRDBFCmd                              BG13727 MD055264
+     C**********         CALL      'QCMDEXC'                                        BG13727 MD055264
+     C**********         PARM                    Command                            BG13727 MD055264
+     C**********         PARM                    CommandLen                         BG13727 MD055264
       *
      C                   CALL      'AOHELPR0'                                                BG13727
      C                   PARM                    ReturnC7                                    BG13727
@@ -353,10 +357,10 @@
      C     SCHELP        PARM                    DSSDY                                       BG13727
       *
       * Delete override and check for success; if not found then check main help.            BG13727
-     C                   EVAL      Command = DLTOVRCmd                                       BG13727
-     C                   CALL      'QCMDEXC'                                                 BG13727
-     C                   PARM                    Command                                     BG13727
-     C                   PARM                    CommandLen                                  BG13727
+     C**********         EVAL      Command = DLTOVRCmd                              BG13727 MD055264
+     C**********         CALL      'QCMDEXC'                                        BG13727 MD055264
+     C**********         PARM                    Command                            BG13727 MD055264
+     C**********         PARM                    CommandLen                         BG13727 MD055264
       *
      C                   IF        ReturnC7 <> *blanks                                       BG13727
      C                   IF        ReturnC7 <> '*NRF'                                        BG13727
@@ -366,6 +370,7 @@
      C                   EXSR      *PSSR                                                     BG13727
      C                   ELSE                                                                BG13727
      C                   EVAL      ReturnC7 = *blanks                                        BG13727
+     C                   Eval      Option = '*KEY2'                                         MD055264
       *
      C                   Call      'AOHELPR0'
      C                   Parm                    ReturnC7
@@ -383,7 +388,7 @@
      C                   MOVEL     Option        DBKey                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** If no record can be found in the database and Consumer Banking                       CRE026
       ** is installed, call the Consumer Banking Help API                                     CRE026
      C                   If        CRE026 = 'Y'                                               CRE026
@@ -403,7 +408,8 @@
       ** returned.  Need to retrieve the associated help document                             CRE026
       ** reference.  Set option to key on file and set KeyInfo to                             CRE026
       ** the menu option                                                                      CRE026
-     C                   Eval      Option = '*KEY'                                            CRE026
+     C**********         Eval      Option = '*KEY'                                   CRE026 MD055264
+     C                   Eval      Option = '*KEY2'                                         MD055264
      C                   Eval      KeyInfo = AOHTMLPage                                       CRE026
                                                                                               CRE026
      C                   Call      'AOHELPR0'                                                 CRE026
@@ -432,7 +438,7 @@
      C                   If        ReturnC7 = '*NRF'
      C                   Eval      AOHTMLPage = 'No_Help_Available.htm'
      C                   EndIf
- 
+
      C                   ENDIF                                                               BG13727
       * Else if record was found on alternative help then set flag.                          BG13727
      C                   ELSE                                                                BG13727
@@ -440,7 +446,7 @@
      C                   ENDIF                                                               BG13727
       *
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -451,7 +457,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     CrtLnk        BEGSR
       *                                                                               239647 BG13727
       ***Determine*if*HTTPs*serving*is*enabled.*                                      239647 BG13727
@@ -553,9 +559,9 @@
      C                   PARM                    SVAL10          200
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     *LOCK         IN        LDA
- 
+
      C     SVAL10        IFEQ      '*NRF'
      C                   MOVE      SVALK10       DBKEY
      C                   ENDIF
@@ -586,7 +592,7 @@
      C     SVAL1         IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C**********         MOVEL     '001'         DBASE                                       BG13727
      C                   EVAL      DBase = 001                                               BG13727
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -616,9 +622,9 @@
      C                   Eval       Buffer = KeyInformation +
      C                                       %TRIMR(LinkRoot) +
      C                                       %TRIMR(AOHTMLPage)
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -630,9 +636,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   Parm                    Type
      C                   Parm                    KeyInfo
@@ -663,7 +669,7 @@
       /COPY ZACPYSRC,DBFIELDS                                                                 CRE026
                                                                                               CRE026
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *

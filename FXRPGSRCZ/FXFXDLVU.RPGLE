@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. AR818539           Date 12Mar20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -116,6 +117,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR818539 - Make sure to default settlement based on SSI when *
+      *             customer has changed. (Child: AR818540)           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
@@ -846,7 +849,13 @@
      C                   ENDIF                                                                CGL058
       *                                                                                       CGL058
      C                   EXSR      ValidateTr
+      *                                                                                     AR818539
+      ** If customer is valid, check if there is SSI details                                AR818539
+      *                                                                                     AR818539
+     C     DDCustOK      IFEQ      'Y'                                                      AR818539
      C                   EXSR      DftSettmts                                               BUG7032R
+     C                   ENDIF                                                              AR818539
+      *                                                                                     AR818539
      C                   EXSR      ValidateSt
      C                   EXSR      ValidateLP                                                BUG3992
 

@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251029             Date 22May20               *
+      *  Last Amend No. MD031031           Date 23Feb15               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -85,11 +85,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  251029 - Handle file locking properly. Patterned after       *
-      *           fix 231306.                                         *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *
+      *             that side is already netted.                      *      
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -1548,21 +1549,9 @@
      C                   EVAL      ##TTYP = DDDLTP                                            224231
      C                   ENDIF                                                                224231
       *
-      *                                                                                       251029
-      ** And if the program does not enter this routine as a result                           251029
-      ** of locking files (@RTCD = *RECLCK).  Settlement details should                       251029
-      ** remain as how it was previously input unless otherwise changed                       251029
-      ** again by the user.                                                                   251029
-      *                                                                                       251029
-     C     ##PAYF        IFEQ      *BLANKS                                                    251029
-     C     ##RECF        ANDEQ     *BLANKS                                                    251029
-     C*
       * DETERMINE PARAMETERS FOR SETTLEMENT DETAILS INPUT
       *
      C                   EXSR      DETP@S
-      *                                                                                       251029
-     C                   ENDIF                                                                251029
-      *                                                                                       251029
      C                   END
       *                                                                         CAP014
       * If no changes are allowed, protect (but still validate)                 CAP014
@@ -2273,20 +2262,13 @@
       *
      C     @RTCD         IFNE      *BLANK
      C*****@RTCD         ANDNE     '*RECUPD'                             CAP006 168345
-     C     @RTCD         IFEQ      '*RECUPD'                                                  251029
-     C     @RTCD         OREQ      '*RECLCK'                                                  251029
-     C                   ROLBK                                                                251029
-     C                   ELSE                                                                 251029
      C                   If        CSC022 = 'N'                                               CSC022
      C                             Or (CSC022 = 'Y' and WSkpCom = 'N')                        CSC022
-     C*
      C                   ROLBK
      C                   Else                                                                 CSC022
      C                   SETON                                        U7U8                    CSC022
      C                   Endif                                                                CSC022
-     C                   ENDIF                                                                251029
      C     @RTCD         IFNE      '*RECUPD'                                    168345
-     C     @RTCD         ORNE      '*RECLCK'                                                  251029
      C                   EXSR      *PSSR
      C                   ENDIF                                                  168345
      C                                                                          CAP006
@@ -2294,7 +2276,8 @@
                                                                                               244036
       ** Add record within Deals Master Extension File (done from Java layer).                244036
      C**********         IF        DDACTN = 'I'                                         244036247888
-     C                   IF        DDACTN = 'I' AND CLE025 = 'Y'                              247888
+     C**********         IF        DDACTN = 'I' AND CLE025 = 'Y'                     247888 MD031031
+     C                   IF        DDACTN = 'I'                                             MD031031
      C                   EXSR      WriteDLDLDB                                                244036
      C                   END                                                                  244036
                                                                                               244036
@@ -2330,35 +2313,10 @@
       * display message on 'browse' screen.                                     CAP006
      C     @RTCD         IFEQ      '*RECUPD'                                    CAP006
      C                   MOVE      'Y'           @ERRUP                         CAP006
-     C                   ELSE                                                                 251029
-      *                                                                                       251029
-      ** If error was due to locking display message on main screen to                        251029
-      ** retain values already inserted/amended by the user on repair.                        251029
-      *                                                                                       251029
-     C     @RTCD         IFEQ      '*RECLCK'                                                  251029
-      *                                                                                       251029
-     C     DDACTN        IFEQ      'I'                                                        251029
-     C                   MOVE      *BLANKS       DDDLNO                                       251029
-     C                   MOVE      *BLANKS       @SIDN                                        251029
-     C                   ENDIF                                                                251029
-      *                                                                                       251029
-     C                   MOVEL     '*ANY'        FldNameArr(1)                                251029
-     C                   MOVEL     'MMM1068'     MsgIdArr(1)                                  251029
-     C                   MOVE      *BLANKS       SAVRDNB           1                          251029
-     C                   MOVE      @RDNB         SAVRDNB                                      251029
-     C                   MOVE      *BLANKS       @RDNB                                        251029
-      *                                                                                       251029
      C                   ELSE                                                   CAP006
      C                   MOVE      'N'           @ERRUP                         CAP006
-      *                                                                                       251029
-     C     SAVRDNB       IFNE      *BLANKS                                                    251029
-     C                   MOVE      SAVRDNB       @RDNB                                        251029
-     C                   ENDIF                                                                251029
-      *                                                                                       251029
      C                   END                                                    CAP006
      C                                                                          CAP006
-      *                                                                                       251029
-     C                   END                                                                  251029
       * IF RECORDS ARE STILL TO BE READ FROM THE SUBFILE, READ THEM
       *
      C     @RDNB         IFEQ      'Y'
@@ -2367,13 +2325,7 @@
       *
       * ELSE, RETURN TO THE BROWSE SCREEN
       *
-     C     @RTCD         IFEQ      '*RECLCK'                                                  251029
-     C                   MOVEL     'M'           @SCRN                                        251029
-     C                   ELSE                                                                 251029
      C                   MOVEL     'B'           @SCRN
-      *                                                                                       251029
-     C                   ENDIF                                                                251029
-      *                                                                                       251029
      C                   END
       *
      C                   ENDSR

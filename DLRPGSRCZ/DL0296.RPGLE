@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE098             Date 02Dec13               *
+      *  Last Amend No. MD055440           Date 18Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE098             Date 02Dec13               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055440 - CLS accounting entries are generated with a blank *
+      *             blank posting narrative.	                      *
+      *             Reinstate codes that was removed by CER030 changes*
+      *             and also deliver the missing message ID's.        *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE098 - User-Defined Retail Transaction Types on Postings   *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -115,7 +120,7 @@
       *
       ** Generate additional entries for CLS schedule - audit
      FDL0296AU  O    E             PRINTER
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -136,12 +141,12 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -150,7 +155,7 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -261,7 +266,7 @@
       *
       ** Pointer for the indicator array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
      ** Work fields and parameters used in CGL020                                             CGL020
      D CGL020          S              1A                                                      CGL020
      D*WWROCN***       S              6S 0                                             CGL020 CSD027
@@ -419,7 +424,7 @@
       ** Repeat while valid record.
       *
      C                   DOW       EndOfFile = False
- 
+
      C                   IF        PYVALD <= WControlDat AND PYRECI = 'D'
       *
       ** Access nostro detail to retrieve CLS pay/receive nostro.
@@ -435,16 +440,16 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
      C                   EVAL      DBFILE = 'SDNOSTPD'
      C                   EVAL      DBASE = 005
      C                   OUT       LDA
      C                   EXSR      SRDBErr
- 
+
      C                   ELSE
      C                   MOVE      PYNOST        WNostroD
      C                   MOVE      A7LPR         WNostroR
@@ -513,23 +518,23 @@
       *
       ** Write record to generated entries dealing details.
      C                   EXSR      SRWrite
- 
+
       ** Determine if interbranch posings required for Receive
      C                   EXSR      SRRcvIBP
- 
+
      C                   ENDIF
       *
       ** CLS PAYMENT
       ** ===========
      C                   IF        PYTOTP <> *ZEROS
- 
+
       ** Generate as many postings as there are detailed records (for each
       ** header record):
- 
+
      C     KEY1          CHAIN     FXCLSPSDL0                         03
- 
+
       ** Debit CLS Dummy Nostro with the Pay amount
- 
+
      C     *IN03         DOWEQ     *OFF
      C                   Z-ADD     D_PYAMT       WPostingAmt
      C                   EVAL      WDrCr = 0
@@ -552,15 +557,15 @@
       *
       ** Write record to generated entries dealing details.
      C                   EXSR      SRWrite
- 
+
       ** Determine if interbranch posings required for Pay
      C                   EXSR      SRPayIBP
- 
+
       ** Read next detail record for the same CLS schedule
      C     KEY1          READE     FXCLSPSDL0                             03
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** Set "Amount posted" flag to 'Y' and update record.
@@ -569,16 +574,16 @@
       *                                                                                       186804
      C                   IF        P_UpdPost = 'Y'                                            186804
      C                   EVAL      PYPOST = 'Y'
- 
+
      C                   UPDATE    FXCLPHD0
      C                   ENDIF                                                                186804
- 
+
      C                   ENDIF
      C                   ENDIF
       *
       ** Read next pay schedule header record.
      C                   READ      FXCLSPSHL1                             01
- 
+
      C                   ENDDO
       *
       ** Update generated entries trailer file.
@@ -592,7 +597,7 @@
       ** Terminate program
       *
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -637,14 +642,14 @@
       ** Retail account number
      C                   IF        WInterB = 'Y'
      C                   EVAL      ACNO = *ZEROS
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       PAcSn
      C                   MOVE      A7ACSN        PAcSn
      C                   MOVE      CNUM          PCust
      C                   MOVE      BRCA          PBrCd
      C                   MOVE      ACOD          PAccn
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
@@ -655,7 +660,7 @@
      C                   PARM                    PAcSn
      C                   PARM                    PBrCd
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PBrCd + PCust + PCyCd + PAccn + PAcSn
@@ -666,7 +671,7 @@
      C                   ELSE
      C                   EVAL      ACNO = SACNO
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If CRE009 is ON, pgm called by DLC10 & Account is Retail               CRE009
@@ -753,7 +758,7 @@
       *
       ** Determine the value for the narrative using AOPNARR0:
      C                   CLEAR                   CGPNAR
- 
+
      C                   MOVE      'DL'          MNMODI
      C                   MOVE      A7CYCD        MNCYCD
      C                   MOVE      ACOD          MNACCD
@@ -772,14 +777,26 @@
      C**********         EVAL      P#MGID = 'GB53000'                                         CER030
      C**********         EVAL      MNNARR = 'CLS RECEIPT'                                     CER030
      C**********         ENDIF                                                                CER030
- 
+      *                                                                                     MD055440
+      ** CLS total amount pay is not zero.                                                  MD055440
+     C                   IF        PYTOTP <> *ZEROS                                         MD055440
+     C                   EVAL      P#MGID = 'GB52000'                                       MD055440
+     C                   EVAL      MNNARR = 'CLS PAYMENT'                                   MD055440
+     C                   ENDIF                                                              MD055440
+      *                                                                                     MD055440
+      ** CLS total amount receive is not zero.                                              MD055440
+     C                   IF        PYTOTR <> *ZEROS                                         MD055440
+     C                   EVAL      P#MGID = 'GB53000'                                       MD055440
+     C                   EVAL      MNNARR = 'CLS RECEIPT'                                   MD055440
+     C                   ENDIF                                                              MD055440
+
      C                   CALL      'AOPNARR0'
      C                   PARM                    P#RTN
      C                   PARM                    P#MGID
      C                   PARM      *BLANKS       P#PRM1
      C     CGPNAR        PARM      CGPNAR        DSSDY
      C                   PARM                    P#NARR
- 
+
      C                   IF        P#RTN <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = MNCUST
@@ -788,9 +805,9 @@
      C                   OUT       LDA
      C                   EXSR      SRDBErr
      C                   ENDIF
- 
+
      C                   MOVEL(P)  P#NARR        PNAR
- 
+
      C                   ELSE
       *
       ** CLS total amount pay is not zero.
@@ -801,7 +818,7 @@
      C                   IF        PYTOTR <> *ZEROS
      C                   EVAL      PNAR = 'CLS RECEIPT'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Posting amount
@@ -867,7 +884,7 @@
      C                   EVAL      PRFC = PYPRFC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WDumNostro <> 'Y' OR WInterB = 'Y'
      C                   EVAL      PRFC = PYPRFC
      C                   ENDIF
@@ -891,7 +908,7 @@
      C                   PARM                    PAccn
      C*****SDACOD        PARM      SDACOD        DSFDY                                        CGL029
      C     SDACOD        PARM      SDACOD        DSSDY                                        CGL029
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PAccn
@@ -988,7 +1005,7 @@
       *
       ** Record id
      C                   EVAL      RECI = 'P'
- 
+
       ** When CGL020 is installed                                                             CGL020
                                                                                               CGL020
      C                   IF        CGL020 = 'Y'                                               CGL020
@@ -1031,7 +1048,7 @@
      C                   ENDIF                                                                CGL020
                                                                                               CGL020
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1050,22 +1067,22 @@
      C                   EVAL      WAmt = 0
      C                   EVAL      WAmt = PSTA / 1000
      C                   EVAL      WWAmt = WAmt
- 
+
      C                   Z-ADD     WInteger      WWTotI
      C                   Z-ADD     WDecimal      WWTotD
- 
+
      C                   IF        WWAmt < 0
      C                   Z-SUB     WWAmt         WWAmt
      C                   ENDIF
- 
+
      C                   Z-ADD     WWAmt         WWAmtI
      C                   MOVE      WWAmt         WWAmtD
      C                   ADD       WWAmtD        WWTotD
- 
+
      C                   IF        WWTotD < WWAmtD
      C                   ADD       1             WWTotI
      C                   ENDIF
- 
+
      C                   ADD       WWAmtI        WWTotI
      C                   Z-ADD     WWTotI        WInteger
      C                   Z-ADD     WWTotD        WDecimal
@@ -1073,9 +1090,9 @@
       ** Write record to generated entries dealing detail file.
       *
      C                   WRITE     APOSTPDF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1084,12 +1101,12 @@
       *                                                               *
       *****************************************************************
      C     SRRcvIBP      BEGSR
- 
+
      C                   IF        WBranchD <> WBranchR
      C                   EVAL      WInterB = 'Y'
- 
+
       ** DEBIT BICN (Real Nostro)/Ccy/'Due From' account (Dummy Nostro)
- 
+
      C                   EVAL      WDrCr = 0
      C                   EVAL      WDumNostro = 'Y'
      C                   EXSR      SRNostro
@@ -1098,12 +1115,12 @@
      C                   EVAL      WBICN = A8BICN
      C                   EVAL      PBrch = WBranchD
      C                   EXSR      SRBranch
- 
+
      C                   EXSR      SRPayRec
      C                   EXSR      SRWrite
- 
+
       ** CREDIT BICN (Dummy Nostro)/Ccy/'Due To' account (Real Nostro)
- 
+
      C                   EVAL      WDrCr = 1
      C                   EVAL      WDumNostro = 'N'
      C                   EXSR      SRNostro
@@ -1112,14 +1129,14 @@
      C                   EVAL      WBICN = A8BICN
      C                   EVAL      PBrch = WBranchR
      C                   EXSR      SRBranch
- 
+
      C                   EXSR      SRPayRec
      C                   EXSR      SRWrite
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1128,12 +1145,12 @@
       *                                                               *
       *****************************************************************
      C     SRPayIBP      BEGSR
- 
+
      C                   IF        WBranchD <> WBranchR
      C                   EVAL      WInterB = 'Y'
- 
+
       ** CREDIT BICN (Real Nostro)/Ccy/'Due To' account (Dummy Nostro)
- 
+
      C                   EVAL      WDrCr = 1
      C                   EVAL      WDumNostro = 'Y'
      C                   EXSR      SRNostro
@@ -1142,12 +1159,12 @@
      C                   EVAL      WBICN = A8BICN
      C                   EVAL      PBrch = WBranchD
      C                   EXSR      SRBranch
- 
+
      C                   EXSR      SRPayRec
      C                   EXSR      SRWrite
- 
+
       ** DEBIT BICN (Dummy Nostro)/Ccy/'Due From' account (Real Nostro)
- 
+
      C                   EVAL      WDrCr = 0
      C                   EVAL      WDumNostro = 'N'
      C                   EXSR      SRNostro
@@ -1156,14 +1173,14 @@
      C                   EVAL      WBICN = A8BICN
      C                   EVAL      PBrch = WBranchR
      C                   EXSR      SRBranch
- 
+
      C                   EXSR      SRPayRec
      C                   EXSR      SRWrite
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1172,17 +1189,17 @@
       *                                                               *
       *****************************************************************
      C     SRNostro      BEGSR
- 
+
       ** Determine if Real or Dummy nostro details are to be retrieved
- 
+
      C                   IF        WDumNostro = 'Y'
      C                   MOVE      WNostroD      PNoNb
      C                   ELSE
      C                   MOVE      WNostroR      PNoNb
      C                   ENDIF
- 
+
       ** Access nostro details
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
@@ -1195,7 +1212,7 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
@@ -1204,9 +1221,9 @@
      C                   OUT       LDA
      C                   EXSR      SRDBErr
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1215,13 +1232,13 @@
       *                                                               *
       *****************************************************************
      C     SRBranch      BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PBrch
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PBrch
@@ -1230,9 +1247,9 @@
      C                   OUT       LDA
      C                   EXSR      SRDBErr
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1244,7 +1261,7 @@
       *
       ** Update trailer record if found, otherwise write record.
      C     1             CHAIN     GEDLZZ                             02
- 
+
      C                   IF        NoRecFnd = False
      C                   EVAL      NORE1 = NORE1 + WGenRec
      C                   EVAL      HRWN  = HRWN  + WInteger
@@ -1267,9 +1284,9 @@
      C                   Z-ADD     WDecimal      HRDC
      C                   WRITE     APOSTZZF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1278,7 +1295,7 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
      C                   IF        WGenRec <> 0
      C                   Z-ADD     WGenRec       RCOUNT
      C                   Z-ADD     WInteger      RINTEGER
@@ -1289,9 +1306,9 @@
      C                   WRITE     HEADAU
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1303,12 +1320,12 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST                                                                186804
      C                   PARM                    P_UpdPost         1                          186804
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
@@ -1427,17 +1444,17 @@
      C                   Z-ADD     BJRDNB        WControlDat
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Key lists
- 
+
      C     KEY1          KLIST
      C                   KFLD                    PYCCY
      C                   KFLD                    PYNOST
      C                   KFLD                    PYVALD
      C                   KFLD                    PYSEQN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1446,17 +1463,17 @@
       *                                                               *
       *****************************************************************
      C     SRDBErr       BEGSR
- 
+
      C                   WRITE     HEADAU
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   WRITE     DBERROR
- 
+
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1468,17 +1485,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *
       ********************************************************************

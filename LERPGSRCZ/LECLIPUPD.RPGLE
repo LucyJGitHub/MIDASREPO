@@ -12,8 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054877           Date 14Jan20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 207964             Date 23Aug02               *
+      *  Prev Amend No. MD031292           Date 06Nov19               *
+      *                 MD025836           Date 06Nov19               *
+      *                 MD055714           Date 06May20               *
+      *                 MD054877           Date 14Jan20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -160,6 +164,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  207964 - Incorrect exposure if loan is in base currency. Do  *
+      *           not change ZMD to 'M'. Amendment to CLE023.         *
+      *         - Applied for MD-10504(artf1087794)                   *
+      *  MD031292 - Initialize CLOANCK when inserting to avoid        *
+      *             update with data from previous loan.              *
+      *  MD025836 - Loan principal increase causing excess. Remove    *
+      *             DAYNO increase when maturity is amended to update *
+      *             drawn amount on previous maturity date.           *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
       *  MD054877 - Interest shadow postings at maturity of guarantee *
       *             loan not produced. Allow shadow postings genera-  *
       *             tion at maturity if interest date is zero.        *
@@ -1851,6 +1866,7 @@
       *
       ***  Write CLOANCK records
       *
+     C                   CLEAR                   CLOANCKF                                   MD031292
      C                   EXSR      LONK_INS
      C                   WRITE     CLOANCKF
      C                   MOVE      *BLANKS       Z#BSTK                                       222373
@@ -4021,7 +4037,11 @@
       *
      C     S01465        IFEQ      'Y'
      C     L_CLMDAT      ANDNE     MDAT
+     C     @ACTRV        IFEQ      'Y'                                                      MD055714
+     C                   Z-ADD     L_CLOMDT      OMDT                                       MD055714
+     C                   ELSE                                                               MD055714
      C                   Z-ADD     MDAT          OMDT
+     C                   ENDIF                                                              MD055714
      C                   ENDIF
       *
       *----------------------------------------------------------------
@@ -5712,7 +5732,7 @@
      C                   Z-ADD     Prv_MDAT      DAYNO
      C                   Z-ADD     Prv_MDAT      ENDAY
      C     Prv_MDAT      IFGT      BJRDNB
-     C                   ADD       1             DAYNO
+     C**********         ADD       1             DAYNO                                      MD025836
      C                   ADD       1             ENDAY
      C                   END
      C                   MOVE      *BLANK        ZLOC
@@ -6047,8 +6067,14 @@
      C                   EXSR      ZXRATE
      C                   Z-ADD     ZRATEX        ZEXCH                                        CLE023
      C                   MOVE      ZMDIX         ZMD                                          CLE023
+      * If loan is in base currency, use spot rate.                                           207964
      C     ZCCYI         IFEQ      BJCYCD                                                     CLE023
+     C                   Z-ADD     ZRATE2        ZEXCH                                        207964
+     C     ZMDI2         IFEQ      'D'                                                        207964
      C                   MOVE      'M'           ZMD                                          CLE023
+     C                   ELSE                                                                 207964
+     C                   MOVE      'D'           ZMD                                          207964
+     C                   ENDIF                                                                207964
      C                   ENDIF                                                                CLE023
      C                   ENDIF                                                                CLE023
 

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032890           Date 18Feb15               *
       *                 CRE101             Date 27Aug14               *
@@ -49,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -96,13 +100,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** BRT Customer Details
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Customer Group Codes
      FTABLEV4   IF   E             DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -121,64 +125,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Client Group Code
      D GRP             S              1    DIM(8)
       ** Account Commission Indicators
@@ -195,12 +199,12 @@
      D AIN6            S              1    DIM(8)
       ** Fixed Commission Indicators
      D AIN7            S              1    DIM(8)
- 
+
       ** DATA STRUCTURE TO GET THE RIGHT CUSTOMER GROUP
      D                 DS
      D  ZZ010                  1     10
      D  CGRP                  10     10
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDMINBOK                      1A
@@ -216,47 +220,47 @@
      D  DDPBKUOK                      1A
      D  DDFCCUOK                      1A                                                      CLE025
      D**DDK24COK                      1A                                             CER047 BUG24157
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D ValidAccn     E DS                  EXTNAME(GLVAMADPD)
       * Valid Account layout -> ACCNTAB
- 
+
      D ValidExRI     E DS                  EXTNAME(GLVAMRIPD)
      D GLRIACOD      E                     EXTFLD(QQACOD)                                     CGL029
       * Valid Account layout -> REIACD
- 
+
      D ValidExPW     E DS                  EXTNAME(GLVAMPWPD)
      D GLPWACOD      E                     EXTFLD(QQACOD)                                     CGL029
       * Valid Account layout -> REAPWDPD
- 
+
      D TranIn5       E DS                  EXTNAME(GLAMODPD)
       * Incoming Transaction (screen 5)
- 
+
      D TranIn1       E DS                  EXTNAME(GLAMADPD)
       * Incoming Transaction (screen 1)
- 
+
      D/COPY OFCPYSRCZ,CRE101_049                                                              CRE101
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
      D Idx1            S              3P 0
- 
+
      D CLE025          S              1                                                       CLE025
      D PRTCD           S              7                                                       CLE025
      D POPTN           S              7                                                       CLE025
@@ -282,13 +286,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -297,11 +301,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EXSR      SRINIT
       *
       * Call Validation Modules in Sequence
- 
+
       ** Validate Minimum Balance
       /COPY WNCPYSRC,GLAMAD5V01                                                               CUT009
      C                   EXSR      VMINBAL
@@ -354,7 +358,7 @@
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -368,9 +372,9 @@
       ** VMINBAL - Validate Minimum Balance
       *****************************************************************
      C     VMINBAL       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVMMBL'
@@ -394,9 +398,9 @@
       *
       ** Minimum Balance - Ok
      C                   Parm                    DDMINBOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -406,9 +410,9 @@
       *  VBSTX   - Validate Base Rate Tax Category
       *****************************************************************
      C     VBSTX         BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVBSTX'
@@ -438,9 +442,9 @@
       *
       ** BRT Category - Ok
      C                   Parm                    DDBRTCAOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -450,9 +454,9 @@
       ** VFCLTY - Validate Facility Type, Number & Encashment
       *****************************************************************
      C     VFCLTY        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVFCTY'
@@ -493,9 +497,9 @@
      C                   Parm                    DDEFACOk
      C                   Parm                    DDACTN                                     MD032890
       *
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -505,9 +509,9 @@
       *  VINAIFLG - Validate Inactive Account Flag
       *****************************************************************
      C     VINAIFLG      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVIAIN'
@@ -529,9 +533,9 @@
       *
       ** Inactive Account Y/N - Ok
      C                   Parm                    DDINAIOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -541,9 +545,9 @@
       ** VBPIN    - Validate Bankrupt/Liquidated Flag
       *****************************************************************
      C     VBPIN         BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVBPIN'
@@ -565,9 +569,9 @@
       *
       ** Bankrupt/Liquidated Y/N - Ok
      C                   Parm                    DDBRLIOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -577,9 +581,9 @@
       ** VBDDB    - Validate Bad Debt Flag
       *****************************************************************
      C     VBDDB         BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVBDDB'
@@ -601,9 +605,9 @@
       *
       ** Bad Debt Y/N - Ok
      C                   Parm                    DDBADIOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -613,9 +617,9 @@
       ** VPTRAFLG - Validate Print Trans Advice Flag
       *****************************************************************
      C     VPTRAFLG      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVPRAI'
@@ -637,9 +641,9 @@
       *
       ** Print Trans. Advice Y/N - Ok
      C                   Parm                    DDPTRAOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -649,9 +653,9 @@
       ** VPRCHFLG - Validate Print Rate Chg Advice Flag
       *****************************************************************
      C     VPRCHFLG      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVPIIN'
@@ -673,9 +677,9 @@
       *
       ** Print Rate Chg. Advice Y/N - Ok
      C                   Parm                    DDPRCHOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -685,9 +689,9 @@
       ** VPBKUFLG - Validate Passbook Used on A/C Flag
       *****************************************************************
      C     VPBKUFLG      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVPKIN'
@@ -713,9 +717,9 @@
       *
       ** Passbook Used on A/C Y/N - Ok
      C                   Parm                    DDPBKUOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -764,9 +768,9 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
      C                   MOVE      DDBRTCA       AMBRTCA
                                                                                               CLE025
       ** Facility Customer                                                                    CLE025
@@ -865,7 +869,7 @@
      C**********         IF        CER047 = 'Y'                                      CER047 BUG24157
      C**********         EVAL      AMK24C = DDK24C                                   CER047 BUG24157
      C**********         ENDIF                                                       CER047 BUG24157
- 
+
      C/COPY OFCPYSRCZ,CRE101_052                                                              CRE101
      C                   ENDSR
       *****************************************************************
@@ -934,9 +938,9 @@
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Transaction information (DS) from source system
      C                   PARM                    TranIn1
@@ -1111,7 +1115,7 @@
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       *                                                                                       CER047
       ** Check if enhancement CER047 is on                                                    CER047
       *                                                                                       CER047
@@ -1140,7 +1144,7 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1148,9 +1152,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1160,7 +1164,7 @@
      C                   MOVEL     *BLANK        WFldNamXAr                                   CER047
      C                   MOVEL     *BLANK        WMsgIDXAr                                    CER047
      C                   MOVEL     *BLANK        WMsgDtaXAr                                   CER047
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1168,7 +1172,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)

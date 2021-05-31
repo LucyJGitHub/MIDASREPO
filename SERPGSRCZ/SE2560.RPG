@@ -19,9 +19,8 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056904           Date 08Oct20               *
-      *  Prev Amend No. MD056768           Date 08Oct20               *
-      *                 AR324886           Date 08Apr20               *
+      *  Last Amend No. MD056768           Date 08Oct20               *
+      *  Prev Amend No. MD056904           Date 08Oct20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -63,15 +62,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD056768 - File out of balance in SEC0612E 00001 component.  *
+      *             Ensure that POSETA audit file is updated with the *
+      *             current number of live records after drop off.    *     
       *  MD056904 - Database error in SEC0302 10007 component.        *
       *             Ensure that no other position settlements exist   *
-      *             before dropping off extension file records.       *     
-      *  MD056768 - File out of balance in SEC0612E 00001 component   *
-      *             Ensure that POSETA audit file is updated with the *
-      *             current number of live records after drop off.    *
-      *  AR324886 - Implement 4-eyes processing in Position           *
-      *             Settlement Maintenance.                           *
-      *             (Upgrade as required by HUT105)                   *
+      *             before dropping off extension file records.       *
       *  MD046248 - Finastra Rebranding                               *
      F*  095907 - TRAILERS POSETA MUST BE UPDATED                     *
      F*         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
@@ -138,9 +134,6 @@
      F*
      F*POSET***UP**E***********K        DISK                              E20114
      FPOSET1  UP  E           K        DISK                               E20114
-     FPSAUT   UF  E           K        DISK                                                 AR324886
-      ** SE Position Settlement Authorisation detail                                        AR324886
-      *                                                                                     AR324886
      FSECTY   IF  E           K        DISK
      FPOSETA  UF  E                    DISK
      FTABSE   IF  E           K        DISK
@@ -233,8 +226,6 @@
      I                                              PSSH  L2
      I                                              PCPY  L1
      I              RECI                            RECIX
-     I              TNLU                            TNLUX                                   AR324886
-     I              EXCD                            EXCDX                                   AR324886
      I/COPY WNCPYSRC,SE2560I001
      I*LDA******* UDS                            256
      I***********                           134 177 DBLOT                 S01117
@@ -359,18 +350,6 @@
      C                     KFLD           K3PDUD  50                                          CRE020
      C                     KFLD           K3PEVT  2                                           CRE020
       *                                                                                       CRE020
-     C           PSAUTH    KLIST                                                            AR324886
-     C                     KFLD           PBCA                                              AR324886
-     C                     KFLD           PSSH                                              AR324886
-     C                     KFLD           PCPY                                              AR324886
-     C                     KFLD           PDUD                                              AR324886
-     C                     KFLD           PEVT                                              AR324886
-     C                     KFLD           PTFR                                              AR324886
-     C                     KFLD           TNLUX                                             AR324886
-     C                     KFLD           TXBS                                              AR324886
-     C                     KFLD           BNFO                                              AR324886
-     C                     KFLD           EXCDX                                             AR324886
-      *                                                                                     AR324886
      C/COPY WNCPYSRC,SE2560C001
       *
       * Define keylist for chaining to tabletl file
@@ -735,11 +714,6 @@
      C                     END
      C*                                                                                       095907
      C                     ELSE                                                               095907
-      *                                                                                     AR324886
-     C           PSAUTH    CHAINPSAUT                80                                     AR324886
-     C           *IN80     IFEQ *OFF                                                        AR324886
-     C                     DELETPSAUT                                                       AR324886
-     C                     ENDIF                                                            AR324886
      C*                                                                                       095907
      C* Get dec places tabtg10                                                                095907
      C*                                                                                       095907
@@ -931,19 +905,19 @@
       ** Delete position settlement from the main file                                      MD056904
      C*                                                                                       095907
      C                     DELETPOSETDF                                                     MD056904
-      *                                                                                     MD056904     
+      *                                                                                     MD056904
       ** Deleted LIVE records                                                               MD056768
       *                                                                                     MD056768
      C           RECIX     IFEQ 'D'                                                         MD056768
      C                     ADD  1         LVDEL   50                                        MD056768
      C                     ENDIF                                                            MD056768
-      *                                                                                     MD056768
+      *                                                                                     MD056768      
       ** Check other position settlement                                                    MD056904
       *                                                                                     MD056904
      C           KEY1      CHAINPOSET2               38                                     MD056904
       *                                                                                     MD056904
       ** Delete MT5xx extension records w/o position settlement                             MD056904
-      *                                                                                     MD056904      
+      *                                                                                     MD056904
      C           S01401    IFEQ 'Y'                                                           095907
      C           *IN38     ANDEQ'1'                                                         MD056904
      C           KEY1      CHAINPOSETDY1             34                                       095907
@@ -982,11 +956,6 @@
      C           KPOST3    READEPOSETDD3                 78                                   CRE020
      C                     ENDDO                                                              CRE020
      C                     ENDIF                                                              CRE020
-      *                                                                                     AR324886
-     C           PSAUTH    CHAINPSAUT                80                                     AR324886
-     C           *IN80     IFEQ *OFF                                                        AR324886
-     C                     DELETPSAUT                                                       AR324886
-     C                     ENDIF                                                            AR324886
      C*
      C* Increment deleted not authorised count if neccessary
      C*

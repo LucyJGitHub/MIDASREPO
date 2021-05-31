@@ -9,14 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR1042300          Date 14Oct12              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR1009800          Date 20Nov12              */
 /*                      AR999622           Date 09Jul12              */
 /*                      CSC054  *CREATE    Date 23Feb12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR1042300 - PEA Restore of files in global layer required   */
+/*                   (Child:AR1042301)                               */
 /*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1009800 - Report field in SDBANKPD of PEA system should   */
@@ -44,7 +47,8 @@
              DCL        VAR(&NBRRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&DPLIBP) TYPE(*CHAR) LEN(10)                               /*AR1009800*/
-
+             DCL        VAR(&GMLIBL) TYPE(*CHAR) LEN(10)                               /*AR1042300*/
+             DCL        VAR(&PRFG) TYPE(*CHAR) LEN(2)                                  /*AR1042300*/
 /*/COPY SDCPYSRC,SDSVALDCL  */
 
              DCLF       FILE(SCPEADL0)
@@ -70,7 +74,8 @@
 
 /** Get Live and PEA zone system prefix */
 /** also get MQ Queue Manager and Incoming Queue Name */
-
+             CHGVAR     VAR(&SVALK7) VALUE('PEALiveGlobalPrefix')                      /*AR1042300*/
+                                                                                       /*AR1042300*/
              CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
                           'PEALiveSystemPrefix' &SVAL1 +
                           'PEASystemPrefix' &SVAL2 +
@@ -85,7 +90,7 @@
              CHGVAR     VAR(&PRFP) VALUE(%SST(&SVAL2 1 2))
              CHGVAR     VAR(&MQMGR) VALUE(%SST(&SVAL5 1 48))
              CHGVAR     VAR(&MQUEUE) VALUE(%SST(&SVAL6 1 48))
-
+             CHGVAR     VAR(&PRFG) VALUE(%SST(&SVAL7 1 2))                             /*AR1042300*/
 /** Retrieve JOB details */
 
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
@@ -97,6 +102,7 @@
              CHGVAR     VAR(&DUMDM) VALUE(%SST(&SVAL4 1 10))
              CHGVAR     VAR(&DOWNER) VALUE(&PRFP *CAT 'OWNER')
              CHGVAR     VAR(&DPLIBP) VALUE(&PRFP *CAT 'DPLIB')                         /*AR1009800*/
+             CHGVAR     VAR(&GMLIBL) VALUE(&PRFG *CAT 'GMLIB')                         /*AR1042300*/
 
 /** Create temporary message queue for error handling. */
 
@@ -126,6 +132,16 @@
                           FMTOPT(*MAP *DROP)                                           /*AR1009800*/
              MONMSG     MSGID(CPF0000)                                                 /*AR1009800*/
                                                                                        /*AR1009800*/
+/** Restore Global DBIC */                                                             /*AR1042300*/
+                                                                                       /*AR1042300*/
+             CRTLIB     LIB(PEAGLOBRST)                                                /*AR1042300*/
+             MONMSG     MSGID(CPF2111)                                                 /*AR1042300*/
+                                                                                       /*AR1042300*/
+             RSTLIB     SAVLIB(&GMLIBL) DEV(*SAVF) SAVF(&DILIBP/DBICGM) +
+                          MBROPT(*ALL) RSTLIB(PEAGLOBRST) +
+                          OUTPUT(*PRINT)                                               /*AR1042300*/
+             MONMSG     MSGID(CPF3773)                                                 /*AR1042300*/
+                                                                                       /*AR1042300*/
 /** Restore all files residing in xxDMLIB to RestoreToLibrary */
 
 /**********  RSTLIB     SAVLIB(&DMLIBL) DEV(*SAVF) +
@@ -226,7 +242,13 @@ CHKERR:      RTVMBRD    FILE(SCPEADL0) NBRCURRCD(&NBRRCD)
                           JOBD(MBATCH) JOBQ(INTERFACE) +
                           PRTDEV(*CURRENT) OUTQ(*JOBD) USER(*JOBD) +
                           RTGDTA(*JOBD) INLLIBL(*JOBD)
-
+                                                                                       /*AR1042300*/
+/** Delete Global Restore Library */                                                   /*AR1042300*/
+                                                                                       /*AR1042300*/
+             SBMJOB     CMD(DLTLIB LIB(PEAGLOBRST)) JOB(DLTTMPLIB) +
+                          JOBD(MBATCH) JOBQ(INTERFACE) +
+                          PRTDEV(*CURRENT) OUTQ(*JOBD) USER(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD)                                 /*AR1042300*/
              CHGVAR     VAR(&MSG) VALUE('Restore Successful')
 
              GOTO       CMDLBL(ENDP)

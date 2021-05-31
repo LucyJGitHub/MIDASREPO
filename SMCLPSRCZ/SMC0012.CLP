@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055749           Date 09Jun20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUP034             Date 24Jan07              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055749 - Bridge menu CHDT ends in error                   */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library.             */
@@ -123,6 +125,10 @@ VALIDATE:                                                                       
 /* Delete outfiles if they already exist */
              DLTF       FILE(QTEMP/FROMDTALIB)
              MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UPDTLBOF)                                            /*MD055749*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055749*/
+             DLTF       FILE(QTEMP/SMDTNFQF)                                            /*MD055749*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055749*/
 
 /* Produce outfile of files in "from" DTALIB */
              DSPOBJD    OBJ(&FROMDTALIB/*ALL) OBJTYPE(*ALL) +
@@ -130,9 +136,16 @@ VALIDATE:                                                                       
 
 /* Produce query to identify files not in "to" library that          */
 /*  exist in "from" library                                          */
+/** Start of change for MD055749 **/
+             DSPFD      FILE(&TODTALIB/*ALL) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPDTLBOF)
+
+/**********  OPNQRYF    FILE((QTEMP/FROMDTALIB) (UPDTLBOF)) +        */
+/**********               FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/UPDTLBOF + */
              OPNQRYF    FILE((QTEMP/FROMDTALIB) (UPDTLBOF)) +
-                          FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/UPDTLBOF +
+                          FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/ATFILE +
                           *EQ)) JDFTVAL(*ONLYDFT)
+/** End of change for MD055749 **/
              CPYFRMQRYF FROMOPNID(FROMDTALIB) TOFILE(QTEMP/SMDTNFQF) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              CLOF       OPNID(FROMDTALIB)

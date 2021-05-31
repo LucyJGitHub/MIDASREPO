@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -428,6 +431,7 @@
      C                   EVAL                   Buffer = FESTScnfmt + FES2ScnFmt              CLE106
      C**********                                 + ##RECS + ##PAYS                    CLE106 BUG9518
      C                                           + ##RECS + ##PAYS + InfData                 BUG9518
+     C                                           + P_SIGN                                   MD054354
  
      C                   SETON                                        LR
      C                   RETURN
@@ -631,6 +635,8 @@
  
       * Record status
      C                   PARM                    S#STAT           10
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
  
      C                   ENDSR
       **********************************************************************

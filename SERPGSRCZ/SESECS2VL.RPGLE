@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035962           Date 25May16               *
+      *  Last Amend No. MD056949           Date 13Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035962           Date 25May16               *
       *                 MD000091           Date 16May13               *
       *                 AR1077984          Date 17Jan13               *
       *                 AR750169           Date 17Sep12               *
@@ -61,6 +62,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056949 - SE0045 is dumping on security with no coupon      *
+      *             date array - which is not an error                *
+      *           - skip validation for last coupon date and next     *
+      *             coupon date if the security has no coupon/rate    *
+      *             days and BCNV is not 'N'                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035962 - NCD incorrectly defaulted to maturity date. Make  *
       *             sure next coupon date is defaulted first before   *
@@ -727,6 +733,9 @@
       *                                                                                       CSE031
      C**********         IF        DDACTN <> 'I'                                     CSE031 BUG10083
                                                                                             BUG10847
+     C                   IF        DDACTN <> 'I'                                            MD056949
+     C                   EXSR      SRValCPDRT                                               MD056949
+     C                   ENDIF                                                              MD056949     
       ** Get default value of Last Coupon Date                                              BUG10847
                                                                                             BUG10847
      C                   IF        DDACTN =  'I'  AND DDLCPN = *BLANKS                      BUG10847
@@ -734,7 +743,9 @@
      C                   ENDIF                                                              BUG10847
                                                                                             BUG10847
       ** Validate the Last Coupon Date.                                                       CSE031
+     C                   IF        RetCodeOut = *BLANKS                                     MD056949
      C                   EXSR      SRVLstCD                                                   CSE031
+     C                   ENDIF                                                              MD056949
       *                                                                                       CSE031
       ***Validate*the*Next Coupon Date.*******************************               CSE031 MD035962
      C**********         EXSR      SRVNxtCD                                          CSE031 MD035962
@@ -745,7 +756,9 @@
                                                                                             BUG10847
       ** Validate the Next Coupon Date.                                                     MD035962
       *                                                                                     MD035962
+     C                   IF        RetCodeOut = *BLANKS                                     MD056949
      C                   EXSR      SRVNxtCD                                                 MD035962
+     C                   ENDIF                                                              MD056949
       *                                                                                       CSE031
      C**********         ENDIF                                                       CSE031 BUG10083
       *                                                                                       CSE071

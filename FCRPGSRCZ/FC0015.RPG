@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-     F*  Last Amend No. MD054408           Date 05Oct19               *
-     F*  Prev Amend No. AR887528A          Date 18Jul19               *
+      *  Last Amend No. AR1042838          Date 27May13               *
+      *  Prev Amend No. AR752383           Date 05Jul11               *
+      *                 MD054408           Date 05Oct19               *
+      *                 AR887528A          Date 18Jul19               *
       *                 AR887528           Date 21Jun19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -36,6 +38,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR1042838 - Error when M, Q or Y Freq. with non-working days.*
+      *              Remove fix 261095, improve this fix to adjust    *
+      *              Next report date properly. (Child: AR1047150)    *
+      *  AR752383 - RCF Periodic Reporting not taking into account    *
+      *             location code when calculating next submission    *
+      *             date. Applied fix 213888. (Child: AR752384)       *
       *  MD054408 - TAIC013 - Periodic Report starts generating Daily *
       *             if previous month does not have 31 days           *
       *  AR887528A - Amended AR887528 fix                             *
@@ -154,15 +162,15 @@
      I                                        1   20NWD                   066539
      I                                        3   40NWM                   066539
      I                                        5   60NWY                   066539
-      *                                                                                     AR887528
-     I            DS                                                                        AR887528
-      *                                                                                     AR887528
-      ** Next working day's variables : For Computation                                     AR887528
-      *                                                                                     AR887528
-     I                                        1   60NXWRKD                                  AR887528
-     I                                        1   20NXD                                     AR887528
-     I                                        3   40NXM                                     AR887528
-     I                                        5   60NXY                                     AR887528
+      **********                                                                  AR887528 AR1042838
+     I**********  DS                                                              AR887528 AR1042838
+      **********                                                                  AR887528 AR1042838
+      ***Next*working*day's*variables*:*For*Computation***************            AR887528 AR1042838
+      **********                                                                  AR887528 AR1042838
+     I**********                              1   60NXWRKD                        AR887528 AR1042838
+     I**********                              1   20NXD                           AR887528 AR1042838
+     I**********                              3   40NXM                           AR887528 AR1042838
+     I**********                              5   60NXY                           AR887528 AR1042838
       *                                                                   066539
       *****************************************************
       /EJECT
@@ -216,6 +224,7 @@
      C                     MOVE BJMRDT    R@DATE             Today's date
      C                     MOVE BJLCCY    ZCCY               Local Ccy.cd.
      C                     MOVE *BLANK    ZLOC               Location code
+     C                     MOVE BJSLCD    ZLOC                                              AR752383
       *                    ¦
      C                     Z-ADD1         R@MM               Set month ptr
      C           R@MNTH    LOKUP@MN,R@MM                 90  Month No.
@@ -317,22 +326,22 @@
      C                     PARM           NWDATE  60                      066539
      C                     PARM           PADATE  7                       066539
      C                     MOVE NWDATE    NWDATD                          066539
-      *                                                                                     AR887528
-     C           P@FREQ    IFEQ 'M'                                                         AR887528
-     C           P@FREQ    OREQ 'Q'                                                         AR887528
-     C           P@FREQ    OREQ 'Y'                                                         AR887528
-     C           BJDNWD    SUB  1         COMPDT  50                                        AR887528
-     C                     EXSR NDATE2                                                      AR887528
-     C           NXD       IFGE P@FRQD                                                      AR887528
-     C                     Z-ADDNXD       CDAY    20                                        AR887528
-     C                     ELSE                                                             AR887528
-     C           NXM       DOWNENWM                                                         AR887528
-     C                     SUB  1         COMPDT                                            AR887528
-     C                     EXSR NDATE2                                                      AR887528
-     C                     ENDDO                                                            AR887528
-     C                     Z-ADDNXD       CDAY                                              AR887528
-     C                     ENDIF                                                            AR887528
-     C                     ENDIF                                                            AR887528
+      **********                                                                  AR887528 AR1042838
+     C********** P@FREQ    IFEQ 'M'                                               AR887528 AR1042838
+     C********** P@FREQ    OREQ 'Q'                                               AR887528 AR1042838
+     C********** P@FREQ    OREQ 'Y'                                               AR887528 AR1042838
+     C********** BJDNWD    SUB  1         COMPDT  50                              AR887528 AR1042838
+     C**********           EXSR NDATE2                                            AR887528 AR1042838
+     C********** NXD       IFGE P@FRQD                                            AR887528 AR1042838
+     C**********           Z-ADDNXD       CDAY    20                              AR887528 AR1042838
+     C**********           ELSE                                                   AR887528 AR1042838
+     C********** NXM       DOWNENWM                                               AR887528 AR1042838
+     C**********           SUB  1         COMPDT                                  AR887528 AR1042838
+     C**********           EXSR NDATE2                                            AR887528 AR1042838
+     C**********           ENDDO                                                  AR887528 AR1042838
+     C**********           Z-ADDNXD       CDAY                                    AR887528 AR1042838
+     C**********           ENDIF                                                  AR887528 AR1042838
+     C**********           ENDIF                                                  AR887528 AR1042838
       *
       * 3. Frequency 'B' - Last Working day of month :
       *
@@ -582,9 +591,15 @@
      C********** R@DD      IFGE NDD                                                  173405 AR887528
      C********** CDAY      IFGE NDD                                                AR887528 MD054408
      C********** R@MM      IFEQ NWM                                                  066539 AR887528
+      *                                                                                    AR1042838
+      **  261095 use Date of report in FC0010(= Rundat);                                   AR1042838
+      **  Look for next date (Monthly)                                                     AR1042838
+      *                                                                                    AR1042838
+     C           R@MM      IFEQ NWM                                                        AR1042838
      C                     ADD  1         NWM                             066539
      C**********           ENDIF                                                     066539 AR887528
      C**********           END                                                       173405 MD054408
+     C                     ENDIF                                                           AR1042838
      C                     EXSR YRADJ                                     066539
      C           NDD       IFGT @DD,NWM                                   066539
      C                     Z-ADD@DD,NWM   NDD                             066539
@@ -613,11 +628,19 @@
      C********** R@DD      IFGE NDD                                                  173405 AR887528
      C********** CDAY      IFGE NDD                                               AR887528 AR887528A
      C********** R@MM      IFEQ NWM                                                  066539 AR887528
+      *                                                                                    AR1042838
+      **  261095 use Date of report in FC0010(= Rundat)                                    AR1042838
+      **  Look for next date (Quaterly)                                                    AR1042838
+      *                                                                                    AR1042838
+     C           R@MM      IFEQ NWM                                                        AR1042838
      C                     ADD  3         NWM                             066539
      C**********           ELSE                                                      066539 AR887528
      C**********           ADD  2         NWM                                        066539 AR887528
      C**********           ENDIF                                                     066539 AR887528
      C**********           END                                                      173405 AR887528A
+     C                     ELSE                                                            AR1042838
+     C                     ADD  2         NWM                                              AR1042838
+     C                     ENDIF                                                           AR1042838
      C                     EXSR YRADJ                                     066539
      C           NDD       IFGT @DD,NWM                                   066539
      C                     Z-ADD@DD,NWM   NDD                             066539
@@ -642,11 +665,19 @@
      C********** R@DD      IFGE NDD                                                  173405 AR887528
      C********** CDAY      IFGE NDD                                               AR887528 AR887528A
      C********** R@MM      IFEQ NWM                                                  066539 AR887528
+      *                                                                                    AR1042838
+      ** 261095 use Date of report in FC0010(= Rundat)                                     AR1042838
+      ** Look for next date (Yearly)                                                       AR1042838
+      *                                                                                    AR1042838
+     C           R@MM      IFEQ NWM                                                        AR1042838
      C                     ADD  12        NWM                             066539
      C**********           ELSE                                                      066539 AR887528
      C**********           ADD  11        NWM                                        066539 AR887528
      C**********           ENDIF                                                     066539 AR887528
      C**********           END                                                      173405 AR887528A
+     C                     ELSE                                                            AR1042838
+     C                     ADD  11        NWM                                              AR1042838
+     C                     ENDIF                                                           AR1042838
      C                     EXSR YRADJ                                     066539
      C           NDD       IFGT @DD,NWM                                   066539
      C                     Z-ADD@DD,NWM   NDD                             066539
@@ -701,24 +732,24 @@
      C                     PARM           ZDAYNO                          066539
      C                     ENDSR                                          066539
       *                                                                   066539
-      *****************************************************************                     AR887528
-      *                                                               *                     AR887528
-      *  NDATE2 SR - To Convert Computed Date to DDMMYY Format        *                     AR887528
-      *                                                               *                     AR887528
-      *****************************************************************                     AR887528
-      *                                                                                     AR887528
-     C           NDATE2    BEGSR                                                            AR887528
-      *                                                                                     AR887528
-     C                     MOVE 'D'       PFMT1   1                                         AR887528
-     C                     CALL 'ZDATE2'                                                    AR887528
-     C                     PARM           COMPDT                                            AR887528
-     C                     PARM           PFMT1                                             AR887528
-     C                     PARM           COMPD6  60                                        AR887528
-     C                     PARM           COMPD7  7                                         AR887528
-     C                     MOVELCOMPD6    NXWRKD                                            AR887528
-      *                                                                                     AR887528
-     C                     ENDSR                                                            AR887528
-      *                                                                                     AR887528
+      *****************************************************************           AR887528 AR1042838
+      *****************************************************************           AR887528 AR1042838
+      ***NDATE2*SR*-*To*Convert*Computed*Date*to*DDMMYY*Format*********           AR887528 AR1042838
+      *****************************************************************           AR887528 AR1042838
+      *****************************************************************           AR887528 AR1042838
+      **********                                                                  AR887528 AR1042838
+     C********** NDATE2    BEGSR                                                  AR887528 AR1042838
+      **********                                                                  AR887528 AR1042838
+     C**********           MOVE 'D'       PFMT1   1                               AR887528 AR1042838
+     C**********           CALL 'ZDATE2'                                          AR887528 AR1042838
+     C**********           PARM           COMPDT                                  AR887528 AR1042838
+     C**********           PARM           PFMT1                                   AR887528 AR1042838
+     C**********           PARM           COMPD6  60                              AR887528 AR1042838
+     C**********           PARM           COMPD7  7                               AR887528 AR1042838
+     C**********           MOVELCOMPD6    NXWRKD                                  AR887528 AR1042838
+      **********                                                                  AR887528 AR1042838
+     C**********           ENDSR                                                  AR887528 AR1042838
+      **********                                                                  AR887528 AR1042838
       ********************************************************************066539
       /COPY ZSRSRC,ZACCH
       /COPY ZSRSRC,ZBKDT

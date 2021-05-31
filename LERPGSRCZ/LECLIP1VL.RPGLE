@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055344           Date 28Feb20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. AR918361           Date 02Apr12               *
+      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *                 MD055714           Date 06May20               *
+      *                 MD055380           Date 17Apr20               *
+      *                 MD055344           Date 28Feb20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052327           Date 17Nov18               *
       *                 MD052214           Date 26Oct18               *
@@ -167,6 +171,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918361 - No error message for rollover frequency when not  *
+      *             defined in facility rollover types. Validate the  *
+      *             rollover frequency properly against the facility  *
+      *             to which the loan is linked. (Child: AR918362)    *
+      *           - Applied for MD-16939                              *
+      *  MD029863 - Loan input field Final Maturity date not reset    *
+      *             after change to the date is rejected.             *
+      *           - Applied for MD049247.                             *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
+      *  MD055380 - Rollover can't be completed when main loan in WIP.*
+      *             Reverse fix AR820729.                             *
       *  MD055344 - Event code not found error                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -1141,6 +1158,7 @@
      D PCcy            S              3A                                                      CER020
      D PZloc           S              3A                                                      CER020
      D PZInd           S              1A                                                      CER020
+     D WSVFM           S              5P 0                                                  MD029863
                                                                                               CLE025
      D PSysVal01       S             20A   INZ('LoansPartPrchPartSld')                       BUG6108
      D PCurSet01       S            200A                                                     BUG6108
@@ -1836,10 +1854,10 @@
      C**********         MOVE      *ZEROS        CCLTOLN                               245411 CLE148
      C                   MOVE      *BLANKS       CCLTOLN                                      CLE148
      C                   ENDIF                                                                245411
-      *                                                                                     AR820729
-      ** Validate Rollover Status                                                           AR820729
-      *                                                                                     AR820729
-     C                   EXSR      SRRSTS                                                   AR820729
+      **********                                                                   AR820729 MD055380
+      ***Validate*Rollover*Status                                                  AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C**********         EXSR      SRRSTS                                          AR820729 MD055380
       *                                                                                       CER020
       ** Validate Initial Start and Final Maturity Date                                       CER020
       *                                                                                       CER020
@@ -5847,19 +5865,21 @@ B001 C     ZERR          IFNE      *BLANKS
       ***  Moreover, it must be a valid frequency for the facility to
       ***  which the loan is being linked
       *
+     C     DDRLFQ        LOOKUP    WFREQ                                  97                AR918361
      C     DDRLFQ        IFNE      *BLANK
+     C     *IN97         ANDEQ     '0'                                                      AR918361
      C*****DDRLFQ        ANDNE     'M'                                                        CLE064
      C*****DDRLFQ        ANDNE     'T'                                               BUG21898 CLE064
      C*****DDRLFQ        ANDNE     'Q'                                                        CLE064
      C*****DDRLFQ        ANDNE     'X'                                                        CLE064
      C*****DDRLFQ        ANDNE     'Y'                                                        CLE064
-     C     DDRLFQ        LOOKUP    WFREQ                                  97                  CLE064
-     C     *IN97         IFEQ      '0'                                                        CLE064
+     C*****DDRLFQ        LOOKUP    WFREQ                                  97         CLE064 AR918361
+     C******IN97         IFEQ      '0'                                               CLE064 AR918361
      C                   MOVE      'N'           DDRLFQOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDRLFQ'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0055'     MsgIDXAr(Idx)
-     C                   ENDIF                                                                CLE064
+     C**********         ENDIF                                                       CLE064 AR918361
      C                   ELSE
      C     *IN83         IFEQ      '0'
      C     DDRLFQ        ANDNE     *BLANK
@@ -8519,6 +8539,34 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     WNUM7         WALF6                                      AR804863
      C                   Z-ADD     ZDAYNO        WSVMD                                      AR804863
      C                   Z-ADD     WSVMD         CCLMDAT                                    AR804863
+      *                                                                                     MD029863
+      ** Final Maturity Date                                                                MD029863
+      *                                                                                     MD029863
+     C                   Z-ADD     *ZEROS        WSVFM                                      MD029863
+     C                   MOVE      DDFMDT        ZDATE                                      MD029863
+     C                   MOVE      BJDFIN        ZDATFM                                     MD029863
+     C                   CALL      'ZDATE1'                                                 MD029863
+     C                   PARM      *BLANKS       ZERR                                       MD029863
+     C                   PARM                    ZDATE                                      MD029863
+     C                   PARM                    ZDATFM                                     MD029863
+     C                   PARM                    ZDAYNO                                     MD029863
+      *                                                                                     MD029863
+     C                   MOVEL     DDFMDT        WNUM7                                      MD029863
+     C                   MOVEL     WNUM7         WALF6                                      MD029863
+     C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+      *                                                                                     MD055714
+      ** Original Maturity Date                                                             MD055714
+      *                                                                                     MD055714
+     C                   MOVE      DDOMDT        ZDATE                                      MD055714
+     C                   MOVE      BJDFIN        ZDATFM                                     MD055714
+     C                   CALL      'ZDATE1'                                                 MD055714
+     C                   PARM      *BLANKS       ZERR                                       MD055714
+     C                   PARM                    ZDATE                                      MD055714
+     C                   PARM                    ZDATFM                                     MD055714
+     C                   PARM                    ZDAYNO                                     MD055714
+      *                                                                                     MD055714
+     C                   Z-ADD     ZDAYNO        CCLOMDT                                    MD055714
       *                                                                                     AR217961
       ** Customer number / short name                                                       AR217961
       *                                                                                     AR217961
@@ -8720,24 +8768,24 @@ B001 C     ZERR          IFNE      *BLANKS
       *                                                                                       240510
      C                   ENDSR                                                                240510
       /EJECT                                                                                  240510
-      *****************************************************************                     AR820729
-      *  SRRSTS - Validate Rollover Status                            *                     AR820729
-      *****************************************************************                     AR820729
-     C     SRRSTS        BEGSR                                                              AR820729
-      *                                                                                     AR820729
-      ** Do not allow amendment when there is a pending change on                           AR820729
-      ** rollover details                                                                   AR820729
-      *                                                                                     AR820729
-     C     DDACTN        IFEQ      'A'                                                      AR820729
-     C     CLRSTS        ANDEQ     'R'                                                      AR820729
-     C     DDACTN        OREQ      'R'                                                      AR820729
-     C     CLRSTS        ANDEQ     'R'                                                      AR820729
-     C                   ADD       1             Idx                                        AR820729
-     C                   MOVEL     '5046109'     MsgIDXAr(Idx)                              AR820729
-     C                   MOVEL     'DDLNRF'      FldNamXAr(Idx)                             AR820729
-     C                   ENDIF                                                              AR820729
-     C                   ENDSR                                                              AR820729
-      /EJECT                                                                                AR820729
+      *****************************************************************            AR820729 MD055380
+      ***SRRSTS*-*Validate*Rollover*Status                            *            AR820729 MD055380
+      *****************************************************************            AR820729 MD055380
+     C*****SRRSTS        BEGSR                                                     AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+      ***Do*not*allow*amendment*when*there*is*a*pending*change*on                  AR820729 MD055380
+      ***rollover*details                                                          AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C*****DDACTN        IFEQ      'A'                                             AR820729 MD055380
+     C*****CLRSTS        ANDEQ     'R'                                             AR820729 MD055380
+     C*****DDACTN        OREQ      'R'                                             AR820729 MD055380
+     C*****CLRSTS        ANDEQ     'R'                                             AR820729 MD055380
+     C**********         ADD       1             Idx                               AR820729 MD055380
+     C**********         MOVEL     '5046109'     MsgIDXAr(Idx)                     AR820729 MD055380
+     C**********         MOVEL     'DDLNRF'      FldNamXAr(Idx)                    AR820729 MD055380
+     C**********         ENDIF                                                     AR820729 MD055380
+     C**********         ENDSR                                                     AR820729 MD055380
+      */EJECT***                                                                   AR820729 MD055380
       *****************************************************************                       CER020
       *                                                               *                       CER020
       *  SRVInStDt - Validate Initial Start Date                      *                       CER020

@@ -9,14 +9,15 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD023889           Date 10Dic13              */
+/*       Last Amend No. MD049512           Date 10Aug18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD023889           Date 10Dic13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. 191263             Date 03May01              */
+/*                      191263             Date 03May01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Aug99              */
 /*                      110361             DATE  21JAN97            */
@@ -30,6 +31,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD049512 - All real time postings are reprocessed everytime */
+/*                  GLC450 runs causing imbalance in GLHIBL. Ensure  */
+/*                  GLRTPD are processed once.                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD023889 - Accounting Rules Process (GL Account creation)   */
 /*                  Add /COPY CGL135_113, CGL135_114                 */
@@ -144,6 +148,7 @@
 /*/COPY OFCPYSRCZ,CGL135_113                                          */ /*MD023889*/
 /************OVRDBF     FILE(ACCNTX) TOFILE(ACCNT)            *090139* *110361*/
              OVRDBF     FILE(ACCNTX) TOFILE(ACCNT) SHARE(*NO)         /*110361*/
+             CLRPFM     FILE(GERTTMP)                                                   /*MD049512*/
  
 /*/COPY WNCPYSRC,GLC450003                                           */
              CALL PGM(GL0450) PARM(&BNUM)
@@ -193,7 +198,8 @@
 /* */                                                                 /*CMC001*/
                 CLRPFM     FILE(MCMOVEPD)                             /*CMC001*/
                 CLRPFM     FILE(MCPST1PD)                             /*CMC001*/
-                CALL       PGM(MCC0310) PARM('GERTPD')                /*CMC001*/
+/**********     CALL       PGM(MCC0310) PARM('GERTPD')                           /*CMC001 MD049512*/
+                CALL       PGM(MCC0310) PARM('GERTTMP')                                 /*MD049512*/
                 IF COND(%SWITCH(XXXXXX11)) THEN(DO)                   /*CMC001*/
                    RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                /*CMC001*/
                    CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))      /*CMC001*/

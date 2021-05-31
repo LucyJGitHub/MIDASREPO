@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD039359           Date 27Jul16               *
-      *  Prev Amend No. AR685870           Date 10Dec10               *
+      *  Last Amend No. MD056605           Date 05Sep20               *
+      *  Prev Amend No. MD039359           Date 27Jul16               *
+      *                 AR685870           Date 10Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056605 - Deliverable Data Split for APDTAKPD/APUDTKPD      *
       *  MD039359 - Abnormal termination is not reported in           *
       *             Switchable Feature initialization screen.         *
       *  AR685870 - Introduce sequence number field.                  *
@@ -32,7 +34,7 @@
       /EJECT
       *****************************************************************
      F***APUDTKPD  IF   E             DISK                                                  AR685870
-     FAPUDTKL0  IF   E           K DISK                                                     AR685870
+     F*APUDTKL0* IF   E           K DISK                                           AR685870 MD056605
       *
       *****************************************************************
       *
@@ -50,6 +52,7 @@
      D WPZONE          S             10A   INZ(*BLANKS)                                     AR685870
      D WPCOND          S            500A   INZ(*BLANKS)                                     AR685870
      D WPCND2          S            500A   INZ(*BLANKS)                                     AR685870
+     D APUDTK        E DS                  EXTNAME(APUDKJW0)                                MD056605
       *
       *****************************************************************
       /EJECT
@@ -121,9 +124,23 @@
      C**********         ENDDO                                                              AR685870
       ** Read through file                                                                  AR685870
                                                                                             AR685870
-     C     *LOVAL        SETLL     APUDTKL0                                                 AR685870
-     C                   READ      APUDTKL0                               80                AR685870
-     C                   DOW       *IN80 = *OFF                                             AR685870
+     C******LOVAL        SETLL     APUDTKL0                                        AR685870 MD056605
+     C**********         READ      APUDTKL0                               80       AR685870 MD056605
+     C/EXEC SQL                                                                             MD056605
+     C+ declare ACursor insensitive scroll cursor for                                       MD056605
+     C+ select * from APUDKJW0                                                              MD056605
+     C+ order by APMAIN, APUEXT, APSEQN                                                     MD056605
+     C/END-EXEC                                                                             MD056605
+                                                                                            MD056605
+     C/EXEC SQL                                                                             MD056605
+     C+ open ACursor                                                                        MD056605
+     C/END-EXEC                                                                             MD056605
+                                                                                            MD056605
+     C/EXEC SQL                                                                             MD056605
+     C+ fetch next from ACursor into :APUDTK                                                MD056605
+     C/END-EXEC                                                                             MD056605
+     C***********        DOW       *IN80 = *OFF                                    AR685870 MD056605
+     C                   DOW       SQLCODE = 0                                              MD056605
                                                                                             AR685870
      C                   IF        APUEXT <> WPUEXT  and                                    AR685870
      C                             WPUEXT <> *BLANKS                                        AR685870
@@ -143,13 +160,19 @@
      C                   EVAL      WPCND2 = %trim(WPCND2) + ' ' + %trim(APCND2)             AR685870
      C                   EVAL      WPMAIN = APMAIN                                          AR685870
      C                   EVAL      WPUEXT = APUEXT                                          AR685870
-     C                   READ      APUDTKL0                               80                AR685870
+     C**********         READ      APUDTKL0                               80       AR685870 MD056605
+     C/EXEC SQL                                                                             MD056605
+     C+ fetch next from ACursor into :APUDTK                                                MD056605
+     C/END-EXEC                                                                             MD056605
      C                   ENDDO                                                              AR685870
                                                                                             AR685870
      C                   EXSR      SRSQL                                                    AR685870
      C                   EXSR      POPRTN                                                   AR685870
      C                   EXSR      SRSQLE                                                   AR685870
                                                                                             AR685870
+     C/EXEC SQL                                                                             MD056605
+     C+ close ACursor                                                                       MD056605
+     C/END-EXEC                                                                             MD056605
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

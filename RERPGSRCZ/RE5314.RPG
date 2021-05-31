@@ -10,8 +10,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. 218433             Date 11May20               *
+      *  Prev Amend No. 228902             Date 12Mar20               *
+      *                 187747             Date 12Mar20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD034990           Date 25May16               *
       *                 CRE100             Date 21Mar14               *
       *                 CER059             Date 19Jul10               *
@@ -51,6 +54,16 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  218433 - Statement fees booked but no statements generated.  *
+      *           Applied for MD022996.                               *
+      *  228902 - Generate statements for rate change only when Rate  *
+      *           Change Print Indicator is 'Y' in SDRETLPD.          *
+      *           Applied for MD-21523.                               *
+      *  218433 - Statement fees booked but no statements generated.  *
+      *  187747 - If any of the suppression features S01534, S01377,  *
+      *           or S01533 are/is *ON, and there are no movments for *
+      *           the account, then don't generate statement fees.    *
+      *           Also, suppression should not be based on Daily only.*
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  MD034990 - Postings not posted against account sequence of   *
@@ -140,6 +153,10 @@
      FREACNML0IF  E           K        DISK                               CAC001
      F**  RE Account Numbers File                                         CAC001
      F*                                                                   CAC001
+     FAPOST   IF  E           K        DISK                                                   187747
+     F            APOSTPDF                          KRENAMEAPOSPF                             187747
+     F            APOSTRAF                          KRENAMEAPOSRF                             187747
+     F**  Postings File                                                                       187747
      F*****************************************************************
      F*                                                               *
      F*  F U N C T I O N   O F  I N D I C A T O R S                   *
@@ -147,6 +164,7 @@
      F*   30 : Account is closing or account has no movements         *   121058
      F*   31 : On if READE to GLACP1L0 fails                          *   121058
      F*   40 : No record on REIACD                                    *   121058
+     F*   41 : No record on APOST.                                    *                       187747
      F*   50 : account details end of file indicator                  *
      F*   70 : retail account not found                               *
      F*   71 : No trailer found for update                            *
@@ -254,6 +272,20 @@
      I                                        1  80 CPY@
      I                                        1  20 CPY@##
      I*
+     I            DS                                                                          218433
+     I**  DS to format full Account ID for ACCNT DB Error                                     218433
+     I                                        1  18 ACID                                      218433
+     I                                        1   6 CNUM                                      218433
+     I                                        7   9 CCY                                       218433
+     I                                       10  190ACOD                                      218433
+     I                                       20  210ACSQ                                      218433
+     I                                       22  24 BRCA                                      218433
+     I*                                                                                       218433
+     I              'STATEMENT '          C         CSTMT                                     218433
+     I              'NORMAL    '          C         CNORM                                     218433
+     I*                                                                                       218433
+     IUDCR      E DSCGUDCRPD                                                                  218433
+      **  External DS for UDC Reference Details                                               218433
      ISDBANK    E DSSDBANKPD
      I** Bank Details
      I*
@@ -477,6 +509,8 @@
       *===================================================================
      C           #P03      BEGSR                           **#P03  BEGSR *
       *
+     C                     MOVE 'N'       SUPP    1                                           218433 
+      *
       **   Save the details of the main account
      C**********           Z-ADDCNUM      WMCNUM                                              CSD027
      C                     MOVE CNUM      WMCNUM                                              CSD027
@@ -523,6 +557,7 @@
       *                                                                   121058
      C           S01534    IFEQ 'Y'                                       121058
      C           S01377    OREQ 'Y'                                       121058
+     C           S01533    OREQ 'Y'                                                           187747
       *                                                                   121058
      C**********           Z-ADDWMCNUM    WCNUM                                        121058 CSD027
      C                     MOVE WMCNUM    WCNUM                                               CSD027
@@ -544,6 +579,8 @@
      C           WACST     ANDNE'C'                                       121058
      C           S01377    OREQ 'Y'                                       121058
      C           WACST     ANDNE'C'                                       121058
+     C           S01533    OREQ 'Y'                                                           187747
+     C           WACST     ANDNE'C'                                                           187747
       *                                                                   121058
       **  Rate change posting only count as account movements if:         121058
       **  'Rate Change Print' Indicator = 'Y' and either                  121058
@@ -600,35 +637,105 @@
      C           *IN30     IFEQ *OFF                                      121058
      C           WKACP     SETLLGLACP5L0                 30               121058
      C                     ENDIF                                          121058
+      ** Position to postings after last statement date in LF/APOST.                          187747
+      *                                                                                       187747
+     C           WKAPO     SETGTAPOST                41                                       187747
+      *                                                                                       187747
+      ** If NOT daily and still no movements found, check APOST postings.                     187747
+      *                                                                                       187747
+     C           *IN30     DOWEQ*OFF                                                          187747
+     C           *IN41     ANDEQ*OFF                                                          187747
+     C********** WMSTFQ    ANDNE'D'                                                    187747 218433
+      *                                                                                       187747
+     C           WKAPO2    READEAPOST                    41                                   187747
+      *                                                                                       187747
+     C           *IN41     IFEQ *OFF                                                          187747
+      *                                                                                       187747
+     C           RECI      IFEQ 'P'                                                           187747
+     C           PSTD      ANDGTLSTD                                                          187747
+      *                                                                                       187747
+      ** If posting found and after last statement date => VALID movement                     187747
+     C                     MOVE *ON       *IN30                                               187747
+     C                     ENDIF                                                              187747
+      *                                                                                       187747
+     C           RECI      IFEQ 'R'                                                           187747
+     C           PSTD      ANDGTLSTD                                                          187747
+      *                                                                                       187747
+      ** If rate change found, and after last statement date, and it is                       187747
+      ** not Tiered/Threshold or Print rate change = 'Y', then VALID.                         187747
+      *                                                                                       228902
+     C           WKRCPI    IFEQ 'Y'                                                           228902
+     C           DRCR      IFEQ 1                                                             187747
+     C           CRTIER    ANDNE'Y'                                                           187747
+     C           DRCR      OREQ 0                                                             187747
+     C           DRTIER    ANDNE'Y'                                                           187747
+     C                     MOVE *ON       *IN30                                               187747
+     C                     ENDIF                                                              187747
+     C                     ENDIF                                                              228902
+      *                                                                                       187747
+     C                     ENDIF                                                              187747
+      *                                                                                       187747
+     C                     ENDIF                                                              187747
+      *                                                                                       187747
+     C                     ENDDO                                                              187747
      C                     ELSE                                           121058
      C                     MOVE *OFF      *IN30                           121058
+      ** Make sure statement is not set to SUPPRESS in UDC                                    218433
+     C                     MOVELBRCA      DRBRCA                                              218433
+     C                     MOVELCSTMT     DRPTYP                                              218433
+     C                     MOVELCNORM     DRPSTP                                              218433
+     C                     MOVELACID      DRMACT                                              218433
+     C                     MOVELCNUM      XXCUST                                              218433
+      *                                                                                       218433
+     C                     CALL 'CG9010'               91                                     218433
+     C                     PARM *BLANKS   ##RTCD  7                                           218433
+     C                     PARM '*REF    '##MODE 10                                           218433
+     C                     PARM 'NO '     ##CMT   3                                           218433
+     C                     PARM           XXCUST  6                                           218433
+     C                     PARM           UDCR                                                218433
+     C                     PARM *BLANKS   ##ITMA  8                                           218433
+      *                                                                                       218433
+      **  CGD1270 => no error, but suppress output for this transaction.                      218433
+      *                                                                                       218433
+      *                                                                                       218433
+     C           ##RTCD    IFEQ 'CGD1270'                                                     218433
+     C                     MOVE 'Y'       SUPP                                                218433
+     C                     ENDIF                                                              218433
      C                     ENDIF                                          121058
       *                                                                   121058
       **  Post charges only if one of the following conditions is met:    121058
       **                                                                  121058
       **    a) Suppress Statements with Zero Movements feature is OFF     121058
-      **    b) Suppress Statements with Zero Movements feature is ON      121058
-      **       and Statement Frequency is not equal to 'D'                121058
-      **    C) Suppress Statements with Zero Movements feature is ON,     121058
-      **       Statement Frequency is equal to 'D' and account has        121058
-      **       movements                                                  121058
+      ******b)*Suppress*Statements*with*Zero*Movements*feature*is*ON***                121058 187747
+      *********and*Statement*Frequency*is*not*equal*to*'D'*************                121058 187747
+      ******C)*Suppress*Statements*with Zero Movements*feature*is*ON,**                121058 187747
+      *********Statement*Frequency*is*equal*to*'D'*and*account*has*****                121058 187747
+      *********movements***********************************************                121058 187747
+      **    b) Suppress Statements with Zero Movements feature is ON,                         187747
+      **       and account has movements.                                                     187747
+      **                                                                                      187747
+      **  Include S01533 in the statement suppression features list.                          187747
       **                                                                  121058
       *                                                                   121058
      C           WACST     IFNE 'C'                                       167032
+     C           SUPP      IFEQ 'N'                                                           218433
      C           S01534    IFNE 'Y'                                       121058
      C           S01377    ANDNE'Y'                                       121058
-     C           S01534    OREQ 'Y'                                       121058
-     C           WMSTFQ    ANDNE'D'                                       121058
+     C           S01533    ANDNE'Y'                                                           187747
+     C********** S01534    OREQ 'Y'                                                    121058 187747
+     C********** WMSTFQ    ANDNE'D'                                                    121058 187747
      C           CGL184    ANDEQ'N'                                                           CGL184
      C           S01534    OREQ 'Y'                                       121058
-     C           WMSTFQ    ANDEQ'D'                                       121058
+     C********** WMSTFQ    ANDEQ'D'                                                    121058 187747
      C           *IN30     ANDEQ*ON                                       121058
-     C           S01377    OREQ 'Y'                                       121058
-     C           WMSTFQ    ANDNE'D'                                       121058
+     C********** S01377    OREQ 'Y'                                                    121058 187747
+     C********** WMSTFQ    ANDNE'D'                                                    121058 187747
      C           CGL184    ANDEQ'N'                                                           CGL184
      C           S01377    OREQ 'Y'                                       121058
-     C           WMSTFQ    ANDEQ'D'                                       121058
+     C********** WMSTFQ    ANDEQ'D'                                                    121058 187747
      C           *IN30     ANDEQ*ON                                       121058
+     C           S01533    OREQ 'Y'                                                           187747
+     C           *IN30     ANDEQ*ON                                                           187747
      C           S01534    OREQ 'Y'                                                           CGL184
      C           WMSTFQ    ANDNE'D'                                                           CGL184
      C           WMSTFQ    ANDNE'K'                                                           CGL184
@@ -764,6 +871,7 @@
      C                     END                             *E3
      C                     END                             *E2
      C                     END                             *E1
+     C                     END                                                             218433
       *
      C                     ENDIF                                          121058
      C                     ENDIF                                          167032
@@ -1392,6 +1500,7 @@
       *                                                                   121058
      C           S01534    IFEQ 'Y'                                       121058
      C           S01377    OREQ 'Y'                                       121058
+     C           S01533    OREQ 'Y'                                                           187747
      C                     CLOSEGLACP1L0                                  121058
      C                     CLOSEGLACP5L0                                  121058
      C                     ENDIF                                          121058
@@ -1569,6 +1678,23 @@
      C                     KFLD           ACOD                            121058
      C                     KFLD           ACSQ                            121058
      C                     KFLD           BRCA                            121058
+      *                                                                                       187747
+     C**  Define new key list for LF/APOST                                                    187747
+     C*                                                                                       187747
+     C           WKAPO     KLIST                                                              187747
+     C                     KFLD           BRCA                                                187747
+     C                     KFLD           CNUM                                                187747
+     C                     KFLD           CCY                                                 187747
+     C                     KFLD           ACOD                                                187747
+     C                     KFLD           ACSQ                                                187747
+     C                     KFLD           LSTD                                                187747
+     C*                                                                                       187747
+     C           WKAPO2    KLIST                                                              187747
+     C                     KFLD           BRCA                                                187747
+     C                     KFLD           CNUM                                                187747
+     C                     KFLD           CCY                                                 187747
+     C                     KFLD           ACOD                                                187747
+     C                     KFLD           ACSQ                                                187747
       *                                                                                       CGL020
       ** Check if Compliance Watch Additional A/C Postings Information                        CGL020
       ** is installed                                                                         CGL020
@@ -1740,6 +1866,31 @@
      C                     EXSR *PSSR                                     121058
      C                     ENDIF                                          121058
      C                     ENDIF                                          121058
+      *
+      **  CHECK IF S01533 SUPPRESS STATEMENTS WITH ZERO MOVEMENTS                             187747
+      **  FEATURE IS INSTALLED                                                                187747
+      *                                                                                       187747
+     C                     CALL 'AOSARDR0'                                                    187747
+     C                     PARM *BLANKS   @RTCD                                               187747
+     C                     PARM '*VERIFY' @OPTN                                               187747
+     C                     PARM 'S01533'  @SARD   6                                           187747
+     C           SCSARD    PARM SCSARD    DSFDY                                               187747
+      *                                                                                       187747
+     C           @RTCD     IFEQ *BLANK                                                        187747
+     C                     MOVE 'Y'       S01533  1                                           187747
+     C           S01377    IFNE 'Y'                                                           187747
+     C           S01534    ANDNE'Y'                                                           187747
+     C                     OPEN GLACP1L0                                                      187747
+     C                     OPEN GLACP5L0                                                      187747
+     C                     END                                                                187747
+     C                     ELSE                                                               187747
+     C           @RTCD     IFNE '*NRF   '                                                     187747
+     C                     MOVEL'SCSARDPD'DBFILE           **************                     187747
+     C                     Z-ADD14        DBASE            * DBERR 14 * *                     187747
+     C                     MOVEL@SARD     DBKEY            **************                     187747
+     C                     EXSR *PSSR                                                         187747
+     C                     ENDIF                                                              187747
+     C                     ENDIF                                                              187747
       *                                                                                       CRE100
       ** Determine system values whether internal postings for charges                        CRE100
       ** should be posted at customer or bank level.                                          CRE100

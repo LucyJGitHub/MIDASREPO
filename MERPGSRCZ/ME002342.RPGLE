@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR870148           Date 24Nov11               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR870148           Date 24Nov11               *
       *                 MD023237           Date 05Nov13               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR870148 - Statement freq blank not accepted (Child:AR870149)*
       *  MD023237 - Database error encountered when amending          *

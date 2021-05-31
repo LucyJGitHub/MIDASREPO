@@ -37,8 +37,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. 223783             Date 28May12               *      
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
@@ -54,6 +57,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Call AOIBANR4 with correct parameter                *
+      *         - Applied for AR973615 (Child: AR973617)              *      
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
@@ -361,7 +371,8 @@
      C     CFT004        Wheneq    'Y'
      C                   CALL      'AOIBANR4'                           90
      C                   PARM                    P@RTCD
-     C                   PARM      '*VERIFY'     P@OPTN
+     C**********         PARM      '*VERIFY'     P@OPTN                                       223783
+     C                   PARM      '*KEY   '     P@OPTN                                       223783
      C                   PARM                    @IBAN
      C     ACCT          PARM      ACCT          DSSDY
      C*
@@ -426,9 +437,11 @@
       *
       *  Retrieve Posting Amount
      C                   If        PMTPY = '101'
-     C                   Eval      WPSTA = %subst(P32B : 28 : 15)
+     C**********         Eval      WPSTA = %subst(P32B : 28 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(P32B : 34 : 15)                          AR928996A
      C                   Else
-     C                   Eval      WPSTA = %subst(PDCA : 34 : 15)
+     C**********         Eval      WPSTA = %subst(PDCA : 34 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(PDCA : 40 : 15)                          AR928996A
      C                   Endif
      C                   Eval      X=%scan(',' : WPSTA)
       *
@@ -460,7 +473,8 @@
       *
       *  Retrieve Posting Value date
      C     PMTPY         IfEQ      '101'
-     C                   Eval      WVDAT = %subst(PH30 : 25 : 6)
+     C**********         Eval      WVDAT = %subst(PH30 : 25 : 6)                           AR928996A
+     C                   Eval      WVDAT = %subst(PH30 : 31 : 6)                           AR928996A
      C                   Else
      C                   Movel     PDCA          DSTRAN
      C                   Movel     TVVDAT        WVDAT

@@ -15,13 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CUT007 *REWRITE    Date 02Dec10               *
+      *  Last Amend No. MD057288           Date 01Dec20               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CUT007 *REWRITE    Date 02Dec10               *
       *                 BUG28082           Date 31Aug10               *
       *                 BUG27989*CREATE    Date 08Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057288 - Length or start position is out of range for the  *                             
+      *             string operation. Correct variable displayed to   *
+      *             avoid error in UT000034 when setting IDTxTmp.     >
       *  MD046248 - Finastra Rebranding                               *
       *  CUT007 - Make utility file-driven.                           *
       *  BUG28082 - Unable to display the correct information in the  *
@@ -143,7 +147,8 @@
      D PWD_LEN         C                   100
      D DSC_LEN         C                    50
       * Default column text.
-     D ID_TX           C                   'Validation List ID. . . . . .:'
+     D*ID_TX****       C                   'Validation List ID. . . . . .:'                 MD057288
+     D ID_TX           C                   'Validation List ID'                             MD057288
       *
      D VLDL            DS                  ALIGN
      D   ValidList                   10A

@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 257335             Date 22Oct08               *
+      *                 257335             Date 22Oct08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  257335 - COB: Component MXC0480 failed with array index      *
       *           error in MXBRCAFLT (apply fix 250079)               *
@@ -38,11 +41,11 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
      FSDBRCHL0  IF   E           K DISK    INFSR(*PSSR)
      FMXBREXL0  IF   E           K DISK    INFSR(*PSSR)
      FMXDINCPD  IF   E           K DISK    INFSR(*PSSR)                         190783
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -60,29 +63,30 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       * Maximum number of branches
      D***MaxNoBchs       C                   CONST(100)                                       257335
-     D MaxNoBchs       C                   CONST(500)                                         257335
- 
+     D***MaxNoBchs       C                   CONST(500)                              257335 MD055146
+     D MaxNoBchs       C                   CONST(999)                                       MD055146
+
       * Branches for export
      D #_BRCD          S              3    DIM(MaxNoBchs)
       * Analysis codes of branches for export
      D #_ANC1          S              4    DIM(MaxNoBchs)
      D #_ANC2          S              4    DIM(MaxNoBchs)
- 
- 
- 
+
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -101,29 +105,29 @@
      C                   PARM                    A8ANC1            4
       * Analysis Code 2
      C                   PARM                    A8ANC2            4
- 
+
       * Load branches for export
- 
+
      C     I#LD          IFEQ      'L'
      C                   EXSR      LOAD_BRCD
      C                   ELSE
- 
+
       * Determine if branch is to be included in the export
- 
+
      C     I#LD          IFEQ      'D'
      C                   EXSR      DET_EXP
      C                   ELSE
- 
+
       * Error
- 
+
      C                   EVAL      I#ERMS = 'NOT LOAD OR DETERMINE'
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
       * Return
- 
+
      C                   RETURN
       *
       ********************************************************************
@@ -132,9 +136,9 @@
       * Load branches for export
       ********************************************************************
      C     LOAD_BRCD     BEGSR
- 
+
       * Error
- 
+
      C     I#AC          IFNE      'C'
      C     I#AC          ANDNE     'A'
      C                   EVAL      I#ERMS = 'NOT CURRENT OR ACTIVITY'
@@ -150,12 +154,12 @@
      C     MXDINCK       CHAIN     MXDINCP0                           99        190783
      C   99              MOVEL     'Y'           DIDINC                         190783
      C                   ENDIF                                                  190783
- 
- 
+
+
      C                   Z-ADD     1             @I
      C                   READ      @A8REB1                                99
      C     *IN99         DOWEQ     '0'
- 
+
      C*****A8BRCD********CHAIN     MXBREXP0                           99        CMX003
      C*******************MOVEL     *BLANK        A8COMI                  CMX003 190783
      C*****MXBREXK*******CHAIN     MXBREXP0                           99 CMX003 190783
@@ -173,7 +177,7 @@
      C*******************MOVEL     *BLANK        A8ANC2                         190783
      C*******************ENDIF                                           CMX003 190783
      C*******************ENDIF                                                  190783
- 
+
      C*****I#AC**********IFEQ      'C'                                          190783
      C*****A8ICUR********ANDEQ     'Y'                                          190783
      C*****I#AC**********OREQ      'A'                                          190783
@@ -222,7 +226,7 @@
      C                   ENDIF
      C                   READ      @A8REB1                                99
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -230,12 +234,12 @@
       * Determine if branch is to be included in the export
       ********************************************************************
      C     DET_EXP       BEGSR
- 
+
       * Look for branch in list of branches for export
- 
+
      C                   Z-ADD     1             @I                6 0
      C     I#BRCA        LOOKUP    #_BRCD(@I)                             99    *
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     'Y'           Exp_BRCA
      C                   MOVEL     #_ANC1(@I)    A8ANC1                         *
@@ -252,7 +256,7 @@
      C     MXDINCK       KLIST                                                  190783
      C                   KFLD                    DIFLTT                         190783
      C                   KFLD                    DICOMI                         190783
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5

@@ -21,8 +21,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031947           Date 13Jan16               *
+      *  Prev Amend No. 239308             Date 13Jan16               *
+      *                 MD013549           Date 30Aug13               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 CLE141             Date 08Feb16               *
@@ -86,6 +89,17 @@
      F*---------------------------------------------------------------*
      F*  AMENDMENT HISTORY                                            *
      F*                                                               *
+      *  MD031947 - Newly inserted Loan generated a Loan confirmation *
+      *              showing as 'AMENDED'                             *
+      *           - Enhance fix 239308 to also check if a conf has    *
+      *             already been printed today. If there is, then     *
+      *             produce an amendment conf as it is a valid amend. *
+      *  239308 - CANC/AMEND MUST BE BLANK IF LOAN INSERTED AND       *
+      *           amended the same day.                               *
+      *         - Applied for MD-31947                                *
+      *  MD013549 - Loan confirmation interest amount is incorrect.   *
+      *             Move the non-zero lowest date to ZIEND for        *
+      *             correct interest calculation.                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
@@ -181,6 +195,7 @@
      FLEAPRHI0IF  E           K        DISK                                                   CER050
       *                                                                                       CER050
      F*
+     FLELOANL4IF  E           K        DISK                                                 MD031947
      F/COPY WNCPYSRC,CG6005F001
       /TITLE FUNCTION OF INDICATORS
      F*****************************************************************
@@ -462,6 +477,33 @@
      I** Rename fields of LOAMSDK
      I              VDAT                            ##VDA1
      I              AMTP                            ##AMT1
+      *                                                                                     MD031947
+      ** Rename fields for LELOANL4                                                         MD031947
+      *                                                                                     MD031947
+     ILELOAND0                                                                              MD031947
+     I              RECI                            L4RECI                                  MD031947
+     I              RCDT                            L4RCDT                                  MD031947
+     I              LNRFX                           L4LNRX                                  MD031947
+     I              VDAT                            L4VDAT                                  MD031947
+     I              LASN                            L4LASN                                  MD031947
+     I              CHTP                            L4CHTP                                  MD031947
+     I              CNRQ                            L4CNRQ                                  MD031947
+     I              CNPR                            L4CNPR                                  MD031947
+     I              REPR                            L4REPR                                  MD031947
+     I              RRLA                            L4RRLA                                  MD031947
+     I              LADI                            L4LADI                                  MD031947
+     I              PRI1                            L4PRI1                                  MD031947
+     I              ZZ004                           L4Z004                                  MD031947
+     I              BRCAX                           L4BRCX                                  MD031947
+     I              RRNT                            L4RRNT                                  MD031947
+     I              TNLU                            L4TNLU                                  MD031947
+     I              PRI2                            L4PRI2                                  MD031947
+     I              PRI3                            L4PRI3                                  MD031947
+     I              PRI4                            L4PRI4                                  MD031947
+     I              BRCA                            L4BRCA                                  MD031947
+     I              CNUM                            L4CNUM                                  MD031947
+     I              LNRF                            L4LNRF                                  MD031947
+      *                                                                                     MD031947
      I*
      ICPYR        DS
      I**  Data Structure for Compilation - Copyright Insertion
@@ -861,6 +903,8 @@
      C                     MOVEL'MIDAS  ' W0MSGF
      C                     EXSR SRERR
      C                     END
+     C                     Z-ADD##ORED    #ORED   50                                          239308
+     C                     Z-ADD##LCD     #LCD    50                                          239308
      C*
      C                     MOVEL'B'       RCDT
      C           KCLOAN    CHAINCLOAN                88
@@ -3259,7 +3303,7 @@
       *                                                                                       CER050
      C           CER050    IFEQ 'Y'                                                           CER050
      C                     EXSR ZI@APR                                                        CER050
-     C                     ENDIF                                                              CER050     
+     C                     ENDIF                                                              CER050
      C**  Accumulate RDEs and associated data and output to PF/CGUDTPD.
      C*
      C                     EXSR SRADTA
@@ -4129,6 +4173,32 @@
      C           ##CHT1    IFEQ 'R'
      C           ##CHT1    OREQ 'A'
      C                     MOVEL##CHT1    P@CNAM
+      *                                                                                     MD031947
+      ** Check LTRIX for previous confirmation prints.                                      MD031947
+      ** If no confirmations has been printed previously and CHTP is                        MD031947
+      ** 'A', do not tag this as amended.                                                   MD031947
+      *                                                                                     MD031947
+     C           LNKY1     KLIST                                                            MD031947
+     C                     KFLD           ##BRCA                                            MD031947
+     C                     KFLD           ##CNUM                                            MD031947
+     C                     KFLD           LNRF                                              MD031947
+     C                     MOVE 'N'       WPRNTD  1                                         MD031947
+     C           LNKY1     SETLLLELOANL4                                                    MD031947
+     C           LNKY1     READELELOANL4                 98                                 MD031947
+      *                                                                                     MD031947
+     C           *IN98     DOWEQ'0'                                                         MD031947
+     C           L4CNPR    IFEQ 'Y'                                                         MD031947
+     C                     MOVE 'Y'       WPRNTD                                            MD031947
+     C                     LEAVE                                                            MD031947
+     C                     ENDIF                                                            MD031947
+     C           LNKY1     READELELOANL4                 98                                 MD031947
+     C                     ENDDO                                                            MD031947
+      *                                                                                     MD031947
+     C           ##CHT1    IFEQ 'A'                                                           239308
+     C           #ORED     ANDEQ#LCD                                                          239308
+     C           WPRNTD    ANDEQ'N'                                                         MD031947
+     C                     MOVEL*BLANKS   P@CNAM                                              239308
+     C                     END                                                                239308
      C                     END
      C*
      C                     MOVE LNRF      P@LNRF
@@ -4749,7 +4819,7 @@
      C                     ELSE                                                               CER050
      C                     MOVEL'N'       CER050                                              CER050
      C                     END                                                                CER050
-      *                                                                                       CER050      
+      *                                                                                       CER050
       ** Check if CLE141 is installed.                                                        CLE141
       *                                                                                       CLE141
      C                     CALL 'AOSARDR0'                                                    CLE141
@@ -5251,7 +5321,8 @@
      C                     ELSE                                                               CLE028
       *                                                                                       CLE028
      C*
-     C                     Z-ADD##VDAT    ZIBEG
+     C**********           Z-ADD##VDAT    ZIBEG                                             MD013549
+     C                     Z-ADD##SLID    ZIBEG                                             MD013549
      C                     Z-ADD##ICBS    ZICALC
      C                     Z-ADD##CPAM    ZIAMT
      C                     Z-ADD##INTR    ZIRATE
@@ -5293,8 +5364,11 @@
      C**  else,if interest pay date is not zero, use interest pay date.
      C*
      C           ##NIDT    IFGT 0
+     C           ##NIDT    IFLT ZIEND                                                       MD013549
+     C           ZIEND     OREQ 0                                                           MD013549
      C                     Z-ADD##NIDT    ZIEND
      C**********           ELSE                                                               245914
+     C                     ENDIF                                                            MD013549
      C                     END                                                                245914
      C*
      C**  else, use maturity date.
@@ -5338,7 +5412,10 @@
      C**  else,if interest pay date is not zero, use interest pay date.                       245914
      C*                                                                                       245914
      C           ##NIDT    IFGT 0                                                             245914
+     C           ##NIDT    IFLT ZIEND                                                       MD013549
+     C           ZIEND     OREQ 0                                                           MD013549
      C                     Z-ADD##NIDT    ZIEND                                               245914
+     C                     ENDIF                                                            MD013549
      C                     END                                                                245914
      C*                                                                                       245914
      C**  else, use maturity date.                                                            245914

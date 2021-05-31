@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054655           Date 06Dec19               *
-      *  Prev Amend No. MD048346           Date 20Dec17               *
+      *  Last Amend No. MD057457           Date 16Jan21               *
+      *  Prev Amend No. MD055401           Date 23Oct20               *
+      *                 MD054655           Date 06Dec19               *
+      *                 MD048346           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046325           Date 26Jul17               *
       *                 MD045382           Date 20Apr17               *
@@ -26,6 +28,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057457 - GLC0802C 00001 failed due to FOOB on GL0580AU.    *
+      *           - Replace the condition from 'WDecSum > 1000' to    *
+      *              to 'WDecSum >= 1000'. Patterned after MD-51930.  *
+      *  MD055401 - FX Netting / incorrect projected movement on      *
+      *             nostro for Nets inserted at D-1. Fix on this      *
+      *             program is additional to reported case. Fix here  *
+      *             is to get the settlement branch of FX Netting.    *
       *  MD054655 - GLC0802C seq.00001 fails. DBCE length too small   *
       *           - Introduced WDBCE 15,0 to hold result before move  *
       *             to DBCE                                           *
@@ -703,7 +712,8 @@
       ** If decimal exceeds 1000, carry 1 to integer. Amount in
       ** excess of 1000 is moved back on decimal.
       *
-     C                   IF        WDecSum > 1000
+     C**********         IF        WDecSum > 1000                                           MD057457
+     C                   IF        WDecSum >= 1000                                          MD057457
      C                   EVAL      HRDC = WDecSum - 1000
      C                   EVAL      HRWN = HRWN + 1
      C                   ELSE
@@ -962,8 +972,10 @@
      C     SVBRCA        IFNE      *BLANKS                                                  MD048346
      C                   EVAL      AMBRCA = SVBRCA                                          MD048346
      C                   ELSE                                                               MD048346
-     C     ABRCA         IFNE      *BLANKS                                                  MD048346
-     C                   EVAL      AMBRCA = ABRCA                                           MD048346
+     C*****ABRCA         IFNE      *BLANKS                                         MD048346 MD055401
+     C     AMONOB        IFNE      *BLANKS                                                  MD055401
+     C**********         EVAL      AMBRCA = ABRCA                                  MD048346 MD055401
+     C                   EVAL      AMBRCA = AMONOB                                          MD055401
      C                   ELSE                                                               MD048346
      C     BBBRCD        IFNE      *BLANKS                                                  MD048346
      C                   EVAL      AMBRCA = BBBRCD                                          MD048346

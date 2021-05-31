@@ -9,12 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR1042300          Date 14Oct12              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CSC054  *CREATE    Date 23Feb12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR1042300 - PEA Restore of files in global layer required   */
+/*                   (Child:AR1042301)                               */
 /*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC054 - Period End Adjustments                             */
@@ -33,6 +36,9 @@
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SAVFT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SAVFR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRFG) TYPE(*CHAR) LEN(2)                                  /*AR1042300*/
+             DCL        VAR(&LOWNRG) TYPE(*CHAR) LEN(7)                                /*AR1042300*/
+             DCL        VAR(&GDBASE) TYPE(*CHAR) LEN(10)                               /*AR1042300*/
 
 /*/COPY SDCPYSRC,SDSVALDCL  */
 
@@ -51,7 +57,8 @@
 
 /** Get PEA related system values. Continue processing only when */
 /** PEAIndicator is set to 'Y'                                   */
-
+             CHGVAR     VAR(&SVALK7) VALUE('PEALiveGlobalPrefix')                      /*AR1042300*/
+                                                                                       /*AR1042300*/
              CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
                           'PEALiveSystemPrefix' &SVAL1 +
                           'PEASystemPrefix' &SVAL2 +
@@ -73,19 +80,26 @@
              CHGVAR     VAR(&SAVFR) VALUE(%SST(&SVAL3 1 10))
              CHGVAR     VAR(&USER) VALUE(%SST(&SVAL5 1 10))
              CHGVAR     VAR(&SAVFT) VALUE(%SST(&SVAL6 1 10))
-
+             CHGVAR     VAR(&PRFG) VALUE(%SST(&SVAL7 1 2))                             /*AR1042300*/
              CHGVAR     VAR(&LOWNR) VALUE(&PRFL *CAT 'OWNER')
              CHGVAR     VAR(&POWNR) VALUE(&PRFP *CAT 'OWNER')
+             CHGVAR     VAR(&LOWNRG) VALUE(&PRFG *CAT 'OWNER')                         /*AR1042300*/
              CHGVAR     VAR(&ZDBASE) VALUE(&PRFL *CAT 'DATABASE')
-
+             CHGVAR     VAR(&GDBASE) VALUE(&PRFG *CAT 'DATABASE')                      /*AR1042300*/
 /** Setup ownership and authorities */
 
              ADDAUTLE   AUTL(&ZDBASE) USER(&POWNR) AUT(*ALL)
              MONMSG     MSGID(CPF0000 MCH0000)
-
+                                                                                       /*AR1042300*/
+             ADDAUTLE   AUTL(&GDBASE) USER(&POWNR) AUT(*ALL)                           /*AR1042300*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                         /*AR1042300*/
              GRTOBJAUT  OBJ(&LOWNR) OBJTYPE(*USRPRF) USER(&POWNR) +
                           AUT(*ALL)
              MONMSG     MSGID(CPF0000 MCH0000)
+                                                                                       /*AR1042300*/
+             GRTOBJAUT  OBJ(&LOWNRG) OBJTYPE(*USRPRF) USER(&POWNR) +
+                          AUT(*ALL)                                                    /*AR1042300*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                         /*AR1042300*/
 
 /** Setup SAVF authorities */
 
@@ -94,7 +108,10 @@
              GRTOBJAUT  OBJ(&SAVFT/DBICDM) OBJTYPE(*FILE) USER(&USER) +
                           AUT(*ALL)                                                       /*CSD101*/
              MONMSG     MSGID(CPF0000 MCH0000)
-
+                                                                                       /*AR1042300*/
+             GRTOBJAUT  OBJ(&SAVFT/DBICGM) OBJTYPE(*FILE) USER(&USER) +
+                          AUT(*ALL)                                                    /*AR1042300*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                         /*AR1042300*/
              GRTOBJAUT  OBJ(&SAVFR) OBJTYPE(*LIB) USER(&POWNR) +
                           AUT(*ALL)
              MONMSG     MSGID(CPF0000 MCH0000)

@@ -10,9 +10,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*                                                                   */
-/*       Last Amend No. MD045032           Date 07Apr18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055724           Date 29Apr20              */
+/*       Prev Amend No. MD052994           Date 25Nov19              */
+/*                      MD045032           Date 07Apr18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD033997           Date 11May15              */
 /*                      MD027718           Date 23Sep14              */
 /*                      AR1097467          Date 02Apr13              */
@@ -39,6 +40,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055724 - Reversal entries for previous facility posted    */
+/*                  twice on contingent facility account. Clear      */
+/*                  PF/LECLHIPD before every call to LER032.         */
+/*       MD052994 - CL Facility Event not Generated for Retail       */
+/*                  Account Debit Capitalised Interests              */
 /*       MD045032 - No reversal entries for previous facility.       */
 /*                  Clear CLE025 deleted history file.               */
 /*                  Applied for CLE169.                              */
@@ -79,12 +85,12 @@
 /*                a new program LER035 to update for Leo Actions     */
 /*                                                                   */
 /*********************************************************************/
- 
+
 /**********PGM  PARM(&CNAM &CSEQ)   */                                                    /*CLE134*/
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
- 
+
 /* Declare the variables for rerun checking */
- 
+
      DCL VAR(&CNAM) TYPE(*CHAR) LEN(10)
      DCL VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
      DCL VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -127,7 +133,7 @@
 /* */                                                                 /*S01408*/
 /*/COPY WNCPYSRC,LERC30AVDR                                           /*S01408*/
 /* */                                                                 /*S01408*/
- 
+
      SNDPGMMSG  MSG('Facility History Update Part 2') +
                                        TOMSGQ(MRUNQ)
 /* Create data area LDA */                                                                /*CLE147*/
@@ -139,7 +145,7 @@
                                                                                           /*CLE147*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                               /*CLE147*/
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                         /*CLE147*/
- 
+
                                                                       /*S01473*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
@@ -188,19 +194,19 @@
 /* */                                                                 /*S01408*/
 /*/COPY WNCPYSRC,LERC30AIPG                                           /*S01408*/
 /* */                                                                 /*S01408*/
- 
+
 /* Check the current status of this component */
- 
+
      CALL PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
 /**********  IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)      */               /*CLE134 MD033997*/
 /**Clear*LEHISAPD*-*Actions*file*for*PDCLs*generated*by*the*COB**/               /*CLE134 MD033997*/
 /**********  CLRPFM     FILE(LEHISAPD)                          */               /*CLE134 MD033997*/
 /**********  ENDDO                                              */               /*CLE134 MD033997*/
- 
+
      IF COND(&STAT *EQ 'N') THEN(DO)
- 
+
 /**IF*NOT*RERUN*Take*Security*Copy*of*History*Files*******************/                /*AR1097467*/
- 
+
 /****CPYF**     FROMFILE(FACHISH) TOFILE(XFACHISH) MBROPT(*REPLACE)  */                /*AR1097467*/
 /****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XFACHISH)) */              /*AR1097467*/
 /****CPYF**     FROMFILE(FACHISA) TOFILE(XFACHISA) MBROPT(*REPLACE)  */                /*AR1097467*/
@@ -245,15 +251,15 @@
 /**********  ENDDO                                                   */         /*CLE147 AR1097467*/
                                                                       /*S01473*/
      CHGDTAARA  DTAARA(LERSTS (1 3)) VALUE(NEW)
- 
+
 /* Set the status to failed (&STAT = Y) in case the program fails */
- 
+
      CHGVAR VAR(&STAT) VALUE('Y')
      CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
      ENDDO
 /****ELSE*CMD(DO)                                                    */                /*AR1097467*/
- 
+
 /**IF*RERUN*Copy*back*Security*Copy*of*History*Files******************/                /*AR1097467*/
 /****CPYF       FROMFILE(XFACHISH) TOFILE(FACHISH) MBROPT(*REPLACE)  */                /*AR1097467*/
 /****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(FACHISH))*/                /*AR1097467*/
@@ -290,9 +296,9 @@
 /********************************************************************/        /*AR589217 AR589217A*/
 /********** CALL LE07053                                            */        /*AR589217 AR589217A*/
 /********** IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)             */        /*AR589217 AR589217A*/
- 
+
 /****ENDDO*                                                         */                 /*AR1097467*/
- 
+
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
 /* Delete reversed facilities from FACACT */                                           /*AR589217A*/
            CALL LE007053                                                               /*AR589217A*/
@@ -307,7 +313,7 @@
                         TOFILE(QTEMP/LKEY1DP) MBROPT(*ADD) +
                         INCREL((*IF PAMT *NE 0) (*AND IAMT *EQ +
                         0)) FMTOPT(*MAP *DROP)                                          /*MD027718*/
- 
+
            OVRDBF     FILE(LKEY1DP) TOFILE(QTEMP/LKEY1DP)                                 /*CLE134*/
 /*  Overidde to PDCL files */                                                             /*CLE134*/
            OVRDBF     FILE(HISACT) TOFILE(LEHISAPD)                                       /*CLE134*/
@@ -315,11 +321,13 @@
            OVRDBF     FILE(LEHISFL0) TOFILE(LEHISAL0)                                     /*CLE134*/
            ENDDO                                                                          /*CLE134*/
   /* Call Generated Changes Extract Program */
- 
+
+             IF         COND(&RERUN *NE 'INTCAP') THEN(DO)                              /*MD052994*/
+                                                                                        /*MD052994*/
 /**********  CALL LER031 */                                                               /*263413*/
              CALL       PGM(LER031) PARM(&RERUN)                                          /*263413*/
      IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
- 
+
 /**/                                                                                      /*CLE023*/
 /* Call Update to History Amount for Rollovers if CLE023 is on */                         /*CLE023*/
 /**/                                                                                      /*CLE023*/
@@ -355,24 +363,30 @@
                           GOTO       CMDLBL(ERROR)                                        /*CLE147*/
              ENDDO                                                                        /*CLE147*/
              ENDDO                                                                        /*CLE147*/
- 
+                                                                                        /*MD052994*/
+             ENDDO                                                                      /*MD052994*/
+
 /*/COPY WNCPYSRC,LERC30A001                                          */
   /* Call Update Extract Program */
- 
+
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              OVRDBF     FILE(HISACTL2) TOFILE(LEHISAL2) SHARE(*NO)                        /*CLE134*/
              OVRDBF     FILE(HISUPD) TOFILE(LEHISAL3) SHARE(*NO)                          /*CLE134*/
              OVRDBF     FILE(HISUPD1) TOFILE(LEHISAL3) SHARE(*NO)                         /*CLE134*/
              ENDDO
              ELSE       CMD(DO)                                                           /*CLE134*/
-             CLRPFM     FILE(LECLHIPD)                                                  /*MD045032*/
+/**********  CLRPFM     FILE(LECLHIPD)                                         /*MD045032 MD055724*/
              OVRDBF     FILE(HISUPD1) TOFILE(HISUPD) SHARE(*NO)                           /*246032*/
              OVRDBF     FILE(HISUPD) SHARE(*NO)                                           /*246032*/
              ENDDO                                                                        /*CLE134*/
+                                                                                        /*MD055724*/
+             CLRPFM     FILE(LECLHIPD)                                                  /*MD055724*/
  /********** CALL LER032  */                                                            /*AR398038*/
              CALL       PGM(LER032) PARM(&RERUN)                                        /*AR398038*/
              DLTOVR     FILE(HISUPD1 HISUPD)                                              /*246032*/
-             IF         COND(&RERUN *EQ '      ') THEN(DO)                                /*CLE134*/
+/**********  IF         COND(&RERUN *EQ '      ') THEN(DO)           */      /*CLE134*/ /*MD052994*/
+             IF         COND((&RERUN *EQ '      ') *OR +
+                          (&RERUN *EQ 'INTCAP')) THEN(DO)                               /*MD052994*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))                              /*157759*/
              ENDDO                                                                        /*CLE134*/
@@ -391,16 +405,16 @@
             CPYF       FROMFILE(LEHISAPD) TOFILE(HISACT) MBROPT(*ADD)                     /*CLE134*/
             MONMSG     MSGID(CPF0000) EXEC(CHGJOB SWS(XXXXXX11))                          /*CLE134*/
              ENDDO                                                                        /*CLE134*/
- 
+
   /* IF ERROR, SEND MSG & COPY BACK SECURITY FILES     */
 ERROR:
      IF COND(%SWITCH(XXXXXX11)) THEN(DO)
- 
+
              CALLSUBR   SUBR(JRNRECOVR)                                                /*AR1097467*/
             SNDPGMMSG  MSG('Job terminated, database in error. +
                           Contact Systems Department.') +
                        TOMSGQ(MOPERQ MRUNQ)
- 
+
      ENDDO
      ELSE  CMD(DO)
 /**********  IF         COND(&CLE147 = 'Y') THEN(DO)                 */         /*CLE147 AR1097467*/
@@ -410,7 +424,7 @@ ERROR:
      CHGVAR VAR(&STAT) VALUE('N')
      CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
      ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)                                                 /*AR1097467*/
                                                                                        /*AR1097467*/
 /*********************************************************************/                /*AR1097467*/
@@ -459,6 +473,6 @@ ERROR:
 /* End JRNRECOVR subroutine. */                                                        /*AR1097467*/
 /**********  CHGVAR     VAR(&CPYFLD) VALUE('(c) +                    */                /*AR1097467*/
 /**********               Misys International Banking Systems Ltd.') */                /*AR1097467*/
- 
+
 /**********ENDPGM  */                                                                     /*CLE134*/
-ENDPGM: ENDPGM                                                                            /*CLE134*/ 
+ENDPGM: ENDPGM                                                                            /*CLE134*/

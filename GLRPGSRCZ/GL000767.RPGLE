@@ -15,8 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD055071           Date 29Jan20               *
-      *  Prev Amend No. MD054986           Date 27Jan20               *
+      *  Last Amend No. MD057255           Date 27Nov20               *
+      *  Prev Amend No. MD057025           Date 21Oct20               *
+      *                 CGL194             Date 01Aug20               *
+      *                 MD056237           Date 20Jul20               *
+      *                 MD054940           Date 18Feb20               *
+      *                 MD055078           Date 18Feb20               *
+      *                 MD055071           Date 29Jan20               *
+      *                 MD054986           Date 27Jan20               *
       *                 MD054905           Date 04Dec19               *
       *                 CGL185             Date 13Mar17               *
       *                 MD041589           Date 23Sep16               *
@@ -27,6 +33,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057255 - Controlling Person not removed in report          *
+      *  MD057025 - Cannot enquire details of Controlling Person in   *
+      *             Approved Report.                                  *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
+      *  MD056237 - Reporting Group/Accounts were removed from the    *
+      *             CRS Report after authorization. Amend to          *
+      *             correctly get data from file.                     *
+      *  MD054940 - CRS Issue: Controlling Person Type                *
+      *  MD055078 - Information on non-account holders is missing     *
       *  MD055071- Correct A/C Holder Type for N/PA. With ContPerson  *
       *            = CRS101, Wihtout ContPerson = CRS103              *
       *  MD054986 - CRS Issue: Account Holder/Organisation            *
@@ -209,6 +224,11 @@
       ** Midas GL Report Management                                                           CGL185
      FGLCAPAL1  UF A E           K DISK    INFSR(*PSSR)                                       CGL185
                                                                                               CGL185
+      ** Midas GL Report Management Data File                                                 CGL194
+     FGLCRMDLC  UF A E           K DISK    INFSR(*PSSR)                                       CGL194
+     F                                     RENAME(GLCRMDD0:GLCRMDC1)                          CGL194
+     F                                     PREFIX(C1_)                                        CGL194
+
 
       *****************************************************************
       /EJECT
@@ -352,6 +372,7 @@
      D ArAcctNumbr     S             83A   DIM(50)
      D ArExcCust       S            280A   DIM(50)
      D ArIncCust       S            278A   DIM(50)
+     D ArConPers       S             10A   DIM(50)                                          MD057025
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -476,6 +497,7 @@
      D WActHldrTyp     S              8A
      D WTINCnt         S              2S 0
      D Iw              S              2S 0 INZ(0)
+     D Iv              S              2S 0 INZ(0)                                          MD057025
      D Ix              S              2S 0 INZ(0)
      D Iy              S              3S 0 INZ(0)
      D Iz              S              2S 0 INZ(0)
@@ -532,6 +554,11 @@
      D KDNAH           S             10A
      D KDCTY           S              2A
      D WNUM3           S              3S 0
+     D WTINElem        S                   LIKE(MGELMT)                                     MD054940
+     D WAcctRept       S              1A                                                      CGL194
+     D KMsgApp         S                   LIKE(MGMSID)                                       CGL194
+     D WFIDocTyp       S             10A                                                      CGL194
+     D WMsIdG          S             22A                                                      CGL194
 
       *****************************************************************
       /EJECT
@@ -759,15 +786,19 @@
      C                   EVAL      MGDATA = MGMSID
      C                   EXSR      SRWrite
 
-     C                   EVAL      MGELMT = 'CorrMessageRefID'
-     C                   IF        PActn = 'C'
-     C                             OR PActn = 'O'
-     C                             OR PActn = 'I'
-     C                   EVAL      MGDATA = PMsid
-     C                   ELSE
-     C                   EVAL      MGDATA = *BLANK
-     C                   ENDIF
-     C                   EXSR      SRWrite
+     C                   EVAL      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   EVAL      MGDATA = 'CRS701'                                          CGL194
+     C                   EXSR      SRWrite                                                    CGL194
+                                                                                              CGL194
+     C**********         EVAL      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         IF        PActn = 'C'                                                CGL194
+     C**********                   OR PActn = 'O'                                             CGL194
+     C**********                   OR PActn = 'I'                                             CGL194
+     C**********         EVAL      MGDATA = PMsid                                             CGL194
+     C**********         ELSE                                                                 CGL194
+     C**********         EVAL      MGDATA = *BLANK                                            CGL194
+     C**********         ENDIF                                                                CGL194
+     C**********         EXSR      SRWrite                                                    CGL194
 
      C                   EVAL      MGELMT = 'ReportingPeriod'
      C                   EVAL      MGDATA = PYEAR + '-12-31'
@@ -815,17 +846,23 @@
      C                   SELECT
      C                   WHEN      MGELMT = 'MessageRefId'
      C                   EVAL      MGDATA = MGMSID
-     C                   WHEN      MGELMT = 'CorrMessageRefID'
-     C                   IF        PActn = 'C'
-     C                             OR PActn = 'O'
-     C                             OR PActn = 'I'
-     C                   EVAL      MGDATA = PMsid
-     C                   ENDIF
+     C**********         WHEN      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         IF        PActn = 'C'                                                CGL194
+     C**********                   OR PActn = 'O'                                             CGL194
+     C**********                   OR PActn = 'I'                                             CGL194
+     C**********         EVAL      MGDATA = PMsid                                             CGL194
+     C**********         ENDIF                                                                CGL194
      C                   WHEN      MGELMT = 'Timestamp'
      C                   EVAL      MGDATA = %SUBST(WTMST:1:10)
      C                                      + 'T' + %SUBST(WTMST:12:2)
      C                                      + ':' + %SUBST(WTMST:15:2)
      C                                      + ':' + %SUBST(WTMST:18:2)
+                                                                                              CGL194
+     C                   WHEN      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   IF        PActn = 'C'                                                CGL194
+     C                             OR PActn = 'I'                                             CGL194
+     C                   EVAL      MGDATA = 'CRS702'                                          CGL194
+     C                   ENDIF                                                                CGL194
      C                   ENDSL
 
      C                   EXSR      SRWrite
@@ -843,6 +880,8 @@
       *****************************************************************
      C     SRReportFI    BEGSR
 
+     C                   EXSR      SRRFIDocTyp                                                CGL194
+                                                                                              CGL194
      C                   IF        PRpDocRef <> *BLANKS
      C                             AND PActn = 'C'
      C                             OR PActn = 'N'
@@ -906,7 +945,8 @@
      C                   EVAL      MGTPMT = 'ReportingFI'
 
      C                   EVAL      MGELMT = 'DocTypeIndic'
-     C                   EVAL      MGDATA = WDoctyp
+     C**********         EVAL      MGDATA = WDoctyp                                           CGL194
+     C                   EVAL      MGDATA = WFIDocTyp                                         CGL194
      C                   EXSR      SRWrite
 
      C                   EVAL      MGELMT = 'DocRefId'
@@ -921,7 +961,25 @@
      C                   EXSR      SRWrite
 
      C                   ELSE
+      * Check for previous corrected ReportingFI                                              CGL194
+     C                   IF        PRpDocRef = *BLANKS                                        CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      KMsgApp = %SUBST(PMsId:1:22) + '.999ZZ'                    CGL194
+     C     KMSgId        SETGT     GLCRMGL1                                                   CGL194
+     C                   READP     GLCRMGL1                                                   CGL194
+     C                   EVAL      WMsIdG = %SUBST(PMsId:1:22)                                CGL194
+     C                   DOW       NOT %EOF(GLCRMGL1)                                         CGL194
+     C                             AND %SUBST(R1_GGMSID:1:22) = WMsIdG                        CGL194
+     C                   IF        %SUBST(R1_GGMSID:27:1) = 'A'                               CGL194
+     C                   EVAL      KMsgNo = R1_GGMSID                                         CGL194
+     C                   LEAVE                                                                CGL194
+     C                   ENDIF                                                                CGL194
+     C                   READP     GLCRMGL1                                                   CGL194
+     C                   ENDDO                                                                CGL194
+     C                   ELSE                                                                 CGL194
      C                   EVAL      KMsgNo = PMsId
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
      C                   EVAL      KTopMT = 'ReportingFI'
      C     KRepFI        SETLL     GLCRMDL0
      C     KRepFI        READE     GLCRMDL0
@@ -943,6 +1001,12 @@
      C                   EVAL      Iz = %SCAN('.':MGDATA) + 1
      C                   EVAL      %SUBST(MGDATA:Iz:6) = WMsgAcSq + WMsgDtyp
      C                                                   + WMsgActn
+                                                                                              CGL194
+     C                   WHEN      MGELMT = 'CorrDocRefId'                                    CGL194
+     C                   EVAL      MGDATA = *BLANKS                                           CGL194
+                                                                                              CGL194
+     C                   WHEN      MGELMT = 'DocTypeIndic'                                    CGL194
+     C                   EVAL      MGDATA = WFIDocTyp                                         CGL194
      C                   ENDSL
 
      C                   EXSR      SRWrite
@@ -962,6 +1026,7 @@
 
      C                   EXSR      SRInit
      C                   EVAL      IxPayment = 3001
+     C                   EVAL      WAcctRept = 'N'                                            CGL194
 
      C     PBrcd         SETLL     GLCRMXL0
      C     PBrcd         READE     GLCRMXL0
@@ -1067,7 +1132,19 @@
      C                   WHEN      WPrevRepJn = 'Y'
      C                   EXSR      SRComPayJac
      C                   ENDSL
-
+                                                                                              CGL194
+     C                   IF        WAcctRept <> 'Y'                                           CGL194
+     C                   EVAL      KMsgNo = MGMSID                                            CGL194
+     C                   EVAL      KTopMT = 'MessageSpec'                                     CGL194
+     C                   EVAL      KElemnam = 'MessageTypeIndic'                              CGL194
+                                                                                              CGL194
+     C     KMSpec        CHAIN     GLCRMDLC                                                   CGL194
+     C                   IF        %FOUND(GLCRMDLC)                                           CGL194
+     C                   EVAL      C1_MGDATA = 'CRS703'                                       CGL194
+     C                   UPDATE    GLCRMDC1                                                   CGL194
+     C                   ENDIF                                                                CGL194
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1397,6 +1474,7 @@
      C     SRCsActRepHdr BEGSR
 
      C                   EVAL      MGSEQU = 1
+     C                   EVAL      WAcctRept = 'Y'                                            CGL194
 
      C                   EVAL      KGroupNm = 'AccountReport'
      C                   EVAL      KElemNm  = 'DocSpec'
@@ -1793,6 +1871,7 @@
      C**********         EXSR      SRWrite                                                  MD054986
 
      C                   EVAL      MGELMT = 'IN'
+     C                   EVAL      WTINElem  = 'IN'                                         MD054940
      C                   EVAL      DCust =  CRCUST                                          MD054986
      C                   EXSR      SRCusCtryLst                                             MD054986
      C**********         EVAL      MGDATA = E5TINO                                          MD054986
@@ -1804,6 +1883,7 @@
      C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
      C                   ELSE
      C                   EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      WTINElem  = 'TIN'                                        MD054940
      C                   EVAL      DCust =  CRCUST
      C                   EXSR      SRCusCtryLst
      C                   ENDIF
@@ -1880,6 +1960,7 @@
      C**********         EVAL      MGDATA = NHCOLC                                          MD054986
      C**********         EXSR      SRWrite                                                  MD054986
      C                   EVAL      MGELMT = 'IN'
+     C                   EVAL      WTINElem  = 'IN'                                         MD054940
      C                   EVAL      DNaho =  NRNAHO                                          MD054986
      C                   EXSR      SRNahCtryLst                                             MD054986
      C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
@@ -1891,6 +1972,7 @@
      C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
      C                   ELSE
      C                   EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      WTINElem  = 'TIN'                                        MD054940
      C                   EVAL      DNaho =  NRNAHO
      C                   EXSR      SRNahCtryLst
      C                   ENDIF
@@ -1991,6 +2073,7 @@
      C**********         EXSR      SRWrite                                                  MD054986
 
      C                   EVAL      MGELMT = 'IN'
+     C                   EVAL      WTINElem  = 'IN'                                         MD054940
      C                   EVAL      DCust =  EXCUSD                                          MD054986
      C                   EXSR      SRCusCtryLst                                             MD054986
      C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
@@ -2002,6 +2085,7 @@
      C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
      C                   ELSE
      C                   EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      WTINElem  = 'TIN'                                        MD054940
      C                   EVAL      DCust =  EXCUSD
      C                   EXSR      SRCusCtryLst
      C                   ENDIF
@@ -2329,6 +2413,7 @@
      C                   EVAL      ACtryIsBy(WTINCnt) = CDCTRY
      C                   IF        WTINCnt > 7
      C**********         EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2362,7 +2447,8 @@
 
       ** If there are remaining TINs not reported
      C                   IF        WTINCnt > 0
-     C                   EVAL      MGELMT = 'TIN'
+     C**********         EVAL      MGELMT = 'TIN'                                           MD054940
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2436,6 +2522,7 @@
      C                   EVAL      ACtryIsBy(WTINCnt) = CNCTRY
      C                   IF        WTINCnt > 7
      C**********         EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2468,7 +2555,8 @@
 
       ** If there are remaining TINs not reported
      C                   IF        WTINCnt > 0
-     C                   EVAL      MGELMT = 'TIN'
+     C**********         EVAL      MGELMT = 'TIN'                                           MD054940
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2612,6 +2700,8 @@
       *****************************************************************
      C     SRConPersn    BEGSR
 
+     C                   EVAL      Iv = 0                                                   MD057025
+     C                   EVAL      ArConPers = *BLANKS                                      MD057025
      C                   EVAL      IdxB = 0
      C                   EVAL      IxConPer = 1000
      C                   EVAL      XCust = EXCUSD
@@ -2663,6 +2753,8 @@
      C                   IF        JCCUST <> *BLANK
      C                   EVAL      MGDATA = JCCUST
      C                   EXSR      SRWrite
+     C                   EVAL      Iv = Iv + 1                                             MD057025
+     C                   EVAL      ArConPers(Iv) = JCCUST                                  MD057025
 
      C                   EVAL      PCUST  = JCCUST
      C                   EXSR      SRAccCust
@@ -2672,18 +2764,33 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      FCust  = JCCUST
      C                   EXSR      SRCRSHDet
      C                   EXSR      SRWrCusDetail
 
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = E5DBTH
@@ -2712,6 +2819,8 @@
 
      C                   EVAL      MGDATA = JCNAHO
      C                   EXSR      SRWrite
+     C                   EVAL      Iv = Iv + 1                                              MD057025
+     C                   EVAL      ArConPers(Iv) = JCNAHO                                   MD057025
 
       ** Get Non-Account Holder Details of the Joint Account Member
 
@@ -2725,19 +2834,34 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      KNAHO  = JCNAHO
      C                   EXSR      SRCRNHDet
      C                   EXSR      SRWrNahDetail
 
 
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = *BLANKS
@@ -2778,12 +2902,22 @@
      C     XCust         READE     SDCUAHL0
 
      C                   DOW       NOT %EOF(SDCUAHL0)
+     C                   IF        CATYLC <> 'D'                                            MD057255
+     C                             AND CACINT = 'Y'                                         MD057255
 
      C                   IF        CAPCNT <> *Blanks
-     C                   MOVE      CAPCNT        WNUM3
+     C                   MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   ELSE                                                               MD055078
+     C                   EVAL      WNUM3 = *ZERO                                            MD055078
+     C                   ENDIF                                                              MD055078
+     C**********         MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   IF        WNUM3 <> *ZERO                                           MD055078
+     C                             OR CACINT = 'Y'                                          MD055078
+     C                   IF        %LOOKUP(CAAUTH:ArConPers) = 0                            MD057025
+     C                             AND CAAUTH <> *BLANKS                                    MD057025
      C                   EVAL      IxConPer =IxConPer + 1
      C                   EVAL      MGSEQU =  IxConPer
-     C                   IF        WNUM3 <> *ZERO
+     C**********         IF        WNUM3 <> *ZERO                                           MD055078
      C                   EVAL      MGCUST = EXCUSD
      C                   EVAL      MGACHO = EXCUSD
      C                   EVAL      MGMTYP = 'CUST'
@@ -2791,13 +2925,14 @@
 
      C                   EVAL      MGELMT = 'ControllingPerson'
      C                   EVAL      MGDATA = *BLANKS
-     C                   EVAL      MGTPMT = *BLANKS
+     C**********         EVAL      MGTPMT = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'AccountReport'                                 MD054940
      C                   EVAL      KGroupNm = 'AccountReport'
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
      C                   EXSR      SRWrite
 
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
      C                   EVAL      MGLEVL = 0
 
      C                   EVAL      MGELMT = 'AccountNumber'
@@ -2805,6 +2940,7 @@
      C                   EXSR      SRWrite
 
      C                   EVAL      MGELMT = 'ControllingPerson'
+     C                   EVAL      PCuah = CAAUTH                                           MD055078
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
@@ -2813,6 +2949,9 @@
      C     SDCUST        PARM      SDCUST        DSSDY
       *
      C                   IF        PRtCd = *BLANKS
+     C                   EVAL      MGDATA = PCuah                                           MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
      C                   EVAL      PAcus  = PCuah
      C                   EXSR      SRAccAcus
 
@@ -2820,23 +2959,58 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      FCust  = PCuah
      C                   EXSR      SRCRSHDet
      C                   EXSR      SRWrCusDetail
 
      C                   IF        CRTYPE = 'P'                                             MD045184
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = E5DBTH
      C                   EXSR      SRWrite
+                                                                                            MD056237
+     C                   EVAL      MGELMT = 'City'                                          MD056237
+     C                   EVAL      MGDATA = E5BTHT                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'BirthInfo2'                                  MD056237
+     C                   EVAL      KElemNm  = 'CountryInfo'                                 MD056237
+     C                   EXSR      SRGetGrpLevl                                             MD056237
+     C                   EVAL      MGELMT = 'CountryInfo'                                   MD056237
+     C                   EVAL      MGDATA = *Blanks                                         MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'CountryInfo'                                 MD056237
+     C                   EVAL      KElemNm  = 'CountryCode'                                 MD056237
+     C                   EVAL      MGTPMT = KGroupNm                                        MD056237
+     C                   EVAL      MGELMT = KElemNm                                         MD056237
+     C                   EVAL      MGDATA = E5BTHC                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD056237
+                                                                                            MD056237
      C                   ENDIF                                                              MD045184
 
      C                   ELSE
@@ -2857,31 +3031,67 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      KNAHO  = PCuah
      C                   EXSR      SRCRNHDet
      C                   EXSR      SRWrNahDetail
 
      C                   IF        NRTYPE = 'P'                                             MD045184
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = *BLANKS
      C                   MOVEL     NHDBTH        MGDATA
      C                   EXSR      SRWrite
+                                                                                            MD056237
+     C                   EVAL      MGELMT = 'City'                                          MD056237
+     C                   EVAL      MGDATA = NHBTHT                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'BirthInfo2'                                  MD056237
+     C                   EVAL      KElemNm  = 'CountryInfo'                                 MD056237
+     C                   EXSR      SRGetGrpLevl                                             MD056237
+     C                   EVAL      MGELMT = 'CountryInfo'                                   MD056237
+     C                   EVAL      MGDATA = *Blanks                                         MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'CountryInfo'                                 MD056237
+     C                   EVAL      KElemNm  = 'CountryCode'                                 MD056237
+     C                   EVAL      MGTPMT = KGroupNm                                        MD056237
+     C                   EVAL      MGELMT = KElemNm                                         MD056237
+     C                   EVAL      MGDATA = NHBTHC                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD056237
      C                   ENDIF                                                              MD045184
      C                   ENDIF
 
      C                   ENDIF
 
      C                   ENDIF
-     C                   ENDIF
+     C                   ENDIF                                                              MD057025
+     C**********         ENDIF                                                              MD055078
+     C                   ENDIF                                                              MD057255
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
 
@@ -3368,6 +3578,10 @@
      C                             AND PRType = 'APPROVED NEW'
      C                   EVAL      WRType = 'DRAFT CORRECTED'
       *
+     C                   WHEN      PActn = 'C'                                                CGL194
+     C                             AND PRType = 'APPROVED CORRECTED'                          CGL194
+     C                   EVAL      WRType = 'DRAFT CORRECTED'                                 CGL194
+      *                                                                                       CGL194
      C                   WHEN      PActn = 'O'
      C                             AND PRType = 'APPROVED'
      C                   EVAL      WRType = 'DRAFT DELETE'
@@ -3542,6 +3756,63 @@
      C                   ENDSL
 
      C                   ENDSR
+                                                                                              CGL194
+      *****************************************************************                       CGL194
+      /EJECT                                                                                  CGL194
+      *****************************************************************                       CGL194
+      *                                                               *                       CGL194
+      * SRRFIDocTyp - Determine Document Type of Reporting FI         *                       CGL194
+      *                                                               *                       CGL194
+      *****************************************************************                       CGL194
+     C     SRRFIDocTyp   BEGSR                                                                CGL194
+      *                                                                                       CGL194
+     C                   IF        Pstat = 'LIVE'                                             CGL194
+     C                   SELECT                                                               CGL194
+     C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   WHEN      PActn = 'N'                                                CGL194
+     C                             OR PActn = 'R'                                             CGL194
+     C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
+     C                   EVAL      WActn  = 'N'                                               CGL194
+     C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD2'                                        CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype = 'DRAFT NEW'                                   CGL194
+     C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   ENDSL                                                                CGL194
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
+     C                   IF        PStat = 'TEST'                                             CGL194
+     C                   SELECT                                                               CGL194
+     C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   WHEN      PActn = 'N'                                                CGL194
+     C                             OR PActn = 'R'                                             CGL194
+     C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
+     C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD12'                                       CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype = 'DRAFT NEW'                                   CGL194
+     C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   ENDSL                                                                CGL194
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
+     C                   ENDSR                                                                CGL194
+                                                                                              CGL194
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4332,7 +4603,14 @@
      C     XCust         READE     SDCUAHL0
 
      C                   DOW       NOT %EOF(SDCUAHL0)
+     C                   IF        CATYLC <> 'D'                                            MD057255
+     C                             AND CACINT = 'Y'                                         MD057255
      C                   IF        CAPCNT <> *Blanks
+     C                   MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   ELSE                                                               MD055078
+     C                   EVAL      WNUM3 = 0                                                MD055078
+     C                   ENDIF                                                              MD055078
+     C                   IF        WNUM3 <> *ZERO                                           MD055078
      C                             OR CACINT = 'Y'                                          MD055071
      C**********         MOVE      CAPCNT        WNUM3                                      MD055071
      C**********         IF        WNUM3 <> *ZERO                                           MD055071
@@ -4368,6 +4646,7 @@
 
      C**********         ENDIF                                                              MD055071
      C                   ENDIF
+     C                   ENDIF                                                              MD057255
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
 
@@ -4612,6 +4891,15 @@
      C                   KFLD                    KDNah
      C                   KFLD                    KDCty
 
+     C     KMSpec        KLIST                                                                CGL194
+     C                   KFLD                    KMsgNo                                       CGL194
+     C                   KFLD                    KTopMT                                       CGL194
+     C                   KFLD                    KElemnam                                     CGL194
+                                                                                              CGL194
+     C     KMSgId        KLIST                                                                CGL194
+     C                   KFLD                    PCtry                                        CGL194
+     C                   KFLD                    KMsgApp                                      CGL194
+                                                                                              CGL194
      C                   ENDSR
       *****************************************************************
       /EJECT

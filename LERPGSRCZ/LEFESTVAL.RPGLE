@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD026969A          Date 23Oct19               *
+      *                 MD026969           Date 23Oct19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE073             Date 13May08               *
@@ -33,6 +36,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
+      *  MD026969A - Further modifications.                           *
+      *           - Applied for MD054354                              *
+      *  MD026969 - New Processing for Fee Settlement.                *
+      *           - Applied for MD054354                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -69,6 +78,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
+     FLEFZASL2  IF   E           K DISK    INFSR(*PSSR)                                    MD026969A
  
  
       *****************************************************************
@@ -119,6 +129,9 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
+      ** Zero Past Due Fee Settlement                                                       MD054354
+     D PDFeeSttmt      C                   Const('ZeroPDFeeSettlements')                    MD054354
+                                                                                            MD054354
  
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -160,10 +173,35 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D CLE106          S              1A                                                      CLE106
+     D WKSADJ          S             13  0 INZ(0)                                          MD026969A
+     D W#CNUM          S              6A                                                   MD026969A
+     D W#FACL          S              5S 0                                                 MD026969A
+     D W#FSEQ          S              2S 0                                                 MD026969A
  
      D PRTCD           S              7A                                                      CLE148
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
+     D PSysVal01       S             20A                                                    MD054354
+     D PCurSet01       S            200A                                                    MD054354
+     D PSysVal02       S             20A                                                    MD054354
+     D PCurSet02       S            200A                                                    MD054354
+     D PSysVal03       S             20A                                                    MD054354
+     D PCurSet03       S            200A                                                    MD054354
+     D PSysVal04       S             20A                                                    MD054354
+     D PCurSet04       S            200A                                                    MD054354
+     D PSysVal05       S             20A                                                    MD054354
+     D PCurSet05       S            200A                                                    MD054354
+     D PSysVal06       S             20A                                                    MD054354
+     D PCurSet06       S            200A                                                    MD054354
+     D PSysVal07       S             20A                                                    MD054354
+     D PCurSet07       S            200A                                                    MD054354
+     D PSysVal08       S             20A                                                    MD054354
+     D PCurSet08       S            200A                                                    MD054354
+     D PSysVal09       S             20A                                                    MD054354
+     D PCurSet09       S            200A                                                    MD054354
+     D PSysVal10       S             20A                                                    MD054354
+     D PCurSet10       S            200A                                                    MD054354
+                                                                                            MD054354
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -290,6 +328,38 @@
      C                   MOVEL     'LER0191'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
+     C                   IF        PDFeeSet = 'Y'                                           MD054354
+      *                                                                                    MD026969A
+      ** Must exist in new file if W#CPAM = 0 and Partial settlement                       MD026969A
+      ** and settlement amount should match the adjustment amount                          MD026969A
+      *                                                                                    MD026969A
+     C                   MOVEL     S#CSSN        W#CNUM                                    MD026969A
+     C                   MOVEL     S#FACT        W#FACL                                    MD026969A
+     C                   MOVE      S#FCNO        W#FACL                                    MD026969A
+     C                   MOVE      S#FSEQ        W#FSEQ                                    MD026969A
+     C     S#TYPE        IFEQ      'P'                                                     MD026969A
+     C     S#ACTN        ANDNE     'X'                                                     MD026969A
+     C     S#ACTN        ANDNE     'D'                                                     MD026969A
+     C     W#CPAM        ANDEQ     0                                                       MD026969A
+     C     S#SADJok      ANDNE     'N'                                                     MD026969A
+     C     K#FZAS        CHAIN(N)  LEFZASL2                                                MD026969A
+     C                   IF        %FOUND(LEFZASL2)                                        MD026969A
+     C                   IF        P_SIGN = '-'                                             MD054354
+     C                   Z-SUB     W#SADJ        WKSADJ                                    MD026969A
+     C                   ELSE                                                              MD026969A
+     C                   Z-ADD     W#SADJ        WKSADJ                                    MD026969A
+     C                   ENDIF                                                             MD026969A
+     C                   IF        WKSADJ <> FZAMTP                                        MD026969A
+     C                   MOVE      'N'           S#SADJok                                  MD026969A
+     C                   ADD       1             Ix                                        MD026969A
+     C                   MOVEL     'S#SADJ    '  FldNameArr(Ix)                            MD026969A
+     C                   MOVEL     'LER0418'     MsgIdArr(Ix)                              MD026969A
+     C                   ENDIF                                                             MD026969A
+     C                   ENDIF                                                             MD026969A
+     C                   ENDIF                                                             MD026969A
+      *                                                                                    MD026969A
+     C                   ENDIF                                                              MD054354
+      *                                                                                     MD054354
  
      C                   ENDSR
       *****************************************************************
@@ -309,6 +379,20 @@
      C                   MOVEL     'S#TYPE    '  FldNameArr(Ix)
      C                   MOVEL     'LER0078'     MsgIdArr(Ix)
      C                   ENDIF
+      *                                                                                     MD026969
+      ** If W#CPAM is zero, type should be Partial (insert and amend)                       MD026969
+      *                                                                                     MD026969
+     C     S#TYPE        IFNE      'P'                                                      MD026969
+     C     S#ACTN        ANDNE     'X'                                                      MD026969
+     C     S#ACTN        ANDNE     'D'                                                      MD026969
+     C     W#CPAM        ANDEQ     0                                                        MD026969
+     C     S#TYPEok      ANDNE     'N'                                                      MD026969
+     C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
+     C                   MOVE      'N'           S#TYPEok                                   MD026969
+     C                   ADD       1             Ix                                         MD026969
+     C                   MOVEL     'S#TYPE    '  FldNameArr(Ix)                             MD026969
+     C                   MOVEL     'LER0417'     MsgIdArr(Ix)                               MD026969
+     C                   ENDIF                                                              MD026969
  
      C                   ENDSR
       *****************************************************************
@@ -341,6 +425,10 @@
      C     S#TYPE        WHENEQ    'P'
  
      C     W#SADJ        IFGE      W#CPAM
+     C     PDFeeSet      ANDNE     'Y'                                                      MD054354
+     C     W#SADJ        ORGE      W#CPAM                                                   MD054354
+     C     W#CPAM        ANDNE     0                                                        MD026969
+     C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
      C                   MOVE      'N'           S#SADJok
      C                   ADD       1             Ix
      C                   MOVEL     'S#SADJ    '  FldNameArr(Ix)
@@ -492,6 +580,17 @@
      C***********        ENDIF                                                         CAP084 223947
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD026969
+      ** Settlement Amount sign                                                             MD026969
+      *                                                                                     MD026969
+     C                   IF        PDFeeSet = 'Y'                                           MD054354
+     C                   IF        P_SIGN = *BLANK                                          MD054354
+     C                   MOVE      '+'           STSIGN                                     MD026969
+     C                   MOVE      '+'           P_SIGN                                     MD026969
+     C                   ELSE                                                               MD026969
+     C                   MOVE      P_SIGN        STSIGN                                     MD054354
+     C                   ENDIF                                                              MD026969
+     C                   ENDIF                                                              MD054354
  
      C                   ENDSR
       *****************************************************************                       CAP084
@@ -666,6 +765,7 @@
      C                   PARM                    F5XUSR           10
      C                   PARM                    F5AUSR           10
      C                   PARM                    LEFESTFmt                                    CAP084
+     C                   PARM                    P_SIGN            1                        MD054354
       *
       * OUTPUTS
  
@@ -732,7 +832,42 @@
      C                   IF        @RTCD = *Blanks                                            CLE106
      C                   EVAL      CLE106 = 'Y'                                               CLE106
      C                   ENDIF                                                                CLE106
- 
+      ** Check for Zero Past Due Fee Settlement system value                                MD054354
+     C                   CALLB     'AOSVALR0'                                               MD054354
+     C                   PARM      *BLANKS       PRtCd             7                        MD054354
+     C                   PARM      PDFeeSttmt    PSysVal01                                  MD054354
+     C                   PARM      *BLANKS       PCurSet01                                  MD054354
+     C                   PARM      *BLANKS       PSysVal02                                  MD054354
+     C                   PARM      *BLANKS       PCurSet02                                  MD054354
+     C                   PARM      *BLANKS       PSysVal03                                  MD054354
+     C                   PARM      *BLANKS       PCurSet03                                  MD054354
+     C                   PARM      *BLANKS       PSysVal04                                  MD054354
+     C                   PARM      *BLANKS       PCurSet04                                  MD054354
+     C                   PARM      *BLANKS       PSysVal05                                  MD054354
+     C                   PARM      *BLANKS       PCurSet05                                  MD054354
+     C                   PARM      *BLANKS       PSysVal06                                  MD054354
+     C                   PARM      *BLANKS       PCurSet06                                  MD054354
+     C                   PARM      *BLANKS       PSysVal07                                  MD054354
+     C                   PARM      *BLANKS       PCurSet07                                  MD054354
+     C                   PARM      *BLANKS       PSysVal08                                  MD054354
+     C                   PARM      *BLANKS       PCurSet08                                  MD054354
+     C                   PARM      *BLANKS       PSysVal09                                  MD054354
+     C                   PARM      *BLANKS       PCurSet09                                  MD054354
+     C                   PARM      *BLANKS       PSysVal10                                  MD054354
+     C                   PARM      *BLANKS       PCurSet10                                  MD054354
+                                                                                            MD054354
+     C                   If        PRtCd <> *Blanks                                         MD054354
+     C                   Eval      DBFile = 'SDSVALPD'                                      MD054354
+     C                   Eval      DBase = 906                                              MD054354
+     C                   Eval      DBKey = '*KEY    '                                       MD054354
+     C                   ExSR      *PSSR                                                    MD054354
+     C                   EndIf                                                              MD054354
+     C                   MOVEL     PCurSet01     PDFeeSet          1                        MD054354
+      *                                                                                     MD054354
+     C     K#FZAS        KLIST                                                             MD026969A
+     C                   KFLD                    W#CNUM                                    MD026969A
+     C                   KFLD                    W#FACL                                    MD026969A
+     C                   KFLD                    W#FSEQ                                    MD026969A
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================

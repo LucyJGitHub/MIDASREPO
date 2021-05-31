@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. AR937671           Date 03Apr12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR937671 - Incorrect header printed due to overprinting.     *
+      *             Increase line required. (Child:AR937672)          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field              *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -395,7 +398,8 @@
       ** When EOF, write trailer
  
      C                   IF        *IN01 = *ON
-     C                   EVAL      RqdLn1 = 8
+     C**********         EVAL      RqdLn1 = 8                                               AR937671
+     C                   EVAL      RqdLn1 = 11                                              AR937671
      C                   EXSR      SRCHKLIN
  
      C                   IF        RTOTAL <> *ZERO
@@ -452,6 +456,7 @@
      C                   CLOSE     RE100509P1
      C                   OPEN      RE100509P1
      C                   EXSR      SRRCFP1
+     C                   WRITE     HEADP1                                                   AR937671
      C                   ENDIF
  
      C                   ENDDO
@@ -459,7 +464,8 @@
       ** When EOF, write trailer
  
      C                   IF        *IN01 = *ON
-     C                   EVAL      RqdLn1 = 8
+     C**********         EVAL      RqdLn1 = 8                                               AR937671
+     C                   EVAL      RqdLn1 = 11                                              AR937671
      C                   EXSR      SRCHKLIN
  
      C                   IF        RTOTAL <> *ZERO
@@ -513,7 +519,8 @@
       ** When EOF, write trailer
  
      C                   IF        *IN01 = *ON
-     C                   EVAL      RqdLn1 = 8
+     C**********         EVAL      RqdLn1 = 8                                               AR937671
+     C                   EVAL      RqdLn1 = 11                                              AR937671
      C                   EXSR      SRCHKLIN
  
      C                   IF        RTOTAL <> *ZERO
@@ -693,7 +700,8 @@
  
       ** Check for overflow
  
-     C                   Z-ADD     2             RqdLn1
+     C**********         Z-ADD     2             RqdLn1                                     AR937671
+     C                   Z-ADD     11            RqdLn1                                     AR937671
      C                   EXSR      SRCHKLIN
  
       ** Check for overflow

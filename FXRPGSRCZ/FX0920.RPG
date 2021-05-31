@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054215           Date 06Sep19               *
-      *  Prev Amend No. MD052512           Date 12Feb19               *
+      *  Last Amend No. MD055401           Date 23Oct20               *
+      *  Prev Amend No. MD055650           Date 11May20               *
+      *                 MD054215           Date 06Sep19               *
+      *                 MD052512           Date 12Feb19               *
       *                 MD051682           Date 07Aug18               *
       *                 MD051332           Date 28Jun18               *
       *                 MD051241           Date 11Jun18               *
@@ -96,6 +98,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055401 - FX Netting / incorrect projected movement on      *
+      *             nostro for Nets inserted at D-1. Projection for   *
+      *             Netting ICD set as Nostro consist of the FX deal  *
+      *             and Netting transaction contra postings but actual*
+      *             only post for Netting transaction contra posting. *
+      *             Fix is to remove the contra posting for FX deal   *
+      *             in Netting ICD account.                           *
+      *  MD055650 - Duplicated storno postings after net deletion.    *
+      *             Fix is to ensure that once the FXNETMDPD is       *
+      *             updated (by other job), do not re-update to avoid *
+      *             executing projection. Also, added error ind 84 for*
+      *             UPDATFXNETMD0.                                    *
+      *             Also, fix ensure that record still be available   *
+      *             prior to calling CNFTRM subroutine by removing    *
+      *             ROLBACK and moving SETON LR.                      *
       *  MD054215 - Pressing F6 will not skip settlement details      *
       *             processing.                                       *
       *  MD052512 - FX Netting causes extra projected movement on an  *
@@ -860,9 +877,9 @@
      C                     ENDDO
       *
      C                     EXSR SDTERM
-     C                     SETON                     LR
+     C**********           SETON                     LR                                     MD055650
       ** Rollback previous Updates
-     C                     ROLBK
+     C**********           ROLBK                                                            MD055650
      C           *INKC     IFEQ *ON
      C           NOPARM    ANDNE0
      C                     MOVEL'*INKC'   PLRTRN
@@ -870,6 +887,7 @@
       *  Clear screen message queue.
      C                     CALL 'ZA0250'
      C                     EXSR CNFTRM
+     C                     SETON                     LR                                     MD055650
      C                     RETRN
      C                     ENDIF
       *
@@ -1825,8 +1843,32 @@
      C                     EXSR *PSSR
      C                     ENDIF
       *
+      ** Skip file update if being or already updated by other job.                         MD055650
+      ** Send message 'Record has been updated by another workstation'                      MD055650
+      *                                                                                     MD055650
+     C           AMRECI    IFEQ 'E'                                                         MD055650
+     C           AMRECI    OREQ 'R'                                                         MD055650
+      *                                                                                     MD055650
+     C                     MOVEL'FXM1023' @MSGID                                            MD055650
+     C                     CALL 'ZA0240'                                                    MD055650
+     C                     PARM           @MSGID                                            MD055650
+      *                                                                                     MD055650
+     C                     ELSE                                                             MD055650
+      *                                                                                     MD055650
      C                     MOVE 'E'       AMRECI
-     C                     UPDATFXNETMD0
+     C**********           UPDATFXNETMD0                                                    MD055650
+     C                     UPDATFXNETMD0               84                                   MD055650
+      *                                                                                     MD055650
+     C           *IN84     IFEQ *ON                                                         MD055650
+      ** Data base error in file (FXNETMPD).                                                MD055650
+     C           *LOCK     IN   LDA                                                         MD055650
+     C                     SETON                       U7U8                                 MD055650
+     C                     Z-ADD21        DBASE            ***************                  MD055650
+     C                     MOVEL'FXNETMPD'DBFILE           *DB ERROR 21  *                  MD055650
+     C                     MOVELAMNETR    DBKEY            ***************                  MD055650
+     C                     OUT  LDA                                                         MD055650
+     C                     EXSR *PSSR                                                       MD055650
+     C                     ENDIF                                                            MD055650
       *
      C           AMNETR    SETLLDLDEALL1
      C           AMNETR    READEDLDEALL1                 82
@@ -1893,7 +1935,8 @@
      C                     MOVE SUSER     AMCHUS
      C                     MOVE SWSID     AMCHWS
      C                     MOVE 'E'       AMEXPF
-     C                     UPDATFXNETMD0
+     C**********           UPDATFXNETMD0                                                    MD055650
+     C                     UPDATFXNETMD0               84                                   MD055650
       *
      C           *IN84     IFEQ *ON
       ** Data base error in file (FXNETMPD).
@@ -1928,6 +1971,8 @@
      C                     MOVE SUSER     CMTUSR           User Id
      C                     TIME           CMTTIM           Time
      C           CMTTXT    COMIT                           Commit updates
+      *
+     C                     ENDIF                                                            MD055650
      C                     END
      C                     END
       *
@@ -3338,28 +3383,28 @@
      C                     EXSR UPDMEM                                                      MD041420
      C                     EXSR UPDPRN                                                      MD041420
      C                     EXSR UPDOLP                                                      MD041420
-      *                                                                                     MD044815
-      ** Post to FX netting ICD account.                                                    MD044815
-      *                                                                                     MD044815
-     C                     MOVELA8BICN    CUSN                                              MD044815
-     C                     MOVELAMCCYD    CCYD                                              MD044815
-     C                     MOVEL'01'      ASNC                                              MD044815
-     C                     MOVELAMBRCA    BRCA                                              MD044815
-     C                     MOVELBNNEAC    ACDE                                              MD044815
-     C           DORC      IFEQ 1                                                           MD044815
-     C                     Z-ADD0         DORC                                              MD044815
-     C                     ELSE                                                             MD044815
-     C                     Z-ADD1         DORC                                              MD044815
-     C                     ENDIF                                                            MD044815
-      *Check if Netting ICD account exists before writing                                   MD049118
-     C                     EXSR EXIST                                                       MD049118
-     C           *OFF      IFEQ *IN85                                                       MD049118
-     C                     WRITEQACMTLF                                                     MD044815
-     C                     ENDIF                                                            MD049118
-     C*                                                                                     MD049118
-     C                     EXSR UPDMEM                                                      MD044815
-     C                     EXSR UPDPRN                                                      MD044815
-     C                     EXSR UPDOLP                                                      MD044815
+      ***********                                                                  MD044815 MD055401
+      ***Post*to*FX*netting*ICD*account.*******************************            MD044815 MD055401
+      ***********                                                                  MD044815 MD055401
+     C***********          MOVELA8BICN    CUSN                                     MD044815 MD055401
+     C***********          MOVELAMCCYD    CCYD                                     MD044815 MD055401
+     C***********          MOVEL'01'      ASNC                                     MD044815 MD055401
+     C***********          MOVELAMBRCA    BRCA                                     MD044815 MD055401
+     C***********          MOVELBNNEAC    ACDE                                     MD044815 MD055401
+     C***********DORC      IFEQ 1                                                  MD044815 MD055401
+     C***********          Z-ADD0         DORC                                     MD044815 MD055401
+     C***********          ELSE                                                    MD044815 MD055401
+     C***********          Z-ADD1         DORC                                     MD044815 MD055401
+     C***********          ENDIF                                                   MD044815 MD055401
+      *Check*if*Netting*ICD*account*exists*before*writing**************            MD049118 MD055401
+     C***********          EXSR EXIST                                              MD049118 MD055401
+     C************OFF      IFEQ *IN85                                              MD049118 MD055401
+     C***********          WRITEQACMTLF                                            MD044815 MD055401
+     C***********          ENDIF                                                   MD049118 MD055401
+     C***********                                                                  MD049118 MD055401
+     C***********          EXSR UPDMEM                                             MD044815 MD055401
+     C***********          EXSR UPDPRN                                             MD044815 MD055401
+     C***********          EXSR UPDOLP                                             MD044815 MD055401
       *                                                                                     MD021333
       ** Move 'Y' to exit flag variable.                                                    MD036826
       *                                                                                     MD036826

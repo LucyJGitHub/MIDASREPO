@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL178             Date 04Aug16               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL178             Date 04Aug16               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26741           Date 11Nov09               *
       *                 BUG25800           Date 02Sep09               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL178 - Generate MT942 based on MT950.                      *
       *  CER059 - German Feature Upgrade to Delhi                     *

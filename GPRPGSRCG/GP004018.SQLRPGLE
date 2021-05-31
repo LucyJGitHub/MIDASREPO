@@ -15,8 +15,10 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD042109           Date 26Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050405           Date 03Jun20               *
+      *  Prev Amend No. MD053451A          Date 19May20               *
+      *                 MD042109           Date 26Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
@@ -33,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
+      *  MD053451A - BFTC Audit Reports were not generated.           *
       *  MD042109 - Updates, amendments and deletes do not show on    *
       *             BFTC audit reports                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -153,9 +157,12 @@
      D  BFDELDAT                     26A                                                      CBF023
      D  BFGRPNAM                     32A
      D  BFGRPDSP                     62A
+     D  BFRCRTONB                    26A                                                   MD053451A
+     D  BFAPRDATB                    26A                                                   MD053451A
 
      D***NullIndDs       S              5I 0 DIM(10)                                          CBF023
-     D NullIndDs       S              5I 0 DIM(11)                                            CBF023
+     D*NullIndDs       S              5I 0 DIM(11)                                  CBF023 MD053451A
+     D NullIndDs       S              5I 0 DIM(13)                                         MD053451A
 
       ** Input Parameter for ZDATEO
      D                 DS
@@ -242,7 +249,10 @@
      C+   A.BFRECAPPROVEDDATE,
      C+   A.BFRECDELETETDATE,                                                                 CBF023
      C+   C.BFGROUPNAME,
-     C+   C.BFGROUPDISPLAYNAME
+     C****C.BFGROUPDISPLAYNAME****************************************                     MD053451A
+     C+   C.BFGROUPDISPLAYNAME,                                                            MD053451A
+     C+   B.BFRECCREATEDON,                                                                MD053451A
+     C+   B.BFRECAPPROVEDDATE                                                              MD053451A
      C+
      C***from*MIVW_EGAS*A**********************************************                    AR1029808
      C****left*outer*join*MIVW_EVGP*B*on*B.BFEVENTGROUPIDPK*=*A.BFEVENTGROUPID             AR1029808
@@ -278,7 +288,11 @@
      C**********         IF        ZDayNo3  = BJRDNB OR                                    AR1036892
      C**********                   ZDayNo3  = 0)                                           AR1036892
      C**********                   (ZDayNo4 = BJRDNB AND                                   AR1036892
-     C                   IF        ZDayNo3  = BJRDNB                                       AR1036892
+     C**********         IF        ZDayNo3  = BJRDNB                              AR1036892 MD050405
+                                                                                            MD050405
+      ** Print report based on today's date instead of Midas rundate                        MD050405
+                                                                                            MD050405
+     C                   IF        TmpDat03 = %DATE()                                       MD050405
 
       ** If Different Event Group ID
 
@@ -381,14 +395,22 @@
      C                   IF        NullIndDs(5) = 0                                        AR1030958
      C                   EVAL      RCDAT = BFLSTMOD                                        AR1030958
      C                   ELSE                                                              AR1032571
+     C                   IF        NullIndDs(12) = 0                                       MD053451A
+     C                   EVAL      RCDAT = BFRCRTONB                                       MD053451A
+     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(6) = 0                                        AR1032571
      C                   EVAL      RCDAT = BFRCRTON                                        AR1032571
      C                   ENDIF                                                             AR1032571
      C                   ENDIF                                                             AR1030958
+     C                   ENDIF                                                             MD053451A
      C                   ELSE                                                              AR1030958
+     C                   IF        NullIndDs(12) = 0                                       MD053451A
+     C                   EVAL      RCDAT = BFRCRTONB                                       MD053451A
+     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(6) = 0
      C                   EVAL      RCDAT = BFRCRTON
      C                   ENDIF
+     C                   ENDIF                                                             MD053451A
      C**********         ENDIF                                                             AR1029191
      C                   ENDIF                                                             AR1030958
                                                                                               CBF023
@@ -412,18 +434,25 @@
      C                   IF        NullIndDs(5) = 0                                        AR1030958
      C                   EVAL      RTIME = BFLSTMOD                                        AR1030958
      C                   ELSE                                                              AR1032571
+     C                   IF        NullIndDs(12) = 0                                       MD053451A
+     C                   EVAL      RTIME = BFRCRTONB                                       MD053451A
+     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(6) = 0                                        AR1032571
      C                   EVAL      RTIME = BFRCRTON                                        AR1032571
      C                   ENDIF                                                             AR1032571
+     C                   ENDIF                                                             MD053451A
      C                   ENDIF                                                             AR1030958
      C                   ELSE                                                              AR1030958
+     C                   IF        NullIndDs(12) = 0                                       MD053451A
+     C                   EVAL      RTIME = BFRCRTONB                                       MD053451A
+     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(6) = 0                                        AR1029156
      C                   EVAL      RTIME = BFRCRTON
      C                   ENDIF                                                             AR1029156
      C**********         ENDIF                                                             AR1029191
      C                   ENDIF                                                             AR1030958
-                                                                                              CBF023
-     C                   ENDIF                                                                CBF023
+     C                   ENDIF                                                             MD053451A
+     C                   ENDIF                                                             MD053451A
 
       ** Last Change Action
 
@@ -445,15 +474,23 @@
       ** Authorisation Date
 
      C**********         IF        NullIndDs(11) = 0                                       AR1029808
+     C                   IF        NullIndDs(13) = 0                                       MD053451A
+     C                   EVAL      RAUDT = BFAPRDATB                                       MD053451A
+     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(8) = 0                                        AR1029808
      C                   EVAL      RAUDT = BFAPRDAT
+     C                   ENDIF                                                             MD053451A
      C                   ENDIF
 
       ** Authorisation Timestamp
 
      C**********         IF        NullIndDs(11) = 0                             AR1028208 AR1029808
+     C                   IF        NullIndDs(13) = 0                                       MD053451A
+     C                   EVAL      RATIM = BFAPRDATB                                       MD053451A
+     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(8) = 0                              AR1028208 AR1029808
      C                   EVAL      RATIM = BFAPRDAT
+     C                   ENDIF                                                             MD053451A
      C                   ENDIF                                                             AR1028208
 
       ** Event Group
@@ -601,6 +638,12 @@
      C**********         IF        NullIndDs(5) = 0                                        AR1036892
      C**********         EVAL      TmpDat03 = %DATE(%SUBST(BFLSTMOD:1:10):*ISO)            AR1036892
      C                   EVAL      TmpDat03 = *LOVAL                                        MD042109
+     C                   IF        NullIndDs(13) = 0                                       MD053451A
+     C                   EVAL      TmpDat03 = %DATE(%SUBST(BFAPRDATB:1:10):*ISO)           MD053451A
+     C                   ELSE                                                              MD053451A
+     C                   IF        NullIndDs(12) = 0                                       MD053451A
+     C                   EVAL      TmpDat03 = %DATE(%SUBST(BFRCRTONB:1:10):*ISO)           MD053451A
+     C                   ELSE                                                              MD053451A
       ** Approved Date                                                                      MD042109
      C                   IF        NullIndDs(8) = 0                                        AR1036892
      C                   EVAL      TmpDat03 = %DATE(%SUBST(BFAPRDAT:1:10):*ISO)            AR1036892
@@ -615,6 +658,8 @@
      C                   ENDIF                                                              MD042109
      C                   ENDIF                                                              MD042109
      C                   ENDIF                                                              MD042109
+     C                   ENDIF                                                             MD053451A
+     C                   ENDIF                                                             MD053451A
      C                   IF        TmpDat03 <> *LOVAL                                       MD042109
      C                   EVAL      DatNum03 = %DEC(TmpDat03)
      C                   EVAL      PDateIN  = DatNum03

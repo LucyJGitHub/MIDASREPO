@@ -1,0 +1,82 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPGLE)                                 *
+      *                                                               *
+      *  SCGSNMSCLE - Midas CG Send message                           *
+      *                                                               *
+      *  Last Amend No. MD054955 *CREATE   Date 16Dec19               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
+      *                                                               *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CGSNMS   : Send message to program's message queue           *
+      *                                                               *
+      *  CALLED BY: When reporting errors                             *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR   CGSNMS        BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'CGSNMS'      @STK(Q)
+      *
+      * If no program send to ##PGM
+      *
+     C     CGPGMQ        IFEQ      *BLANK
+     C                   MOVEL     ##PGM         CGPGMQ
+     C                   END
+      *
+      * If level to send is blanks default to *SAME
+      *
+     C     CGPGRL        IFEQ      *BLANK
+     C                   MOVEL     '*SAME'       CGPGRL
+     C                   END
+      *
+      * If no message file specified, use default
+      *
+     C     CGMSGF        IFEQ      *BLANK
+     C                   MOVEL     'CGUSRMSG'    CGMSGF
+     C                   END
+      *
+     C                   CALL      'AOCREPT'
+     C                   PARM                    CGMSID            7
+     C                   PARM                    CGMSGF           10
+     C                   PARM                    CGMSFL           10
+     C                   PARM                    CGMSDT          256
+     C                   PARM                    CGPGRL            5
+     C                   PARM                    CGPGMQ           10
+     C                   PARM                    CGMSGQ           10
+     C                   PARM                    CGMSGT            7
+      *
+     C                   MOVEL     'Y'           CGMSGS            1
+      *
+      * Clear all fields for default mechanism next time
+      *
+     C                   MOVEL     *BLANK        CGMSID
+     C                   MOVEL     *BLANK        CGMSGF
+     C                   MOVEL     *BLANK        CGMSFL
+     C                   MOVEL     *BLANK        CGMSDT
+     C                   MOVEL     *BLANK        CGPGRL
+     C                   MOVEL     *BLANK        CGPGMQ
+     C                   MOVEL     *BLANK        CGMSGQ
+     C                   MOVEL     *BLANK        CGMSGT
+      *
+      *  Unwind subroutine stack name
+      *
+     C     CGEXIT        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     CSR                 ENDSR
+      *****************************************************************
+      * End of /COPY SCGSNMSC                                         *
+      *****************************************************************

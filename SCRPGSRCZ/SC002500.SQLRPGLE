@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD027365           Date 19Aug14               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD056609           Date 07Sep20               *
+      *  Prev Amend No. MD027365           Date 19Aug14               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER059             Date 19Jul10               *
       *                 CAP190             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056609 - Deliverable Data Split for APMNEXPD               *
       *  MD027365 - Unable to insert fee with unexpected errors due   *
       *             to obsolete records in extension file LEFEEDQD.   *
       *             Execute routine to delete the records.            *
@@ -44,7 +46,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-     FAPMNEXPD  IF   E             DISK
+     F*APMNEXPD* IF   E             DISK                                                    MD056609
       *
       *****************************************************************
       *
@@ -54,6 +56,7 @@
       *
       ** Dynamic SQL statement work field
      D WSTRSQL         S           1000A   INZ(*BLANKS)
+     D APMNEX        E DS                  EXTNAME(APMNXJW0)                                MD056609
       *
       *****************************************************************
       /EJECT
@@ -62,10 +65,24 @@
       *****************************************************************
       *
       ** Read through file
-     C     1             SETLL     APMNEXPD
-     C                   READ      APMNEXPD                               80
+     C*****1****         SETLL     APMNEXPD                                                 MD056609
+     C**********         READ      APMNEXPD                               80                MD056609
+     C/EXEC SQL                                                                             MD056609
+     C+ declare ACursor insensitive scroll cursor for                                       MD056609
+     C+ select * from APMNXJW0                                                              MD056609
+     C+ order by APEXTN                                                                     MD056609
+     C/END-EXEC                                                                             MD056609
+                                                                                            MD056609
+     C/EXEC SQL                                                                             MD056609
+     C+ open ACursor                                                                        MD056609
+     C/END-EXEC                                                                             MD056609
+                                                                                            MD056609
+     C/EXEC SQL                                                                             MD056609
+     C+ fetch next from ACursor into :APMNEX                                                MD056609
+     C/END-EXEC                                                                             MD056609
       *
-     C                   DOW       *IN80 = *OFF
+     C**********         DOW       *IN80 = *OFF                                             MD056609
+     C                   DOW       SQLCODE = 0                                              MD056609
       *
      C                   IF        APHIST = *BLANKS
       *
@@ -132,7 +149,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
-     C                   READ      APMNEXPD                               80
+     C**********         READ      APMNEXPD                               80                MD056609
+     C/EXEC SQL                                                                             MD056609
+     C+ fetch next from ACursor into :APMNEX                                                MD056609
+     C/END-EXEC                                                                             MD056609
      C                   ENDDO
       *
      C                   EVAL      *INLR = *ON

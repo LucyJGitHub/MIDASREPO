@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CER070             Date 25Nov14               *
       *                 MD030956           Date 09Oct14               *
@@ -56,6 +57,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
+      *           - Recompile over changes in SDCBRTPD.               *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A- BOE Upgrade to MidasPlus - incorporate code from    *
       *           /COPY members and add switchability.                *
@@ -107,14 +112,14 @@
      FSDVSWFDL1 UF   E           K DISK                                                      CSW207A
      F                                     COMMIT                                            CSW207A
      F                                     RENAME(SDVSWSDD0:SDVSWSDD1)                       CSW207A
- 
+
      FSDVECUSDPDO    E             DISK
      F                                     RENAME(SDVCUSDD0:SDVCUSDERR)
      FSDVECUBRPDO    E             DISK
      F                                     RENAME(SDVCUBRPD0:SDVCUBRERR)
      FSDVECUPBPDO    E             DISK
      F                                     RENAME(SDVCUPBPD0:SDVCUPBERR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUSDU001
                                                                                              LLN022A
@@ -136,7 +141,7 @@
      F                                     COMMIT                                             CER001
      FSDVECUX1PDO    E             DISK    USROPN                                             CER001
      F                                     RENAME(SDVCULXDL:SDVCULXDLR)                       CER001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -155,52 +160,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in CUSD API update')
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID CUSTOMER
      D SDVCUD        E DS                  EXTNAME(SDVCUSDPD)
- 
+
       **  EXTERNALLY DESCRIBED DS FOR VALID CUSTOMER BRT details
      D SDVBRT        E DS                  EXTNAME(SDVCUBRPD)
- 
+
       **  EXTERNALLY DESCRIBED DS FOR VALID CUSTOMER PB details
      D SDVPRB        E DS                  EXTNAME(SDVCUPBPD)
                                                                                              CSW207A
       **  EXTERNALLY DESCRIBED DS FOR VALID CUSTOMER PB details                              CSW207A
      D SDVSWSD       E DS                  EXTNAME(SDVSWSDPD)                                CSW207A
- 
+
      D SDVTID        E DS                  EXTNAME(SDVTICDPD)                                BUG3362
       *                                                                                      BUG3362
      D SDCUSDUPC       DS             1    DTAARA(SDCUSDUPC)
- 
+
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
@@ -210,8 +215,8 @@
       **  Data Structure for AOSVALR0 string                                                  CSD012
      DSVAL1            DS           200                                                       CSD012
      DSVAL11                   1      1                                                       CSD012
- 
- 
+
+
      D Object          S             10A   INZ('SDCUSDUPC')
      D LockObj         S             10A   INZ('SDCUSDLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -226,15 +231,15 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Command length for QCMDEXC
      D CommandLen      S             15P 5 INZ(26)
- 
+
       ** Data queue details
       ** ------------------
      D DtqLen          S              5P 0 INZ(10)
@@ -242,8 +247,8 @@
      D DtqNam          S             10A   INZ('APCUSDDTQ')
      D DtqLib          S             10A   INZ('*LIBL')
      D DtqDta          S             10A
- 
- 
+
+
       ** Override Database Table
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX2           S              1    DIM(50) CTDATA PERRCD(50)
@@ -259,7 +264,7 @@
                                                                                               CSD012
       ** Override SDAULGL2                                                                    CSD012
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
- 
+
      D CGP001          S              1                                                       CGP001
      D V_DDGCUS        S             10                                                       CGP001
                                                                                               CGP001
@@ -279,7 +284,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -302,7 +307,7 @@
      D SDVCULXL      E DS                  EXTNAME(SDVCULX1L0)                                CER001
      D SDVCULXLS     E DS                  EXTNAME(SDVCULX1L0)                                CER001
      D                                     PREFIX(SS)                                         CER001
- 
+
       *******************************************************************
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -311,39 +316,39 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *******************************************************************
- 
+
       /COPY WNCPYSRC,SDCUSDU003
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APCUSDDTQ'
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
       ** Wait for data queue prompt
       ** Server program will send data queue entry when record is
       ** written to the valid transactions file
      C                   DOW       DtqDta <> 'END'
- 
+
      C                   CALL      'QRCVDTAQ'
      C                   PARM                    DtqNam
      C                   PARM                    DtqLib
      C                   PARM                    DtqLen
      C                   PARM                    DtqDta
      C                   PARM                    DtqWait
- 
+
       ** If data queue entry is 'END', leave the DOW loop at this point
      C                   IF        DtqDta = 'END'
      C                   LEAVE
      C                   ENDIF
- 
+
       ** If data queue entry says run, first lock allocation data area
      C     DtqDta        IFEQ      'GO'
- 
+
       ** Allocate with exclusive lock state
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
@@ -354,25 +359,25 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Ensure the U7 and U8 indicators are off, to prevent problems
       ** caused by earlier errors.
      C                   CLEAR                   *inu7
      C                   CLEAR                   *inu8
- 
- 
+
+
       /COPY WNCPYSRC,SDCUSDU004
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     SDVCUSDPD
- 
+
       ** READ VALID SD CUSTOMER
      C                   READ      SDVCUSDD0                              99    *
      C     *IN99         DOWEQ     '0'
- 
+
       /COPY WNCPYSRC,SDCUSDU005
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lower level modules
       **  will include the key information
@@ -384,40 +389,40 @@
      C                   MOVEL     CUCUST        @SwCust                                     CSW207A
      C                   MOVEL     CUBRCD        @SwBrCh                                     CSW207A
      C                   EVAL      @Timestamp = CUTMST
- 
+
       /COPY WNCPYSRC,SDCUSDU006
- 
+
       ** GET EXTENSION FILE DETAILS (BRT Details & Particpator History)
- 
+
      C                   CLEAR                   SDVBRT
      C                   CLEAR                   SDVPRB
      C                   CLEAR                   SDVSWSD                                     CSW207A
      C                   CLEAR                   SDVTID                                     BUG3362
- 
- 
+
+
       /COPY WNCPYSRC,SETRADU007
- 
+
      C     S01383        IFEQ      'Y'
      C**********         IF        CUTAIN = 'I' or                                           201011
      C**********                   CUTAIN = 'J'                                              201011
      C     @KeyBrtL1     CHAIN     SDVCUBRL1                          98
      C**********         ENDIF                                                               201011
      C                   ENDIF
- 
- 
+
+
       /COPY WNCPYSRC,SETRADU007
- 
+
      C     BGN4ST        IFEQ      'Y'
      C     @KeyPrbL1     CHAIN     SDVCUPBL0                          97
      C                   END
- 
+
      C     BGN4ST        IFEQ      'Y'                                                       CSW207A
      C     CSW207        OREQ      'Y'                                                       CSW207A
      C     @KeySwftl1    CHAIN     SDVSWSDD1                          96                     CSW207A
      C                   ENDIF                                                               CSW207A
- 
+
       /COPY WNCPYSRC,SDCUSDU008
- 
+
       ** If Bank of England switched on then CHAIN to BoE details on valid                   LLN022A
       * file.                                                                                LLN022A
                                                                                              LLN022A
@@ -439,7 +444,7 @@
      C                   Move      UL98          *IN98                                       LLN022A
                                                                                              LLN022A
      C                   EndIf                                                               LLN022A
- 
+
       ** SD DATABASE UPDATE
      C                   CALLB     'SDCUSDUPD'
      C                   PARM      *BLANK        @@RTCD            7
@@ -463,7 +468,7 @@
      C                   PARM      *BLANKS       PTransType                                   CSD028
      C                   PARM                    DACTN             1                        MD030956
      C                   PARM                    CTI006            1                        MD030956
- 
+
      C/COPY WNCPYSRC,SDCUSDUC01
                                                                                              LLN022A
       ** If Bank of England switched on then call database updater module                    LLN022A
@@ -612,7 +617,7 @@
                                                                                              LLN022A
      C                   COMMIT
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SDCUSDU009
       *                                                                                       CER001
       ** If an error has occurred, remove record in error from                                CER001
@@ -643,7 +648,7 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -699,9 +704,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID SD CUSTOMERS
      C                   READ      SDVCUSDD0                              99    *
      C                   END
@@ -716,15 +721,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,SDCUSDU010
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUSDU011
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -750,18 +755,18 @@
      C                   CALLB     'ZARTVJOBA'                                                CER001
      C                   PARM                    @Return           6                          CER001
      C                   PARM                    @type             1                          CER001
- 
+
       *  Define key list for SDVCUSDL1
      C     @KeyCusdL1    KLIST
      C                   KFLD                    @CuCust           6
      C                   KFLD                    @Timestamp
- 
+
       *  Define key list for SDVCUBRL1
      C     @KeyBrtL1     KLIST
      C*****              KFLD                    @BrCust           6 0                        CSD027
      C                   KFLD                    @BrCust           6                          CSD027
      C                   KFLD                    @Timestamp
- 
+
       *  Define key list for SDVCUPBL0
      C     @KeyPrbL1     KLIST
      C*****              KFLD                    @PbCust           6 0                        CSD027
@@ -772,7 +777,7 @@
      C     @KeySwftl1    KLIST                                                               CSW207A
      C                   KFLD                    @SwCust           6                         CSW207A
      C                   KFLD                    @SwBrch           3                         CSW207A
- 
+
       *  Check if an existing DBU_CUSD job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589
@@ -785,24 +790,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -812,7 +817,7 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
@@ -1036,7 +1041,7 @@
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OX4
      C                   PARM                    MESLEN
- 
+
       ** Overrride SDTICSLR                                                                  BUG3362
       *                                                                                      BUG3362
      C                   CALL      'QCMDEXC'                                                 BUG3362
@@ -1048,7 +1053,7 @@
      C**********         PARM                    ##OX5                                CGP001 BUG3362
      C                   PARM                    ##OX6                                       BUG3362
      C                   PARM                    MESLEN                                       CGP001
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUSDU012
                                                                                              LLN022A
@@ -1165,7 +1170,7 @@
      C                   EVAL      CSW207 = 'N'                                              CSW207A
      C                   ENDIF                                                               CSW207A
                                                                                              CSW207A
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

@@ -32,10 +32,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR970389B          Date 16Sep20               *
-      *  Prev Amend No. AR970389A          Date 16Sep20               *
-      *                 MD056548           Date 10Sep20               *
-      *                 MD053345           Date 01Jun20               *
+      *  Last Amend No. MD057294           Date 03Dec20               *
+      *  Prev Amend No. MD050526           Date 27Oct20               *
+      *                 AR970389B          Date 16Sep20               *
+      *                 AR970389A          Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD052432           Date 18Dec18               *
       *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
@@ -156,6 +158,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057294 - Missing Customer's Authority Holders Link after   *
+      *             amend                                             *
+      *  MD050526 - Maintain Customers tab Authority Holders Link and *
+      *             Details by Country of Tax code not shown in red   *
+      *             in case of errors                                 *
       *  AR970389B - Reopen AR970389A due to the field also being     *
       *              defaulted to 'N' when some features are switched *
       *              ON. (Child: AR970392B)                           *
@@ -164,9 +171,15 @@
       *              validation if transaction is coming from external*
       *              systems. (Child: AR970392A)                      *
       *            - Applied for MD-56719.                            *
-      *  MD056548 - Customer Fees Maintenance is missing              *
-      *  MD053345 - Dead lock when amending customer through JMS CUSD *
-      *             API.                                              *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from APTRANVU.                                    *
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
+      *           - Added BRT DOB Century fields on TransInEx2,       *
+      *             FillerBufEx2 and BufferEx2. Also as parameter to  *
+      *             SDCUSDCVT, SDCUSD6VL and SDCUSDUPD.               *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -478,6 +491,21 @@
      D TranInBrTx    E DS                  EXTNAME(SDCUBRPD)
      D   TranInBrT1            1    500
      D   TranInBrT2          501    693
+     D TranInBRTCent   DS                                                                   MD055446
+     D   TI_DD1DOB                    2S 0                                                  MD055446
+     D   TI_DD2DOB                    2S 0                                                  MD055446
+     D   TI_DD3DOB                    2S 0                                                  MD055446
+     D   TI_DD4DOB                    2S 0                                                  MD055446
+     D   TI_DD5DOB                    2S 0                                                  MD055446
+     D   TI_BRTCent            1     10S 0                                                  MD055446
+     D*  TI_BRTCentS           1     10S 0                                                  MD055446
+     D                 DS                                                                   MD055446
+     D TranInBRTDS             1     10P 0                                                  MD055446
+     D   TI_DD1DOBD                   2P 0                                                  MD055446
+     D   TI_DD2DOBD                   2P 0                                                  MD055446
+     D   TI_DD3DOBD                   2P 0                                                  MD055446
+     D   TI_DD4DOBD                   2P 0                                                  MD055446
+     D   TI_DD5DOBD                   2P 0                                                  MD055446
      D TranInPriv    E DS                  EXTNAME(SDCUPBPD)
      D TranInMT3X    E DS                  EXTNAME(SDCUMTPD)                                BUG14485
      D                                     PREFIX(MT)                                       BUG14485
@@ -564,6 +592,13 @@
       * Valid Customer BRT details layout
      D ValidCuBr     E DS                  EXTNAME(SDVCUBRPD)
      D                                     PREFIX(V_)
+      ** Valid Customer BRT (Century) details layout                                        MD055446
+     D ValidCuBrCent   DS                                                                   MD055446
+     D  V_BR1DBC                      2S 0                                                  MD055446
+     D  V_BR2DBC                      2S 0                                                  MD055446
+     D  V_BR3DBC                      2S 0                                                  MD055446
+     D  V_BR4DBC                      2S 0                                                  MD055446
+     D  V_BR5DBC                      2S 0                                                  MD055446
 
      D ValidTIcd     E DS                  EXTNAME(SDVTICDPD)                                BUG3362
      D                                     PREFIX(V_)                                        BUG3362
@@ -639,6 +674,12 @@
       * (Current) Customer BRT details record in file Format
      D BrtxFilFmt    E DS                  EXTNAME(SDCBRTPD)
       * (Current) BRT Participator history record in file Format
+     D  BrtxFilFmtC1         718    719P 0                                                  MD055446
+     D  BrtxFilFmtC2         720    721P 0                                                  MD055446
+     D  BrtxFilFmtC3         722    723P 0                                                  MD055446
+     D  BrtxFilFmtC4         724    725P 0                                                  MD055446
+     D  BrtxFilFmtC5         726    727P 0                                                  MD055446
+     D  BrtxFilFmtCen        718    727P 0                                                  MD055446
      D BrptFilFmt    E DS                  EXTNAME(PTYHSTPD)
      D                                     PREFIX(P)
                                                                                              BUG3362
@@ -722,6 +763,12 @@
      D**********                           PREFIX(@)                                          CSD079
      D                                     PREFIX(F@)                                         CSD079
                                                                                               CSD079
+     D CurCuBrtCent    DS                                                                   MD055446
+     D   F@@DD1DOB                    2S 0                                                  MD055446
+     D   F@@DD2DOB                    2S 0                                                  MD055446
+     D   F@@DD3DOB                    2S 0                                                  MD055446
+     D   F@@DD4DOB                    2S 0                                                  MD055446
+     D   F@@DD5DOB                    2S 0                                                  MD055446
       * (Current) Customer in Screen Format - Private Banking Details
      D CurCuPriv     E DS                  EXTNAME(SDCUPBPD)
      D**********                           PREFIX(@)                                          CSD079
@@ -920,6 +967,8 @@
      D  TransCUEX                          LIKE(ExtData)                                    MD044880
      D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
+     D  TransCent                    10A                                                    MD055446
+     D  TransUser                    20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -970,6 +1019,9 @@
       ** Index for arrays of error message ids etc
      D*****Idx             S              3P 0                                               BUG5082
      D Idx             S              3P 0 INZ(0)                                            BUG5082
+
+      ** Counter used for checking errors returned by validators                            MD050526
+     D Idz             S              3P 0 INZ(0)                                           MD050526
 
       ** Index for arrays of warning message ids etc
      D***** WIdx            S              3P 0                                              BUG5082
@@ -1131,7 +1183,9 @@
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                           MD044880 CGL157
      D***FillerBufEx2    S           5591A                                           CGL157 MD054028
-     D FillerBufEx2    S           5590A                                                    MD054028
+     D***FillerBufEx2    S           5590A                                         MD054028 MD055446
+     D***FillerBufEx2    S           5580A                                         MD055446 MD055373
+     D FillerBufEx2    S           5560A                                                    MD055373
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1165,8 +1219,6 @@
      D  PACRTN                36     45                                                     MD042692
      D  PAACCZ                46     47                                                     MD042692
      D  PAINSF                48     48                                                     MD042692
-
-     D S01464          S              1A   INZ('N')                                         MD056548
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
@@ -1227,6 +1279,7 @@
      C                   EVAL      TranInMT3X = TransCUMT                                     CSW213
      C                   EVAL      TranInMsrt = TransCUMR                                     CSW213
      C                   EVAL      TranInBrTx = TransCUBR                                     CSW213
+     C                   MOVE      TransCent     TranInBRTCent                              MD055446
      C                   EVAL      TranInPriv = TransCUPB                                     CSW213
      C                   EVAL      TranInCumi = TransCUMI                                     CSW213
      C                   EVAL      TranInCuad = TransCUAD                                     CSW213
@@ -1553,6 +1606,8 @@
      C                                       + ExtData                                      MD044880
      C                                       + TranInCRSS                                     CGL157
      C                                       + DDAPRC                                       MD054028
+     C                                       + TranInBRTCent                                MD055446
+     C                                       + TransUser                                    MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -1728,7 +1783,12 @@
 
      C                   MOVE      CustFilFmt    ValidCusd
      C**********         MOVE      BrtxFilFmt    ValidCuBr                                  BUG14161
-     C                   MOVEL     BrtxFilFmt    ValidCuBr                                  BUG14161
+     C                   MOVEL     BrtxFilFmt    ValidCuBr
+     C                   Eval      V_BR1DBC = BrtxFilFmtC1                                  MD055446
+     C                   Eval      V_BR2DBC = BrtxFilFmtC2                                  MD055446
+     C                   Eval      V_BR3DBC = BrtxFilFmtC3                                  MD055446
+     C                   Eval      V_BR4DBC = BrtxFilFmtC4                                  MD055446
+     C                   Eval      V_BR5DBC = BrtxFilFmtC5                                  MD055446
      C                   MOVE      PrivFilFmt    ValidPriv
      C                   MOVE      TIcdFilFmt    ValidTiCd                                   BUG3362
      C                   MOVEL     CumiFilFmt    ValidCumi                                    CSD079
@@ -1825,6 +1885,7 @@
      C                   PARM                    CurCuFTCR                                    CGL132
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
+     C                   PARM                    CurCuBrTCent                               MD055446
 
      C                   MOVE      DDAPRC        ADDDAPRC          1                        MD054028
       ** Customer Details
@@ -1989,6 +2050,7 @@
      C                   EVAL      V_CTETXS =  TXDDETXS                                     MD023188
      C                   EVAL      V_CCTXArr(Idy)  = ValidCCTX                              AR740196
      C                   EVAL      CCTXArr(Idy) = TranInCCTX1                               MD023188
+     C                   EXSR      SrChkErr                                                 MD050526
      C                   EVAL      Idy = Idy + 1                                            AR740196
      C                   EVAL      hasDetails = *ON                                         AR743761
      C                   ENDDO                                                              AR740196
@@ -2036,7 +2098,6 @@
       ** Validate Service Fees                                                                CSD079
                                                                                               CSD079
      C     CSD008        IFEQ      'Y'                                                        CSD079
-     C     S01464        OREQ      'Y'                                                      MD056548
      C     SFEDDSMAC     IFNE      *BLANKS                                                   BG12238
      C     SFEDDHMIN     ORNE      *BLANKS                                                   BG12238
      C     SFEDDNAIN     ORNE      *BLANKS                                                   BG12238
@@ -2325,6 +2386,7 @@
      C                   EVAL      TranInCUAH1 = CUAHArr(Idy)                                 CER059
      C                   EXSR      ValdCUAH                                                   CER059
      C                   EVAL      V_CUAHArr(Idy)  = ValidCUAH                                CER059
+     C                   EXSR      SrChkErr                                                 MD050526
      C                   EVAL      Idy = Idy + 1                                              CER059
      C                   ENDDO                                                                CER059
      C**********         ENDIF                                                     AR728530 MD026253
@@ -2513,7 +2575,9 @@
       *
       ** Screen validation
      C                   PARM      '0'           SinVal            1
-      *
+      *                                                                                     MD055446
+      ** Customer Base Rate Tax Details (Century)                                           MD055446
+     C                   PARM                    TranInBRTCent                              MD055446
 
       *
       * OUTPUTS
@@ -2540,6 +2604,9 @@
       *
       * Changed Party Names Array
      C                   PARM                    ChgNamArr         5
+      *                                                                                     MD055446
+      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
+     C                   PARM                    ValidCuBrCent                              MD055446
 
      C                   ENDSR
       *****************************************************************
@@ -2905,6 +2972,7 @@
      C                   PARM                    CurCuFTCR                                    CGL132
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
+     C                   PARM                    CurCuBrTCent                               MD055446
 
      C                   MOVE      DDAPRC        ADDDAPRC                                   MD054028
       ** Substitute the data for the various parts of the transaction,
@@ -3699,6 +3767,7 @@
      C                   CLEAR                   CurCuFTCR                                    CGL132
      C                   CLEAR                   CurCuCRSH                                    CGL157
      C                   CLEAR                   CurCuCRSD                                    CGL157
+     C                   CLEAR                   CurCuBrTCent                               MD055446
 
      C                   MOVE      *ALL'Y'       OKCuPrim
      C                   MOVE      *ALL'Y'       OKCuSeco
@@ -3896,12 +3965,6 @@
                                                                                               CSD079
       ** Set Service fees Fields                                                              CSD079
                                                                                               CSD079
-     C                   IF        S01464 = 'Y' AND CSD008 = 'N'                            MD056548
-     C                   MOVEL     DDCUSN        V_SFCUST                                   MD056548
-     C                   MOVEL     SFEDDSMAC     V_SFSMAC                                   MD056548
-     C                   MOVEL     SFEDDSBCH     V_SFSBCH                                   MD056548
-     C                   MOVEL     SFEDDSCCY     V_SFSCCY                                   MD056548
-     C                   ENDIF                                                              MD056548
      C                   IF        CSD008 = 'Y'                                               CSD079
      C                   MOVEL     DDCUSN        V_SFCUST                                     CSD079
      C                   MOVEL     SFEDDSMAC     V_SFSMAC                                     CSD079
@@ -4511,6 +4574,9 @@
      C                   PARM      *BLANKS       PTransType                                   CSD028
      C                   PARM      *BLANKS       DACTN             1                          CSD028
      C                   PARM                    CTI006                                     MD030956
+     C                   PARM                    ValidCuBrCent                              MD055446
+     C                   PARM                    TransUser                                  MD055373
+     C                   PARM                    AAUTH                                      MD055373
                                                                                               CER059
      C**********         IF        @RTCD = *BLANKS                                   CER059 MD053634
      C**********                   AND (DDACTN <> 'D'                              AR741363 MD053634
@@ -4536,6 +4602,9 @@
      C                   IF        @RTCD = *BLANKS                                          MD053634
      C                             AND (DDACTN <> 'D'                                       MD053634
      C                             AND DDACTN <> 'C')                                       MD053634
+     C                   IF        V_CUAHArr(1) = *Blanks                                   MD057294
+     C                   EVAL      V_CUAHArr(1) = DDCUSN                                    MD057294
+     C                   ENDIF                                                              MD057294
      C                   EXSR      SrUpdCUAH                                                MD053634
      C                   ENDIF                                                              MD053634
                                                                                             MD053634
@@ -4579,16 +4648,7 @@
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                  CSC022
      C                   ROLBK
      C                   EndIf                                                                CSC022
-      *                                                                                     MD053345
-     C     @RTCD         IFEQ      '*LOCKED'                                                MD053345
-     C                   ADD       1             Idx                                        MD053345
-     C                   EVAL      FldNameArr(Idx) = 'DDACTN'                               MD053345
-     C                   EVAL      MsgIdArr(Idx)   = 'USR8867'                              MD053345
-     C                   EVAL      MsgFArray(Idx)  = 'GBSDUSRMSG'                           MD053345
-     C                   ELSE                                                               MD053345
      C                   EXSR      *PSSR
-     C                   ENDIF                                                              MD053345
-      *                                                                                     MD053345
      C                   ELSE
       /COPY WNCPYSRC,SDCUSDVU04
      C                   IF        CGL132 = 'Y' AND                                         MD026519
@@ -6193,6 +6253,85 @@
       *****************************************************************                       CER059
       /EJECT                                                                                  CER059
       *****************************************************************                       CER059
+      *                                                               *                     MD050526
+      * SrChkErr                                                      *                     MD050526
+      *                                                               *                     MD050526
+      *****************************************************************                     MD050526
+                                                                                            MD050526
+     C     SrChkErr      BEGSR                                                              MD050526
+     C                   EVAL      Idz = 1                                                  MD050526
+     C                   DOW       Idz <= Idx                                               MD050526
+      *                                                                                     MD050526
+     C                   IF        FldNameArr(Idz) = 'DDAUT0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAAUTH' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDLTP0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CALTYP' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG10'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG1' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG20'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG2' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG30'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG3' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG40'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG4' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDTPA0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CATYPA' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCINT0'                              MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CACINT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPCNT0'                              MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPCNT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDETXS'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXETXS' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCTTX'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCTTX' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCERF'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCERF' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCEEX'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCEEX' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCSTS'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCSTS' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCADT'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCADT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCVDT'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCVDT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+     C                   ENDIF                                                              MD050526
+     C                   EVAL      Idz = Idz + 1                                            MD050526
+     C                   ENDDO                                                              MD050526
+     C                   ENDSR                                                              MD050526
+      *****************************************************************                     MD050526
+      /EJECT                                                                                MD050526
+      *****************************************************************                     MD050526
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
@@ -7107,20 +7246,6 @@
      C                   eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
-
-      ** Check if enhancement S01464 is on                                                  MD056548
-                                                                                            MD056548
-     C                   CALLB     'AOSARDR0'                                               MD056548
-     C                   PARM      *BLANKS       @RTCD                                      MD056548
-     C                   PARM      '*VERIFY'     @OPTN                                      MD056548
-     C                   PARM      'S01464'      @SARD                                      MD056548
-     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
-                                                                                            MD056548
-     C                   IF        @RTCD = *BLANKS                                          MD056548
-     C                   EVAL      S01464 = 'Y'                                             MD056548
-     C                   ELSE                                                               MD056548
-     C                   EVAL      S01464 = 'N'                                             MD056548
-     C                   ENDIF                                                              MD056548
       /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082

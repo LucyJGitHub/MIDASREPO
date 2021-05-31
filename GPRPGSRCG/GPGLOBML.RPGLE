@@ -15,8 +15,9 @@
       *  If file T_MLMTRAN is changed, this will need to be changed   *
       *  as well                                                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR466512           Date 19Aug14               *
+      *  Last Amend No. 262796             Date 03Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR466512           Date 19Aug14               *
       *                 CLE148             Date 23Jul12               *
       *                 AR733372           Date 05Apr11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262796 - READE not functioning.  Changed to CHAIN            *
+      *         - Applied for MD054701.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR466512 - Global system value 'UseCtryCitizenship' is not   *
       *             considered in Manual Transactions updates.        *
@@ -75,7 +78,7 @@
       *           to the Global Transactions file.                    *
       *                                                               *
       *****************************************************************
- 
+
      FGZSDBRCHL0IF   E           K DISK    INFSR(*PSSR)
      F                                     Prefix(HF)
      FGZSDBANKL1IF   E           K DISK    INFSR(*PSSR)
@@ -93,16 +96,16 @@
      FGPPOSNL0  UF A E           K DISK    INFSR(*PSSR)
      F                                       RENAME(GOPOSND0:GPPOSNP)
      F                                     COMMIT
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
      D POWER           S              9S 0 DIM(10) CTDATA PERRCD(1)                          BUG3368
                                                                                              BUG3368
      DT_TRAP         E DS                  EXTNAME(GPTRAPPD)
      DGT_TRAP        E DS                  EXTNAME(GPTRAPPD) PREFIX(G)
      DP_POSN         E DS                  EXTNAME(GPPOSNPD)
- 
+
       ** This matches the file description for the file T_MLMTRAN
       ** but cannot use the external description due to the binary fields
       ** For example MTID would be taken to be 20 Integer long which is
@@ -132,7 +135,7 @@
      D MTFACCUST            4182   4187A
      D MTFACTYPE            4188   4190A
      D MTFACSEQ             4191   4192A
- 
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -151,11 +154,11 @@
      D**EntryData******      117  10117A                                                     BUG6921
      D**EntryData******      117  22000A                                              BUG6921 245952
      D  EntryData            117  32000A                                                      245952
- 
- 
+
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
+
      D SPLITCUST       DS
       * Split up customer sent from ML
      D  SP_BRANCH              1      3
@@ -164,7 +167,7 @@
       * Separator
      D  SP_CUST                5     10
       * Customer in zone
- 
+
      D ZWDTIN          S              8S 0
                                                                                              BUG3368
      D                 DS                                                                    BUG3368
@@ -174,22 +177,22 @@
                                                                                              BUG3368
      D                 DS                                                                    BUG3368
      D  TREF_CH                1     20    DIM(20)                                           BUG3368
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4192
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4192
- 
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -198,16 +201,16 @@
      C     TRGEVENT      IFEQ      '2'
      C                   MOVEL     *BLANK        I#AIMG
      C                   ENDIF
- 
+
      C                   MOVEL     I#AIMG        MLMTRAN
      C     MLMTRAN       IFEQ      *BLANKS
      C                   MOVEL     I#BIMG        MLMTRAN
      C                   ENDIF
- 
+
      C*******************DUMP                                                                BUG3368
      C                   EXSR      TRAP
      C                   EXSR      POSN
- 
+
      C                   RETURN
       /SPACE 5
       *****************************************************************
@@ -215,7 +218,7 @@
       ********************************************************************
      C     TRAP          BEGSR
       * Recover the zone attached to the branch
- 
+
      C     MTBRCHCODE    CHAIN     SDBRCHD0                           99
       * error
      C     *IN99         IFEQ      *ON
@@ -223,7 +226,7 @@
      C                              + ' NOT IN GLOBAL LAYER'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   T_TRAP
       * Zone
      C                   MOVEL     HFA8ZONE      T_ZONE
@@ -257,7 +260,8 @@
       *
      C                   ELSE
      C* CUST IN GLOBAL FORM
-     C     MTCUSTCODE    READE     GPCUSTXL2                              99
+     C*****MTCUSTCODE    READE     GPCUSTXL2                              99                  262796
+     C     MTCUSTCODE    CHAIN     GPCUSTXL2                          99                      262796
       * error
      C     *IN99         IFEQ      *ON
      C                   EVAL      I#ERMS = 'CUSTOMER' + MTCUSTCODE
@@ -367,7 +371,7 @@
      C                   EXSR      ZDATE10
      C                   Z-ADD     ZZMDNO        T_SDAT                           Midas day no.
      C                   ENDIF                                                               BUG3562
- 
+
       * End Date
      C                   MOVEL     *BLANKS       WORKDATE          8
      C                   EVAL      WORKDATE = %CHAR(MTMATDATE:*ISO0)
@@ -378,7 +382,7 @@
      C                   EXSR      ZDATE10
      C                   Z-ADD     ZZMDNO        T_EDAT                           Midas day no.
      C                   ENDIF                                                               BUG3562
- 
+
       * Reservation Id
      C                   MOVEL     MTRESVID      W_RSID           20
      C     W_RSID        IFNE      *BLANKS
@@ -386,7 +390,7 @@
      C                   ELSE
      C                   MOVEL     *ZEROS        T_RSID
      C                   ENDIF
- 
+
      C     SP_HYPHEN     IFNE      '-'
      C     CUCUST        CHAIN     GZSDCUSTL0                         87
       * error
@@ -396,7 +400,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVEL     BBBRCD        T_CUBR
       * Risk Customer Branch
      C                   MOVEL     BBBRCD        T_RCBR
@@ -413,7 +417,7 @@
      C                   MOVEL     BBCOLC        T_CNCD
      C                   ENDIF                                                              AR466512
       * Matured?
- 
+
      C*****T_ZONE********CHAIN     SDBANKD0                           99                     BUG3562
       **error************                                                                    BUG3562
      C******IN99*********IFEQ      *ON                                                       BUG3562
@@ -434,11 +438,11 @@
      C     TRGEVENT      WHENEQ    '3'
      C                   MOVEL     'U'           T_ACTN
      C                   ENDSL
- 
+
      C     MTDELETED     IFEQ      'Y'
      C                   MOVEL     'D'           T_ACTN
      C                   ENDIF
- 
+
      C     T_ID          SETLL     GPTRAPP
      C     T_ID          READE     GPTRAPP                                99
      C  N99GT_UNUM       ADD       1             T_UNUM
@@ -453,7 +457,7 @@
      C                   WRITE     GPTRAPP
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -468,7 +472,7 @@
      C     MTLIABCCY     CHAIN     GPCURRD0                           99                     BUG3368
      C                   Z-ADD     GCNBDP        LiablCDP          1 0                       BUG3368
      C     1             ADD       LiablCDP      LiablIx           1 0                       BUG3368
- 
+
      C     MTASSETAMT    IFNE      *ZEROS
      C     MTLIABAMT     ORNE      *ZEROS
      C     T_ACTN        OREQ      'D'
@@ -479,7 +483,7 @@
      C     T_ID          READE     GPPOSNL0                               79
      C                   ENDDO
      C                   ENDIF
- 
+
      C     MTASSETAMT    IFNE      *ZEROS
      C     T_ACTN        ANDNE     'D'
      C     MTLIABAMT     ORNE      *ZEROS
@@ -512,7 +516,7 @@
      C                   WRITE     GPPOSNP
      C                   ENDIF
      C                   ENDIF
- 
+
      C     MTLIABAMT     IFNE      *ZEROS
      C                   CLEAR                   P_POSN
      C                   MOVEL     T_ID          P_ID
@@ -542,7 +546,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       /SPACE 5                                                                               BUG3368
       *****************************************************************                      BUG3368
@@ -573,14 +577,14 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
      C     KGBRCH        KLIST
      C                   KFLD                    KBRCH             3
      C                   KFLD                    KCUST             6
- 
+
      C     GPUTXMK       KLIST
      C                   KFLD                    KZONE            10
      C                   KFLD                    KMOD              2
@@ -626,7 +630,7 @@
      C                   EVAL      I#ERMS = 'MISSING GLOBAL SYSTEM VALUE'                   AR466512
      C                   EXSR      *PSSR                                                    AR466512
      C                   ENDIF                                                              AR466512
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

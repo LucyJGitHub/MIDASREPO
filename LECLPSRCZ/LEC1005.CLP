@@ -9,7 +9,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 256062             Date 27May14              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,7 +18,7 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 116180             Date 18May98              */
+/*                      116180             Date 18May98              */
 /*                      S01408             Date 25May95              */
 /*                      S01189              DATE 09FEB90            */
 /*                      S01194              DATE 09FEB90            */
@@ -25,6 +26,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       256062 - Call LE0970 during monthend COB.                   */
+/*              - Applied for MD-26864.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       116180 - Allow report to be on request rather than monthly.*/
 /*                This program has been changed only to run the     */
@@ -94,6 +97,7 @@
 /**/
 /***************** OVRDBF     FILE(TABLE)  TOFILE(TABLEEE)           * *S01194*/
 /******************CALL       PGM(LE0970)                             /*116180*/
+                   CALL       PGM(LE0970) PARM('     ' 'ALL')                             /*256062*/
 /***************** DLTOVR     FILE(*ALL)                             * *S01194*/
 /**/
                    IF         COND(%SWITCH(XXXXXX00)) THEN(DO)

@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056103           Date 23Jun20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CUP023             Date 17Mar11              */
 /*                      BUG27791 *CREATE   Date 28May10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056103 - Ensure proper update of SDSVLXTD                 */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP023 - Addition of sequence numbers for release levels    */
@@ -42,6 +44,7 @@
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)                                 /*CUP023*/
+             DCL        VAR(&SYSTEMVAL) TYPE(*CHAR) LEN(200)                            /*MD056103*/
 
 /**********  DCLF       FILE(UPSVALJ0) OPNID(A) */                                      /*MD054605*/
              DCLF       FILE(UPSVALJ0) OPNID(A) ALWNULL(*YES)                           /*MD054605*/
@@ -264,7 +267,18 @@ PROMPT:
                           ??SUBRLS(&SUBRLS)                                               /*CUP023*/
              MONMSG     MSGID(CPF6801)
 /**********  DLTOVR     FILE(GPSVALL0) LVL(*JOB) */                                     /*MD054605*/
-
+             CHGVAR     VAR(&STM_STR) VALUE(' ')                                        /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE('update SDSVLXTD z +
+                         set (z.gival) = (select g.gival from GPSVLXTD g')              /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE(' where g.gisval +
+                          = ''BrgOldSystemRlsLvl'') where z.gisval +
+                          = ''BrgOldSystemRlsLvl'';')                                   /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                           /*MD056103*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD056103*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD056103*/
+                                                                                        /*MD056103*/
              GOTO       CMDLBL(ENDPGM)
 ERROR:
 /* Set up messages for Midas Information Screen. */

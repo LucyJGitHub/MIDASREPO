@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 15Mar13               *
+      *  Last Amend No. MD050526           Date 27Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132             Date 15Mar13               *
       *                 AR855391           Date 27Oct11               *
       *                 CSD091             Date 04Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -25,6 +26,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050526 - Maintain Customers tab Authority Holders Link and *
+      *             Details by Country of Tax code not shown in red   *
+      *             in case of errors                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *
       *  CSD091 - Overrideable Errors Configurability Enabler Phase 2 *
@@ -378,7 +382,8 @@
       *
      C                   EVAL      LtypOk = 'N'
      C                   EVAL      Idx = Idx + 1
-     C                   EVAL      FldnamXar(Idx) =  'DDAUT' +
+     C**********         EVAL      FldnamXar(Idx) =  'DDAUT' +                              MD050526
+     C                   EVAL      FldnamXar(Idx) =  'DDLTP' +                              MD050526
      C                                  %TRIM (%CHAR(PAuthNum))
      C                   EVAL      MsgIdXAr(Idx) = 'USR5994'
       *
@@ -436,12 +441,15 @@
      C                   EVAL      FldnamXar(Idx) =  'DDPG' + '1' +
      C                             %TRIM (%CHAR(PAuthNum))
      C                   EVAL      IDx = IDx + 1
+     C                   EVAL      MsgIdXAr(Idx) = 'USR5996'                                MD050526
      C                   EVAL      FldnamXar(Idx) =  'DDPG' + '2' +
      C                             %TRIM (%CHAR(PAuthNum))
      C                   EVAL      IDx = IDx + 1
+     C                   EVAL      MsgIdXAr(Idx) = 'USR5996'                                MD050526
      C                   EVAL      FldnamXar(Idx) =  'DDPG' + '3' +
      C                             %TRIM (%CHAR(PAuthNum))
      C                   EVAL      IDx = IDx + 1
+     C                   EVAL      MsgIdXAr(Idx) = 'USR5996'                                MD050526
      C                   EVAL      FldnamXar(Idx) =  'DDPG' + '4' +
      C                             %TRIM (%CHAR(PAuthNum))
       *

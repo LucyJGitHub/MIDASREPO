@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051696           Date 12Mar20
+      *  Last Amend No. MD051696           Date 12Mar20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,7 +28,6 @@
       *                                                               *
       *  MD051696 - File Out of Balance error on component SDC0602    *
       *             SD1420AU audit report under SDCMRKPD file         *
-      *           - Applied for MD056353.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  CSD025 - Customer De-Activation                              *

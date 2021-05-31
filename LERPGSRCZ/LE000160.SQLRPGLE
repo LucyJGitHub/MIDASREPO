@@ -19,11 +19,17 @@
       *                                                               *
       *  (C) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD031156           Date 18Jul18               *
-      *  Prev Amend No. CLE159  *Create    Date 18Jul18               *
+      *  Last Amend No. MD055472           Date 21Apr20               *
+      *  Prev Amend No. MD031156           Date 18Jul18               *
+      *                 CLE159  *Create    Date 18Jul18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055472 - Descrepancy between lower release versus FBM2.1   *
+      *             on the calculation of amortization due to half    *
+      *             adjust and declaration of field. Use a system     *
+      *             value to determine whether to use the FBM 11.06   *
+      *             version or the FBM2.1 version of LE000160.        *
       *  MD031156 - LEC000159 00001 Failed in COB due to decimal data *
       *             error in LE000160                                 *
       *  CLE159 - Lending Fee Amortization Enhancement                *
@@ -350,7 +356,11 @@
       *
       * Recalculate Outstanding Fee Amount
       *
+     C     KEYDAT        Ifeq      FEPSTD                                                   MD055472
      C     @@FAMT        sub       SVDAFS        REOFES
+     C                   ELSE                                                               MD055472
+     C     SVOFES        sub       SVDAFS        REOFES                                     MD055472
+     C                   ENDIF                                                              MD055472
       *
      C     REOFES        Iflt      *Zeros
      C                   z-add     *Zeros        REOFES

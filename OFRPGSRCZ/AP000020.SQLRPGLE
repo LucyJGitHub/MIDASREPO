@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP090A            Date 04Nov13               *
+      *  Last Amend No. MD056610           Date 07Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP090A            Date 04Nov13               *
       *                 CAP090   *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056610 - Deliverable Data Split for APPGMSTD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP090A - Initiate Batch Process API                         *
       *  CAP090 - Initiate Batch Process API                          *
@@ -87,15 +89,26 @@
       ** Write to Network Descriptions Extension File
 
      C/exec SQL
-     C+ Insert into APPGMSTD
+     C**Insert*into APPGMSTD                                                                MD056610
+     C+ Insert into APPGSCTD                                                                MD056610
      C+  Values
      C+  (
      C+    'ACCOUNTING RULES',
      C*+***'GLC000586'                                                                       CAP090A
-     C+    'GLC000585'                                                                       CAP090A
+     C*****'GLC000585'                                                              CAP090A MD056610
+     C+    'GLC000585',                                                                     MD056610
+     C+    'C'                                                                              MD056610
      C+  )
      C/end-exec
 
+     C/exec SQL                                                                             MD056610
+     C+ Insert into APPGSXTD                                                                MD056610
+     C+  Values                                                                             MD056610
+     C+  (                                                                                  MD056610
+     C+    'ACCOUNTING RULES',                                                              MD056610
+     C+    'C'                                                                              MD056610
+     C+  )                                                                                  MD056610
+     C/end-exec                                                                             MD056610
       ** Handle SQL Error
 
      C                   If        SQLCOD < 0

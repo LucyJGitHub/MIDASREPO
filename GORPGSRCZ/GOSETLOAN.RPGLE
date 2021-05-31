@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD035257           Date 19Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -38,6 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035257 - Set T_EDAT to rundate for live non auto-settle    *
+      *             loans.                                            *
+      *           - Applied for MD054829.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -77,6 +81,8 @@
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                MD035257
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD035257
 
 
       * ENTRY PARAMETERS
@@ -92,6 +98,7 @@
      C                   PARM                    SL_MLNR           6                          CLE148
      C**********         PARM                    SL_OLNO           6 0                        CSD027
      C                   PARM                    SL_OLNO           6                          CSD027
+     C                   PARM                    I#LOC             4                        MD035257
       * OUTPUTS
      C                   PARM                    T_TRAP
 
@@ -240,7 +247,21 @@
       * Start Date
      C                   Z-ADD     CL_VDAT       T_SDAT
       * End Date
+     C     CL_RECI       IFEQ      'D'                                                      MD035257
+     C     CL_AUTO       ANDEQ     'N'                                                      MD035257
+     C     CL_MDAT       ANDLT     BJRDNB                                                   MD035257
+     C     I#LOC         ANDEQ     'GLOB'                                                   MD035257
+     C                   Z-ADD     BJRDNB        T_EDAT                                     MD035257
+     C                   ELSE                                                               MD035257
+     C     CL_RECI       IFEQ      'D'                                                      MD035257
+     C     CL_AUTO       ANDEQ     'N'                                                      MD035257
+     C     CL_MDAT       ANDLT     BJDNWD                                                   MD035257
+     C     I#LOC         ANDEQ     'ZONE'                                                   MD035257
+     C                   Z-ADD     BJDNWD        T_EDAT                                     MD035257
+     C                   ELSE                                                               MD035257
      C                   Z-ADD     CL_MDAT       T_EDAT
+     C                   ENDIF                                                              MD035257
+     C                   ENDIF                                                              MD035257
       * Recourse ind
      C                   MOVEL     CL_RCSI       T_RCSI
       * Customer branch
@@ -301,6 +322,13 @@
 
       /COPY GOCPYSRC,GOGETZONE
 
+      *                                                                                     MD035257
+      **  Access Bank Details                                                               MD035257
+      *                                                                                     MD035257
+     C                   CALLB     'AOBANKR0'                                               MD035257
+     C                   PARM      '*DBERR  '    @RTCD             7                        MD035257
+     C                   PARM      '*FIRST  '    @OPTN             7                        MD035257
+     C     SDBANK        PARM      SDBANK        DSFDY                                      MD035257
 
       * key list
 

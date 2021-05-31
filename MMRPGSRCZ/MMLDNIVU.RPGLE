@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 250161             Date 22May20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD057049           Date 03Nov20               *
+      *  Prev Amend No. MD056313           Date 21Sep20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
@@ -138,8 +139,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  250161 - Ensure that maturity date and value date of deals   *
-      *           is validated against DACO of ACCNTAB.               *
+      *  MD057049 - Move value of IKRRAT to HKRRAT                    *
+      *  MD056313 - Deal settlement not validated during authorize    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -777,7 +778,7 @@
       ** spaces in parameter list not used by this function
      D PayDat          S              5P 0 INZ(99999)
      D RecDat          S              5P 0 INZ(99999)
-     D LOD             S              1A   INZ(*Blanks)                                       250161
+
       ** Value Date as a Midas Day Number to be placed in either Payment
       **  or Receipt Date
      D ValDateMDN      S              5P 0
@@ -1321,8 +1322,10 @@
                                                                                              BUG4482
      C                   WHEN      DDACTN = 'X'                                              BUG4482
       *  Processing for Authorises                                                           BUG4482
+     C                   MOVEL     DealFilFmt    ValidDeal                                  MD056313
      C                   EVAL      IKINTR = HKINTR                                         MD037869A
      C                   EVAL      IKSPRD = HKSPRD                                         MD037869A
+     C                   EVAL      IKRRAT = HKRRAT                                          MD057049
      C                   EXSR      ValidateTr                                                BUG4482
      C**********         EXSR      ValidateAc                                      BUG6164 MD037869A
      C                   EXSR      ValidateSt                                                BUG4482
@@ -2678,22 +2681,20 @@
 
      C                   IF        OKVDAT <> 'N'
 
-     C**********         CALLB     'ZDATE1'                                                   250161
-     C**********         PARM                    DDVDAT                                       250161
-     C**********         PARM                    ValDateMDN                                   250161
-     C**********         PARM                    BJDFIN                                       250161
-     C**********         PARM                    ErrorFlag                                    250161
+     C                   CALLB     'ZDATE1'
+     C                   PARM                    DDVDAT
+     C                   PARM                    ValDateMDN
+     C                   PARM                    BJDFIN
+     C                   PARM                    ErrorFlag
 
       * If the Deal Type is for a Loan,    set the Pay Date = Value Date
       * If the Deal Type is for a Deposit, set the Receive Date = Value Date
      C                   IF           DDType = 'IP' OR DDType = 'TI'
      C                             OR DDType = 'CL' OR DDType = 'LN'
      C                             OR DDType = 'DL'
-     C**********         EVAL      PayDat = ValDateMDN                                        250161
-     C                   EVAL      LOD = 'L'                                                  250161
+     C                   EVAL      PayDat = ValDateMDN
      C                   ELSE
-     C**********         EVAL      RecDat = ValDateMDN                                        250161
-     C                   EVAL      LOD = 'D'                                                  250161
+     C                   EVAL      RecDat = ValDateMDN
      C                   ENDIF
       *                                                                                       260428
      C     DDACTN        IFNE      'I'                                                        260428
@@ -2718,7 +2719,7 @@
      C                   EVAL      W#CCY = *BLANKS                                          MD022656
      C     PayDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
-     C     DDACTN        OREQ      'X'                                                       260428A
+     C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
      C                   MOVEL     'Y'           ##PPAY                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
@@ -2729,7 +2730,7 @@
      C                   ENDIF                                                                260428
      C     RecDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
-     C     DDACTN        OREQ      'X'                                                       260428A
+     C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
      C                   MOVEL     'Y'           ##PREC                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
@@ -2739,41 +2740,6 @@
      C                   MOVEL     'N'           ##PREC                                       260428
      C                   ENDIF                                                                260428
      C                   ENDIF                                                                260428
-
-                                                                                              250161
-      ** Payment date = value date for loan, maturity date for deposit                        250161
-     C                   IF        LOD = 'L'                                                  250161
-     C                   CALLB     'ZDATE1'                                                   250161
-     C                   PARM                    DDVDAT                                       250161
-     C                   PARM                    ValDateMDN                                   250161
-     C                   PARM                    BJDFIN                                       250161
-     C                   PARM                    ErrorFlag                                    250161
-     C                   EVAL      PayDat = ValDateMDN                                        250161
-     C                   ELSE                                                                 250161
-     C                   CALLB     'ZDATE1'                                                   250161
-     C                   PARM                    DDMDAT                                       250161
-     C                   PARM                    ValDateMDN                                   250161
-     C                   PARM                    BJDFIN                                       250161
-     C                   PARM                    ErrorFlag                                    250161
-     C                   EVAL      PayDat = ValDateMDN                                        250161
-     C                   Endif                                                                250161
-                                                                                              250161
-      ** Receive date = maturity date for loan, value date for deposit                        250161
-     C                   IF        LOD = 'L'                                                  250161
-     C                   CALLB     'ZDATE1'                                                   250161
-     C                   PARM                    DDMDAT                                       250161
-     C                   PARM                    ValDateMDN                                   250161
-     C                   PARM                    BJDFIN                                       250161
-     C                   PARM                    ErrorFlag                                    250161
-     C                   EVAL      RecDat = ValDateMDN                                        250161
-     C                   ELSE                                                                 250161
-     C                   CALLB     'ZDATE1'                                                   250161
-     C                   PARM                    DDVDAT                                       250161
-     C                   PARM                    ValDateMDN                                   250161
-     C                   PARM                    BJDFIN                                       250161
-     C                   PARM                    ErrorFlag                                    250161
-     C                   EVAL      RecDat = ValDateMDN                                        250161
-     C                   Endif                                                                250161
 
      C                   ENDIF
 
@@ -3361,6 +3327,7 @@
      C                   EVAL      IKPOBN = *BLANKS                                           CSD027
      C                   EVAL      IKPOCN = *BLANKS                                           CSD027
      C                   Z-ADD     *ZERO         IKOMDT
+     C                   Z-ADD     *ZERO         IKRRAT                                     MD057049
 
       ** Have to clear the settlement data structure, or the packed numeric
       ** fields are not initialised correctly.
@@ -3573,6 +3540,7 @@
      C                   IF           DDACTN = 'D'
      C                             OR DDACTN = 'X'
      C                   MOVEL     DealFilFmt    ValidDeal
+     C                   EVAL      IKRRAT = HKRRAT                                          MD057049
      C                   ENDIF
 
       * Set Valid file field(s) that are needed for all Action Codes

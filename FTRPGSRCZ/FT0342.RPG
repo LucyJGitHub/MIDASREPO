@@ -15,8 +15,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050514           Date 18Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1001980          Date 28Jun12               *
+      *  Prev Amend No. AR930698           Date 21Mar12               *
+      *                 AR918975           Date 21Mar12               *
+      *                 MD050514           Date 18Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW213             Date 03Jun13               *
       *                 MD020161           Date 24Apr13               *
       *                 AR928992           Date 21Feb13               *
@@ -81,6 +84,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR1001980  Invalid call to AOIBANR4 without setting up       *
+      *             IBAN string (Child: AR1002970)                    *
+      *  AR930698 - Apply STP changes for CFT047.                     *
+      *             MT202 debit transactions for non-bank customer.   *
+      *             Allow both ordering customer/ordering bank.       *
+      *             (Child: AR930700)                                 *
+      *  AR918975 - Allow lower case SWIFT characters for STP.        *
+      *             (Child: AR919050)                                 *
       *  MD050514 - Authority issue with xxOWNER user profile         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
@@ -2905,6 +2916,9 @@
       *                                                                                     BUG15037
       * Store in occurrance data structure 2 any information                                BUG15037
       *                                                                                     BUG15037
+      * Set Iban to be that of account in Ordering customer                                AR1001980
+     C                     MOVELWORC1     P@IBAN    P                                      AR1001980
+      *                                                                                    AR1001980
      C           2         OCUR OACCNT                                                      BUG15037
      C                     CALL 'AOIBANR4'                                                    CFT032
      C                     PARM *BLANKS   @RTCD                                               CFT032
@@ -7650,6 +7664,7 @@
       *
      C           BBBNBI    IFNE 'Y'
      C           BBBSIN    ANDEQ*BLANKS                                   068088
+     C           CFT047    IFNE 'Y'                                                         AR930698
      C                     MOVEL'Y'       E#MSGS
      C                     MOVEL'Y'       E#NOUP
      C           S4ORBK    CAT  S4ORBB    FTMSDT    P
@@ -7657,6 +7672,7 @@
      C                     MOVEL'FTM2109' FTMSID
      C                     EXSR FTSNMS
      C                     GOTO EXXVAL
+     C                     ENDIF                                                            AR930698
      C                     END
       *
      C                     END
@@ -7868,6 +7884,7 @@
      C           F4ORCT    OREQ 'P'                                       E35508
      C           F4ORCT    OREQ 'I'                                                           CFT032
      C           S4ORBK    IFNE *BLANKS                                   E35508
+     C           CFT047    ANDNE'Y'                                                         AR930698
      C                     MOVEL'Y'       E#MSGS
      C                     MOVELS4ORC1    FTMSDT
      C                     MOVELE#CPGM    FTPGMQ
@@ -9783,6 +9800,28 @@
      C                     MOVEL'N'       CSW024                                              CFT032
      C                     ENDIF                                                              CFT032
      C/COPY OFCPYSRCZ,CFT148_031                                                            MD020161
+      *                                                                                     AR930698
+      ** Access SAR details to see if CFT047 is enabled.                                    AR930698
+      *                                                                                     AR930698
+     C                     CALL 'AOSARDR0'                                                  AR930698
+     C                     PARM *BLANKS   @RTCD                                             AR930698
+     C                     PARM '*VERIFY' @OPTN                                             AR930698
+     C                     PARM 'CFT047'  @SARD                                             AR930698
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR930698
+     C           @RTCD     IFNE *BLANKS                                                     AR930698
+     C           @RTCD     ANDNE'*NRF   '                                                   AR930698
+     C                     MOVEL'CFT047'  W0KEY                                             AR930698
+     C                     MOVEL'SCSARDPD'W0FILE                                            AR930698
+     C                     Z-ADD74        W0ERNB                                            AR930698
+     C                     EXSR SRERR                                                       AR930698
+     C                     ENDIF                                                            AR930698
+      *                                                                                     AR930698
+     C           @RTCD     IFEQ *BLANKS                                                     AR930698
+     C                     MOVEL'Y'       CFT047  1                                         AR930698
+     C                     ELSE                                                             AR930698
+     C                     MOVEL'N'       CFT047                                            AR930698
+     C                     ENDIF                                                            AR930698
+      *                                                                                     AR930698
       * Check CSW207 feature                                                                  CSW207
      C                     CALL 'SWIF2007'                                                    CSW207
      C                     PARM *BLANKS   @RTCD                                               CSW207

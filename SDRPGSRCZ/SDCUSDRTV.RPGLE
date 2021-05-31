@@ -30,8 +30,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056548           Date 10Sep20               *
-      *  Prev Amend No. 254109             Date 01Jun20               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
@@ -152,17 +152,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056548 - Customer Fees Maintenance is missing              *
-      *  254109 - Introduce new err msgs; one for the 'D' action code *
-      *           and another one for 'C' and 'R' action codes ( when *
-      *           CSD007 feauture is switched on) just to indicate the*
-      *           reason why action code is invalid.                  *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD048748 - Error Authorising Release of a Closed Customer    *
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
-      *  MD053634 - Requested Customer Authority Holders Link Report  *
-      *             for KWG$24c  not generated.                       *
+      *  MD053634 - Requested Customer “Authority Holders Link Report *
+      *             for KWG$24c” not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
@@ -1101,8 +1102,6 @@
      D WCTAX           S              2A                                                      CGL132
      D WWCLAC          S              5A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
-
-     D S01464          S              1A   INZ('N')                                         MD056548
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1295,7 +1294,6 @@
       ** Retrieve Service Fees                                                                CSD079
                                                                                               CSD079
      C     CSD008        IFEQ      'Y'                                                        CSD079
-     C     S01464        OREQ      'Y'                                                      MD056548
      C                   EXSR      RtvSfee                                                    CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -2265,27 +2263,16 @@
      C*****DDACTN        ANDEQ     'D'                                                        CSD007
      C     DDACTN        IFEQ      'C'                                                        CSD007
      C     DDACTN        OREQ      'R'                                                        CSD007
-     C*****DDACTN        OREQ      'D'                                                 CSD007 254109
-      ***Delete*Action*is*not*allowed**********************************                       254109
+     C     DDACTN        OREQ      'D'                                                        CSD007
+      *  Delete Action is not allowed
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C**********         MOVEL     'USR0553'     MsgIdArr(Ix)                                 254109
-     C                   MOVEL     '5049396'     MsgIdArr(Ix)                                 254109
+     C                   MOVEL     'USR0553'     MsgIdArr(Ix)
      C                   GOTO      EVAL
       *
      C                   ENDIF
       *                                                                                       CSD007
-     C     DDACTN        IFEQ      'D'                                                        254109
-      *                                                                                       254109
-     C                   MOVEL     'N'           OKACTN                                       254109
-     C                   ADD       1             Ix                                           254109
-     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                               254109
-     C                   MOVEL     '5049395'     MsgIdArr(Ix)                                 254109
-     C                   GOTO      EVAL                                                       254109
-      *                                                                                       254109
-     C                   ENDIF                                                                254109
-      *                                                                                       254109
      C                   ENDIF                                                                CSD007
       *                                                                                       CSD012
       * If Authorisation check is on,                                                         CSD012
@@ -2424,6 +2411,7 @@
                                                                                             BUG27866
      C                   IF        WJOBTP = 'I' AND                                         BUG27866
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
+     C                             AND WWJOB <> 'QZDASSINIT'                               AR1088819
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
       *
@@ -5760,20 +5748,6 @@
      C                   Eval      WCusAlphChksum  = PSysVal2                                 CSD027
      C                   Eval      WCusAlphaSupNum = PSysVal3                                 CSD027
       *                                                                                       CSD027
-
-      ** Check if enhancement S01464 is on                                                  MD056548
-                                                                                            MD056548
-     C                   CALLB     'AOSARDR0'                                               MD056548
-     C                   PARM      *BLANKS       @RTCD                                      MD056548
-     C                   PARM      '*VERIFY'     @OPTN                                      MD056548
-     C                   PARM      'S01464'      @SARD                                      MD056548
-     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
-                                                                                            MD056548
-     C                   IF        @RTCD = *BLANKS                                          MD056548
-     C                   EVAL      S01464 = 'Y'                                             MD056548
-     C                   ELSE                                                               MD056548
-     C                   EVAL      S01464 = 'N'                                             MD056548
-     C                   ENDIF                                                              MD056548
      C                   ENDSR
       *****************************************************************
       /EJECT

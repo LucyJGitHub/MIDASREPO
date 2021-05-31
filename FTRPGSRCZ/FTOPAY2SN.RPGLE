@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042042           Date 22Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055503           Date 03Apr20               *
+      *  Prev Amend No. MD042042           Date 22Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT050             Date 03Jun13               *
       *                 258944             Date 23Jan13               *
@@ -89,6 +90,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055503 - Not able to do webfacing authorisation for invalid*
+      *             outgoing payment that had been repaired.          *
+      *           - Added the missing parameter (InputUser) introduced*
+      *             by MD042042 in FTOPAY3VL and FTOPAY4VL.           *
       *  MD042042 - Input User Information is replaced by WIP         *
       *             Authoriser in Authorizing in "HATS"               *
       *  MD046248 - Finastra Rebranding                               *
@@ -1540,6 +1545,7 @@
      C                   PARM                    NwPtFilFmt                     CFT014
      C                   PARM                    NwPtFilFmX                     CFT014
      C                   PARM                    Val@Fields                     CFT014
+     C                   PARM                    InputUser                                  MD055503
                                                                                 CFT014
       ** If errors returned                                                     CFT014
                                                                                 CFT014
@@ -1932,6 +1938,7 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
+     C                   PARM                    InputUser                                  MD055503
  
       *
       * If errors returned

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -65,6 +66,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -467,6 +470,7 @@
      C**********                   + InfData                                          CAP086 BUG9518
      C**********                            + InRecSttmt + InPaySttmt                 CLE106 BUG9518
      C                             + InRecSttmt + InPaySttmt + InfData                       BUG9518
+     C                             + P_Sign                                                 MD054354
                                                                                               CLE106
      C*****INVALID*******TAG                                                    BUG1849
      C                   SETON                                        LR
@@ -492,6 +496,7 @@
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InfData500                                   CAP086
+     C                   PARM                    P_Sign            1                        MD054354
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -973,6 +978,7 @@
      C                   PARM                    F1XUSR           10
      C                   PARM                    F1AUSR           10
      C                   PARM                    FESTFilFmt
+     C                   PARM                    P_SIGN                                     MD054354
       *
       * OUTPUTS
 

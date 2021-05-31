@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053725           Date 31Jul19               *
-      *  Prev Amend No. MD052414A          Date 26Mar19               *
+      *  Last Amend No. MD026356           Date 06Nov19               *
+      *  Prev Amend No. MD053725           Date 31Jul19               *
+      *                 MD052414A          Date 26Mar19               *
       *                 MD034242           Date 13Mar19               *
       *                 MD052414           Date 06Feb19               *
       *                 MD046248           Date 27Oct17               *
@@ -81,6 +82,8 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  MD026356  - Report displays *ERROR* when account is closed.  *
+      *              Display '-Customer Closed-' text instead.        *
       *  MD053725 - CGL050 feature still has differences against      *
       *             DUG422 feature.                                   *
       *           - Ensure Net amount is printed for Retail Accounts. *
@@ -731,6 +734,7 @@
      D WWARLT          DS          4000                                                       CGL030
       ** Entire contents of array ARLT (used to find nbr of elements)                         CGL030
      D WWARL1          DS          4000                                                       CGL030
+     D ERR2            C                   CONST('- Customer Closed -')                     MD026356
 0114 I/SPACE 2
 0115 I**
 0116 I*    ACCOUNT BALANCES EXTRACT DETAIL RECORD
@@ -1502,6 +1506,9 @@
      C*                                                                   S01408
      C                   END                                                                  S01194
 0456 C*                                                                   S01194
+     C     @RTCD         IFEQ      '*CUSCLS'                                                MD026356
+     C                   MOVEL     ERR2          BBCRNM                                     MD026356
+     C                   ENDIF                                                              MD026356
 0461 C*
 0462 C     ACBK          COMP      ACJK2                              6262
 0463 C   62              Z-ADD     0             LDBE

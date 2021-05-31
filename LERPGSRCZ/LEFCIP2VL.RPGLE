@@ -11,8 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR896408           Date 31Jan19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. AR918343           Date 25Apr12               *
+      *  Prev Amend No. MD027517           Date 08Jul14               *      
+      *               . MD053093           Date 03Sep19               *
+      *                 MD048074           Date 03Sep19               *
+      *                 MD046484           Date 03Sep19               *
+      *                 MD039655           Date 03Sep19               *
+      *                 AR896408           Date 31Jan19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031311           Date 13Jun16               *
       *                 MD041034           Date 05Sep16               *
@@ -70,6 +76,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918343 - Tried to remove drawing types from facility but   *
+      *             BFM did not allow.                                *
+      *             Defaulting of drawing types should only occured   *
+      *             during insert and at the start (Child: AR918344)  *
+      *  MD027517 - Also validate Last Availability of CA against TR. *
+      *             Extend validation of 244684.                      *      
+      *  MD053093 - Component LEC06 00001 failed in Live due to       *
+      *             truncated CANM.                                   *
+      *           - Applied for MD052591.                             *
+      *  MD048074 - Drawing types, rollover types and allowable CCY   *
+      *             were currupted during reject.                     *
+      *           - Applied for MD052591.                             *
+      *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
+      *             maintenance. Applied for MD052591                 *
+      *  MD039655 - Facility cannot be rejected. Applied for MD052591 *
       *  AR896408 - Validation in subroutine VCDTE                    *
       *             (Validate Closing Date) is only executed for      *
       *             syndicated facilities thus DTEX                   *
@@ -490,6 +511,9 @@
 
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
+     D XXCSSN          S                   LIKE(DDCSSN)                                     AR918343
+     D XXFACT          S                   LIKE(DDFACT)                                     AR918343
+     D XXFCNO          S                   LIKE(DDFCNO)                                     AR918343
 
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
@@ -518,7 +542,20 @@
      C                   IN        ZMUSER                                                    BUG8550
      C                   UNLOCK    ZMUSER                                                    BUG8550
                                                                                              BUG8550
+     C     DDCSSN        IFNE      XXCSSN                                                   AR918343
+     C     DDFACT        ORNE      XXFACT                                                   AR918343
+     C     DDFCNO        ORNE      XXFCNO                                                   AR918343
+     C                   MOVE      'Y'           DRWTPDFLT         1                        AR918343
+     C                   ENDIF                                                              AR918343
+      *                                                                                     AR918343
      C                   EXSR      RESETERRS
+                                                                                            MD039655
+      ** Skip validation process if action is reject                                        MD039655
+                                                                                            MD039655
+     C                   IF        @ACTRV <> *BLANK                                         MD039655
+     C                   EXSR      SRRSFD                                                   MD039655
+     C                   RETURN                                                             MD039655
+     C                   ENDIF                                                              MD039655
       *
       ** Call Validation Modules in Sequence
       *
@@ -605,9 +642,175 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
+      *                                                                                     AR918343
+     C                   MOVE      DDCSSN        XXCSSN                                     AR918343
+     C                   MOVE      DDFACT        XXFACT                                     AR918343
+     C                   MOVE      DDFCNO        XXFCNO                                     AR918343
       *
       * RETURN
      C                   RETURN
+      *****************************************************************                     MD039655
+     C/EJECT                                                                                MD039655
+      *****************************************************************                     MD039655
+      ** SRRSFD  - Restore Original Details (for Reject Action)                             MD039655
+      *****************************************************************                     MD039655
+     C     SRRSFD        BEGSR                                                              MD039655
+      *                                                                                     MD046484
+      ** Get Number of Decimal Places for Currency                                          MD046484
+      *                                                                                     MD046484
+     C                   MOVE      DDFCCY        CKEY                                       MD046484
+     C                   MOVE      '*BLANKS'     @RTCD                                      MD046484
+     C                   CALLB     'AOCURRR0'    PLIST2                                     MD046484
+     C                   Z-ADD     A6NBDP        W#NBDP                                     MD046484
+      *                                                                                     MD039655
+     C                   MOVEL     DDSYIN        FPSYIN                                     MD039655
+     C                   MOVEL     DDSYCP        FPSYCP                                     MD039655
+     C                   MOVEL     DDANUM        FPANUM                                     MD039655
+      *                                                                                     MD039655
+      ** Drawing Types                                                                      MD048074
+      *                                                                                     MD048074
+     C                   MOVE      DDDTS1        DDDTS1A                                    MD048074
+     C                   MOVE      DDDTS2        DDDTS2A                                    MD048074
+     C                   MOVE      DDDTS3        DDDTS3A                                    MD048074
+     C                   MOVE      DDDTS4        DDDTS4A                                    MD048074
+     C                   MOVE      DDDTS5        DDDTS5A                                    MD048074
+      *                                                                                     MD048074
+     C     CLE028        IFEQ      'Y'                                                      MD048074
+     C                   MOVE      DDDTS6        DDDTS6A                                    MD048074
+     C                   ENDIF                                                              MD048074
+      *                                                                                     MD048074
+     C     CLE028        IFEQ      'Y'                                                      MD039655
+     C                   MOVEL     DDDTX6        DPDTPX                                     MD039655
+     C                   ENDIF                                                              MD039655
+     C                   MOVEL     DDDTX5        FPDTPS                                     MD039655
+     C                   MOVE      DDDICB        FPDICB                                     MD039655
+      *                                                                                     MD048074
+      ** Rollover Types                                                                     MD048074
+      *                                                                                     MD048074
+     C                   MOVE      DDRTS1        DDRTS1A                                    MD048074
+     C                   MOVE      DDRTS2        DDRTS2A                                    MD048074
+     C                   MOVE      DDRTS3        DDRTS3A                                    MD048074
+     C                   MOVE      DDRTS4        DDRTS4A                                    MD048074
+     C                   MOVE      DDRTS5        DDRTS5A                                    MD048074
+     C                   MOVE      DDRTS6        DDRTS6A                                    MD048074
+     C                   MOVE      DDRTS7        DDRTS7A                                    MD048074
+     C                   MOVE      DDRTS8        DDRTS8A                                    MD048074
+     C                   MOVE      DDRTS9        DDRTS9A                                    MD048074
+     C                   MOVE      DDRTS0        DDRTS0A                                    MD048074
+     C                   MOVE      DDRTSA        DDRTSAA                                    MD048074
+     C                   MOVE      DDRTSB        DDRTSBA                                    MD048074
+     C                   MOVE      DDRTSC        DDRTSCA                                    MD048074
+     C                   MOVE      DDRTSD        DDRTSDA                                    MD048074
+     C                   MOVE      DDRTSE        DDRTSEA                                    MD048074
+     C                   MOVE      DDRTSF        DDRTSFA                                    MD048074
+     C                   MOVE      DDRTSG        DDRTSGA                                    MD048074
+     C                   MOVE      DDRTSH        DDRTSHA                                    MD048074
+     C                   MOVE      DDRTSI        DDRTSIA                                    MD048074
+     C                   MOVE      DDRTSJ        DDRTSJA                                    MD048074
+     C                   MOVE      DDRTSK        DDRTSKA                                    MD048074
+      *                                                                                     MD048074
+     C                   MOVEL     DDRTX6        FPRTPS                                     MD039655
+     C                   MOVEL     DDRLPD        FPRLPD                                     MD039655
+     C                   MOVEL     DDLAID        FPLAID                                     MD039655
+     C                   MOVEL     DDCSEL        FPCSEL                                     MD039655
+      *                                                                                     MD048074
+      ** Allowable Currencies                                                               MD048074
+      *                                                                                     MD048074
+     C                   MOVE      DDCY01        DDCY01A                                    MD048074
+     C                   MOVE      DDCY02        DDCY02A                                    MD048074
+     C                   MOVE      DDCY03        DDCY03A                                    MD048074
+     C                   MOVE      DDCY04        DDCY04A                                    MD048074
+     C                   MOVE      DDCY05        DDCY05A                                    MD048074
+     C                   MOVE      DDCY06        DDCY06A                                    MD048074
+     C                   MOVE      DDCY07        DDCY07A                                    MD048074
+     C                   MOVE      DDCY08        DDCY08A                                    MD048074
+     C                   MOVE      DDCY09        DDCY09A                                    MD048074
+     C                   MOVE      DDCY10        DDCY10A                                    MD048074
+     C                   MOVE      DDCY11        DDCY11A                                    MD048074
+     C                   MOVE      DDCY12        DDCY12A                                    MD048074
+     C                   MOVEL     DDACCY        FPALCY                                     MD039655
+      *                                                                                     MD039655
+     C                   MOVEL     DDCOMD        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPCOMD                                     MD039655
+      *                                                                                     MD039655
+     C                   MOVEL     DDCDTE        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPCDTE                                     MD039655
+      *                                                                                     MD039655
+     C                   MOVEL     DDAVLD        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPAVLD                                     MD039655
+      *                                                                                     MD039655
+     C                   MOVEL     DDLPTP        FPLPTP                                     MD039655
+     C                   MOVE      DDLPBR        FPLPBR                                     MD039655
+      *                                                                                     MD039655
+     C     DDLPTP        IFEQ      'P'                                                      MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDLPAM        ZFIELD                                     MD039655
+     C                   Z-ADD     7             ZADEC                                      MD039655
+     C                   Z-ADD     4             ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPLPAM                                     MD039655
+     C                   ELSE                                                               MD039655
+     C     DDLPTP        IFEQ      'A'                                                      MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDLPAM        ZFIELD                                     MD039655
+     C                   MOVE      WWNBDP        W#NBDP                                     MD039655
+     C                   Z-ADD     W#NBDP        ZADEC                                      MD039655
+     C     13            SUB       W#NBDP        ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPLPAM                                     MD039655
+     C                   ENDIF                                                              MD039655
+     C                   ENDIF                                                              MD039655
+      *                                                                                     MD039655
+     C                   MOVE      DDLPPS        FPLPPS                                     MD039655
+     C                   MOVEL     DDDFTP        FPDFTP                                     MD039655
+     C                   MOVEL     DDDFST        FPDFST                                     MD039655
+     C                   MOVEL     DDDFCL        FPDFCL                                     MD039655
+      *                                                                                     MD039655
+     C                   Z-ADD     *ZERO         FPCAXR                                     MD039655
+     C     DDCAXR        IFNE      *BLANKS                                                  MD039655
+     C                   MOVE      DDCAXR        ZFIELD                                     MD039655
+     C                   Z-ADD     8             ZADEC                                      MD039655
+     C                   Z-ADD     5             ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPCAXR                                     MD039655
+     C                   ENDIF                                                              MD039655
+      *                                                                                     MD039655
+     C                   MOVE      *BLANK        FPCACY                                     MD039655
+      *                                                                                     MD039655
+     C     DDTRCA        IFEQ      'TR'                                                     MD039655
+     C**********         MOVE      DDCANM        K1CNUM                            MD039655 MD053093
+     C                   MOVEL     DDCANM        K1CNUM                                     MD053093
+     C                   MOVE      DDCAFT        K1FACT                                     MD039655
+     C                   MOVE      DDCAFN        K1FCNO                                     MD039655
+      *                                                                                     MD039655
+     C     K#KY01        CHAIN     FCLTY                              80                    MD039655
+     C     *IN80         IFEQ      '0'                                                      MD039655
+     C                   MOVE      FCCY          FPCACY                                     MD039655
+     C                   ENDIF                                                              MD039655
+      *                                                                                     MD039655
+     C                   ENDIF                                                              MD039655
+      *                                                                                     MD039655
+     C                   MOVEL     DDCMDI        FPCMDI                                     MD039655
+     C                   MOVE      DDPRTR        FPPRTR                                     MD039655
+     C                   MOVE      DDSVCD        FPSVCD                                     MD039655
+     C                   MOVE      DDLMTI        FPLMTI                                     MD039655
+      *                                                                                     MD039655
+     C                   ENDSR                                                              MD039655
       *****************************************************************
       ** VSYIN   - Validate Syndication indicator
       *****************************************************************
@@ -886,6 +1089,9 @@
      C                   ENDIF                                                              AR785547
      C                   ELSE                                                               AR785547
       *   Default to all if no entry made.
+      *                                                                                     AR918343
+     C     DDACTN        IFEQ      'I'                                                      AR918343
+     C     DRWTPDFLT     ANDEQ     'Y'                                                      AR918343
      C                   MOVE      'C'           DDDTS1
      C                   MOVE      'T'           DDDTS2
      C                   MOVE      'D'           DDDTS3
@@ -899,6 +1105,7 @@
      C     DDSYIN        ANDNE     'Y'                                                       BUG3723
      C                   MOVE      'F'           DDDTS6                                      BUG3723
      C                   ENDIF                                                               BUG3723
+     C                   ENDIF                                                              AR918343
      C                   ENDIF                                                              AR785547
       *
      C                   ELSE
@@ -1035,6 +1242,8 @@
      C                   MOVE      DDDTS6        DDDTS6A                                     BUG3723
      C                   ENDIF                                                               BUG3723
       *
+     C                   MOVE      'N'           DRWTPDFLT                                  AR918343
+      *                                                                                     AR918343
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2666,6 +2875,30 @@
      C                   Movel     'DDCAXR'      FldNamXAr(Idx)
      C                   Movel     'LEF0275'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                     MD027517
+      ** Validate Last Availability Date of CA against attached TR.                         MD027517
+      *                                                                                     MD027517
+     C                   IF        DDTRCA = 'CA'                                            MD027517
+     C                   MOVEL     DDCSSN        K0CANM                                     MD027517
+     C                   MOVE      DDFACT        K0CAFT                                     MD027517
+     C                   MOVE      DDFCNO        K0CAFN                                     MD027517
+     C     K#KY10        SETLL     FCLTYFL9                                                 MD027517
+     C     K#KY10        READE     FCLTYFL9                               05                MD027517
+      *                                                                                     MD027517
+     C     *IN05         DOWEQ     '0'                                                      MD027517
+      *                                                                                     MD027517
+     C     LERECI        IFEQ      'D'                                                      MD027517
+     C     LEAVLD        ANDGT     W#AVLD                                                   MD027517
+     C                   Move      'N'           DDAVLDOK                                   MD027517
+     C                   Add       1             Idx                                        MD027517
+     C                   Movel     'DDAVLD'      FldNamXAr(Idx)                             MD027517
+     C                   Movel     '5049411'     MsgIDXAr(Idx)                              MD027517
+     C                   LEAVE                                                              MD027517
+     C                   ENDIF                                                              MD027517
+      *                                                                                     MD027517
+     C     K#KY10        READE     FCLTYFL9                               05                MD027517
+     C                   ENDDO                                                              MD027517
+     C                   ENDIF                                                              MD027517
       *
      C                   ENDIF
       *
@@ -2839,6 +3072,10 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
+                                                                                            MD039655
+      ** Reject Action Code                                                                 MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV            1                        MD039655
 
       * OUTPUTS
       * Field OK flags (DS) from/to caller

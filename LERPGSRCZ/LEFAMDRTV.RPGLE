@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD024809           Date 06Nov19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CSC054             Date 23Feb12               *
       *                 AR787620           Date 10Jun11               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024809 - Also execute holiday check during authorise.      *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -1112,10 +1114,12 @@
      C                   ENDIF
       *
      C                   ENDIF
+     C                   ENDIF                                                              MD024809
  
       * If value date is OK
       * issue a warning if the date is a holiday
  
+     C                   IF        S#ACTN = 'I' or S#ACTN = 'X' or S#ACTN = 'A'             MD024809
      C     S#VLDTok      IFEQ      'Y'
      C                   Z-ADD     W#VLDT        ZDAYNO
      C                   IF        WAggregate = 'Y'                                           CLE041

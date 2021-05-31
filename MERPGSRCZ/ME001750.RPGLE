@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034562           Date 02Jun15               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034562           Date 02Jun15               *
       *                 CSW215             Date 06Apr15               *
       *                 CSW213             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034562 - ACOUNTLINE and ACOUNTIBAN must be accepted for    *
       *             59F even if CSW215 is OFF                         *

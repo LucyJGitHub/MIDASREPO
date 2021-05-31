@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CLE071  *CREATE    Date 18Jul18               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. CLE071  *CREATE    Date 18Jul18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  CLE071 - Value Dating of Rate Changes to Fees                *
       *                                                               *
       *****************************************************************
@@ -33,8 +36,10 @@
      D G_LEFERQL1    E DS                  EXTNAME(GZLEFERCQD)
      D                                     PREFIX(G_)
 
-     D BR              S              3    DIM(99)
-     D SL              S             27    DIM(99)
+     D***BR*****         S              3    DIM(99)                                        MD055146
+     D***SL*****         S             27    DIM(99)                                        MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D SL              S             27    DIM(999)                                         MD055146
 
      D SYNLOGREC       DS
      D  BSCNTW                 1      9S 0
@@ -123,7 +128,8 @@
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
 
-     C                   Z-ADD     1             I                 2 0
+     C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C   01FCBRCA        LOOKUP    BR(I)                                  99
      C   02G_FCBRCA      LOOKUP    BR(I)                                  99
      C     *IN99         IFEQ      *OFF
@@ -181,7 +187,8 @@
      C                   WRITE     GPSBLOGD0
 
       * Write branch totals
-     C                   Z-ADD     1             I                 2 0
+     C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C     BR(I)         DOWNE     '***'
      C                   MOVEL     BR(I)         BSBRCA
      C                   MOVEL     SL(I)         SYNLOGREC

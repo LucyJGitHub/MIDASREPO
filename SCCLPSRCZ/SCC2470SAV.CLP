@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036915           Date 06Jan16              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036915           Date 06Jan16              */
 /*                      AR855839           Date 25Nov12              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -18,6 +19,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036915 - COB: COBJRNMON is not ready for IASP.            */
 /*       AR855839 - Reopen of Input cycle gives MSGW in COBJRNMON.   */
@@ -129,9 +131,11 @@
                                                                                         /*AR855839*/
 /** Call AOSARDR0 only when SCSARDL1 is not allocated */                                /*AR855839*/
                                                                                         /*AR855839*/
-             ALCOBJ     OBJ((SCSARDL1 *FILE *EXCL *FIRST)) WAIT(1)                      /*AR855839*/
+/**********  ALCOBJ     OBJ((SCSARDL1 *FILE *EXCL *FIRST)) WAIT(1) */         /*AR855839**MD055681*/
+             ALCOBJ     OBJ((SCSRDJW0 *FILE *EXCL *FIRST)) WAIT(1)                      /*MD055681*/
              MONMSG     MSGID(CPF0000) EXEC(RETURN)                                     /*AR855839*/
-             DLCOBJ     OBJ((SCSARDL1 *FILE *EXCL *FIRST))                              /*AR855839*/
+/**********  DLCOBJ     OBJ((SCSARDL1 *FILE *EXCL *FIRST)) */                 /*AR855839**MD055681*/
+             DLCOBJ     OBJ((SCSRDJW0 *FILE *EXCL *FIRST))                              /*MD055681*/
 /**/
 /**Decide*if*CCB009*-*journalling*during*COB*is*on**/                                     /*CCB020*/
 /**/
@@ -173,7 +177,7 @@
 /* up attached receiver */
 /**/
              CHGVAR     VAR(&CURR_RDEC) VALUE(&CURR_RDEC - 1)
- 
+
  SAVE:
 /**/
 /* Are there any receivers to save - Yes if the &CURR_RCV -1 is */
@@ -220,7 +224,7 @@
 /**/
                  GOTO       CMDLBL(SAVE)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDCLPGM)
 /**/
 /* Abnormal Termination */
@@ -228,10 +232,10 @@
 ABNORMAL:
              CHGJOB     SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              SNDPGMMSG  MSG('Program SCC2470SAV ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  ENDCLPGM:
              ENDPGM

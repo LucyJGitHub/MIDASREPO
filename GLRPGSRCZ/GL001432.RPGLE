@@ -14,8 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG009             Date 24Oct19               *
-      *  Prev Amend No. MD050696           Date 15May18               *
+      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Prev Amend No. 223783             Date 28May12               *      
+      *                 MD055642A          Date 27May20               *
+      *                 CMG008             Date 20Feb20               *
+      *                 CMG009             Date 24Oct19               *
+      *                 MD050696           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -52,6 +56,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
+      *           (Recompile)                                         *
+      *  223783 - Edit field 86.                                      *
+      *         - Applied for AR973615 (Child: AR973617)              *      
+      *  MD055642A - FM 2.1 SP21 Duplicate MultiCash Narr 22 on       *
+      *             field 61 subfield 86                              *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  CMG009 - MT942 without Forward Value Postings.               *
       *  MD050696 - Multicash extended narratives from BuN interface  *
       *            postings not merged in field 86                    *
@@ -114,7 +125,9 @@
      F/COPY WNCPYSRC,GLH00180
      FSDNTTIL0  IF   E           K DISK                      INFSR(*PSSR)                     CGL152
       ** Midas SD Network Transaction Identifier.                                             CGL152
-
+     FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                 CMG008
+      ** SWIFT Character Conversion file                                                      CMG008
+                                                                                              CMG008
       *****************************************************************
       *                                                               *
       * Use of Indicators                                             *
@@ -173,6 +186,9 @@
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Data Structure for Customer record format.
+                                                                                              223783
+     D DSACCT        E DS                  EXTNAME(ACCNTAB) PREFIX(XG)                        223783
+      **  Data Structure for Account Details.                                                 223783
                                                                                             BUG26832
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)                                BUG26832
       **  Data Structure for Network Description format                                     BUG26832
@@ -239,6 +255,13 @@
      D WkField6        S              6A                                        Working Field 6
      D WkField30       S             30A                                        Working Field 30
      D CRE008          S              6                                         CRE008 flag   CRE008
+     D ZA1             S              1    DIM(51)                                            223783
+     D ZA2             S              1    DIM(99)                                            223783
+     D WFIELD          S             99A                                                      223783
+     D WNARR           DS            65                                                       223783
+     D WFIELD1                 1      4A                                                      223783
+     D WFIELD2                 5     14A                                                      223783
+     D WFIELD3                15     65A                                                      223783
      D CGL152          S              1                                         CGL152 flag   CGL152
      D CMG009          S              1                                         CMG009 flag   CMG009
      D/COPY WNCPYSRC,GLH00416
@@ -248,6 +271,32 @@
      D GLSPOSX                        7A                                                    BUG25147
      D  WBatchNb               1      3A                                                    BUG25147
      D  WItemNb                4      6S 0                                                  BUG25147
+                                                                                              CMG008
+     D WConv           S              1A                                                      CMG008
+                                                                                              CMG008
+     D ValSwiftChr     C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ+                 CMG008
+     D                                            abcdefghijklmnopqrstuvwxyz+                 CMG008
+     D                                            0123456789+()?:-/,''. ')                    CMG008
+      ** Valid Swift Characters                                                               CMG008
+                                                                                              CMG008
+     D WBlank          C                   CONST(' ')                                         CMG008
+      ** Replacement Blank character                                                          CMG008
+                                                                                              CMG008
+     D WConvFld        S             65A                                                      CMG008
+      ** String to be converted                                                               CMG008
+                                                                                              CMG008
+     D To_Char         S            100A                                                      CMG008
+      ** TO character string                                                                  CMG008
+                                                                                              CMG008
+     D Fr_Char         S            100A                                                      CMG008
+      ** FROM character string                                                                CMG008
+                                                                                              CMG008
+     D WPos            S              3S 0                                                    CMG008
+      ** Work field for %CHECK and %REPLACE operation                                         CMG008
+                                                                                              CMG008
+     D WLen            S              3S 0                                                    CMG008
+      ** Work field for %SUBST operation                                                      CMG008
+                                                                                              CMG008
      D/COPY WNCPYSRC,GLH00181
 
       ** Input Specs
@@ -303,6 +352,8 @@
      C                   OUT       LDA                                                      BUG26832
      C                   EXSR      *PSSR                                                    BUG26832
      C                   ENDIF                                                              BUG26832
+      *                                                                                       CMG008
+     C                   EVAL      WConv = EDCONV                                             CMG008
 
      C                   IF        EDMCNW <> 'Y'                                            BUG26832
                                                                                             BUG26832
@@ -623,6 +674,15 @@
 
      C                   ENDSL
 
+      ** If CMG008 is ON, convert French characters based on translation table.               CMG008
+      ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008
+     C                   If        CMG008 = 'Y' AND WConv = 'Y'                               CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGSFD7                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGSFD7 = WConvFld                                          CMG008
+     C                   Endif                                                                CMG008
+                                                                                              CMG008
       *    --------      -----
      C     @SubFld7      ENDSR
 
@@ -672,6 +732,15 @@
 
      C                   ENDSL
 
+      ** If CMG008 is ON, convert French characters based on translation table.               CMG008
+      ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008
+     C                   If        CMG008 = 'Y' AND WConv = 'Y'                               CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGSFD8                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGSFD8 = WConvFld                                          CMG008
+     C                   Endif                                                                CMG008
+                                                                                              CMG008
       *    --------      -----
      C     @SubFld8      ENDSR
      C/COPY WNCPYSRC,GLH00428
@@ -779,6 +848,15 @@
 
      C                   ENDSL
 
+      ** If CMG008 is ON, convert French characters based on translation table.               CMG008
+      ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008
+     C                   If        CMG008 = 'Y' AND WConv = 'Y'                               CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGSFD9                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGSFD9 = WConvFld                                          CMG008
+     C                   Endif                                                                CMG008
+                                                                                              CMG008
       *    --------      -----
      C     @SubFld9      ENDSR
 
@@ -823,7 +901,7 @@
      C                   EVAL      MG8663 = BAEX19                                          BUG25147
      C                   EVAL      MG8664 = BAEX20                                          BUG25147
      C                   EVAL      MG8665 = BAEX21                                          BUG25147
-     C                   EVAL      MG8632 = BAEX22                                          BUG25147
+     C**********         EVAL      MG8632 = BAEX22                                BUG25147 MD055642A
      C                   EVAL      MG8635 = 'Y'                                             BUG25311
      C                   ELSE                                                               BUG25147
 
@@ -946,7 +1024,166 @@
       *                                                                                     BUG25147
      C                   ENDIF                                                              BUG25147
      C/COPY WNCPYSRC,GLH00207
+      *                                                                                       223783
+      ** Check if we have ti use IBAN.                                                        223783
+      *                                                                                       223783
+     C                   MOVEL     MGADI1        WNARR                                        223783
+     C                   MOVEL     WFIELD2       @RETL                                        223783
+     C                   MOVEL     *BLANK        @CNUM                                        223783
+     C                   MOVEL     *BLANK        @CUCD                                        223783
+     C                   MOVEL     *BLANK        @ACCD                                        223783
+     C                   MOVEL     *BLANK        @ACSQ                                        223783
+     C                   MOVEL     *BLANK        @BRCA                                        223783
+     C                   CALL      'AOACCTR0'                           80                    223783
+     C                   PARM                    @RTCD             7                          223783
+     C                   PARM      '*KEY'        @OPTN             7                          223783
+     C                   PARM                    @RETL            10                          223783
+     C                   PARM                    @CNUM             6                          223783
+     C                   PARM                    @CUCD             3                          223783
+     C                   PARM                    @ACCD             4                          223783
+     C                   PARM                    @ACSQ             2                          223783
+     C                   PARM                    @BRCA             3                          223783
+     C     DSACCT        PARM      *BLANKS       DSSDY                                        223783
+     C     @RTCD         IFEQ      *BLANKS                                                    223783
+     C     XGRECI        ANDEQ     'D'                                                        223783
+     C     XGIBAN        ANDNE     *BLANKS                                                    223783
+     C                   MOVE      *BLANKS       WFIELD                                       223783
+     C                   MOVEA     *BLANKS       ZA2                                          223783
+     C                   EVAL      WFIELD = WFIELD1 + XGIBAN                                  223783
+     C     ' '           SCAN      WFIELD        Z                 2 0    99                  223783
+     C                   SUB       1             Z                                            223783
+     C                   Z-ADD     1             X                                            223783
+     C                   Z-ADD     1             Y                 2 0                        223783
+     C     1             DO        Z             X                                            223783
+     C                   EVAL      ZA2(Y) = %SUBST(WFIELD:X:1)                                223783
+     C                   ADD       1             Y                                            223783
+     C                   ENDDO                                                                223783
+     C                   Z-ADD     1             X                                            223783
+     C     1             DO        51            X                                            223783
+     C                   EVAL      ZA2(Y) = %SUBST(WFIELD3:X:1)                               223783
+     C                   ADD       1             Y                                            223783
+     C                   ENDDO                                                                223783
+     C                   MOVE      *BLANKS       WFIELD                                       223783
+     C                   MOVEA     ZA2           WFIELD                                       223783
+     C                   MOVEL     WFIELD        MGADI1                                       223783
+     C                   ENDIF                                                                223783
 
+      ** If CMG008 is ON, convert French characters based on translation table.               CMG008
+      ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008
+     C                   If        CMG008 = 'Y' AND WConv = 'Y'                               CMG008
+      ** Convert MGADI1                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGADI1                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGADI1 = WConvFld                                          CMG008
+      ** Convert MGADI2                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGADI2                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGADI2 = WConvFld                                          CMG008
+      ** Convert MGADI3                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGADI3                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGADI3 = WConvFld                                          CMG008
+      ** Convert MGADI4                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGADI4                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGADI4 = WConvFld                                          CMG008
+      ** Convert MGADI5                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGADI5                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGADI5 = WConvFld                                          CMG008
+      ** Convert MGADI6                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MGADI6                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MGADI6 = WConvFld                                          CMG008
+      ** Convert MG8621                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8621                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8621 = WConvFld                                          CMG008
+      ** Convert MG8622                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8622                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8622 = WConvFld                                          CMG008
+      ** Convert MG8623                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8623                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8623 = WConvFld                                          CMG008
+      ** Convert MG8624                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8624                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8624 = WConvFld                                          CMG008
+      ** Convert MG8625                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8625                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8625 = WConvFld                                          CMG008
+      ** Convert MG8626                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8626                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8626 = WConvFld                                          CMG008
+      ** Convert MG8627                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8627                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8627 = WConvFld                                          CMG008
+      ** Convert MG8628                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8628                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8628 = WConvFld                                          CMG008
+      ** Convert MG8629                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8629                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8629 = WConvFld                                          CMG008
+      ** Convert MG8660                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8660                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8660 = WConvFld                                          CMG008
+      ** Convert MG8661                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8661                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8661 = WConvFld                                          CMG008
+      ** Convert MG8662                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8662                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8662 = WConvFld                                          CMG008
+      ** Convert MG8663                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8663                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8663 = WConvFld                                          CMG008
+      ** Convert MG8664                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8664                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8664 = WConvFld                                          CMG008
+      ** Convert MG8665                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8665                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8665 = WConvFld                                          CMG008
+      ** Convert MG8632                                                                       CMG008
+     C                   Eval      WConvFld = *Blanks                                         CMG008
+     C                   Eval      WConvFld = MG8632                                          CMG008
+     C                   Exsr      ConvChar                                                   CMG008
+     C                   Eval      MG8632 = WConvFld                                          CMG008
+                                                                                              CMG008
+     C                   Endif                                                                CMG008
+                                                                                              CMG008
       *    --------      -----
      C     @Field86      ENDSR
 
@@ -972,6 +1209,69 @@
                                                                                               CGL152
       *    --------      -----                                                                CGL152
      C     @CGL152SFld6  ENDSR                                                                CGL152
+                                                                                              CMG008
+      *========================================================================*              CMG008
+      * BldConvFil : Build Conversion Table for removing French character      *              CMG008
+      *------------------------------------------------------------------------*              CMG008
+                                                                                              CMG008
+     C     BldConvFil    BEGSR                                                                CMG008
+      *    ----------    -----                                                                CMG008
+      *                                                                                       CMG008
+      ** Open Character conversion file                                                       CMG008
+     C                   Open      SDCONVPD                                                   CMG008
+      *                                                                                       CMG008
+      ** Initialise work fields                                                               CMG008
+     C                   Eval      Fr_Char = *Blanks                                          CMG008
+     C                   Eval      To_Char = *Blanks                                          CMG008
+     C                   Eval      WLen = 0                                                   CMG008
+                                                                                              CMG008
+      ** Read file and collect characters in FROM and TO alpha fields                         CMG008
+     C     *Loval        Setll     SDCONVPD                                                   CMG008
+     C                   Read      SDCONVPD                                                   CMG008
+                                                                                              CMG008
+     C                   Dow       NOT %EOF                                                   CMG008
+     C                   Eval      Fr_Char = %SUBST(Fr_Char:1:WLen) + FRCHAR                  CMG008
+     C                   Eval      To_Char = %SUBST(To_Char:1:WLen) + TOCHAR                  CMG008
+     C                   Eval      WLen = Wlen + 1                                            CMG008
+                                                                                              CMG008
+     C                   Read      SDCONVPD                                                   CMG008
+     C                   Enddo                                                                CMG008
+      *                                                                                       CMG008
+      ** Close file                                                                           CMG008
+     C                   Close     SDCONVPD                                                   CMG008
+      *                  -----                                                                CMG008
+     C                   ENDSR                                                                CMG008
+                                                                                              CMG008
+      *========================================================================*              CMG008
+      * ConvChar : Convert Character and remove remove invalid non-SWIFT chars *              CMG008
+      *------------------------------------------------------------------------*              CMG008
+                                                                                              CMG008
+     C     ConvChar      BEGSR                                                                CMG008
+      *    --------      -----                                                                CMG008
+      *                                                                                       CMG008
+      ** Only process field if not blank                                                      CMG008
+     C                   If        WConvFld <> *BLANKS                                        CMG008
+                                                                                              CMG008
+      ** Convert all French characters based on conversion table                              CMG008
+     C                   Eval      WConvFld = %XLATE(%TRIM(Fr_Char)                           CMG008
+     C                                        :%TRIM(To_Char):WConvFld)                       CMG008
+                                                                                              CMG008
+      ** Convert all remaining non-SWIFT chars (not defined in the table)                     CMG008
+      ** into blanks. Use pre-defined 'Valid Swift Chars' field for comparison.               CMG008
+     C                   Eval      WPos = 0                                                   CMG008
+     C                   Eval      WPos = %CHECK (ValSwiftChr:WConvFld)                       CMG008
+                                                                                              CMG008
+      ** Repeat process until all invalid chars are found and converted to blank              CMG008
+     C                   Dow       WPos > 0                                                   CMG008
+     C                   Eval      WConvFld = %REPLACE(WBlank:WConvFld:WPos:1)                CMG008
+     C                   Eval      WPos = 0                                                   CMG008
+     C                   Eval      WPos = %CHECK(ValSwiftChr:WConvFld)                        CMG008
+     C                   Enddo                                                                CMG008
+                                                                                              CMG008
+     C                   Endif                                                                CMG008
+      *                  -----                                                                CMG008
+     C                   ENDSR                                                                CMG008
+                                                                                              CMG008
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
@@ -1038,6 +1338,27 @@
      C                   IF        P@RTCD = *BLANKS                                           CGL152
      C                   EVAL      CGL152 = 'Y'                                               CGL152
      C                   ENDIF                                                                CGL152
+                                                                                              CMG008
+      ** Check if feature CMG008 is installed                                                 CMG008
+                                                                                              CMG008
+     C                   EVAL      CMG008 = 'N'                                               CMG008
+                                                                                              CMG008
+     C                   CALL      'AOSARDR0'                                                 CMG008
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG008
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG008
+     C                   PARM      'CMG008 '     P@SARD                         Feature Ref   CMG008
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG008
+                                                                                              CMG008
+     C                   IF        P@RTCD = *BLANKS                                           CMG008
+     C                   MoveL     'Y'           CMG008            1                          CMG008
+     C                   ENDIF                                                                CMG008
+                                                                                              CMG008
+      * If CMG008 is ON, build the character conversion table                                 CMG008
+                                                                                              CMG008
+     C                   IF        CMG008 = 'Y'                                               CMG008
+     C                   EXSR      BldConvFil                                                 CMG008
+     C                   ENDIF                                                                CMG008
+                                                                                              CMG008
      C/COPY WNCPYSRC,GLH00430
 
      C/COPY WNCPYSRC,GLH00208

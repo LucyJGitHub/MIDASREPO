@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c)Finastra International Limited 2001                       *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057047           Date 15Jan21               *
+      *  Last Amend No. MD057283           Date 19May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057047           Date 15Jan21               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034202           Date 26Jun15               *
@@ -97,6 +98,11 @@
      F*                                                               *
 0012 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057283 - If initial threshold is specified on the interest *
+      *             calc. type,calculation of interest will only start*
+      *             when balance exceeds initial threshold. Interest  *
+      *             rates on this part of the report should be shown  *
+      *             as zero since no interest is calculated.          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057047 - When RetailNegativeIntDsp is 'N', RE0782P6 report *
       *             report shows a negative interest rate as positive *
@@ -1523,6 +1529,8 @@
      I              9999                  C         MAXVAL                                  CRE083AW
       ** Work variables                                                                     MD057047
      I              'RetailNegativeIntDsp'C         WPARM                                   MD057047
+      **                                                                                    MD057283
+     I              'DspZeroIntRate'      C         WSYSVL                                  MD057283
      I*
      I/COPY WNCPYSRC,RE0782IIP3
      I*
@@ -1628,6 +1636,39 @@
      C                     MOVE 'Y'       WNEGIN                                            MD057047
      C                     ENDIF                                                            MD057047
      C                     ENDIF                                                            MD057047
+      *                                                                                     MD057283
+      ** Call AOSVALR0 to check system value to zeroised interest rate if                   MD057283
+      ** initial threshold is greater than the level balance.                               MD057283
+      *                                                                                     MD057283
+     C                     CALL 'AOSVALR0'                                                  MD057283
+     C                     PARM *BLANKS   PRTCD   7                                         MD057283
+     C                     PARM WSYSVL    WSVLK1 20                                         MD057283
+     C                     PARM           WSVL1 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK2 20                                         MD057283
+     C                     PARM           WSVL2 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK3 20                                         MD057283
+     C                     PARM           WSVL3 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK4 20                                         MD057283
+     C                     PARM           WSVL4 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK5 20                                         MD057283
+     C                     PARM           WSVL5 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK6 20                                         MD057283
+     C                     PARM           WSVL6 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK7 20                                         MD057283
+     C                     PARM           WSVL7 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK8 20                                         MD057283
+     C                     PARM           WSVL8 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK9 20                                         MD057283
+     C                     PARM           WSVL9 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK0 20                                         MD057283
+     C                     PARM           WSVL0 200                                         MD057283
+      *                                                                                     MD057283
+     C           PRTCD     IFNE *BLANKS                                                     MD057283
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD057283
+     C                     EXSR *PSSR                                                       MD057283
+     C                     ELSE                                                             MD057283
+     C                     MOVELWSVL1     WZERAT  1                                         MD057283
+     C                     ENDIF                                                            MD057283
      C**                                                                  S01117
      C                     Z-ADD0         NORE1   50                      S01117
      C                     Z-ADD0         NORE2   50                      S01117
@@ -2123,6 +2164,14 @@
 0700 C  N57      BAL,M     ADD  1         BAL,M
      C/COPY WNCPYSRC,RE0782C017
 0701 C                     Z-ADDRAT,M     ZINP
+      *                                                                                     MD057283
+     C           WZERAT    IFEQ 'Y'                                                         MD057283
+     C           INTH      IFGT BAL,M                                                       MD057283
+     C           INTH      ANDGEBAL,N                                                       MD057283
+     C                     Z-ADD*ZERO     ZINP                                              MD057283
+     C                     ENDIF                                                            MD057283
+     C                     ENDIF                                                            MD057283
+      *                                                                                     MD057283
      C/COPY WNCPYSRC,RE0782C032
 0702 C                     EXSR REM0
 0703 C                     MOVE ZINPWN    INTWN

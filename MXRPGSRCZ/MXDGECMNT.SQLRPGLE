@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058226           Date 31May21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058226 - DEDESC must be part of XTD                        *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAAA03 - Webfacing Changes                                   *
@@ -422,6 +424,7 @@
      C+ (                                                                                   MD056612
      C+   DEDTAG                                                                            MD056612
      C+  ,DECATC                                                                            MD056612
+     C+  ,DEDESC                                                                            MD058226
      C+  ,DETRIG                                                                            MD056612
      C+  ,DESNM1                                                                            MD056612
      C+  ,DESNM2                                                                            MD056612
@@ -433,6 +436,7 @@
      C+ (                                                                                   MD056612
      C+   :P_DEDTAG                                                                         MD056612
      C+  ,:P_DECATC                                                                         MD056612
+     C+  ,:P_DEDESC                                                                         MD058226
      C+  ,:P_DETRIG                                                                         MD056612
      C+  ,:P_DESNM1                                                                         MD056612
      C+  ,:P_DESNM2                                                                         MD056612
@@ -447,6 +451,7 @@
      C+ update MXDGEXTD set                                                                 MD056612
      C+   DEDTAG = :P_DEDTAG                                                                MD056612
      C+  ,DECATC = :P_DECATC                                                                MD056612
+     C+  ,DEDESC = :P_DEDESC                                                                MD058226
      C+  ,DETRIG = :P_DETRIG                                                                MD056612
      C+  ,DESNM1 = :P_DESNM1                                                                MD056612
      C+  ,DESNM2 = :P_DESNM2                                                                MD056612

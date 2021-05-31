@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058226           Date 31May21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058226 - ROLLWOWN not working due to missing CLOSE CURSOR. *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -520,6 +522,10 @@
      C                   ADD       1             SUBF_RRN
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD058226
+     C+ close CCursor                                                                       MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
       * Issue start of file message
 
      C     *IN99         IFEQ      '1'

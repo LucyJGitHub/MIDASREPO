@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058226           Date 31May21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 251519             Date 20Nov07               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058226 - Error CPF5149 during amend                        *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  251519 - Moved SUBFLCTL record format after FOOTER to prevent*
@@ -222,9 +224,24 @@
 
       * Read workfile
 
-     C     MXEXFDK       SETLL     MXEXFFZ0                                     *
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
-     C     *IN99         DOWEQ     '0'
+     C*****MXEXFDK       SETLL     MXEXFFZ0                                     *           MD058226
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ declare YCursor insensitive scroll cursor for                                       MD058226
+     C+ select * from MXEXFFZZ                                                              MD058226
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN                                         MD058226
+     C+ order by WHFILE, WHFSQN, WHIBO, WHFOBO                                              MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ open YCursor                                                                        MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next from YCursor into :MXEXFF                                                MD058226
+     C/END-EXEC                                                                             MD058226
+     C******IN99         DOWEQ     '0'                                                      MD058226
+     C     SQLCODE       DOWEQ     0                                                        MD058226
      C                   SELECT
      C     WHLSEQ        WHENEQ    '1'
      C     CFLBP1        ANDEQ     *ZERO
@@ -251,9 +268,16 @@
      C                   Z-ADD     WHFOBO        CFLBP6
      C                   Z-ADD     WHFLDB        CFLLN6
      C                   ENDSL
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next from YCursor into :MXEXFF                                                MD058226
+     C/END-EXEC                                                                             MD058226
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD058226
+     C+ close YCursor                                                                       MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -307,12 +331,28 @@
 
       * Get first record
 
-     C     MXEXFFK       SETLL     MXEXFFZ0
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
+     C*****MXEXFFK       SETLL     MXEXFFZ0                                                 MD058226
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ declare SCursor insensitive scroll cursor for                                       MD058226
+     C+ select * from MXEXFFZZ                                                              MD058226
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN                                         MD058226
+     C+ and WHFOBO >= :WHFOBO  and WHIBO >= :WHIBO                                          MD058226
+     C+ order by WHFILE, WHFSQN, WHIBO, WHFOBO                                              MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ open SCursor                                                                        MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next from SCursor into :MXEXFF                                                MD058226
+     C/END-EXEC                                                                             MD058226
 
       * If not end of file
 
-     C     *IN99         IFEQ      '0'
+     C******IN99         IFEQ      '0'                                                      MD058226
+     C     SQLCODE       IFEQ      0                                                        MD058226
      C                   Z-ADD     WHIBO         ToP_IBO           5 0
      C                   Z-ADD     WHFOBO        ToP_FOBO          5 0
      C                   ELSE
@@ -330,7 +370,8 @@
 
       * Do while not end of file
 
-     C     *IN99         DOWEQ     '0'
+     C******IN99         DOWEQ     '0'                                                      MD058266
+     C     SQLCODE       DOWEQ     0                                                        MD058266
 
      C                   ADD       1             SUBF_RRN          4 0    04    *
 
@@ -342,18 +383,27 @@
 
      C                   WRITE     SUBFLREC
      C     SUBF_RRN      IFEQ      NumPerPag
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
-     C     *IN99         IFEQ      '1'
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next from SCursor into :MXEXFF                                                MD058226
+     C/END-EXEC                                                                             MD058226
+     C******IN99         IFEQ      '1'                                                      MD058226
+     C     SQLCODE       IFEQ      100                                                      MD058226
      C                   Z-ADD     *ZERO         WHIBO
      C                   Z-ADD     *ZERO         WHFOBO
      C                   MOVEL     'MX00001'     ZAMSID
      C                   EXSR      ZASNMS
      C                   ELSE
-     C                   SETON                                            99    *
+     C**********         SETON                                            99    *           MD058226
+     C                   eval      SQLCODE = 100                                            MD058226
      C                   END
      C                   ELSE
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
-     C     *IN99         IFEQ      '1'
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next from SCursor into :MXEXFF                                                MD058226
+     C/END-EXEC                                                                             MD058226
+     C******IN99         IFEQ      '1'                                                      MD058226
+     C     SQLCODE       IFEQ      100                                                      MD058226
      C                   Z-ADD     *ZERO         WHIBO
      C                   Z-ADD     *ZERO         WHFOBO
      C                   MOVEL     'MX00001'     ZAMSID
@@ -363,6 +413,10 @@
 
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD058226
+     C+ close SCursor                                                                       MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
       * Set on subfile control indicators
 
      C     *IN(4)        IFEQ      '1'
@@ -381,10 +435,24 @@
 
       * Update sequence on record
 
-     C     MXEXFFK       CHAIN     MXEXFFZ0                           99        *
-     C     *IN99         IFEQ      '0'
+     C*****MXEXFFK       CHAIN     MXEXFFZ0                           99        *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ SELECT *                                                                            MD058226
+     C+ into :MXEXFF                                                                        MD058226
+     C+ from MXEXFFZZ                                                                       MD058226
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN and WHIBO  = :WHIBO                     MD058226
+     C+ and WHFOBO = :WHFOBO                                                                MD058226
+     C/END-EXEC                                                                             MD058226
+     C******IN99         IFEQ      '0'                                                      MD058226
+     C     SQLCODE       IFEQ      0                                                        MD058226
      C                   MOVEL     DDACTN        WHLSEQ
-     C                   UPDATE    MXEXFFZ0
+     C**********         UPDATE    MXEXFFZ0                                                 MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ update      MXEXFFZZ  set                                                           MD058226
+     C+ WHLSEQ = :WHLSEQ                                                                    MD058226
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN and WHIBO  = :WHIBO                     MD058226
+     C+ and WHFOBO = :WHFOBO                                                                MD058226
+     C/END-EXEC                                                                             MD058226
      C                   ENDIF
 
 
@@ -427,12 +495,16 @@
 
       * Clear workfile
 
-     C     MXEXFDK       SETLL     MXEXFFZ0                                     *
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
-     C     *IN99         DOWEQ     '0'
-     C                   DELETE    MXEXFFZ0
-     C     MXEXFDK       READE     MXEXFFZ0                               99    *
-     C                   ENDDO
+     C*****MXEXFDK       SETLL     MXEXFFZ0                                     *           MD058226
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C******IN99         DOWEQ     '0'                                                      MD058226
+     C**********         DELETE    MXEXFFZ0                                                 MD058226
+     C*****MXEXFDK       READE     MXEXFFZ0                               99    *           MD058226
+     C**********         ENDDO                                                              MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ delete from MXEXFFZZ                                                                MD058226
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN                                         MD058226
+     C/END-EXEC                                                                             MD058226
 
       * Load workfile
 
@@ -468,7 +540,69 @@
      C     WHFOBO        WHENEQ    CFLBP6
      C                   MOVE      '6'           WHLSEQ
      C                   ENDSL
-     C                   WRITE     MXEXFFZ0
+     C**********         WRITE     MXEXFFZ0                                                 MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ insert into MXEXFFZZ                                                                MD058226
+     C+ (                                                                                   MD058226
+     C+   WHFILE                                                                            MD058226
+     C+  ,WHFSQN                                                                            MD058226
+     C+  ,WHFTYP                                                                            MD058226
+     C+  ,WHFLDI                                                                            MD058226
+     C+  ,WHFOBO                                                                            MD058226
+     C+  ,WHIBO                                                                             MD058226
+     C+  ,WHFLDB                                                                            MD058226
+     C+  ,WHFLDD                                                                            MD058226
+     C+  ,WHFLDP                                                                            MD058226
+     C+  ,WHFTXT                                                                            MD058226
+     C+  ,WHFLDT                                                                            MD058226
+     C+  ,WHINEX                                                                            MD058226
+     C+  ,WHMFNM                                                                            MD058226
+     C+  ,WHDS01                                                                            MD058226
+     C+  ,WHDS02                                                                            MD058226
+     C+  ,WHDS03                                                                            MD058226
+     C+  ,WHDS04                                                                            MD058226
+     C+  ,WHDS05                                                                            MD058226
+     C+  ,WHDS06                                                                            MD058226
+     C+  ,WHDS07                                                                            MD058226
+     C+  ,WHDS08                                                                            MD058226
+     C+  ,WHDS09                                                                            MD058226
+     C+  ,WHDS10                                                                            MD058226
+     C+  ,WHDS11                                                                            MD058226
+     C+  ,WHLSEQ                                                                            MD058226
+     C+  ,WHSREF                                                                            MD058226
+     C+  ,WHMODE                                                                            MD058226
+     C+ )                                                                                   MD058226
+     C+ values                                                                              MD058226
+     C+ (                                                                                   MD058226
+     C+   :WHFILE                                                                           MD058226
+     C+  ,:WHFSQN                                                                           MD058226
+     C+  ,:WHFTYP                                                                           MD058226
+     C+  ,:WHFLDI                                                                           MD058226
+     C+  ,:WHFOBO                                                                           MD058226
+     C+  ,:WHIBO                                                                            MD058226
+     C+  ,:WHFLDB                                                                           MD058226
+     C+  ,:WHFLDD                                                                           MD058226
+     C+  ,:WHFLDP                                                                           MD058226
+     C+  ,:WHFTXT                                                                           MD058226
+     C+  ,:WHFLDT                                                                           MD058226
+     C+  ,:WHINEX                                                                           MD058226
+     C+  ,:WHMFNM                                                                           MD058226
+     C+  ,:WHDS01                                                                           MD058226
+     C+  ,:WHDS02                                                                           MD058226
+     C+  ,:WHDS03                                                                           MD058226
+     C+  ,:WHDS04                                                                           MD058226
+     C+  ,:WHDS05                                                                           MD058226
+     C+  ,:WHDS06                                                                           MD058226
+     C+  ,:WHDS07                                                                           MD058226
+     C+  ,:WHDS08                                                                           MD058226
+     C+  ,:WHDS09                                                                           MD058226
+     C+  ,:WHDS10                                                                           MD058226
+     C+  ,:WHDS11                                                                           MD058226
+     C+  ,:WHLSEQ                                                                           MD058226
+     C+  ,:WHSREF                                                                           MD058226
+     C+  ,:WHMODE                                                                           MD058226
+     C+ )                                                                                   MD058226
+     C/end-exec                                                                             MD058226
      C*****MXEXFDK       READE     MXEXFFP0                               99    *           MD056612
      C/EXEC SQL                                                                             MD056612
      C+ fetch next from GCursor into :MXEXFF                                                MD056612
@@ -569,21 +703,41 @@
      C                   Z-ADD     ToP_IBO       WHIBO
      C                   Z-ADD     ToP_FOBO      WHFOBO
 
-     C     MXEXFFK       SETGT     MXEXFFZ0
-     C     MXEXFDK       READPE    MXEXFFZ0                               99    *
+     C*****MXEXFFK       SETGT     MXEXFFZ0                                                 MD058226
+     C*****MXEXFDK       READPE    MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ declare ZCursor insensitive scroll cursor for                                       MD058226
+     C+ select * from MXEXFFZZ                                                              MD058226
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN and WHIBO  <= :WHIBO                    MD058226
+     C+ and WHFOBO <= :WHFOBO                                                               MD058226
+     C+ order by WHFILE, WHFSQN, WHIBO, WHFOBO desc                                         MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ open ZCursor                                                                        MD058226
+     C/END-EXEC                                                                             MD058226
+                                                                                            MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next  from ZCursor into :MXEXFF                                               MD058226
+     C/END-EXEC                                                                             MD058226
 
       * Read previous
       * until count matches count of records previous read
 
-     C     *IN99         DOWEQ     '0'
+     C******IN99         DOWEQ     '0'                                                      MD058226
+     C     SQLCODE       DOWEQ     0                                                        MD058226
      C     SUBF_RRN      ANDLT     NumPerPag
-     C     MXEXFDK       READPE    MXEXFFZ0                               99    *
+     C*****MXEXFDK       READPE    MXEXFFZ0                               99    *           MD058226
+     C/EXEC SQL                                                                             MD058226
+     C+ fetch next  from ZCursor into :MXEXFF                                               MD058226
+     C/END-EXEC                                                                             MD058226
      C                   ADD       1             SUBF_RRN
      C                   ENDDO
 
       * Issue start of file message
 
-     C     *IN99         IFEQ      '1'
+     C******IN99         IFEQ      '1'                                                      MD058226
+     C     SQLCODE       IFEQ      100                                                      MD058226
      C                   Z-ADD     *ZERO         WHIBO
      C                   Z-ADD     *ZERO         WHFOBO
      C                   MOVEL     'MX00002'     ZAMSID

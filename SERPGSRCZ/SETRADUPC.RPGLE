@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. 248683             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
       *                 BUG22911           Date 17Feb09               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248683 - Initialize Data Area for SE1806 Flag.               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -95,7 +97,7 @@
      F                                     RENAME(SEVTRX2D0:SEVTRX2ERR)                       CSE045
      FSEVTRX2L1 UF   E           K DISK                                                       CSE045
      F                                     RENAME(SEVTRX2D0:SEVTRX2D1)                        CSE045
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SETRADU008
       *                                                                                       CER001
@@ -105,7 +107,7 @@
      FSEVETDX1PDO    E             DISK    USROPN                                             CER001
      F                                     RENAME(SEVTDLXD6:SEVTDLXD6R)                       CER001
       *                                                                                       CER001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -124,19 +126,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006--------------
       ** The following /COPY line includes the definitions for fields           CAP006
       ** used in checking whether there are messages on the data queue.         CAP006
@@ -157,9 +159,9 @@
      D Command         DS                                                       CAP006
       ** OVRDBF command for QCMDEXC to run                                      CAP006
      D                         1     26    INZ('OVRDBF TRADSDY1 SHARE(*NO)')    CAP006
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID SECURITY
      D SEVTRD        E DS                  EXTNAME(SEVTRADPD)
      D SEVTRDX1      E DS                  EXTNAME(SEVTRX1PD)
@@ -180,10 +182,10 @@
      D                                     PREFIX(A_)                                         CSE045
      D SEVTRDX2B     E DS                  EXTNAME(SEVTRX2PD)                                 CSE045
      D                                     PREFIX(B_)                                         CSE045
- 
+
      D SETRADUPC       DS             1    DTAARA(SETRADUPC)
- 
- 
+
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
@@ -191,8 +193,8 @@
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D PMCWL           DS          9999                                                       CSD015
       ** Additional entry parameter for Midas Compliance Watch                                CSD015
- 
- 
+
+
      D Object          S             10A   INZ('SETRADUPC')
      D LockObj         S             10A   INZ('SETRADLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -206,7 +208,7 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -214,11 +216,11 @@
                                                                                 CAP006
       ** Command length for QCMDEXC                                             CAP006
      D CommandLen      S             15P 5 INZ(26)                              CAP006
- 
+
      D Idx             S              3P 0                                                    CAP067
                                                                                               210517
      D PMODE           S              3A                                                      210517
- 
+
      D ULX603          S              1A   INZ('N')                                           CER001
      D CAS006          S              1                                                       CAS006
      D PRTCD           S              7                                                       CAS006
@@ -230,7 +232,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -247,7 +249,7 @@
      D SEVTDLX6      E DS                  EXTNAME(SEVTDLX1L1)                                CER001
      D SEVTDLX6S     E DS                  EXTNAME(SEVTDLX1L1)                                CER001
      D                                     PREFIX(SS)                                         CER001
- 
+
       *******************************************************************
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -256,9 +258,9 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *******************************************************************
- 
+
       /COPY WNCPYSRC,SETRADU001
- 
+
       ** Set up the name of the server/database updater data queue.             CAP006
      C                   EVAL      DtaQName = 'APTRADDTQ'                       CAP006
                                                                                 CAP006
@@ -296,43 +298,43 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       /COPY WNCPYSRC,SETRADU002
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     SEVTRADPD
- 
+
       ** READ VALID SE TRADE
      C                   READ      SEVTRADD0                              99    *
      C     *IN99         DOWEQ     '0'
- 
+
       /COPY WNCPYSRC,SETRADU003
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lower level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = FRNT
      C                   EVAL      ARFOAsocID = AFRT
      C                   EVAL      ARRprLocn  = REPA
- 
+
       /COPY WNCPYSRC,SETRADU004
- 
+
       ** GET EXTENSION FILE DETAILS (RECORDS A & B)
- 
+
      C                   CLEAR                   SEVTRDX1A
      C                   CLEAR                   SEVTRDX1B
      C                   CLEAR                   SEVTRDX2A                                    CSE045
      C                   CLEAR                   SEVTRDX2B                                    CSE045
- 
- 
+
+
       /COPY WNCPYSRC,SETRADU005
       *                                                                                       CER001
       ** ULX603 - API Luxembourg - Function SETRAD                                            CER001
       *                                                                                       CER001
      C     ULX603        IFNE      'Y'                                          B1            CER001
       *                                                                                       CER001
- 
+
      C     CSW003        IFEQ      'Y'                                          154562
      C                   EVAL      T1WHEN = 'A'
      C                   ELSE                                                   154562
@@ -344,7 +346,7 @@
      C     @KeyTrx1L0    CHAIN     SEVTRX2L0                          98                      CSE045
      C  N98              EVAL      SEVTRDX2A = SEVTRDX2                                       CSE045
      C                   ENDIF                                                                CSE045
- 
+
      C                   EVAL      T1WHEN = 'B'
      C     @KeyTrx1L0    CHAIN     SEVTRX1L0                          98
      C  N98              EVAL      SEVTRDX1B = SEVTRDX1
@@ -352,7 +354,7 @@
      C     @KeyTrx1L0    CHAIN     SEVTRX2L0                          98                      CSE045
      C  N98              EVAL      SEVTRDX2B = SEVTRDX2                                       CSE045
      C                   ENDIF                                                                CSE045
- 
+
       ** SE DATABASE UPDATE
      C                   CALLB     'SETRADUPD'
      C                   PARM      *BLANK        @@RTCD            7
@@ -372,7 +374,7 @@
      C                   PARM                    SEVTRDX2A                                    CSE045
      C                   PARM                    SEVTRDX2B                                    CSE045
      C/COPY WNCPYSRC,SETRADUC01
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
@@ -437,7 +439,7 @@
      C                   COMMIT
      C                   ENDIF                                                                CAP067
      C                   END
- 
+
       /COPY WNCPYSRC,SETRADU006
       *                                                                                       CER001
      C                   ELSE                                                   X1            CER001
@@ -549,7 +551,7 @@
      C                   ENDIF                                                  E2            CER001
       *                                                                                       CER001
      C                   ENDIF                                                  E1            CER001
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -598,9 +600,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID SE TRADES
      C                   READ      SEVTRADD0                              99    *
      C                   END
@@ -615,12 +617,12 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,SETRADU007
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SETRADU010
       *                                                                                       CAP067
@@ -736,7 +738,7 @@
      C                   ENDIF                                                                CAP067
       *                                                                                       CAP067
      C                   ENDSR                                                                CAP067
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -748,17 +750,23 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+      *                                                                                       248683
+      ** Initialize Data Area for SE1806 Flag                                                 248683
+      *                                                                                       248683
+     C                   CALL      'SECDTARA'                                                 248683
+     C                   PARM      'SETRADRPR'   PGMNAM           10                          248683
+     C                   PARM      *BLANKS       WRTFLG            1                          248683
+
       *  Define key list for SEVTRX1L0
      C     @KeyTrx1L0    KLIST
      C                   KFLD                    FRNT
      C                   KFLD                    T1WHEN
- 
+
       *  Define key list for SEVTRADL1
      C     @KeyTradL1    KLIST
      C                   KFLD                    @TradeRef         6
      C                   KFLD                    @Timestamp
- 
+
       *  Define key list for SEVTRX1L1
      C     @KeyTrx1L1    KLIST
      C                   KFLD                    @TradeRef         6
@@ -770,7 +778,7 @@
      C     K@KEY1        KLIST                                                                CER001
      C                   KFLD                    FRNT                                         CER001
      C                   KFLD                    TMST                                         CER001
- 
+
       *  Check if an existing DBU_TRAD job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589
@@ -783,24 +791,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -810,7 +818,7 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
@@ -909,7 +917,7 @@
      C                   ELSE                                                                 CSE045
      C                   MOVEL     'N'           CSE045                                       CSE045
      C                   END                                                                  CSE045
- 
+
       ** Access SAR details file to determine if CGL031                                       CGL031
       ** (Taxation of savings Income) is on.                                                  CGL031
                                                                                               CGL031
@@ -950,7 +958,7 @@
      C                   OPEN      SEVETDX1PD                                                 CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

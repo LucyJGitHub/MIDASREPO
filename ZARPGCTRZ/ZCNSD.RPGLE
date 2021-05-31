@@ -30,50 +30,61 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056218           Date 01Jun20               *
+      *  Prev Amend No. 250223             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CAP002  *CREATE    Date 21Apr98               *
+      *                 CAP002  *CREATE    Date 21Apr98               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056218 - Missing code fix.                                 *
+      *  248698 - Rounding Discrepancies on some SE reports. Apply    *
+      *           fix 228682.                                         *
+      *           Applied for MD056218.                               *
+      *  228682 - Incorrect round up/dwn of amounts due to SR/ZCONS   *
+      *           not storing decimal values which results to inaccu- *
+      *           rate profit/lose amounts of. Applied fix 176594.    *
+      *  250023 - Redefine ZNOMLC as 24,9 for correct consideration   *
+      *           computation.                                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
      D POWER8          S              8  4 DIM(8) CTDATA PERRCD(1)
- 
- 
+
+
       ** INPUTS **
- 
+
      **  Price basis
      D   SPBS          S              1A
      **  Nominal decimal places
      D   NMDP          S              1P 0
      **  Nominal currecy decimal places
      D   NomCcyDec     S              1P 0
- 
- 
+
+
       ** +-----------------------------------------------------------------+
- 
+
       ** Nominal currency decimal places
- 
+
      C                   Z-ADD     NomCcyDec     ZCDP
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZCNSD
- 
+
      C                   RETURN
       /EJECT
       ** +--- The converted ZCNSDZ1 starts here --------------------------+
@@ -114,10 +125,13 @@
      C*
      C                   Z-ADD     0             ZCONS            15 0
      C                   Z-ADD     ZNOML         ZNOML            15 0
-     C                   Z-ADD     0             ZNOMLC           15 0
+     C**********         Z-ADD     0             ZNOMLC           15 0                        250023
+     C                   Z-ADD     0             ZNOMLC           24 9                        250023
      C                   Z-ADD     ZPRC          ZPRC             16 9                         05225
      C                   Z-ADD     ZCDP          ZCDP              1 0                         S0111
      C                   Z-ADD     0             WDIF             15 0
+     C                   Z-ADD     0             ZCONS0           24 9                        228682
+     C                   Z-ADD     0             WDIF0            24 9                        228682
      C*
      C*     Convert Nominal Dec places to Currency Dec. Places
      C*
@@ -128,15 +142,35 @@
      C*
      C* Check for rounding errors
      C*
+     C     ZCDP          IFEQ      *ZERO                                                      228682
+      *                                                                                       228682
+     C     ZNOMLC        DIV(H)    POWER8(DC)    WDIF0                                        228682
+     C     ZNOML         SUB       WDIF0         WDIF0                                        228682
+     C     WDIF0         MULT(H)   ZPRC          WDIF0                                        228682
+     C     WDIF0         MULT(H)   POWER8(DC)    WDIF0                                        228682
+      *                                                                                       228682
+     C                   ELSE                                                                 228682
+      *                                                                                       228682
      C     ZNOMLC        DIV(H)    POWER8(DC)    WDIF
      C     ZNOML         SUB       WDIF          WDIF
      C     WDIF          MULT(H)   ZPRC          WDIF
      C     WDIF          MULT(H)   POWER8(DC)    WDIF
+      *                                                                                       228682
+     C                   END                                                                  228682
      C*
      C* Calculate consideration = face value(=nominal) x trade price
      C*
+     C     ZCDP          IFEQ      *ZERO                                                      228682
+      *                                                                                       228682
+     C     ZNOMLC        MULT(H)   ZPRC          ZCONS0                                       228682
+     C     ZCONS0        ADD       WDIF0         ZCONS                                        228682
+      *                                                                                       228682
+     C                   ELSE                                                                 228682
+      *                                                                                       228682
      C     ZNOMLC        MULT(H)   ZPRC          ZCONS
      C                   ADD       WDIF          ZCONS
+      *                                                                                       228682
+     C                   END                                                                  228682
      C*
      C*     If price basis is P, divide consideration by 100
      C*
@@ -148,7 +182,7 @@
      C*
      C*****************************************************************
       ** +--- The converted ZCNSDZ1 ends here ----------------------------+
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -159,13 +193,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       ** Nominal
       ** Price
       ** Price basis
@@ -176,12 +210,12 @@
      C                   PARM                    SPBS
      C                   PARM                    NMDP
      C                   PARM                    NomCcyDec
- 
+
       * OUTPUTS
- 
+
       **  Consideration
      C                   PARM                    ZCONS
- 
+
      C                   ENDSR
       *****************************************************************
 **  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION

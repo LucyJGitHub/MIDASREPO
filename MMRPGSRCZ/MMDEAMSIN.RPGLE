@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. 260173             Date 22May20               **
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -68,6 +69,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
+      *           parameter mismatch. Apply fix 258724.               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -138,7 +141,7 @@
                                                                                               CSD095
      FDLDLDCL1  IF   E           K DISK    PREFIX(DC_)                                        CSD095
      F                                     INFSR(*PSSR)                                       CSD095
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -157,39 +160,39 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D                 DS                                                                     CDL006
       ** Data structure for ZDATE10 date conversion module                                    CDL006
      D  WDate                  1      8  0                                                    CDL006
@@ -206,13 +209,13 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Array to hold Commitment Job Names                                                    CSC022
      D CmtJobNArr      S             10A   DIM(10)                                            CSC022
                                                                                               CSC022
@@ -222,11 +225,11 @@
                                                                                               CSC022
      D CrDlFilFmt    E DS                  EXTNAME(MMDEAMPP)
       * Current Deam in File Format
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(MMDEAMPD)
       * (Current) Deam in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVDEAMPD)
       * New Deam in File Format
      D MMDEAMDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -237,36 +240,36 @@
      D MMDEAMPONS    E                     EXTFLD(QQPONS)                                     CGL029
      D  IGREC                300    368
      D  IGPAY                369    927
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(MMDEAMPD)
       * New Deam in Screen Format
- 
+
      D MMEDEM        E DS                  EXTNAME(MMEDEAMPD)
       * Error indicators
- 
- 
+
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                  1     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                  1    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
- 
+
      D @SETIN          DS
       ** Receive / Pay Settlement Currency, Method & Nostro
      D  @@RSCY                 1      3
@@ -279,7 +282,7 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
- 
+
      D @CCI@M          DS
       ** CURRENT CONTROL INDICATORS FOR MAIN DETAIL SCREEN
      D  @EKYFD                 1      1
@@ -289,17 +292,17 @@
      D  @EINKJ                 5      5
      D  @EINKN                 6      6
      D  @EINKP                 7      7
- 
+
      D @PCI@M          DS             7
       ** PREVIOUS CONTROL INDICATORS FOR MAIN DETAIL SCREEN
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
- 
+
      D                 DS
      D**  Data Structure to format date parameter passed to mm0085
      D  @PDAT                  1      8  0
@@ -315,7 +318,7 @@
      D  @DSPM                  3      4
      D  @DSPY                  5      6
      D*
- 
+
      D*@MORPI*****     DS                                                              179510 200400
       ***Midas*Our Receive / Pay  Instructions (for Sett Meth = 04 )                   179510 200400
      D**@@MORI****             1     12                                                179510 200400
@@ -323,10 +326,10 @@
       ************                                                                     179510 200400
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
- 
+
       ** External Data Structure for Access Program AOSARDR0                                  CDL006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL006
                                                                                               CDL006
@@ -339,18 +342,18 @@
                                                                                               CAP004
      D ExtData       E DS                  EXTNAME(MMDAEXPD)                                  CAP004
       * MM DEAM Extra Data - File (D/B) format                                                CAP004
- 
+
      D/COPY QWINDSRC,MMDEAMSDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Work variables for CSC022                                                            CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
      D wCommitSkip     S              1A   INZ('N')                                           CSC022
@@ -361,14 +364,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,MMDEAMS008
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -379,18 +382,18 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,MMDEAMS001
- 
+
       *
       * READ NEXT BROWSE SUBFILE RECORD
       *
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMS002
- 
+
       *
       * DO WHILE SCREEN: MAIN DETAILS
       *
@@ -400,17 +403,17 @@
      C                   ExSr      SCRN@F                                                     CDL006
      C                   EndIf                                                                CDL006
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMS003
- 
+
       * SCREEN: WINDOW
       *
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMS004
- 
+
       *
       *
       * DO WHILE SCREEN: SETTLEMENT DETAILS
@@ -418,27 +421,27 @@
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMS005
- 
+
       *
       * SCREEN: CONFIRMATION OF INPUT
       *
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMS006
- 
+
       *
       * DO FILE UPDATES
       *
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMS007
- 
+
       *
       * TERMINATE PROGRAM
       *
@@ -446,10 +449,10 @@
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMDEAMS009
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -1458,6 +1461,8 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS
       *
@@ -2356,7 +2361,7 @@
      C*
      C** Load value date to numeric keyfield,in YYYYMMDD format
      C                   MOVE      DDVDAT        @VDAT
- 
+
      C                   Z-ADD     0             @PDAT                          **2
      C                   MOVE      @DSPY         @PYEAR                         **2
      C     BJDFIN        IFEQ      'D'                                                         BHF18
@@ -2380,7 +2385,7 @@
      C                   Z-ADD     0             @PDAT                          *1
      C                   END                                                    E1
      C                   Z-ADD     @PDAT         ValueDate         8 0
- 
+
       ** Generate DEAM Sequence Number
      C                   CALLB     'MM0085'
      C                   PARM                    Term              1
@@ -2395,7 +2400,7 @@
      C                   Z-ADD     SeqNoPack     IGDS38
      C                   MOVEL     IGDS38        @LSQN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2561,7 +2566,7 @@
                                                                                               CDL006
      C                   CallB     'MMFIDINIT'                                                CDL006
      C                   Parm      *Blanks       RetCode           7                          CDL006
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMDEAMS010
       ** Access SAR details file to determine if Commitment Control                           CSC022
@@ -2599,7 +2604,7 @@
      C                   EndIf                                                                CSC022
       *                                                                                       CSC022
      C                   EndIf                                                                CSC022
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

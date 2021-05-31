@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR397085A          Date 01Jun20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSW034             Date 09Jan04              */
+/*                      CSW034             Date 09Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CMX011             Date 29Dev01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR397085A - MS_MID2MMM reached max limit. Clear the data    */
+/*                   queue when MQ is used by MM4. (Child: AR397086) */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSW034 - Midas Message Manager Global Processing            */
 /*       CMX011 - Enable Meridian Export to use data queue as well   */
@@ -56,6 +59,9 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CMX011) TYPE(*CHAR) LEN(1) VALUE(' ')             /*CMX011*/
+             DCL        VAR(&CSW038) TYPE(*CHAR) LEN(1) VALUE(' ')                     /*AR397085A*/
+             DCL        VAR(&DTQNAME) TYPE(*CHAR) LEN(10)                              /*AR397085A*/
+             DCL        VAR(&DTQLIB) TYPE(*CHAR) LEN(10)                               /*AR397085A*/             
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -81,6 +87,11 @@
              CALL (AOSARDR0) PARM(&RTCD '*VERIFY' 'CMX011')                    /*CMX011*/
              IF (&RTCD *EQ ' ') (CHGVAR (&CMX011) VALUE('Y'))                  /*CMX011*/
                                                                                /*CMX011*/
+/***  Access Switchable Features file to see if CSW038 present.                        /*AR397085A*/
+                                                                                       /*AR397085A*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSW038')                   /*AR397085A*/
+             IF         COND(&RTCD *EQ ' ') THEN(CHGVAR VAR(&CSW038) +
+                          VALUE('Y'))                                                  /*AR397085A*/                                                                               
  
 /*/COPY WNCPYSRC,MXC0020MPS                                          */
  
@@ -133,6 +144,11 @@
              CALL       PGM(MXBULKTRD) PARM(&RTCD &ERMS &MODE &COMI +
                           &EXTT &FMT)                                          /*CMX011*/
              ENDDO                                                             /*CSW034*/
+             IF         COND(&CSW038 = 'Y') THEN(DO)                                   /*AR397085A*/
+               CHGVAR     VAR(&DTQLIB) VALUE(%SUBSTRING(&DTAQ 1 10))                   /*AR397085A*/
+               CHGVAR     VAR(&DTQNAME) VALUE(%SUBSTRING(&DTAQ 11 10))                 /*AR397085A*/
+               CALL       PGM(QCLRDTAQ) PARM(&DTQNAME &DTQLIB)                         /*AR397085A*/
+             ENDDO                                                                     /*AR397085A*/             
              ENDDO                                                             /*CMX011*/
              ELSE (DO)                                                         /*CMX011*/
              CALL       PGM(MXBULKTRM) PARM(&RTCD &ERMS &MODE &COMI +

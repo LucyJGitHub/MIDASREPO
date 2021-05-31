@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR965821           Date 10May12               *
+      *  Last Amend No. 253037             Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR965821           Date 10May12               *
       *                 AR853795           Date 22Oct11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  253037 - Suppress generation of program dump when NDSUJR     *
+      *           record is not found in SCJSEQPD for HFC0200 only.   *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR965821 - FDC0050 00001 ends in database error              *
       *             (Child:AR965823)                                  *
@@ -58,6 +61,10 @@
       *  Journal sequence number
       *
      C                   parm                    JrnSeq           10 0
+      *                                                                                       253037
+      *  Calling program                                                                      253037
+      *                                                                                       253037
+     C                   parm                    CalPgm           10                          253037
       *
       *  Key list for SCJSEQL0
       *
@@ -98,11 +105,13 @@
      C                   MOVE      *ZERO         JrnSeq                                     AR965821
       *                                                                                     AR965821
      C                   ELSE                                                               AR965821
+     C                   If        CalPgm <> 'HFC0200   '                                     253037
      C                   movel     'SCJSEQL0'    DBFILE            8
      C                   movel     '002'         DBASE             3 0
      C                   movel     Event         DBKEY            29
      C                   move      EvtFlg        DBKEY
      C                   exsr      *PSSR
+     C                   EndIf                                                                253037     
      C                   ENDIF                                                              AR965821
       *
      C                   endif

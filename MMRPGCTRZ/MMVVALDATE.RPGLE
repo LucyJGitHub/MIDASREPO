@@ -24,10 +24,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036225           Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 245491             Date 08Feb07               *
       *                 249967             Date 13Sep07               *
       *                 BUG12893A          Date 14Dec06               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036225 - MM deals in Repair Q. Make sure validation for    *
+      *             value date is only for retail accounts.           *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  245491 - Remove DB error on CALL AONOSTR0. Settlement        *
@@ -67,7 +70,8 @@
       *           higher level.                                       *
       *                                                               *
       *****************************************************************
- 
+     FREHISBL   IF   E           K DISK    PREFIX(R_)                                       MD036225
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -86,59 +90,67 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+      ** External data structure for Account Details file                                   MD036225
+     D ACCNT         E DS                  EXTNAME(ACCNTAB)                                 MD036225
+
       ** External data structure for book codes file
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ** EXTERNAL DS FOR BANK DETAILS                                                         240486
      D SDBANK        E DS                  EXTNAME(SDBANKPD) PREFIX(XX:2)                     240486
- 
+     D P@ACSQ          DS                                                                   MD036225
+      * Account sequence key character->numeric conversion data structure                   MD036225
+     D  W@ACSQ                 1      2  0                                                  MD036225
+     D P@RETL          DS                                                                   MD036225
+      * Retail account character->numeric conversion data structure                         MD036225
+     D  W@RETL                 1     10  0                                                  MD036225
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D ZAVDATE         C                   CONST('ZAVDATE')
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @KEYC           S             10A                                                      CGL029
      D @VDYNO          S              5P 0
      D BJDFIN          S              1A
@@ -152,10 +164,10 @@
      D Msgid1          S                   LIKE(#MsgID)
      D WMsgid1         S                   LIKE(#MsgID)
      D WMsgid2         S                   LIKE(#MsgID)
- 
+
       ** Deal file version of value date
      D IKDVSD          S                   LIKE(@VDYNO)
- 
+
       ** Deal file version of start/last interest date
      D IKSLID          S                   LIKE(@VDYNO)
      D PMERCD          S            150A
@@ -169,15 +181,15 @@
      D @RTCDE          S              1A                                                      240486
      D BVDYNO          S                   LIKE(BJRDNB)                                       240486
      D DDACTN          S              1A                                                      249967
- 
+
       ** Location code for holiday checking
      D ZLOC            S              3A
- 
+
       ** Holiday indicator
      D ZIND            S              1A
                                                                                 CDL006
      D CDL006          S              1A   IMPORT                               CDL006
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -185,7 +197,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -193,12 +205,37 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   WarnFound
      C                   RESET                   Msgid1
- 
+     C                   MOVEL     'N'           RETACC            1                        MD036225
+     C                   MOVEL     *BLANKS       P@RETL                                     MD036225
+     C                   Z-ADD     0             W@RETL                                     MD036225
+     C                   Z-ADD     0             RHISD                                      MD036225
+     C                   MOVEL     *BLANKS       P@CNUM                                     MD036225
+     C                   MOVEL     *BLANKS       P@CUCD                                     MD036225
+     C                   MOVEL     *BLANKS       P@ACCD                                     MD036225
+     C                   MOVEL     *BLANKS       P@ACSQ                                     MD036225
+     C                   MOVEL     *BLANKS       P@BRCA                                     MD036225
+     C                   MOVEL     *BLANKS       BRCA                                       MD036225
+     C****               Z-ADD     0             CNUM                                       MD036225
+     C                   MOVEL     *BLANKS       CNUM                                       MD036225
+     C                   MOVEL     *BLANKS       CCY                                        MD036225
+     C                   Z-ADD     0             ACOD                                       MD036225
+     C                   Z-ADD     0             ACSQ                                       MD036225
+      *                                                                                     MD036225
+      ** Define KLIST to access REHISDL                                                     MD036225
+      *                                                                                     MD036225
+     C     KREHIS        KLIST                                                              MD036225
+     C                   KFLD                    BRCA                                       MD036225
+     C                   KFLD                    CNUM                                       MD036225
+     C                   KFLD                    CCY                                        MD036225
+     C                   KFLD                    ACOD                                       MD036225
+     C                   KFLD                    ACSQ                                       MD036225
+      *                                                                                     MD036225
+
       **  The field must be entered.
      C     DDVDAT        IFEQ      *BLANKS
      C                   EVAL      ErrorFound = 'Y'
@@ -242,20 +279,40 @@
       ** Check if value date is within back-value period                                      240486
       *                                                                                       240486
      C                   EVAL      BVDYNO = BJRDNB - XXBVPD                                   240486
-     C                   IF        @VDYNO  < BVDYNO                                           240486
+     C     PMRSTM        IFEQ      14                                                       MD036225
+     C     PMRONS        ANDNE     *BLANKS                                                  MD036225
+     C                   MOVEL     PMRONS        P@RETL                                     MD036225
+     C                   EXSR      SRACCT                                                   MD036225
+     C     P@RTCD        IFEQ      *BLANKS                                                  MD036225
+     C                   MOVEL     'Y'           RETACC                                     MD036225
+     C                   Z-ADD     DACO          ACOPDT            5 0                      MD036225
+     C                   EXSR      SREHIS                                                   MD036225
+     C                   ENDIF                                                              MD036225
+     C                   ELSE                                                               MD036225
+     C     PMPSTM        IFEQ      14                                                       MD036225
+     C     PMPONS        ANDNE     *BLANKS                                                  MD036225
+     C                   MOVEL     PMPONS        P@RETL                                     MD036225
+     C                   EXSR      SRACCT                                                   MD036225
+     C     P@RTCD        IFEQ      *BLANKS                                                  MD036225
+     C                   MOVEL     'Y'           RETACC                                     MD036225
+     C                   Z-ADD     DACO          ACOPDT                                     MD036225
+     C                   EXSR      SREHIS                                                   MD036225
+     C                   ENDIF                                                              MD036225
+     C                   ENDIF                                                              MD036225
+     C                   ENDIF                                                              MD036225
+     C**********         IF        @VDYNO  < BVDYNO                                  240486 MD036225
      C**********                   AND DDACTN = 'I'                                           240486
-     C                             AND DDACTN = 'I'                                           249967
-     C                   EVAL      ErrorFound = 'Y'                                           240486
-     C                   EVAL      WarnFound  = 'Y'                                           240486
-     C                   MOVEL     'MMM2625'     Msgid1                                       240486
-     C                   ENDIF                                                                240486
+     C**********         EVAL      ErrorFound = 'Y'                                  240486 MD036225
+     C**********         EVAL      WarnFound  = 'Y'                                  240486 MD036225
+     C**********         MOVEL     'MMM2625'     Msgid1                              240486 MD036225
+     C**********         ENDIF                                                       240486 MD036225
       *                                                                                       240486
      C**  If the date is not a working day in the deal currency and the
      C****receive*method*is*01,07,08,*and*the*deal*type*is*IT,CD,CI or******    CDL006
      C****TD,*this*is*an*error.*********************************************    CDL006
       ** receive method is 01,07,08, and the deal type is IT,CD,CI,TD,          CDL006
       ** DT,LT, or FT, this is an error.                                        CDL006
- 
+
       ** NOTE: the deal type check here is only applicable for Loans,
       ** Deposits and Negotiable Assets Issued.  To allow this module
       ** to be used for other types of Money Market transaction, a check
@@ -273,7 +330,7 @@
      C     DDTYPE        OREQ      'FT'                                         CDL006
      C     CDL006        ANDEQ     'Y'                                          CDL006
      C     TransType     ORNE      'LDNI'
- 
+
      C     PMRSTM        IFEQ      01
      C     PMRSTM        OREQ      07
      C     PMRSTM        OREQ      08
@@ -315,9 +372,31 @@
      C                   MOVE      *BLANKS       ZLOC                                         245491
      C                   END                                                                  245491
      C*
+      *                                                                                     MD036225
+      ** Check if settlement is retail only if RETACC='N'                                   MD036225
+      *                                                                                     MD036225
+     C     RETACC        IFEQ      'N'                                                      MD036225
+     C                   MOVE      A7CUST        P@CNUM                                     MD036225
+     C                   MOVE      A7CYCD        P@CUCD                                     MD036225
+     C                   MOVE      A7ACCD        P@ACCD                                     MD036225
+     C                   Z-ADD     A7ACSN        W@ACSQ                                     MD036225
+     C                   MOVE      A7BRCD        P@BRCA                                     MD036225
+      *                                                                                     MD036225
+     C                   EXSR      SRACCT                                                   MD036225
+      *                                                                                     MD036225
+     C     P@RTCD        IFEQ      *BLANKS                                                  MD036225
+     C     P@RETL        IFNE      *BLANKS                                                  MD036225
+     C                   MOVEL     'Y'           RETACC                                     MD036225
+     C                   EXSR      SREHIS                                                   MD036225
+     C                   ENDIF                                                              MD036225
+     C                   Z-ADD     DACO          ACOPDT                                     MD036225
+     C                   ENDIF                                                              MD036225
+      *                                                                                     MD036225
+     C                   ENDIF                                                              MD036225
      C                   ELSE
      C                   MOVE      *BLANKS       ZLOC
      C                   END
+     C
      C*
      C                   CALLB     'ZCHKH'
      C                   PARM                    @VDYNO
@@ -377,6 +456,27 @@
      C                   MOVE      *BLANKS       ZLOC                                         245491
      C                   END                                                                  245491
      C*
+      *                                                                                     MD036225
+      ** Check if settlement is retail only if RETACC='N'                                   MD036225
+      *                                                                                     MD036225
+     C     RETACC        IFEQ      'N'                                                      MD036225
+     C                   MOVEL     A7CUST        P@CNUM                                     MD036225
+     C                   MOVEL     A7CYCD        P@CUCD                                     MD036225
+     C                   MOVEL     A7ACCD        P@ACCD                                     MD036225
+     C                   Z-ADD     A7ACSN        W@ACSQ                                     MD036225
+     C                   MOVEL     A7BRCD        P@BRCA                                     MD036225
+      *                                                                                     MD036225
+     C                   EXSR      SRACCT                                                   MD036225
+      *                                                                                     MD036225
+     C     P@RTCD        IFEQ      *BLANKS                                                  MD036225
+     C     P@RETL        IFNE      *BLANKS                                                  MD036225
+     C                   MOVEL     'Y'           RETACC                                     MD036225
+     C                   EXSR      SREHIS                                                   MD036225
+     C                   ENDIF                                                              MD036225
+     C                   Z-ADD     DACO          ACOPDT                                     MD036225
+     C                   ENDIF                                                              MD036225
+      *                                                                                     MD036225
+     C                   ENDIF                                                              MD036225
      C                   ELSE
      C                   MOVE      *BLANKS       ZLOC
      C                   END
@@ -395,6 +495,46 @@
      C                   END
      C                   END
      C                   END
+      *                                                                                     MD036225
+      ** Check if value date is within back-value period & retail.                          MD036225
+      ** If backvalue period is 999 it means *NOMAX and value date                          MD036225
+      ** can be beyond backvalue period but >= earliest retail history.                     MD036225
+      *                                                                                     MD036225
+     C     RETACC        IFEQ      'Y'                                                      MD036225
+      *                                                                                     MD036225
+     C     XXBVPD        IFNE      999                                                      MD036225
+     C     @VDYNO        ANDLT     BVDYNO                                                   MD036225
+      *                                                                                     MD036225
+     C                   EVAL      ErrorFound = 'Y'                                         MD036225
+     C                   EVAL      WarnFound  = 'Y'                                         MD036225
+     C                   MOVEL     'MMM2625'     Msgid1                                     MD036225
+      *                                                                                     MD036225
+     C                   ELSE                                                               MD036225
+      *                                                                                     MD036225
+     C     XXBVPD        IFEQ      999                                                      MD036225
+     C     @VDYNO        ANDLT     RHISD                                                    MD036225
+     C     XXBVPD        ORNE      999                                                      MD036225
+     C     @VDYNO        ANDLT     RHISD                                                    MD036225
+     C                   EVAL      ErrorFound = 'Y'                                         MD036225
+     C                   EVAL      WarnFound  = 'Y'                                         MD036225
+     C                   MOVEL     'MMM2627'     Msgid1                                     MD036225
+     C                   ENDIF                                                              MD036225
+     C                   ENDIF                                                              MD036225
+      *                                                                                     MD036225
+     C                   ENDIF                                                              MD036225
+      *                                                                                     MD036225
+      ** Issue a warning message if *NOMAX (999) and before backvalue                       MD036225
+      ** period for retail. For non-retail issue a warning if before                        MD036225
+      ** backvalue period.                                                                  MD036225
+      *                                                                                     MD036225
+     C     RETACC        IFEQ      'Y'                                                      MD036225
+     C     XXBVPD        ANDEQ     999                                                      MD036225
+     C     @VDYNO        ANDLT     BVDYNO                                                   MD036225
+     C     RETACC        OREQ      'N'                                                      MD036225
+     C     @VDYNO        ANDLT     BVDYNO                                                   MD036225
+     C                   EVAL      WarnFound  = 'Y'                                         MD036225
+     C                   MOVEL     'MMM2626'     WMSGid1                                    MD036225
+     C                   ENDIF                                                              MD036225
      C*
      C**  Find whether the date is a holiday in the local currency.
      C*
@@ -443,9 +583,9 @@
      C                   END
      C                   END
      C                   END
- 
+
       **  Output value date
- 
+
      C     ErrorFound    IFEQ      'N'
      C     ErrorFound    OREQ      'Y'
      C     WarnFound     ANDEQ     'Y'
@@ -455,13 +595,64 @@
      C                   Z-ADD     0             IKDVSD
      C**********         Z-ADD     0             IKSLID                                     BUG12893
      C                   END
- 
+
       ** Return code set in /COPY
      C/COPY ZACPYSRC,SETRETCDE
- 
+
      C                   RETURN
- 
+
       *****************************************************************
+      *****************************************************************                     MD036225
+      /EJECT                                                                                MD036225
+      *****************************************************************                     MD036225
+      *                                                               *                     MD036225
+      * SRACCT - Call ACCNTAB access object program                   *                     MD036225
+      *                                                               *                     MD036225
+      * Called by: Main processing                                    *                     MD036225
+      *                                                               *                     MD036225
+      * Calls: None                                                   *                     MD036225
+      *                                                               *                     MD036225
+      *****************************************************************                     MD036225
+      *                                                                                     MD036225
+     C     SRACCT        BEGSR                                                              MD036225
+      *                                                                                     MD036225
+     C                   CALLB     'AOACCTR0'                                               MD036225
+     C                   PARM                    P@RTCD            7                        MD036225
+     C                   PARM      '*KEY   '     P@OPTN            7                        MD036225
+     C                   PARM                    P@RETL           10                        MD036225
+     C                   PARM                    P@CNUM            6                        MD036225
+     C                   PARM                    P@CUCD            3                        MD036225
+     C                   PARM                    P@ACCD           10                        MD036225
+     C                   PARM                    P@ACSQ            2                        MD036225
+     C                   PARM                    P@BRCA            3                        MD036225
+     C     ACCNT         PARM      ACCNT         DSSDY                                      MD036225
+      *                                                                                     MD036225
+     C                   ENDSR                                                              MD036225
+      *                                                                                     MD036225
+      *****************************************************************                     MD036225
+      /EJECT                                                                                MD036225
+      *****************************************************************                     MD036225
+      *                                                               *                     MD036225
+      * SREHIS - Access REHISPD to check earliest retail history      *                     MD036225
+      *                                                               *                     MD036225
+      * Called by: Main processing                                    *                     MD036225
+      *                                                               *                     MD036225
+      * Calls: None                                                   *                     MD036225
+      *                                                               *                     MD036225
+      *****************************************************************                     MD036225
+      *                                                                                     MD036225
+     C     SREHIS        BEGSR                                                              MD036225
+      *                                                                                     MD036225
+     C     KREHIS        CHAIN     REHISBL                            01                    MD036255
+      *                                                                                     MD036225
+     C     *IN01         IFEQ      '0'                                                      MD036225
+     C                   Z-ADD     R_HISD        RHISD             5 0                      MD036225
+     C                   ELSE                                                               MD036225
+     C                   Z-ADD     0             RHISD                                      MD036225
+     C                   ENDIF                                                              MD036225
+      *                                                                                     MD036225
+     C                   ENDSR                                                              MD036225
+      *                                                                                     MD036225
       /EJECT
       *****************************************************************
       *                                                               *
@@ -472,9 +663,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    Msgid1
@@ -497,16 +688,16 @@
       ** Transaction type (4A, from caller)
      C                   PARM                    TransType
      C                   PARM                    DDACTN                                       249967
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

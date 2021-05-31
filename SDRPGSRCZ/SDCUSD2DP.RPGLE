@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. HUT107             Date 01APR20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 02Jun14               *
       *                 CFT050             Date 03Jun13               *
@@ -75,6 +77,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT113 - Full Private Banking Functionality in FM            *
+      *           (Upgrade HUT026 to FM2.1 SP22)                      *
+      *           Addition of hooks HUT113_040 and HUT113_041         *
+      *           Amendment of core hook SDH00108                     *
+      *  HUT107 - Additional 3rd Party Trust Indicator                *
+      *           (Upgrade HUT016 to FM2.1 SP22)                      *
+      *            - Added hooks :                                    *
+      *           Addition of hooks HUT107_002 and HUT107_003         *
+      *           Amendment of core hook SDH00108                     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -161,6 +172,7 @@
      FSDCDSHL1  IF   E           K DISK    INFSR(*PSSR)                                       CSD028
      F                                     RENAME(@BBREBF:@BBRESH)                            CSD028
                                                                                               CSD028
+     F/COPY WNCPYSRC,HUT107_002                                                               HUT107
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -401,6 +413,7 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   END
+     C/COPY WNCPYSRC,HUT113_040                                                               HUT113
 
 
       ** Set up the customer reference to be used by the message handler
@@ -423,6 +436,7 @@
      C     DDACTN        IFEQ      'I'
      C                   MOVE      *ON           *IN86
      C                   ENDIF
+     C/COPY WNCPYSRC,HUT113_041                                                               HUT113
                                                                                               CSD007
       ** If CSD007 is installed, retrieve Customer Status                                     CSD007
                                                                                               CSD007
@@ -560,6 +574,8 @@
      C     @EINKJ        COMP      'Y'                                    72
      C     @EINKW        COMP      'Y'                                    74                  CSD007
      C     @EINKX        COMP      'Y'                                    73
+      *
+     C/COPY WNCPYSRC,HUT107_003                                                               HUT107
       *
       * WRITE MESSAGE SUBFILE, PRIMARY DETAILS AND FOOTER SCREEN
       *

@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 253037             Date 01Jun20              */
+/*       Prev Amend No. 249112             Date 01Jun20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      228542             Date 05Aug04              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -33,6 +35,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       253037 - Suppress generation of program dump when NDSUJR    */
+/*                record is not found in SCJSEQPD.                   */
+/*       249112 - SFDC 00192180. Apply fix SC#240261 / SFDC 00126651 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -96,6 +101,9 @@
              DCL        VAR(&STRRCV) TYPE(*CHAR) LEN(10)                                  /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                 /*CSC020*/
              DCL        VAR(&STRSEQA) TYPE(*CHAR) LEN(10)                                 /*CSC020*/
+             DCL        VAR(&TXT) TYPE(*CHAR) LEN(50)                                     /*249112*/
+             DCL        VAR(&YRL) TYPE(*CHAR) LEN(5)                                      /*249112*/
+             DCL        VAR(&RCOD) TYPE(*CHAR) LEN(1)                                     /*249112*/
  
              DCLF       FILE(HFFILEPD)
 /* */
@@ -123,7 +131,9 @@
 /*  Determine journal sequence number of next day set up.                                   CSC020*/
 /*  (Equivalent to beginning of ICRCV001 in previous releases)                              CSC020*/
 /*                                                                                          CSC020*/
-             SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&STRRCV) SEQ(&STRSEQ)                      /*CSC020*/
+/*           SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&STRRCV) SEQ(&STRSEQ) */            /*CSC020 253037*/
+             SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&STRRCV) SEQ(&STRSEQ) +
+                          PGM(HFC0200)                                                    /*253037*/
 /*                                                                                          CSC020*/
 /*  If no value returned, then set sequence to first available.                             CSC020*/
 /*                                                                                          CSC020*/
@@ -245,6 +255,12 @@ REDSP:                                                                /*088064*/
 /*********** MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&CURREC) +     /*088064*/
 /***********              VALUE(0))                                   /*088064*/
  
+/** Check if file XX is journalled, then ENDJRNPF */                                      /*249112*/
+             CALL       PGM(HFC0110) PARM('XX' &TXT &YRL &RCOD)                           /*249112*/
+             IF         COND(&RCOD *NE 'R') THEN(DO)                                      /*249112*/
+                ENDJRNPF   FILE(&HFLIB/XX)                                                /*249112*/
+                MONMSG     MSGID(CPF9812)                                                 /*251296*/
+             ENDDO                                                                        /*249112*/
 /* */
 /* Check that the work file XX exists. If not create it. */
 /* Ensuring that there is no data in the file */

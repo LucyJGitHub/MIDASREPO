@@ -152,9 +152,9 @@
 /************DCL********VAR(&FTUSRMSG) TYPE(*CHAR) LEN(10)     /*068078 CUT004*/
 /************DCL********VAR(&MEMSG) TYPE(*CHAR) LEN(10)        /*068078 CUT004*/
 /************DCL********VAR(&CGUSRMSG) TYPE(*CHAR) LEN(10)     /*S01522 CUT004*/
- 
+
 /*/COPY MLCPYSRC,MLCOVRDCL                                         */ /*CUT004*/
- 
+
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*E40242*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*E40242*/
              DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                /*S01522*/
@@ -203,7 +203,7 @@
              CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
                                                                                           /*CSC022*/
 /*/COPY WNCPYSRC,FTC0630002                                          */
- 
+
 /* Global message monitor :                                     */    /*078314*/
                                                                       /*078314*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -290,9 +290,9 @@
              ENDDO                                                                        /*CSC022*/
                                                                                           /*CSC022*/
              ENDDO                                                                        /*CSC022*/
- 
+
 /*/COPY WNCPYSRC,FTC0630004                                          */
- 
+
 /************RTVDTAARA**DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)     /*E32886 CUT004*/
 /************RTVDTAARA**DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)     /*E32886 CUT004*/
 /**/                                                                  /*S01117*/
@@ -303,9 +303,9 @@
              RTVJOBA USER(&USER10)                                    /*CUT004*/
 /**/
 /*/COPY WNCPYSRC,FTC0630009                                          */
- 
+
 /*/COPY MLCPYSRC,MLCOVROVR                                         */ /*CUT004*/
- 
+
 /************RTVDTAARA**DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)     /*E32886 CUT004*/
 /************RTVDTAARA**DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)     /*E32886 CUT004*/
 /***********************                                       /*078314 CUT004*/
@@ -352,7 +352,7 @@
 /************OVRMSGF****MSGF(FTUSRMSG) TOMSGF(&FTUSRMSG)       /*068078 CUT004*/
 /************OVRMSGF****MSGF(MEMSG) TOMSGF(&MEMSG)             /*068078 CUT004*/
 /************OVRMSGF****MSGF(CGUSRMSG) TOMSGF(&CGUSRMSG)       /*S01522 CUT004*/
- 
+
 /* TERMINATE IF USER NOT FOUND                                      */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /*     C O M P O N E N T   A C T I V E  ?                  */
@@ -513,7 +513,7 @@
              ENDDO                                                                        /*CCG015*/
                                                                                           /*CCG015*/
              ENDDO                                                    /*S01522*/
- 
+
 /*                    - - - - - - - - - - - -        */
 /**  Call Program    - - -  F T 0 6 4 0  - - -      **/
 /*                    - - - - - - - - - - - -        */
@@ -742,13 +742,13 @@
 /**  Check for Database Errors Trapped by Program  **/                /*CFT006*/
 /**/                                                                  /*CFT006*/
         IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)                   /*CFT006*/
- 
+
         CHGVAR     VAR(&RTCD) VALUE('       ')                        /*CFT006*/
         CHGVAR     VAR(&SARD) VALUE('CFT006')                                             /*207984*/
         CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                        /*CFT006*/
- 
+
         CALL   PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                  /*CFT006*/
- 
+
         IF     COND(&RTCD *EQ '       ') THEN(DO)                     /*CFT006*/
 /*                                                   */               /*CFT006*/
 /* Call Program FT0657                               */               /*CFT006*/
@@ -942,7 +942,7 @@ ABNOR:                                                                /*078314*/
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                 /*CCG015*/
                 CALL       PGM(CGC3605) PARM(&ACTION)                                     /*CCG015*/
              ENDDO                                                                        /*205448*/
- 
+
  /**/                                                                                     /*CSC022*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSC022*/
  /**   job is not currently running in batch mode */                                      /*CSC022*/

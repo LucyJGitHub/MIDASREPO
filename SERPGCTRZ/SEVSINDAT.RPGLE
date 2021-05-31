@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 261824             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -159,7 +164,7 @@
       *
       ** Working variables
      D WItlDtNo        S              5P 0
- 
+
      D PCpnRt          S             15P 0
       *
       ** +--------------------------------------+
@@ -191,11 +196,11 @@
      C                   IF        OKITLD = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKITLD <> 'N'
      C                   Z-ADD     WItlDtNo      S1ITLD
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -206,9 +211,9 @@
       *                                                               *
       *****************************************************************
      C     SRValItlDte   BEGSR
- 
+
      C                   IF        DDITLD = *BLANKS
- 
+
      C                   IF        DDINCS = 'C' AND
      C                             PCpnRt <> *ZEROS
      C                   MOVE      'N'           OKITLD
@@ -216,14 +221,14 @@
      C                   MOVEL     'DDITLD'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0177'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   GOTO      EvalItlDte
      C                   ENDIF
       *
       ** Check valid date
       *
      C                   TESTN                   DDITLD               01
- 
+
      C                   IF        *IN01 = *OFF
      C                   MOVE      'N'           OKITLD
      C                   ADD       1             IDx
@@ -231,7 +236,7 @@
      C                   MOVEL     'SEA0177'     MsgIdXAr(IDx)
      C                   GOTO      EvalItlDte
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       PDateIn
      C                   MOVE      DDITLD        PDateIn
      C                   CALLB     'ZDATE1'
@@ -239,7 +244,7 @@
      C                   PARM      *ZERO         PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   IF        PErrorFlag = 'Y'
      C                   MOVE      'N'           OKITLD
      C                   ADD       1             IDx
@@ -247,11 +252,12 @@
      C                   MOVEL     'SEA0177'     MsgIdXAr(IDx)
      C                   GOTO      EvalItlDte
      C                   ENDIF
- 
+
      C                   Z-ADD     PDaynoOut     WItlDtNo
       *
       ** Must not be greater than maturity date
-     C                   IF        PDaynoOut >= S1MATY
+     C**********         IF        PDaynoOut >= S1MATY                                        261824
+     C                   IF        PDaynoOut >= S1MATY and S1MATY <> *ZEROS                   261824
      C                   MOVE      'N'           OKITLD
      C                   ADD       1             IDx
      C                   MOVEL     'DDITLD'      FldNamXAr(IDx)
@@ -268,7 +274,7 @@
      C**********         MOVEL     'DDITLD'      FldNamXAr(IDx)                               225455
      C**********         MOVEL     'SEA0178'     MsgIdXAr(IDx)                                225455
      C**********         ENDIF                                                                225455
- 
+
      C     EValItlDte    ENDSR
       *
       *****************************************************************

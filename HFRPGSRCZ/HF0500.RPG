@@ -16,18 +16,23 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249112A            Date 01Jun20               *     
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. 065338             Date 04Nov94               *
+      *                 065338             Date 04Nov94               *
       *                 S01379             Date 05Oct92               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+     F*  249112A- When subfile is empty, pressing any function key    *
+     F*           will always exit from the screen. Fix is instead of *
+     F*           goto ENDPGM, redisplay the no record screen until   *
+     F*           F3=Exit or F5 where file will be rechecked.         *     
       *  MD046248 - Finastra Rebranding                               *
      F*  065338 - If file/item has been deleted then do not display   *
      F*           it for file selection.                              *
@@ -139,6 +144,10 @@
      C** Set up copyright parameter
      C*
      C                     MOVEACPY@      BIS@   80
+     C*                                                                                      249112A
+     C** Initialize no HFFILEPD record flag                                                  249112A
+     C*                                                                                      249112A
+     C                     MOVE *BLANK    NOREC   1                                          249112A
      C*
       *
       ** Read in Installation Data
@@ -259,9 +268,12 @@
      C                     WRITEHF0500C0
      C                     EXFMTHF0500F1
      C                     CALL 'SCC0250'
-     C                     GOTO ENDPGM
-     C                     END
+     C**********           GOTO ENDPGM                                                       249112A
+     C**********           END                                                               249112A
+     C                     MOVE 'Y'       NOREC                                              249112A
+     C                     ELSE                                                              249112A
      C*
+     C                     MOVE *BLANK    NOREC                                              249112A
      C                     WRITEHF0500F5
      C                     WRITEHF0500C0
      C                     EXFMTHF0500F4
@@ -271,10 +283,15 @@
      C                     SETOF                     30
      C                     SETOF                     626364
      C                     SETOF                     6667
+     C                     ENDIF                                                             249112A
      C* END ?
      C           *IN01     IFEQ '1'
      C                     GOTO ENDPGM
      C                     END
+     C* NO RECORD ?                                                                          249112A
+     C           NOREC     IFEQ 'Y'                                                          249112A
+     C                     GOTO REDSP                                                        249112A
+     C                     ENDIF                                                             249112A
      C* INIT ?
      C           *IN05     IFEQ '1'
      C                     GOTO RESTA
@@ -547,6 +564,43 @@
      C   07                SETON                     U7
      C                     OUT  JRN
      C*
+      *  If no subfile record, keep on displaying the                                        249112A
+      *  no record screen until F3=Exit. If F5, recheck                                      249112A
+      *  file again in case new records are created.                                         249112A
+      *                                                                                      249112A
+     C           REDSP     TAG                             * REDISPLAY EMPTY SCREEN          249112A
+      *                                                                                      249112A
+     C           *IN01     DOWEQ'0'                                                          249112A
+     C           NOREC     ANDEQ'Y'                                                          249112A
+      *                                                                                      249112A
+     C           *IN05     IFEQ '1'                                                          249112A
+     C                     Z-ADD1         RRNX    90                                         249112A
+     C           RRNX      SETLLHFFILEPD                                                     249112A
+     C                     READ HFFILEPD                 31                                  249112A
+     C           *IN31     IFEQ '0'                                                          249112A
+     C                     MOVE 'N'       NOREC                                              249112A
+     C                     ENDIF                                                             249112A
+     C                     ENDIF                                                             249112A
+      *                                                                                      249112A
+     C           NOREC     IFNE 'N'                                                          249112A
+     C                     MOVEL'HAF0065' WUMSID           Message Identif                   249112A
+     C                     CALL 'SCC0240'                  Retrieve MSGF                     249112A
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif                   249112A
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na                   249112A
+     C                     SETON                     80                                      249112A
+     C                     WRITEHF0500F2                                                     249112A
+     C                     WRITEHF0500C0                                                     249112A
+     C                     EXFMTHF0500F1                                                     249112A
+     C                     CALL 'SCC0250'                                                    249112A
+     C                     ENDIF                                                             249112A
+      *                                                                                      249112A
+     C                     ENDDO                                                             249112A
+      *                                                                                      249112A
+      *  If previously without record but now with record read, goto RESTA                   249112A
+      *                                                                                      249112A
+     C           NOREC     IFEQ 'N'                                                          249112A
+     C                     GOTO RESTA                                                        249112A
+     C                     ENDIF                                                             249112A
      C*
      C           ENDPGM    TAG                             * ENDPGM TAG
      C*

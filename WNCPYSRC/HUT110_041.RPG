@@ -1,0 +1,102 @@
+      *****************************************************************                       HUT110
+      *                                                               *                       HUT110
+      *  Midas - /COPY Member FT0645                                  *                       HUT110
+      *                                                               *                       HUT110
+      *  FT0645 - Midas FT Bank transfers input cycle                 *                       HUT110
+      *                                                               *                       HUT110
+      *  Last Amend No. HUT110  *CREATE    Date 20Apr20               *                       HUT110
+      *                                                               *                       HUT110
+      *---------------------------------------------------------------*                       HUT110
+      *                                                               *                       HUT110
+      *  HUT110 - Upgraded HUT022 to FBM 2.1 SP22                     *                       HUT110
+      *           RTGS via SWIFT.                                     *                       HUT110
+      *                                                               *                       HUT110
+      *****************************************************************                       HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+      ** If HUT110 is ON, replace Field 53 with the SWIFT ID of the                           HUT110
+      ** RTGS Cover MT202 Destination customer if Cover MT202 is to                           HUT110
+      ** be produced.                                                                         HUT110
+      *                                                                                       HUT110
+     C           HUT110    IFEQ 'Y'                                                           HUT110
+     C           SNMT      ANDEQ'Y'                                                           HUT110
+     C           WKRTGS    ANDEQ'Y'                                                           HUT110
+      *                                                                                       HUT110
+      ** Chain to RTGS extension file using payment reference.                                HUT110
+      *                                                                                       HUT110
+     C           PREF      CHAINXXPYXL1              90                                       HUT110
+      *                                                                                       HUT110
+      ** If extension record found, retrieve RTGS Cover MT202                                 HUT110
+      ** Destination customer and use this to retrieve the                                    HUT110
+      ** customer's SWIFT address.                                                            HUT110
+      *                                                                                       HUT110
+     C                     MOVEL*BLANKS   WKSWID 12                                           HUT110
+      *                                                                                       HUT110
+     C           *IN90     IFEQ *OFF                                                          HUT110
+     C           GD202C    ANDNE*BLANKS                                                       HUT110
+      *                                                                                       HUT110
+      ** Check if Counterparty Nostro                                                         HUT110
+      *                                                                                       HUT110
+     C                     MOVELGD202C    @CNCD   8                                           HUT110
+     C                     CALL 'AOCNSTR0'                                                    HUT110
+     C                     PARM *BLANKS   @RTCD                                               HUT110
+     C                     PARM '*KEY   ' @OPTN                                               HUT110
+     C                     PARM           @CNCD                                               HUT110
+     C           SDCNST    PARM *BLANKS   DSFDY                                               HUT110
+      *                                                                                       HUT110
+     C           @RTCD     IFEQ *BLANKS                                                       HUT110
+      *                                                                                       HUT110
+      ** Counterparty Nostro found, output SWIFT ID                                           HUT110
+      ** as Field 53 in MT203                                                                 HUT110
+      *                                                                                       HUT110
+     C                     MOVELAWSWID    WKSWID                                              HUT110
+     C                     ELSE                                                               HUT110
+      *                                                                                       HUT110
+      ** It may be a SWIFT ID already.                                                        HUT110
+      *                                                                                       HUT110
+     C                     MOVELGD202C    @SWFT  12                                           HUT110
+     C           @SWFT     CHAINSDCUSTL7             90                                       HUT110
+     C           *IN90     IFEQ '0'                                                           HUT110
+     C                     MOVELGD202C    WKSWID                                              HUT110
+     C                     ELSE                                                               HUT110
+     C                     MOVELGD202C    @KEY1                                               HUT110
+     C                     CALL 'AOCUSTR0'                                                    HUT110
+     C                     PARM *BLANKS   @RTCD                                               HUT110
+     C                     PARM '*KEY   ' @OPTN                                               HUT110
+     C                     PARM           @KEY1  10                                           HUT110
+     C                     PARM *BLANKS   @KYST   7                                           HUT110
+     C           SDCUST    PARM SDCUST    DSSDY                                               HUT110
+      *                                                                                       HUT110
+     C           @RTCD     IFEQ *BLANKS                                                       HUT110
+     C                     MOVELBBCSID    WKSWID                                              HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+      ** Use the SWIFT address of RTGS Cover MT202 Destination                                HUT110
+      ** customer as Field 53 in MT203.                                                       HUT110
+      *                                                                                       HUT110
+     C           WKSWID    IFNE *BLANKS                                                       HUT110
+     C                     MOVEL*BLANKS   OFSPT1                                              HUT110
+     C                     MOVELWKSWID    OFSPT1                                              HUT110
+     C                     MOVEL*BLANKS   OFSPT2                                              HUT110
+     C                     MOVEL*BLANKS   OFSPT3                                              HUT110
+     C                     MOVEL*BLANKS   OFSPT4                                              HUT110
+     C                     MOVEL*BLANKS   OFSPT5                                              HUT110
+      *                                                                                       HUT110
+     C                     MOVELOFSPT1    M2SCR1                                              HUT110
+     C                     MOVELOFSPT2    M2SCR2                                              HUT110
+     C                     MOVELOFSPT3    M2SCR3                                              HUT110
+     C                     MOVELOFSPT4    M3SCR4                                              HUT110
+     C                     MOVELOFSPT5    M3SCR5                                              HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+      *****************************************************************                       HUT110
+      * End of /COPY HUT110_041                                       *                       HUT110
+      *****************************************************************                       HUT110

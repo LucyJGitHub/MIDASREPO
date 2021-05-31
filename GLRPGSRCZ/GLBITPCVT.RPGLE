@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL135A            Date 10Jul13               *
+      *  Last Amend No. AR574704           Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL135A            Date 10Jul13               *
       *                 CSF011A            Date 28Nov11               *
       *                 CAP207             Date 10Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR574704 - If item is sent via API, which uses a RE account  *
+      *             that has blank BTRACN, account detail is not      *
+      *             shown. Ensure that full account detail will be    *
+      *             shown on screen.                                  *      
       *  MD046248 - Finastra Rebranding                               *
       *  CGL135A - Accounting Rules Process                           *
       *            Added hooks: CGL135_047, CGL135_048, CGL135_049,   *
@@ -174,15 +179,21 @@
      C     BMRANR        ANDEQ     'Y'                                                       BUG5208
       *
      C     BTRACN        IFEQ      *ZERO
-     C                   MOVEL     *BLANKS       DDACID
+     C**********         MOVEL     *BLANKS       DDACID                                     AR574704
+     C                   EVAL      DDACID = BTCUST                                          AR574704
+     C                   EVAL      DDCYCD = BTCYCD                                          AR574704
+     C                   EVAL      DDACCD = BTACCD                                          AR574704
+     C                   EVAL      DDACSN = BTACSN                                          AR574704
+     C                   EVAL      DDIBCA = BTIBCA                                          AR574704
      C                   ELSE
      C                   MOVE      BTRACN        DDACID
-     C                   ENDIF
+     C**********         ENDIF                                                              AR574704
       *
      C                   EVAL      DDCYCD = *BLANKS
      C                   EVAL      DDIBCA = *BLANKS
      C                   EVAL      DDACSN = *BLANKS
      C                   EVAL      DDIBCA = *BLANKS
+     C                   ENDIF                                                              AR574704
       *
      C                   ELSE
      C                   EVAL      DDACID = BTCUST

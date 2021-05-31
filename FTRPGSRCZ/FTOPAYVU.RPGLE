@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054059           Date 28Nov19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD056457           Date 09Aug20               *
+      *  Prev Amend No. HUT106             Date 09Aug20               *
+      *                 MD054059           Date 28Nov19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
@@ -108,6 +110,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056457 - FISC Code details not expanding to Customer Name  *
+      *             on Inputs fields. Expand scope of HUT106.         *
+      *             Amend core hooks FTOPAYVUC4 and FTOPAYVUF1.       *
+      *             Addition of hook HUT106_038.                      *
+      *  HUT106 - Allow FISC Bank Reference to be entered in SWIFT ID *
+      *           Field                                               *
       *  MD054059 - Missing outgoing payment reference in the         *
       *             extension files                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -2691,6 +2699,7 @@
      C     SDCUST        PARM      SDCUST        DSSDY                                        CSF011
      C                   ENDIF                                                               CSF011A
                                                                                               CSF011
+     C/COPY WNCPYSRC,HUT106_038                                                             MD056457
      C                   IF        @RTCD = *BLANKS                                            CSF011
      C                             OR P@TYP = '*CNST'                                       MD030906
                                                                                              CSF011A
@@ -2716,7 +2725,7 @@
       ** Receivers correspondent                                                             CSF011A
                                                                                              CSF011A
      C                   WHEN      CusIdx = 2                                                CSF011A
-     C                   IF        P@TYP = '*CNST'                                          MD030906
+     C                   IF        P@TYP = '*CNST'                                          MD630906
      C                   EVAL      DDRCSN = AWCPNC                                          MD030906
      C                   EVAL      DDRCNM = AWCPNM                                          MD030906
      C                   EVAL      DDRCTN = AWCNTN                                          MD030906

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057283           Date 19May21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038030           Date 01Apr16               *
       *                 MD037149           Date 11May16               *
       *                 CGL165             Date 17Feb15               *
@@ -80,6 +81,11 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD057283 - If initial threshold is specified on the interest *
+      *             calc. type,calculation of interest will only start*
+      *             when balance exceeds initial threshold. Interest  *
+      *             rates on this part of the report should be shown  *
+      *             as zero since no interest is calculated.          *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038030 - With CFT004 on, address is not printed on         *
@@ -919,6 +925,9 @@
       *                                                                   CFT004
       ** Long data structure for access programs.                         CFT004
      I*
+      ** Work Variables
+     I              'DspZeroIntRate'      C         WSYSVL                                  MD057283
+      *
      I/COPY WNCPYSRC,RE3761I002
      C*===================================================================
      C                     MOVEACPY@      BIS@   80
@@ -8744,6 +8753,39 @@
      C                     ENDIF                                                            BUG26838
       *                                                                                     BUG26838
      C                     ENDIF                                                            BUG26838
+      *                                                                                     MD057283
+      ** Call AOSVALR0 to check system value to zeroised interest rate if                   MD057283
+      ** initial threshold is greater than the level balance.                               MD057283
+      *                                                                                     MD057283
+     C                     CALL 'AOSVALR0'                                                  MD057283
+     C                     PARM *BLANKS   PRTCD   7                                         MD057283
+     C                     PARM WSYSVL    WSVLK1 20                                         MD057283
+     C                     PARM           WSVL1 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK2 20                                         MD057283
+     C                     PARM           WSVL2 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK3 20                                         MD057283
+     C                     PARM           WSVL3 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK4 20                                         MD057283
+     C                     PARM           WSVL4 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK5 20                                         MD057283
+     C                     PARM           WSVL5 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK6 20                                         MD057283
+     C                     PARM           WSVL6 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK7 20                                         MD057283
+     C                     PARM           WSVL7 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK8 20                                         MD057283
+     C                     PARM           WSVL8 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK9 20                                         MD057283
+     C                     PARM           WSVL9 200                                         MD057283
+     C                     PARM *BLANKS   WSVLK0 20                                         MD057283
+     C                     PARM           WSVL0 200                                         MD057283
+      *                                                                                     MD057283
+     C           PRTCD     IFNE *BLANKS                                                     MD057283
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD057283
+     C                     EXSR *PSSR                                                       MD057283
+     C                     ELSE                                                             MD057283
+     C                     MOVELWSVL1     WZERAT  1                                         MD057283
+     C                     ENDIF                                                            MD057283
      C*
      C                     ENDSR                           **FIRST ENDSR**
      C********************************************************************
@@ -10590,6 +10632,11 @@
       * Output first tier/threshold                                       086087
      C                     Z-ADDRTA,1     ORAT1                           086087
      C                     Z-ADDBLA,1     OBAL01                          086087
+      *                                                                                     MD057283
+     C           INTH      IFGT OBAL01                                                      MD057283
+     C           WZERAT    ANDEQ'Y'                                                         MD057283
+     C                     Z-ADD*ZEROS    ORAT1                                             MD057283
+     C                     ENDIF                                                            MD057283
      C*
      C***********          MOVEL*BLANKS   ORAT1                           086087
      C***********          MOVEL*BLANKS   OBAL01                          086087
@@ -10797,6 +10844,10 @@
      C           ORATC     ANDNE*BLANKS                                   086087
      C           OBAL01    ORNE *ZEROS                                    086087
      C           OBALC     ANDNE*BLANKS                                   086087
+     C           INTH      IFGT OBAL01                                                      MD057283
+     C           WZERAT    ANDEQ'Y'                                                         MD057283
+     C                     Z-ADD*ZEROS    ORAT1                                             MD057283
+     C                     ENDIF                                                            MD057283
      C                     EXSR OVERCR                                    086087
      C                     WRITERAT3CR                                    086087
      C                     ELSE                                           086087
@@ -10892,6 +10943,11 @@
       * Output first tier/threshold                                       086087
      C                     Z-ADDRTA,1     ORAT1                           086087
      C                     Z-ADDBLA,1     OBAL01                          086087
+      *                                                                                     MD057283
+     C           INTH      IFGT OBAL01                                                      MD057283
+     C           WZERAT    ANDEQ'Y'                                                         MD057283
+     C                     Z-ADD*ZEROS    ORAT1                                             MD057283
+     C                     ENDIF                                                            MD057283
      C*
      C***********          MOVEL*BLANKS   ORAT1                           086087
      C***********          MOVEL*BLANKS   OBAL01                          086087
@@ -11102,6 +11158,10 @@
      C           ORATC     ANDNE*BLANKS                                   086087
      C           OBAL01    ORNE *ZEROS                                    086087
      C           OBALC     ANDNE*BLANKS                                   086087
+     C           INTH      IFGT OBAL01                                                      MD057283
+     C           WZERAT    ANDEQ'Y'                                                         MD057283
+     C                     Z-ADD*ZEROS    ORAT1                                             MD057283
+     C                     ENDIF                                                            MD057283
      C                     EXSR OVERDR                                    086087
      C                     WRITERAT3DR                                    086087
      C                     ELSE                                           086087

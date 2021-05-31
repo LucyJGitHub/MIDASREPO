@@ -175,7 +175,6 @@
       *                                                               *
       *  LUC123 - Extend Customer De-Activation (CSD025) to GL and LE *
       *           Amendment of core hook LECLIP1V27                   *
-      *           Addition of hook LUC123_012                         *
       *           Addition of hook LUC123_013                         *
       *           Addition of hook LUC123_014                         *
       *           Addition of hook LUC123_015                         *
@@ -830,7 +829,6 @@
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  First DS for access programs, long data structure
-     D/COPY WNCPYSRC,LUC123_012                                                               LUC123
       *                                                                                     CER050
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   CER050
      D                                     PREFIX(L@)                                       CER050
@@ -8580,7 +8578,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714

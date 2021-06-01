@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056567           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058225           Date 31May21               *
+      *  Prev Amend No. MD056567           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058225 - Error encountered when no detail to displayed.    *
       *  MD056567 - Deliverable Data Split for Validation Lists       *
       *  MD046248 - Finastra Rebranding                               *
       *  098230 - Introduction of standard header box.                *
@@ -152,7 +154,7 @@
      C/EXEC SQL                                                                             MD056567
      C+ open BCursor                                                                        MD056567
      C/END-EXEC                                                                             MD056567
-     C                   END
+     C**********         END                                                                MD058225
       * Save start position
      C                   MOVE      #2STVL        W0STVL
      C**N82KRST*         READE     @Y2EXIN                              7182    *82=EOF     MD056567
@@ -167,6 +169,7 @@
      C                   seton                                        71                    MD056567
      C                   Endif                                                              MD056567
                                                                                             MD056567
+     C                   END                                                                MD058225
       * Load SFL.
      C                   EXSR      BBLDSF
       *================================================================

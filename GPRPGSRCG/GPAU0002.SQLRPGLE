@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056611           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058228           Date 31May21               *
+      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058228 - Decimal data error when creating a file           *
       *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
@@ -108,6 +110,7 @@
      C     GPAUFLK       CHAIN     GPAUFLD0                           90
      C                   MOVEL     USRID         AFUSRI
      C  N90              UPDATE    GPAUFLD0
+     C   90              Z-ADD     0             AFFDSP                                     MD058228
      C   90              WRITE     GPAUFLD0
      C                   MOVEL     FHDATA        SHDATA
 

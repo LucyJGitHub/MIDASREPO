@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056612           Date 12Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058226           Date 31May21              */
+/*       Prev Amend No. MD056612           Date 12Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058226 - Value 'E.*NONE   ' for parameter TOFILE          */
+/*                  not a valid name.                                */
 /*       MD056612 - Deliverable Data Split for MX group              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSW034 - Midas Message Manager Global Processing            */
@@ -102,6 +105,10 @@
 
              CHGVAR     VAR(&COMIE) VALUE('E.' *CAT &COMI)
 
+/* If not composite, use format instead */                                              /*MD058226*/
+             IF         COND(&COMIE *EQ 'E.*NONE') THEN(CHGVAR +
+             VAR(&COMIE) VALUE('E.' *CAT &FMT))                                         /*MD058226*/
+                                                                                        /*MD058226*/
 /*/COPY WNCPYSRC,MXC0721MPS                                          */
 
 

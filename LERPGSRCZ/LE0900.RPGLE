@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055687           Date 22Jul20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055687           Date 22Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 MD024133           Date 30Apr14               *
@@ -75,6 +76,7 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055687 - Live COB - LEC10A failed                          *
       *           - File control error occurs in LE0860 as amount is  *

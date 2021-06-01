@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD029248           Date 22Aug14               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD029248           Date 22Aug14               *
       *                 MD055733           Date 03Jul20               *
       *                 AR927395           Date 05Aug13               *
       *                 CER050             Date 16Jun19               *
@@ -122,6 +123,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD029248 - Move interest amount for projection of risk loans *
       *             manual repayment for interest.                    *
@@ -131,7 +133,7 @@
       *  AR927395 - Wrong COF repayment when loan had rate changes.   *
       *             Compute corresponding COFA when PD interest is    *
       *             paid off. (Child: AR927398)                       *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *       
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *

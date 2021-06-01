@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Initialise BckwrdLookng Rate Fld in Loans')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC001111 - Initialise Backward-Looking Rate Field in       */
+/*                   Loans File (CLE172 Take-On Program)             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CLE172  *CREATE    Date 01Oct20              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CLE172 - LIBOR Deregulation - Lending                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+
+             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2020')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Mode 1 - First call */
+
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+                CALL       PGM(LE001111)
+             ENDDO
+
+/* Mode 2 - Second call */
+
+             IF         COND(&PMODE *EQ '2') THEN(DO)
+                CALL       PGM(LE001111)
+             ENDDO
+
+/* Check if program call is successful */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/* Program abnormal processing */
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+             SNDPGMMSG  MSG('Program LEC000027 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+
+END:
+             ENDPGM

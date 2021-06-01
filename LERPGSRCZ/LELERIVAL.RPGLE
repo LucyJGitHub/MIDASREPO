@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD057191           Date 02Dec20               *
       *                 MD057323           Date 09Dec20               *
       *                 MD045482           Date 23Oct20               *
       *                 MD034915A          Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
-      *               . MD024812A          Date 06Nov19               *
+      *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -123,6 +125,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
@@ -573,6 +577,49 @@
      D   LOC9                 55     57                                                       CLE141
      D   LOC0                 58     60                                                       CLE141
                                                                                               CLE141
+      *                                                                                       CLE172
+      *** Backward-Looking Rate Screen Fields                                                 CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS                                                                     CLE172
+     D  DDNBLRTB                      1A                                                      CLE172
+     D  DDNRFRRB                     10A                                                      CLE172
+     D  DDNCALMB                      4A                                                      CLE172
+     D  DDNBADJB                     13A                                                      CLE172
+     D  DDNFLORB                     13A                                                      CLE172
+     D  DDNLBDYB                      2A                                                      CLE172
+     D  DDNLODYB                      2A                                                      CLE172
+     D  DDNOPSHB                      1A                                                      CLE172
+     D  DDNRRDPB                      2A                                                      CLE172
+     D  DDNDBAVB                      1A                                                      CLE172
+     D  DDNBLRT                       1A                                                      CLE172
+     D  DDNRFRR                      10A                                                      CLE172
+     D  DDNCALM                       4A                                                      CLE172
+     D  DDNBADJ                      13A                                                      CLE172
+     D  DDNFLOR                      13A                                                      CLE172
+     D  DDNLBDY                       2A                                                      CLE172
+     D  DDNLODY                       2A                                                      CLE172
+     D  DDNOPSH                       1A                                                      CLE172
+     D  DDNRRDP                       2A                                                      CLE172
+     D  DDNDBAV                       1A                                                      CLE172
+      *                                                                                       CLE172
+      ** New LERI Backward-Looking Rate Fields for validation input                           CLE172
+      *                                                                                       CLE172
+     D NRoScnBlrt      DS            49                                                       CLE172
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Valid Fields                                              CLE172
+      *                                                                                       CLE172
+     D LeriValBlrt     DS                                                                     CLE172
+     D  VNBLRT                        1A                                                      CLE172
+     D  VNRFRR                       10A                                                      CLE172
+     D  VNCALM                        4A                                                      CLE172
+     D  VNBADJ                       11P 7                                                    CLE172
+     D  VNFLOR                       11P 7                                                    CLE172
+     D  VNLBDY                        2S 0                                                    CLE172
+     D  VNLODY                        2S 0                                                    CLE172
+     D  VNOPSH                        1A                                                      CLE172
+     D  VNRRDP                        2S 0                                                    CLE172
+     D  VNDBAV                        1A                                                      CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -652,6 +699,7 @@
      D W_CLRSTS        S                   LIKE(K_CLRSTS)                                     CLE030
       ** ReAuthorise constant value                                                          BUG6926
      D W_ReAutho       S             16    Inz('REAUTHORISE REQ.')                           BUG6926
+     D WFLOOR          S             11P 7 INZ(9999.9999999)                                MD057871
                                                                                              BUG6926
                                                                                               CLE030
      D CLE031          S              1                                                       CLE031
@@ -659,6 +707,8 @@
      D CLE036          S              1                                                      BUG9655
      D CLE106          S              1                                                       CLE106
                                                                                               CLE106
+     D CLE172          S              1                                                       CLE172
+     D ASTRK           S              1                                                       CLE172
      D CRE073          S              1                                                       CRE073
      D TMCNSP          S             11P 7                                                    CRE073
      D TMBSRT          S             11P 7                                                    CRE073
@@ -969,6 +1019,15 @@
      C                   EXSR      SRNCAS
 
       /COPY WNCPYSRC,LELERIV024
+
+      *                                                                                       CLE172
+      **  Validate new backward-looking rate fields                                           CLE172
+      *                                                                                       CLE172
+     C                   IF         CLE172 = 'Y' AND                                          CLE172
+     C                              DDNBRTOK <> 'N' AND                                       CLE172
+     C                              DDNBRAOK <> 'N'                                           CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
+     C                   ENDIF                                                                CLE172
 
       *
       ** Validate New Change Indicator
@@ -4117,6 +4176,16 @@
      C                   MOVE      'N'           DDNbraOK
      C                   ENDIF
      C                   ENDIF
+      *                                                                                       CLE172
+      ** Change Indicator must be 'D' if Backward-Looking Rate is 'Y'                         CLE172
+      *                                                                                       CLE172
+     C     DDNBLRTB      IFEQ      'Y'                                                        CLE172
+     C     DDNCHIB       ANDNE     'D'                                                        CLE172
+     C                   MOVEL     'N'           DDNchiOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDNCHIB'                                CLE172
+     C                   EVAL      MsgIDArr(Idx) = '5049458'                                  CLE172
+     C                   ENDIF                                                                CLE172
       *
 
      C                   ENDSR
@@ -6992,6 +7061,61 @@
       *
 
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   EXSR      CHKASTRK                                                   CLE172
+      *                                                                                       CLE172
+     C                   IF        ASTRK = 'N'                                                CLE172
+      *                                                                                       CLE172
+     C                   CLEAR                   NRoScnBlrt                                   CLE172
+     C                   CLEAR                   TempInpDS                                    CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     LeriScnBlrt   NRoScnBlrt                                   CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LERI'        ApiName           4                          CLE172
+     C                   PARM                    L_CLLNRF          6                          CLE172
+     C                   PARM                    L_CLPTYP                                     CLE172
+     C                   PARM                    L_CLCCY                                      CLE172
+     C                   PARM                    WNBRA                                        CLE172
+     C                   PARM                    L_CLICBS                                     CLE172
+     C                   PARM                    L_CLCHTP                                     CLE172
+     C                   PARM      NRoScnBlrt    TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNameArr                                   CLE172
+     C                   PARM                    MsgIDArr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LeriValBlrt                                  CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     VNBLRT        L_CLNBLR                                     CLE172
+     C                   MOVEL     VNRFRR        L_CLNRFR                                     CLE172
+     C                   MOVEL     VNCALM        L_CLNCAL                                     CLE172
+     C                   Z-ADD     VNBADJ        L_CLNBAD                                     CLE172
+     C                   Z-ADD     VNFLOR        L_CLNFLR                                     CLE172
+     C                   Z-ADD     VNLBDY        L_CLNLBD                                     CLE172
+     C                   Z-ADD     VNLODY        L_CLNLOD                                     CLE172
+     C                   MOVEL     VNOPSH        L_CLNPSH                                     CLE172
+     C                   Z-ADD     VNRRDP        L_CLNRRD                                     CLE172
+     C                   MOVEL     VNDBAV        L_CLNDBA                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     TempInpDS     NRoScnBlrt                                   CLE172
+     C                   MOVEL     NRoScnBlrt    LeriScnBlrt                                  CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *                                                                                       CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -8951,6 +9075,94 @@
      C                   MOVEL     DDNFSNB       L_CLNFSN                                   AR702532
      C                   ENDIF                                                              AR702532
       *                                                                                     AR702532
+     C                   IF        CLE172 = 'Y'                                             MD057871
+      ** Return Backward-Looking Rate Fields to original value                                CLE172
+      *                                                                                       CLE172
+      *                                                                                       CLE172
+      ** New Backward Looking Rate Indicator                                                  CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNBLRTB      L_CLNBLR                            CLE172 MD057871
+     C                   MOVEL     DDNBLRT       L_CLNBLR                                   MD057871
+      *                                                                                       CLE172
+      ** New Risk Free Rate                                                                   CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNRFRRB      L_CLNRFR                            CLE172 MD057871
+     C                   MOVEL     DDNRFRR       L_CLNRFR                                   MD057871
+      *                                                                                       CLE172
+      ** New Calculation Method                                                               CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNCALMB      L_CLNCAL                            CLE172 MD057871
+     C                   MOVEL     DDNCALM       L_CLNCAL                                   MD057871
+      *                                                                                       CLE172
+      ** New Benchmark Adjustment                                                             CLE172
+      *                                                                                       CLE172
+     C**********         MOVE      *BLANKS       ZFIELD                              CLE172 MD057871
+     C**********         MOVE      DDNBADJB      ZFIELD                              CLE172 MD057871
+     C**********         Z-ADD     7             ZADEC                               CLE172 MD057871
+     C**********         Z-ADD     4             ZADIG                               CLE172 MD057871
+     C**********         EXSR      ZALIGN                                            CLE172 MD057871
+     C*****ZALIGNok      IFEQ      'Y'                                               CLE172 MD057871
+     C**********         MOVE      ZFIELD        VNBADJ                              CLE172 MD057871
+     C**********         Z-ADD     VNBADJ        L_CLNBAD                            CLE172 MD057871
+     C**********         ELSE                                                        CLE172 MD057871
+     C**********         Z-ADD     *ZEROS        L_CLNBAD                            CLE172 MD057871
+     C**********         ENDIF                                                       CLE172 MD057871
+     C                   IF        DDNBADJ <> *BLANKS                                       MD057871
+     C                   EVAL      L_CLNBAD = %DEC(DDNBADJ:11:7)                            MD057871
+     C                   ELSE                                                               MD057871
+     C                   EVAL      L_CLNBAD = *ZEROS                                        MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                       CLE172
+      ** New Floor                                                                            CLE172
+      *                                                                                       CLE172
+     C                                                                                        CLE172
+     C                   IF        DDNFLOR = *BLANKS                                        MD057871
+     C                   IF        DDNBLRT = 'Y'                                            MD057871
+     C                   Z-ADD     WFLOOR        L_CLNFLR                                   MD057871
+     C                   ELSE                                                               MD057871
+     C                   EVAL      L_CLNFLR = *ZEROS                                        MD057871
+     C                   ENDIF                                                              MD057871
+     C                   ELSE                                                               MD057871
+     C                   EVAL      L_CLNFLR = %DEC(DDNFLOR:11:7)                            MD057871
+     C**********         MOVE      *BLANKS       ZFIELD                              CLE172 MD057871
+     C**********         MOVE      DDNFLORB      ZFIELD                              CLE172 MD057871
+     C**********         Z-ADD     7             ZADEC                               CLE172 MD057871
+     C**********         Z-ADD     4             ZADIG                               CLE172 MD057871
+     C**********         EXSR      ZALIGN                                            CLE172 MD057871
+     C*****ZALIGNok      IFEQ      'Y'                                               CLE172 MD057871
+     C**********         MOVE      ZFIELD        VNFLOR                              CLE172 MD057871
+     C**********         Z-ADD     VNFLOR        L_CLNFLR                            CLE172 MD057871
+     C**********         ELSE                                                        CLE172 MD057871
+     C**********         Z-ADD     *ZEROS        L_CLNFLR                            CLE172 MD057871
+     C**********         ENDIF                                                       CLE172 MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                       CLE172
+      ** New Lookback Days                                                                    CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNLBDYB      L_CLNLBD                            CLE172 MD057871
+     C                   MOVEL     DDNLBDY       L_CLNLBD                                   MD057871
+      *                                                                                       CLE172
+      ** New Lockout Days                                                                     CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNLODYB      L_CLNLOD                            CLE172 MD057871
+     C                   MOVEL     DDNLODY       L_CLNLOD                                   MD057871
+      *                                                                                       CLE172
+      ** New Observation Period Shift                                                         CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNOPSHB      L_CLNPSH                            CLE172 MD057871
+     C                   MOVEL     DDNOPSH       L_CLNPSH                                   MD057871
+      *                                                                                       CLE172
+      ** New Rate Rounding Decimal Places                                                     CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNRRDPB      L_CLNRRD                            CLE172 MD057871
+     C                   MOVEL     DDNRRDP       L_CLNRRD                                   MD057871
+      *                                                                                       CLE172
+      ** New Day Basis for Average                                                            CLE172
+      *                                                                                       CLE172
+     C**********         MOVEL     DDNDBAVB      L_CLNDBA                            CLE172 MD057871
+     C                   MOVEL     DDNDBAV       L_CLNDBA                                   MD057871
+      *                                                                                       CLE172
+     C                   ENDIF                                                              MD057871
      C                   ENDSR                                                              AR702532
       *****************************************************************            AR820729 MD055380
       */EJECT***                                                                   AR820729 MD055380
@@ -9269,6 +9481,55 @@
      C                   ENDSR                                                              MD034449
       *****************************************************************                     MD034449
       /EJECT                                                                                MD034449
+      *****************************************************************                       CLE172
+      * CHKASTRK - CHECK ASTERISKS                                    *                       CLE172
+      *****************************************************************                       CLE172
+      *                                                                                       CLE172
+     C     CHKASTRK      BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   EVAL      ASTRK = *BLANKS                                            CLE172
+      *                                                                                       CLE172
+     C                   IF        DDNRFRRB='*' OR DDNCALMB='*' OR                            CLE172
+     C                             DDNBADJB='*' OR DDNFLORB='*' OR                            CLE172
+     C                             DDNLBDYB='*' OR DDNLODYB='*' OR                            CLE172
+     C                             DDNOPSHB='*' OR DDNRRDPB='*' OR                            CLE172
+     C                             DDNDBAVB='*' OR DDNBLRTB='*' OR                            CLE172
+     C                             DDNBRAB='*'                                                CLE172
+      *                                                                                       CLE172
+     C                   IF        DDNRFRRB<>'*' OR DDNCALMB<>'*' OR                          CLE172
+     C                             DDNBADJB<>'*' OR DDNFLORB<>'*' OR                          CLE172
+     C                             DDNLBDYB<>'*' OR DDNLODYB<>'*' OR                          CLE172
+     C                             DDNOPSHB<>'*' OR DDNRRDPB<>'*' OR                          CLE172
+     C                             DDNDBAVB<>'*' OR DDNBLRTB<>'*' OR                          CLE172
+     C                             DDNBRAB<>'*'                                               CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDNBLRTB'                               CLE172
+     C                   EVAL      MsgIDArr(Idx) = '5049496'                                  CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEL     *BLANKS       L_CLNBLR                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNRFR                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNCAL                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNBAD                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNFLR                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNLBD                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNLOD                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNPSH                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNRRD                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNDBA                                     CLE172
+     C                                                                                        CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   EVAL      ASTRK = 'N'                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
       *****************************************************************
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
@@ -9293,6 +9554,11 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM                    @ACTRV            1                        AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
+                                                                                              CLE172
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -9735,6 +10001,19 @@
      C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
      C**********         ENDIF                                                     MD034449 MD057191
+      *                                                                                       CLE172
+      ** Determine if CLE172 is installed                                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      'N'           CLE172            1                          CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       PRTCD                                        CLE172
+     C                   PARM      '*VERIFY '    POPTN                                        CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+      *                                                                                       CLE172
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      'Y'           CLE172                                       CLE172
+     C                   ENDIF                                                                CLE172
       *
       **  Key list for LELOAML0
       *

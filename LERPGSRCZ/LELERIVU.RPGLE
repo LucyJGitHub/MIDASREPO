@@ -23,8 +23,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD057604           Date 06Apr21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 MD057604           Date 06Apr21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
@@ -74,11 +76,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD057604 - EUC0190 fails in COB. Do not allow input of sett  *
       *             details if non dicount loan and not a multi-ccy   *
       *             rollover.                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
@@ -249,6 +253,8 @@
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
@@ -362,6 +368,12 @@
 
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       ** LE Rollover Extra Data - File (D/B) format
+                                                                                              CLE172
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            98                                                       CLE172
+     D NewLibor        S             98A                                                    MD057871
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
@@ -475,6 +487,7 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                  MD057871
 
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
@@ -540,6 +553,17 @@
      C                   MOVEL     InfData500    InfData                                      CAP086
      C**********         MOVEL     Extdata500    Extdata                                      CAP086
      C                   MOVEL     ExtData500    ExtData                                      CAP086
+                                                                                              CLE172
+      ** ExtData Buffer Pointer                                                               CLE172
+     C                   Z-ADD     1             eBfp              4 0                        CLE172
+     C                   MOVEL     'LELEEXPD'    Filename                                     CLE172
+     C                   EXSR      GETRCDLN                                                   CLE172
+     C                   ADD       RecordLen     eBfp                                         CLE172
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   EVAL      LeriScnBlrt = %SUBST(Extdata500:eBfp:98)                   CLE172
+     C                   ADD       98            eBfp                                         CLE172
+                                                                                              CLE172
 
       ** Reset variables gradually updated
 
@@ -599,6 +623,15 @@
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
      C                   ENDIF
+      *                                                                                     MD057871
+     C                   EVAL       NewLibor = LeriScnBlrt                                  MD057871
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
+     C                   IF         Pos <> 0                                                MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:LeriScnBlrt:Pos:-
+     C                              12)                                                     MD057871
+     C                   EVAL       LeriScnBlrt = NewLibor                                  MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                     MD057871
 
       ** If action is for update, get the correct record information from file               BUG8145
       ** Only for TranInLERI part of screen formats                                          BUG8145
@@ -628,7 +661,9 @@
      C                                      TranInLERI3 +                                     246576
      C**********                            ##RECS + ##PAYS +                        246576 AR702532
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
-     C                                      InfData + ExtData                                 246576
+     C**********                            InfData + ExtData                          246576 CLE172
+     C                                      InfData + ExtData +                               CLE172
+     C                                      LeriScnBlrt                                       CLE172
      C                   Endif                                                                246576
      C                   Else                                                                BUG8145
       ** Remerge buffer with all relevant data structures
@@ -638,7 +673,9 @@
      C**********                            ##RECS + ##PAYS + ExtData                         CAP086
      C**********                            ##RECS + ##PAYS +                        CAP086 AR702532
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
-     C                                      InfData + ExtData                                 CAP086
+     C**********                            InfData + ExtData                          CAP086 CLE172
+     C                                      InfData + ExtData +                               CLE172
+     C                                      LeriScnBlrt                                       CLE172
      C                   EndIf                                                               BUG8145
 
      C                   MOVE      '1'           *INLR
@@ -814,6 +851,10 @@
       ** Rollover Work Fields
      C                   PARM                    NwRoScnFmt
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** Update 'Current' Loan with Loan in Screen Format
      C                   MOVEL     NwRoScnFmt    CrRoScnFmt
@@ -920,6 +961,10 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM                    @ACTRV                                     AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** OUTPUTS
       ** Rollover Instructions Details OK inds
@@ -2393,6 +2438,23 @@
      C                   END
 
      C                   ENDSR
+      ****************************************************************                        CLE172
+      *  Get Record Lengths of Transaction Data Blocks               *                        CLE172
+      ****************************************************************                        CLE172
+     C     GETRCDLN      BEGSR                                                                CLE172
+                                                                                              CLE172
+     C                   CALLB     'UTGETRCDLN'                                               CLE172
+     C                   PARM                    ReturnCode                                   CLE172
+     C                   PARM      *ZERO         RecordLen         5 0                        CLE172
+     C                   PARM                    FileName         10                          CLE172
+     C                   PARM      '*LIBL     '  FileLib          10                          CLE172
+                                                                                              CLE172
+      ** If file not found (or any other error) shut down the program                         CLE172
+     C     ReturnCode    Ifne      *BLANKS                                                    CLE172
+     C                   EXSR      *PSSR                                                      CLE172
+     C                   EndIf                                                                CLE172
+                                                                                              CLE172
+     C                   ENDSR                                                                CLE172
       *****************************************************************
       /EJECT
       *****************************************************************

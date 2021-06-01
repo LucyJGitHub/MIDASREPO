@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -381,6 +383,27 @@
       *
      C                     ENDIF
       *
+      ** If CLE172 is ON and rollover date is not less that SLID then                         CLE172
+      ** need to drop BR records after rollover date where change                             CLE172
+      ** is from backward looking to forward looking or vice versa.                           CLE172
+      *                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C           RECI      ANDEQ'D'                                                           CLE172
+     C           RLDT      ANDGT*ZERO                                                         CLE172
+     C           RLDT      ANDLEDLRC                                                          CLE172
+     C           RLDT      ANDGESLID                                                          CLE172
+     C           RLDT      ANDLTBJRDNB                                                        CLE172
+     C           BRTT      ANDNENBRA                                                          CLE172
+     C           BLRT      ANDNENBLRT                                                         CLE172
+     C           BLRT      ANDNE*BLANKS                                                       CLE172
+     C           NBLRT     ANDNE*BLANKS                                                       CLE172
+     C                     MOVE 'RO'      W#AMTP                                              CLE172
+     C                     MOVE RLDT      W#VDAT                                              CLE172
+     C                     MOVE *ZEROS    W#LASN                                              CLE172
+     C                     MOVE NBRA      W#BSRC                                              CLE172
+     C                     EXSR DELHIS                                                        CLE172
+     C                     ENDIF                                                              CLE172
+      *                                                                                       CLE172
      C                     READ CLOAN                    81
      C                     ENDDO
       *
@@ -853,6 +876,18 @@
      C           @RTCD     IFEQ *BLANKS                                                       CLE141
      C                     MOVEL'Y'       CLE141                                              CLE141
      C                     ENDIF                                                              CLE141
+      *                                                                                       CLE172
+      ** Determine if CLE172 is switched ON                                                   CLE172
+      *                                                                                       CLE172
+     C                     MOVEL'N'       CLE172  1                                           CLE172
+     C                     CALL 'AOSARDR0'                                                    CLE172
+     C                     PARM *BLANKS   @RTCD                                               CLE172
+     C                     PARM '*VERIFY' @OPTN                                               CLE172
+     C                     PARM 'CLE172'  PSARD                                               CLE172
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE172
+     C           @RTCD     IFEQ *BLANKS                                                       CLE172
+     C                     MOVEL'Y'       CLE172                                              CLE172
+     C                     ENDIF                                                              CLE172
       *
      C           CLNKEY    KLIST
      C                     KFLD           LNRF

@@ -10,8 +10,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. MD058050           Date 10May21               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD034915           Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
@@ -134,6 +137,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank floor in calling ARR Calculator     *
+      *  MD058050 - CLE172 fields are reflected in LE0310P1 Report    *
+      *             when CLE172 off. Switch off *IN21 if CLE172 is    *
+      *             off.                                              *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
@@ -352,6 +360,8 @@
      FSDCURRPDIF  E                    DISK                                                   CLE038
      FLEAPRHI0IF  E           K        DISK                                                   CER050
      FLEANACI1IF  E           K        DISK                                                   CER073
+      ** Libor Standing data                                                                  CLE172
+     FSDLIBRTDIF  E           K        DISK                                                   CLE172
       ** CER073 AnaCredit - Loans Extension File                                              CER073
 0018 F*E0310P1O   F     132     OF     PRINTER                      S01124S01117
      FLE0310AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
@@ -393,6 +403,7 @@
      F*       19      NO DETAILS TO REPORT FOR THIS BRANCH                S01117
 0035 F*       20      FIRST CYCLE INDICATOR
      F*       21      FIRST LINE OF SPECIAL INSTRUCTIONS IS BLANK
+     F*               CLE172 is switched on                                                   CLE172
 0036 F*       22      ACTIONED TODAY
      F*       23      WORK INDICATOR USED FOR BENIFICIARY BANK DETAILS
 0037 F*       24      INSERTED RECORD
@@ -1048,6 +1059,11 @@
      I                                       11  11 SSF                   S01117
      I                                       12  12 DATF                  S01117
      I                                       13  13 MBIN                  S01117
+     I              9999.9999999          C         CFLR                                    MD057871
+      *                                                                                     MD057871
+     I            DS                                                                        MD057871
+     I                                        1  14 ARR                                     MD057871
+      *
      C                     MOVEACPY@      BIS@   80
 0372 C*
      C*
@@ -1867,6 +1883,22 @@
      C           PRTCD     IFEQ *BLANKS                                                       CER073
      C                     MOVE 'Y'       CER073                                              CER073
      C                     ENDIF                                                              CER073
+      *                                                                                       CLE172
+      ** Check if CLE172 is switched ON                                                       CLE172
+      *                                                                                       CLE172
+     C                     MOVE 'N'       CLE172  1                                           CLE172
+     C                     CALL 'AOSARDR0'                                                    CLE172
+     C                     PARM *BLANKS   PRTCD                                               CLE172
+     C                     PARM '*VERIFY' POPTN                                               CLE172
+     C                     PARM 'CLE172'  PSARD                                               CLE172
+      *                                                                                       CLE172
+     C           PRTCD     IFEQ *BLANKS                                                       CLE172
+     C                     MOVE 'Y'       CLE172                                              CLE172
+     C                     ENDIF                                                              CLE172
+     C*                                                                                       CLE172
+     C           KLIBR     KLIST                                                              CLE172
+     C                     KFLD           KSCFLD  8                                           CLE172
+     C                     KFLD           KINVAL 10                                           CLE172
       *                                                                                       CER050
       ** Determine if CER050 feature is enabled                                               CER050
       *                                                                                       CER050
@@ -2176,6 +2208,7 @@ STOP  *                                                                   CLE004
       *                                                                   CLE004
 0411 C           ENDT      TAG                             ** ENDT TAG **
       *                                                                   CLE004
+      *                                                                                       CLE172
 0412 C*
 0413 C*    LAST RECORD PROCESSING
       **                                                                  S01117
@@ -2856,6 +2889,13 @@ STOP  *                                                                   CLE004
      C*
      C           BENEND    TAG                             * BENEND TAG *
      C*
+     C**   Switched ON *IN21 when CLE172 = 'Y'                                                CLE172
+     C*                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVE *ON       *IN21                                               CLE172
+     C                     ELSE                                                             MD058050
+     C                     MOVE *OFF      *IN21                                             MD058050
+     C                     ENDIF                                                              CLE172
 0641 C*
 0642 C*    MAINTAIN COUNT NUMBER LOANS/PARTS PRINTED
 0643 C*
@@ -4027,6 +4067,75 @@ STOP  *                                                                   CLE004
      C                     MOVE *ON       *IN17                                               CLE034
      C                     ENDIF                                                              CLE034
      C                     ENDIF                                                              CLE034
+      *                                                                                       CLE172
+      ** If CLE172 is switched on, print LIBOR Deregulation Details                           CLE172
+      *                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVELBLRT      RBLRT                                               CLE172
+     C                     MOVELRFRR      RRFRR                                               CLE172
+     C                     MOVELCALM      RCALM                                               CLE172
+     C                     MOVELBADJ      RBADJ                                               CLE172
+      *                                                                                     MD057871
+     C                     MOVE FLOR      ARR                                               MD057871
+     C           FLOR      IFEQ CFLR                                                        MD057871
+     C                     MOVEL*BLANKS   RFLOR                                             MD057871
+     C                     ELSE                                                             MD057871
+     C                     MOVE ARR       ZFLD15                                            MD057871
+     C                     Z-ADD7         ZDECS                                             MD057871
+     C                     CALL 'ZSEDIT'                                                    MD057871
+     C                     PARM           ZFLD15 150                                        MD057871
+     C                     PARM           ZDECS   10                                        MD057871
+     C                     PARM 'L'       ZECODE  1                                         MD057871
+     C                     PARM *BLANKS   ZOUT21 21                                         MD057871
+     C                     MOVE ZOUT21    RFLOR                                             MD057871
+     C                     ENDIF                                                            MD057871
+      *                                                                                     MD057871
+     C**********           MOVELFLOR      RFLOR                                      CLE172 MD057871
+     C                     MOVELLBDY      RLBDY                                               CLE172
+     C                     MOVELLODY      RLODY                                               CLE172
+     C                     MOVELOPSH      ROPSH                                               CLE172
+     C                     MOVELRRDP      RRRDP                                               CLE172
+      ** Day Basis for Average Description - DBAV                                             CLE172
+     C                     MOVEL'DAYCOUNT'KSCFLD                                              CLE172
+     C                     MOVELDBAV      KINVAL                                              CLE172
+     C           KLIBR     CHAINSDLIBRTD             21                                       CLE172
+     C           *IN21     IFEQ '0'                                                           CLE172
+     C                     MOVELDSPVAL    RDBAV                                               CLE172
+     C                     ENDIF                                                              CLE172
+     C                     MOVELRTKN      RRTKN                                               CLE172
+     C                     MOVELNBLRT     RNBLRT                                              CLE172
+     C                     MOVELNRFRR     RNRFRR                                              CLE172
+     C                     MOVELNCALM     RNCALM                                              CLE172
+     C                     MOVELNBADJ     RNBADJ                                              CLE172
+      *                                                                                     MD057871
+     C                     MOVE NFLOR     ARR                                               MD057871
+     C           NFLOR     IFEQ CFLR                                                        MD057871
+     C                     MOVEL*BLANKS   RNFLOR                                            MD057871
+     C                     ELSE                                                             MD057871
+     C                     MOVE ARR       ZFLD15                                            MD057871
+     C                     Z-ADD7         ZDECS                                             MD057871
+     C                     CALL 'ZSEDIT'                                                    MD057871
+     C                     PARM           ZFLD15 150                                        MD057871
+     C                     PARM           ZDECS   10                                        MD057871
+     C                     PARM 'J'       ZECODE  1                                         MD057871
+     C                     PARM *BLANKS   ZOUT21 21                                         MD057871
+     C                     MOVE ZOUT21    RNFLOR                                            MD057871
+     C                     ENDIF                                                            MD057871
+      *                                                                                     MD057871
+     C**********           MOVELNFLOR     RNFLOR                                     CLE172 MD057871
+     C                     MOVELNLBDY     RNLBDY                                              CLE172
+     C                     MOVELNLODY     RNLODY                                              CLE172
+     C                     MOVELNOPSH     RNOPSH                                              CLE172
+     C                     MOVELNRRDP     RNRRDP                                              CLE172
+      ** Day Basis for Average Description - NDBAV                                            CLE172
+     C                     MOVEL'DAYCOUNT'KSCFLD                                              CLE172
+     C                     MOVELNDBAV     KINVAL                                              CLE172
+     C           KLIBR     CHAINSDLIBRTD             21                                       CLE172
+     C           *IN21     IFEQ '0'                                                           CLE172
+     C                     MOVELDSPVAL    RNDBAV                                              CLE172
+     C                     ENDIF                                                              CLE172
+     C                     MOVE *ON       *IN21                                               CLE172
+     C                     ENDIF                                                              CLE172
       *                                                                   CEU020
      C                     ENDSR                                          CLE006
       /EJECT                                                              CLE004
@@ -4841,6 +4950,38 @@ STOP  *                                                                   CLE004
      O                 15      FSGN      73                               CAC001
      O                 75                94 'FACILITY BRANCH'             S01117
      O                 75      FCLB     113                               S01117
+     O        D  2     30    21                                                               CLE172
+     O                                   26 'BACKWARD LOOKING RATE'                           CLE172
+     O                         RBLRT     37                                                   CLE172
+     O                                   53 'RISK FREE RATE'                                  CLE172
+     O                         RRFRR     75                                                   CLE172
+     O                                   97 'CALCULATION METHOD'                              CLE172
+     O                         RCALM    113                                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   25 'BENCHMARK ADJUSTMENT'                            CLE172
+     O                         RBADJ     40 '  0 .       -'                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   10 'FLOOR'                                           CLE172
+     O**********               RFLOR     40 '  0 .       -'                          CLE172 MD057871
+     O                         RFLOR     40                                                 MD057871
+     O        D  1     30    21                                                               CLE172
+     O                                   18 'LOOKBACK DAYS'                                   CLE172
+     O                         RLBDY     37                                                   CLE172
+     O                                   51 'LOCKOUT DAYS'                                    CLE172
+     O                         RLODY     75                                                   CLE172
+     O                                   97 'OBSERVATION PERIOD'                              CLE172
+     O                                  103 ' SHIFT'                                          CLE172
+     O                         ROPSH    113                                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   24 'RATE ROUNDING DECML'                             CLE172
+     O                                   31 'PLACES'                                          CLE172
+     O                         RRRDP     37                                                   CLE172
+     O                                   60 'DAY BASIS FOR AVERAGE'                           CLE172
+     O                         RDBAV    113                                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   16 'RATES KNOWN'                                     CLE172
+     O                         RTKN      37                                                   CLE172
+      *                                                                                       CLE172
      O/COPY WNCPYSRC,LE0310O010
 1200 O********D  1     30                                                 S01518
      O********D*11     30N80                                                           S01518 CLE034
@@ -5229,6 +5370,39 @@ STOP  *                                                                   CLE004
      O                                  100 'ROLLOVER AUTHORISING '                           199886
      O                                  104 'USER'                                            199886
      O                         RRXUS    118                                                   199886
+     O        D  2     30    21                                                               CLE172
+     O                                   26 'NEXT BACKWARD LOOKING'                           CLE172
+     O                                   31 'RATE'                                            CLE172
+     O                         RNBLRT    37                                                   CLE172
+     O                                   58 'NEXT RISK FREE RATE'                             CLE172
+     O                         RNRFRR    75                                                   CLE172
+     O                                  102 'NEXT CALCULATION METHOD'                         CLE172
+     O                         RNCALM   113                                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   19 'NEXT BENCHMARK'                                  CLE172
+     O                                   30 'ADJUSTMENT'                                      CLE172
+     O                         RNBADJ    45 '  0 .       -'                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   15 'NEXT FLOOR'                                      CLE172
+     O**********               RNFLOR    45 '  0 .       -'                          CLE172 MD057871
+     O                         RNFLOR    45                                                 MD057871
+     O        D  1     30    21                                                               CLE172
+     O                                   23 'NEXT LOOKBACK DAYS'                              CLE172
+     O                         RNLBDY    37                                                   CLE172
+     O                                   56 'NEXT LOCKOUT DAYS'                               CLE172
+     O                         RNLODY    75                                                   CLE172
+     O                                  102 'NEXT OBSERVATION PERIOD'                         CLE172
+     O                                  108 ' SHIFT'                                          CLE172
+     O                         RNOPSH   113                                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   29 'NEXT RATE ROUNDING DECML'                        CLE172
+     O                                   36 'PLACES'                                          CLE172
+     O                         RNRRDP    43                                                   CLE172
+     O        D  1     30    21                                                               CLE172
+     O                                   19 'NEXT DAY BASIS'                                  CLE172
+     O                                   31 'FOR AVERAGE'                                     CLE172
+     O                         RNDBAV    84                                                   CLE172
+      *                                                                                       CLE172
      O        D  1     30 11                                                                 BUG9103
      O                                   18 'FCLT CCY PRIN'                                  BUG9103
      O                 35      FPAM      37 '            0 '                                 BUG9103

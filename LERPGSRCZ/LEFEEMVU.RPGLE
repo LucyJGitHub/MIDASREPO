@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050688           Date 26Aug20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD050688           Date 26Aug20               *
       *                 AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
       *                 MD052696           Date 04Apr19               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
@@ -1639,7 +1641,7 @@
       ** Array index (3P0) from/to caller                                                   MD031692
                                                                                             MD031692
      C                   PARM                    WIdx                                       MD031692
-                                                                                            MD031692     
+                                                                                            MD031692
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0

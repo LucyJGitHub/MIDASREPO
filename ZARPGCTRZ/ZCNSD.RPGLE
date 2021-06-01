@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD056218           Date 01Jun20               *
-      *  Prev Amend No. 250223             Date 22May20               *
+      *  Last Amend No. MD057810           Date 28May21               *
+      *  Prev Amend No. MD056218           Date 01Jun20               *
+      *                 250223             Date 22May20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057810 - Discrepancy of Countervalue for TWD Currency      *
+      *             Add half-adjust at the final computation.         *
       *  MD056218 - Missing code fix.                                 *
       *  248698 - Rounding Discrepancies on some SE reports. Apply    *
       *           fix 228682.                                         *
@@ -57,34 +60,34 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
      D POWER8          S              8  4 DIM(8) CTDATA PERRCD(1)
- 
- 
+
+
       ** INPUTS **
- 
+
      **  Price basis
      D   SPBS          S              1A
      **  Nominal decimal places
      D   NMDP          S              1P 0
      **  Nominal currecy decimal places
      D   NomCcyDec     S              1P 0
- 
- 
+
+
       ** +-----------------------------------------------------------------+
- 
+
       ** Nominal currency decimal places
- 
+
      C                   Z-ADD     NomCcyDec     ZCDP
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZCNSD
- 
+
      C                   RETURN
       /EJECT
       ** +--- The converted ZCNSDZ1 starts here --------------------------+
@@ -163,7 +166,8 @@
      C     ZCDP          IFEQ      *ZERO                                                      228682
       *                                                                                       228682
      C     ZNOMLC        MULT(H)   ZPRC          ZCONS0                                       228682
-     C     ZCONS0        ADD       WDIF0         ZCONS                                        228682
+     C*****ZCONS0        ADD       WDIF0         ZCONS                               228682 MD057810
+     C     ZCONS0        ADD(H)    WDIF0         ZCONS                                      MD057810
       *                                                                                       228682
      C                   ELSE                                                                 228682
       *                                                                                       228682
@@ -182,7 +186,7 @@
      C*
      C*****************************************************************
       ** +--- The converted ZCNSDZ1 ends here ----------------------------+
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -193,13 +197,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       ** Nominal
       ** Price
       ** Price basis
@@ -210,12 +214,12 @@
      C                   PARM                    SPBS
      C                   PARM                    NMDP
      C                   PARM                    NomCcyDec
- 
+
       * OUTPUTS
- 
+
       **  Consideration
      C                   PARM                    ZCONS
- 
+
      C                   ENDSR
       *****************************************************************
 **  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION

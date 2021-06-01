@@ -14,11 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. MD057965           Date 28May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
-      *                 212319             Date 28May12               *      
+      *                 212319             Date 28May12               *
       *                 MD049134           Date 27Jul20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD031848           Date 12Mar20               *
@@ -63,6 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057965 - Next Statement Date is set to 11months later when *
+      *             MT940 statement frequency is 'E'                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
@@ -74,7 +77,7 @@
       *         - Applied for AR973615 (Child: AR973617)              *
       *  212319 - Default text for Zeo Balance account not reported   *
       *           on statements                                       *
-      *         - Applied for AR973615 (Child: AR973617)              *      
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  MD049134   - Retrieve History Balance from Retail History    *
       *             instead of CLBL from ACCNTAB for the correct      *
       *             Available Balance in Field 64.                    *
@@ -812,7 +815,11 @@
      C                   IF        N40SFR = *Blanks                             On Movement   216935
      C                   EVAL      ZFREQ = 'D'                                  Frequence     216935
      C                   ELSE                                                                 216935
+     C                   IF        N40SFR = 'E'                                             MD057965
+     C                   EVAL      ZFREQ = *BLANK                                           MD057965
+     C                   ELSE                                                               MD057965
      C                   EVAL      ZFREQ = N40SFR                               Frequence     216935
+     C                   ENDIF                                                              MD057965
      C                   ENDIF                                                                216935
 
      C**********         CALLB     'ZFREQB'                                                 AR401845

@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. MD046998A          Date 15Apr21               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046998A - Reversed GEMS 226449                             *
+      *            - Applied fix for MD057480                         *
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Wrong interest calculated due to wrong number of    *
       *           days in interest used for divisor basis 3. Fix is to*
@@ -324,11 +327,12 @@
      C* DOES THIS YEAR ALSO CONTAIN FEB29, IE IS IT A LEAP YEAR?
      C*
      C*  MAT MONTH GT FEB
-     C     ZMATM         IFGT      02
-     C                   Z-ADD     ZNCDY         ZEOY                                         226449
-     C                   ELSE                                                                 226449
-     C     ZNCDY         SUB       1             ZEOY              2 0                        226449
-     C                   ENDIF                                                                226449
+     C*****ZMATM         IFGT      02                                                      MD046998A
+     C**********         Z-ADD     ZNCDY         ZEOY                               226449 MD046998A
+     C                   Z-ADD     ZNCDY         ZEOY              2 0                     MD046998A
+     C**********         ELSE                                                       226449 MD046998A
+     C*****ZNCDY         SUB       1             ZEOY              2 0              226449 MD046998A
+     C**********         ENDIF                                                      226449 MD046998A
      C     ZEOY          DIV       4             ZWK               2 0
      C                   MVR                     ZREM              1 0
      C     ZREM          IFNE      0

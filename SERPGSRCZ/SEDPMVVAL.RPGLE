@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054698           Date 02Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057966           Date 19May21               *
+      *  Prev Amend No. MD057546           Date 19Mar21               *
+      *                 MD054698           Date 02Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -86,6 +88,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057966 - Defaulting of exchange rate indicator not working.*
+      *             Need to ensure this works if customer is a Private*
+      *             Banking customer.                                 *
+      *  MD057546 - Depot Walk-In: Customer Delivery/Withdrawal error *
+      *             message is incorrectly displayed.                 *
+      *           - Allow Customer Delivery/Withdrawal value of 'Y'   *
+      *             if Beneficiary customer entry is a PB customer.   *
       *  MD054689 - System allows to REPO more than the actual        *
       *             Security Position Without any warning             *
       *  MD046248 - Finastra Rebranding                               *
@@ -1655,6 +1664,8 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDCWDIOk
      C                   PARM                    CWDI
+      ** Private Banking Customer Indicator                                                 MD057546
+     C                   PARM                    WWPBCS                                     MD057546
 
      C                   EXSR      SRUpdate
 
@@ -1731,6 +1742,7 @@
      C                   PARM                    DDSPMD
      C                   PARM                    SPXR
      C                   PARM                    SPMD
+     C                   PARM                    WWPBCS                                     MD057966
 
      C                   EXSR      SRUpdate
 

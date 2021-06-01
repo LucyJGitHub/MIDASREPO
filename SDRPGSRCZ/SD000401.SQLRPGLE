@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053487           Date 28May19               *
-      *  Prev Amend No. MD053140           Date 03Apr19               *
+      *  Last Amend No. MD056633           Date 07Sep20               *
+      *  Prev Amend No. MD053487           Date 28May19               *
+      *                 MD053140           Date 03Apr19               *
       *                 CSD101 *CREATE     Date 07Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056633 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD053487 - Audit Report should be available for Interface    *
       *             Password Maintenance                              *
       *  MD053140 - F3 Exit and F12 Previous have the same function   *
@@ -271,7 +273,8 @@
       *
      C/exec SQL
      C+ declare FaceCursor cursor for
-     C+ select * from SDFACUW0
+     C**select** from SDFACUW0                                                              MD056633
+     C+ select * from SDFACJW0                                                              MD056633
      C+ where
      C+   LEENTI >= :KID
      C+ order by
@@ -584,7 +587,8 @@
       ** Get record count of SDFACUW0
      C/exec SQL
      C+ select count(*) into :Count
-     C+ from SDFACUW0
+     C**from*SDFACUW0                                                                       MD056633
+     C+ from SDFACJW0                                                                       MD056633
      C/end-exec
       *
       ** Get the Multi-Language of the User

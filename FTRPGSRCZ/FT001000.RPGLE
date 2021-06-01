@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR927047           Date 21Mar12               *      
+      *  Last Amend No. MD056560           Date 31Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR927047           Date 21Mar12               *      
       *                 MD055694           Date 09Mar20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD050730           Date 25Nov19               *
@@ -126,6 +127,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *      
@@ -633,7 +635,8 @@
      D SDNOST        E DS                  Extname(SDNOSTPD)
      D  QQACC1       E                     ExtFld(QQACCD)                                     250600
      D SDNWRK        E DS                  Extname(SDNWRKPD)
-     D SDMTAG        E DS                  Extname(SDMTAGPD)
+     D*SDMTAG***     E DS                  Extname(SDMTAGPD)                                MD056560
+     D SDMTAG        E DS                  Extname(SDMTGJW0)                                MD056560
      D DSFDY         E DS                  Extname(DSFDY)
      D DSLDY         E DS                  Extname(DSLDY)
      D DSSDY         E DS                  Extname(DSSDY)

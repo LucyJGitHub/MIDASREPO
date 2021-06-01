@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056611           Date 20Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 249904             Date 08Jun06               *
+      *                 249904             Date 08Jun06               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG8893            Date 08Jun06               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD046248 - Finastra Rebranding                               *
       *  249904 - Recompiled to correct signature violation error     *
       *  BUG8893 - Recompiled due to change in file GPAUJIPD.         *
@@ -30,15 +32,16 @@
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
       *****************************************************************
- 
+
      FGPAUJIPD  IF   E           K DISK    INFSR(*PSSR)
      FGZSDBANKL1IF   E           K DISK    INFSR(*PSSR)
- 
- 
+
+
       * File Details
-     D GPAUFL        E DS                  EXTNAME(GPAUFLPD)
- 
- 
+     D*GPAUFL***     E DS                  EXTNAME(GPAUFLPD)                                MD056611
+     D GPAUFL        E DS                  EXTNAME(GPAUFJW0)                                MD056611
+
+
       * Field Attributes
       * Field Shortnames
       * Field Descriptions
@@ -47,35 +50,35 @@
      D/COPY GPCPYSRCG,GPAUFDSNM
      D/COPY GPCPYSRCG,GPAUFDDES
      D/COPY GPCPYSRCG,GPAUFDASL
- 
- 
+
+
       * Field Contents
      D/COPY GPCPYSRCG,GPAUFDCON
      D #S_FDCON        S            100    DIM(250)                                          BUG2307
- 
- 
+
+
      C                   READ      GPAUJIPD                               99    *
- 
+
      C     *IN99         DOWEQ     '0'
- 
+
       * Audit File - Retrieval
- 
+
      C                   EXSR      AUFL_RTL
- 
+
       * Audit Field Attributes - Retrieval
       * Audit Field Contents - Retrieval
       * Audit Field Action Selection - Retrieval
- 
+
      C                   EXSR      AUFD_RTL
      C                   EXSR      AUFC_RTL
      C                   EXSR      AUAS_RTL
- 
+
       * Adjust entry types
- 
+
      C                   EXSR      ADJ_ENTT
- 
+
       * Write entries
- 
+
      C     JOENTT        IFEQ      'PT'
      C                   MOVEL     *BLANK        #B_FDCON
      C                   EXSR      WRITE_DETAILS
@@ -83,9 +86,9 @@
      C                   EXSR      WRITE_HEADER
      C                   ENDIF
      C                   ENDIF
- 
+
       * Delete entries
- 
+
      C     JOENTT        IFEQ      'DL'
      C                   MOVEL     #_FDCON       #B_FDCON
      C                   MOVEL     *BLANK        #_FDCON
@@ -94,9 +97,9 @@
      C                   EXSR      WRITE_HEADER
      C                   ENDIF
      C                   ENDIF
- 
+
       * Update (before) entry
- 
+
      C     JOENTT        IFEQ      'UB'
      C     Rollback      ANDEQ     'N'                                                       BUG2307
      C     JOENTT        OREQ      'UP'                                                      BUG2307
@@ -110,9 +113,9 @@
      C                   MOVEL     #_FDCON       #B_FDCON                                    BUG2307
      C                   MOVEL     #S_FDCON      #_FDCON                                     BUG2307
      C                   ENDIF                                                               BUG2307
- 
+
       * Update (after) entry
- 
+
      C     JOENTT        IFEQ      'UP'
      C     Rollback      ANDEQ     'N'                                                       BUG2307
      C     JOENTT        OREQ      'UB'                                                      BUG2307
@@ -122,19 +125,19 @@
      C                   EXSR      WRITE_HEADER
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      GPAUJIPD                               99    *
      C                   ENDDO
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
       /SPACE 5
       ****************************************************************
       * Audit File - Retrieval
       ****************************************************************
      C     AUFL_RTL      BEGSR
- 
+
      C                   CALLB     'GPAUFLRTL'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -151,7 +154,7 @@
      C                   EVAL      I#ERMS = 'BAD FILE:' + InFile
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -159,7 +162,7 @@
       * Audit Field Attributes - Retrieval
       ****************************************************************
      C     AUFD_RTL      BEGSR
- 
+
      C                   CALLB     'GPAUFDRTL'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -182,7 +185,7 @@
      C                   EVAL      I#ERMS = 'BAD FIELDS:'+InFile+InRecordID
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -190,7 +193,7 @@
       * Audit Field Action Selection - Retrieval
       ****************************************************************
      C     AUAS_RTL      BEGSR
- 
+
      C                   CALLB     'GPAUASRTL'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -207,7 +210,7 @@
      C                   EVAL      I#ERMS = 'BAD SELECTS:'+InFile+InRecordID
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -215,7 +218,7 @@
       * Audit Field Contents - Retrieval
       ****************************************************************
      C     AUFC_RTL      BEGSR
- 
+
      C                   CALLB     'GPAUFCRTL'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -228,7 +231,7 @@
      C                   PARM      JOESD         InRecord       4000
      C                   PARM                    #_FDATRB
      C                   PARM                    #_FDSNAM
- 
+
       * OUTPUT
       * Field Contents
      C                   PARM                    #_FDCON
@@ -237,7 +240,7 @@
      C                   EVAL      I#ERMS = 'BAD CONTENT:'+ InRecord
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -245,7 +248,7 @@
       * Audit Change Details - Write
       ****************************************************************
      C     WRITE_DETAILS BEGSR
- 
+
      C                   CALLB     'GPAUCDWRT'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -285,7 +288,7 @@
      C     RollBack      IFEQ      'Y'                                                       BUG2307
      C                   MOVE      '*'           Action                                      BUG2307
      C                   ENDIF                                                               BUG2307
- 
+
      C                   ENDSR
      C****************************************************************
       /SPACE 5
@@ -293,7 +296,7 @@
       * Audit Change Header - Write
       ****************************************************************
      C     WRITE_HEADER  BEGSR
- 
+
      C                   CALLB     'GPAUCHWRT'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -337,7 +340,7 @@
      C                   EVAL      I#ERMS = 'WRITE ERROR:'+ InRecord
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
      C/SPACE 5
@@ -345,9 +348,9 @@
       * Adjust entry types
       ********************************************************************
      C     ADJ_ENTT      BEGSR
- 
+
      C                   MOVE      'N'           Rollback          1
- 
+
      C     JOENTT        IFEQ      'DR'
      C                   MOVEL     'DL'          JOENTT
      C                   MOVE      'Y'           Rollback
@@ -360,7 +363,7 @@
      C                   MOVEL     'UP'          JOENTT
      C                   MOVE      'Y'           Rollback
      C                   ENDIF
- 
+
      C     JOENTT        IFEQ      'PX'
      C                   MOVEL     'PT'          JOENTT
      C                   ENDIF
@@ -371,23 +374,23 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
       * INPUT
       * Zone
      C                   PARM                    I#ZONE           10
- 
+
      C* GET BANK DETAILS
- 
+
      C     I#ZONE        CHAIN     SDBANKD0                           99        *
- 
+
      C     *IN99         IFEQ      *ON
      C                   EVAL      I#ERMS = 'BAD ZONE:' + I#ZONE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

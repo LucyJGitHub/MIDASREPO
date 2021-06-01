@@ -11,8 +11,9 @@
      F*                                                                  *S01230
       *  (c) Finastra International Limited 2001                      *
       *                                                                  *S01230
-      *  Last Amend No. MD056890           Date 11Oct20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD057705           Date 21Jan21               *
+      *  Prev Amend No. MD056890           Date 11Oct20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                                   S01230
      F********************************************************************
       *                                                                  *S01230
+      *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -55,7 +57,7 @@
       ************************************************************
      F*SDMREFL1IF*E*****      K        DISK                           UC                      CPK018
      F*SDMREFJ0* IF   E           K DISK    USROPN                                          MD056890
-     FSDOREFL1  IF   E           K DISK    USROPN                               S01314
+     F*SDOREFL1* IF   E           K DISK    USROPN                               S01314     MD057705
       **IN**-*@DLREGT*Mandatory*Window****************************        S01230              CPK018
       * IN  - @MREFJ0 Mandatory Window                                                        CPK018
       ************************************************************        S01230
@@ -80,6 +82,7 @@
      D***********************P@FMT     E DSSDMREFPD                       S01230
      D*D@FMT****     E DS                  EXTNAME(SDMREFPD)                    S01230      MD056890
      D D@FMT         E DS                  EXTNAME(SDMRFJW1)                                MD056890
+     D SDOREF        E DS                  EXTNAME(SDOREJW0)                                MD057705
       **@DLREGT*-*Mandatory*Window*record*format*data*structure*************                  CPK018
 #     * @MREFJ0 - Mandatory Window record format data structure                               CPK018
       *
@@ -215,18 +218,32 @@
      C     *IN94         OREQ      '1'                                                         S0131
      C***THERE*IS*NO*RECORD*ON*SDMREFL1*SO*CHECK*SDOREFL1*FOR*A*RECORD******           S01314 CPK018
      C*  THERE IS NO RECORD ON SDMREFJ0 SO CHECK SDOREFL1 FOR A RECORD                 S01314 CPK018
-     C                   OPEN      SDOREFL1                             91        Open file    S0131
-     C     *IN91         CABEQ     '1'           T@SKIP                   LR      Open error   S0131
-     C     P@KEYL        SETLL     @DMREGW                            9390                     S0131
-     C     *IN93         CABEQ     '1'           T@SKIP                           Empty file   S0131
-     C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error   S0131
-     C                   READ      @DMREGW                              9094                   S0131
-     C     *IN94         CABEQ     '1'           T@SKIP                           NO RECORD    S0131
-     C     *IN90         CABEQ     '1'           T@SKIP                   LR      FILE ERROR   S0131
-     C     P@KEY1        IFNE      DMNMCP                                       IF 9           S0131
+     C**********         OPEN      SDOREFL1                             91        OpenS0131 MD057705
+     C******IN91         CABEQ     '1'           T@SKIP                   LR      OpenS0131 MD057705
+     C*****P@KEYL        SETLL     @DMREGW                            9390            S0131 MD057705
+     C******IN93         CABEQ     '1'           T@SKIP                           EmptS0131 MD057705
+     C******IN90         CABEQ     '1'           T@SKIP                   LR      FileS0131 MD057705
+     C**********         READ      @DMREGW                              9094          S0131 MD057705
+     C******IN94         CABEQ     '1'           T@SKIP                           NO RS0131 MD057705
+     C******IN90         CABEQ     '1'           T@SKIP                   LR      FILES0131 MD057705
+     C*****P@KEY1        IFNE      DMNMCP                                       IF 9  S0131 MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ SELECT *                                                                            MD057705
+     C+ into :SDOREF                                                                        MD057705
+     C+ from SDOREJW0                                                                       MD057705
+     C+ where DMNMCP = :P@KEY1 and DMFNKY = :P@KEY2                                         MD057705
+     C/END-EXEC                                                                             MD057705
+     C                   Setoff                                       9094                  MD057705
+     C                   If        SQLCODE = 100                                            MD057705
      C                   SETON                                        94                       S0131
      C                   GOTO      T@SKIP                                                      S0131
-     C                   END                                                    FI 9           S0131
+     C                   ENDIF                                                              MD057705
+     C                   If        SQLCODE <> 100 and SQLCODE <> 0                          MD057705
+     C                   SETON                                        90                    MD057705
+     C                   GOTO      T@SKIP                                                   MD057705
+     C                   ENDIF                                                              MD057705
+                                                                                            MD057705
+     C**********         END                                                    FI 9  S0131 MD057705
      C                   END                                                    FI 8           S0131
      C                   END                                                    FI 7
       *
@@ -277,7 +294,7 @@
      C                   PARM                    P@MGDA           50              I:Message datS0123
      C                   PARM      '*DIAG'       P@MGTP            7              I:Message type
      C                   END                                                    FI 9
-     C                   CLOSE     SDOREFL1                                                    S0131
+     C**********         CLOSE     SDOREFL1                                           S0131 MD057705
       *                                                                   S01230
       * Caller Requests DB Error Handling                                 S01230
       *                                                                   S01230

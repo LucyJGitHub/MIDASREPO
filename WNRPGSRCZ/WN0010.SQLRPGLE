@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *
-      *  Last Amend No. MD056890           Date 11Oct20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD057705           Date 21Jan21               *
+      *  Prev Amend No. MD056890           Date 11Oct20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,7 @@
      F*                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -53,7 +55,7 @@
      F*******SDOREFJ0IF  E           K        DISK                UC094172120467
      F*SDMREFL1IF*E*******    K        DISK                                            120467 CPK018
      F*SDMREFJ0* IF   E           K DISK                                                    MD056890
-     FSDOREFL1  IF   E           K DISK    USROPN                               120467
+     F*SDOREFL1* IF   E           K DISK    USROPN                               120467     MD057705
       ********************************************************************
       * PURPOSE OF PROGRAM - This program is called from the core input
       *                      program (in particular Synon generated
@@ -98,6 +100,7 @@
      D  FUNCKY                11     12
      D SDMREF        E DS                  EXTNAME(SDMRFJW1)                                MD056890
      D NullInds        s              5i 0 dim(17)                                          MD056890
+     D SDOREF        E DS                  EXTNAME(SDOREJW0)                                MD057705
       *
      C                   MOVEA     CPY@          BIS@             80
      C*
@@ -290,8 +293,19 @@
      C********** OWIND     CHAINSDOREFL1             30                   094172
      C**********           OPEN SDOREFJ0                           094172 120467
      C********** OWIND     CHAINSDOREFJ0             30            094172 120467
-     C                   OPEN      SDOREFL1                                                    12046
-     C     OWIND         CHAIN     SDOREFL1                           30                       12046
+     C**********         OPEN      SDOREFL1                                           12046 MD057705
+     C*****OWIND         CHAIN     SDOREFL1                           30              12046 MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ SELECT *                                                                            MD057705
+     C+ into :SDOREF                                                                        MD057705
+     C+ from SDOREJW0                                                                       MD057705
+     C+ where DMNMCP = :NMCP and DMFNKY = :FNKY                                             MD057705
+     C/END-EXEC                                                                             MD057705
+     C                   setoff                                       30                    MD057705
+     C                   If        SQLCODE = 100                                            MD057705
+     C                   seton                                        30                    MD057705
+     C                   Endif                                                              MD057705
+                                                                                            MD057705
      C*
       ** IF NO RECORDS ARE FOUND, RETURN TO CALLING PROGRAM
      C*

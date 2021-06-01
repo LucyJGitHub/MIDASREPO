@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR397085A          Date 01Jun20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056612           Date 12Sep20              */
+/*       Prev Amend No. AR397085A          Date 01Jun20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056612 - Deliverable Data Split for MX group              */
 /*       AR397085A - MS_MID2MMM reached max limit. Clear the data    */
 /*                   queue when MQ is used by MM4. (Child: AR397086) */
 /*       MD046248 - Finastra Rebranding                              */
@@ -129,7 +131,7 @@
 
 /* Override Export Format */
 
-             OVRDBF     FILE(MXEXFDL2X) TOFILE(MXEXFDL2) SHARE(*NO)
+/**********  OVRDBF     FILE(MXEXFDL2X) TOFILE(MXEXFDL2) SHARE(*NO) */                  /*MD056612*/
 
 /* Call transmission program  */
 /* If CMX011 is present and &DTAQ contain the name of the dataQ */             /*CMX011*/

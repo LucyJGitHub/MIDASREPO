@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD053634           Date 21Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057294           Date 12May21               *
+      *  Prev Amend No. MD053634           Date 21Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD026854           Date 29May14               *
       *                 MD026755           Date 16May14               *
       *                 MD026780           Date 08May14               *
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057294 - Missing Customer's Authority Holders Link after   *
+      *             amend.                                            *
+      *             Applied for MD-57680.                             *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
       *             for KWG$24c” not generated.                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -219,18 +223,24 @@
       *                                                                                     MD053634
      C     KLCuAh        CHAIN     SDCUAHL0                                                 MD053634
      C                   IF        NOT %FOUND(SDCUAHL0)                                     MD053634
+     C                   IF        ACAUTH <> *Blanks                                        MD057294
      C                   EXSR      SRInsert                                                 MD053634
+     C                   ENDIF                                                              MD057294
      C                   ELSE                                                               MD053634
+     C                   IF        ACAUTH <> *Blanks                                        MD057294
      C                   IF        ACPRG1 <> CAPRG1 or                                      MD053634
      C                             ACPRG2 <> CAPRG2 or                                      MD053634
      C                             ACPRG3 <> CAPRG3 or                                      MD053634
      C                             ACPRG4 <> CAPRG4 or                                      MD053634
      C                             ACTYPA <> CATYPA or                                      MD053634
      C                             ACCINT <> CACINT or                                      MD053634
-     C                             ACPCNT <> CAPCNT                                         MD053634
+     C**********                   ACPCNT <> CAPCNT                                MD053634 MD057294
+     C                             ACPCNT <> CAPCNT or                                      MD057294
+     C                             CATYLC = 'D'                                             MD057294
      C                   EXSR      SRAmend                                                  MD053634
      C                   ENDIF                                                              MD053634
      C                   ENDIF                                                              MD053634
+     C                   ENDIF                                                              MD057294
      C                   EVAL      Idx = Idx + 1                                            MD053634
      C                   ENDDO                                                              MD053634
       *

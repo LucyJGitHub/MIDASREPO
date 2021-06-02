@@ -1,0 +1,1250 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F***GLM050*-*Calculate*Net*Present*Value*(Based*on*DL1956)********   LUC109
+     F*  XX000050 - Calculate NPV (Based on DL1956)                   *   LUC109
+  ?   *****************************************************************
+  ?   * *** THIS PROGRAM MUST BE COMPILED WITH XXINTFLIB AT THE TOP   *
+  ?   * OF LIBL ***                                                   *
+  ?   *****************************************************************
+     F*                                                               *
+     F*  (c) Finastra International Limited 2016                      *
+     F*                                                               *
+     F*  Last Amend No. LUC109             Date 26Oct16               *
+     F*  Prev Amend No. MUI009             Date 16Feb04               *
+     F*                 MMI043  *Create    Date 17Feb99               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  LUC109 - HO Reporting (Upgrade to FBM 2.1)                   *
+     F*  MUI009 - R4.1 Upgrade:                                       *
+     F*           Added I specs requireds by ZCBDYS                   *
+     F*           Amend parameters passed to DLZNPV changed by CAS001 *
+     F*  MMI043 - Bank of Italy Reporting                             *
+     F*                                                               *
+     F*****************************************************************
+     FDLACTVPDIF  E           K        DISK         KINFSR *PSSR
+     FDLCFEVPDIF  E           K        DISK         KINFSR *PSSR
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+      * Start MMI043
+     FSDBRCHL1IF  E           K        DISK         KINFSR *PSSR
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     F                                              KRECNO WRECNO
+     FSDGELRPDIF  E                    DISK         KINFSR *PSSR
+     F                                              KRECNO WRECNO
+     FGLSARDL1IF  E           K        DISK         KINFSR *PSSR
+      * End MMI043
+      *----------------------------------------------------------------
+      *
+      * ID  F  C  H  L    FUNCTION OF INDICATORS
+      *       10          CROSS CURRENCY SWAP
+      *       30          RATES MISSING - NOT REVALUED
+      *       90-99       STANDARD SUBROUTINES
+      *
+      *----------------------------------------------------------------
+      /SPACE 5
+     E                    CPY@    1   1 80
+     E                    POWER   1   7  7 3
+     E                    ZF29   14  32  5 0
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZHOLE                                                  100317
+     E/COPY ZSRSRC,ZDATE9Z1                                               100284
+     I/COPY ZSRSRC,ZSEDITZ2
+      /SPACE 5
+      *
+     ISDBANK    E DSSDBANKPD
+      * BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDCURR    E DSSDCURRPD
+      * CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDBRCH    E DSSDBRCHPD
+      * BRANCH DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDCUST    E DSSDCUSTPD
+      * CUSTOMER DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDGELR    E DSSDGELRPD                                              100284
+      * General Ledger Details accessed via access program                100284
+     ISCSARD    E DSSCSARDPD                                              100287
+      * Switchable Features Details accessed via access program           100287
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     IDBERR       DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZHOLI                                                  100317
+     I/COPY ZSRSRC,ZDATE9Z2                                               100284
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+     I/COPY ZSRSRC,ZCBDYSZ2                                               MUI009
+     I**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     EXSR MAIN
+     C*
+     C** OUTPUT AUDIT REPORT AND END PROGRAM
+     C*
+     C                     EXSR AUDIT
+     C**************************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* MAIN PROCESSING
+     C********************************************************************
+     C           MAIN      BEGSR
+     C*
+     C** READ CASHFLOW EVENTS
+     C*
+     C           FEKEY     SETLLDLCFEVPD
+     C           FEKEY     READEDLCFEVPD                 85*
+     C                     EXSR NWBRCA
+     C                     EXSR NWRCCY
+     C                     EXSR NWBOKC
+     C*
+     C** DO WHILE NOT END OF FILE
+     C*
+     C           *IN85     DOWEQ'0'
+     C*------------------------------------------------------------------
+     C*
+     C** END OF PREVIOUS OUR/THEIR INDICATOR PROCESSING
+     C*
+     C           CFOTIN    IFNE ##OTIN
+     C           ##OTIN    IFNE *BLANK
+     C                     EXSR PROTIN
+     C                     END
+     C                     END
+     C*------------------------------------------------------------------
+     C** NEW (DEAL) CURRENCY PROCESSING
+     C*
+     C           CFCCY     IFNE @CCY
+     C                     EXSR NWCCY
+     C                     END
+     C*------------------------------------------------------------------
+     C*
+     C** NEW OUR/THEIR INDICATOR PROCESSING
+     C*
+     C           CFOTIN    IFNE ##OTIN
+     C                     MOVELCFOTIN    ##OTIN  1
+     C                     Z-ADD0         ##INTC 150                      101577
+     C                     END
+     C*------------------------------------------------------------------
+     C*
+     C** IF NO INTEREST CALCULATION METHOD, DEFAULT IT FOR DEAL CURRENCY
+     C** (REQUIRED IF CASHFLOW SWAP - FREQUENCY 'C')
+     C*
+     C           CFINCL    IFEQ ' '
+     C           CFINCL    OREQ '0'
+     C                     MOVELDLINCL    CFINCL
+     C                     END
+      *------------------------------------------------------------------ 100284
+      *                                                                   100284
+      ** If the cash-flow period has already started, calculate the       100284
+      **   accrual posted to event control date.                          100284
+      *                                                                   100284
+     C           CFSLIP    IFLE ##EVCD                                    100284
+     C           CFSPIN    ANDEQ*BLANKS                                   100284
+      *                                                                   100287
+      ** If CIR002 is on, initialise unsettled interest.                  100287
+      *                                                                   100287
+     C           CIR002    IFEQ 'Y'                                       100287
+     C           CFOTIN    IFEQ 'U'                                       100287
+     C                     Z-ADD##OUSI    ##UNSI                          100287
+     C                     ELSE                                           100287
+     C                     Z-ADD##TUSI    ##UNSI                          100287
+     C                     ENDIF                                          100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C                     EXSR DETACR                                    100284
+      *                                                                   100284
+     C                     ENDIF                                          100284
+     C*
+     C** IF UNKNOWN CASHFLOW, DETERMINE IT
+     C*
+     C           CFAMNT    IFEQ *ZERO
+      *                                                                   101662
+      ** Check if the interest accrual control date is greater than       101662
+      **   the period start date. If it is, calculate the accrued         101662
+      **   interest to control date and start SR/DETAMT from this date.   101662
+      *                                                                   101662
+     C           CFOTIN    IFEQ 'U'                                       101662
+      *                                                                   101662
+     C           UIACD     IFGT CFSLIP                                    101662
+     C                     Z-ADDUIACD     ##SLIP  50                      101662
+     C           UAITC     SUB  UIPRD     ##TOTI 150                      101662
+     C                     ELSE                                           101662
+     C                     Z-ADDCFSLIP    ##SLIP                          100284
+     C                     Z-ADD*ZERO     ##TOTI                          101662
+     C                     ENDIF                                          101662
+      *                                                                   101662
+     C                     ELSE                                           101662
+      *                                                                   101662
+     C           TIACD     IFGT CFSLIP                                    101662
+     C                     Z-ADDTIACD     ##SLIP                          101662
+     C           TAITC     SUB  TIPRD     ##TOTI                          101662
+     C                     ELSE                                           101662
+     C                     Z-ADDCFSLIP    ##SLIP                          100662
+     C                     Z-ADD*ZERO     ##TOTI                          101662
+     C                     ENDIF                                          101662
+      *                                                                   101662
+     C                     ENDIF                                          101662
+      *                                                                   101662
+     C                     Z-ADDCFNIPD    ##INED  50                      100284
+     C                     MOVEL*BLANK    ##CSHF  3
+     C                     EXSR DETAMT
+     C                     ELSE
+     C                     MOVEL'YES'     ##CSHF
+     C                     END
+      *                                                                   100447
+      ** Add the adjustment to the total and then initialise it.          100447
+      *                                                                   100447
+     C           CFOTIN    IFEQ 'U'                                       100447
+     C                     ADD  ##UADJ    CFAMNT                          100447
+     C                     Z-ADD*ZERO     ##UADJ                          100447
+     C                     ELSE                                           100447
+     C                     ADD  ##TADJ    CFAMNT                          100447
+     C                     Z-ADD*ZERO     ##TADJ                          100447
+     C                     ENDIF                                          100447
+      *                                                                   101577
+      ** If the swap is capitalising, maintain a running total of the     101577
+      **   cash-flow amounts to add to the principal.                     101577
+      *                                                                   101577
+     C           CFINPM    IFEQ 'C'                                       101577
+     C           CFINPM    OREQ 'K'                                       101577
+     C                     ADD  CFAMNT    ##INTC                          101577
+     C                     ENDIF                                          101577
+      *                                                                   100287
+      ** If CIR002 is on, initialise the unsettled interest.              100287
+      *                                                                   100287
+     C           CIR002    IFEQ 'Y'                                       100287
+      *                                                                   100287
+     C           CFOTIN    IFEQ 'U'                                       100287
+     C                     Z-ADD*ZEROS    ##OUSI                          100287
+     C                     ELSE                                           100287
+     C                     Z-ADD*ZEROS    ##TUSI                          100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C                     Z-ADD*ZEROS    ##UNSI                          100287
+      *                                                                   100287
+     C                     ENDIF                                          100287
+     C*
+     C** CALCULATE NET PRESENT VALUE OF CASH FLOW AMOUNT
+     C*
+     C                     EXSR CALNPV
+     C*
+     C** REPORT CASH FLOW
+     C*
+     C                     EXSR REPCSF
+     C*
+     C** READ CASHFLOW EVENTS
+     C*
+     C           FEKEY     READEDLCFEVPD                 85*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C** REPORT CASH FLOW
+     C********************************************************************
+     C           REPCSF    BEGSR
+     C*
+     C** 'OUR' PAYMENTS/NET PRESENT VALUE ARE OUTGOING IE SIGNED NEGATIVE
+     C*
+     C           CFOTIN    IFEQ 'U'
+     C                     Z-SUBCFAMNT    CFAMNT
+     C                     Z-SUBZNPOUT    ZNPOUT
+     C                     END
+     C*
+     C** 'RATES MISSING'
+     C*
+      ** If capitalising swap, only final cash-flow will be NPV'd.        101577
+      **                                                                  101577
+      *                                                                   101577
+     C           ZNPOUT    IFEQ *ZERO
+     C           CFINPM    ANDNE'C'                                       101577
+     C           CFINPM    ANDNE'K'                                       101577
+      *                                                                   101577
+     C           ZNPOUT    OREQ *ZERO                                     101577
+     C           CFINPM    ANDEQ'C'                                       101577
+     C           CFNIPD    ANDEQMDAT                                      101577
+     C           CFSPIN    ANDEQ' '                                       101577
+      *                                                                   101577
+     C           ZNPOUT    OREQ *ZERO                                     101577
+     C           CFINPM    ANDEQ'K'                                       101577
+     C           CFNIPD    ANDEQMDAT                                      101577
+     C           CFSPIN    ANDEQ' '                                       101577
+      *                                                                   101577
+     C                     MOVE '1'       *IN30
+      *                                                                   101577
+     C                     END
+     C*
+     C** ACCUMULATE NET PRESENT VALUE
+     C*
+     C           CFOTIN    IFEQ 'U'
+     C                     ADD  ZNPOUT    ##UTOT
+     C                     ELSE
+     C                     ADD  ZNPOUT    ##TTOT
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* DETERMINE CASHFLOW AMOUNT
+     C********************************************************************
+     C           DETAMT    BEGSR
+     C*
+     C** DETERMINE PRINCIPAL & RATE AS AT LAST INTEREST PAYMENT DATE
+     C*
+     C                     Z-ADDCFDLNO    ACDLNO
+     C                     MOVE CFOTIN    ACOTIN
+     C                     Z-ADD##SLIP    ACPRDT                          100284
+     C           DLACTK    SETGTDLACTVD0
+     C           DLACTP    REDPEDLACTVD0                 99*
+     C*
+     C           *IN99     IFEQ '1'
+     C           DLACTK    SETLLDLACTVD0
+     C           DLACTP    READEDLACTVD0                 99*
+     C                     END
+     C*
+     C** SET PRINCIPAL & RATE AS AT LAST INTEREST PAYMENT DATE
+     C** AND DATE INTEREST CALCULATED TO
+     C*
+     C                     Z-ADDACPCPL    ##PCPL 150
+     C                     Z-ADDACEINR    ##EINR 117
+     C                     MOVELACRTTP    ##RTTP  1
+     C*
+     C                     Z-ADD##SLIP    ##IACD  50                      100284
+      *                                                                   101577
+      ** Add the total interest capitalised to the principal for          101577
+      **   capitalised swaps.                                             101577
+      *                                                                   101577
+     C           CFINPM    IFEQ 'C'                                       101577
+     C           CFINPM    OREQ 'K'                                       101577
+     C                     ADD  ##INTC    ##PCPL                          101577
+     C                     ENDIF                                          101577
+     C*
+     C** REPOSITION POINTER TO AFTER RECORD JUST READ
+     C*
+     C           DLACTK    SETGTDLACTVD0
+     C*
+     C** READ FROM THE DEAL ACTIVITY FILE
+     C*
+     C           DLACTP    READEDLACTVD0                 99*
+     C*
+     C** READ UP TO CASHFLOW NEXT INTEREST PAYMENT DATE
+     C*
+     C           *IN99     DOWEQ'0'
+     C           ACPRDT    ANDLT##INED                                    100284
+     C*
+     C** CALCULATE INTEREST FROM LAST DATE TO DEAL ACTIVITY DATE.
+     C** RATE USED IS EFFECTIVE INTEREST RATE OFF DEAL ACTIVITY
+     C** FILE IF CASH FLOW EVENT IS NOT A SPREAD PAYMENT.
+     C** OTHERWISE, THE SPREAD RATE IS USED.
+     C*
+     C                     Z-ADD##PCPL    ZDLAMT
+      *                                                                   100287
+      ** If CIR002 is on, add unsettled interest to amount.               100287
+      *                                                                   100287
+     C           CIR002    IFEQ 'Y'                                       100287
+     C                     ADD  ##UNSI    ZDLAMT                          100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C           CFSPIN    IFEQ *BLANK
+     C                     Z-ADD##EINR    ZDLRAT
+     C                     ELSE
+     C                     Z-ADDCFRTSP    ZDLRAT
+     C                     END
+     C                     Z-ADD##IACD    ZCBSDT
+     C                     Z-ADDACPRDT    ZCBEDT
+     C                     MOVELCFINCL    ZCBCBS
+     C           CFINPM    IFNE 'Y'
+     C                     EXSR ZDLINT                     * DISC./INT.
+     C                     ELSE
+     C                     EXSR CALIYD                     * YIELD
+     C                     END
+     C*
+     C                     ADD  ZDLOUT    ##TOTI
+      *                                                                   100287
+      ** If CIR002 is on, and record was a change of interest rate,       100287
+      **   maintain the unsettled interest.                               100287
+      *                                                                   100287
+     C           CIR002    IFEQ 'Y'                                       100287
+     C           ACEINR    ANDNE##EINR                                    100287
+     C                     Z-ADD##TOTI    ##UNSI                          100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C*
+     C** SET PRINCIPAL & RATE
+     C** AND DATE INTEREST CALCULATED TO
+     C*
+     C                     Z-ADDACPCPL    ##PCPL
+     C                     Z-ADDACEINR    ##EINR
+     C                     MOVELACRTTP    ##RTTP
+     C                     Z-ADDACPRDT    ##IACD
+      *                                                                   101577
+      ** Add the total interest capitalised to the principal for          101577
+      **   capitalised swaps.                                             101577
+      *                                                                   101577
+     C           CFINPM    IFEQ 'C'                                       101577
+     C           CFINPM    OREQ 'K'                                       101577
+     C                     ADD  ##INTC    ##PCPL                          101577
+     C                     ENDIF                                          101577
+     C*
+     C** READ FROM THE DEAL ACTIVITY FILE
+     C*
+     C           DLACTP    READEDLACTVD0                 99*
+     C                     END
+     C*
+     C** CALCULATE INTEREST FROM LAST DATE TO NEXT INTEREST PAYMENT DATE
+     C** RATE USED IS EFFECTIVE INTEREST RATE OFF DEAL ACTIVITY
+     C** FILE IF CASH FLOW EVENT IS NOT A SPREAD PAYMENT.
+     C** OTHERWISE, THE SPREAD RATE IS USED.
+     C*
+     C           ##IACD    IFLT ##INED                                    100284
+     C                     Z-ADD##PCPL    ZDLAMT
+      *                                                                   100287
+      ** If CIR002 is on, add unsettled interest to amount.               100287
+      *                                                                   100287
+     C           CIR002    IFEQ 'Y'                                       100287
+     C                     ADD  ##UNSI    ZDLAMT                          100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C           CFSPIN    IFEQ *BLANK
+     C                     Z-ADD##EINR    ZDLRAT
+     C                     ELSE
+     C                     Z-ADDCFRTSP    ZDLRAT
+     C                     END
+     C                     Z-ADD##IACD    ZCBSDT
+     C                     Z-ADD##INED    ZCBEDT                          100284
+     C                     MOVELCFINCL    ZCBCBS
+     C           CFINPM    IFNE 'Y'
+     C                     EXSR ZDLINT                     * DISC./INT.
+     C                     ELSE
+     C                     EXSR CALIYD                     * YIELD
+     C                     END
+     C                     ADD  ZDLOUT    ##TOTI
+     C                     END
+     C*
+     C** SET CASHFLOW AMOUNT
+     C*
+     C                     Z-ADD##TOTI    CFAMNT
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* NEW BRANCH PROCESSING
+     C********************************************************************
+     C           NWBRCA    BEGSR
+     C*
+     C** GET BRANCH NAME
+     C*
+      * Start MMI043
+     C           CFBRCA    CHAINSDBRCHL1             89
+     C*                    CALL 'AOBRCHR0'
+     C*                    PARM '*MSG   ' @RTCD   7
+     C*                    PARM '*KEY   ' @OPTN   7
+     C*                    PARM           CFBRCA                          100963
+     C*          SDBRCH    PARM SDBRCH    DSFDY
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD010       DBASE            * DB ERROR 10 *
+     C                     MOVELCFBRCA    DBKEY            ***************100963
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* NEW (DEAL) CURRENCY PROCESSING
+     C********************************************************************
+     C           NWCCY     BEGSR
+     C*
+     C** GET (DEAL) CURRENCY DETAILS
+     C*
+     C                     MOVELCFCCY     @CCY    3
+      * Start MMI043
+     C           @CCY      CHAINSDCURRL0             89
+     C*                    CALL 'AOCURRR0'
+     C*                    PARM '*MSG    '@RTCD   7
+     C*                    PARM '*KEY    '@OPTN   7
+     C*                    PARM           @CCY    3
+     C*          SDCURR    PARM SDCURR    DSSDY
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD012       DBASE            * DB ERROR 12 *
+     C                     MOVEL@CCY      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    DLCDP   10
+     C                     MOVELA6DICB    DLINCL  1
+      *                                                                   100317
+      ** Calculate the currency spot date.                                100317
+      *                                                                   100317
+     C                     MOVE CFCCY     ZCCY                            100317
+     C                     MOVE *BLANKS   ZLOC                            100317
+     C                     Z-ADDBJRDNB    ZDAYNO                          100317
+     C                     Z-ADDA6SPDY    ZNRDYS                          100317
+     C                     EXSR ZFWDT                                     100317
+     C                     Z-ADDZDYNBR    ##SPDT  50                      100317
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* NEW BOOK PROCESSING
+     C********************************************************************
+     C           NWBOKC    BEGSR
+     C                     MOVELCFBOKC    @BOKC   2
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C** END OF PREVIOUS OUR/THEIR INDICATOR
+     C********************************************************************
+     C           PROTIN    BEGSR
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C** NEW DEAL PROCESSING
+     C********************************************************************
+     C           NWDEAL    BEGSR
+     C                     Z-ADD*ZERO     ##UTOT 150
+     C                     Z-ADD*ZERO     ##TTOT 150
+     C*
+     C** GET DEAL
+     C*
+     C           PDLNO     CHAINDEALS                99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'DEALS   'DBFILE           ***************
+     C                     Z-ADD013       DBASE            * DB ERROR 13 *
+     C                     MOVELPDLNO     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** GET OUR CURRENCY DETAILS USED FOR BASE CCY CONVERSION
+     C*
+      * Start MMI043
+     C           UCUCY     CHAINSDCURRL0             89
+     C*                    CALL 'AOCURRR0'
+     C*                    PARM '*MSG    '@RTCD   7
+     C*                    PARM '*KEY    '@OPTN
+     C*                    PARM           UCUCY
+     C*          SDCURR    PARM SDCURR    DSSDY
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD014       DBASE            * DB ERROR 14 *
+     C                     MOVELUCUCY     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    UDCDP   10
+     C                     MOVELA6MDIN    UDMDIN  1
+     C                     Z-ADDA6SPRT    UDSPRT 138
+     C*
+     C** GET THEIR CURRENCY DETAILS USED FOR BASE CCY CONVERSION
+     C*
+     C           DTYP      IFEQ 'RX'
+      * Start MMI043
+     C           TCUCY     CHAINSDCURRL0             89
+     C*                    CALL 'AOCURRR0'
+     C*                    PARM '*MSG    '@RTCD
+     C*                    PARM '*KEY    '@OPTN
+     C*                    PARM           TCUCY
+     C*          SDCURR    PARM SDCURR    DSSDY
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD015       DBASE            * DB ERROR 15 *
+     C                     MOVELTCUCY     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    TDCDP   10
+     C                     MOVELA6MDIN    TDMDIN  1
+     C                     Z-ADDA6SPRT    TDSPRT 138
+      *                                                                   100284
+      ** Initiase the total of accrued interest for the deal.             100284
+      *                                                                   100284
+     C                     Z-ADD*ZERO     ##UACR 150                      100284
+     C                     Z-ADD*ZERO     ##TACR 150                      100284
+      *                                                                   100447
+      ** If no accrual will be posted in tonight's COB, set the           100447
+      **   adjustment to that already posted only.                        100447
+      *                                                                   100447
+     C           BKAPDT    IFGT ##EVCD                                    100447
+     C                     Z-ADDTAIAP     ##TADJ 150                      100447
+     C                     Z-ADDUAIAP     ##UADJ 150                      100447
+     C                     ELSE                                           100447
+     C           TAIAP     ADD  TAIAN     ##TADJ                          100447
+     C           UAIAP     ADD  UAIAN     ##UADJ                          100447
+     C                     ENDIF                                          100447
+      *                                                                   100287
+      ** If CIR002 is on, initialise unsettled interest.                  100287
+      *                                                                   100287
+     C           CIR002    IFEQ 'Y'                                       100287
+     C           OUSI      ADD  OUSA      ##OUSI 150                      100287
+     C           TUSI      ADD  TUSA      ##TUSI 150                      100287
+     C                     Z-ADD*ZEROS    ##UNSI 150                      100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C*
+     C** RESET 'RATES MISSING' INDICATOR
+     C*
+     C                     MOVE '0'       *IN30
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C* NEW REPORT CURRENCY PROCESSING
+     C********************************************************************
+     C           NWRCCY    BEGSR
+     C*
+     C** GET REPORT CURRENCY DETAILS
+     C*
+     C                     MOVELCFRCCY    @RCCY   3
+      * Start MMI043
+     C           @RCCY     CHAINSDCURRL0             89
+     C*                    CALL 'AOCURRR0'
+     C*                    PARM '*MSG    '@RTCD   7
+     C*                    PARM '*KEY    '@OPTN   7
+     C*                    PARM           @RCCY   3
+     C*          SDCURR    PARM SDCURR    DSSDY
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD011       DBASE            * DB ERROR 11 *
+     C                     MOVEL@RCCY     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   100963
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* CALCULATE NET PRESENT VALUE OF AN AMOUNT
+     C********************************************************************
+     C           CALNPV    BEGSR
+      *                                                                   101577
+      ** For capitalised swaps, only NPV the final total cash-flow.       101577
+      *                                                                   101577
+     C           CFINPM    IFEQ 'C'                                       101577
+     C           CFNIPD    ANDEQMDAT                                      101577
+     C           CFSPIN    ANDEQ' '                                       101577
+     C           CFINPM    OREQ 'K'                                       101577
+     C           CFNIPD    ANDEQMDAT                                      101577
+     C           CFSPIN    ANDEQ' '                                       101577
+     C                     Z-ADD##INTC    ##AMNT                          101577
+     C                     ELSE                                           101577
+     C                     Z-ADDCFAMNT    ##AMNT                          101577
+     C                     ENDIF                                          101577
+      *                                                                   101577
+      ** For capitalised swaps, only NPV the final total cash-flow.       101577
+      *                                                                   101577
+     C           CFINPM    IFEQ 'C'                                       101577
+     C           CFNIPD    ANDLTMDAT                                      101577
+     C           CFINPM    OREQ 'K'                                       101577
+     C           CFNIPD    ANDLTMDAT                                      101577
+     C           CFINPM    OREQ 'C'                                       101577
+     C           CFSPIN    ANDNE' '                                       101577
+     C           CFINPM    OREQ 'K'                                       101577
+     C           CFSPIN    ANDNE' '                                       101577
+     C                     Z-ADD0         ZNPOUT                          101577
+     C                     ELSE                                           101577
+      *                                                                   100298
+      ** If cash-flow payment date is prior to the spot date, do not      100298
+      **   NPV the amount.                                                100298
+      *                                                                   100298
+     C           CFPYDT    IFLE ##SPDT                                    100298
+     C                     Z-ADD##AMNT    ZNPOUT                          101577
+     C                     ELSE                                           100298
+      *                                                                   100298
+     C                     CALL 'DLZNPV'
+     C                     PARM *BLANK    ZNPRTC  5
+     C                     PARM CFCCY     ZNPCCY  3        * CURRENCY
+     C                     PARM CFINCL    ZNPINC  1        * INT.CALC.METH.
+     C                     PARM ##SPDT    ZNPSDT  50       * SPOT DATE    100317
+     C                     PARM CFPYDT    ZNPFDT  50       * FORWARD DATE
+     C                     PARM ##AMNT    ZNPAMT 130       * AMOUNT       101577
+     C                     PARM *ZERO     ZNPRAT 117
+     C                     PARM *ZERO     ZNPDF  119
+     C                     PARM *ZERO     ZNPOUT 130
+     C                     PARM           CFYLDC                          MUI009
+     C*
+     C           ZNPRTC    IFEQ '*ERR*'
+     C                     MOVE 'DLZNPV  'DBFILE           ***************
+     C                     Z-ADD090       DBASE            * DB ERROR 90 *
+     C                     MOVELDLNO      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   100298
+     C                     ENDIF                                          100298
+      *                                                                   100298
+     C                     ENDIF                                          101577
+      *                                                                   101577
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C* CALCULATE INTEREST ON A YIELD BASIS
+     C********************************************************************
+     C           CALIYD    BEGSR
+     C*
+     C* INITIALIZE FIELDS
+     C*
+     C                     Z-ADDZDLAMT    ZDLAMT
+     C                     Z-ADDZDLRAT    ZDLRAT
+     C                     Z-ADD*ZERO     ZDLOUT
+     C*
+     C* FIND NO. OF DAYS IN PERIOD AND YEAR
+     C*
+     C                     EXSR ZCBDYS
+     C*
+     C** INTEREST = PRINCIPAL ( 1 - 1 / ( 1 + RATE X NUMBER OF DAYS/360))
+     C**       I.E. PRINCIPAL ( 1 - 360 / ( 360 + RATE X NUMBER OF DAYS))
+     C*
+     C           ZCBDIV    MULT 100       ZIWRK3  50
+     C*
+     C           ZCBDAY    MULT ZDLRAT    ZIWRK4 157
+     C                     ADD  ZIWRK3    ZIWRK4
+     C*
+     C           ZIWRK4    IFNE *ZERO
+     C           ZIWRK3    DIV  ZIWRK4    ZIWRK5 159H
+     C           1         SUB  ZIWRK5    ZIWRK5
+     C           ZDLAMT    MULT ZIWRK5    ZDLOUT    H
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C* CONVERT OUR & THEIR TOTALS TO BASE CURRENCY AT SPOT RATE
+     C*****************************************************************
+      *
+     C           CNVTOT    BEGSR
+     C*
+     C                     Z-ADD*ZERO     ##OTOB 150
+     C                     Z-ADD*ZERO     ##TTOB 150
+     C                     Z-ADD*ZERO     ##OTAB 150                      100284
+     C                     Z-ADD*ZERO     ##TTAB 150                      100284
+     C*
+     C** CONVERT OUR TOTAL TO BASE CURRENCY
+     C*
+     C           ##UTOT    IFNE *ZERO
+     C                     Z-ADD##UTOT    ZAMTCI
+     C                     Z-ADDUDCDP     ZCDPI
+     C                     Z-ADDBSCDP     ZCDPO
+     C                     Z-ADDUDSPRT    ZEXCH
+     C                     MOVE UDMDIN    ZMD
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    ##OTOB
+     C                     END
+     C*
+     C** CONVERT THEIR TOTAL TO BASE CURRENCY
+     C*
+     C           ##TTOT    IFNE *ZERO
+     C                     Z-ADD##TTOT    ZAMTCI
+     C                     Z-ADDTDCDP     ZCDPI
+     C                     Z-ADDBSCDP     ZCDPO
+     C                     Z-ADDTDSPRT    ZEXCH
+     C                     MOVE TDMDIN    ZMD
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    ##TTOB
+     C                     END
+      *                                                                   100284
+      ** Convert our total accrual to base currency.                      100284
+      *                                                                   100284
+     C           ##UACR    IFNE *ZERO                                     100284
+     C                     Z-ADD##UACR    ZAMTCI                          100284
+     C                     Z-ADDUDCDP     ZCDPI                           100284
+     C                     Z-ADDBSCDP     ZCDPO                           100284
+     C                     Z-ADDUDSPRT    ZEXCH                           100284
+     C                     MOVE UDMDIN    ZMD                             100284
+     C                     EXSR ZCONVN                                    100284
+     C                     Z-ADDZAMTCO    ##OTAB                          100284
+     C                     END                                            100284
+      *                                                                   100284
+      ** Convert their total accrual to base currency.                    100284
+      *                                                                   100284
+     C           ##TACR    IFNE *ZERO                                     100284
+     C                     Z-ADD##TACR    ZAMTCI                          100284
+     C                     Z-ADDTDCDP     ZCDPI                           100284
+     C                     Z-ADDBSCDP     ZCDPO                           100284
+     C                     Z-ADDTDSPRT    ZEXCH                           100284
+     C                     MOVE TDMDIN    ZMD                             100284
+     C                     EXSR ZCONVN                                    100284
+     C                     Z-ADDZAMTCO    ##TTAB                          100284
+     C                     END                                            100284
+      *                                                                   100284
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C* PRODUCE AUDIT REPORT AND END PROGRAM
+     C*****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     EXSR CNVTOT
+      *
+     C           DTYP      IFEQ 'RX'
+     C           ##OTOB    ADD  ##TTOB    ##TOT
+     C           ##TTAB    SUB  ##OTAB    ##ACR
+     C                     ELSE
+     C           ##UTOT    ADD  ##TTOT    ##TOT  150
+     C           ##TACR    SUB  ##UACR    ##ACR  150
+     C                     END
+      *
+     C           *IN30     IFEQ *ON
+     C                     Z-ADD0         ##TOT
+     C                     END
+      *
+     C                     Z-ADD##TOT     PNPVL
+     C*
+     C***  End Program and Return.
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* INITIAL PROCESSING
+     C********************************************************************
+     C           INIT      BEGSR
+      *
+      ***  Receive Parameter List:
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDLNO   60
+     C                     PARM           PNPVL  150
+     C                     PARM           PRTCD   1
+      *
+     C                     EXSR NWDEAL
+     C                     Z-ADD0         PNPVL
+     C                     MOVE *BLANKS   PRTCD
+     C                     MOVE BRCA      FEBRCA  3
+     C                     MOVE PDLNO     FEDLNO  60
+     C                     MOVE BOKC      FEBOKC  2
+     C*
+     C** SINGLE CURRENCY/CROSS CURRENCY ?
+     C*
+     C*          DTYP      IFEQ 'RX'
+     C*                    MOVE '1'       *IN10
+     C*                    MOVE BJCYCD    FERCCY  3
+     C*                    ELSE
+     C*                    MOVE UCUCY     FERCCY
+     C*                    END
+     C*
+     C** KEY LISTS FOR ACCESS OF DEAL ACTIVITY
+     C*
+     C           DLACTK    KLIST
+     C                     KFLD           ACDLNO
+     C                     KFLD           ACOTIN
+     C                     KFLD           ACPRDT
+     C*
+     C           DLACTP    KLIST
+     C                     KFLD           ACDLNO
+     C                     KFLD           ACOTIN
+     C*
+     C           FEKEY     KLIST
+     C                     KFLD           FEBRCA
+     C                     KFLD           FERCCY
+     C                     KFLD           FEBOKC
+     C                     KFLD           FEDLNO
+      *
+      ** CALL ACCESS PROGRAM FOR BANK DETAILS
+      *
+      * Start MMI043
+     C                     Z-ADD1         WRECNO  50
+     C           WRECNO    CHAINSDBANKPD             89
+     C*                    CALL 'AOBANKR0'
+     C*                    PARM '*DBERR  '@RTCD   7
+     C*                    PARM '*FIRST  '@OPTN   7
+     C*          SDBANK    PARM SDBANK    DSFDY
+      *
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** GET BASE CURRENCY DECIMAL PLACES
+      *
+      * Start MMI043
+     C           BJCYCD    CHAINSDCURRL0             89
+     C*                    CALL 'AOCURRR0'
+     C*                    PARM '*MSG    '@RTCD   7
+     C*                    PARM '*KEY    '@OPTN   7
+     C*                    PARM           BJCYCD
+     C*          SDCURR    PARM SDCURR    DSSDY
+     C*          @RTCD     IFNE *BLANK
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVELBJCYCD    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    BSCDP   10
+      *
+      **  Set Date Format Indicator
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *                                                                   100284
+      ** Call access program for General Ledger details.                  100284
+      *                                                                   100284
+      * Start MMI043
+     C                     Z-ADD1         WRECNO  50
+     C           WRECNO    CHAINSDGELRPD             89
+     C*                    CALL 'AOGELRR0'                                100284
+     C*                    PARM '*DBERR  '@RTCD   7                       100284
+     C*                    PARM '*FIRST  '@OPTN   7                       100284
+     C*          SDGELR    PARM SDGELR    DSFDY                           100284
+      *                                                                   100284
+     C*          @RTCD     IFNE *BLANK                                    100284
+     C           *IN89     IFEQ *ON
+      * End MMI043
+     C                     MOVE 'SDGELRPD'DBFILE           ***************100284
+     C                     Z-ADD018       DBASE            * DB ERROR 18 *100284
+     C                     MOVEL'FIRST'   DBKEY            ***************100284
+     C                     EXSR *PSSR                                     100284
+     C                     END                                            100284
+      *                                                                   100284
+      ** Calculate the event control date.                                100284
+      *                                                                   100284
+     C           BJDNWD    SUB  1         ##EVCD  50                      100284
+      *                                                                   100284
+     C           BKANWD    IFEQ '2'                                       100284
+     C           BKAPDT    ANDLT##EVCD                                    100284
+     C                     Z-ADDBKAPDT    ##EVCD                          100284
+     C                     ENDIF                                          100284
+      *                                                                   100287
+      ** Call access program for Switchable Features.                     100287
+      *                                                                   100287
+      * Start MMI043
+     C           'CIR002'  CHAINGLSARDL1             89
+     C*                    CALL 'AOSARDR0'                                100287
+     C*                    PARM *BLANKS   @RTCD                           100287
+     C*                    PARM '*VERIFY' @OPTN                           100287
+     C*                    PARM 'CIR002'  @SARD   6                       100287
+     C*          SCSARD    PARM SCSARD    DSFDY                           100287
+      *                                                                   100287
+     C*          @RTCD     IFEQ *BLANK                                    100287
+     C           *IN89     IFEQ *OFF
+     C                     MOVEL'Y'       CIR002  1                       100287
+     C                     ELSE                                           100287
+     C                     MOVEL'N'       CIR002                          100287
+     C                     ENDIF                                          100287
+      *                                                                   100287
+     C*          @RTCD     IFEQ '*NRF    '                                100287
+     C*                    MOVEL'N'       CIR002                          100287
+     C*                    ELSE                                           100287
+      *                                                                   100287
+     C*                    MOVE 'SCSARDPD'DBFILE           ***************100287
+     C*                    Z-ADD019       DBASE            * DB ERROR 19 *100287
+     C*                    MOVEL'CIR002'  DBKEY            ***************100287
+     C*                    EXSR *PSSR                                     100287
+     C*                    ENDIF                                          100287
+     C*                    ENDIF                                          100287
+      * End MMI043
+     C*
+     C** SINGLE CURRENCY/CROSS CURRENCY ?
+     C*
+     C           DTYP      IFEQ 'RX'
+     C                     MOVE '1'       *IN10
+     C                     MOVE BJCYCD    FERCCY  3
+     C                     ELSE
+     C                     MOVE UCUCY     FERCCY
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5                                                            100284
+     C********************************************************************100284
+     C* Calculate accrual for deal.                                      *100284
+     C********************************************************************100284
+     C           DETACR    BEGSR                                          100284
+      *                                                                   100284
+      ** If no accrual will be posted in tonight's COB, set the           100284
+      **   accrual to that already posted.                                100284
+      *                                                                   100284
+     C           BKAPDT    IFGT ##EVCD                                    100284
+      *                                                                   100284
+     C           CFOTIN    IFEQ 'U'                                       100284
+     C           UAIPD     SUB  UIPRD     ##UACR                          100284
+     C                     ADD  ##UADJ    ##UACR                          100447
+     C                     ELSE                                           100284
+     C           TAIPD     SUB  TIPRD     ##TACR                          100284
+     C                     ADD  ##TADJ    ##TACR                          100447
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     ELSE                                           100284
+      *                                                                   100284
+      ** If an accual is to be posted in tonight's COB,                   100284
+      *                                                                   100284
+     C           CFOTIN    IFEQ 'U'                                       100284
+      *                                                                   100284
+      ** If this is the first accrual calculated:                         100284
+      *                                                                   100284
+     C           ##UACR    IFEQ 0                                         100284
+      *                                                                   100284
+      ** Set the accrual to the accrual to control date for this          100284
+      **   period.                                                        100284
+      *                                                                   100284
+     C           UAITC     SUB  UIPRD     ##UACR                          100284
+      *                                                                   100447
+      ** Add to this the accrual adjustment.                              100447
+      *                                                                   100447
+     C                     ADD  ##UADJ    ##UACR                          100447
+      *                                                                   100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+      ** Add to this the accrual from the control date to the event       100284
+      **   control date. If the cash-flow is unknown, use SR/DETAMT       100284
+      **   or if a cash-flow schedule is used, use SR/DETCFA.             100284
+      *                                                                   100284
+     C           CFAMNT    IFEQ 0                                         100284
+      *                                                                   100284
+      ** The accrual should be calculated from the greater of the         100951
+      **   interest accrual control date and the period start date.       100951
+      *                                                                   100951
+     C           UIACD     IFGT CFSLIP                                    100951
+     C                     Z-ADDUIACD     ##SLIP                          100951
+     C                     ELSE                                           100951
+     C                     Z-ADDCFSLIP    ##SLIP                          100951
+     C                     ENDIF                                          100951
+      *                                                                   100951
+      ** .... and upto the lesser of the event control date and           100951
+      **   the speriod end date.                                          100951
+      *                                                                   100951
+     C           CFNIPD    IFLT ##EVCD                                    100951
+     C                     Z-ADDCFNIPD    ##INED                          100951
+     C                     ELSE                                           100951
+     C                     Z-ADD##EVCD    ##INED                          100284
+     C                     ENDIF                                          100951
+      *                                                                   100284
+      ** If accruing on first day, add one day to period unless           100284
+      **   accruing upto last day itself.                                 100284
+      *                                                                   100284
+     C           BKALDI    IFNE 'Y'                                       100284
+     C           ##INED    ANDNECFNIPD                                    100284
+     C                     ADD  1         ##INED                          100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     Z-ADD*ZERO     ##TOTI                          101662
+     C                     EXSR DETAMT                                    100284
+     C                     ADD  CFAMNT    ##UACR                          100284
+     C                     Z-ADD0         CFAMNT                          100284
+      *                                                                   100284
+     C                     ELSE                                           100284
+      *                                                                   100284
+     C                     EXSR DETCFA                                    100284
+     C                     ADD  ##AMNT    ##UACR                          100284
+      *                                                                   100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     ELSE                                           100284
+      *                                                                   100284
+      ** If this is the first accrual calculated:                         100284
+      *                                                                   100284
+     C           ##TACR    IFEQ 0                                         100284
+      *                                                                   100284
+      ** Set the accrual to the accrual to control date for this          100284
+      **   period.                                                        100284
+      *                                                                   100284
+     C           TAITC     SUB  TIPRD     ##TACR                          100284
+      *                                                                   100284
+      ** Add to this the accrual adjustment.                              100284
+      *                                                                   100284
+     C           TAIAP     ADD  TAIAN     ##TADJ                          100284
+     C                     ADD  ##TADJ    ##TACR                          100284
+      *                                                                   100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+      ** Add to this the accrual from the control date to the event       100284
+      **   control date. If the cash-flow is unknown, use SR/DETAMT       100284
+      **   or if a cash-flow schedule is used, use SR/DETCFA.             100284
+      *                                                                   100284
+     C           CFAMNT    IFEQ 0                                         100284
+      *                                                                   100284
+      ** The accrual should be calculated from the greater of the         100951
+      **   interest accrual control date and the period start date.       100951
+      *                                                                   100951
+     C           TIACD     IFGT CFSLIP                                    100951
+     C                     Z-ADDTIACD     ##SLIP                          100951
+     C                     ELSE                                           100951
+     C                     Z-ADDCFSLIP    ##SLIP                          100951
+     C                     ENDIF                                          100951
+      *                                                                   100951
+      ** .... and upto the lesser of the event control date and           100951
+      **   the speriod end date.                                          100951
+      *                                                                   100951
+     C           CFNIPD    IFLT ##EVCD                                    100951
+     C                     Z-ADDCFNIPD    ##INED                          100951
+     C                     ELSE                                           100951
+     C                     Z-ADD##EVCD    ##INED                          100284
+     C                     ENDIF                                          100951
+      *                                                                   100284
+      ** If accruing on first day, add one day to period unless           100284
+      **   accruing upto last day itself.                                 100284
+      *                                                                   100284
+     C           BKALDI    IFNE 'Y'                                       100284
+     C           ##INED    ANDNECFNIPD                                    100284
+     C                     ADD  1         ##INED                          100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     Z-ADD*ZERO     ##TOTI                          101662
+     C                     EXSR DETAMT                                    100284
+     C                     ADD  CFAMNT    ##TACR                          100284
+     C                     Z-ADD0         CFAMNT                          100284
+      *                                                                   100284
+     C                     ELSE                                           100284
+      *                                                                   100284
+     C                     EXSR DETCFA                                    100284
+     C                     ADD  ##AMNT    ##TACR                          100284
+      *                                                                   100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     ENDSR                                          100284
+     C********************************************************************100284
+      *                                                                   100284
+      /SPACE 5                                                            100284
+     C********************************************************************100284
+     C* Calculate accrual for deal with known cash-flow.                 *100284
+     C********************************************************************100284
+     C           DETCFA    BEGSR                                          100284
+      *                                                                   100284
+      ** Calculate the number of days in period gone.                     100284
+      *                                                                   100284
+     C                     Z-ADDCFSLIP    ZZBEG                           100284
+     C                     Z-ADD##EVCD    ZZEND                           100284
+      *                                                                   100284
+      ** If accruing on first day, add one day to period.                 100284
+      *                                                                   100284
+     C           CFNIPD    IFLT ##EVCD                                    100284
+     C           BKALDI    ANDNE'Y'                                       100284
+     C                     ADD  1         ZZEND                           100284
+     C                     ENDIF                                          100284
+      *                                                                   100284
+     C                     EXSR ZINTDY                                    100284
+      *                                                                   100284
+     C                     Z-ADDZZINDY    ##DAY   50                      100284
+      *                                                                   100284
+      ** Calculate the number of days in the whole period.                100284
+      *                                                                   100284
+     C                     Z-ADDCFSLIP    ZZBEG                           100284
+     C                     Z-ADDCFNIPD    ZZEND                           100284
+     C                     MOVELCFINCL    ZZCALC                          100284
+      *                                                                   100284
+     C                     EXSR ZINTDY                                    100284
+      *                                                                   100284
+     C                     Z-ADDZZINDY    ##DEN   50                      100284
+      *                                                                   100284
+      ** Pro-rata the amount by the proportion of days gone.              100284
+      *                                                                   100284
+     C           ##DAY     DIV  ##DEN     ##WRK1 159H                     100284
+     C           CFAMNT    MULT ##WRK1    ##AMNT 150H                     100284
+      *                                                                   100284
+     C                     ENDSR                                          100284
+      /SPACE 5
+     C**************************************************************************
+     C* *PSSR      - Error Subroutine                                 *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** If not yet run, then do error processing
+     C*
+     C           WWRUN     IFNE 'Y'
+     C                     MOVEL'Y'       WWRUN   1
+     C**********           MOVEL'GLM050'  DBPGM                          LUC109
+     C                     MOVEL'XX000050'DBPGM                          LUC109
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVELDBERR     @LDA
+     C                     OUT  @LDA
+     C                     DUMP
+     C                     END
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     RETRN
+     C           PSSR9     ENDSR
+     C*****************************************************************
+      /SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+      /SPACE 5
+     C/COPY ZSRSRC,ZSEDITZ3
+      /SPACE 5
+     C/COPY ZSRSRC,ZDLINTZ1
+      /SPACE 5
+     C/COPY ZSRSRC,ZCBDYSZ1
+      /SPACE 5
+     C/COPY ZSRSRC,ZCONVNZ1
+      /SPACE 5
+     C/COPY ZSRSRC,ZFWDT                                                  100317
+      /SPACE 5                                                            100317
+     C/COPY ZSRSRC,ZACCH                                                  100317
+      /SPACE 5                                                            100317
+     C/COPY ZSRSRC,ZINTDYZ2                                               100284
+      /SPACE 5                                                            100284
+     C/COPY ZSRSRC,ZDATE9Z3                                               100284
+      /SPACE 5                                                            100284
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+     C/EJECT                                                              126017
+**  CPY@
+(c) Finastra International Limited 2016
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN    100284
+00366007310109601461                                                      100284
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR       100284
+00000000310005900090001200015100181002120024300273003040033400365         100284

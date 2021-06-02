@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD056565             Date 21Jan21             *
-      *  Prev Amend No. MD056751             Date 20Sep20             *
+      *  Last Amend No. MD058177             Date 27May21             *
+      *  Prev Amend No. MD056565             Date 21Jan21             *
+      *                 MD056751             Date 20Sep20             *
       *                 MD056613             Date 20Sep20             *
       *                 MD057670             Date 02Mar21             *
       *                 MD056556             Date 31Aug20             *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058177 - Error for RPTRAQPD take-on. Use DISTINCT          *
+      *             to cater for duplicate record.                    *
       *  MD056565 - Deliverable Data Split for APDFFLDPD              *
       *  MD056751 - Deliverable Data Split for GLFXMLPD and GLGXMLPD  *
       *  MD056613 - Deliverable Data Split for CSD101                 *
@@ -223,7 +226,12 @@
      C                   IF        First = 'Y'
       ** Get until the fieldadd to the end of the table.
      C                   eval      PINSERT = %trimr(PINSERT) + 'B.' + WHFLDI
+     C                   if        XINDEX = 'RPTRQCTD'                                      MD058177
+     C                   eval      PSELECT = %trimr(PSELECT) + ' distinct(' +               MD058177
+     C                              'A.' + WHFLDI + ')'                                     MD058177
+     C                   else                                                               MD058177
      C                   eval      PSELECT = %trimr(PSELECT) + 'A.' + WHFLDI
+     C                   endif                                                              MD058177
      C                   eval      First = 'N'
      C                   ELSE
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI

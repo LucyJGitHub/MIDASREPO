@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057605           Date 20May21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055687           Date 22Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
@@ -76,6 +77,8 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
+      *  MD057605 - IPRD on MHISTHP and MHISTHQ was showing as        *
+      *             incorrect. Renamed IPRD field                     *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055687 - Live COB - LEC10A failed                          *
@@ -479,7 +482,8 @@
      I                                  2   16  MATCH                                         CLE137
 0109 I                             P   17   19 0MDATM
 0110 I                             P   20   26 0TINT
-0111 I                             P   27   33 0IPRD
+0111 I**********                   P   27   33 0IPRD                                        MD057605
+     I                             P   27   33 0IPRDM                                       MD057605
 0112 I                             P   34   40 0ICTD
 0113 I                             P   41   47 0IWOD
 0114 I                             P   48   53 7BRTEM

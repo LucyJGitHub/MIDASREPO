@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD056812           Date 20Sep20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056812  - Deliverable Data Split for SDSCODPD              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -246,7 +248,8 @@
       ** Book details                                                           CSE006
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)                    CSE006
 
-     D SDSCOD        E DS                  EXTNAME(SDSCODPD)                                  CSE039
+     D*SDSCOD***     E DS                  EXTNAME(SDSCODPD)                         CSE039 MD056812
+     D SDSCOD        E DS                  EXTNAME(SDSCOJW0)                                MD056812
       ** EXTERNAL DS FOR MESSAGE STATUS CODE DETAILS                                          CSE039
                                                                                               CSE039
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE

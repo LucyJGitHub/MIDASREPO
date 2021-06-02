@@ -9,18 +9,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056612           Date 12Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG2617            Data 20May04              */
+/*                      BUG2617            Data 20May04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CMX001  *CREATE    Data 01Jan00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056612 - Deliverable Data Split for MX group              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG2617- Conversion of MXGENMDN to comply with webfacing.   */
 /*       CMX001 - Meridian Export                                    */
@@ -30,7 +32,7 @@
 /**********               &GENTYPE &MODE &TYPEMATCH)                 *******/            /*BUG2617*/
              PGM        PARM(&FORMAT &TGTNAME &TOSTRMFILE &PFX +
                           &GENTYPE &MODE &TYPEMATCH &RETURNMSG)                          /*BUG2617*/
- 
+
              DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TGTNAME) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOSTRMFILE) TYPE(*CHAR) LEN(5000)
@@ -39,21 +41,22 @@
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TYPEMATCH) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RETURNMSG) TYPE(*CHAR) LEN(75)
- 
+
              DCL        VAR(&ERRORFOUND) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&QRYSLTSTR) TYPE(*CHAR) LEN(200)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2001')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*  Check that the Export Definitions file exists                   */
- 
-             CHKOBJ     OBJ(MXEXFDPD) OBJTYPE(*FILE) AUT(*USE)
+
+/*********   CHKOBJ     OBJ(MXEXFDPD) OBJTYPE(*FILE) AUT(*USE) */                       /*MD056612*/
+             CHKOBJ     OBJ(MXEXDCTD) OBJTYPE(*FILE) AUT(*USE)                          /*MD056612*/
              MONMSG     MSGID(CPF2802 CPF9801 CPF9802 CPF9810 +
                           CPF9820) EXEC(DO)
 /***********    SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +             *******/           /*BUG2617*/
@@ -73,20 +76,27 @@
                   RETURN                                                                 /*BUG2617*/
                 ENDDO                                                                    /*BUG2617*/
              ENDDO                                                                       /*BUG2617*/
- 
+
 /*  If it does exists then, for a single entry only, check it       */
 /*   contains a record for the specified format.                    */
              IF         COND(&ERRORFOUND *NE 'Y') THEN(DO)
-                OVRDBF     FILE(MXEXFDPD) SHARE(*YES)
+/**********     OVRDBF     FILE(MXEXFDPD) SHARE(*YES) */                                /*MD056612*/
+                OVRDBF     FILE(MXEXCXTD) SHARE(*YES)                                   /*MD056612*/
                 CHGVAR     VAR(&QRYSLTSTR) VALUE('EXFMT *EQ "' *CAT +
                              &FORMAT *CAT '"')
-                OPNQRYF    FILE((MXEXFDPD)) OPTION(*INP) +
-                             QRYSLT(&QRYSLTSTR)
-                CPYFRMQRYF FROMOPNID(MXEXFDPD) TOFILE(QTEMP/TSMXEXFDPD) +
-                             MBROPT(*REPLACE) CRTFILE(*YES)
-                CLOF       OPNID(MXEXFDPD)
-                DLTOVR     FILE(MXEXFDPD)
- 
+/*********      OPNQRYF    FILE((MXEXFDPD)) OPTION(*INP) +
+                             QRYSLT(&QRYSLTSTR) */                                      /*MD056612*/
+                OPNQRYF    FILE((MXEXDXTD)) OPTION(*INP) +
+                             QRYSLT(&QRYSLTSTR)                                         /*MD056612*/
+/**********     CPYFRMQRYF FROMOPNID(MXEXFDPD) TOFILE(QTEMP/TSMXEXFDPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) */                          /*MD056612*/
+                CPYFRMQRYF FROMOPNID(MXEXDXTD) TOFILE(QTEMP/TSMXEXFDPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD056612*/
+/**********     CLOF       OPNID(MXEXFDPD) */                                           /*MD056612*/
+                CLOF       OPNID(MXEXFDPD)                                              /*MD056612*/
+/**********     DLTOVR     FILE(MXEXFDPD) */                                            /*MD056612*/
+                DLTOVR     FILE(MXEXFDPD)                                               /*MD056612*/
+
                 RTVMBRD    FILE(QTEMP/TSMXEXFDPD) +
                             NBRCURRCD(&NBRCURRCD)
                 IF         COND(&NBRCURRCD *EQ 0) THEN(DO)
@@ -100,13 +110,13 @@
                    CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
                 ENDDO
              ENDDO
- 
+
 /*********** IF         COND(&ERRORFOUND *EQ 'Y') THEN(DO)               *******/        /*BUG2617*/
 /***********    SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE) *******/        /*BUG2617*/
 /*********** ENDDO                                                       *******/        /*BUG2617*/
- 
+
              RETURN
- 
+
 abnor:
              ENDPGM
- 
+

@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056235  *CREATE  Date 03Jun20               *
+      *  Last Amend No. MD058193           Date 07Sep20               *
+      *  Prev Amend No. MD056235  *CREATE  Date 03Jun20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058193 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD056235 - Name Space Bindings for JMS has passwords is in   *
       *             clear text format                                 *
       *                                                               *
@@ -163,7 +165,8 @@
      C                   EVAL      WLastChgUser = PSUser
 
      C/exec SQL
-     C+ insert into SDFACXTD
+     C**insert*into SDFACXTD                                                                MD058193
+     C+ insert into SDFUCXTD                                                                MD058193
      C+ (
      C+   ININTF
      C+  ,INUSER
@@ -172,6 +175,7 @@
      C+  ,INTMST
      C+  ,INTYLC
      C+  ,INLCUS
+     C+  ,INMODE                                                                            MD058193
      C+ )
      C+ values
      C+ (
@@ -182,8 +186,33 @@
      C+  ,:WTimeStamp
      C+  ,:WChangeType
      C+  ,:WLastChgUser
+     C+  ,'B'                                                                               MD058193
      C+ )
      C/end-exec
+     C/exec SQL                                                                             MD058193
+     C+ insert into SDFUCBTD                                                                MD058193
+     C+ (                                                                                   MD058193
+     C+   ININTF                                                                            MD058193
+     C+  ,INUSER                                                                            MD058193
+     C+  ,INUNIQ                                                                            MD058193
+     C+  ,INUSRD                                                                            MD058193
+     C+  ,INTMST                                                                            MD058193
+     C+  ,INTYLC                                                                            MD058193
+     C+  ,INLCUS                                                                            MD058193
+     C+  ,INMODE                                                                            MD058193
+     C+ )                                                                                   MD058193
+     C+ values                                                                              MD058193
+     C+ (                                                                                   MD058193
+     C+   :WInterface                                                                       MD058193
+     C+  ,:WUser                                                                            MD058193
+     C+  ,:WUniq                                                                            MD058193
+     C+  ,:WUserDesc                                                                        MD058193
+     C+  ,:WTimeStamp                                                                       MD058193
+     C+  ,:WChangeType                                                                      MD058193
+     C+  ,:WLastChgUser                                                                     MD058193
+     C+  ,'B'                                                                               MD058193
+     C+ )                                                                                   MD058193
+     C/end-exec                                                                             MD058193
 
      C                   IF        SQLCOD <> 0
      C                   EVAL      PReturn = 'E'

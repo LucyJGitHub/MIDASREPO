@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056812           Date 20Sep20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056812  - Deliverable Data Split for SDSCODPD              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
@@ -229,7 +231,8 @@
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
-     D SDSCOD        E DS                  EXTNAME(SDSCODPD)                                  CSE039
+     D*SDSCOD***     E DS                  EXTNAME(SDSCODPD)                         CSE039 MD056812
+     D SDSCOD        E DS                  EXTNAME(SDSCOJW0)                                MD056812
       ** EXTERNAL DS FOR MESSAGE STATUS CODE DETAILS                                          CSE039
 
       ** DS for AccessProgramsS, Short DS

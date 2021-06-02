@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD053487           Date 28May19               *
+      *  Last Amend No. MD056613           Date 20Sep20               *
+      *  Prev Amend No. MD056633           Date 07Sep20               *
+      *                 MD054605           Date 17Oct19               *
+      *                 MD053487           Date 28May19               *
       *                 MD053450           Date 11May19               *
       *                 MD053394           Date 08May19               *
       *                 MD053109           Date 03Apr19               *
@@ -25,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056613 - Deliverable Data Split for CSD101                 *
+      *  MD056633 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD053487 - Audit Report should be available for Interface    *
       *             Password Maintenance                              *
@@ -567,7 +571,8 @@
      C                   EVAL      WLastChgUser = *Blanks                                   MD053487
 
      C/exec SQL
-     C+ insert into SDFACXTD
+     C**insert*into SDFACXTD                                                                MD056633
+     C+ insert into SDFUCXTD                                                                MD056633
      C+ (
      C+   ININTF
      C+  ,INUSER
@@ -576,6 +581,7 @@
      C+  ,INTMST
      C+  ,INTYLC                                                                            MD053487
      C+  ,INLCUS                                                                            MD053487
+     C+  ,INMODE                                                                            MD056633
      C+ )
      C+ values
      C+ (
@@ -586,8 +592,33 @@
      C+  ,:WTimeStamp
      C+  ,:WChangeType                                                                      MD053487
      C+  ,:WLastChgUser                                                                     MD053487
+     C+  ,'B'                                                                               MD056633
      C+ )
      C/end-exec
+     C/exec SQL                                                                             MD056633
+     C+ insert into SDFUCBTD                                                                MD056633
+     C+ (                                                                                   MD056633
+     C+   ININTF                                                                            MD056633
+     C+  ,INUSER                                                                            MD056633
+     C+  ,INUNIQ                                                                            MD056633
+     C+  ,INUSRD                                                                            MD056633
+     C+  ,INTMST                                                                            MD056633
+     C+  ,INTYLC                                                                            MD056633
+     C+  ,INLCUS                                                                            MD056633
+     C+  ,INMODE                                                                            MD056633
+     C+ )                                                                                   MD056633
+     C+ values                                                                              MD056633
+     C+ (                                                                                   MD056633
+     C+   :PInterface                                                                       MD056633
+     C+  ,:PUser                                                                            MD056633
+     C+  ,:PUniq                                                                            MD056633
+     C+  ,:PUserDesc                                                                        MD056633
+     C+  ,:WTimeStamp                                                                       MD056633
+     C+  ,:WChangeType                                                                      MD056633
+     C+  ,:WLastChgUser                                                                     MD056633
+     C+  ,'B'                                                                               MD056633
+     C+ )                                                                                   MD056633
+     C/end-exec                                                                             MD056633
 
      C                   ENDSR
 
@@ -687,7 +718,8 @@
 
      C     SrSetFlag     BEGSR
 
-     C                   EVAL      Stmt = 'UPDATE SDINTFTD '
+     C**********         EVAL      Stmt = 'UPDATE SDINTFTD '                                MD056613
+     C                   EVAL      Stmt = 'UPDATE SDINFXTD '                                MD056613
      C                                    + 'SET IFPRCF = ''Y'' where '
      C                                    + 'IFFILE = '''
      C                                    + %TRIMR(PFFile) + ''''

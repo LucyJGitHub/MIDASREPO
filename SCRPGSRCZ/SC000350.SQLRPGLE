@@ -16,13 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD056781           Date 20Sep20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD057885           Date 13Apr21               *
+      *  Prev Amend No. MD056781           Date 20Sep20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD055694           Date 09Mar20               *
       *                 CSW219 *CREATE     Date 04Mar19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057885 - Remove CSW220 changes                             *
       *  MD056781 - Deliverable Data Split for MESWACPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055694 - SWIFT Changes 2021                                *
@@ -85,14 +87,14 @@
       ** Data Structure for Feature
      D FeatDS          DS
      D                                6    INZ('CSW219')
-     D                                6    INZ('CSW220')                                    MD055694
+     D**********                      6    INZ('CSW220')                           MD055694 MD057885
      D                                6    INZ('CSW221')                                    MD055694
      D Feat                           6    DIM(N) OVERLAY(FeatDS)
       *
       ** Data Structure for Feature Password
      D PWordDS         DS
      D                               16    INZ('GALERA')
-     D                               16    INZ('CARMONA')                                   MD055694
+     D**********                     16    INZ('CARMONA')                          MD055694 MD057885
      D                               16    INZ('ABBEY ROAD')                                MD055694
      D PWord                         16    DIM(N) OVERLAY(PWordDS)
       *

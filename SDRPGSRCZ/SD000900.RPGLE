@@ -16,7 +16,8 @@
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
       *  Last Amend No. MD058159           Date 24May21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
@@ -32,6 +33,7 @@
       *                                                               *
       *  MD058159 - ZDBU failed during installation (file PMPSTMQ0)   *
       *             (Recompile)                                       *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *

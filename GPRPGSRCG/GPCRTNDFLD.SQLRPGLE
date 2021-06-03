@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056564           Date 24Aug20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD056565           Date 21Jan21               *
+      *  Prev Amend No. MD056564           Date 24Aug20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056565 - Deliverable Data Split for APDFFLDPD              *
       *  MD056564 - Deliverable Data Split for No Display field cond  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -38,8 +40,8 @@
      F*GPNDCONL0 IF   E           K DISK                                                    MD056564
 
       ** Output file containing list of non-displayed fields
-     FGPDFFLDPD UF A E             DISK
-     F                                     INFDS(InfDS)
+     F*GPDFFLDPD UF A E             DISK                                                    MD056565
+     F**********                           INFDS(InfDS)                                     MD056565
 
       ** File containing switched on features
      F*GPSARDPD* IT   F    6        DISK    INFSR(*PSSR)                                    MD055681
@@ -92,6 +94,7 @@
      D*LogicDS**     E DS                  EXTNAME(GPNDCONPD)                               MD056564
      D LogicDS       E DS                  EXTNAME(GPNDCJW0)                                MD056564
      D SFName                 35     40
+     D GPDFFL        E DS                  EXTNAME(GPDFLJW0)                                MD056565
 
       * File information data structure
      D InfDS           DS
@@ -117,6 +120,19 @@
      C                   KFLD                    NCDFLD
      C                   KFLD                    NCSEQN
 
+      * Delete first all the records (to replace CLRPFM)                                    MD056565
+     C/EXEC SQL                                                                             MD056565
+     C+ delete from GPDFLCTD                                                                MD056565
+     C+ where NDAPDT <> '                   '                                               MD056565
+     C/END-EXEC                                                                             MD056565
+     C/EXEC SQL                                                                             MD056565
+     C+ delete from GPDFLBTD                                                                MD056565
+     C+ where NDAPDT <> '                   '                                               MD056565
+     C/END-EXEC                                                                             MD056565
+     C/EXEC SQL                                                                             MD056565
+     C+ delete from GPDFLXTD                                                                MD056565
+     C+ where NDAPDT <> '                   '                                               MD056565
+     C/END-EXEC                                                                             MD056565
       **--------------------------------------------------------------
       ** Set the values of program, module and procedures names for database
       ** error processing.
@@ -159,18 +175,101 @@
 
       * If the field is not to be displayed, write to outfile
      C                   If        NonDisplay = 'Y'
-     C                   Eval      NDAPDT = NCAPDT
-     C                   Eval      NDDFLD = NCDFLD
-     C                   Eval      NDTYPE = NCTYPE
-     C                   Monitor
-     C                   Write     GPDFFLDD0                            99
+     C**********         Eval      NDAPDT = NCAPDT                                          MD056565
+     C**********         Eval      NDDFLD = NCDFLD                                          MD056565
+     C**********         Eval      NDTYPE = NCTYPE                                          MD056565
+     C**********         Monitor                                                            MD056565
+     C**********         Write     GPDFFLDD0                            99                  MD056565
+     C                   If        NCMODE = 'C'                                             MD056565
+     C/exec SQL                                                                             MD056565
+     C+ insert into GPDFLCTD                                                                MD056565
+     C+ (                                                                                   MD056565
+     C+   NDAPDT                                                                            MD056565
+     C+ , NDDFLD                                                                            MD056565
+     C+ , NDTYPE                                                                            MD056565
+     C+ , FILNAM                                                                            MD056565
+     C+ , FLDNAM                                                                            MD056565
+     C+ , FLMODE                                                                            MD056565
+     C+ , FILNMX                                                                            MD056565
+     C+ , FLDNMX                                                                            MD056565
+     C+ , FLMODX                                                                            MD056565
+     C+ , NDMODE                                                                            MD056565
+     C+ )                                                                                   MD056565
+     C+ values                                                                              MD056565
+     C+ (                                                                                   MD056565
+     C+  :NCAPDT                                                                            MD056565
+     C+ ,:NCDFLD                                                                            MD056565
+     C+ ,:NCTYPE                                                                            MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , 'C'                                                                               MD056565
+     C+ )                                                                                   MD056565
+     C/end-exec                                                                             MD056565
+     C                   else                                                               MD056565
+     C/exec SQL                                                                             MD056565
+     C+ insert into GPDFLBTD                                                                MD056565
+     C+ (                                                                                   MD056565
+     C+   NDAPDT                                                                            MD056565
+     C+ , NDDFLD                                                                            MD056565
+     C+ , NDTYPE                                                                            MD056565
+     C+ , FILNAM                                                                            MD056565
+     C+ , FLDNAM                                                                            MD056565
+     C+ , FLMODE                                                                            MD056565
+     C+ , FILNMX                                                                            MD056565
+     C+ , FLDNMX                                                                            MD056565
+     C+ , FLMODX                                                                            MD056565
+     C+ , NDMODE                                                                            MD056565
+     C+ )                                                                                   MD056565
+     C+ values                                                                              MD056565
+     C+ (                                                                                   MD056565
+     C+  :NCAPDT                                                                            MD056565
+     C+ ,:NCDFLD                                                                            MD056565
+     C+ ,:NCTYPE                                                                            MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , 'B'                                                                               MD056565
+     C+ )                                                                                   MD056565
+     C/end-exec                                                                             MD056565
+     C                   endif                                                              MD056565
+     C/exec SQL                                                                             MD056565
+     C+ insert into GPDFLXTD                                                                MD056565
+     C+ (                                                                                   MD056565
+     C+   NDAPDT                                                                            MD056565
+     C+ , NDDFLD                                                                            MD056565
+     C+ , FILNAM                                                                            MD056565
+     C+ , FLDNAM                                                                            MD056565
+     C+ , FILNMX                                                                            MD056565
+     C+ , FLDNMX                                                                            MD056565
+     C+ , NDMODE                                                                            MD056565
+     C+ )                                                                                   MD056565
+     C+ values                                                                              MD056565
+     C+ (                                                                                   MD056565
+     C+  :NCAPDT                                                                            MD056565
+     C+ ,:NCDFLD                                                                            MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , ' '                                                                               MD056565
+     C+ , :NCMODE                                                                           MD056565
+     C+ )                                                                                   MD056565
+     C/end-exec                                                                             MD056565
 
       * Any error other than 'Duplicate record' = database error
       * (We want to drop any duplicates)
-     C                   On-Error  1021
-     C                   On-Error  *File
+     C**********         On-Error  1021                                                     MD056565
+     C**********         On-Error  *File                                                    MD056565
+     C                   If        SQLCODE < 0                                              MD056565
      C                   Exsr      *PSSR
-     C                   EndMon
+     C                   Endif                                                              MD056565
+     C**********         EndMon                                                             MD056565
 
       * In case the first half of an '*OR' statement has proved correct,
       * we don't want to process any other statements for this field.

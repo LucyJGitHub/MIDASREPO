@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053487           Date 28May19               *
-      *  Prev Amend No. MD053289           Date 15Apr19               *
+      *  Last Amend No. MD056633           Date 07Sep20               *
+      *  Prev Amend No. MD053487           Date 28May19               *
+      *                 MD053289           Date 15Apr19               *
       *                 CSD101 *CREATE     Date 07Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056633 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD053487 - Audit Report should be available for Interface    *
       *             Password Maintenance                              *
       *  MD053289 - Password double capture process is missing in the *
@@ -121,7 +123,8 @@
      D   ValidList                   10A   INZ('SDINTFVL')
      D   Library                     10A   INZ('xxDMLIB')
       *
-     D FileFormat    E DS                  EXTNAME(SDFACXTD)
+     D*FileFormat    E DS                  EXTNAME(SDFACXTD)                                MD056633
+     D FileFormat    E DS                  EXTNAME(SDFUCJW0)                                MD056633
       *
      D WRun            S              1A
      D KID             S             20A
@@ -539,10 +542,16 @@
      C                   EVAL      D0UNQ1 = PAUniq(Ax)
      C                   EVAL      Ax = Ax + 1
      C/exec SQL
-     C+ delete from SDFACXTD
+     C**delete*from SDFACXTD                                                                MD056633
+     C+ delete from SDFUCXTD                                                                MD056633
      C+ where
      C+   INUNIQ = :D0UNQ1
      C/end-exec
+     C/exec SQL                                                                             MD056633
+     C+ delete from SDFUCBTD                                                                MD056633
+     C+ where                                                                               MD056633
+     C+   INUNIQ = :D0UNQ1                                                                  MD056633
+     C/end-exec                                                                             MD056633
       *
      C                   EVAL      PIDName = D0UNQ1
      C                   CALL(E)   'SD000404'
@@ -594,7 +603,8 @@
      C                   PARM      *BLANKS       PLUSER                                     MD053487
       *
      C/exec SQL
-     C+ update SDFACXTD set
+     C**update*SDFACXTD set                                                                 MD056633
+     C+ update SDFUCXTD set                                                                 MD056633
      C+   INTMST = :PTimeStamp,                                                             MD053487
      C+   INTYLC = :PChangeType,                                                            MD053487
      C+   INLCUS = :PLUSER                                                                  MD053487
@@ -645,7 +655,8 @@
      C                   PARM      *BLANKS       PLUSER                                     MD053487
       *
      C/exec SQL
-     C+ insert into SDFACXTD
+     C**insert*into SDFACXTD                                                                MD056633
+     C+ insert into SDFUCXTD                                                                MD056633
      C+ (
      C+   ININTF
      C+  ,INUSER
@@ -654,6 +665,7 @@
      C+  ,INTMST
      C+  ,INTYLC                                                                            MD053487
      C+  ,INLCUS                                                                            MD053487
+     C+  ,INMODE                                                                            MD056633
      C+ )
      C+ values
      C+ (
@@ -664,8 +676,33 @@
      C+  ,:PTimeStamp
      C+  ,:PChangeType                                                                      MD053487
      C+  ,:PLUser                                                                           MD053487
+     C+  ,'B'                                                                               MD056633
      C+ )
      C/end-exec
+     C/exec SQL                                                                             MD056633
+     C+ insert into SDFUCBTD                                                                MD056633
+     C+ (                                                                                   MD056633
+     C+   ININTF                                                                            MD056633
+     C+  ,INUSER                                                                            MD056633
+     C+  ,INUNIQ                                                                            MD056633
+     C+  ,INUSRD                                                                            MD056633
+     C+  ,INTMST                                                                            MD056633
+     C+  ,INTYLC                                                                            MD056633
+     C+  ,INLCUS                                                                            MD056633
+     C+  ,INMODE                                                                            MD056633
+     C+ )                                                                                   MD056633
+     C+ values                                                                              MD056633
+     C+ (                                                                                   MD056633
+     C+   :PInterface                                                                       MD056633
+     C+  ,:PUser                                                                            MD056633
+     C+  ,:PUniq                                                                            MD056633
+     C+  ,:PUserDesc                                                                        MD056633
+     C+  ,:PTimeStamp                                                                       MD056633
+     C+  ,:PChangeType                                                                      MD056633
+     C+  ,:PLUser                                                                           MD056633
+     C+  ,'B'                                                                               MD056633
+     C+ )                                                                                   MD056633
+     C/end-exec                                                                             MD056633
       *
      C                   CALL(E)   'SD000404'
      C                   PARM      *BLANKS       PReturnVal
@@ -782,7 +819,8 @@
       *
      C/exec SQL
      C+ select INTMST into :WTmSt1
-     C+ from SDFACXTD
+     C**from*SDFACXTD                                                                       MD056633
+     C+ from SDFUCXTD                                                                       MD056633
      C+ where
      C+   INUNIQ = :PUniq
      C/end-exec
@@ -799,7 +837,8 @@
       *
      C/exec SQL
      C+ select INTMST into :WTmSt2
-     C+ from SDFACXTD
+     C**from*SDFACXTD                                                                       MD056633
+     C+ from SDFUCXTD                                                                       MD056633
      C+ where
      C+   INUNIQ = :PUniq
      C/end-exec

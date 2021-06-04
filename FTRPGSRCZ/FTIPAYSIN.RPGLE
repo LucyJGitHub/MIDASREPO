@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR921987           Date 23Mar12               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. AR921987           Date 23Mar12               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  AR921987 - If Sender's Correspondent is decoded it must be   *
       *             placed in Receiver's Correspondent for IN (if     *
       *             Receiver's Correspondent is blank and Sender's    *
@@ -116,7 +118,7 @@
       *  AR928996 - Data lost due to rate field :36: being truncated. *
       *             (Child: AR928997)                                 *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
-      *              beneficary customer account.                     *      
+      *              beneficary customer account.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036089 - Incorrect values appeared in FT IPN1              *
       *  AR1090283 - Customer details not visible for enquire.        *

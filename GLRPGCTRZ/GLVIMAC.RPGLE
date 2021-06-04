@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055515           Date 13Apr20               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. LUC123             Date 18Jun19               *
+      *  Prev Amend No. MD055515           Date 13Apr20               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031707           Date 02Jul15               *
       *                 MD024136           Date 08Jan14               *
@@ -54,6 +55,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC123 - Extend Customer De-Activation to GL and LE          *
+      *           Addition of hook LUC123_001                         *
+      *           Addition of hook LUC123_002                         *
+      *           Addition of hook LUC123_003                         *
+      *           Addition of hook LUC123_004                         *
+      *           Addition of hook LUC123_005                         *
+      *           Addition of hook LUC123_006                         *
+      *           Addition of hook LUC123_024                         *
       *  MD055515 - Batch Item allows customer as blank to be         *
       *             accepted. Amend GLVIMAC to ensure that JE Items   *
       *             with blank Customer will not be allowed even when *
@@ -210,6 +219,7 @@
       ** DS for Access Programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *
+      /COPY WNCPYSRC,LUC123_006                                                          LUC123
       ** Work field for Account Identifier
      D WDDACID         DS            10
      D WACF6                   1      6
@@ -310,6 +320,7 @@
       ** Validate Account.
       *
      C                   EXSR      SRProc
+      /COPY WNCPYSRC,LUC123_024                                                            LUC123
       *
      C     DDAcidOK      IFEQ      'N'
      C     DDCycdOK      OREQ      'N'
@@ -868,12 +879,14 @@
       *
       ** Check if valid Customer.
       *
+      /COPY WNCPYSRC,LUC123_004                                                          LUC123
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDACID        PCUST            10
      C                   PARM      *BLANKS       PKYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
+      /COPY WNCPYSRC,LUC123_005                                                          LUC123
       *
      C     PRTCD         IFNE      *BLANKS
      C     PKYST         OREQ      '*ERROR '
@@ -882,11 +895,13 @@
      C                   MOVEL     'DDACID'      FldNamXAr(Idx)
      C                   MOVEL     'GLX0084'     MsgIdXAr(Idx)
      C                   ELSE
+      /COPY WNCPYSRC,LUC123_001                                                          LUC123
      C                   MOVEL     *BLANKS       DDACID
      C                   MOVEL     BBCUST        DDACID
      C                   MOVEL     BBCUST        W2CUST
      C                   MOVEL     BBCUST        PCust1
      C                   MOVEL     BBACOC        PAcOf1
+      /COPY WNCPYSRC,LUC123_003                                                          LUC123
      C                   ENDIF
       *
      C     DDAcidOk      IFEQ      'Y'
@@ -1623,6 +1638,8 @@
       /COPY ZACPYSRC,DBFIELDS
                                                                                              CGL135A
       /COPY OFCPYSRCZ,CGL135_005                                                             CGL135A
+      *
+      /COPY WNCPYSRC,LUC123_002                                                          LUC123
       *
      C                   ENDSR
       *

@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FLEFEED    IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DELEFEEDPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(LEFEEDF:DELEFEEDF)                          LUC109
      FXXLEFEEDPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(LEFEEDF:XXLEFEEDF)                          LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      ILEFEEDF
      I              FEOURS                      @FEOURS
      I              RONS                        @RONS
@@ -109,10 +109,10 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   LEFEED
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   IF        %SUBST(@FEOURS:18:1) <> ' '
@@ -122,14 +122,14 @@
      C                   ELSE
      C                   MOVEL     @FEOURS       FEOURS
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@RONS:18:1) <> ' '
      C                   EVAL      RONS = %SUBST(@RONS:1:6) + %SUBST(@RONS:7:4)
      C                                                      + %SUBST(@RONS:17:2)
      C                   ELSE
      C                   MOVEL     @RONS         RONS
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@PONS:18:1) <> ' '
      C                   EVAL      PONS = %SUBST(@PONS:1:6) + %SUBST(@PONS:7:4)
      C                                                      + %SUBST(@PONS:17:2)
@@ -143,19 +143,19 @@
      C                   MOVEL     @POBN         POBN                                         LUC109
      C                   MOVEL     @POCN         POCN                                         LUC109
      C                   MOVEL     @SMAC         SMAC                                         LUC109
- 
+
       * Write to Extract File                                                                 LUC109
      C**********         WRITE     DELEFEEDF                                                  LUC109
      C                   WRITE     XXLEFEEDF
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   LEFEED
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -164,15 +164,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

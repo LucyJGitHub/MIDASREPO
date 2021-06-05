@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDACRCPD  IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DESDACRCPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(SDACRCD0:DESDACRCD0)                        LUC109
      FXXSDACRCPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(SDACRCD0:XXSDACRCD0)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      ISDACRCD0
      I              G6ACCD                      @G6ACCD
      I              G6RSCD                      @G6RSCD
@@ -101,27 +101,27 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   SDACRCPD
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVEL     @G6ACCD       G6ACCD
      C                   MOVEL     @G6RSCD       G6RSCD
- 
+
       * Write to Extract File
      C**********         WRITE     DESDACRCD0                                                 LUC109
      C                   WRITE     XXSDACRCD0                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   SDACRCPD
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -130,15 +130,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

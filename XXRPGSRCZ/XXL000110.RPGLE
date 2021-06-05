@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDEALSDE   IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEDEALSEPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(DEALSDEF:DEDEALSDEF)                        LUC109
      FXXDEALSEPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(DEALSDEF:XXDEALSDEF)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IDEALSDEF
      I              OSAC                        @OSAC
      I              RONS                        @RONS
@@ -108,10 +108,10 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   DEALSDE
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   IF        %SUBST(@OSAC:18:1) <> ' '
@@ -120,14 +120,14 @@
      C                   ELSE
      C                   MOVEL     @OSAC         OSAC
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@RONS:18:1) <> ' '
      C                   EVAL      RONS = %SUBST(@RONS:1:6) + %SUBST(@RONS:7:4)
      C                                                      + %SUBST(@RONS:17:2)
      C                   ELSE
      C                   MOVEL     @RONS         RONS
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@PONS:18:1) <> ' '
      C                   EVAL      PONS = %SUBST(@PONS:1:6) + %SUBST(@PONS:7:4)
      C                                                      + %SUBST(@PONS:17:2)
@@ -140,19 +140,19 @@
      C                   MOVEL     @ROCN         ROCN                                         LUC109
      C                   MOVEL     @POBN         POBN                                         LUC109
      C                   MOVEL     @POCN         POCN                                         LUC109
- 
+
       * Write to Extract File
      C**********         WRITE     DEDEALSDEF                                                 LUC109
      C                   WRITE     XXDEALSDEF                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   DEALSDE
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -161,15 +161,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

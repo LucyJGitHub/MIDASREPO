@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FEODPOPD   IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEEODPOPP O    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(APOSTPDF:DEAPOSTPDF)                        LUC109
      FXXEODPOPP O    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(APOSTPDF:XXAPOSTPDF)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IAPOSTPDF
      I              ACOD                        @ACOD
      I              OTRF                        @OTRF
@@ -104,10 +104,10 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   EODPOPD
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVEL     @ACOD         ACOD
@@ -115,19 +115,19 @@
      C                   MOVEL     @CNUM         CNUM                                         LUC109
      C                   MOVEL     @ASOC         ASOC                                         LUC109
      C                   MOVEL     @DBCNUM       DBCNUM                                       LUC109
- 
+
       * Write to Extract File
      C**********         WRITE     DEAPOSTPDF                                                 LUC109
      C                   WRITE     XXAPOSTPDF                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   EODPOPD
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -136,15 +136,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

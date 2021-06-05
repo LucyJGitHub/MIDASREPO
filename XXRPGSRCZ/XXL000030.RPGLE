@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FREIACD    IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEREIACDPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(REIACDF:DEREIACDF)                          LUC109
      FXXREIACDPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(REIACDF:XXREIACDF)                          LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IREIACDF
      I              ACOD                        @ACOD
      I              DACP                        @DACP
@@ -104,49 +104,49 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   REIACD
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVEL     @ACOD         ACOD
- 
+
      C                   IF        %SUBST(@DACP:21:1) <> ' '
      C                   EVAL      DACP = %SUBST(@DACP:1:9) + %SUBST(@DACP:10:4)
      C                                                      + %SUBST(@DACP:20:2)
      C                   ELSE
      C                   MOVEL     @DACP         DACP
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@CACP:21:1) <> ' '
      C                   EVAL      CACP = %SUBST(@CACP:1:9) + %SUBST(@CACP:10:4)
      C                                                      + %SUBST(@CACP:20:2)
      C                   ELSE
      C                   MOVEL     @CACP         CACP
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@CHAC:21:1) <> ' '
      C                   EVAL      CHAC = %SUBST(@CHAC:1:9) + %SUBST(@CHAC:10:4)
      C                                                      + %SUBST(@CHAC:20:2)
      C                   ELSE
      C                   MOVEL     @CHAC         CHAC
      C                   ENDIF
- 
+
      C                   MOVEL     @CNUM         CNUM                                         LUC109
       *                                                                                       LUC109
       * Write to Extract File
      C**********         WRITE     DEREIACDF                                                  LUC109
      C                   WRITE     XXREIACDF                                                  LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   REIACD
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -155,15 +155,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

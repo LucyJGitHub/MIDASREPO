@@ -47,7 +47,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFCLTYX0   IF   E           K DISK    INFSR(*PSSR) COMMIT
      FXXFCLTYX0 O    E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(FCLTYFX0:XXFCLTYFX0)
@@ -69,20 +69,20 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IFCLTYFX0
      I              MCNUM                       @MCNUM
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -92,26 +92,26 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       *
       * Read first record from FBM FCLTYX0 file
       *                            -------
      C                   READ(E)   FCLTYX0
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVE      @MCNUM        MCNUM
- 
+
       * Write to Extract File
      C                   WRITE     XXFCLTYFX0
      C                   COMMIT
- 
+
      C                   READ(E)   FCLTYX0
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -120,15 +120,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

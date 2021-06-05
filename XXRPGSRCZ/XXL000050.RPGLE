@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FEVNTXED   IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEEVNTXDPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(EVNTXEDF:DEEVNTXEDF)                        LUC109
      FXXEVNTXDPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(EVNTXEDF:XXEVNTXEDF)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IEVNTXEDF
      I              OSAC2                       @OSAC2
      I              CPCN                        @CPCN                                         LUC109
@@ -101,10 +101,10 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   EVNTXED
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   IF        %SUBST(@OSAC2:16:1) <> ' '
@@ -115,19 +115,19 @@
      C                   MOVEL     @OSAC2        OSAC2
      C                   ENDIF
      C                   MOVEL     @CPCN         CPCN                                         LUC109
- 
+
       * Write to Extract File
      C**********         WRITE     DEEVNTXEDF                                                 LUC109
      C                   WRITE     XXEVNTXEDF                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   EVNTXED
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -136,15 +136,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

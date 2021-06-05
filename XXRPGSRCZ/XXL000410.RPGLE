@@ -47,7 +47,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSECTYD    IF   E           K DISK    INFSR(*PSSR) COMMIT
      FXXSECTYD  O    E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(SECTYDF:XXSECTYDF)
@@ -69,24 +69,24 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      ISECTYDF
      I              ISSR                        @ISSR
      I              RSKC                        @RSKC
      I              LMGR                        @LMGR
      I              PPAG                        @PPAG
      I              GUAR                        @GUAR
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -96,12 +96,12 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       *
       * Read first record from FBM SECTYD file
       *                            ------
      C                   READ(E)   SECTYD
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVE      @ISSR         ISSR
@@ -109,17 +109,17 @@
      C                   MOVE      @LMGR         LMGR
      C                   MOVE      @PPAG         PPAG
      C                   MOVE      @GUAR         GUAR
- 
+
       * Write to Extract File
      C                   WRITE     XXSECTYDF
      C                   COMMIT
- 
+
      C                   READ(E)   SECTYD
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -128,15 +128,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

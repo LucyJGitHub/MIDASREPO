@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FOTPAYDD   IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEOTPAYPP O    E           K DISK    INFSR(*PSSR) COMMIT                            LUC109
      F**********                           RENAME(OTPAYDDF:DEOTPAYDDF)                       LUC109
      FXXOTPAYPP O    E           K DISK    INFSR(*PSSR) COMMIT                               LUC109
      F                                     RENAME(OTPAYDDF:XXOTPAYDDF)                       LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,10 +78,10 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -90,7 +90,7 @@
      D @RUN            S              1
      D WA12            S             12
      D WA18            S             18
- 
+
      IOTPAYDDF
      I              ORBK                        @ORBK
      I              CDRO                        @CDRO
@@ -105,48 +105,48 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   OTPAYDD
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVEL     @ORBK         WA18
- 
+
      C                   IF        %SUBST(WA18:17:2) <> '00'
      C                   EVAL      WA12 = %SUBST(WA18:1:6) + %SUBST(WA18:7:4)
      C                                                     + %SUBST(WA18:17:2)
      C                   ELSE
      C                   MOVEL     WA18          WA12
      C                   ENDIF
- 
+
      C                   MOVEL     WA12          ORBK
- 
+
      C                   MOVEL     @CDRO         WA18
- 
+
      C                   IF        %SUBST(WA18:17:2) <> '00'
      C                   EVAL      WA12 = %SUBST(WA18:1:6) + %SUBST(WA18:7:4)
      C                                                     + %SUBST(WA18:17:2)
      C                   ELSE
      C                   MOVEL     WA18          WA12
      C                   ENDIF
- 
+
      C                   MOVEL     WA12          CDRO
      C                   MOVEL     @SNCO         SNCO                                         LUC109
      C                   MOVEL     @ODMT         ODMT                                         LUC109
- 
+
       * Write to Extract File
      C**********         WRITE     DEOTPAYDDF                                                 LUC109
      C                   WRITE     XXOTPAYDDF                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   OTPAYDD
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -155,15 +155,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

@@ -47,7 +47,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FGTEESGT   IF   E           K DISK    INFSR(*PSSR) COMMIT
      FXXGTEESGT O    E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(GTEESGTF:XXGTEESGTF)
@@ -69,21 +69,21 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IGTEESGTF
      I              CNUM                        @CNUM
      I              GBCN                        @GBCN
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -93,27 +93,27 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       *
       * Read first record from FBM GTEESGT file
       *                            -------
      C                   READ(E)   GTEESGT
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVE      @CNUM         CNUM
      C                   MOVE      @GBCN         GBCN
- 
+
       * Write to Extract File
      C                   WRITE     XXGTEESGTF
      C                   COMMIT
- 
+
      C                   READ(E)   GTEESGT
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -122,15 +122,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

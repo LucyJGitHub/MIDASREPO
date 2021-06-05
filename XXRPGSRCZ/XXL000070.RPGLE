@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FACKEYAL   IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEACKEYLPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(ACKEYALF:DEACKEYALF)                        LUC109
      FXXACKEYLPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(ACKEYALF:XXACKEYALF)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IACKEYALF
      I              ACD1                        @ACD1
      I              ACD2                        @ACD2
@@ -106,10 +106,10 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   ACKEYAL
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVEL     @ACD1         ACD1
@@ -119,19 +119,19 @@
      C                   MOVEL     @ACD5         ACD5
      C                   MOVEL     @ACD6         ACD6
      C                   MOVEL     @AKEY         AKEY                                         LUC109
- 
+
       * Write to Extract File
      C**********         WRITE     DEACKEYALF                                                 LUC109
      C                   WRITE     XXACKEYALF                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   ACKEYAL
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -140,15 +140,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

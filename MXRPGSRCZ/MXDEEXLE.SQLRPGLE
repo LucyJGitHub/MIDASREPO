@@ -316,7 +316,9 @@
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
 
-     C   01              Z-ADD     *ZERO         FEFSEQ
+     C***01*****         Z-ADD     *ZERO         FEFSEQ                                     MD058279
+     C   01              MOVE      FEFSEQ        LKBRTT                                     MD058279
+     C   02              MOVE      LKBRTT        FEFSEQ                                     MD058279
 
       * Process a loan-based account key
 

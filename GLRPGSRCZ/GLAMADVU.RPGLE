@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR979910           Date 07Jun12               *
-      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *  Last Amend No. 250822             Date 22May20               *      
+      *  Prev Amend No. AR979910           Date 07Jun12               *
+      *                 260405             Date 04Apr20               *      
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -144,6 +145,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250822 - Commented-out /cpy GLAMADSMV1 as this is irrelevant *
+      *           since it was not changed for HUT003.                *      
       *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
       *             constant timestamp value constant for validation  *
       *             indicating that no change has occured yet.        *
@@ -992,8 +995,8 @@
      C                   Endif                                                                249966
      C                   GOTO      INVALID
      C                   END
-
-     C/COPY WNCPYSRC,GLAMADSMV1
+     ***COPY*WNCPYSRC,GLAMADSMV1**                                                            250822
+     C/COPY WNCPYSRC,GLAMADVC01
       *                                                                                      LLN022A
       ** Move fields from main screen to Data structure                                      LLN022A
       ** to be passed to window                                                              LLN022A

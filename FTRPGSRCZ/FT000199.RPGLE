@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056683           Date 14Sep20               *
-      *  Prev Amend No. MD056303           Date 18Jul20               *
+      *  Last Amend No. HUT116             Date 06Nov20               *
+      *  Prev Amend No. MD057056           Date 06Nov20               *      
+      *                 MD056683           Date 14Sep20               *
+      *                 MD056303           Date 18Jul20               *
       *                 MD056187           Date 02Jul20               *
       *                 MD056170           Date 30Jun20               *
       *                 MD055939           Date 03Jun20               *
@@ -22,6 +24,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT116 - RTGS Messages are formatted into MT103 format but   *
+      *           these don't have field :121: and should not generate*
+      *           MT199                                               *
+      *           Addition of hooks: HUT116_001 to HUT116_006.        *
+      *  MD057056 - MT199 Field 21 is truncated if Field 20 on        *
+      *             associated MT103 is 16A                           *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
       *  MD056303 - Format error for Field 79 Line 3                  *
@@ -262,7 +270,8 @@
       *
      D WTag121Val      S             36A
      D WTag20Val       S             16A
-     D WTag21Val       S             15A
+     D***WTag21Val       S             15A                                                  MD057056
+     D WTag21Val       S             16A                                                    MD057056
      D WTag79L1Val     S             17A
      D WTag79L2Val     S             11A
      D***WTag79L3Val     S             27A                                                  MD056303
@@ -685,6 +694,7 @@
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
 
+      /COPY WNCPYSRC,HUT116_006                                                               HUT116
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -881,12 +891,14 @@
       ** Writes to MGOMSGPD
       *
      C                   IF        WGenFlg = 'Y'
+      /COPY WNCPYSRC,HUT116_001                                                               HUT116
      C                   EXSR      SrOMSG
 
       *
       ** If generation is successful, turn MT199 to 'Z'
       *
      C                   EVAL      FTM199 = 'Z'
+      /COPY WNCPYSRC,HUT116_002                                                               HUT116
      C                   UPDATE    @INFTL6                              98
 
      C                   IF        *IN98 = *ON
@@ -1226,6 +1238,7 @@
 
      C     SrExtract     BEGSR
 
+      /COPY WNCPYSRC,HUT116_003                                                               HUT116
       *
       ** Get tag 121
       *
@@ -1240,6 +1253,7 @@
      C                   MOVEL     WTag121Val    MFLD
 
      C                   ELSE
+      /COPY WNCPYSRC,HUT116_004                                                               HUT116
      C     *LOCK         IN        LDA
      C                   MOVE      '011'         DBASE
      C                   MOVEL     'KLIncMsg'    DBKEY
@@ -1375,6 +1389,7 @@
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD
 
+      /COPY WNCPYSRC,HUT116_005                                                               HUT116
      C                   ENDSR
       *****************************************************************
       /EJECT

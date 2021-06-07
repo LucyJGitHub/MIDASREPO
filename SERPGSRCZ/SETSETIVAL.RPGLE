@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056770           Date 19Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR706553           Date 22May20               *      
+      *  Prev Amend No. MD056770           Date 19Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR706553 - Trades Input API processing error, incorrect Pay  *
+      *             To/From branch is defaulted. Patterned after fix  *
+      *             245195. (Child: AR706554)                         *      
       *  MD056770 - GLC0340 03035 - GL0340 DBASE Error 4 due to blank *
       *             currency in posting.                              *
       *           - Settlement method '1 ' being received in Midas    *
@@ -837,6 +841,21 @@
       *
      C                   EXSR      ValPyToBrh
  
+      *                                                                                     AR706553
+      ** Default  Pay To/From branch                                                        AR706553
+      ** ---------------------------                                                        AR706553
+      *                                                                                     AR706553
+     C     DDSMTH        IFNE      '00'                                                     AR706553
+     C     DDPYFB        IFEQ      *BLANKS                                                  AR706553
+     C                   EXSR      DEFPYFRBR                                                AR706553
+     C                   MOVE      DDPYFB        PYFA                                       AR706553
+     C                   ENDIF                                                              AR706553
+     C     DDPYTB        IFEQ      *BLANKS                                                  AR706553
+     C                   EXSR      DEFPYTOBR                                                AR706553
+     C                   MOVE      DDPYTB        PYTA                                       AR706553
+     C                   ENDIF                                                              AR706553
+     C                   ENDIF                                                              AR706553
+      *                                                                                     AR706553
       ** Defaulting Procedure for Pay To, Pay From
       ** For Settlement type 04 (Prime Retail Account)
  
@@ -1888,11 +1907,11 @@
       *
       ** Determine default
       *
-     C     DDSMTH        IFNE      '00'                                                       CAP084
-     C     DDPYFB        IFEQ      *BLANKS
-     C                   EXSR      DefPyFrBr
-     C                   END
-     C                   ENDIF                                                                CAP084
+     C*****DDSMTH        IFNE      '00'                                              CAP084 AR706553
+     C*****DDPYFB        IFEQ      *BLANKS                                                  AR706553
+     C**********         EXSR      DefPyFrBr                                                AR706553
+     C**********         END                                                                AR706553
+     C**********         ENDIF                                                       CAP084 AR706553
  
       * Update trade field
  
@@ -2580,11 +2599,12 @@
       *
       ** Determine default
       *
-     C     DDSMTH        IFNE      '00'                                                       CAP084
-     C     DDPYTB        IFEQ      *BLANKS
-     C                   EXSR      DefPyToBr
-     C                   END
-     C                   ENDIF                                                                CAP084
+      *
+     C*****DDSMTH        IFNE      '00'                                              CAP084 AR706553
+     C*****DDPYTB        IFEQ      *BLANKS                                                  AR706553
+     C**********         EXSR      DefPyToBr                                                AR706553
+     C**********         END                                                                AR706553
+     C**********         ENDIF                                                       CAP084 AR706553
  
       * Update trade field
  

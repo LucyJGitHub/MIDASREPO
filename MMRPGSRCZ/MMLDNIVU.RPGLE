@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. MD056313           Date 21Sep20               *
+      *  Last Amend No. 250161             Date 22May20               *      
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 MD056313           Date 21Sep20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
@@ -139,6 +140,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250161 - Ensure that maturity date and value date of deals   *
+      *           is validated against DACO of ACCNTAB.               *      
       *  MD057049 - Move value of IKRRAT to HKRRAT                    *
       *  MD056313 - Deal settlement not validated during authorize    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -778,7 +781,7 @@
       ** spaces in parameter list not used by this function
      D PayDat          S              5P 0 INZ(99999)
      D RecDat          S              5P 0 INZ(99999)
-
+     D LOD             S              1A   INZ(*Blanks)                                       250161
       ** Value Date as a Midas Day Number to be placed in either Payment
       **  or Receipt Date
      D ValDateMDN      S              5P 0
@@ -2681,20 +2684,22 @@
 
      C                   IF        OKVDAT <> 'N'
 
-     C                   CALLB     'ZDATE1'
-     C                   PARM                    DDVDAT
-     C                   PARM                    ValDateMDN
-     C                   PARM                    BJDFIN
-     C                   PARM                    ErrorFlag
+     C**********         CALLB     'ZDATE1'                                                   250161
+     C**********         PARM                    DDVDAT                                       250161
+     C**********         PARM                    ValDateMDN                                   250161
+     C**********         PARM                    BJDFIN                                       250161
+     C**********         PARM                    ErrorFlag                                    250161
 
       * If the Deal Type is for a Loan,    set the Pay Date = Value Date
       * If the Deal Type is for a Deposit, set the Receive Date = Value Date
      C                   IF           DDType = 'IP' OR DDType = 'TI'
      C                             OR DDType = 'CL' OR DDType = 'LN'
      C                             OR DDType = 'DL'
-     C                   EVAL      PayDat = ValDateMDN
+     C**********         EVAL      PayDat = ValDateMDN                                        250161
+     C                   EVAL      LOD = 'L'                                                  250161
      C                   ELSE
-     C                   EVAL      RecDat = ValDateMDN
+     C**********         EVAL      RecDat = ValDateMDN                                        250161
+     C                   EVAL      LOD = 'D'                                                  250161
      C                   ENDIF
       *                                                                                       260428
      C     DDACTN        IFNE      'I'                                                        260428
@@ -2740,6 +2745,41 @@
      C                   MOVEL     'N'           ##PREC                                       260428
      C                   ENDIF                                                                260428
      C                   ENDIF                                                                260428
+
+                                                                                              250161
+      ** Payment date = value date for loan, maturity date for deposit                        250161
+     C                   IF        LOD = 'L'                                                  250161
+     C                   CALLB     'ZDATE1'                                                   250161
+     C                   PARM                    DDVDAT                                       250161
+     C                   PARM                    ValDateMDN                                   250161
+     C                   PARM                    BJDFIN                                       250161
+     C                   PARM                    ErrorFlag                                    250161
+     C                   EVAL      PayDat = ValDateMDN                                        250161
+     C                   ELSE                                                                 250161
+     C                   CALLB     'ZDATE1'                                                   250161
+     C                   PARM                    DDMDAT                                       250161
+     C                   PARM                    ValDateMDN                                   250161
+     C                   PARM                    BJDFIN                                       250161
+     C                   PARM                    ErrorFlag                                    250161
+     C                   EVAL      PayDat = ValDateMDN                                        250161
+     C                   Endif                                                                250161
+                                                                                              250161
+      ** Receive date = maturity date for loan, value date for deposit                        250161
+     C                   IF        LOD = 'L'                                                  250161
+     C                   CALLB     'ZDATE1'                                                   250161
+     C                   PARM                    DDMDAT                                       250161
+     C                   PARM                    ValDateMDN                                   250161
+     C                   PARM                    BJDFIN                                       250161
+     C                   PARM                    ErrorFlag                                    250161
+     C                   EVAL      RecDat = ValDateMDN                                        250161
+     C                   ELSE                                                                 250161
+     C                   CALLB     'ZDATE1'                                                   250161
+     C                   PARM                    DDVDAT                                       250161
+     C                   PARM                    ValDateMDN                                   250161
+     C                   PARM                    BJDFIN                                       250161
+     C                   PARM                    ErrorFlag                                    250161
+     C                   EVAL      RecDat = ValDateMDN                                        250161
+     C                   Endif                                                                250161
 
      C                   ENDIF
 

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  MD055446           Date 04Apr20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD056548           Date 10Sep20               *      
+      *  Prev Amend No  MD055446           Date 04Apr20               *
+      *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056548 - Customer Fees Maintenance is missing              *      
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -512,6 +514,8 @@
      D #DDOBZ          S              4P 0                                                    CSD079
      D WUPMSC          S              1                                                       CSD079
                                                                                               CLE025
+      ** S01464
+     D S01464          S              1A   inz('N')                                         MD056548
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -587,9 +591,9 @@
                                                                                               CSD079
       ** Set Service Fees Screen Fields                                                       CSD079
                                                                                               CSD079
-     C     CSD008        IFEQ      'Y'                                                        CSD079
+     C*****CSD008        IFEQ      'Y'                                               CSD079 MD056548
      C                   EXSR      SCN_SFEE                                                   CSD079
-     C                   ENDIF                                                                CSD079
+     C*****              ENDIF                                                       CSD079 MD056548
                                                                                               CSD079
       ** Set Cheques and Card Details Screen Fields                                           CSD079
                                                                                               CSD079
@@ -3167,8 +3171,14 @@
                                                                                               CSD079
       ** Settlement Account                                                                   CSD079
                                                                                               CSD079
+     C                   IF        (S01464 = 'Y' AND CSD008 = 'N') OR                       MD056548
+     C                             CSD008 = 'Y'                                             MD056548
      C                   EVAL      DDSMAC = E6SMAC                                            CSD079
+     C                   EVAL      DDSBCH = E6SBCH                                          MD056548
+     C                   EVAL      DDSCCY = E6SCCY                                          MD056548
+     C                   ENDIF                                                              MD056548
                                                                                               CSD079
+     C                   IF        CSD008 = 'Y'
       ** Hold Mail Indicator                                                                  CSD079
                                                                                               CSD079
      C                   EVAL      DDHMIN = E6HMIN                                            CSD079
@@ -3193,6 +3203,7 @@
                                                                                               CSD079
      C                   EVAL      DDTAIF = E6TAIF                                            CSD079
                                                                                               CSD079
+     C                   ENDIF
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
       *****************************************************************                       CSD079
@@ -4897,6 +4908,19 @@
      C                   MOVEL     'N'           CER050                                       CER050
      C                   END                                                                  CER050
       *                                                                                       CER050
+      ** Check if enhancement S01464 is on                                                  MD056548
+      *                                                                                     MD056548
+     C                   CALLB     'AOSARDR0'                                               MD056548
+     C                   PARM      *BLANKS       PRTCD                                      MD056548
+     C                   PARM      '*VERIFY'     POPTN                                      MD056548
+     C                   PARM      'S01464'      PSARD                                      MD056548
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
+      *                                                                                     MD056548
+     C                   IF        PRTCD = *BLANKS                                          MD056548
+     C                   EVAL      S01464 = 'Y'                                             MD056548
+     C                   ELSE                                                               MD056548
+     C                   EVAL      S01464 = 'N'                                             MD056548
+     C                   ENDIF                                                              MD056548
      C                   ENDSR
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

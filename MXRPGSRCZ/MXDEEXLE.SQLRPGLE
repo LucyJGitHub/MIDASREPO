@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058279           Date 04Jun21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1056323          Date 14Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058279 - Daily build failure - compilation error in        *
+      *             MXDEEXLE.                                         *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
@@ -297,7 +300,7 @@
      I              LKSTDT                      STDT
      I              LKSLID                      SLID
      I              LKMDAT                      MDAT
-     I              LKBRTT                      FEFSEQ
+     I**********    LKBRTT                      FEFSEQ                                      MD058279
      I              LKBRTE                      BRTE
      I              LKRTSP                      RTSP
      I              LKINTR                      INTR

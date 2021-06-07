@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058091           Date 12May21               *
-      *  Prev Amend No. 248270B            Date 01Jun20               *
+      *  Last Amend No. MD058210           Date 07Jun21               *
+      *  Prev Amend No. MD058091           Date 12May21               *
+      *                 248270B            Date 01Jun20               *
       *                 248270A            Date 01Jun20               *
       *                 248270             Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058210 - Wrong error message is displayed on               *
+      *             ProjectedDaysRetail                               *
       *  MD058091 - Build failure - compilation error in SD009585     *
       *             Fixed the H DEBUG alignment                       *
       *  248270B- If CLE025 is *off, check BMNDFV of RE-ICD against   *
@@ -128,11 +131,14 @@
      C                   Eval      GenError = 'Y'                                             248270
      C                   Add       1             Idx                                          248270
      C**********         Movel     'USR4039'     MsgIDXArr(Idx)                       248270 248270A
-     C                   Movel     'USR9885'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9885'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0751'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9886'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9886'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0752'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9887'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0753'     MsgIDXArr(Idx)                             MD058210
      C                   Else                                                                 248270
       *                                                                                       248270
       ** Validate Current Settings entry. Convert entry to numeric                            248270
@@ -161,11 +167,14 @@
      C                   Eval      GenError = 'Y'                                             248270
      C                   Add       1             Idx                                          248270
      C**********         Movel     'USR4039'     MsgIDXArr(Idx)                       248270 248270A
-     C                   Movel     'USR9885'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9885'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0751'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9886'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9886'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0752'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9887'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0753'     MsgIDXArr(Idx)                             MD058210
      C                   Endif                                                                248270
       ** If value entered by user is not in the range 0 to 999 incl
       ** then return an error
@@ -179,11 +188,14 @@
      C**********         MOVEL     'USR9516'     MsgIDXArr(Idx)                               248270
      C**********         Movel     'USR4039'     MsgIDXArr(Idx)                       248270 248270A
 
-     C                   Movel     'USR9885'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9885'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0751'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9886'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9886'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0752'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9887'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0753'     MsgIDXArr(Idx)                             MD058210
      C                   ENDIF
 
 
@@ -234,11 +246,14 @@
      C                   EVAL      GenError = 'Y'                                             CLE025
      C                   ADD       1             Idx                                          CLE025
      C**********         MOVEL     'USR4039'     MsgIDXArr(Idx)                       CLE025 248270A
-     C                   Movel     'USR9885'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9885'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0751'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9886'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9886'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0752'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9887'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0753'     MsgIDXArr(Idx)                             MD058210
      C                   ENDIF                                                                CLE025
                                                                                               CLE025
       ** If number of days forward is greater than or equal to 9,                             CLE025
@@ -251,11 +266,14 @@
      C                   EVAL      GenError = 'Y'                                             CLE025
      C                   ADD       1             Idx                                          CLE025
      C**********         MOVEL     'USR4039'     MsgIDXArr(Idx)                       CLE025 248270A
-     C                   Movel     'USR9885'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9885'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0751'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9886'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9886'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0752'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9887'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0753'     MsgIDXArr(Idx)                             MD058210
      C                   ENDIF                                                                CLE025
      C                   ENDIF                                                                CLE025
                                                                                               CLE025
@@ -270,11 +288,14 @@
      C                   ADD       1             Idx
      C**********         MOVEL     'USR9517'     MsgIDXArr(Idx)                               248270
      C**********         Movel     'USR4039'     MsgIDXArr(Idx)                       248270 248270A
-     C                   Movel     'USR9885'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9885'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0751'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9886'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9886'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0752'     MsgIDXArr(Idx)                             MD058210
      C                   Add       1             Idx                                         248270A
-     C                   Movel     'USR9887'     MsgIDXArr(Idx)                              248270A
+     C**********         Movel     'USR9887'     MsgIDXArr(Idx)                     248270A MD058210
+     C                   Movel     'USS0753'     MsgIDXArr(Idx)                             MD058210
      C                   ENDIF
      C                   ENDIF                                                               248270B
                                                                                               CLE025

@@ -219,7 +219,7 @@
 
      D AR8XJ           S             40    DIM(5)                                           MD055694
      D AN8X            S             40    DIM(5)                                           MD055694
-                                                                                            MD055694
+                                                                                            MD055694 
      D AJFORM          C                   CONST('ReplaceJFormatSlash')                     MD055694
      D SWIFT           C                   CONST('SWIFTACTV')                               MD055694
      D JFRMAT          C                   CONST('MG001003')                                MD055694

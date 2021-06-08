@@ -81,7 +81,18 @@
      C                   IF        SQLCODE = 100                                            MD058280
      C                   SETON                                        52                    MD058280
      C                   ENDIF                                                              MD058280
-      *
+      *                                                                                     MD058280
+     C/EXEC SQL                                                                             MD058280
+     C+ SELECT *                                                                            MD058280
+     C+ INTO :SCSARD                                                                        MD058280
+     C+ FROM SCSRDJW2                                                                       MD058280
+     C+ WHERE SARN = 'XQQ001'                                                               MD058280
+     C/END-EXEC                                                                             MD058280
+     C                   SETOFF                                       53                    MD058280
+     C                   IF        SQLCODE = 100                                            MD058280
+     C                   SETON                                        53                    MD058280
+     C                   ENDIF                                                              MD058280
+      *                                                                                     MD058280
       ** If HUT113 is enabled and XQQ001 is enabled, remove entry
       ** of XQQ001 feature in SCSARDPD to disable such feature
      C     *in51         IFEQ      *OFF
@@ -116,6 +127,8 @@
      C     *in50         IFEQ      *OFF
      C     *in51         ANDEQ     *ON
      C     *in52         ANDEQ     *ON
+      *
+     C     *in52         IFEQ      *ON                                                      MD058280
      C                   MOVEL     'XQQ001'      ABSARN
      C                   MOVEL     N@NAR         ABSARD
      C                   Z-ADD     AGRDNB        ABLCD
@@ -164,6 +177,22 @@
      C+ , 'B'                                                                               MD058280
      C+ )                                                                                   MD058280
      C/END-EXEC                                                                             MD058280
+      *                                                                                     MD058280
+     C                   ELSE                                                               MD058280
+     C/EXEC SQL                                                                             MD058280
+     C+ UPDATE SCSRDBTD                                                                     MD058280
+     C+ SET ENABLD = 'E'                                                                    MD058280
+     C+ WHERE SARN = 'XQQ001'                                                               MD058280
+     C/END-EXEC                                                                             MD058280
+      *                                                                                     MD058280
+     C/EXEC SQL                                                                             MD058280
+     C+ UPDATE SCSRDXTD                                                                     MD058280
+     C+ SET ENABLD = 'E'                                                                    MD058280
+     C+ WHERE SARN = 'XQQ001'                                                               MD058280
+     C/END-EXEC                                                                             MD058280
+      *                                                                                     MD058280
+     C                   ENDIF                                                              MD058280
+      *                                                                                     MD058280
      C                   ENDIF
       *
      C                   SETON                                        LR

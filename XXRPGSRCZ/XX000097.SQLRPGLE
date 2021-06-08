@@ -71,6 +71,17 @@
      C                   seton                                        50                    MD058280
      C                   endif                                                              MD058280
                                                                                             MD058280
+     C/exec sql                                                                             MD058280
+     C+ select *                                                                            MD058280
+     C+ into :SCSARD                                                                        MD058280
+     C+ from SCSRDJW2                                                                       MD058280
+     C+ where SARN = 'XQQ001'                                                               MD058280
+     C/end-exec                                                                             MD058280
+     C                   setoff                                       51                    MD058280
+     C                   if        SQLCODE = 100                                            MD058280
+     C                   seton                                        51                    MD058280
+     C                   endif                                                              MD058280
+                                                                                            MD058280
       ** deactive XQQ001 feature when HUT113 is being enabled or amended
      C     p@action      ifeq      '1'
      C     p@action      oreq      '2'
@@ -91,6 +102,8 @@
       ** if XQQ001 is not found in SCSARD and CRP006 is ON,insert XQQ001 in SCSARD
      C     *in50         ifeq      *on
      C     *in55         andeq     *off
+      *                                                                                     MD058280
+     C     *in51         ifeq      *on                                                      MD058280
      C                   movel     'XQQ001'      ABSARN
      C                   movel     n@nar         ABSARD
      C                   z-add     AGRDNB        ABLCD
@@ -139,6 +152,21 @@
      C+ , 'B'                                                                               MD058280
      C+ )                                                                                   MD058280
      C/end-exec                                                                             MD058280
+      *                                                                                     MD058280
+     C                   else                                                               MD058280
+     C/exec sql                                                                             MD058280
+     C+ update SCSRDBTD                                                                     MD058280
+     C+ set ENABLD = 'E'                                                                    MD058280
+     C+ where SARN = 'XQQ001'                                                               MD058280
+     C/end-exec                                                                             MD058280
+      *                                                                                     MD058280
+     C/exec sql                                                                             MD058280
+     C+ update SCSRDXTD                                                                     MD058280
+     C+ set ENABLD = 'E'                                                                    MD058280
+     C+ where SARN = 'XQQ001'                                                               MD058280
+     C/end-exec                                                                             MD058280
+     C                   endif                                                              MD058280
+      *                                                                                     MD058280
      C                   endif                                                              MD058280
       *
       ** if XQQ001 is found in SCSARD and CRP006 is OFF,delete XQQ001 in SCSARD

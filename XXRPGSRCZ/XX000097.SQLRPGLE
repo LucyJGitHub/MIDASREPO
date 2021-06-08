@@ -155,12 +155,6 @@
       *                                                                                     MD058280
      C                   else                                                               MD058280
      C/exec sql                                                                             MD058280
-     C+ update SCSRDBTD                                                                     MD058280
-     C+ set ENABLD = 'E'                                                                    MD058280
-     C+ where SARN = 'XQQ001'                                                               MD058280
-     C/end-exec                                                                             MD058280
-      *                                                                                     MD058280
-     C/exec sql                                                                             MD058280
      C+ update SCSRDXTD                                                                     MD058280
      C+ set ENABLD = 'E'                                                                    MD058280
      C+ where SARN = 'XQQ001'                                                               MD058280

@@ -128,7 +128,7 @@
      C     *in51         ANDEQ     *ON
      C     *in52         ANDEQ     *ON
       *
-     C     *in52         IFEQ      *ON                                                      MD058280
+     C     *in53         IFEQ      *ON                                                      MD058280
      C                   MOVEL     'XQQ001'      ABSARN
      C                   MOVEL     N@NAR         ABSARD
      C                   Z-ADD     AGRDNB        ABLCD
@@ -179,12 +179,6 @@
      C/END-EXEC                                                                             MD058280
       *                                                                                     MD058280
      C                   ELSE                                                               MD058280
-     C/EXEC SQL                                                                             MD058280
-     C+ UPDATE SCSRDBTD                                                                     MD058280
-     C+ SET ENABLD = 'E'                                                                    MD058280
-     C+ WHERE SARN = 'XQQ001'                                                               MD058280
-     C/END-EXEC                                                                             MD058280
-      *                                                                                     MD058280
      C/EXEC SQL                                                                             MD058280
      C+ UPDATE SCSRDXTD                                                                     MD058280
      C+ SET ENABLD = 'E'                                                                    MD058280

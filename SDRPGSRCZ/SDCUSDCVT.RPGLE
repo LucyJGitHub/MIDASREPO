@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056548           Date 10Sep20               *      
+      *  Last Amend No. MD056548           Date 10Sep20               *
       *  Prev Amend No  MD055446           Date 04Apr20               *
       *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
@@ -73,7 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056548 - Customer Fees Maintenance is missing              *      
+      *  MD056548 - Customer Fees Maintenance is missing              *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -3178,7 +3178,7 @@
      C                   EVAL      DDSCCY = E6SCCY                                          MD056548
      C                   ENDIF                                                              MD056548
                                                                                               CSD079
-     C                   IF        CSD008 = 'Y'
+     C                   IF        CSD008 = 'Y'                                             MD056548
       ** Hold Mail Indicator                                                                  CSD079
                                                                                               CSD079
      C                   EVAL      DDHMIN = E6HMIN                                            CSD079
@@ -3203,7 +3203,7 @@
                                                                                               CSD079
      C                   EVAL      DDTAIF = E6TAIF                                            CSD079
                                                                                               CSD079
-     C                   ENDIF
+     C                   ENDIF                                                              MD056548
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
       *****************************************************************                       CSD079

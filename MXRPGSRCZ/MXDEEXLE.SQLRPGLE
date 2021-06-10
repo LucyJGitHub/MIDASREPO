@@ -45,8 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058279 - Daily build failure - compilation error in        *
-      *             MXDEEXLE.                                         *
+      *  MD058279 - Amended the program to not rename field LKBRTT to *
+      *             FEFSEQ and to move the value of LKBRTT to FEFSEQ  *
+      *             if indicator 02 is on.                            *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
@@ -317,6 +318,10 @@
      C                   PARM                    I#ERMS           30
 
      C   01              Z-ADD     *ZERO         FEFSEQ
+
+     C     *IN02         IFEQ      '1'                                                      MD058279
+     C                   MOVE      LKBRTT        FEFSEQ                                     MD058279
+     C                   ENDIF                                                              MD058279
 
       * Process a loan-based account key
 

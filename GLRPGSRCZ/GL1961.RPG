@@ -17,9 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049475           Date 16Nov18               *
-      *  Prev Amend No. MD036706           Date 21Apr16               *
+      *  Last Amend No. MD049369           Date 01Dec20               *
+      *  Prev Amend No. MD049475           Date 16Nov18               *
+      *                 MD036706           Date 21Apr16               *
+      *                 241355             Date 29Jan13               *
       *                 218487             Date 24Jan13               *
+      *                 201530             Date 24Jan13               *
       *                 191287             Date 24Jan13               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -42,14 +45,22 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049369 - Customer Service Fees - Narrative                 *
+      *           - Use the Narrative 1 (length 30) in GLCHRGPD for   *
+      *             Posting Narrative if 'UseFeeTypesNarrative' = 'Y' *
       *  MD049475 - ERROR on Service Fees Settlement                  *
       *  MD036706 - FOOB in GLC30. Add 1 to HRWN if HRDC >= 1000      *
       *             Pattern fix to MD-31137.                          *
       *  MD031137 - Decimals Hash Total strictly equal to 1000        *
       *             cause GLC30 to fail out of Balance of 1000        *
       *             Add 1 to HRWN if HRDC <= 1000.                    *
+      *  241355 - Split narrative for 'MG' for customers.             *
       *  218487 - Cust Service Fees not multilanguage - apply fix     *
       *           191287 and also apply to core (GL19nn) versions.    *
+      *  201530 - Replace posting narrative message id GBCFE09        *
+      *           with GBCFE01.                                       *
+      *           Add narratives on posting depending on fee          *
+      *           processing type.                                    *
       *  191287 - Narratives on postings are not Multilanguage.       *
       *           Applied for AR1083062                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -88,6 +99,10 @@
      F            GLOTSTD0                          KRENAMEGLOTSTD6
       ** Outstanding Settlement by Charge Reference      Prefix 'F7'
       *
+     FGLCHRGL4IF  E           K        DISK         KINFSR *PSSR                            MD049369
+     F            GLCHRGD0                          KRENAMEGLCHARGE                         MD049369
+      ** Customer Fees Charges - Fee Type & Charge Group                                    MD049369
+      *                                                                                     MD049369
      FGLTAHIPDO   E                    DISK         KINFSR *PSSR A
       ** Today Accruals on Holding items File            Prefix 'F2'
       *
@@ -166,10 +181,18 @@
       *****************************************************************                       CGL029
      ISDCFTPD0                                                                                CGL029
      I              QQACAC                          QQACAX                                    CGL029
+      *                                                                                     MD049369
+      ** Rename fields for GLCHRGL4                                                         MD049369
+      *                                                                                     MD049369
+     IGLCHARGE                                                                              MD049369
+     I              CHNAR1                          GHNAR1                                  MD049369
       *
       ** Texts for Narrative
      I              'FEE ACCR.  '         C         WWNAR1
      I              'FEE SETTL. '         C         WWNAR2
+      *                                                                                     MD049369
+      ** Retrive System Value                                                               MD049369
+     I              'UseFeeTypesNarrative'C         SVAL01                                  MD049369
       *
      IDSNARR      DS
       ** Data Structure for Posting Narrative
@@ -345,6 +368,14 @@
       *****************************************************************
       *
      C           SRINIT    BEGSR                           *** SRINIT ***
+      *                                                                                     MD049369
+      ** Key definition for GLCHRGL4                                                        MD049369
+      *                                                                                     MD049369
+     C           KCHRGE    KLIST                                                            MD049369
+     C                     KFLD           KFTYP   2                                         MD049369
+     C                     KFLD           KGROU   2                                         MD049369
+     C                     KFLD           KCNUM   6                                         MD049369
+     C                     KFLD           KPORT   4                                         MD049369
       *
       ** Set up copyright parameter.
       *
@@ -546,6 +577,50 @@
      C                     MOVEL'N'       CGL020                                              CGL020
      C                     ENDIF                                                              CGL020
       *                                                                                       CGL020
+      *                                                                                     MD049369
+     C                     MOVE 'N'       FEENAR  1                                         MD049369
+     C                     MOVE 'N'       NARCHK  1                                         MD049369
+      *                                                                                     MD049369
+      ** Obtain the System Value 'UseFeeTypesNarrative'                                     MD049369
+      *                                                                                     MD049369
+     C                     CALL 'AOSVALR0'                                                  MD049369
+     C                     PARM *BLANKS   PRTCD                                             MD049369
+     C                     PARM SVAL01    PSV01  20                                         MD049369
+     C                     PARM           PCS01 200                                         MD049369
+     C                     PARM           PSV02  20                                         MD049369
+     C                     PARM           PCS02 200                                         MD049369
+     C                     PARM           PSV03  20                                         MD049369
+     C                     PARM           PCS03 200                                         MD049369
+     C                     PARM           PSV04  20                                         MD049369
+     C                     PARM           PCS04 200                                         MD049369
+     C                     PARM           PSV05  20                                         MD049369
+     C                     PARM           PCS05 200                                         MD049369
+     C                     PARM           PSV06  20                                         MD049369
+     C                     PARM           PCS06 200                                         MD049369
+     C                     PARM           PSV07  20                                         MD049369
+     C                     PARM           PCS07 200                                         MD049369
+     C                     PARM           PSV08  20                                         MD049369
+     C                     PARM           PCS08 200                                         MD049369
+     C                     PARM           PSV09  20                                         MD049369
+     C                     PARM           PCS09 200                                         MD049369
+     C                     PARM           PSV10  20                                         MD049369
+     C                     PARM           PCS10 200                                         MD049369
+      *                                                                                     MD049369
+     C           PRTCD     IFEQ *BLANKS                                                     MD049369
+     C                     MOVELPCS01     FEENAR                                            MD049369
+     C                     ELSE                                                             MD049369
+      *                                                                                     MD049369
+     C           PRTCD     IFNE '*NRF'                                                      MD049369
+     C           *LOCK     IN   LDA                                                         MD049369
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD049369
+     C                     MOVELPSV01     DBKEY                                             MD049369
+     C                     Z-ADD8         DBASE                                             MD049369
+     C                     MOVEL'GL1961'  DBPGM                                             MD049369
+     C                     OUT  LDA                                                         MD049369
+     C                     EXSR *PSSR                                                       MD049369
+     C                     ENDIF                                                            MD049369
+     C                     ENDIF                                                            MD049369
+      *                                                                                     MD049369
      C                     ENDSR
       *
       *****************************************************************
@@ -1238,6 +1313,8 @@
      C                     Z-ADDWSSPRT    ZRATET
      C                     MOVE WSMDIN    ZMDINT
      C                     Z-ADDWSNBDP    ZCDPT
+      *                                                                                     MD049369
+     C                     MOVELFEENAR    NARCHK                                            MD049369
       *
       ** If Settlement Currency isn't Charging Currency, then convert Amount
       *
@@ -1377,6 +1454,8 @@
      C                     EXSR SRACOD
      C                     EXSR SRWNSE
       *
+     C                     MOVEL'N'       NARCHK                                            MD049369
+      *                                                                                     MD049369
      C                     ENDSR
       *
       *****************************************************************
@@ -1394,6 +1473,8 @@
       *****************************************************************
       *
      C           SRCHBK    BEGSR                           *** SRCHBK ***
+      *                                                                                     MD049369
+     C                     MOVELFEENAR    NARCHK                                            MD049369
       *
       ** Convert Accrued to Date Amount in Base Currency for Bank
       *
@@ -1448,6 +1529,8 @@
      C                     EXSR SRWNSE
      C                     ENDIF
       *
+     C                     MOVEL'N'       NARCHK                                            MD049369
+      *                                                                                     MD049369
      C                     ENDSR
       *
       *****************************************************************
@@ -1465,6 +1548,8 @@
       *****************************************************************
       *
      C           SRBKSE    BEGSR                           *** SRBKSE ***
+      *                                                                                     MD049369
+     C                     MOVELFEENAR    NARCHK                                            MD049369
       *
       ** Generate Inter-currency settlement Entry
       ** Debit Entry --> Base CCY equivalent amount
@@ -1503,6 +1588,8 @@
      C                     EXSR SRACOD
      C                     EXSR SRWNSE
       *
+     C                     MOVEL'N'       NARCHK                                            MD049369
+      *                                                                                     MD049369
      C                     ENDSR
       *
       *****************************************************************
@@ -1520,6 +1607,8 @@
       *****************************************************************
       *
      C           SRINTB    BEGSR                           *** SRINTB ***
+      *                                                                                     MD049369
+     C                     MOVELFEENAR    NARCHK                                            MD049369
       *
       ** Inter-Branch Postings - Retrieve Profit Center
       *
@@ -1605,6 +1694,8 @@
      C                     ENDIF
      C                     ENDIF
       *
+     C                     MOVEL'N'       NARCHK                                            MD049369
+      *                                                                                     MD049369
      C                     ENDSR
       *
       *****************************************************************
@@ -1994,6 +2085,28 @@
      C           SEPNAR    IFNE 'Y'                                                           191287
      C                     GOTO EXPNAR                                                        191287
      C                     ENDIF                                                              191287
+      *                                                                                     MD049369
+      ** Use the Narrative 1 (length 30) in GLCHRGPD for Posting                            MD049369
+      ** Narrative if 'UseFeeTypesNarrative' is equal to 'Y'                                MD049369
+      *                                                                                     MD049369
+     C           NARCHK    IFEQ 'Y'                                                         MD049369
+     C                     MOVEL*BLANKS   PNAR                                              MD049369
+     C                     MOVEL*BLANKS   KFTYP                                             MD049369
+     C                     MOVEL*BLANKS   KGROU                                             MD049369
+     C                     MOVEL*BLANKS   KCNUM                                             MD049369
+     C                     MOVEL*BLANKS   KPORT                                             MD049369
+      *                                                                                     MD049369
+     C                     MOVELF7FETP    KFTYP     P                                       MD049369
+     C                     MOVELF7CHGR    KGROU     P                                       MD049369
+     C                     MOVELF7CNUM    KCNUM     P                                       MD049369
+     C                     MOVELF7PTFR    KPORT     P                                       MD049369
+      *                                                                                     MD049369
+     C           KCHRGE    CHAINGLCHRGL4            N85                                     MD049369
+     C           *IN85     IFEQ *OFF                                                        MD049369
+     C                     MOVELGHNAR1    PNAR      P                                       MD049369
+     C                     ENDIF                                                            MD049369
+      *                                                                                     MD049369
+     C                     ELSE                                                             MD049369
       *                                                                                       191287
       * Determine the value for the narrative using AOPNARR0                                  191287
       *                                                                                       191287
@@ -2016,7 +2129,30 @@
      C           DSTEXT    IFEQ WWNAR1                                                        191287
      C                     MOVE 'GBCFE07' ##MGID                                              191287
      C                     ELSE                                                               191287
-     C                     MOVE 'GBCFE09' ##MGID                                              191287 
+     C                     SELEC                                                              201530
+     C           F7PRTP    WHEQ 'SC'                                                          201530
+     C***********          MOVE 'GBCFE09' ##MGID                                       191287 201530
+     C                     MOVE 'GBCFE01' ##MGID                                              201530
+      *                                                                                       201530
+     C           F7PRTP    WHEQ 'MG'                                                          201530
+      *                                                                                       241355
+      ** Split Narrative for customer side of posting                                         241355
+     C           TRAT      IFEQ *ZEROS                                                        241355
+     C                     MOVE 'GBCFE10' ##MGID                                              201530
+     C                     ELSE                                                               241355
+     C                     MOVE 'GBCFE14' ##MGID                                              241355
+     C                     ENDIF                                                              241355
+      *                                                                                       201530
+     C           F7PRTP    WHEQ 'HM'                                                          201530
+     C                     MOVE 'GBCFE11' ##MGID                                              201530
+      *                                                                                       201530
+     C           F7PRTP    WHEQ 'NA'                                                          201530
+     C                     MOVE 'GBCFE12' ##MGID                                              201530
+      *                                                                                       201530
+     C           F7PRTP    WHEQ 'FI'                                                          201530
+     C                     MOVE 'GBCFE13' ##MGID                                              201530
+      *                                                                                       201530
+     C                     ENDSL                                                              201530
      C                     ENDIF                                                              191287
       *                                                                                       191287
      C                     CALL 'AOPNARR0'                                                    191287
@@ -2029,6 +2165,8 @@
      C           ##RTN     IFEQ *BLANKS                                                       191287
      C                     MOVEL##NARR    PNAR      P                                         191287
      C                     ENDIF                                                              191287
+      *                                                                                     MD049369
+     C                     ENDIF                                                            MD049369
       *                                                                                       191287
      C           EXPNAR    ENDSR                                                              191287
      C********************************************************************                    191287

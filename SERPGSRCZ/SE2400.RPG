@@ -39,8 +39,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050604           Date 21Feb20               *
-      *  Prev Amend No. MD052583           Date 22Jan19               *
+      *  Last Amend No. 211362             Date 31May21               *
+      *  Prev Amend No. MD050604           Date 21Feb20               *
+      *                 MD052583           Date 22Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CSE110             Date 06Oct17               *
       *                 260331             Date 31Mar16               *
@@ -237,6 +238,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  211362 - Zero amount in position settlement.                 *
+      *         - Duplicate position settlement. Partially applied    *
+      *           fix 212074.                                         *
+      *         - Applied for AR1093786                               *
       *  MD050604 - Average price of position changed incorrectly.    *
       *           - Recompiled due to changes in /copy sources        *
       *             ZAVPRZ1, ZCCAL1Z2 and ZCNSDZ1.                    *
@@ -5394,7 +5399,7 @@
      C           BGPFMG    IFEQ 'Y'                                       S01486
      C           BGN4ST    OREQ 'Y'                                       CPB001
      C           PAMD      IFEQ 0                                         S01486
-     C           PEVT      ANDNE'MT'                                      S01486
+     C********** PEVT      ANDNE'MT'                                                   S01486 211362
      C                     GOTO ENDW02                                    S01486
      C                     END                                            S01486
      C                     ELSE                                           S01486
@@ -6594,6 +6599,11 @@
      C                     ELSE                            X1             S01486
      C*                                                                   S01486
      C                     MOVE CSCN      WWCNUA  6                       S01486
+      *                                                                                       211362
+     C           BGPFMG    IFEQ 'Y'                                                           211362
+     C           BGN4ST    OREQ 'Y'                                                           211362
+     C                     MOVE CDCN      WWCNUA                                              211362
+     C                     ENDIF                                                              211362
      C*                                                                   S01486
       *                                                                   S01486
      C                     MOVELWWCNUA    @CUST  10                       S01486
@@ -6644,6 +6654,12 @@
      C                     ELSE                            X1             S01486
      C**********           Z-ADDCSCN      WZCNUM  60                                   S01486 CSD027
      C                     MOVE CSCN      WZCNUM  6                                           CSD027
+      *                                                                                       211362
+     C           BGPFMG    IFEQ 'Y'                                                           211362
+     C           BGN4ST    OREQ 'Y'                                                           211362
+     C                     MOVE CDCN      WZCNUM                                              211362
+     C                     ENDIF                                                              211362
+      *                                                                                       211362
      C                     MOVE *BLANKS   WZPTFR  4                       S01486
      C                     MOVE PNCY      WWCCY1  3                       S01486
      C                     MOVE BFPCYC    WWCCY2  3                       S01486
@@ -7020,6 +7036,11 @@
      C                     MOVE CDPA      @BRCA                                             AR877365
      C                     ENDIF                                                            AR877365
      C/COPY WNCPYSRC,SE2400C058
+     C                     MOVE CSBA      @BRCA   3                                           211362
+     C           BGPFMG    IFEQ 'Y'                                                           211362
+     C           BGN4ST    OREQ 'Y'                                                           211362
+     C                     MOVE CDPA      @BRCA                                               211362
+     C                     ENDIF                                                              211362
      C                     CALL 'AOCBTXR0'                                S01447
      C                     PARM *BLANKS   @RTCD                           S01447
      C                     PARM '*KEY   ' @OPTN                           S01447
@@ -7134,6 +7155,11 @@
      C***********          MOVE CSBR      BHBR                            S01117
      C                     MOVE CSBA      BHBA                            S01117
      C                     MOVE CSSC      BHSC
+     C           BGPFMG    IFEQ 'Y'                                                           211362
+     C           BGN4ST    OREQ 'Y'                                                           211362
+     C                     MOVE CDPA      BHBA                                                211362
+     C                     MOVE CDSN      BHSC                                                211362
+     C                     ENDIF                                                              211362
      C                     MOVE '  '      BHBK
      C           SAAT      IFEQ 'MA'                                      E37289
      C                     Z-ADDWNOMAT    TCTR

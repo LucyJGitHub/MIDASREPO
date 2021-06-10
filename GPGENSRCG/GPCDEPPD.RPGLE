@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. 249827             Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249827 - Make DDTE and PTFR a matching field between primary *
+      *           and secondary file. This is after fields were added *
+      *           as key field in GZCDEPPL0.                          *
+      *         - Applied for AR923573                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
@@ -33,7 +38,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZCDEPPL1 UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZCDEPPD  O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -42,9 +47,9 @@ O    F                                     USROPN
 O
 O    D Z_CDEPPD      E DS                  EXTNAME(GZCDEPPD  )
 O    D G_CDEPPD      E DS                  EXTNAME(GZCDEPPD  ) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -88,9 +93,9 @@ O    C                   ELSE
 O    C                   WRITE     W_CDEPPDF
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -112,7 +117,9 @@ O    C                   KFLD                    CDCN
 O    C                   KFLD                    CDSN
 O    C                   KFLD                    CDPT
 O    C                   KFLD                    CDMK
- 
+     C                   KFLD                    DDTE                                         249827
+     C                   KFLD                    PTFR                                         249827
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -120,15 +127,15 @@ O    C                   KFLD                    CDMK
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -143,10 +150,10 @@ O    C                   KFLD                    CDMK
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD04624            Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CRE073             Date 06Dec10               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -74,12 +76,12 @@
      F                                     RENAME(MMVRPDMD0:MMVRPDMDX)
      FMMVELDNIPDO    E             DISK
      F                                     RENAME(MMVLDNID0:MMVLDNIERR)
- 
+
       * Hook to enable non-core files to be included
      F/COPY WNCPYSRC,MMREPOU001
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -97,45 +99,45 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in REPO API update')
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID LOAN & DEPOSIT
      D MMVREPO       E DS                  EXTNAME(MMVRPLNPD)
- 
+
      D MMREPOUPC       DS             1    DTAARA(MMREPOUPC)
- 
+
      D**  Data structure of Depot Movement File                                               CAP087
      D DPTXX         E DS                  EXTNAME(DPTMVDL1) PREFIX(D)                        CAP087
                                                                                               CAP087
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External data structure for SAR details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short date structure
- 
+
                                                                                               247695
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)                                  247695
       ** File - Payment Further Settlement Instructions                                       247695
@@ -156,15 +158,15 @@
      D Return2         S              7A
      D Endjob          S              1A   INZ('Y')
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D ##CXX           S             89A
      D ##CXXX          S            112A
- 
+
      D ##CM            S              1    DIM(58) CTDATA PERRCD(58)
      D ##CF            S              1    DIM(21) CTDATA PERRCD(21)
      D ##OX1           S              1    DIM(78) CTDATA PERRCD(78)
@@ -189,28 +191,28 @@
       ** 'N' - called from Money Markey module                                                CAP087
      D DepotPos        S              1A                                                      CAP087
                                                                                               CAP087
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
      D/COPY WNCPYSRC,MMREPOU002
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APREPODTQ'
- 
+
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -218,9 +220,9 @@
       * MAIN - MAIN BODY                                              *
       *                                                               *
       *****************************************************************
- 
+
      C/COPY WNCPYSRC,MMREPOU003
- 
+
       *  Initialise Data queue parms
      C                   EVAL      DtqLen = 10
      C                   EVAL      DtqWait = -1
@@ -231,16 +233,16 @@
       ** Server program will send data queue entry when record is
       ** written to the valid transactions file
      C     DtqDta        DOWNE     'END'
- 
+
      C                   CALL      'QRCVDTAQ'
      C                   PARM                    DtqNam           10
      C                   PARM                    DtqLib           10
      C                   PARM                    DtqLen            5 0
      C                   PARM                    DtqDta           10
      C                   PARM                    DtqWait           5 0
- 
+
      C     DtqDta        IFEQ      'GO'
- 
+
       *  Lock allocation data area
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
@@ -251,29 +253,29 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
      C/COPY WNCPYSRC,MMREPOU004
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     MMVRPLNPD
- 
+
       ** READ VALID LOANS & DEPOSITS
      C                   READ      MMVRPLND0                              99
- 
+
      C     *IN99         DOWEQ     '0'
- 
+
      C/COPY WNCPYSRC,MMREPOU005
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = IKFRNT
      C                   EVAL      ARFOAsocID = IKAFRT
      C                   EVAL      ARRprLocn  = IKREPA
- 
+
      C/COPY WNCPYSRC,MMREPOU006
- 
+
       ** MM DATABASE UPDATE
      C                   CALLB     'MMLDNIUPM'
      C                   PARM      *BLANKS       @@RTCD            7
@@ -284,180 +286,180 @@
      C                   PARM      *BLANKS       PBFRCD          100                          247695
       ** FRCD Issued Extension details after update                                           247695
      C                   PARM      *BLANKS       PAFRCD          100                          247695
- 
+
      C/COPY WNCPYSRC,MMREPOU007
- 
+
       ** DL DATABASE UPDATE IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
- 
+
      C                   ROLBK
- 
+
      C                   ELSE
- 
+
      C     @@RTCD        IFNE      '*RECUPD'
- 
+
      C/COPY WNCPYSRC,MMREPOU008
- 
+
      C                   CALLB     'MMLDNIUPD'
      C                   PARM      *BLANKS       @@RTCD            7
      C                   PARM                    MMVREPO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MMREPOU009
- 
+
       ** DL DATABASE UPDATE IF NO ERROR
- 
+
      C     @@RTCD        IFEQ      '*ERROR '
- 
+
      C                   ROLBK
- 
+
      C                   ELSE
- 
+
      C     @@RTCD        IFNE      '*RECUPD'
- 
+
       ** REPO Deliveru details update
- 
+
       ** Create temporary DEPOT Movements for REPOS file
- 
+
      C                   Z-ADD     58            MESLEN           15 5
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CM
      C                   PARM                    MESLEN
- 
+
       ** Clear temporary depot movements file
- 
+
      C                   Z-ADD     21            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CF
      C                   PARM                    MESLEN
- 
+
      C                   MOVEA     ##CX          ##CXX
      C     ##CXX         CAT       IKAFRT        ##CXXX
      C                   MOVE      '''))'        ##CXXX
- 
+
       ** Create temporary depot movements file from the valid file
- 
+
      C                   Z-ADD     112           MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CXXX
      C                   PARM                    MESLEN
- 
+
       ** Create Temporary Depot Movements for Repos Extension File 1
- 
+
      C                   Z-ADD     77            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##C1
      C                   PARM                    MESLEN
- 
+
       ** Create Temporary Depot Movements for Repos Extension File 2
- 
+
      C                   Z-ADD     77            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##C2
      C                   PARM                    MESLEN
- 
+
       ** Create temporary files for Certificates processing
- 
+
      C                   Z-ADD     81            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CN1
      C                   PARM                    MESLEN
- 
+
      C                   Z-ADD     81            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CT1
      C                   PARM                    MESLEN
- 
+
       ** Override SECRTNTPPD to QTEMP/SECRTNTPPD
- 
+
      C                   Z-ADD     78            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX1
      C                   PARM                    MESLEN
- 
+
       ** Override SECRTTTPPD to QTEMP/SECRTTTPPD
- 
+
      C                   Z-ADD     78            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX2
      C                   PARM                    MESLEN
- 
+
       ** Override DPTMVDL1 to DPTMVDL1 SHARE(*NO)
- 
+
      C                   Z-ADD     68            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX3
      C                   PARM                    MESLEN
- 
+
       ** Override DPTMVDY1 to DPTMVDY1 SHARE(*NO)
- 
+
      C                   Z-ADD     68            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX4
      C                   PARM                    MESLEN
- 
+
       ** Override DPTMVDY2 to DPTMVDY2 SHARE(*NO)
- 
+
      C                   Z-ADD     68            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX5
      C                   PARM                    MESLEN
- 
+
       ** Override SEDMRPX1 to SEDMRPX1 SHARE(*NO)
- 
+
      C                   Z-ADD     68            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX6
      C                   PARM                    MESLEN
- 
+
       ** Override SEDMRPX2 to SEDMRPX2 SHARE(*NO)
- 
+
      C                   Z-ADD     68            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX7
      C                   PARM                    MESLEN
- 
+
       ** Override SECRTNL1 to SECRTNL1 SHARE(*NO)
- 
+
      C                   Z-ADD     71            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX8
      C                   PARM                    MESLEN
- 
+
       ** Override SECRTTL1 to SECRTTL1 SHARE(*NO)
- 
+
      C                   Z-ADD     71            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##OX9
      C                   PARM                    MESLEN
- 
+
      C                   CALLB     'MMRPDLUPD'
      C                   PARM      *BLANKS       @@RTCD
      C                   PARM                    MMVREPO
      C                   PARM                    DPTXX                                        CAP087
      C                   PARM      'N'           DepotPos                                     CAP087
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MMREPOU010
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'
- 
+
      C                   ROLBK
- 
+
      C                   ELSE
- 
+
      C                   DELETE    MMVRPLND0
- 
+
      C                   EXSR      DltValDepot
- 
+
      C                   COMMIT
       *
       ** Call MMCREPOCMT to Commit changes for all activation groups.
@@ -465,41 +467,41 @@
       ** will cause database error.
       *
      C                   CALL      'MMCREPOCMT'
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MMREPOU011
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'
- 
+
      C                   EVAL      @Dealno = IKDN38
      C                   EVAL      @Timestamp = IKTMESTMP
- 
+
      C     @KMMDL1       CHAIN     MMVRPLNL1                          89
- 
+
      ** Write details of record to error file (same format as MMVRPLNPD)
      C                   WRITE     MMVLDNIERR
      C                   DELETE    MMVRPLND1
- 
+
      C                   EXSR      DltValDepot
- 
+
      ** Send message to system operator
      C                   MOVEL     DBerrUpd      DBError          28
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MsgSndRtn        10
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID LOANS & DEPOSITS
      C                   READ      MMVRPLND0                              99
- 
+
      C                   ENDDO
      ** Unlock allocation data area
      C                   CALLB     'APCDLCOBJ'
@@ -509,19 +511,19 @@
      C                   PARM                    LockStateE
      C                   PARM                    Member
      C                   PARM                    Return
- 
+
      C                   ENDIF
       ** End loop for data queue prompt
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,MMREPOU012
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
      C/COPY WNCPYSRC,MMREPOU013
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -530,26 +532,26 @@
       *                                                               *
       *****************************************************************
      C     DltValDepot   BEGSR
- 
+
       ** Remove record from REPO depot movements valid file
- 
+
       ** Position file cursor to start of file
- 
+
      C******LOVAL        SETLL     MMVRPDML0                                                  249095
      C     IKAFRT        SETLL     MMVRPDML0                                                  249095
- 
+
      C     IKAFRT        READE     MMVRPDML0                              99
- 
+
      C     *IN99         DOWEQ     '0'
- 
+
      C                   DELETE    MMVRPDMDX
- 
+
      C     IKAFRT        READE     MMVRPDML0                              99
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -562,14 +564,14 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       *  Define key list for MMVRPLNL1
      C     @KMMDL1       KLIST
      C                   KFLD                    @Dealno           6 0
      C                   KFLD                    @Timestamp
- 
+
       *  Check if an existing DBU_REPO job is active in the subsystem.
- 
+
      C                   CALL      'SCC0520'
      C                   PARM                    LockObj
      C                   PARM                    Lib
@@ -578,31 +580,31 @@
      C                   PARM                    Member
      C                   PARM                    Endjob
      C                   PARM                    Return2
- 
+
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
       ** Check if Dealing Fiduciary is switched ON
- 
+
      C                   CALLB     'MMFIDINIT'
      C                   PARM      *BLANKS       WRTCD             7
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -612,27 +614,27 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       *  Hook to enable non-core initial processing to be included
      C/COPY WNCPYSRC,MMREPOU014
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
       ****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ****************************************************************
       /EJECT
       ****************************************************************
- 
+
 ** CPY@
 (c) Finastra International Limited 2001
 ** ##CM

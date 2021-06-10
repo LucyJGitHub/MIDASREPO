@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD04624            Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -80,89 +82,89 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas DL DEALSDC/DEALSDD by Deal type/Sub Type
      F***DEALSL4   UF   E           K DISK    INFSR(*PSSR)                                    CAS011
      FDEALSL7   UF   E           K DISK    INFSR(*PSSR)                                       CAS011
- 
+
       ** Midas FD Deal type/subtype file FSACAI = 'Y'
      FFDDTSTL2  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas DL Fees by Related Purchase Deal No.
      F***DEALSL6   IF   E           K DISK    INFSR(*PSSR)                                    CAS011
      FDEALSL9   IF   E           K DISK    INFSR(*PSSR)                                       CAS011
      F                                     PREFIX(NA)
- 
+
       ** Midas DL Effective Interest Rate Details
      FMMEIRAL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas DL Effective Interest Rate Details
      FMMEIRAL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMEIRAD0:MMEIRAD1)
- 
+
       ** Midas DL Effective Interest Rate Details
      FMMEIRAL2  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMEIRAD0:MMEIRAD2)
- 
+
       ** Midas LE Effective Interest Rate Details
      FMMEIRAL3  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMEIRAD0:MMEIRAD3)
- 
+
       ** Midas DL Effective Interest Rate Period
      FMMEIRDL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas DL Effective Interest Rate Period
      FMMEIRDL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMEIRDD0:MMEIRDD1)
      F                                     RENAME(MMEIRHD0:MMEIRHD1)
- 
+
       ** Midas DL Effective Interest Rate Period
      FMMEIRDL2  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMEIRDD0:MMEIRDD2)
      F                                     RENAME(MMEIRHD0:MMEIRHD2)
- 
+
       ** Midas DL Effective Interest Rate Period
      FMMEIRDL4  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMEIRDD0:MMEIRDD4)
      F                                     RENAME(MMEIRHD0:MMEIRHD4)
- 
+
       ** Midas DL Effective Interest Rate History File
      FMMEIRHPD  UF A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(HI:2)
- 
+
       ** Midas DL Fees
      FDLFEEDLA  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0:DLFEEDDA)
      F                                     PREFIX(LA:2)
- 
+
       ** Midas DL Fees
      FDLFEEDLB  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0:DLFEEDDB)
      F                                     PREFIX(LB:2)
- 
+
       ** Midas DL Fees
      FDLFEEDLC  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0:DLFEEDDC)
      F                                     PREFIX(LC:2)
- 
+
       ** Midas DL Fees
      FDLFEEDLD  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0:DLFEEDDD)
      F                                     PREFIX(LD:2)
- 
+
       ** Midas DL Fees
      FDLFEEDLE  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0:DLFEEDDE)
      F                                     PREFIX(LE:2)
- 
+
       ** Midas MM Cashflows File
      FMMCFLAL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CF:2)
- 
+
       ** Midas MM Effective Interest Rate Details
      FMMCFSFL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(MMCFLFD0)
- 
+
       ** Midas DL Fees History File                                                         BUG12989
      FDLFHSTL0  IF   E           K DISK    INFSR(*PSSR)                                     BUG12989
                                                                                             BUG12989
@@ -171,79 +173,79 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for Midas SD Bank details ICD file
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Midas General Ledger ICD file
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External data structure for Currency Details File
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** External data structure for Currency Details File
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Customer Details File
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for EIR File (Current)
      D EIRCurrFmt    E DS                  EXTNAME(MMEIRDPD)
- 
+
       ** External data structure for EIR File (New)
      D EIRNewFmt     E DS                  EXTNAME(MMEIRDPD)
      D                                     PREFIX(NW:2)
- 
+
       ** External data structure for EIR File (History)
      D EIRHistFmt    E DS                  EXTNAME(MMEIRHPD)
      D                                     PREFIX(HI:2)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D KDlno           S              6S 0
      D KFSeq           S              2S 0
      D KDate           S              5P 0
- 
+
      D PRetCode        S              7A
      D POption         S              7A
      D PCurrency       S              3A
      D PBaseRate       S              2A
- 
+
      D PAmount         S             15P 0
      D POutAmount      S             15P 0
      D PSumFee         S             15P 0                                                    233601
@@ -257,7 +259,7 @@
      D POutMDIn        S              1A
      D PFrDecPlace     S              1P 0
      D PToDecPlace     S              1P 0
- 
+
      D WEvCD           S              5P 0
      D WNextDate       S              5P 0
      D WPrevDate       S              5P 0
@@ -268,46 +270,46 @@
      D WTempAmount     S             15P 0
      D WCurrPrincipal  S             15P 0
      D WFeeExist       S              1P 0                                                 BUG12989A
- 
+
      D WLoopDoneF      S              1A
      D WUpdateOnlyF    S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Read Deal Type/Sub Type combinations to index deals file
      C     *LOVAL        SETLL     FDDTSTL2
      C                   READ      FDDTSTL2
- 
+
      C                   DOW       NOT %EOF(FDDTSTL2)
      C*****KDealType     SETLL     DEALSL4                                                    CAS011
      C*****KDealType     READE     DEALSL4                                                    CAS011
      C     KDealType     SETLL     DEALSL7                                                    CAS011
      C     KDealType     READE     DEALSL7                                                    CAS011
- 
+
      C**********         DOW       NOT %EOF(DEALSL4)                                          CAS011
      C                   DOW       NOT %EOF(DEALSL7)                                          CAS011
- 
+
       ** Call EIR Processing routine
      C                   EXSR      SrProcEIR
      C                   CLEAR                   DEALSDCF
      C                   CLEAR                   DEALSDDF
      C*****KDealType     READE     DEALSL4                                                    CAS011
      C     KDealType     READE     DEALSL7                                                    CAS011
- 
+
      C                   ENDDO
      C                   READ      FDDTSTL2
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -315,24 +317,24 @@
       * SrProcEIR - Process EIR Periods                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrProcEIR     BEGSR
- 
+
      C                   CLEAR                   EIRNewFmt
- 
+
       ** Check EIR file to obtain current (first) EIR period
- 
+
      C     DLNO          CHAIN     MMEIRDL0
- 
+
      C                   SELECT
- 
+
      C                   WHEN      %FOUND(MMEIRDL0) AND
      C                             EIENDT <= WEvCD AND EIENDT >= BJRDNB
- 
+
       ** Period might possibly have ended already. Check.
      C                   EXSR      SrEndEIR
- 
- 
+
+
      C                   WHEN      EIADJP = 'Y'
       *                                                                                     BUG13576
       ** Execute below subr for future-valued deals                                         BUG13576
@@ -340,28 +342,28 @@
      C                             Or %Found(MMEIRDL0)                                      BUG13576
      C                             And VDAT = WEvCD                                         BUG13576
      C                             And VDAT > DDAT                                          BUG13576
- 
+
      C                   EXSR      SrAdjToEIR
- 
- 
+
+
       ** If no existing period is defined check if one can be setup
       ***Create*new*record*if*deal*value*date*has*started***********               BUG12910 BUG13307
                                                                                             BUG12910
      C                   WHEN      NOT %FOUND(MMEIRDL0)
      C**********                   AND VDAT <= WEvCD AND VDAT >= BJRDNB            BUG12910 BUG13048
      C**********                   AND VDAT <= WEvCD                               BUG13048 BUG13307
- 
+
      C                   EXSR      SrNewEIR
- 
+
      C                   ENDSL
- 
+
      C                   IF        NWSTDT <> 0 AND NWENDT <> 0
      C**********         EXSR      SrAmortise                                                 233601
      C                   EXSR      SrAmortise2                                                233601
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -370,29 +372,29 @@
       *              defined yet for the deal                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SrNewEIR      BEGSR
- 
+
      C*                  CLEAR                   EIRNewFmt
- 
+
       ** Default EIR Period Start and End date to Value and Maturity
       ** Date respectively
      C                   EVAL      NWSTDT = VDAT
      C                   EVAL      NWENDT = MDAT
      C                   EVAL      NWLADT = *ZEROS                                            232928
      C                   EVAL      NWAMAJ = *ZEROS                                            232928
- 
+
      C                   IF        NWSTDT <> 0 AND NWENDT <> 0
- 
+
       ** If a valid EIR period has been defined, Amortise
      C                   EVAL      NWRECI = 'D'
      C                   EVAL      NWTRAN = DLNO
      C                   EVAL      NWRCAL = 'Y'
      C                   EVAL      EIRCurrFmt = EIRNewFmt
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -401,18 +403,18 @@
       *            necessary                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SrEndEIR      BEGSR
- 
+
      C*                  CLEAR                   EIRNewFmt
- 
+
      C                   EVAL      NWSTDT = EIENDT
      C                   EVAL      NWENDT = MDAT
- 
+
      C                   IF        NWSTDT <> 0 AND NWENDT <> 0
- 
+
      C                   EVAL      NWTRAN = EITRAN
- 
+
      C                   IF        BKALDI = 'Y'
      C                   EVAL      NWRECI = 'T'
      C                   ELSE
@@ -420,17 +422,17 @@
      C                   EVAL      EIRHistFmt = EIRCurrFmt
      C                   EVAL      NWRCAL = 'Y'
      C                   EVAL      HIRECI = 'M'
- 
+
       ** Write Period to History File
      C                   WRITE     MMEIRHD0
      C                   DELETE    MMEIRDD0
      C                   ENDIF
- 
+
      C                   MOVE      EIRNewFmt     EIRCurrFmt
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -438,24 +440,24 @@
       * SrAmortise - Compute amount to amortise for the period        *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAmortise    BEGSR
- 
+
      C                   EVAL      WTempAmount = 0
      C                   EVAL      WAmortAmnt = 0
- 
+
       ** Discount Processing
      C                   IF        DISA <> 0
      C                   EVAL      WAmortAmnt = DISA
      C                   ENDIF
- 
+
      C                   IF        WAmortAmnt > 0
- 
+
       ** Get Currency details from the currencies file
      C                   EVAL      PAmount = WAmortAmnt
      C                   EVAL      PCurrency = CCY
      C                   EXSR      SrCurr
- 
+
      C                   EVAL      EARECI = 'D'
      C                   EVAL      EATYPE = 'D'
      C                   EVAL      EATRAN = DLNO
@@ -471,36 +473,36 @@
      C*                  EVAL      EAAMNT = WAmortAmnt
      C                   MOVE      WAmortAmnt    EAAMNT
      C                   MOVE      DISA          EAOAMT
- 
+
      C                   WRITE     MMEIRAD0
- 
+
      C                   IF        EIRECI = 'D'
      C                   EVAL      DISA = DISA + WAmortAmnt
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WTempAmount = WAmortAmnt
      C                   EVAL      WAmortAmnt = 0
- 
+
       ** Read through Amortising and One-off fees
      C     DLNO          SETLL     DLFEEDLB
      C     DLNO          READE     DLFEEDLB
- 
+
      C                   EVAL      KDlNo = DLNO
- 
+
      C                   DOW       NOT %EOF(DLFEEDLB)
- 
+
      C                   EVAL      KFSeq = LBFSEQ
      C     KDlNoFSeq     CHAIN     MMEIRAL3
- 
+
      C                   DOW       %FOUND(MMEIRAL3)
      C                             AND EATYPE = 'N'
      C                   EVAL      WUpdateOnlyF = 'N'
      C                   DELETE    MMEIRAD3
      C     KDlNoFSeq     CHAIN     MMEIRAL3
      C                   ENDDO
- 
+
      C     KDlNoFSeq     CHAIN     MMEIRAL3
      C                   IF        %FOUND(MMEIRAL3)
      C                   IF        LBPYON = EATYPE
@@ -515,14 +517,14 @@
      C                   ELSE
      C                   EVAL      WUpdateOnlyF = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      WAmortAmnt = LBFAMT
- 
+
      C                   IF        WAmortAmnt > 0
- 
+
      C                   EVAL      PCurrency = LBFCCY
      C                   EXSR      SrCurr
- 
+
       ** Convert Facility Currency when it is not the Deal Currency
      C                   IF        CCY <> LBFCCY
      C                   EVAL      PFrCurrency = LBFCCY
@@ -534,7 +536,7 @@
      C                   EVAL      POutMDIn = A6MDIN
      C                   EVAL      POutAmount = WAmortAmnt
      C                   ENDIF
- 
+
      C                   IF        LBPYON = 'S'
      C                   EVAL      EATYPE = 'S'
      C                   EVAL      EAEDAM = LBPEND
@@ -555,57 +557,57 @@
      C                   EVAL      EASDAM = LBPSTD
      C                   MOVE      POutAmount    EAAMNT
      C                   MOVE      WAmortAmnt    EAOAMT
- 
+
      C                   IF        WUpdateOnlyF = 'Y'
      C                   UPDATE    MMEIRAD3
      C                   ELSE
      C                   WRITE     MMEIRAD0
      C                   ENDIF
- 
+
       ** If EIR being updated is a current EIR, update DLFEED
      C                   IF        EIRECI = 'D'
      C                   EVAL      LBFEAM = LBFEAM + POutAmount
      C                   UPDATE    DLFEEDDB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WTempAmount = WTempAmount + WAmortAmnt
- 
+
      C     DLNO          READE     DLFEEDLB
      C                   ENDDO
- 
+
      C                   IF        WTempAmount > 0
- 
+
      C                   EVAL      EIFDPA = WTempAmount + EIFDPA
- 
+
      C                   EVAL      KDate = EISTDT
      C     KDlNoDate     SETLL     MMCFSFL0
- 
+
      C                   IF        %EQUAL(MMCFSFL0)
      C                   READ      MMCFSFL0
      C                   ELSE
      C                   READP     MMCFSFL0
      C                   ENDIF
- 
+
      C                   EVAL      WCurrPrincipal = MFCPAM
- 
+
      C                   EVAL      EIDSTD = WCurrPrincipal - EIFDPA
- 
+
      C                   ENDIF
- 
+
       ** Read through Repeating and Accruing Fees
- 
+
      C                   EVAL      WTempAmount = 0
      C                   EVAL      WAccAmount = 0
- 
+
      C     DLNO          SETLL     DLFEEDLC
      C     DLNO          READE     DLFEEDLC
- 
+
      C                   EVAL      KDlNo = DLNO
- 
+
      C                   DOW       NOT %EOF(DLFEEDLC)
- 
+
      C                   EVAL      KFSeq = LCFSEQ
      C     KDlNoFSeq     CHAIN     MMEIRAL3
      C                   IF        %FOUND(MMEIRAL3)
@@ -621,37 +623,37 @@
      C                   ELSE
      C                   EVAL      WUpdateOnlyF = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      EASTDT = EISTDT
      C                   EVAL      EAENDT = EIENDT
      C                   EVAL      WNextDate = EISTDT
      C                   EVAL      WLoopDoneF = 'N'
- 
+
      C                   IF        WUpdateOnlyF = 'Y'
- 
+
      C     KDlNoFSeq     CHAIN     MMEIRAL3
- 
+
      C                   DOW       %FOUND(MMEIRAL3)
      C                             AND EATYPE = 'N'
      C                   EVAL      WUpdateOnlyF = 'N'
      C                   DELETE    MMEIRAD3
      C     KDlNoFSeq     CHAIN     MMEIRAL3
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WRepAmount = *ZERO
      C     KDlNoFSeq     CHAIN     MMCFLAL3
      C                   DOU       WLoopDoneF = 'Y'
- 
+
      C                   IF        LCPYON = 'N'
      C                             AND %FOUND(MMCFLAL3)
- 
+
      C                   EVAL      WPrevDate = WNextDate
      C                   EVAL      EASDAM = WPrevDate
- 
+
      C     KDlNoFSeq     READE     MMCFLAL3
- 
+
      C                   IF        %FOUND(MMCFLAL3)
      C     KDlNoFSeq     READPE    MMCFLAL3
      C                   EVAL      WNextDate = CFFLDT
@@ -662,12 +664,12 @@
      C                   EVAL      EAEDAM = WNextDate
      C                   EVAL      WLoopDoneF = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      EATYPE = 'N'
      C                   EVAL      EAEDAM = LCLDAT
      C                   EVAL      WAccAmount = CFCAMT
      C                   EVAL      WRepAmount = WAccAmount + CFCAMT
- 
+
      C                   ELSE
      C                   EVAL      EATYPE = 'E'
      C                   EVAL      EASDAM = EISTDT
@@ -675,10 +677,10 @@
      C                   EVAL      WAccAmount = LCFAMT
      C                   EVAL      WLoopDoneF = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      PCurrency = LCFCCY
      C                   EXSR      SrCurr
- 
+
       ** Convert Fee Currency when it is not the Deal Currency
      C                   IF        CCY <> LCFCCY
      C                   EVAL      PFrCurrency = LCFCCY
@@ -690,7 +692,7 @@
      C                   EVAL      POutMDIn = A6MDIN
      C                   EVAL      POutAmount = WAccAmount
      C                   ENDIF
- 
+
      C                   EVAL      EARECI = 'D'
      C                   EVAL      EATRAN = LCDLNO
      C                   EVAL      EAFCOD = LCFCOD
@@ -702,64 +704,64 @@
      C                   EVAL      EAENDT = EIENDT
      C                   MOVE      POutAmount    EAAMNT
      C                   MOVE      WAccAmount    EAOAMT
- 
+
      C                   IF        WUpdateOnlyF = 'Y'
      C                             AND LCPYON <> 'N'
      C                   UPDATE    MMEIRAD3
      C                   ELSE
      C                   WRITE     MMEIRAD0
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WRepAmount = 0
      C                   EVAL      WTempAmount = WTempAmount + WAccAmount
      C                   ELSE
      C                   EVAL      WTempAmount = WTempAmount + WRepAmount
      C                   EVAL      POutAmount = WRepAmount
      C                   ENDIF
- 
+
      C                   IF        CCY <> LCFCCY AND WRepAmount <> 0
      C                   EVAL      PFrCurrency = LCFCCY
      C                   EVAL      PToCurrency = CCY
      C                   EVAL      PAmount = WRepAmount
      C                   EXSR      SrConvert
      C                   ENDIF
- 
+
       ** If EIR being updated is a current EIR, update DLFEED
      C                   IF        EIRECI = 'D'
      C                   EVAL      LCFEAM = LCFEAM + POutAmount
      C                   UPDATE    DLFEEDDC
      C                   ENDIF
- 
+
      C     DLNO          READE     DLFEEDLC
      C                   ENDDO
- 
+
      C                   IF        WTempAmount > 0
      C                   EVAL      EIFDPC = WTempAmount + EIFDPC
      C                   ENDIF
- 
+
       ** Set transaction to mature when Period End Date is less than
       ** or equal to rundate and Accrual starts on First Day
      C                   IF        EIENDT <= BJRDNB AND BKALDI <> 'N'
      C                   EVAL      EIRECI = 'M'
      C                   EVAL      EIRHistFmt = EIRCurrFmt
      C                   WRITE     MMEIRHD0
- 
+
      C                   ELSE
      C                   EVAL      EIRECI = 'D'
      C                   WRITE     MMEIRDD0
- 
+
      C                   IF        RCDT = 'C'
      C                   UPDATE    DEALSDCF
      C                   ELSE
      C                   UPDATE    DEALSDDF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  233601
       *****************************************************************                       233601
@@ -980,9 +982,9 @@
       *              deleted                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAdjToEIR    BEGSR
- 
+
      C                   CLEAR                   EIRNewFmt
      C                   EVAL      EIADJP = *BLANKS
      C                   EVAL      EIRECI = '*'
@@ -992,7 +994,7 @@
      C                   WRITE     MMEIRHD0
      C                   ENDIF
      C                   DELETE    MMEIRDD0
- 
+
      C*****DLNO          CHAIN     DEALSL6                                                    CAS011
      C     DLNO          CHAIN     DEALSL9                                                    CAS011
      C**********         IF        %FOUND(DEALSL6)                                            CAS011
@@ -1001,15 +1003,15 @@
      C                   ELSE
      C                   EVAL      NWENDT = MDAT
      C                   ENDIF
- 
+
      C                   EVAL      NWRECI = 'D'
      C                   EVAL      NWADJP = *BLANKS
      C                   EVAL      NWRCAL = 'Y'
      C                   CLEAR                   EIRCurrFmt
      C                   EVAL      EIRCurrFmt = EIRNewFmt
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1017,29 +1019,29 @@
       * SrConvert - Convert from one currency to another              *
       *                                                               *
       *****************************************************************
- 
+
      C     SrConvert     BEGSR
- 
+
       ** Save currency specifics first (Exchange Rate, M/D Indicator
       ** and decimal places) then get the other currency's specifics
       ** from the currencies file
- 
+
      C                   EVAL      PFrXRate = A6SPRT
      C                   EVAL      PFrMDIn = A6MDIN
      C                   EVAL      PFrDecPlace = A6NBDP
- 
+
      C                   IF        BJCYCD <> PToCurrency
- 
+
       ** If target currency is not the base currency, do cross
       ** currency conevrt
- 
+
      C                   EVAL      PCurrency = PToCurrency
      C                   EXSR      SrCurr
- 
+
      C                   EVAL      PToXRate = A6SPRT
      C                   EVAL      PToMDIn = A6MDIN
      C                   EVAL      PToDecPlace = A6NBDP
- 
+
      C                   CALL      'ZCCYCN'
      C                   PARM                    PAmount
      C                   PARM                    PFrCurrency
@@ -1053,9 +1055,9 @@
      C                   PARM                    POutAmount
      C                   PARM                    POutXRat
      C                   PARM                    POutMDIn
- 
+
      C                   ELSE
- 
+
       ** In Deal Currency is the base currency, do simple convert
      C                   CALL      'ZCONVZ1'
      C                   PARM                    PAmount
@@ -1066,14 +1068,14 @@
      C                   PARM                    PFrDecPlace
      C                   PARM                    PToDecPlace
      C                   PARM                    POutAmount
- 
+
      C                   EVAL      POutXRat = PFrXRate
      C                   EVAL      POutMDIn = PFrMDIn
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1081,15 +1083,15 @@
       * SrCurr - Call to AOCCURR0                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCurr        BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDCURRPD'
@@ -1098,9 +1100,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1108,13 +1110,13 @@
       * *INZSR - Initial Subroutine                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Set up Local Data Area
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = *BLANKS
      C                   EVAL      DbKey = *BLANKS
@@ -1122,25 +1124,25 @@
      C                   EVAL      DbPGM = 'DL004600'
      C                   EVAL      Dbase = *ZERO
      C                   OUT       LDA
- 
+
      C     KDealType     KLIST
      C                   KFLD                    DTPE11
      C                   KFLD                    DLST11
- 
+
      C     KDlNoDate     KLIST
      C                   KFLD                    KDlno
      C                   KFLD                    KDate
- 
+
      C     KDlNoFSeq     KLIST
      C                   KFLD                    KDlno
      C                   KFLD                    KFseq
- 
+
       ** Get Bank ICD
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
@@ -1150,14 +1152,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C**********         CALLB     'AOGELRR0'                                                 CAS011
      C                   CALLB     'AOGELRR1'                                                 CAS011
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CAS011
      C     SDGELR        PARM      SDGELR        DSSDY                                        CAS011
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDGELRPD'
@@ -1166,25 +1168,25 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Calculate Event Control Date
      C                   IF        (BJDNWD - 1) > BKAPDT
      C                   EVAL      WEvCD = BKAPDT
      C                   ELSE
      C                   EVAL      WEvCD = BJDNWD - 1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

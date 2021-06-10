@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 MD05347            Date 27Oct20               *
       *                 MD055318           Date 17Feb20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
@@ -92,6 +93,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  260173 - Introduce new parameter to be used in the vali-     *
       *           dation of action code when authorising a reversal   *
       *           transaction. Apply fix 258724.                      *

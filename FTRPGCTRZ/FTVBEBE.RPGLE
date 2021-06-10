@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026333           Date 29Apr14               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT110             Date 20Apr20               *      
+      *  Prev Amend No. MD026333           Date 29Apr14               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
       *                 AR924684           Date 10Nov14               *
@@ -66,6 +67,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT110 - Upgraded HUT022 to FBM 2.1 SP22                     *
+      *           RTGS via SWIFT.                                     *
+      *           Add RTGS-related validation for Beneficiary.        *
+      *           Also partially upgraded fix MD030805                *
+      *           Added hooks HUT110_077   HUT110_078                 *      
       *  MD026333 - Beneficiary field on Settlement screen allows     *
       *             closed customer. Call AOCUSTR1 instead to return  *
       *             and validate BBCLST and or BBDTDL fields.         *
@@ -744,7 +750,9 @@
  
       *  First 10 characters should be key for SDCUST
       * Send error to screen
+     C/COPY WNCPYSRC,HUT110_077                                                               HUT110
      C                   Add       1             Idx
+     C/COPY WNCPYSRC,HUT110_078                                                               HUT110
      C                   If        ADSLSH <> '/'
      C                             AND BEN1EXPND = 'Y'                                      MD027201
      C                             AND WIND1 = 'Y'                                          MD027201

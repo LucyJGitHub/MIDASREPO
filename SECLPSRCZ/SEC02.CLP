@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. 259607             Date 07Oct20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR586601           Date 22May20              */
+/*       Prev Amend No. 259607             Date 07Oct20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -71,6 +72,11 @@
 /*                        S01129             DATE  11/05/88         */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD032160 - upgrade selected fixes from UBS-TPE MP1.2.1 to   */
+/*                 UBS-TPE 2.1 SP22.                                 */
+/*                 Apply fix AR586601                                */
+/*       AR586601 - Corrected the position of CHGJOB command         */
+/*                  introduced by CPB001. Applied fix AR575736.      */
 /*       259607 - Add override to file SECNTRL0 if calling           */
 /*                SE1910.                                            */
 /*       MD046248 - Finastra Rebranding                              */
@@ -651,13 +657,15 @@ CALLP:
                 OVRDBF     FILE(SECNTRLX) TOFILE(SECNTRL0) SHARE(*NO)                     /*259607*/
              ENDDO                                                                        /*259607*/
              CALL       PGM(&PARM)
-             CHGJOB SWS(XXX0XXXX)                                     /*CPB001*/
+/**********  CHGJOB SWS(XXX0XXXX) */                                             /*CPB001 AR586601*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)
+                CHGJOB     SWS(XXX0XXXX)                                                /*AR586601*/
                 ROLLBACK
                 SNDPGMMSG MSG('Transaction failed. Re-input +
                       necessary. Enter to continue.') TOPGMQ(*EXT)
                 GOTO ENDPGM
              ENDDO                                                    /*CSE007*/
+             CHGJOB     SWS(XXX0XXXX)                                                   /*AR586601*/
 /*/COPY WNCPYSRC,SEC02020                                            */
       ENDDO                                                           /*S01269*/
 /**/                                                                  /*S01408*/

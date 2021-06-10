@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048586           Date 11Jan21               *
-      *  Prev Amend No. MD023298A          Date 03Jun20               *
+      *  Last Amend No. HUT101             Date 27Mar20               *      
+      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *                 MD023298A          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
@@ -126,6 +127,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
+      *           Payment Authorisation for Funds Transfer            *
+      *           Upgraded with CAP211 functionality.                 *
+      *           Used hook: FTH00109                                 *
+      *           Added hooks: HUT101_013, HUT101_014, HUT101_015     *      
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
       *  MD023298A - Front office ID already exists for OTPAYDQD.     *
@@ -1257,6 +1263,7 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_013                                                               HUT101
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
      C                   EVAL      AUP1 = INUSR1                                              CAP211
@@ -1922,6 +1929,7 @@
      C                   Eval      OTTMESTMP = TimeStamp                                    BUG18500
 
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_014                                                               HUT101
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
      C                   EVAL      AUP1 = INUSR1                                              CAP211
@@ -5441,6 +5449,7 @@
      C                   Z-ADD     BJRDNB        DATE                                         CFT157
       *                                                                                       CFT157
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CFT157
+     C/COPY WNCPYSRC,HUT101_015                                                               HUT101
       *                                                                                       CFT157
      C                   IF        PUser = *Blanks                                            CFT157
      C                   EVAL      SAUS = SUSR                                                CFT157

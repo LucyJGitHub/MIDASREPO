@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -215,6 +217,9 @@
 
       ** External DS for profit centre details
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
+                                                                                              CDL102
+      ** External DS for base rate details                                                    CDL102
+     D   SDBSRT      E DS                  EXTNAME(SDBSRTPD)                                  CDL102
                                                                                               CDL020
       ** External DS For midas modules details                                                CDL020
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CDL020
@@ -410,6 +415,35 @@
      D PRTCD           S              7A                                                     BUG9717
      D POPTN           S              7A                                                     BUG9717
      D CDL038          S              1A                                                     BUG9717
+      ** FUND Backward-Looking Rate Screen Fields                                             CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+                                                                                              CDL102
+      ** FUND Backward-Looking Rate Valid Fields                                              CDL102
+     D FUNDValBlrt     DS                                                                     CDL102
+     D  WCLBLRT                       1A                                                      CDL102
+     D  WCLRFRR                      10A                                                      CDL102
+     D  WCLCALM                       4A                                                      CDL102
+     D  WCLBADJ                      11P 7                                                    CDL102
+     D  WCLFLOR                      11P 7                                                    CDL102
+     D  WCLLBDY                       2S 0                                                    CDL102
+     D  WCLLODY                       2S 0                                                    CDL102
+     D  WCLOPSH                       1A                                                      CDL102
+     D  WCLRRDP                       2S 0                                                    CDL102
+     D  WCLDBAV                       1A                                                      CDL102
+     D  WCLRTKN                       1A                                                      CDL102
+      *                                                                                       CDL102
+     D CDL102          S              1                                                       CDL102
 
       /COPY WNCPYSRC,ABFUNDV002
 
@@ -762,6 +796,14 @@
      C                   IF        CDL019 = 'Y'                                               CDL019
      C                   EXSR      SRFixBsRte                                                 CDL019
      C                   ENDIF                                                                CDL019
+      *                                                                                       CDL102
+      ** Validate backward-looking rate fields if CDL102 is ON                                CDL102
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y' and                                           CDL102
+     C                             OKBRTT  <> 'N' and                                         CDL102
+     C                             OKICBS  <> 'N'                                             CDL102
+     C                   EXSR      SRBLRTE                                                    CDL102
+     C                   ENDIF                                                                CDL102
 
       *                  ======
      C                   RETURN
@@ -2251,6 +2293,7 @@
 
       ** New Deal in File Format of associated deal
      C                   PARM                    NwDlFilFmt2
+     C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Update error info with that returned from the validation module
 
@@ -3032,6 +3075,8 @@
      C                   PARM                    BJRDNB                                       CDL020
      C                   PARM                    N1SPRD                                       CDL020
      C                   PARM      N1INTR        PPINTR           11 7                        CDL038
+     C                   PARM                    TranScnBlrt                                  CDL102
+     C                   PARM                    CDL102                                       CDL102
      C*******************PARM                    PPINTR           11 7                 CDL020 CDL038
                                                                                               CDL020
      C                   IF        RetCodeOut <> *Blanks                                      CDL020
@@ -3165,6 +3210,123 @@
      C                   ENDIF
 
      C                   ENDSR
+      *                                                                                       CDL102
+      *****************************************************************                       CDL102
+      /EJECT                                                                                  CDL102
+      *****************************************************************                       CDL102
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CDL102
+      *****************************************************************                       CDL102
+     C     SRBLRTE       BEGSR                                                                CDL102
+      *                                                                                       CDL102
+      ** Initialise data structures                                                           CDL102
+      *                                                                                       CDL102
+     C                   CLEAR                   TempInpDS                                    CDL102
+     C                   CLEAR                   FUNDValBlrt                                  CDL102
+      ** Reset variables updated by each module                                               CDL102
+                                                                                              CDL102
+     C                   EXSR      SRResetErrs                                                CDL102
+                                                                                              CDL102
+      ** Initialise Backward-Looking Rate field to N                                          CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     'N'           N1BLRT                                       CDL102
+     C                   MOVEL     'N'           N2BLRT                                       CDL102
+                                                                                              CDL102
+     C                   CALLB     'AOBSRTR0'                                                 CDL102
+     C                   PARM      *BLANK        PRTCD                                        CDL102
+     C                   PARM      '*KEY'        POPTN                                        CDL102
+     C                   PARM                    DDCCY                                        CDL102
+     C                   PARM                    DDBRTT                                       CDL102
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CDL102
+     C                   IF        PRTCD <> *BLANKS AND                                       CDL102
+     C                             PRTCD <> '*NRF   '                                         CDL102
+     C     *LOCK         IN        LDA                                                        CDL102
+     C                   EVAL      DBFILE = 'SDBSRTPD'                                        CDL102
+     C                   EVAL      DBASE = 904                                                CDL102
+     C                   EVAL      DBKEY = D1BSRC                                             CDL102
+     C                   OUT       LDA                                                        CDL102
+     C                   EXSR      *PSSR                                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** For deals input via SOAP/MQ, ensure that BLRT cannot be 'Y'                          CDL102
+      ** if deal is not using a backward-looking base rate code                               CDL102
+      *                                                                                       CDL102
+     C     DDBLRT        IFEQ      'Y'                                                        CDL102
+     C     DDBRTT        IFEQ      *BLANKS                                                    CDL102
+     C     N1BSRC        ORNE      *BLANKS                                                    CDL102
+     C     BABLRT        ANDNE     'Y'                                                        CDL102
+     C                   MOVEL     'N'           OKBLRT                                       CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   MOVEL     'DDBLRT'      FldNamXAr(Idx)                               CDL102
+     C                   MOVEL     '5049497'     MsgIDXAr(Idx)                                CDL102
+     C                   EXSR      SRUpdatErrs                                                CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Call program to validate Backward Looking Rate Fields                                CDL102
+      *                                                                                       CDL102
+     C     OKBLRT        IFNE      'N'                                                        CDL102
+     C                   MOVEL     D1MTYP        TransType                                    CDL102
+     C                   CALLB     'ZAVBLRTE'                                                 CDL102
+     C                   PARM      'FUND'        ApiName           4                          CDL102
+     C                   PARM                    D1PCDN            6                          CDL102
+     C                   PARM                    TransType         2                          CDL102
+     C                   PARM                    DDCCY                                        CDL102
+     C                   PARM                    DDBRTT                                       CDL102
+     C                   PARM                    DDICBS                                       CDL102
+     C                   PARM                    DDACTN                                       CDL102
+     C                   PARM      TranScnBlrt   TempInpDS       200                          CDL102
+     C                   PARM      *ZEROS        Idx                                          CDL102
+     C                   PARM                    FldNamXAr                                    CDL102
+     C                   PARM                    MsgIDXAr                                     CDL102
+     C                   PARM                    TempOutDS       200                          CDL102
+     C                   PARM      *BLANKS       RetCodeOut                                   CDL102
+      *                                                                                       CDL102
+      ** Move back updated values to screen fields                                            CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     TempInpDS     TranScnBlrt                                  CDL102
+     C     RetCodeOut    IFNE      'Error'                                                    CDL102
+     C                   MOVEL     TempOutDS     FUNDValBlrt                                  CDL102
+     C                   MOVEL     WCLBLRT       N1BLRT                                       CDL102
+     C                   MOVEL     WCLRFRR       N1RFRR                                       CDL102
+     C                   MOVEL     WCLCALM       N1CALM                                       CDL102
+     C                   Z-ADD     WCLBADJ       N1BADJ                                       CDL102
+     C                   Z-ADD     WCLFLOR       N1FLOR                                       CDL102
+     C                   Z-ADD     WCLLBDY       N1LBDY                                       CDL102
+     C                   Z-ADD     WCLLODY       N1LODY                                       CDL102
+     C                   MOVEL     WCLOPSH       N1OPSH                                       CDL102
+     C                   Z-ADD     WCLRRDP       N1RRDP                                       CDL102
+     C                   MOVEL     WCLDBAV       N1DBAV                                       CDL102
+     C                   MOVEL     WCLRTKN       N1RTKN                                       CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     WCLBLRT       N2BLRT                                       CDL102
+     C                   MOVEL     WCLRFRR       N2RFRR                                       CDL102
+     C                   MOVEL     WCLCALM       N2CALM                                       CDL102
+     C                   Z-ADD     WCLBADJ       N2BADJ                                       CDL102
+     C                   Z-ADD     WCLFLOR       N2FLOR                                       CDL102
+     C                   Z-ADD     WCLLBDY       N2LBDY                                       CDL102
+     C                   Z-ADD     WCLLODY       N2LODY                                       CDL102
+     C                   MOVEL     WCLOPSH       N2OPSH                                       CDL102
+     C                   Z-ADD     WCLRRDP       N2RRDP                                       CDL102
+     C                   MOVEL     WCLDBAV       N2DBAV                                       CDL102
+     C                   MOVEL     WCLRTKN       N2RTKN                                       CDL102
+      *                                                                                       CDL102
+      ** Fixed Base Rate must be 'N' if Backward-Looking Rate is 'Y'                          CDL102
+      *                                                                                       CDL102
+     C     N1BLRT        IFEQ      'Y'                                                        CDL102
+     C     DDFBRT        ANDNE     'N'                                                        CDL102
+     C                   MOVEL     'N'           OKFBRT                                       CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   MOVEL     'DDFBRT'      FldNamXAr(Idx)                               CDL102
+     C                   MOVEL     '5049498'     MsgIDXAr(Idx)                                CDL102
+     C                   EXSR      SRUpdatErrs                                                CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EXSR      SRUpdatErrs                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+     C                   ENDSR                                                                CDL102
 
       *****************************************************************
       /EJECT
@@ -3272,6 +3434,10 @@
      C                   PARM                    CDL019                                       CDL019
                                                                                               CDL020
      C                   PARM                    CDL020                                       CDL020
+                                                                                              CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+
 
       ** OUTPUT
       ** ======
@@ -3345,6 +3511,19 @@
      C                   EVAL      CDL038 = 'N'                                              BUG9717
      C                   ENDIF                                                               BUG9717
                                                                                              BUG9717
+      ** Check if CDL102 is installed                                                         CDL102
+                                                                                              CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRtcd                                        CDL102
+     C                   PARM      '*VERIFY'     POptn                                        CDL102
+     C                   PARM      'CDL102'      PSARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C                   IF        PRtcd = *Blanks                                            CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.

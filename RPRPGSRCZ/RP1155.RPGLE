@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -271,6 +273,17 @@
      D HCNSG3        E                     EXTFLD(CNSG      )                                 CLE148
      D HRDMT3        E                     EXTFLD(RDMT      )                                 CLE148
      D HRDFD3        E                     EXTFLD(RDFD      )                                 CLE148
+     D HBLRT3        E                     EXTFLD(BLRT      )                                 CLE172
+     D HRFRR3        E                     EXTFLD(RFRR      )                                 CLE172
+     D HCALM3        E                     EXTFLD(CALM      )                                 CLE172
+     D HBADJ3        E                     EXTFLD(BADJ      )                                 CLE172
+     D HFLOR3        E                     EXTFLD(FLOR      )                                 CLE172
+     D HLBDY3        E                     EXTFLD(LBDY      )                                 CLE172
+     D HLODY3        E                     EXTFLD(LODY      )                                 CLE172
+     D HOPSH3        E                     EXTFLD(OPSH      )                                 CLE172
+     D HRRDP3        E                     EXTFLD(RRDP      )                                 CLE172
+     D HDBAV3        E                     EXTFLD(DBAV      )                                 CLE172
+     D HRTKN3        E                     EXTFLD(RTKN      )                                 CLE172
       **   Format for Information DS for LF/PLHISTL0
      D PLHISTds        DS
      D   @KFormat            261    270

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055694           Date 09Mar20               *
+      *  Last Amend No. MD056560           Date 31Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055694           Date 09Mar20               *
       *                 CMG008             Date 20Feb20               *
       *                 CER050             Date 16Jun19               *
       *                 MD037229           Date 03Sep18               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD055694 - SWIFT Changes 2021                                *
@@ -218,7 +220,8 @@
      D MEOUFM        E DS                  EXTNAME(MEOUFMPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
-     D SDMTAG        E DS                  EXTNAME(SDMTAGPD)
+     D*SDMTAG***     E DS                  EXTNAME(SDMTAGPD)                                MD056560
+     D SDMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)

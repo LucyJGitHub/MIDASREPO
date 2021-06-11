@@ -1,0 +1,1011 @@
+     H DEBUG DATEDIT(*YMD)
+      *****************************************************************
+/**** *  RPGBASE                                                      *                     MD057705
+/*STD *  RPGSQLBND                                                    *                     MD057705
+/*EXI *  TEXT('Midas SD Optional window maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0530D - Optional Window Maintenance.                       *
+      *                                                               *
+      *  Function:  This program displays the optional window         *
+      *             programs.                                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD057705           Date 21Jan21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004             Date 12Jan98               *
+      *                 CSD003             Date 06JAN98               *
+      *                 S01516             DATE 25AUG94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD057705 - Deliverable Data Split for SDOREFPD               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE004 - Lending Enhancements - Syndications  (Recompile)    *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01516 - New program created to replace WN0450M, and to      *
+      *           enable the user to enquire on and/or amend one      *
+      *           record at a time.                                   *
+      *                                                               *
+      *****************************************************************
+     F*Optional window ref maintInitialise Program F-Spec
+     F/COPY WNCPYSRC,SD0530DFPG
+     FSD0530D#  CF   E             WORKSTN USROPN
+     F                                     SFILE(#SFLRCD:##RR)
+     F                                     INFDS(INFDS#)
+     F                                     INFSR(*PSSR)
+      * DSP: Midas SD Optional window maintenance
+      *
+     F*SDOREFL1* IF   E           K DISK    USROPN                                          MD057705
+     F**********                           INFDS(INFDS1)                                    MD057705
+     F**********                           INFSR(*PSSR)                                     MD057705
+      * RTV : Midas SD Optional window reference retrieval
+      *
+     D* Description     : Copyright notice for inclusion in all programs
+     D*
+     D********************************************************************
+     D*Optional window ref maintInitialise Program E-Spec
+     D/COPY WNCPYSRC,SD0530DEPG
+     D*
+     D* Description     : Copyright notice for inclusion in all programs
+     D*
+     D*Optional window ref maintInitialise Program I-Spec
+     D/COPY WNCPYSRC,SD0530DIPG
+      /EJECT
+      * Data structures:
+     D PGMDS         ESDS                  EXTNAME(Y2PGDSP)
+      * Program data structure
+     D JBDTTM          DS
+      * Job date/time
+     D  ##JDT                  1      7  0
+     D  ##JCC                  1      1  0
+     D  ##JYY                  2      3  0
+     D  ##JMM                  4      5  0
+     D  ##JDD                  6      7  0
+     D  ##JTM                  8     13  0
+     D  ##JHH                  8      9  0
+     D  ##JNN                 10     11  0
+     D  ##JSS                 12     13  0
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     D YARTCM          DS           512
+     D  DUMMY1                 1      1
+     D INFDS#        E DS                  EXTNAME(Y2I#DSP)
+      * Display file information data structure
+      *
+     D INFDS1        E DS                  EXTNAME(Y2I1DSP)
+      * File information data structure
+      *
+     D SDOREF        E DS                  EXTNAME(SDOREJW0)                                MD057705
+      * Outward parameters
+     D PARC            DS            12
+      * KEY : Midas SD Optional window reference retrieval
+      * I : MAP Name Of Calling Program
+     D  PANMCP                 1     10
+      * I : MAP Function Key
+     D  PAFNKY                11     12
+      *
+      * Outward parameters
+     D PBRC            DS            12
+      * KEY : Midas SD Optional window reference retrieval
+      * I : MAP Name Of Calling Program
+     D  PBNMCP                 1     10
+      * I : MAP Function Key
+     D  PBFNKY                11     12
+      *
+     D A@CPY           DS
+     D* Copyright array
+     D  CPY@                   1     80
+     D                                     DIM(1) CTDATA PERRCD(1)              Copyright array
+     D RUNDAT          DS
+     D  MRDT                   1      7
+     D  RDNB                   8     10P 0
+     D  SUC                   11     11
+     D  DFF                   12     12
+     D  MBIN                  13     13
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C     *ENTRY        PLIST
+     C                   PARM                    P0RTN             7
+      *****************************************************************
+      * Initialize
+     C                   EXSR      ZZINIT
+      *
+     C                   DO        *HIVAL
+      * Initialise & load subfile page
+     C                   EXSR      BAIZSF
+     C                   MOVEL     'N'           W0RSF             1
+      * Display screen until reload requested
+     C     W0RSF         DOWEQ     'N'
+      * Display screen
+     C                   EXSR      CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03              CAS                     ZXEXPG
+      * HOME: Request subfile reload
+     C   05              CAS                     FBRQRL
+      * Display next SFL page
+     C   27              CAS                     BBLDSF
+      * Process screen input
+     C                   CAS                     DAPR##
+     C                   END
+      *
+     C                   END                                                    OD W0RSF
+     C                   END                                                    OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR   BAIZSF        BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                   SETON                                        80
+     C                   WRITE     #SFLCTL
+     C                   SETOFF                                       80
+      * Reset no of records in subfile
+     C                   Z-ADD     *ZERO         ##RRMX            5 081         SETOF 81
+      * USER: Initialize subfile control
+      * 00/Copy member SD0530DISC - Optional Window Ref File  *
+     C*Optional window ref maintInitialise Subf Control
+     C/COPY WNCPYSRC,SD0530DISC
+      * Position DBF file
+     C     KPOS          KLIST
+     C                   KFLD                    DMNMCP                         Name Of Calling
+     C                   KFLD                    DMFNKY                         Function Key
+      * Setup key
+     C                   MOVEL     #2NMCP        DMNMCP                         Name Of Calling
+     C                   MOVEL     #2FNKY        DMFNKY                         Function Key
+     C*****KPOS*         SETLL     @DMREGW                                                  MD057705
+     C**********         READ      @DMREGW                              8782    *82=EOF     MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ declare ACursor insensitive scroll cursor for                                       MD057705
+     C+ select * from SDOREJW0                                                              MD057705
+     C+ where DMNMCP >= :#2NMCP and DMFNKY >= :#2FNKY                                       MD057705
+     C+ order by DMNMCP, DMFNKY                                                             MD057705
+     C/END-EXEC                                                                             MD057705
+                                                                                            MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ close ACursor                                                                       MD057705
+     C/END-EXEC                                                                             MD057705
+                                                                                            MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ open ACursor                                                                        MD057705
+     C/END-EXEC                                                                             MD057705
+                                                                                            MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ fetch next from ACursor into :SDOREF                                                MD057705
+     C/END-EXEC                                                                             MD057705
+                                                                                            MD057705
+      * Save previous selector values
+     C     *LIKE         DEFINE    #2LCD         WZLCD
+     C                   MOVEL     #2LCD         WZLCD                          Last Change Dat
+     C     *LIKE         DEFINE    #2TYLC        WZTYLC
+     C                   MOVEL     #2TYLC        WZTYLC                         Type of Last Ch
+     C     *LIKE         DEFINE    #2WNCN        WZWNCN
+     C                   MOVEL     #2WNCN        WZWNCN                         Window Controll
+     C     *LIKE         DEFINE    #2LGWD        WZLGWD
+     C                   MOVEL     #2LGWD        WZLGWD                         Length of Windo
+     C     *LIKE         DEFINE    #2WDWD        WZWDWD
+     C                   MOVEL     #2WDWD        WZWDWD                         Width of Window
+     C     *LIKE         DEFINE    #2TTWD        WZTTWD
+     C                   MOVEL     #2TTWD        WZTTWD                         Title of Window
+     C     *LIKE         DEFINE    #2SRWD        WZSRWD
+     C                   MOVEL     #2SRWD        WZSRWD                         Starting Row of
+     C     *LIKE         DEFINE    #2SCWD        WZSCWD
+     C                   MOVEL     #2SCWD        WZSCWD                         Starting column
+     C     *LIKE         DEFINE    #2NMCP        WZNMCP
+     C                   MOVEL     #2NMCP        WZNMCP                         Name Of Calling
+     C     *LIKE         DEFINE    #2FNKY        WZFNKY
+     C                   MOVEL     #2FNKY        WZFNKY                         Function Key
+     C     *LIKE         DEFINE    #2PGMT        WZPGMT
+     C                   MOVEL     #2PGMT        WZPGMT                         Program Text
+      * Translate search mask for text field
+     C                   MOVEL     'QSYST'       WQB10X           10
+     C                   MOVE      'RNTBL'       WQB10X
+     C     *LIKE         DEFINE    #2PGMT        WQPGMT                         Program Text
+     C                   CALL      'QDCXLATE'
+      * Length
+     C                   PARM      50            WQA5N             5 0
+     C                   PARM      #2PGMT        WQPGMT                         Program Text
+     C                   PARM                    WQB10X                         QSYSTRNTBL
+     C                   PARM      'QSYS'        WQC10X           10
+      * Load subfile page
+     C                   Z-ADD     0             ##RROK            5 0
+     C                   EXSR      BBLDSF
+      *================================================================
+     CSR   BAEXIT        ENDSR
+      /EJECT
+     CSR   BBLDSF        BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27              DO
+     C**N82*****         READP     @DMREGW                                90    *           MD057705
+     C**N82*****         READ      @DMREGW                                90    *           MD057705
+     C     *IN82         IFEQ      '0'                                                      MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ fetch prior from ACursor into :SDOREF                                               MD057705
+     C/END-EXEC                                                                             MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ fetch next from ACursor into :SDOREF                                                MD057705
+     C/END-EXEC                                                                             MD057705
+     C                   ENDIF                                                              MD057705
+     C                   END
+      *
+      * Setof record error indicators
+     C                   MOVEL     *ALL'0'       WKIND0            1
+     C                   MOVEA     WKIND0        *IN(34)
+      * Start at previous highest record in SFL
+     C                   Z-ADD     ##RRMX        ##RR              5 0
+      * Reset count of DBF records read
+     C                   Z-ADD     0             ##RRRD            5 0
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C     W0RR0         IFGT      0
+     C     W0RR0         DIV       ##SFPG        ##SPG             3 0
+     C                   MVR                     ##SLIN            3 0
+     C     ##SLIN        IFGT      0
+     C                   ADD       1             ##SPG
+     C                   END
+     C     W0SPG         IFGT      ##SPG
+     C                   Z-ADD     W0SPG         ##SPG
+     C                   END
+     C                   ELSE
+     C                   Z-ADD     W0SPG         ##SPG
+     C                   END
+      * Compute lines required based on pages
+     C     ##SPG         MULT      ##SFPG        ##SFLN            9 0
+     C     ##SFLN        IFGT      999
+     C                   Z-ADD     999           ##SFLN
+     C                   END
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C******IN82         DOWEQ     '0'                                          DO          MD057705
+     C     SQLCODE       DOWEQ     0                                            DO          MD057705
+     C     ##RROK        ANDLT     ##SFLN
+     C     ##RRRD        ANDLT     W0SLM
+      * Check selection fields - if fail, read next record
+     C     #2LCD         IFNE      *ZERO                                        Last Change Dat
+     C     DMLCD         CABNE     #2LCD         BB020                          Last Change Dat
+     C                   END
+     C     #2TYLC        IFNE      *BLANK                                       Type of Last Ch
+     C     DMTYLC        CABNE     #2TYLC        BB020                          Type of Last Ch
+     C                   END
+     C     #2WNCN        IFNE      *BLANK                                       Window Controll
+      * Scan for search string
+     C                   CALL      'QCLSCAN'
+     C                   PARM                    DMWNCN                         Window Controll
+      * Length
+     C                   PARM      10            WQA3N             3 0
+      * Start
+     C                   PARM      1             WQB3N             3 0
+      * Mask
+     C                   PARM                    #2WNCN
+      * Length
+     C                   PARM      10            WQC3N             3 0
+      * Translate
+     C                   PARM      '1'           WQD1              1
+      * Trim
+     C                   PARM      '1'           WQE1              1
+      * Wild
+     C                   PARM      '?'           WQF1              1
+      * Result
+     C                   PARM                    WQG3N             3 0
+     C     WQG3N         CABLT     1             BB020
+     C                   END
+     C     #2LGWD        IFNE      *ZERO                                        Length of Windo
+     C     DMLGWD        CABNE     #2LGWD        BB020                          Length of Windo
+     C                   END
+     C     #2WDWD        IFNE      *ZERO                                        Width of Window
+     C     DMWDWD        CABNE     #2WDWD        BB020                          Width of Window
+     C                   END
+     C     #2TTWD        IFNE      *BLANK                                       Title of Window
+      * Scan for search string
+     C                   CALL      'QCLSCAN'
+     C                   PARM                    DMTTWD                         Title of Window
+      * Length
+     C                   PARM      7             WQA3N             3 0
+      * Start
+     C                   PARM      1             WQB3N             3 0
+      * Mask
+     C                   PARM                    #2TTWD
+      * Length
+     C                   PARM      7             WQC3N             3 0
+      * Translate
+     C                   PARM      '1'           WQD1              1
+      * Trim
+     C                   PARM      '1'           WQE1              1
+      * Wild
+     C                   PARM      '?'           WQF1              1
+      * Result
+     C                   PARM                    WQG3N             3 0
+     C     WQG3N         CABLT     1             BB020
+     C                   END
+     C     #2SRWD        IFNE      *ZERO                                        Starting Row of
+     C     DMSRWD        CABNE     #2SRWD        BB020                          Starting Row of
+     C                   END
+     C     #2SCWD        IFNE      *ZERO                                        Starting column
+     C     DMSCWD        CABNE     #2SCWD        BB020                          Starting column
+     C                   END
+     C     #2NMCP        IFEQ      *BLANK                                       Name Of Calling
+     C     #2FNKY        IFNE      *BLANK                                       Function Key
+     C     DMFNKY        CABNE     #2FNKY        BB020                          Function Key
+     C                   END
+     C                   END
+     C     #2PGMT        IFNE      *BLANK                                       Program Text
+      * Scan for search string
+     C                   CALL      'QCLSCAN'
+     C                   PARM                    DMPGMT                         Program Text
+      * Length
+     C                   PARM      50            WQA3N             3 0
+      * Start
+     C                   PARM      1             WQB3N             3 0
+      * Mask
+     C                   PARM                    WQPGMT
+      * Length
+     C                   PARM      50            WQC3N             3 0
+      * Translate
+     C                   PARM      '1'           WQD1              1
+      * Trim
+     C                   PARM      '1'           WQE1              1
+      * Wild
+     C                   PARM      '?'           WQF1              1
+      * Result
+     C                   PARM                    WQG3N             3 0
+     C     WQG3N         CABLT     1             BB020
+     C                   END
+      * Load SFL fields
+     C                   EXSR      MBFL#1
+      * Allow for possible *Set Cursor processing
+     C                   ADD       1             ##RR
+     C                   EXSR      MC#1FN
+     C                   SUB       1             ##RR
+     C                   MOVEL     'Y'           W0RSL             1
+      * Allow for possible *Set Cursor processing
+     C                   ADD       1             ##RR
+      * USER: Initialize subfile record from DBF record
+      * 00/Copy member SD0530DISR - Optional Window Ref File  *
+     C*Optional window ref maintInitialise Subfile Rcd
+     C/COPY WNCPYSRC,SD0530DISR
+     C                   SUB       1             ##RR
+      * DBF record not selected
+     C     W0RSL         CABNE     'Y'           BB020
+      * Output to subfile
+     C                   ADD       1             ##RR
+     C                   ADD       1             ##RROK               81        *
+      * If SFLRCD invalid, note that errors present
+     C   98
+     CANN99              SETON                                        99        *
+     C                   WRITE     #SFLRCD
+     C     BB020         TAG
+      * Increment scan check count
+     C                   ADD       1             ##RRRD
+     C**********         READ      @DMREGW                                82    *82=EOF     MD057705
+     C/EXEC SQL                                                                             MD057705
+     C+ fetch next from ACursor into :SDOREF                                                MD057705
+     C/END-EXEC                                                                             MD057705
+     C                   END                                                    OD 1 - ##SFPG
+      *................................................................
+     C     BB900         TAG
+      *................................................................
+      * If no DBF records found, display error message
+     C     ##RR          IFEQ      *ZERO
+     C     *IN82         ANDEQ     '1'
+      * Send message '*No data to display'
+     C                   MOVEL     'Y2U0008'     ZAMSID
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF
+     C                   EXSR      ZASNMS
+     C                   END                                                    FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C     ##RR          IFGT      ##RRMX
+      * Calculate top line
+     C     ##RROK        DIV       ##SFPG        ##SPG
+     C                   MVR                     ##SLIN
+     C     ##SLIN        IFGT      0
+     C     ##RR          SUB       ##SLIN        ##SFRC
+     C                   ELSE
+     C     ##RR          SUB       ##SFPG        ##SFRC
+     C                   END
+     C                   ADD       1             ##SFRC
+     C                   Z-ADD     ##RR          ##RRMX
+     C                   END
+      * If scan limit reached, display error message
+     C     ##RRRD        IFGE      W0SLM
+      * Send message '*Scan limit reached'
+     C                   MOVEL     'Y2U0017'     ZAMSID
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF
+     C                   EXSR      ZASNMS
+     C                   ELSE
+     C                   Z-ADD     0             ##RROK
+     C                   END
+      *================================================================
+     CSR   BBEXIT        ENDSR
+      /EJECT
+     CSR   CAEXFM        BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C     W0HLP         DOUEQ     'N'
+     C                   MOVEL     'N'           W0HLP             1
+     C                   MOVE      *IN25         HELP25            1
+     C                   MOVE      *ALL'0'       ##OFF            30
+     C                   MOVEA     ##OFF         *IN(1)
+     C                   MOVE      HELP25        *IN25
+      * Update screen time
+     C                   TIME                    ##TME
+      * PUTOVR unless conditioned fields change
+     C                   SETON                                        86
+     C     *IN81         IFNE      CAIN81
+     C                   SETOFF                                       86
+     C                   END
+     C                   MOVE      *IN81         CAIN81            1
+      * Set cursor by *SET CURSOR data
+     C     YSETCS        IFEQ      'Y'
+     C                   EXSR      Y0SET
+     C                   END
+     C                   WRITE     #MSGCTL
+     C                   WRITE     #CMDTXT1
+     C                   EXFMT     #SFLCTL
+      * Maintain subfile position where possible
+     C     @#SFRC        IFGT      *ZERO
+     C                   Z-ADD     @#SFRC        ##SFRC
+     C                   END
+      * Test cursor
+     C                   EXSR      Y8TST
+      * Clear set cursor DDS indicator
+     C     WCSRLC        IFEQ      'OFF'
+     C                   SETOFF                                       94        *
+     C                   END
+     C                   MOVE      *BLANK        WCSRLC
+      * If help requested, display help text
+     C   25              EXSR      ZHHPKY
+     C                   END
+      * Update job time
+     C                   TIME                    ##JTM
+      * Clear messages from program message queue
+     C                   CALL      'Y2CLMSC'
+     C                   PARM      ##PGM         ZAPGMQ           10
+     C                   PARM      '*SAME'       ZAPGRL            5
+      * Reset first message only flag
+     C                   MOVEL     'Y'           ZAFSMS            1      99    *
+     C                   SETOFF                                         8392    *
+     C     YSETCS        IFEQ      'Y'
+     C                   EXSR      Y9CLR
+     C                   END
+      *================================================================
+     CSR   CAEXIT        ENDSR
+      /EJECT
+     CSR   DAPR##        BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                   MOVEL     'N'           W0DCF             1
+      * Validate Function Key
+     C                   MOVEL     *BLANK        W0RTN
+     C                   MOVEL     #2FNKY        W0NSRQ            1            Function Key
+      * Name search required?
+     C     W0NSRQ        IFEQ      '?'
+     C                   CALL      'Y2VLLSR'                            90      *
+     C                   PARM                    W0RTN             7
+     C                   PARM      1187831       Y2LSNO            7 0
+     C     #2FNKY        PARM      #2FNKY        W0EXVL           20            Function Key
+      * Defer confirm
+     C                   MOVEL     'Y'           W0DCF             1
+     C                   END
+      *
+      * If error, exit
+     C     *IN99         CABEQ     '1'           DAEXIT
+      *................................................................
+      * CALC: Subfile control function fields
+      * 00/Copy member SD0530DSFF - Optional Window Ref File  *
+     C*Optional window ref maintCalculate Control Fields
+     C/COPY WNCPYSRC,SD0530DSFF
+      * Change of position specified
+     C     WZNMCP        CASNE     #2NMCP        FBRQRL
+     C     WZFNKY        CASNE     #2FNKY        FBRQRL
+     C     WZPGMT        CASNE     #2PGMT        FBRQRL
+     C                   END
+      * USER: Process subfile control (Pre-confirm)
+      * 00/Copy member SD0530DPSC - Optional Window Ref File  *
+     C*Optional window ref maintProcess Subfile Control
+     C/COPY WNCPYSRC,SD0530DPSC
+      * Reload subfile requested
+     C     W0RSF         CABEQ     'Y'           DAEXIT
+     C     *IN81         IFEQ      '1'
+      * Process subfile records
+     C                   EXSR      DBPRSF
+     C                   END
+      * USER: Final processing (Pre-confirm)
+      * 00/Copy member SD0530DFPR - Optional Window Ref File  *
+     C*Optional window ref maintFinal Processing
+     C/COPY WNCPYSRC,SD0530DFPR
+      * If error, quit processing
+     C     *IN99         CABEQ     '1'           DAEXIT
+      * Defer confirm/update requested
+     C     W0DCF         CABEQ     'Y'           DAEXIT
+      * USER: Process command keys
+      * 00/Copy member SD0530DPCK - Optional Window Ref File  *
+     C*Optional window ref maintProcess Command Keys
+     C/COPY WNCPYSRC,SD0530DPCK
+      * CASE: CTL.*CMD key is *Go to 'Add' mode
+     C     *IN09         IFEQ      '1'                                          *IF
+      * Edit optional window - Optional Window Ref File  *
+     C                   CLEAR                   PARC
+     C                   MOVEL     *BLANK        PANMCP                         Name Of Calling
+     C                   MOVEL     *BLANK        PAFNKY                         Function Key
+      *
+     C                   CALL      'SD0531R'                            90      Edit optional w
+     C                   PARM      *BLANK        W0RTN             7
+     C                   PARM                    PARC                           KEY: Optional W
+     C                   PARM      'I'           WQ0001            1            Action Code
+      *
+     C     *IN90         IFEQ      '1'
+      * Call to program ended in error
+     C                   MOVEL     'Y2U0032'     W0RTN
+     C                   MOVEL     *BLANKS       W0CLPG           10
+     C                   MOVEL     'SD0531R'     W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                   MOVEL     'Y2U0032'     ZAMSID
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF
+     C                   MOVEL     W0CLPG        ZAMSDA                         Message data
+     C                   EXSR      ZASNMS
+     C                   END
+      *
+      * Error detected?
+     C     W0RTN         IFNE      *BLANK
+     C                   SETON                                        99        *
+     C                   END
+     C                   MOVEL     'Y'           W0RSF                          *Reload subfile
+     C                   END                                                    *FI
+      *================================================================
+     CSR   DAEXIT        ENDSR
+      /EJECT
+     CSR   DBPRSF        BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                   READC     #SFLRCD                                92    *
+     C     *IN92         DOWEQ     '0'
+      * Process subfile record
+     C                   EXSR      DCPRSR
+     C                   UPDATE    #SFLRCD
+     C                   READC     #SFLRCD                                92    *
+     C                   END
+      *================================================================
+     CSR   DBEXIT        ENDSR
+      /EJECT
+     CSR   DCPRSR        BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                   MOVEA     WKIND0        *IN(34)
+     C                   SETOFF                                       98        *
+     C                   EXSR      MC#1FN
+      * USER: Process subfile record (Pre-confirm)
+      * 00/Copy member SD0530DPSR - Optional Window Ref File  *
+     C*Optional window ref maintProcess Subfile Record
+     C/COPY WNCPYSRC,SD0530DPSR
+      * User requests E - Enquire
+      * CASE: RCD.*SFLSEL is *Enquire
+     C     #1SEL         IFEQ      'E'                                          *IF
+      * Display optional window - Optional Window Ref File  *
+     C                   CLEAR                   PBRC
+     C                   MOVEL     #1NMCP        PBNMCP                         Name Of Calling
+     C                   MOVEL     #1FNKY        PBFNKY                         Function Key
+      *
+     C                   CALL      'SD0531E'                            90      Display optiona
+     C                   PARM      *BLANK        W0RTN             7
+     C                   PARM                    PBRC                           KEY: Optional W
+      *
+     C     *IN90         IFEQ      '1'
+      * Call to program ended in error
+     C                   MOVEL     'Y2U0032'     W0RTN
+     C                   MOVEL     *BLANKS       W0CLPG           10
+     C                   MOVEL     'SD0531E'     W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                   MOVEL     'Y2U0032'     ZAMSID
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF
+     C                   MOVEL     W0CLPG        ZAMSDA                         Message data
+     C                   EXSR      ZASNMS
+     C                   END
+      *
+      * Error detected?
+     C     W0RTN         IFNE      *BLANK
+     C                   SETON                                        98        *
+     C                   END
+     C                   MOVEL     'Y'           W0RSF                          *Reload subfile
+     C                   END                                                    *FI
+      * User requests A -Amend
+      * CASE: RCD.*SFLSEL is *Amend
+     C     #1SEL         IFEQ      'A'                                          *IF
+      * Edit optional window - Optional Window Ref File  *
+     C                   CLEAR                   PARC
+     C                   MOVEL     #1NMCP        PANMCP                         Name Of Calling
+     C                   MOVEL     #1FNKY        PAFNKY                         Function Key
+      *
+     C                   CALL      'SD0531R'                            90      Edit optional w
+     C                   PARM      *BLANK        W0RTN             7
+     C                   PARM                    PARC                           KEY: Optional W
+     C                   PARM      'A'           WQ0002            1            Action Code
+      *
+     C     *IN90         IFEQ      '1'
+      * Call to program ended in error
+     C                   MOVEL     'Y2U0032'     W0RTN
+     C                   MOVEL     *BLANKS       W0CLPG           10
+     C                   MOVEL     'SD0531R'     W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                   MOVEL     'Y2U0032'     ZAMSID
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF
+     C                   MOVEL     W0CLPG        ZAMSDA                         Message data
+     C                   EXSR      ZASNMS
+     C                   END
+      *
+      * Error detected?
+     C     W0RTN         IFNE      *BLANK
+     C                   SETON                                        98        *
+     C                   END
+     C                   MOVEL     'Y'           W0RSF                          *Reload subfile
+     C                   END                                                    *FI
+      * User requests D - Delete
+      * CASE: RCD.*SFLSEL is *Delete
+     C     #1SEL         IFEQ      'D'                                          *IF
+      * Edit optional window - Optional Window Ref File  *
+     C                   CLEAR                   PARC
+     C                   MOVEL     #1NMCP        PANMCP                         Name Of Calling
+     C                   MOVEL     #1FNKY        PAFNKY                         Function Key
+      *
+     C                   CALL      'SD0531R'                            90      Edit optional w
+     C                   PARM      *BLANK        W0RTN             7
+     C                   PARM                    PARC                           KEY: Optional W
+     C                   PARM      'D'           WQ0003            1            Action Code
+      *
+     C     *IN90         IFEQ      '1'
+      * Call to program ended in error
+     C                   MOVEL     'Y2U0032'     W0RTN
+     C                   MOVEL     *BLANKS       W0CLPG           10
+     C                   MOVEL     'SD0531R'     W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                   MOVEL     'Y2U0032'     ZAMSID
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF
+     C                   MOVEL     W0CLPG        ZAMSDA                         Message data
+     C                   EXSR      ZASNMS
+     C                   END
+      *
+      * Error detected?
+     C     W0RTN         IFNE      *BLANK
+     C                   SETON                                        98        *
+     C                   END
+     C                   MOVEL     'Y'           W0RSF                          *Reload subfile
+     C                   END                                                    *FI
+      * Exit program processing - Fast Exit
+      * CASE: PGM.*Return code is *User QUIT requested
+     C     W0RTN         IFEQ      'Y2U9999'                                    *IF
+     C                   MOVEL     W0RTN         P0RTN                          *Return code
+     C                   EXSR      ZYEXPG
+     C                   END                                                    *FI
+     C     *IN98         IFEQ      '1'
+      * SFLRCD invalid
+     C  N99              Z-ADD     ##RR          ##SFRC               99        *
+      * SFLNXTCHG
+     C                   SETON                                        84
+     C                   ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                   SETOFF                                       84
+     C                   MOVEL     *BLANK        #1SEL
+     C                   END                                                    FI *IN98
+      *================================================================
+     CSR   DCEXIT        ENDSR
+      /EJECT
+     CSR   FBRQRL        BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                   MOVEL     'Y'           W0RSF
+      *================================================================
+     CSR   FBEXIT        ENDSR
+      /EJECT
+     CSR   MBFL#1        BEGSR
+      *================================================================
+      * Move @DMREGW fields to subfile
+      *================================================================
+     C                   MOVEL     *BLANK        #1SEL
+     C                   Z-ADD     DMLCD         #1LCD                          Last Change Dat
+     C                   MOVEL     DMTYLC        #1TYLC                         Type of Last Ch
+     C                   MOVEL     DMWINT        #1WINT                         Window Type
+     C                   MOVEL     DMWNCN        #1WNCN                         Window Controll
+     C                   Z-ADD     DMLGWD        #1LGWD                         Length of Windo
+     C                   Z-ADD     DMWDWD        #1WDWD                         Width of Window
+     C                   MOVEL     DMTTWD        #1TTWD                         Title of Window
+     C                   Z-ADD     DMSRWD        #1SRWD                         Starting Row of
+     C                   Z-ADD     DMSCWD        #1SCWD                         Starting column
+     C                   MOVEL     DMNMCP        #1NMCP                         Name Of Calling
+     C                   MOVEL     DMFNKY        #1FNKY                         Function Key
+     C                   MOVEL     DMPGMT        #1PGMT                         Program Text
+     C                   MOVEL     *BLANK        #1SEL                          *SFLSEL
+      *================================================================
+     CSR   MBEXIT        ENDSR
+      /EJECT
+     CSR   MC#1FN        BEGSR
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+      * CALC: Subfile record function fields
+      * 00/Copy member SD0530DRFF - Optional Window Ref File  *
+     C*Optional window ref maintCalculate Record Funcs
+     C/COPY WNCPYSRC,SD0530DRFF
+      *================================================================
+     CSR   MCEXIT        ENDSR
+      /EJECT
+     CSR   MEIZ#2        BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                   Z-ADD     *ZERO         #2LCD                          Last Change Dat
+     C                   MOVEL     *BLANK        #2TYLC                         Type of Last Ch
+     C                   MOVEL     *BLANK        #2WNCN                         Window Controll
+     C                   Z-ADD     *ZERO         #2LGWD                         Length of Windo
+     C                   Z-ADD     *ZERO         #2WDWD                         Width of Window
+     C                   MOVEL     *BLANK        #2TTWD                         Title of Window
+     C                   Z-ADD     *ZERO         #2SRWD                         Starting Row of
+     C                   Z-ADD     *ZERO         #2SCWD                         Starting column
+     C                   MOVEL     *BLANK        #2NMCP                         Name Of Calling
+     C                   MOVEL     *BLANK        #2FNKY                         Function Key
+     C                   MOVEL     *BLANK        #2PGMT                         Program Text
+      *================================================================
+     CSR   MEEXIT        ENDSR
+      /EJECT
+     CSR   Y0SET         BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR   Y0EXIT        ENDSR
+      /EJECT
+     CSR   Y8TST         BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                   Z-ADD     @#RWCL        ZINPOS            5 0
+     C     ZINPOS        DIV       256           W0CRW
+     C                   MVR                     W0CCL
+      *================================================================
+     CSR   Y8EXIT        ENDSR
+      /EJECT
+     CSR   Y9CLR         BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR   Y9EXIT        ENDSR
+      /EJECT
+     CSR   ZASNMS        BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C     ZAPGMQ        IFEQ      *BLANK
+     C                   MOVEL     ##PGM         ZAPGMQ
+     C                   END
+     C                   CALL      'Y2SNMGC'
+     C                   PARM                    ZAPGMQ           10            Program queue
+     C                   PARM                    ZAPGRL            5            Rel queue
+     C                   PARM                    ZAMSID            7            Message ID
+     C                   PARM                    ZAMSGF           10            Message file
+     C                   PARM                    ZAMSDA          132            Message data
+     C                   PARM                    ZAMSTP            7            Message type
+      * Clear all fields for default mechanism next time
+     C                   MOVEL     *BLANK        ZAPGMQ
+     C                   MOVEL     *BLANK        ZAPGRL
+     C                   MOVEL     *BLANK        ZAMSID
+     C                   MOVEL     *BLANK        ZAMSGF
+     C                   MOVEL     *BLANK        ZAMSDA
+     C                   MOVEL     *BLANK        ZAMSTP
+      *================================================================
+     CSR   ZAEXIT        ENDSR
+      /EJECT
+     CSR   ZHHPKY        BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                   MOVEL     'Y'           W0HLP             1
+      *
+      * Extract cursor row and column
+     C     @#RWCL        DIV       256           ZHCSRW            5 0          Row
+     C                   MVR                     ZHCSCL            5 0          Column
+      *
+      * Save cursor position for redisplay
+     C                   Z-ADD     ZHCSRW        ZZCSRW            3 0          Row
+     C                   Z-ADD     ZHCSCL        ZZCSCL            3 0          Column
+      *
+      *
+     C                   CALL      'YDDSHPR'
+     C                   PARM      ##PGM         W0HPMB           10            Help text sourc
+     C                   PARM      *BLANK        YYHPFL           10            Help text file
+     C                   PARM      *BLANK        YYHPLB           10            Help text libra
+     C                   PARM                    W0RTN             7
+     C                   PARM      '*START'      YYHLVN           10            Help label
+     C                   PARM      '*NORMAL'     YYUSOP           10            Options
+     C                   PARM      ZHCSRW        YYRW              5 0          Row
+     C                   PARM      ZHCSCL        YYCL              5 0          Column
+     C                   PARM      *ZERO         YYLGCT            5 0          # of grps
+     C                   PARM      *BLANK        YYLGVN           10            Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94              MOVEL     'OFF'         WCSRLC
+     C  N94              SETON                                        94        *
+      *================================================================
+     CSR   ZHEXIT        ENDSR
+      /EJECT
+     CSR   ZXEXPG        BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy member SD0530DEPP - Optional Window Ref File  *
+     C*Optional window ref maintExit Program Processing
+     C/COPY WNCPYSRC,SD0530DEPP
+     C                   EXSR      ZYEXPG
+      *================================================================
+     CSR   ZXEXIT        ENDSR
+      /EJECT
+     CSR   ZYEXPG        BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                   SETON                                        LR
+      *
+      * Exit program
+     C                   RETURN
+      *
+      *================================================================
+     CSR   ZYEXIT        ENDSR
+      /EJECT
+     CSR   ZZINIT        BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C     W0ICL         IFEQ      *BLANK
+     C                   MOVEL     'Y'           W0ICL             1            *Initial call
+     C                   ELSE
+     C                   MOVEL     'N'           W0ICL
+     C                   END
+     C                   MOVE      *BLANK        P0RTN
+     C                   MOVE      *BLANK        W0RTN             7
+     C                   MOVEL     *BLANK        W0RSL             1
+     C                   MOVEL     *BLANK        W0RSF             1
+     C                   MOVEL     *ZEROS        W0RTW             9 0
+     C                   MOVEL     '400'         W0ENV             3
+      * Setup job date/time
+      *
+     C                   Z-ADD     UDATE         ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C     ##JYY         IFLT      40
+     C                   Z-ADD     1             ##JCC
+     C                   ELSE
+     C                   Z-ADD     0             ##JCC
+     C                   END
+     C                   TIME                    ##JTM
+      * Update screen time
+     C                   TIME                    ##TME             6 0
+      * Define work field Midas Run Date
+     C                   MOVEL     *BLANK        WUMRDT            7
+      * Define work field Run day number
+     C                   Z-ADD     *ZERO         WURDNB            5 0
+      * Define work field Set Up Complete
+     C                   MOVEL     *BLANK        WUSUC             1
+      * Define work field Date format flag
+     C                   MOVEL     *BLANK        WUDFF             1
+      * Define work field Multi-branching Indicator
+     C                   MOVEL     *BLANK        WUMBIN            1
+      * Flag no *SET CURSOR in the program
+     C                   MOVE      'N'           YSETCS            1
+     C                   MOVE      *BLANK        WCSRLC            3
+      * Define *Synon program work fields
+     C                   MOVEL     *BLANKS       W0CFL            10            *Cursor field
+     C                   Z-ADD     *ZEROS        W0CRW             5 0          *Cursor row
+     C                   Z-ADD     *ZEROS        W0CCL             5 0          *Cursor column
+      * Move main file information to JOB context
+     C                   MOVE      @1FFL         ZZFFL            10            Main file name
+     C                   MOVE      @1FLB         ZZFLB            10            Main file lib
+     C                   MOVE      @1FMB         ZZFMB            10            Main file mbr
+     C                   MOVE      ZZFFL         @1FFL            10
+     C                   MOVE      ZZFLB         @1FLB            10
+     C                   MOVE      ZZFMB         @1FMB            10
+     C                   CALL      'Y2QLVNR'
+     C                   PARM                    ZZFFL            10
+     C                   PARM                    ZZFLB            10
+     C                   PARM                    ZZFQL            21            LIBRARY/FILE
+      * Open files
+     C                   OPEN      SD0530D#
+     C**********         OPEN      SDOREFL1                                                 MD057705
+     C                   MOVEL     'N'           W0PMT             1
+     C                   Z-ADD     13            ##SFPG            3 0          SFLPAG
+     C                   Z-ADD     1             ##SFRC
+      * Maximum record number
+     C                   Z-ADD     *ZERO         ##RRMX
+      * Scan limit
+     C                   Z-ADD     500           W0SLM             5 0
+      * Subfile pages
+     C                   Z-ADD     1             W0SPG             3 0
+      * Processed Subfile record
+     C                   Z-ADD     0             W0RR0             4 0
+      *................................................................
+     C                   MOVEL     *BLANK        W0GRP             1
+      * USER: Initialize program
+      * SD0530D precompiler - Optional Window Ref File  *
+      * Copyright Statement 1994 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C     *DTAARA       DEFINE                  RUNDAT
+     C                   IN        RUNDAT
+     C                   MOVE      MRDT          ##MRDT            7            RUN DATE
+     C                   MOVE      MRDT          WUMRDT
+     C                   MOVE      RDNB          WURDNB                         RUNDAY NO.
+     C                   MOVE      SUC           WUSUC                          SET UP COMPLT
+     C                   MOVE      DFF           WUDFF                          DTE FMT FLAG
+     C                   MOVE      MBIN          WUMBIN                         MULTI BR. IND
+      * 00/Copy member SD0530DFPG - Optional Window Ref File  *
+      * 00/Copy member SD0530DEPG - Optional Window Ref File  *
+      * 00/Copy member SD0530DIPG - Optional Window Ref File  *
+      * 00/Copy member SD0530DCPG - Optional Window Ref File  *
+     C*Optional window ref maintInitialise Program C-Spec
+     C/COPY WNCPYSRC,SD0530DCPG
+      * 00/Copy member SD0530DOPG - Optional Window Ref File  *
+      * Initialise subfile control
+     C                   EXSR      MEIZ#2
+      *================================================================
+     CSR   ZZEXIT        ENDSR
+      /EJECT
+     CSR   *PSSR         BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0530DPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0530DPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C*COPY*SDCPYSRC,SDPSSRINS                                                              MD057705
+     C/COPY SDCPYSRC,SDPSSRINTI                                                             MD057705
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0530DPS2
+      *
+      *================================================================
+     CSR                 ENDSR
+      *================================================================
+     O*Optional window ref maintInitialise Program O-Spec
+     O/COPY WNCPYSRC,SD0530DOPG
+**CTDATA CPY@
+(c) Finastra International Limited 2001

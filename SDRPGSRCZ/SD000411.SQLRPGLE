@@ -16,11 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD053314 *CREATE   Date 30Apr19               *
+      *  Last Amend No. MD056613           Date 20Sep20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD053314 *CREATE   Date 30Apr19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056613 - Deliverable Data Split for CSD101                 *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD053314 - Ensure user cannot be deleted when attached to    *
       *             an Interface.                                     *
@@ -44,7 +46,7 @@
       ** +--------------------------------------+
 
       ** Interface Password Validation Core File.
-     FSDIPVCL0  IF   E           K DISK    INFSR(*pssr)
+     F*SDIPVCL0* IF   E           K DISK    INFSR(*pssr)                                    MD056613
      F*SDSVALL0* IF   E           K DISK    INFSR(*pssr)                                    MD054605
      F*GPSVALL0* IF   E           K DISK    INFSR(*pssr)                                    MD054605
      F**********                           RENAME(@SVALL0:@SVALR0)                          MD054605
@@ -90,6 +92,7 @@
      D GPSVAL        E DS                  EXTNAME(GPSVLJW0)                                MD054605
      D                                     PREFIX(G)                                        MD054605
      D NullInds        s              5i 0 dim(16)                                          MD054605
+     D SDIPVC        E DS                  EXTNAME(SDIPVJW0)                                MD056613
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -118,9 +121,23 @@
       *****************************************************************
       *
       ** Perform check of User ID across the selected Interface
-     C     PID           SETLL     SDIPVCL0
-     C     PID           READE     SDIPVCL0                               51
-     C     *IN51         DOWEQ     *OFF
+     C*****PID**         SETLL     SDIPVCL0                                                 MD056613
+     C*****PID**         READE     SDIPVCL0                               51                MD056613
+     C/exec SQL                                                                             MD056613
+     C+ declare ACursor cursor for                                                          MD056613
+     C+ select * from SDIPVJW0 where ICINTF = :PID                                          MD056613
+     C+ order by ICINTF                                                                     MD056613
+     C/end-exec                                                                             MD056613
+                                                                                            MD056613
+     C/exec SQL                                                                             MD056613
+     C+ open ACursor                                                                        MD056613
+     C/end-exec                                                                             MD056613
+                                                                                            MD056613
+     C/exec SQL                                                                             MD056613
+     C+ fetch next from ACursor into :SDIPVC                                                MD056613
+     C/end-exec                                                                             MD056613
+     C******IN51         DOWEQ     *OFF                                                     MD056613
+     C     SQLCODE       DOWEQ     0                                                        MD056613
      C     PRetCd        ANDEQ     *BLANKS
       *
      C                   IF        ICUFLD = 'GIVAL'
@@ -273,9 +290,16 @@
      C                   ENDSL
      C                   ENDIF
       *
-     C     PID           READE     SDIPVCL0                               51
+     C*****PID           READE     SDIPVCL0                               51                MD056613
+     C/exec SQL                                                                             MD056613
+     C+ fetch next from ACursor into :SDIPVC                                                MD056613
+     C/end-exec                                                                             MD056613
      C                   ENDDO
 
+     C/exec SQL                                                                             MD056613
+     C+ close ACursor                                                                       MD056613
+     C/end-exec                                                                             MD056613
+                                                                                            MD056613
      C                   EVAL      *INLR = *ON
 
      C                   RETURN

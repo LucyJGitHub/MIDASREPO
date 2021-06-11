@@ -15,9 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD034449           Date 24Jan19               *      
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Negative Rate/Spread field is not displayed       *
@@ -173,6 +175,21 @@
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  Second DS for access programs, long data structure
+      *                                                                                       CLE172
+     D LoanScnBlrt     DS                                                                     CLE172
+     D  DDBLRT                        1A                                                      CLE172
+     D  DDRFRR                       10A                                                      CLE172
+     D  DDCALM                        4A                                                      CLE172
+     D  DDBADJ                       13A                                                      CLE172
+     D  DDFLOR                       13A                                                      CLE172
+     D  DDLBDY                        2A                                                      CLE172
+     D  DDLODY                        2A                                                      CLE172
+     D  DDOPSH                        1A                                                      CLE172
+     D  DDRRDP                        2A                                                      CLE172
+     D  DDDBAV                        1A                                                      CLE172
+     D  DDRTKN                        1A                                                      CLE172
+      ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
+      *                                                                                       CLE172
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -183,10 +200,21 @@
      D PRtcd           S              7                                                       CLE035
      D POptn           S              7                                                       CLE035
      D PSARD           S              6                                                       CLE035
+                                                                                              CLE172
+      ** Parameters for ZA0920                                                                CLE172
+     D @@RETC          S             10A                                                      CLE172
+     D @@AMTW          S             13P 0                                                    CLE172
+     D @@QECN          S              1P 0                                                    CLE172
+     D @@DCSP          S              1A                                                      CLE172
+     D @@AMTD          S             14A                                                      CLE172
+                                                                                              CLE172
      D*CLE035***       S              1                                               CLE035 BUG9491
      D CLE036          S              1                                                      BUG9491
      D CLE143          S              1                                                       CLE143
      D CRE073          S              1                                                       CRE073
+     D CLE172          S              1A                                                      CLE172
+     D WWBadj          S             11P 7                                                    CLE172
+     D WWFlor          S             11P 7                                                    CLE172
                                                                                               CLE035
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -586,6 +614,69 @@
                                                                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+     C                   IF        CLE172 = 'Y'                                               CLE172
+                                                                                              CLE172
+      ** Backward-Looking Rate                                                                CLE172
+                                                                                              CLE172
+     C                   MOVE      BLRT          DDBLRT                                       CLE172
+                                                                                              CLE172
+      ** Risk Free Rate                                                                       CLE172
+                                                                                              CLE172
+     C                   MOVE      RFRR          DDRFRR                                       CLE172
+                                                                                              CLE172
+      ** Calculation Method                                                                   CLE172
+                                                                                              CLE172
+     C                   MOVE      CALM          DDCALM                                       CLE172
+                                                                                              CLE172
+      ** Observation Period Shift                                                             CLE172
+                                                                                              CLE172
+     C                   MOVE      OPSH          DDOPSH                                       CLE172
+                                                                                              CLE172
+      ** Rates Known                                                                          CLE172
+                                                                                              CLE172
+     C                   MOVE      RTKN          DDRTKN                                       CLE172
+                                                                                              CLE172
+      ** Convert numeric fields into screen field                                             CLE172
+      ** if Backward-Looking Rate is Y                                                        CLE172
+                                                                                              CLE172
+     C                   IF        BLRT = 'Y'                                                 CLE172
+                                                                                              CLE172
+      ** Benchmark Adjustment                                                                 CLE172
+                                                                                              CLE172
+     C                   Z-ADD     BADJ          WWBadj                                       CLE172
+     C                   Z-ADD     *ZEROS        @@AMTW                                       CLE172
+     C                   MOVE      WWBadj        @@AMTW                                       CLE172
+     C                   EXSR      FMTRATE                                                    CLE172
+     C                   MOVE      @@AMTD        DDBADJ                                       CLE172
+                                                                                              CLE172
+      ** Floor                                                                                CLE172
+                                                                                              CLE172
+     C                   Z-ADD     FLOR          WWFlor                                       CLE172
+     C                   Z-ADD     *ZEROS        @@AMTW                                       CLE172
+     C                   MOVE      WWFlor        @@AMTW                                       CLE172
+     C                   EXSR      FMTRATE                                                    CLE172
+     C                   MOVE      @@AMTD        DDFLOR                                       CLE172
+                                                                                              CLE172
+      ** Lookback Days                                                                        CLE172
+                                                                                              CLE172
+     C                   MOVE      LBDY          DDLBDY                                       CLE172
+                                                                                              CLE172
+      ** Lockout Days                                                                         CLE172
+                                                                                              CLE172
+     C                   MOVE      LODY          DDLODY                                       CLE172
+                                                                                              CLE172
+      ** Rate Rounding Decimal Places                                                         CLE172
+                                                                                              CLE172
+     C                   MOVE      RRDP          DDRRDP                                       CLE172
+                                                                                              CLE172
+      ** Day Basis for Average                                                                CLE172
+                                                                                              CLE172
+     C                   MOVE      DBAV          DDDBAV                                       CLE172
+                                                                                              CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -613,9 +704,27 @@
       *
      C                   MOVEL     DDACT2        ##ACTN            1
      C                   MOVEL     *BLANK        LoanScnFmt2
+     C                   MOVEL     *BLANKS       LoanScnBlrt                                  CLE172
      C                   MOVEL     ##ACTN        DDACT2
       *
      C                   ENDSR
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      * FMTRATE - Format Rate for Display                             *                       CLE172
+      *****************************************************************                       CLE172
+     C     FMTRATE       BEGSR                                                                CLE172
+                                                                                              CLE172
+      ** Format using 7 decimal places                                                        CLE172
+     C                   Z-ADD     7             @@QECN                                       CLE172
+     C                   CALLB     'ZA0920'                                                   CLE172
+     C                   PARM      *BLANK        @@RETC                                       CLE172
+     C                   PARM                    @@AMTW                                       CLE172
+     C                   PARM                    @@QECN                                       CLE172
+     C                   PARM      '.'           @@DCSP                                       CLE172
+     C                   PARM      *BLANK        @@AMTD                                       CLE172
+                                                                                              CLE172
+     C                   ENDSR                                                                CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -649,6 +758,10 @@
       ***  Loan in screen format
       *
      C                   PARM                    LoanScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
       *
       ***  Initialize program name
       *
@@ -708,6 +821,19 @@
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+      ** Check if CLE172 is installed                                                         CLE172
+                                                                                              CLE172
+     C                   EVAL      CLE172 = 'N'                                               CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       PRtcd                                        CLE172
+     C                   PARM      '*VERIFY'     POptn                                        CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        PRtcd = *Blanks                                            CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
      C                   ENDSR
       *****************************************************************
       /EJECT

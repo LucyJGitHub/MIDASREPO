@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 207964             Date 23Aug02               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
@@ -165,6 +166,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
       *           not change ZMD to 'M'. Amendment to CLE023.         *
@@ -689,6 +691,7 @@
      D CER020          S              1A                                                      CER020
      D CRE073          S              1A                                                      CRE073
      D CLE141          S              1A                                                      CLE141
+     D CLE172          S              1A                                                      CLE172
 
      D LEVCliL       E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(L_)
@@ -3233,6 +3236,14 @@
      C     L_CLSPIN      WHENEQ    *Blank                                                     CLE106
      C                   Z-ADD     L_CLRTSP      INTR                                         CLE106
      C                   ENDSL
+      *                                                                                       CLE172
+      ** If CLE172 is ON, add/subtract the Benchmark Adjustment                               CLE172
+      *                                                                                       CLE172
+     C     CLE172        IFEQ      'Y'                                                        CLE172
+     C     L_CLBLRT      ANDEQ     'Y'                                                        CLE172
+     C     L_CLBADJ      ANDNE     *ZEROS                                                     CLE172
+     C                   ADD       L_CLBADJ      INTR                                         CLE172
+     C                   ENDIF                                                                CLE172
       *
       * Base rate code
      C                   MOVE      L_CLBRTT      BRTT
@@ -3946,6 +3957,19 @@
      C                   EVAL      PREM = L_CLPREM                                            CER050
      C                   ENDIF                                                                CER050
       *                                                                                       CER050
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      BLRT = L_CLBLRT                                            CLE172
+     C                   EVAL      RFRR = L_CLRFRR                                            CLE172
+     C                   EVAL      CALM = L_CLCALM                                            CLE172
+     C                   EVAL      BADJ = L_CLBADJ                                            CLE172
+     C                   EVAL      FLOR = L_CLFLOR                                            CLE172
+     C                   EVAL      LBDY = L_CLLBDY                                            CLE172
+     C                   EVAL      LODY = L_CLLODY                                            CLE172
+     C                   EVAL      OPSH = L_CLOPSH                                            CLE172
+     C                   EVAL      RRDP = L_CLRRDP                                            CLE172
+     C                   EVAL      DBAV = L_CLDBAV                                            CLE172
+     C                   EVAL      RTKN = L_CLRTKN                                            CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE164
      C                   ENDSR
       ****************************************************************
@@ -9575,6 +9599,19 @@
      C                   EXSR      *PSSR                                                      CLE141
      C                   ENDIF                                                                CLE141
      C                   ENDIF                                                                CLE141
+                                                                                              CLE172
+      ** Access SAR details to see if CLE172 is switched on                                   CLE172
+                                                                                              CLE172
+     C                   EVAL      CLE172 = 'N'                                               CLE172
+     C                   CALL      'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       PRetCode                                     CLE172
+     C                   PARM      '*VERIFY'     POption                                      CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      *BLANKS       DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        PRetCode = *BLANKS                                         CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CRE073
      C                   EVAL      SVALK1 = 'AutoEndCalcLoanFee'                            MD046370
      C                   EVAL      SVALK2 = 'PDCLPAMVPayAC'                                 MD050007

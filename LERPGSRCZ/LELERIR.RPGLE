@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD057871           Date 30Apr21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR702532           Date 13Jan15               *
       *                 MD028338           Date 25Nov14               *
@@ -51,8 +53,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR702532 - After rejection, there is no WIP record but RSTS  *
@@ -218,6 +222,12 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)                                  246574
       ** Rollover Extra Data - User's Enhancement(s) data                                     246574
                                                                                               246574
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            98                                                       CLE172
+     D NewLibor        S             98A                                                    MD057871
+      *                                                                                       CLE172
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank Details
 
@@ -254,6 +264,9 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                  MD057871
+     D BLKFLR          C                   CONST('            ')                            MD057871
+     D SCNSTR          C                   CONST('9999.9999999')                            MD057871
                                                                                               CLE106
       ** CLE106 feature                                                                       CLE106
      D CLE106          S              1                                                       CLE106
@@ -383,6 +396,15 @@
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
+      *                                                                                     MD057871
+     C                   EVAL       NewLibor = LeriScnBlrt                                  MD057871
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                            MD057871
+     C                   IF         Pos <> 0                                                MD057871
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:LeriScnBlrt:Pos:-
+     C                              12)                                                     MD057871
+     C                   EVAL       LeriScnBlrt = NewLibor                                  MD057871
+     C                   ENDIF                                                              MD057871
+      *                                                                                     MD057871
       ** Remerge buffer with all relevant data structures
 
      C                   EVAL      Buffer = NwRoScnFmt + NwRoScnFmt2 +
@@ -392,7 +414,9 @@
      C**********                       ##RECS + ##PAYS +                             CSF011 AR702532
      C**********                           InfData + ExtData                         246574 AR702532
      C                                 NwRoScnFmt3 + @ACTRV + ##RECS +                      AR702532
-     C                                 ##PAYS + InfData + ExtData                           AR702532
+     C*                                ##PAYS + InfData + ExtData                    AR702532 CLE172
+     C                                 ##PAYS + InfData + ExtData +                           CLE172
+     C                                 LeriScnBlrt                                            CLE172
 
      C                   MOVE      '1'           *INLR
      C                   RETURN
@@ -544,6 +568,10 @@
       ** Rollover Work Fields
      C                   PARM                    NwRoScnFmt
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** Update 'Current' Loan with Loan in Screen Format
 

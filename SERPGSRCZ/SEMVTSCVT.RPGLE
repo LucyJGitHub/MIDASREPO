@@ -14,15 +14,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056812           Date 20Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE039  *CREATE    Date 11Feb03               *
+      *                 CSE039  *CREATE    Date 11Feb03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056812  - Deliverable Data Split for SDSCODPD              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE039 - Automatic Settlement of Trades                      *
       *                                                               *
@@ -31,11 +33,11 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEMVTSL2  IF   E           K DISK    INFSR(*PSSR) PREFIX(P_)
      F                                     RENAME(SEMVTSD0:SEMVTSD2)
       ** Movements Status - Omit Midas-Generated Records
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -47,19 +49,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -71,49 +73,50 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D TranFilFmt    E DS                  EXTNAME(SEMVTSPD)
       ** SEMVTS Transaction Details in File Format
- 
+
      D APITrnDets    E DS                  EXTNAME(SEMVTS1PD)
       ** SEMVTS Transaction Details in screen format
- 
+
      D OScrnFlds     E DS                  EXTNAME(SEMVTS2PD)
       ** SEMVTS Output only Screen Fields
- 
+
      D SdBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
-     D SdSCOD        E DS                  EXTNAME(SDSCODPD)
+
+     D*SdSCOD***     E DS                  EXTNAME(SDSCODPD)                                MD056812
+     D SdSCOD        E DS                  EXTNAME(SDSCOJW0)                                MD056812
       ** SWIFT Status and Reason Codes
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Alternate arrays of Midas-generated Status Codes and Narratives
       ** and their related index
      D MidasGCod       S              4A   DIM(12) CTDATA PERRCD(1)
      D MidasGNar       S             60A   DIM(12) ALT(MidasGCod)
      D MGi             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦

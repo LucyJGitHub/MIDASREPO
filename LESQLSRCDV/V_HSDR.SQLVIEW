@@ -1,0 +1,56 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Lending Module                                                */
+/*                                                                             */
+/*       V_HSDR   - ARR Daily Rates History View                               */
+/*                                                                             */
+/*       (c) Finastra International Limited 2020                               */
+/*                                                                             */
+/*       Last Amend No. MD058103           Date 19May21                        */
+/*       Prev Amend No. MD057935           Date 29Apr21                        */ 
+/*                      CLE172  *CREATE    Date 01Oct20                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD058103 - ARR Daily Rates History content for NCCR SARR and          */
+/*                  SAVG are not correct                                       */
+/*       MD057935 - Add field Rate Applied and Current int. prd. for prefilter */ 
+/*       CLE172   - LIBOR Deregulation - Lending                               */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+  CTRNID,                                                                       :
+  CINFLG,                                                                       :   MD057935
+  CINPDT,                                                                       :
+  CINPDY,                                                                       :
+  COBPDT,                                                                       :
+  COBPDY,                                                                       :
+  CPBRFR,                                                                       :
+  CRTEAP,                                                                       :   MD057935
+**CAVCRT,***********************************************************************:   MD058103
+    CASE CCALCM                                                                 :   MD058103
+     WHEN 'NCCR' THEN CDCMRT                                                    :   MD058103
+     WHEN 'SARR' THEN CRTEAP                                                    :   MD058103
+     WHEN 'CCR'  THEN CAVCRT                                                    :   MD058103
+     WHEN 'SAVG' THEN CSMPAV                                                    :   MD058103
+     END AS CAVCRT,                                                             :   MD058103                                                                 :
+  CASE WHEN CINPDT = 0 THEN NULL ELSE DATE(CINPDT+719892) END AS CMINPDT,       :
+  CASE WHEN COBPDT = 0 THEN NULL ELSE DATE(COBPDT+719892) END AS CMOBPDT        :
+  FROM                                                                          :
+  SDHSDRTD                                                                      :
+  WHERE CMODID = 'LE';                                                          :                                                                  
+                                                                                : 
+  LABEL ON COLUMN **********/**********                                         :   MD058103
+   (CAVCRT IS 'Average/Compounded  Rate');                                      :   MD058103 
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD CMINPDT    AS CINPDT     USING SDHSDRTD                        :
+ * DESCRIBEFIELD CMOBPDT    AS COBPDT     USING SDHSDRTD                        :
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Daily Rates History ';                                          :
+                                                                                :

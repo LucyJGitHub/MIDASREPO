@@ -3265,10 +3265,11 @@
       ** Call program to validate Backward Looking Rate Fields                                CDL102
       *                                                                                       CDL102
      C     OKBLRT        IFNE      'N'                                                        CDL102
-     C                   MOVEL     D1MTYP        TransType                                    CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     'IL'          TransType                                    CDL102
      C                   CALLB     'ZAVBLRTE'                                                 CDL102
      C                   PARM      'FUND'        ApiName           4                          CDL102
-     C                   PARM                    D1PCDN            6                          CDL102
+     C                   PARM                    DDDLNO            6                          CDL102
      C                   PARM                    TransType         2                          CDL102
      C                   PARM                    DDCCY                                        CDL102
      C                   PARM                    DDBRTT                                       CDL102
@@ -3281,10 +3282,24 @@
      C                   PARM                    TempOutDS       200                          CDL102
      C                   PARM      *BLANKS       RetCodeOut                                   CDL102
       *                                                                                       CDL102
-      ** Move back updated values to screen fields                                            CDL102
-      *                                                                                       CDL102
-     C                   MOVEL     TempInpDS     TranScnBlrt                                  CDL102
      C     RetCodeOut    IFNE      'Error'                                                    CDL102
+     C                   MOVEL     'ID'          TransType                                    CDL102
+     C                   CALLB     'ZAVBLRTE'                                                 CDL102
+     C                   PARM      'FUND'        ApiName           4                          CDL102
+     C                   PARM                    DDDLNO            6                          CDL102
+     C                   PARM                    TransType         2                          CDL102
+     C                   PARM                    DDCCY                                        CDL102
+     C                   PARM                    DDBRTT                                       CDL102
+     C                   PARM                    DDICBS                                       CDL102
+     C                   PARM                    DDACTN                                       CDL102
+     C                   PARM      TranScnBlrt   TempInpDS       200                          CDL102
+     C                   PARM      *ZEROS        Idx                                          CDL102
+     C                   PARM                    FldNamXAr                                    CDL102
+     C                   PARM                    MsgIDXAr                                     CDL102
+     C                   PARM                    TempOutDS       200                          CDL102
+     C                   PARM      *BLANKS       RetCodeOut                                   CDL102
+     C     RetCodeOut    IFNE      'Error'                                                    CDL102
+                                                                                              CDL102
      C                   MOVEL     TempOutDS     FUNDValBlrt                                  CDL102
      C                   MOVEL     WCLBLRT       N1BLRT                                       CDL102
      C                   MOVEL     WCLRFRR       N1RFRR                                       CDL102
@@ -3324,6 +3339,9 @@
      C                   EXSR      SRUpdatErrs                                                CDL102
      C                   ENDIF                                                                CDL102
       *                                                                                       CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EXSR      SRUpdatErrs                                                CDL102
+     C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
       *                                                                                       CDL102
      C                   ENDSR                                                                CDL102

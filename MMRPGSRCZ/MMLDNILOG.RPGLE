@@ -51,7 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

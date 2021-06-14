@@ -104,6 +104,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057922 - SSI details are not defaulted on Loan Events.     *
+      *             Ensure correct defaulting of Customer's SSI or    *
+      *             Associated Loan during Loan Events (PI)           *
+      *             processing.                                       *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

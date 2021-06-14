@@ -269,6 +269,8 @@
      C                   MOVEL     *BLANKS       WWAIR                                      MD023416
      C     DDAIR         IFNE      *BLANKS                                                  MD023416
      C     CDL102        ANDEQ     'N'                                                        CDL102
+     C     CDL102        OREQ      'Y'                                                        CDL102
+     C     DDBLRT        ANDEQ     'N'                                                        CDL102
      C                   MOVEL     DDAIR         WWAIR            12                         BUG5169
      C                   ELSE                                                                 CDL102
      C                   MONITOR                                                              CDL102

@@ -314,7 +314,7 @@
      C                   IF        DDACTN = 'I'
       *                                                                                       CDL102
       ** For transactions using backward looking rate, the calculation of interest will be    CDL102
-      ** zero during input because the base rate code is linked to z sero value.              CDL102
+      ** zero during input because the base rate code is linked to a sero value.              CDL102
       *                                                                                       CDL102
      C                   IF        N1BLRT = 'Y'                                               CDL102
      C                   EVAL      N1MTTI = *ZEROS                                            CDL102

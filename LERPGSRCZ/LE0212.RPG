@@ -22,8 +22,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. FCM101F            Date 09Aug19               *
-      *  Prev Amend No. FCM101D            Date 02Apr19               *
+      *  Last Amend No. MD058102           Date 09Jun21               *
+      *  Prev Amend No. MD058283           Date 09Jun21               *
+      *                 MD058248           Date 09Jun21               *
+      *                 MD058238           Date 09Jun21               *
+      *                 FCM101F            Date 09Aug19               *
+      *                 FCM101D            Date 02Apr19               *
       *                 FCM101C            Date 01Apr19               *
       *                 FCM101             Date 22Mar19               *
       *                 MD052515           Date 24Jan19               *
@@ -40,7 +44,7 @@
       *                 MD050018           Date 05Nov18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD047806           Date 18Sep17               *
-      *                 MD031179           Date 24Nov15               *      
+      *                 MD031179           Date 24Nov15               *
       *                 AR698122           Date 11Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
@@ -295,6 +299,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058102 - Base rate code change on LOAMSDK and HISTSHQ does *
+      *             not display negative base rates correctly. Display*
+      *             '-' if negative for BC event. Pattern after fix   *
+      *             MD039618.                                         *
+      *  MD058283 - LOAC shows wrong new contractual spread rate and  *
+      *             and all-in rate on future rollovers. Populate     *
+      *             WNNSP and WNNSG with NNSP and NNSG, respectively  *
+      *             at the start of SR/SRRDAT.                        *
+      *  MD058248 - LOAC displays both the contractual spread rate and*
+      *             old spread rate. If FCM101 is ON, prevent display *
+      *             of old spread rate if contractual spread rate is  *
+      *             also output.                                      *
+      *  MD058238 - LOAC uses wrong interest rate after base rate code*
+      *             change. If FCM101 is ON, calculate the current    *
+      *             spread rate for a BC event in LOAMSDK or HISTSHQ. *
       *  FCM101F - Various FCM101 issues on LOAC                      *
       *  FCM101D - Further revisions to FCM101 and its fixes          *
       *  FCM101C - FCM101, FCM101A, FCM101B and FCM101C changes       *
@@ -319,7 +338,7 @@
       *  MD052734 - Maturity date projections missing for loans       *
       *             whose maturity date is less than rundate and is   *
       *             holiday on Currency and Location Business Day     *
-      *             Convention.                                       *      
+      *             Convention.                                       *
       *  MD053035 - Add missing line from MD035545.                   *
       *  MD052587 - Past Due Interest from PDCL Y appearing in PDCL Z *
       *             during enquiry in LOAC screen.                    *
@@ -1577,8 +1596,8 @@
      C***********          MOVE *BLANK    WSAME                     132288154221
      C                     MOVE *BLANK    SEMSG
      C                     MOVE *BLANK    SCMSG
-     C                     Z-ADD*ZERO     OUTALL                                             FCM101D
-     C                     Z-ADD*ZERO     NINTR                                              FCM101D
+     C**********           Z-ADD*ZERO     OUTALL                                    FCM101D MD058248
+     C**********           Z-ADD*ZERO     NINTR                                     FCM101D MD058248
      C                     Z-ADD11        VSLN
      C           *IN08     IFEQ '1'
      C                     MOVE '0'       *IN30
@@ -1599,6 +1618,10 @@
      C                     ENDIF                                                              244097
       *                                                                                       FCM101
      C           FCM101    IFEQ 'Y'                                                           FCM101
+     C                     Z-ADDNNSP      XXNNSP 117                                        MD058248
+     C                     MOVE NNSG      XXNNSG  1                                         MD058248
+     C                     Z-ADD*ZERO     OUTALL                                            MD058248
+     C                     Z-ADD*ZERO     NINTR                                             MD058248
      C                     MOVE 'N'       WFLOOR                                              FCM101
       *                                                                                       FCM101
      C           PTYP      IFEQ 61                                                            FCM101
@@ -2592,6 +2615,14 @@
      C********** BRTE      ANDGT*ZEROS                                              BUG9052 MD035329
      C********** RTSP      IFGE *ZEROS                                             MD035329 MD052515
      C********** BRTT      ANDGT*ZEROS                                             MD035329 MD052515
+      *                                                                                     MD058248
+      ** Output 'spread' if FCM101 is not ON or if                                          MD058248
+      ** FCM101 is ON and 'contractual spread' will not be output below                     MD058248
+      *                                                                                     MD058248
+     C           FCM101    IFNE 'Y'                                                         MD058248
+     C           FCM101    OREQ 'Y'                                                         MD058248
+     C           CNSG      ANDEQ*BLANK                                                      MD058248
+      *                                                                                     MD058248
      C           RTSP      IFNE *ZEROS                                                      AR988460
      C           BRTT      ANDGT*ZEROS                                                      MD052515
      C           VSLN      ANDLT20                                                           BUG9052
@@ -2629,6 +2660,7 @@
      C                     ENDIF                                                            AR988460
      C                     EXSR SRDISS                                                       BUG9052
      C                     ENDIF                                                             BUG9052
+     C                     ENDIF                                                            MD058248
       *                                                                                       FCM101
       ** ... Start Contractual Spread Rate                                                    FCM101
       *                                                                                       FCM101
@@ -3161,6 +3193,21 @@
      C           AMTPH     WHEQ 'BR'
      C           AMTPH     OREQ 'BC'
      C                     Z-ADDBRTEH     WCUBR
+     C           FCM101    IFEQ 'Y'                                                         MD058238
+     C                     SELEC                                                            MD058238
+     C           WCUSI     WHEQ 'A'                                                         MD058238
+     C           INTRH     SUB  BRTEH     WCUSP                                             MD058238
+     C           WCUSI     WHEQ 'S'                                                         MD058238
+     C           INTRH     ADD  BRTEH     WCUSP                                             MD058238
+     C           WCUSI     WHEQ 'P'                                                         MD058238
+     C           BRTEH     IFNE 0                                                           MD058238
+     C           INTRH     MULT 100       WWORK                                             MD058238
+     C           WWORK     DIV  BRTEH     WCUSP                                             MD058238
+     C                     ELSE                                                             MD058238
+     C                     Z-ADD0         WCUSP                                             MD058238
+     C                     ENDIF                                                            MD058238
+     C                     ENDSL                                                            MD058238
+     C                     ENDIF                                                            MD058238
      C                     EXSR SRNEWI
       *
      C           AMTPH     WHEQ 'SC'
@@ -4551,10 +4598,24 @@ E1   C                     ENDIF                                                
       *                                                                                       CLE036
      C                     ENDIF                                                              CLE036
       *                                                                                       CLE036
+     C           BRTEH     IFLT 0                                                           MD058102
+     C                     MOVE 'Y'       WSUB                                              MD058102
+     C                     Z-SUBBRTEH     BRTEH                                             MD058102
+     C                     ENDIF                                                            MD058102
+      *                                                                                     MD058102
      C                     MOVE BRTEH     ZFIELD
      C                     Z-ADD7         ZADEC
      C                     EXSR ZEDIT
+      *                                                                                     MD058102
+     C           WSUB      IFEQ 'Y'                                                         MD058102
+     C                     MOVE *BLANKS   WSUB                                              MD058102
+     C                     MOVE ZFIELD    WFLD1  19                                         MD058102
+     C           WFLD1     CAT  '-'       WFLD2  20                                         MD058102
+     C                     MOVE WFLD2     SAMNT                                             MD058102
+     C                     Z-SUBBRTEH     BRTEH                                             MD058102
+     C                     ELSE                                                             MD058102
      C                     MOVE ZFIELD    SAMNT
+     C                     ENDIF                                                            MD058102
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
      C                     EXSR SRDISH
       *                                                                                       FCM101
@@ -4834,6 +4895,14 @@ E1   C                     ENDIF                                                
       *                                                                                    AR1071639
      C********** RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
      C********** BRTEH     ANDNE*ZEROS                                            AR1071639 MD047806
+      *                                                                                     MD058248
+      ** Output 'spread' if FCM101 is not ON or if                                          MD058248
+      ** FCM101 is ON and 'contractual spread' will not be output below                     MD058248
+      *                                                                                     MD058248
+     C           FCM101    IFNE 'Y'                                                         MD058248
+     C           FCM101    OREQ 'Y'                                                         MD058248
+     C           CNSGH     ANDEQ*BLANK                                                      MD058248
+      *                                                                                     MD058248
      C           BRTT      IFGT *ZEROS                                                      MD047806
      C           WDTL5     ANDEQ*BLANK
      C           VSLN      ANDLT20
@@ -4873,6 +4942,7 @@ E1   C                     ENDIF                                                
      C                     MOVE 'Y'       WDTL5
      C                     EXSR SRDISH
      C                     ENDIF
+     C                     ENDIF                                                            MD058248
       *                                                                                       FCM101
      C           FCM101    IFEQ 'Y'                                                           FCM101
       *                                                                                       FCM101
@@ -5203,6 +5273,14 @@ E1   C                     ENDIF                                                
       *                                                                                    AR1071639
      C*********  RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
      C*********  BRTEH     ANDNE*ZEROS                                            AR1071639 MD047806
+      *                                                                                     MD058248
+      ** Output 'spread' if FCM101 is not ON or if                                          MD058248
+      ** FCM101 is ON and 'contractual spread' will not be output below                     MD058248
+      *                                                                                     MD058248
+     C           FCM101    IFNE 'Y'                                                         MD058248
+     C           FCM101    OREQ 'Y'                                                         MD058248
+     C           CNSGH     ANDEQ*BLANK                                                      MD058248
+      *                                                                                     MD058248
      C           BRTTH     IFGT *ZEROS                                                      MD047806
      C           BRTEH     ORNE *ZEROS                                                      MD047806
      C           VSLN      ANDLT20
@@ -5240,6 +5318,7 @@ E1   C                     ENDIF                                                
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
      C                     EXSR SRDISH
      C                     ENDIF
+     C                     ENDIF                                                            MD058248
       *
       ** ... Contractual Spread                                                               FCM101
       *                                                                                       FCM101
@@ -6412,6 +6491,22 @@ E1   C                     ENDIF                                                
       *
      C           AMTPL     WHEQ 'BC'
      C                     Z-ADDBRTEL     WCUBR
+      *                                                                                     MD058238
+     C           FCM101    IFEQ 'Y'                                                         MD058238
+     C                     CALL XXCALC                                                      MD058238
+     C                     PARM           PRTCD                                             MD058238
+     C                     PARM BRTEL     @@BSRT                                            MD058238
+     C                     PARM           SVBRTF                                            MD058238
+     C                     PARM           SVBRSG                                            MD058238
+     C                     PARM           SVAIRF                                            MD058238
+     C                     PARM           SVAISG                                            MD058238
+     C                     PARM CNSP      SVCNSP                                            MD058238
+     C                     PARM CNSG      SVCNSG                                            MD058238
+     C                     PARM *ZERO     OUTSPR 117                                        MD058238
+     C                     PARM *ZERO     OUTALL 117                                        MD058238
+     C                     PARM *BLANKS   OUTSPS  1                                         MD058238
+     C                     Z-ADDOUTSPR    WCUSP                                             MD058238
+     C                     ENDIF                                                            MD058238
       *                                                                                     AR698122
       ** Below code will be reversed to use the rate from LOAMSDK.                          AR698122
       ** Retrieval of historic rate already done upon insert of BC.                         AR698122
@@ -6627,10 +6722,24 @@ E1   C                     ENDIF                                                
       *                                                                                       CLE036
      C                     ENDIF                                                              CLE036
       *                                                                                       CLE036
+     C           BRTEL     IFLT 0                                                           MD058102
+     C                     MOVE 'Y'       WSUB                                              MD058102
+     C                     Z-SUBBRTEL     BRTEL                                             MD058102
+     C                     ENDIF                                                            MD058102
+      *                                                                                     MD058102
      C                     MOVE BRTEL     ZFIELD
      C                     Z-ADD7         ZADEC
      C                     EXSR ZEDIT
+      *                                                                                     MD058102
+     C           WSUB      IFEQ 'Y'                                                         MD058102
+     C                     MOVE *BLANKS   WSUB                                              MD058102
+     C                     MOVE ZFIELD    WFLD1                                             MD058102
+     C           WFLD1     CAT  '-'       WFLD2                                             MD058102
+     C                     MOVE WFLD2     SAMNT                                             MD058102
+     C                     Z-SUBBRTEL     BRTEL                                             MD058102
+     C                     ELSE                                                             MD058102
      C                     MOVE ZFIELD    SAMNT
+     C                     ENDIF                                                            MD058102
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
      C                     EXSR SRDISL
       *
@@ -11388,6 +11497,10 @@ E1   C                     ENDIF                                                
      C                     MOVE ' '       FCALR                           184903
      C                     Z-ADDRLDT      HFRLDT  50                                        MD053334
      C                     Z-ADD*ZERO     WWBRTE                                             BUG9240
+     C                     Z-ADDXXNNSP    NNSP                                              MD058248
+     C                     MOVE XXNNSG    NNSG                                              MD058248
+     C                     Z-ADDNNSP      WNNSP                                             MD058283
+     C                     MOVE NNSG      WNNSG   1                                         MD058283
       *                                                                                       224646
       ** Do not write rollover details if the selected date is greater                        224646
       ** than the rollover date                                                               224646
@@ -11464,7 +11577,9 @@ E1   C                     ENDIF                                                
       *                                                                                      FCM101F
      C           NNSG      IFEQ *BLANK                                                       FCM101F
      C           CNSG      ANDNE*BLANK                                                       FCM101F
-     C                     MOVE NNSG      WNNSG   1                                          FCM101F
+     C           NNSG      OREQ CNSG                                                        MD058283
+     C           NNSP      ANDEQCNSP                                                        MD058283
+     C**********           MOVE NNSG      WNNSG   1                                 FCM101F MD058283
      C                     MOVE CNSG      NNSG                                               FCM101F
      C                     Z-ADDCNSP      WNNSP                                              FCM101F
      C                     ENDIF                                                             FCM101F
@@ -12556,10 +12671,19 @@ E1   C                     ENDIF                                                
      C                     ENDIF                                                             FCM101F
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
      C**********           MOVE 'Y'       WDTL5                                        184903 193701
+      *                                                                                     MD058248
+      ** Output 'spread' if FCM101 is not ON or if                                          MD058248
+      ** FCM101 is ON and 'contractual spread' will not be output below                     MD058248
+      *                                                                                     MD058248
+     C           FCM101    IFNE 'Y'                                                         MD058248
+     C           FCM101    OREQ 'Y'                                                         MD058248
+     C           NNSG      ANDEQ*BLANK                                                      MD058248
+      *                                                                                     MD058248
      C           WNOTWR    IFEQ *BLANK                                                        224646
      C           WFXCOF    ANDNE'Y'                                                         MD031378
      C                     EXSR SRDETL                                    184903
      C                     ENDIF                                                              224646
+     C                     ENDIF                                                            MD058248
      C                     MOVE 'Y'       WDTL8                                               193701
      C           VSLN      IFGE 20                                                            FCM101
      C           WBRAT     IFNE *ZEROS                                                        FCM101

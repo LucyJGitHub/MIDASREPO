@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD029086           Date 20Aug14              */
-/*       Prev Amend No. CUP040             Date 10Mar14              */
+/*       Last Amend No. MD058171           Date 11Jun21              */
+/*       Prev Amend No. MD029086           Date 20Aug14              */
+/*                      CUP040             Date 10Mar14              */
 /*                      MD020016           Date 19Apr13              */
 /*                      AR1092254          Date 27Feb13              */
 /*                      A1084804           Date 30Jan13              */
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058171 - Delete the temporary file in QTEMP when running  */
+/*                  *PRC.                                            */
 /*       MD029086 - Running of UPT_WIPCF encountered duplicate       */
 /*                  errors.                                          */
 /*       CUP040 - New deliverable data methodology.                  */
@@ -41,7 +44,7 @@
 /**********               &TKOOPT &KEYF &LAYER)                                        */ /*CUP040*/
              PGM        PARM(&MODE &FILE &OLDLIB &NEWLIB &MBROPT +
                           &TKOOPT &KEYF &LAYER &ORIF)                                     /*CUP040*/
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
@@ -51,7 +54,7 @@
              DCL        VAR(&KEYF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
              DCL        VAR(&ORIF) TYPE(*CHAR) LEN(10)                                    /*CUP040*/
- 
+
              DCL        VAR(&OFFSET) TYPE(*DEC) LEN(3 0)
              DCL        VAR(&RECLEN) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
@@ -66,25 +69,25 @@
              DCL        VAR(&DATE) TYPE(*CHAR) LEN(6)
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                      /*MD029086*/
              DCL        VAR(&SQL) TYPE(*CHAR) LEN(5000)                                 /*MD029086*/
- 
+
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
              RTVJOBA    USER(&USER) DATE(&DATE)
- 
+
 ADD:
 /* Add Action File. */
              IF         COND(&MODE *EQ '*ADD') THEN(DO)
@@ -102,7 +105,7 @@ ADD:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
 BUILD:
 /* Build Action File. */
              IF         COND(&MODE *EQ '*BLD') THEN(DO)
@@ -120,10 +123,10 @@ BUILD:
                 IF         COND(&RTNCODE *NE ' ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
 /* Create work files. */
                 CALLSUBR   SUBR(CRTWRKFS) RTNVAL(&SUBRERR)
- 
+
 /* Copy data from files to flat-files. */
                 CPYF       FROMFILE(&OLDLIB/&FILE) +
                              TOFILE(QTEMP/UPAFNDPD) MBROPT(*REPLACE) +
@@ -133,10 +136,10 @@ BUILD:
                              TOFILE(QTEMP/UPAFODPD) MBROPT(*REPLACE) +
                              FMTOPT(*NOCHK)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
 /* Perform special processing for before build. */
                 CALLSUBR   SUBR(PREBLD) RTNVAL(&SUBRERR)
- 
+
 /* Call program to perform comparison. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
@@ -151,7 +154,7 @@ BUILD:
 /* Perform special processing after build. */
                 CALLSUBR   SUBR(PSTBLD)  RTNVAL(&SUBRERR)
              ENDDO
- 
+
 REVIEW:
 /* Review Action File. */
              IF         COND(&MODE *EQ '*RVW') THEN(DO)
@@ -166,10 +169,10 @@ REVIEW:
                 IF         COND(&RTNCODE *NE ' ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
 /* Create work files. */
                 CALLSUBR   SUBR(CRTWRKFS) RTNVAL(&SUBRERR)
- 
+
 /* Copy across files to enable processing. */
                 CPYF       FROMFILE(UPAFDVPD) TOFILE(QTEMP/UPAFODPD) +
                              MBROPT(*REPLACE) INCREL((*IF ATACT *NE +
@@ -179,10 +182,10 @@ REVIEW:
                              MBROPT(*REPLACE) INCREL((*IF ATACT *EQ +
                              'AB') (*AND ATFILE *EQ &FILE)) FMTOPT(*NOCHK)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
 /* Perform special processing before review. */
                 CALLSUBR   SUBR(PRERVW) RTNVAL(&SUBRERR)
- 
+
 /* Call program to produce report of Action File. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
@@ -195,7 +198,7 @@ REVIEW:
                 CHGVAR     VAR(&USRDTA) VALUE('R' *BCAT &FILE)
                 CHGSPLFA   FILE(UP009006P1) SPLNBR(*LAST) USRDTA(&USRDTA)
              ENDDO
- 
+
 CONFLICT:
 /* Cross check Action File. */
              IF         COND(&MODE *EQ '*CFT') THEN(DO)
@@ -210,10 +213,10 @@ CONFLICT:
                 IF         COND(&RTNCODE *NE ' ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
 /* Create work files. */
                 CALLSUBR   SUBR(CRTWRKFS) RTNVAL(&SUBRERR)
- 
+
 /* Copy across files to enable processing. */
                 CPYF       FROMFILE(UPAFDVPD) TOFILE(QTEMP/UPAFODPD) +
                              MBROPT(*REPLACE) INCREL((*IF ATFILE *EQ +
@@ -222,13 +225,13 @@ CONFLICT:
                 CPYF       FROMFILE(&FILE) TOFILE(QTEMP/UPAFNDPD) +
                              MBROPT(*REPLACE) FMTOPT(*NOCHK)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
 /* Identify library containing system file. */
                 RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&NEWLIB)
- 
+
 /* Perform special processing before running conflict report. */
                 CALLSUBR   SUBR(PRECFT) RTNVAL(&SUBRERR)
- 
+
 /* Call program to produce conflict report. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
@@ -240,12 +243,12 @@ CONFLICT:
                 ENDDO
                 CHGVAR     VAR(&USRDTA) VALUE('X' *BCAT &FILE)
                 CHGSPLFA   FILE(UP009006P1) SPLNBR(*LAST) USRDTA(&USRDTA)
- 
+
 /* Perform special processing after running conflict report. */
                 CALLSUBR   SUBR(PSTCFT) RTNVAL(&SUBRERR)
- 
+
              ENDDO
- 
+
 UPDACTF:
 /* Update Action File. */
              IF         COND(&MODE *EQ '*UPD') THEN(DO)
@@ -261,7 +264,7 @@ UPDACTF:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
 PROCESS:
 /* Process Action File. */
              IF         COND(&MODE *EQ '*PRC') THEN(DO)
@@ -271,7 +274,7 @@ PROCESS:
                 ENDDO
 /* Perform special processing before processing Action File. */
                 CALLSUBR   SUBR(PREPRC) RTNVAL(&SUBRERR)
- 
+
                 OVRDBF     FILE(UPAFDVL1) TOFILE(QTEMP/UPAFDVPD)
                 CALL       PGM(UP009005)
                 DLTOVR     FILE(UPAFDVL1)
@@ -287,7 +290,7 @@ PROCESS:
 /* Perform special processing after processing Action File. */
                 CALLSUBR   SUBR(PSTPRC) RTNVAL(&SUBRERR)
              ENDDO
- 
+
 MERGE:                                                                                  /*A1084804*/
 /* Merge Action Files. */                                                               /*A1084804*/
              IF         COND(&MODE *EQ '*MRG') THEN(DO)                                 /*A1084804*/
@@ -315,9 +318,9 @@ MERGE:                                                                          
 /* Perform special processing after merging Action Files. */                            /*A1084804*/
                 CALLSUBR   SUBR(PSTMRG) RTNVAL(&SUBRERR)                                /*A1084804*/
              ENDDO                                                                      /*A1084804*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -334,7 +337,7 @@ RCVMSG:
                 SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                              MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
              ENDDO
- 
+
 /*********************************************************************/
 /*                                                                   */
 /*       PREBLD - Special processing to perform before the build of  */
@@ -342,7 +345,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PREBLD)
- 
+
 /* APDFFLDPD */
              IF         COND(&FILE *EQ 'APDFFLDPD') THEN(DO)
                 CPYF       FROMFILE(&OLDLIB/&FILE) +
@@ -358,7 +361,7 @@ RCVMSG:
                    CLRPFM     FILE(QTEMP/UPAFODPD)
                 ENDDO
              ENDDO
- 
+
 /* GPDFFLDPD */
              IF         COND(&FILE *EQ 'GPDFFLDPD') THEN(DO)
                 CPYF       FROMFILE(&OLDLIB/&FILE) +
@@ -374,7 +377,7 @@ RCVMSG:
                    CLRPFM     FILE(QTEMP/UPAFODPD)
                 ENDDO
              ENDDO
- 
+
              ENDSUBR
 /* End PREBLD subroutine. */
 /*********************************************************************/
@@ -384,22 +387,22 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PSTBLD)
- 
+
 /* CBDPRLPD */
              IF         COND(&FILE *EQ 'CBDPRLPD') THEN(DO)
                 CALL       PGM(UP009008) PARM(&FILE)
              ENDDO
- 
+
 /* CBMEXCPD */
              IF         COND(&FILE *EQ 'CBMEXCPD') THEN(DO)
                 CALL       PGM(UP009008) PARM(&FILE)
              ENDDO
- 
+
 /* CBMDCNPD */
              IF         COND(&FILE *EQ 'CBMDCNPD') THEN(DO)
                 CALL       PGM(UP009008) PARM(&FILE)
              ENDDO
- 
+
              ENDSUBR
 /* End PSTBLD subroutine. */
 /*********************************************************************/
@@ -409,7 +412,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PRERVW)
- 
+
 /* General */
              IF         COND(&TKOOPT *EQ '*PRETKO') THEN(DO)
                 CPYF       FROMFILE(UPAFCPPD) TOFILE(QTEMP/UPAFODPD) +
@@ -425,7 +428,7 @@ RCVMSG:
                    CLRPFM     FILE(QTEMP/UPAFNDPD)
                 ENDDO
              ENDDO
- 
+
              ENDSUBR
 /* End PRERVW subroutine. */
 /*********************************************************************/
@@ -435,7 +438,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PRECFT)
- 
+
 /* APDFFLDPD */
              IF         COND(&FILE *EQ 'APDFFLDPD') THEN(DO)
                 CPYF       FROMFILE(&NEWLIB/&FILE) +
@@ -445,7 +448,7 @@ RCVMSG:
                    CLRPFM     FILE(QTEMP/UPAFNDPD)
                 ENDDO
              ENDDO
- 
+
 /* GPDFFLDPD */
              IF         COND(&FILE *EQ 'GPDFFLDPD') THEN(DO)
                 CPYF       FROMFILE(&NEWLIB/&FILE) +
@@ -455,7 +458,7 @@ RCVMSG:
                    CLRPFM     FILE(QTEMP/UPAFNDPD)
                 ENDDO
              ENDDO
- 
+
              ENDSUBR
 /* End PRECFT subroutine. */
 /*********************************************************************/
@@ -465,7 +468,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PSTCFT)
- 
+
              ENDSUBR
 /* End PSTCFT subroutine. */
 /*********************************************************************/
@@ -475,7 +478,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PREUPD)
- 
+
 /* General */
              IF         COND(&TKOOPT *EQ '*PRETKO') THEN(DO)
                 OVRDBF     FILE(AFCPL01) TOFILE(UPAFCPL0) SHARE(*NO)
@@ -484,7 +487,7 @@ RCVMSG:
                 OVRDBF     FILE(AFCPL01) TOFILE(UPAFDVL0) SHARE(*NO)
                 OVRDBF     FILE(UPAFCPL0) TOFILE(UPAFDVL0) SHARE(*NO)
              ENDDO
- 
+
              ENDSUBR
 /*********************************************************************/
 /*                                                                   */
@@ -493,14 +496,14 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PSTUPD)
- 
+
 /* General */
              DLTOVR     FILE(AFCPL01)
- 
+
              IF         COND(&TKOOPT *EQ '*POSTTKO') THEN(DO)
                 DLTOVR     FILE(UPAFCPL0)
              ENDDO
- 
+
              ENDSUBR
 /* End PSTUPD subroutine. */
 /*********************************************************************/
@@ -510,7 +513,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PREPRC)
- 
+
 /* General */
 /* - create work file containing only the records for the relevant file. */
              DLTF       FILE(QTEMP/UPAFDVPD)
@@ -534,35 +537,38 @@ RCVMSG:
 /**********  CPYF       FROMFILE(&FILE) TOFILE(&PLIB/&SECCOPY) +                     */ /*MD020016*/
 /**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                            */ /*MD020016*/
 /**********               MBROPT(*REPLACE) CRTFILE(*YES)                             */ /*MD020016*/
+/* - delete security copy before copying it. */                                         /*MD058171*/
+             DLTF       FILE(QTEMP/&SECCOPY)                                            /*MD058171*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD058171*/
              CPYF       FROMFILE(&FILE) TOFILE(QTEMP/&SECCOPY) +
                           FROMMBR(*ALL) TOMBR(*FROMMBR) +
                           MBROPT(*REPLACE) CRTFILE(*YES)                                /*MD020016*/
- 
+
 /* APDFFLDPD */
              IF         COND(&FILE *EQ 'APDFFLDPD') THEN(DO)
                 OVRDBF     FILE(APDFFLDPD) MBR(APIFMODPD)
              ENDDO
- 
+
 /* GPDFFLDPD */
              IF         COND(&FILE *EQ 'GPDFFLDPD') THEN(DO)
                 OVRDBF     FILE(GPDFFLDPD) MBR(GPIFMODPD)
              ENDDO
- 
+
 /* CBDPRLPD */
              IF         COND(&FILE *EQ 'CBDPRLPD') THEN(DO)
                 CALL       PGM(UP0809)
              ENDDO
- 
+
 /* CBMEXCPD */
              IF         COND(&FILE *EQ 'CBMEXCPD') THEN(DO)
                 CALL       PGM(UP0814)
              ENDDO
- 
+
 /* CBMDCNPD */
              IF         COND(&FILE *EQ 'CBMDCNPD') THEN(DO)
                 CALL       PGM(UP0819)
              ENDDO
- 
+
 /* T_WIPCF */
              IF         COND(&FILE *EQ 'T_WIPCF') THEN(DO)
 /**********     RESETMAXID FILE(T_WIPCF)                                             */ /*MD029086*/
@@ -575,12 +581,12 @@ RCVMSG:
                 RUNSQL     SQL(&SQL) COMMIT(*NONE)                                      /*MD029086*/
                 RESETMAXID FILE(T_WIPCF) RSTOPT(*RSTALL)                                /*MD029086*/
              ENDDO
- 
+
 /* T_GPOVCFPD */
              IF         COND(&FILE *EQ 'T_GPOVCFPD') THEN(DO)
                 RESETMAXID FILE(T_GPOVCFPD)
              ENDDO
- 
+
 /* T_GRMENUH */                                                                         /*AR859322*/
              IF         COND(&FILE *EQ 'T_GRMENUH') THEN(DO)                            /*AR859322*/
                 RESETMAXID FILE(T_GRMENUH)                                              /*AR859322*/
@@ -600,17 +606,17 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PSTPRC)
- 
+
 /* APDFFLDPD */
              IF         COND(&FILE *EQ 'APDFFLDPD') THEN(DO)
                 DLTOVR     FILE(APDFFLDPD)
              ENDDO
- 
+
 /* GPDFFLDPD */
              IF         COND(&FILE *EQ 'GPDFFLDPD') THEN(DO)
                 DLTOVR     FILE(GPDFFLDPD)
              ENDDO
- 
+
 /* FCREPTPD */
              IF         COND(&FILE *EQ 'FCREPTPD') THEN(DO)
 /* Update trailer FCRPDSPA. */
@@ -619,45 +625,45 @@ RCVMSG:
                    RTNSUBR    RTNVAL(1)
                 ENDDO
              ENDDO
- 
+
 /* APNDCONPD */
              IF         COND(&FILE *EQ 'APNDCONPD') THEN(DO)
 /* Update file APDFFLDPD. */
                 CALL       PGM(APCCRTNDFL)
              ENDDO
- 
+
 /* GPNDCONPD */
              IF         COND(&FILE *EQ 'GPNDCONPD') THEN(DO)
 /* Update file APDFFLDPD. */
                 CALL       PGM(GPCCRTNDFL)
              ENDDO
- 
+
 /* CBDPRLPD */
              IF         COND(&FILE *EQ 'CBDPRLPD') THEN(DO)
                 CALL       PGM(UP0809)
              ENDDO
- 
+
 /* CBMEXCPD */
              IF         COND(&FILE *EQ 'CBMEXCPD') THEN(DO)
                 CALL       PGM(UP0814)
              ENDDO
- 
+
 /* CBMDCNPD */
              IF         COND(&FILE *EQ 'CBMDCNPD') THEN(DO)
                 CALL       PGM(UP0819)
              ENDDO
- 
+
 /* T_WIPCF */
              IF         COND(&FILE *EQ 'T_WIPCF') THEN(DO)
 /**********     RESETMAXID FILE(T_WIPCF)                                             */ /*MD029086*/
                 RESETMAXID FILE(T_WIPCF) RSTOPT(10000)                                  /*MD029086*/
              ENDDO
- 
+
 /* T_GPOVCFPD */
              IF         COND(&FILE *EQ 'T_GPOVCFPD') THEN(DO)
                 RESETMAXID FILE(T_GPOVCFPD)
              ENDDO
- 
+
 /* T_GRMENUH */                                                                         /*AR859322*/
              IF         COND(&FILE *EQ 'T_GRMENUH') THEN(DO)                            /*AR859322*/
                 RESETMAXID FILE(T_GRMENUH)                                              /*AR859322*/
@@ -677,13 +683,13 @@ RCVMSG:
 /*                                                                   */                 /*A1084804*/
 /*********************************************************************/                 /*A1084804*/
              SUBR       SUBR(PSTMRG)                                                    /*A1084804*/
- 
+
 /* Call program to reset unique numbers for CB* files. */                               /*A1084804*/
              OVRDBF     FILE(UPAFCPPD) TOFILE(&OLDLIB/UPAFCPPD)                         /*A1084804*/
              CALL       PGM(UP009013)                                                   /*A1084804*/
              DLTOVR     FILE(UPAFCPPD)                                                  /*A1084804*/
              RGZPFM     FILE(&OLDLIB/UPAFCPPD)                                          /*A1084804*/
- 
+
              ENDSUBR                                                                    /*A1084804*/
 /* End PSTMRG subroutine. */                                                            /*A1084804*/
 /*********************************************************************/
@@ -692,7 +698,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(CRTWRKFS)
- 
+
              DLTF       FILE(QTEMP/UPAFODPD)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/UPAFNDPD)
@@ -701,7 +707,7 @@ RCVMSG:
                           TOLIB(QTEMP)
              CRTDUPOBJ  OBJ(UPAFNDPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP)
- 
+
              ENDSUBR
 /* End CRTWRKFS subroutine. */
 /*********************************************************************/
@@ -710,7 +716,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(T_GRMENUL)
- 
+
              IF         COND(&MODE *EQ '*BLD') THEN(DO)
                 CLRPFM     FILE(UPGMULPD)
                 DLTF       FILE(QTEMP/T_GRMENU_O)
@@ -736,27 +742,27 @@ RCVMSG:
                 CALL       PGM(UPC1725) PARM('D' &OLDLIB &NEWLIB)
                 DLTOVR     FILE(GMUL1 GMUL2)
              ENDDO
- 
+
              IF         COND(&MODE *EQ '*RVW') THEN(DO)
                 CHGVAR     VAR(&HEADER) VALUE(&FILE *BCAT 'differences +
                              Between "Old" and "New" Libraries')
                 CALL       PGM(UP1726) PARM(&HEADER)
                 CHGSPLFA   FILE(UP1726P1) SPLNBR(*LAST) USRDTA(&FILE)
              ENDDO
- 
+
              IF         COND(&MODE *EQ '*CFT') THEN(DO)
                 CALL       PGM(UP1728) PARM(&FILE)
                 CHGSPLFA   FILE(UP1728P1) SPLNBR(*LAST) USRDTA(&FILE)
                 CHGSPLFA   FILE(UP0803P1) SPLNBR(*LAST) USRDTA(&FILE)
              ENDDO
- 
+
              IF         COND(&MODE *EQ '*PRC') THEN(DO)
                 CALL       PGM(UP1727)
              ENDDO
- 
- 
+
+
              ENDSUBR
 /* End T_GRMENUL subroutine. */
- 
+
 ENDPGM:
              ENDPGM

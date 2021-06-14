@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 250161             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. 250161             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 MD056313           Date 21Sep20               *
       *                 MD054028           Date 05Sep19               *
@@ -141,6 +142,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  250161 - Ensure that maturity date and value date of deals   *
       *           is validated against DACO of ACCNTAB.               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -431,6 +433,8 @@
       * Incoming transaction in screen format
      D TranIn        E DS                  EXTNAME(MMLDNIPD)
 
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
      D TranQExt      E DS                  EXTNAME(DLSTMPPD)                                  CER049
      ** Incoming stamp tax details screen format                                              CER049
                                                                                               CER049
@@ -1163,6 +1167,9 @@
      C                   IF        CER050 = 'Y'                                             MD054028
      C                   EVAL      DDAPRC = %SUBST(Buffer2:1774)                            MD054028
      C                   ENDIF                                                              MD054028
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EVAL      TranScnBlrt = %SUBST(Buffer2:1783)                         CDL102
+     C                   ENDIF                                                                CDL102
      C                   IF        CDL033 = 'Y'                                               CDL033
      C**********         EVAL      RFormula = %SUBST(Buffer:454:8)                    CDL033 BUG9827
      C**********         EVAL      PFormula = %SUBST(Buffer:462:8)                    CDL033 BUG9827
@@ -1473,6 +1480,7 @@
      C                   EVAL      Buffer2 = %SUBST(Filler:357)                             MD054028
      C                                       + TranQExt                                       CSF011
      C                                       + DDAPRC + DDAPRR                              MD054028
+     C                                       + TranScnBlrt                                    CDL102
      C                                       + FIDTScnRpt                                     CSF011
      C**********         EVAL      BufferEx2 = RatDateDS + PayDateDS                 CDL033 BUG10943
      C**********                              + RegData                            BUG10563 BUG10943
@@ -1838,6 +1846,20 @@
      C                   If        PRTCD = *Blanks                                            CDL020
      C                   Eval      CDL020 = 'Y'                                               CDL020
      C                   Endif                                                                CDL020
+                                                                                              CDL102
+      ** Access SAR details file to determine if CDL102 is switched on                        CDL102
+      ** (Libor Deregulation Dealing)                                                         CDL102
+                                                                                              CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *Blanks       PRTCD                                        CDL102
+     C                   PARM      '*VERIFY'     POPTN                                        CDL102
+     C                   PARM      'CDL102'      PSARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+     C                   MOVE      'N'           CDL102            1                          CDL102
+     C                   IF        PRTCD = *Blanks                                            CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ENDIF                                                                CDL102
       *
       * Access SAR details file to determine if CSC011 switchable feature
       * is switched on
@@ -2513,6 +2535,7 @@
      C                   PARM                    ExtData
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Field OK flags (DS) from/to caller
      C                   PARM                    MMELDN
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -2597,6 +2620,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      IKINTR        SRate                                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
                                                                                               CDL016
      C                   ENDIF                                                                CDL016
                                                                                               CDL016
@@ -3006,6 +3030,7 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS
       *
@@ -3120,6 +3145,7 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS            24
       *
@@ -4398,6 +4424,7 @@
      C                   PARM                    IKRDFC                                      BUG9827
       ** Decimal separator (1A, from SDDEALPD)                                               BUG9827
      C                   PARM      *blanks       NNDCSP                                      BUG9827
+     C                   PARM                    TranScnBlrt                                  CDL102
                                                                                              BUG9827
      C                   IF        ReturnCode <> *BLANKS                                     BUG9827
      C     *LOCK         IN        LDA                                                       BUG9827

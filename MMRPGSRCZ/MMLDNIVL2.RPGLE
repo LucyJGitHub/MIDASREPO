@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD055010           Date 04Mar20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD055010           Date 04Mar20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD055010 - Error message displayed with special character    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -238,6 +240,19 @@
      D  WMM9                   3      4  0                                                    CDL093
      D  WYY9                   5      6  0                                                    CDL093
       *                                                                                       CDL093
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
       **  Front Office (2 First characters determine System Front Office)
      D FrontOffice     DS            20
      D  W_System               1      2
@@ -749,6 +764,7 @@
      C                   PARM                    DDRDFC                                     BUG10810
       ** Decimal separator (1A, from SDDEALPD)                                              BUG10810
      C                   PARM                    BNDCSP                                     BUG10810
+     C                   PARM                    DDBLRT                                       CDL102
                                                                                             BUG10810
      C                   ELSE                                                               BUG10810
                                                                                             BUG10810
@@ -810,6 +826,7 @@
      C                   PARM                    DDRDFC                                     BUG10810
       ** Decimal separator (1A, from SDDEALPD)                                              BUG10810
      C                   PARM                    BNDCSP                                     BUG10810
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   ENDIF                                                              BUG10810
       *                                                                                       CDL093
      C     TAGCALC9      TAG                                                                  CDL093
@@ -1120,6 +1137,7 @@
       ** New Field STRate                                                                     CDL033
       *                                                                                       CDL033
      C                   PARM                    STRate           11 7                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
       *
       **  Move program name into *LDA field.
       *

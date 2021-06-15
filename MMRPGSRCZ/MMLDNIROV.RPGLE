@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -145,8 +147,8 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -158,57 +160,57 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
      D  Z_HKCCY      E                     EXTFLD(HKCCY)
      D  Z_HKCYDP     E                     EXTFLD(HKCYDP)
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** EXTERNAL DS FOR BASE RATE DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                  238592
       ** EXTERNAL DS FOR CURRENCY DETAILS                                                     238592
                                                                                               238592
@@ -216,18 +218,18 @@
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)                       CSD006
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                     CSD006
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD025680
       ** External DS for SAR Details                                                        MD025680
- 
+
      D/COPY WNCPYSRC,MMLDNIYD01
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D HKCYDP          S              1S 0
- 
+
       ** Index for arrays of error message ids etc
      D Ix              S              3P 0
      D Wx              S              3P 0
@@ -254,7 +256,7 @@
      D ddDCSGOK        S              1A                                                      CRE073
      D WWBRTT          S             11P 7                                                    CRE073
      D WDDBRTT         S             12A                                                      CRE073
- 
+
      D CER016          S              1A                                                    MD025680
      D PRtCd           S              7A                                                    MD025680
      D POptn           S              7A                                                    MD025680

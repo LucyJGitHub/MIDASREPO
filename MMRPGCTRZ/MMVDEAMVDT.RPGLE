@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD04624            Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -58,7 +60,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
@@ -90,41 +92,41 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D**  Data Structure to split value date used in key to deams file
      D  @KVALD                 1      8  0
@@ -132,90 +134,90 @@
      D  @VYEAR                 3      4  0
      D  @VDMM                  5      6  0
      D  @VDDD                  7      8  0
- 
+
      D                 DS
      D**  Data structure for convertion of YYMMDD to DDMMYY
      D  @DMVDT                 1      6
      D  @DMVD                  1      2
      D  @DMVM                  3      4
      D  @DMVY                  5      6
- 
+
      D                 DS
      D**  Data Structure for screen value date (received as a parameter)
      D  @VDAT                  1      6
      D  @DSPD                  1      2
      D  @DSPM                  3      4
      D  @DSPY                  5      6
- 
+
       ** External data structure for access programs (short)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D @DEAM         E DS                  EXTNAME(MMDEAMPP)
      D  @DMVYR                51     52
      D  @DMVMT                53     54
      D  @DMVDY                55     56
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MSGID)
- 
+
       ** Warning message code 1 received as a parameter
      D WMsgid1         S                   LIKE(#MSGID)
- 
+
       ** Value Date received as a parameter
      D DDVDAT          S              6A
- 
+
       ** Deal Amendment Type received as a parameter
      D DDMTYP          S              2A
- 
+
       ** Action Code received as a parameter
      D DDACTN          S              1A
- 
+
       ** Deal Number received as a parameter
      D DDDLNO          S              6A
- 
+
       ** Record ID from original deal received as a parameter
      D H@RCID          S              2A
- 
+
       ** Currency from original deal received as a parameter
      D H@CCY           S              3A
- 
+
       ** Notice Days from original deal passed as parameter
      D H@NTCE          S              3S 0
- 
+
       ** Run Day Number from SDBANKPD received as paramater
      D BJRDNB          S              5  0
- 
+
       ** Local Currency Code from SDBANKPD received as paramater
      D BJLCCY          S              3A
- 
+
       ** Date Format Indicator from SDBANKPD received as paramater
      D BJDFIN          S              1A
- 
+
       ** System Location Code from SDBANKPD received as paramater
      D BJSLCD          S              3A
- 
+
       ** Location Code (last 3 characters from Nostro Shortname A7NOSN)
       ** received as paramater
      D @RLOC           S              3A
- 
+
       ** Value Date in Midas Day Number format returned as a parameter
      D ValueDate       S              5  0
- 
+
       ** Valid Value Date reformated returned as a parameter
      D IGVDYY          S              4S 0
      D IGVDMM          S              2S 0
      D IGVDDD          S              2S 0
- 
+
       ** Fields used in call to ZF2C
      D DateIn          S              5  0
      D FirstCcy        S              3A
@@ -224,7 +226,7 @@
      D SecondLoc       S              3A
      D NumDaysFwd      S              2S 0
      D DayNumber       S              5  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -232,7 +234,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -240,7 +242,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   WarnFound
@@ -293,7 +295,7 @@
      C                   ELSE
      C                   MOVE      @DSPD         @VDMM
      C                   END
- 
+
      C     BJDFIN        IFEQ      'D'
      C                   MOVE      @DSPM         @VDMM
      C                   ELSE
@@ -379,7 +381,7 @@
      C                   MOVE      BJSLCD        SecondLoc
      C                   Z-ADD     H@NTCE        NumDaysFwd
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ZF2C'
      C                   PARM                    ReturnCode
      C                   PARM                    DateIn
@@ -401,21 +403,21 @@
      C                   END
      C*
      C     DEAMVDTEND    TAG
- 
+
      C** No error set up value date for output
      C                   IF        ErrorFound = 'N'
      C                   Z-ADD     @VDYY         IGVDYY
      C                   Z-ADD     @VDMM         IGVDMM
      C                   Z-ADD     @VDDD         IGVDDD
      C                   ENDIF
- 
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -427,9 +429,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    Msgid1
@@ -450,7 +452,7 @@
      C                   PARM                    IGVDYY
      C                   PARM                    IGVDMM
      C                   PARM                    IGVDDD
- 
+
      C** Deam key fields
      C     @DMKEY        KLIST
      C                   KFLD                    @DLKEY            6 0
@@ -463,11 +465,11 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD04624            Date 27Oct17               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD027637           Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -76,7 +78,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FFORAT     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -95,84 +97,84 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Deam Status
      D @STSA           S             24    DIM(5) CTDATA PERRCD(1)
- 
+
       * Deam in File Format
      D DeamFilFmt    E DS                  EXTNAME(MMDEAMPP)
- 
+
       * Deam in Screen Format
      D DeamScnFmt    E DS                  EXTNAME(MMDEAMPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D PDaynoIn        S              5P 0                                                    CDL017
       ** Midas Day number                                                                     CDL017
                                                                                               CDL017
      D PDateOut        S              8S 0                                                    CDL017
       ** Formatted date field for use in the parameter list                                   CDL017
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
@@ -180,7 +182,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CRE073          S              1A                                                      CRE073
                                                                                               CRE073
       ** +--------------------------------------+
@@ -249,7 +251,7 @@
      C**  - Execute FMTAMT to format the rate, using 8 decimal places
      C**    and adjusting the file figure to have only implied decimal
      C**    places.
- 
+
      C     HNMTYP        IFNE      'SC'
      C     HNMTYP        ANDNE     'EM'                                                       CDL017
      C     HNMTYP        ANDNE     'BC'                                                       CDL022
@@ -708,7 +710,7 @@
      C                   EXSR      *PSSR                                                      CRE073
      C                   ENDIF                                                                CRE073
      C                   ENDIF                                                                CRE073
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

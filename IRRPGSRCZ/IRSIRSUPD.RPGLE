@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056655A          Date 09Oct20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD05665            Date 09Oct20               *
       *                 MD056655           Date 21Sep20               *
       *                 MD031031           Date 24Feb15               *
       *                 MD054117           Date 12Sep19               *
@@ -121,6 +122,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056655A - Deal no already exists is encountered when NASP  *
       *              transaction is entered; error in SOAP exists     *

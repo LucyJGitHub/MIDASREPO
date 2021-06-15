@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD04624            Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 03Jun14               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -59,7 +61,7 @@
       *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -77,143 +79,143 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D WSRACT          S             21A   DIM(12)
       ** Array for the Receipt Accounts
- 
+
      D WSRALL          S              1A   DIM(12)
       ** Array for the Receipt Allocations
- 
+
      D WSRPCT          S              7A   DIM(12)
       ** Array for the Receipt Percentages
- 
+
      D WVRPCT          S              6A   DIM(12)
       ** Array for the Receipt Valid Percentages
- 
+
      D WSRAMT          S             14A   DIM(12)
       ** Array for the Receipt Amounts
- 
+
      D WVRAMT          S             13A   DIM(12)
       ** Array for the Receipt Valid Amounts
- 
+
      D WSPACT          S             21A   DIM(12)
       ** Array for the Payment Accounts
- 
+
      D WSPALL          S              1A   DIM(12)
       ** Array for the Payment Allocations
- 
+
      D WSPPCT          S              7A   DIM(12)
       ** Array for the Payment Percentages
- 
+
      D WVPPCT          S              6A   DIM(12)
       ** Array for the Payment Valid Percentages
- 
+
      D WSPAMT          S             14A   DIM(12)
       ** Array for the Payment Amounts
- 
+
      D WVPAMT          S             13A   DIM(12)
       ** Array for the Payment Valid Amounts
- 
+
      D CHKACCI         S             21A   DIM(12)
       ** Check Array for Interest Account entered more than once
- 
+
      D CHKACCP         S             21A   DIM(12)
       ** Check Array for Principal Account entered more than once
- 
+
      D CHKACCB         S             21A   DIM(12)
       ** Check Array for Principal + Interest Account entered more than once
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       ** Deal in File Format
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** External DS for Short Dummy Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** External DS for Long Dummy Data Structure
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External DS for Branch details
- 
+
      D ACCT          E DS                  EXTNAME(ACCNTAB)
       ** External DS for Account details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for Currency details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** External DS for Dealing details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  WLCD         E                     EXTFLD(LCD)
       ** External DS for SAR Details
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** Screen - Receive Instructions
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** Screen - Payment Instructions
- 
+
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)
       ** File - Receive Further Settlement Instructions
- 
+
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)
       ** File - Payment Further Settlement Instructions
- 
+
      D #FRECS        E DS                  EXTNAME(SDFSSRPD)
       ** Screen - Receive Further Settlement Instructions
- 
+
      D #FPAYS        E DS                  EXTNAME(SDFSSPPD)
       ** Screen - Payment Further Settlement Instructions
- 
+
      D #FRECE        E DS                  EXTNAME(SDFSERPD)
       ** Errors - Receive Further Settlement Instructions
- 
+
      D #FPAYE        E DS                  EXTNAME(SDFSEPPD)
       ** Errors - Payment Further Settlement Instructions
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                 CSF011A
      D                                     PREFIX(C_)                                        CSF011A
       ** External DS for Customer details                                                    CSF011A
@@ -222,17 +224,17 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for Accounts Date Array
      D Wx              S              2P 0
- 
+
       ** DS for Multibranch indicator using RUNDAT
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
       ** OUR ACCOUNT
      D                 DS
      D  A#OURA                 1     18
@@ -243,7 +245,7 @@
      D  A#ACAS                 7     18
      D  A#ACSQ                17     18
      D  A#REST                 3     18
- 
+
       ** Parameters for RE101901
      D PRetCode        S              7
      D PInBranch       S              3
@@ -260,7 +262,7 @@
      D POutACode       S             10  0
      D POutASeqN       S              2  0
      D POutRetNo       S             10  0
- 
+
      D WFldNameArr     S             10    DIM(75)
      D*WkCust***       S              6  0                                                    CSD027
      D WkCust          S              6                                                       CSD027
@@ -273,7 +275,7 @@
      D WkASeqNA        S              2
      D WkRetNoA        S             10
      D WIdx            S              3  0
- 
+
       ** Parameters for call to ZA0840
      D @@ALPH          S             16A
      D @@IDP           S              3  0
@@ -290,7 +292,7 @@
      D CusIdxD         S              4S 0                                                   CSF011A
      D CusIdxE         S              4S 0                                                   CSF011A
      D W@Len           S              4S 0                                                   CSF011A
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -306,25 +308,25 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialisation
- 
+
      C                   EXSR      SRINIT
- 
+
       ** Receipt - Further Settlement Instructions
- 
+
      C     DDRMAC        IFEQ      'Y'
      C                   EXSR      RECEIP
      C                   ENDIF
- 
+
       ** Payment - Further Settlement Instructions
- 
+
      C     DDPMAC        IFEQ      'Y'
      C                   EXSR      PAYMNT
      C                   ENDIF
- 
+
       ** Exit program
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
@@ -333,27 +335,27 @@
       *                                                               *
       *****************************************************************
      C     RECEIP        BEGSR
- 
+
       ** Receipt - Clear output fields
- 
+
      C                   CLEAR                   #FRECF
- 
+
       ** Receipt - Validate Accounts
- 
+
      C                   EXSR      VLRACNT
- 
+
       ** Receipt - Validate Allocation
- 
+
      C                   EXSR      VLRALL
- 
+
       ** Receipt - Validate Percentage
- 
+
      C                   EXSR      VLRPCTG
- 
+
       ** Receipt - Validate Amounts
- 
+
      C                   EXSR      VLRAMNT
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -362,28 +364,28 @@
       *                                                               *
       *****************************************************************
      C     PAYMNT        BEGSR
- 
+
       ** Payment - Clear output fields
- 
+
      C                   CLEAR                   #FPAYF
- 
+
       ** Payment - Validate Accounts
- 
+
      C                   EXSR      VLPACNT
- 
+
       ** Payment - Validate Allocation
- 
+
      C                   EXSR      VLPALL
- 
- 
+
+
       ** Payment - Validate Percentage
- 
+
      C                   EXSR      VLPPCTG
- 
+
       ** Payment - Validate Amounts
- 
+
      C                   EXSR      VLPAMNT
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -392,9 +394,9 @@
       *                                                               *
       *****************************************************************
      C     VLRACNT       BEGSR
- 
+
       ** Validate Unallocated Account
- 
+
      C                   EVAL      Wx = 0
       *
      C     DRUAC         IFEQ      *BLANKS
@@ -408,9 +410,9 @@
      C                   EXSR      VLROBR
      C                   EXSR      VLRONS
      C                   ENDIF
- 
+
       ** Validate all other Accounts entered
- 
+
      C                   MOVE      *BLANKS       CHKACCI
      C                   MOVE      *BLANKS       CHKACCP
      C                   MOVE      *BLANKS       CHKACCB
@@ -419,7 +421,7 @@
      C                   EXSR      SRSETCNI                                                  CSF011A
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSRACT(Wx) <> *BLANKS
       *
       ** An entry has been made, but the previous field is blank
@@ -523,14 +525,14 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   EXSR      SRCNTCNI                                                  CSF011A
      C                   ADD       1             Wx
      C                   ENDDO
      C                   EVAL      SETTF = *BLANKS                                           CSF011A
- 
+
       ** If all the Accounts are valid set up file fields
- 
+
      C                   IF        RUACOK  <> 'N' AND  RAC02OK <> 'N' AND
      C                             RAC03OK <> 'N' AND  RAC04OK <> 'N' AND
      C                             RAC05OK <> 'N' AND  RAC06OK <> 'N' AND
@@ -553,7 +555,7 @@
      C                   MOVE      DRAC12        FRAC12
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -562,15 +564,15 @@
       *                                                               *
       *****************************************************************
      C     VLRALL        BEGSR
- 
+
       ** Validate Allocation
- 
+
      C                   MOVE      'N'           CHKIP             1
      C                   MOVE      'N'           CHKB              1
      C                   EVAL      Wx = 1
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSRALL(Wx) <> *BLANKS
       *
       ** An Allocation may only be entered if an Account has been entered
@@ -630,7 +632,7 @@
      C                   IF        WSRALL(Wx) = 'B'
      C                   MOVE      'Y'           CHKB
      C                   ENDIF
- 
+
      C                   IF        WSRALL(Wx) = 'B' AND
      C                             CHKIP = 'Y' OR
      C                             WSRALL(Wx) = 'I' AND
@@ -643,12 +645,12 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
- 
+
       ** If all the Allocations are valid set up file fields
- 
+
      C                   IF        RAL01OK <> 'N' AND  RAL02OK <> 'N' AND
      C                             RAL03OK <> 'N' AND  RAL04OK <> 'N' AND
      C                             RAL05OK <> 'N' AND  RAL06OK <> 'N' AND
@@ -670,7 +672,7 @@
      C                   MOVE      DRAL12        FRAL12
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -679,9 +681,9 @@
       *                                                               *
       *****************************************************************
      C     VLRPCTG       BEGSR
- 
+
       ** Validate Percentage
- 
+
      C                   MOVE      'N'           ErrPerc           1
      C                   MOVE      'N'           PercEnt           1
      C                   Z-ADD     0             PercTotI          6 0
@@ -690,7 +692,7 @@
      C                   EVAL      Wx = 1
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSRPCT(Wx) <> *BLANKS
       *
       ** A Percentage may only be entered if an Account has been entered
@@ -761,12 +763,12 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
- 
+
       ** All Percentages entered must add up to 100
- 
+
      C     WSRPCT(1)     IFNE      *BLANKS
      C     PercTotI      IFNE      0
      C     PercTotI      ANDNE     100000
@@ -780,9 +782,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1011'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Dispay formatted percentage field
- 
+
      C                   MOVE      WSRPCT(1)     DRPC01
      C                   MOVE      WSRPCT(2)     DRPC02
      C                   MOVE      WSRPCT(3)     DRPC03
@@ -795,9 +797,9 @@
      C                   MOVE      WSRPCT(10)    DRPC10
      C                   MOVE      WSRPCT(11)    DRPC11
      C                   MOVE      WSRPCT(12)    DRPC12
- 
+
       ** If all the Percentage fields are valid set up file fields
- 
+
      C                   IF        RPC01OK <> 'N' AND  RPC02OK <> 'N' AND
      C                             RPC03OK <> 'N' AND  RPC04OK <> 'N' AND
      C                             RPC05OK <> 'N' AND  RPC06OK <> 'N' AND
@@ -819,7 +821,7 @@
      C                   MOVE      WVRPCT(12)    FRPC12
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -828,9 +830,9 @@
       *                                                               *
       *****************************************************************
      C     VLRAMNT       BEGSR
- 
+
       ** Validate Amounts
- 
+
      C                   MOVE      'N'           ErrAmt            1
      C                   MOVE      'N'           AmntEnt           1
      C                   Z-ADD     0             AmntTotI         15 0
@@ -839,7 +841,7 @@
      C                   EVAL      Wx = 1
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSRAMT(Wx) <> *BLANKS
       *
       ** An Amount may only be entered if an Account has been entered
@@ -908,7 +910,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
       *
@@ -923,9 +925,9 @@
      C                   EXSR      RcvAmtERR
      C                   EVAL      MsgIDArr(Idx) = 'ESM1014'
      C                   ENDIF
- 
+
       ** For Allocation 'B' all Amounts must not exceed the Principal + Interest
- 
+
      C     WSRAMT(1)     IFNE      *BLANKS
      C     AmntTotB      IFNE      0
      C     AmntTotB      ANDGT     TotAmIn
@@ -935,9 +937,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1012'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** For Allocation 'I' all Amounts must not exceed the Interest
- 
+
      C     WSRAMT(1)     IFNE      *BLANKS
      C     AmntTotI      IFNE      0
      C     AmntTotI      ANDGT     UMTTI
@@ -947,9 +949,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1019'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** For Allocation 'P' all Amounts must not exceed the Principal
- 
+
      C     WSRAMT(1)     IFNE      *BLANKS
      C     AmntTotP      IFNE      0
      C     AmntTotP      ANDGT     UAMNP
@@ -959,9 +961,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1020'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Display formatted Amount field
- 
+
      C                   MOVE      WSRAMT(1)     DRAM01
      C                   MOVE      WSRAMT(2)     DRAM02
      C                   MOVE      WSRAMT(3)     DRAM03
@@ -974,9 +976,9 @@
      C                   MOVE      WSRAMT(10)    DRAM10
      C                   MOVE      WSRAMT(11)    DRAM11
      C                   MOVE      WSRAMT(12)    DRAM12
- 
+
       ** If all the Amount fields are valid set up file fields
- 
+
      C                   IF        RAM01OK <> 'N' AND  RAM02OK <> 'N' AND
      C                             RAM03OK <> 'N' AND  RAM04OK <> 'N' AND
      C                             RAM05OK <> 'N' AND  RAM06OK <> 'N' AND
@@ -998,7 +1000,7 @@
      C                   MOVE      WVRAMT(12)    FRAM11
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1007,9 +1009,9 @@
       *                                                               *
       *****************************************************************
      C     VLPACNT       BEGSR
- 
+
       ** Validate Unallocated Account
- 
+
      C                   EVAL      Wx = 0
       *
      C     DPUAC         IFEQ      *BLANKS
@@ -1022,9 +1024,9 @@
      C                   EXSR      VLPOBR
      C                   EXSR      VLPONS
      C                   ENDIF
- 
+
       ** Validate all other Accounts entered
- 
+
      C                   MOVE      *BLANKS       CHKACCI
      C                   MOVE      *BLANKS       CHKACCP
      C                   MOVE      *BLANKS       CHKACCB
@@ -1033,7 +1035,7 @@
      C                   EXSR      SRSETCNI                                                  CSF011A
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSPACT(Wx) <> *BLANKS
       *
       ** An entry has been made, but the previous field is blank
@@ -1132,14 +1134,14 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   EXSR      SRCNTCNI                                                  CSF011A
      C                   ADD       1             Wx
      C                   ENDDO
      C                   EVAL      SETTF = *BLANKS                                           CSF011A
- 
+
       ** If all the Accounts are valid set up file fields
- 
+
      C                   IF        PUACOK  <> 'N' AND  PAC02OK <> 'N' AND
      C                             PAC03OK <> 'N' AND  PAC04OK <> 'N' AND
      C                             PAC05OK <> 'N' AND  PAC06OK <> 'N' AND
@@ -1162,7 +1164,7 @@
      C                   MOVE      DPAC12        FPAC12
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1171,15 +1173,15 @@
       *                                                               *
       *****************************************************************
      C     VLPALL        BEGSR
- 
+
       ** Validate Allocation
- 
+
      C                   MOVE      'N'           CHKIP
      C                   MOVE      'N'           CHKB
      C                   EVAL      Wx = 1
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSPALL(Wx) <> *BLANKS
       *
       ** An Allocation may only be entered if an Account has been entered
@@ -1239,7 +1241,7 @@
      C                   IF        WSPALL(Wx) = 'B'
      C                   MOVE      'Y'           CHKB
      C                   ENDIF
- 
+
      C                   IF        WSPALL(Wx) = 'B' AND
      C                             CHKIP = 'Y' OR
      C                             WSPALL(Wx) = 'I' AND
@@ -1252,12 +1254,12 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
- 
+
       ** If all the Allocations are valid set up file fields
- 
+
      C                   IF        PAL01OK <> 'N' AND  PAL02OK <> 'N' AND
      C                             PAL03OK <> 'N' AND  PAL04OK <> 'N' AND
      C                             PAL05OK <> 'N' AND  PAL06OK <> 'N' AND
@@ -1279,7 +1281,7 @@
      C                   MOVE      DPAL12        FPAL12
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1288,9 +1290,9 @@
       *                                                               *
       *****************************************************************
      C     VLPPCTG       BEGSR
- 
+
       ** Validate Percentage
- 
+
      C                   MOVE      'N'           ErrPerc
      C                   MOVE      'N'           PercEnt
      C                   Z-ADD     0             PercTotI          6 0
@@ -1299,7 +1301,7 @@
      C                   EVAL      Wx = 1
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSPPCT(Wx) <> *BLANKS
       *
       ** A Percentage may only be entered if an Account has been entered
@@ -1370,12 +1372,12 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
- 
+
       ** All Percentages entered must add up to 100
- 
+
      C     WSPPCT(1)     IFNE      *BLANKS
      C     PercTotI      IFNE      0
      C     PercTotI      ANDNE     100000
@@ -1389,9 +1391,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1011'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Dispay formatted percentage field
- 
+
      C                   MOVE      WSPPCT(1)     DPPC01
      C                   MOVE      WSPPCT(2)     DPPC02
      C                   MOVE      WSPPCT(3)     DPPC03
@@ -1404,9 +1406,9 @@
      C                   MOVE      WSPPCT(10)    DPPC10
      C                   MOVE      WSPPCT(11)    DPPC11
      C                   MOVE      WSPPCT(12)    DPPC12
- 
+
       ** If all the Percentage fields are valid set up file fields
- 
+
      C                   IF        PPC01OK <> 'N' AND  PPC02OK <> 'N' AND
      C                             PPC03OK <> 'N' AND  PPC04OK <> 'N' AND
      C                             PPC05OK <> 'N' AND  PPC06OK <> 'N' AND
@@ -1428,7 +1430,7 @@
      C                   MOVE      WVPPCT(12)    FPPC12
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1437,9 +1439,9 @@
       *                                                               *
       *****************************************************************
      C     VLPAMNT       BEGSR
- 
+
       ** Validate Amounts
- 
+
      C                   MOVE      'N'           ErrAmt
      C                   MOVE      'N'           AmntEnt
      C                   Z-ADD     0             AmntTotI         15 0
@@ -1448,7 +1450,7 @@
      C                   EVAL      Wx = 1
       *
      C                   DOW       Wx <= 12
- 
+
      C                   IF        WSPAMT(Wx) <> *BLANKS
       *
       ** An Amount may only be entered if an Account has been entered
@@ -1517,13 +1519,13 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
- 
+
       ** Only the Percentage or the Amount field can be entered for a Deal.
       ** A combiantion of percentages and amounts is not allowed.
- 
+
      C                   IF        PercEnt = 'Y' AND
      C                             AmntEnt = 'Y'
      C                   EVAL      Wx = 1
@@ -1532,9 +1534,9 @@
      C                   EXSR      PayAmtERR
      C                   EVAL      MsgIDArr(Idx) = 'ESM1014'
      C                   ENDIF
- 
+
       ** For Allocation 'B' all Amounts must not exceed the Principal + Interest
- 
+
      C     WSPAMT(1)     IFNE      *BLANKS
      C     AmntTotB      IFNE      0
      C     AmntTotB      ANDGT     TotAmIn
@@ -1544,9 +1546,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1012'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** For Allocation 'I' all Amounts must not exceed the Interest
- 
+
      C     WSPAMT(1)     IFNE      *BLANKS
      C     AmntTotI      IFNE      0
      C     AmntTotI      ANDGT     UMTTI
@@ -1556,9 +1558,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1019'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** For Allocation 'P' all Amounts must not exceed the Principal
- 
+
      C     WSPAMT(1)     IFNE      *BLANKS
      C     AmntTotP      IFNE      0
      C     AmntTotP      ANDGT     UAMNP
@@ -1568,9 +1570,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM1020'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Display formatted Amount field
- 
+
      C                   MOVE      WSPAMT(1)     DPAM01
      C                   MOVE      WSPAMT(2)     DPAM02
      C                   MOVE      WSPAMT(3)     DPAM03
@@ -1583,9 +1585,9 @@
      C                   MOVE      WSPAMT(10)    DPAM10
      C                   MOVE      WSPAMT(11)    DPAM11
      C                   MOVE      WSPAMT(12)    DPAM12
- 
+
       ** If all the Amount fields are valid set up file fields
- 
+
      C                   IF        PAM01OK <> 'N' AND  PAM02OK <> 'N' AND
      C                             PAM03OK <> 'N' AND  PAM04OK <> 'N' AND
      C                             PAM05OK <> 'N' AND  PAM06OK <> 'N' AND
@@ -1607,7 +1609,7 @@
      C                   MOVE      WVPAMT(12)    FPAM11
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1616,16 +1618,16 @@
       *                                                               *
       *****************************************************************
      C     VLROBR        BEGSR
- 
+
       ** Receipt Accounts and Settlement Branches if not Multi-Branching
- 
+
      C     @MBIN         IFNE      'Y'
      C                   MOVEL     WWRONS        DDRONS           18
      C                   MOVEL     *BLANKS       DDROBR            3
      C                   ENDIF
- 
+
       ** Receipt Accounts and Settlement Branches if Multi-Branching
- 
+
      C     @MBIN         IFEQ      'Y'
      C     DDRSTM        IFEQ      '05'
      C                   MOVE      WWRONS        DDRONS
@@ -1635,9 +1637,9 @@
      C                   MOVEL     *BLANKS       DDROBR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If Settlement Method is 05 and Multi-Branching
- 
+
      C     @MBIN         IFEQ      'Y'
      C     DDRSTM        ANDEQ     '05'
       *
@@ -1672,9 +1674,9 @@
      C                   MOVE      @DSNB         DDROBR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1763,9 +1765,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Set up Account ID for Overdraft Limit Check
- 
+
      C                   IF        CDL008 = 'Y'
      C                   EVAL      WkCust = CNUM
      C                   EVAL      WkCcy  = CCY
@@ -1858,9 +1860,9 @@
       *
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Set up Account ID for Overdraft Limit Check
- 
+
      C                   IF        CDL008 = 'Y'
      C                   EVAL      WkCust = CNUM
      C                   EVAL      WkCcy  = CCY
@@ -1868,7 +1870,7 @@
      C                   EVAL      WkASeq = ACSQ
      C                   EVAL      WkBRCA = BRCA
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -1887,7 +1889,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1896,16 +1898,16 @@
       *                                                               *
       *****************************************************************
      C     VLPOBR        BEGSR
- 
+
       ** Payment Accounts and Settlement Branches if not Multi-Branching
- 
+
      C     @MBIN         IFNE      'Y'
      C                   MOVEL     WWPONS        DDPONS           18
      C                   MOVEL     *BLANKS       DDPOBR            3
      C                   ENDIF
- 
+
       ** Payment Accounts and Settlement Branches if Multi-Branching
- 
+
      C     @MBIN         IFEQ      'Y'
      C     DDPSTM        IFEQ      '05'
      C                   MOVE      WWPONS        DDPONS
@@ -1915,9 +1917,9 @@
      C                   MOVEL     *BLANKS       DDPOBR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If Settlement Method is 05 and Multi-Branching
- 
+
      C     @MBIN         IFEQ      'Y'
      C     DDPSTM        ANDEQ     '05'
       *
@@ -1952,9 +1954,9 @@
      C                   MOVE      @DSNB         DDPOBR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2146,7 +2148,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2155,13 +2157,13 @@
       *
       *****************************************************************
      C     ACBRCH        BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      @BRCA         @DSNB             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2170,7 +2172,7 @@
       *
       *****************************************************************
      C     ACACCT        BEGSR
- 
+
      C                   CALL      'AOACCTV0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM                    PACID            10
@@ -2181,22 +2183,22 @@
      C                   PARM                    PTYPE             7
      C                   PARM                    PNOSN             2
      C     ACCT          PARM      ACCT          DSSDY
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * GETCCYDET - Get currency details                              *
       *****************************************************************
      C     GETCCYDET     BEGSR
- 
+
       **  Access Currency Details
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*DBERR  '    PRTCD
      C                   PARM      '*KEY    '    POPTN
      C                   PARM                    @CURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2206,13 +2208,13 @@
       *                                                               *
       *****************************************************************
      C     SROvrChk      BEGSR
- 
+
      C                   EVAL      PInBranch = WkBRCA
      C                   EVAL      PInCust = WkCust
      C                   EVAL      PInCurr = WkCcy
      C                   EVAL      PInACode = WkACOD
      C                   EVAL      PInASeqN = WkASEQ
- 
+
      C                   CALL      'RE101901'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM                    PInBranch
@@ -2227,7 +2229,7 @@
      C                   PARM                    POutACode
      C                   PARM                    POutASeqN
      C                   PARM                    POutRetNo
- 
+
      C                   IF        PRetCode = '*ODLMTX'
      C                   MOVE      POutCust      WkCustA
      C                   MOVE      POutACode     WkACodeA
@@ -2258,7 +2260,7 @@
      C                   EVAL      WMsgDtaArr(WIdx) = LenStr +%TRIM(MsgDtaTmp)              MD000091
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2267,7 +2269,7 @@
       *                                                               *
       *****************************************************************
      C     RcvAcntERR    BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 0
@@ -2319,7 +2321,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DRAC12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2328,7 +2330,7 @@
       *                                                               *
       *****************************************************************
      C     RcvAllERR     BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 1
@@ -2380,7 +2382,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DRAL12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2389,7 +2391,7 @@
       *                                                               *
       *****************************************************************
      C     RcvAcntWRN    BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 0
@@ -2429,7 +2431,7 @@
      C                   EVAL      WFldNameArr(Idx) = 'DRAC12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2438,7 +2440,7 @@
       *                                                               *
       *****************************************************************
      C     RcvPctERR     BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 1
@@ -2490,7 +2492,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DRPC12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2499,7 +2501,7 @@
       *                                                               *
       *****************************************************************
      C     RcvAmtERR     BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 1
@@ -2551,7 +2553,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DRAM12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2560,7 +2562,7 @@
       *                                                               *
       *****************************************************************
      C     PayAcntERR    BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 0
@@ -2612,7 +2614,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DPAC12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2621,7 +2623,7 @@
       *                                                               *
       *****************************************************************
      C     PayAllERR     BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 1
@@ -2673,7 +2675,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DPAL12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2682,7 +2684,7 @@
       *                                                               *
       *****************************************************************
      C     PayPctERR     BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 1
@@ -2734,7 +2736,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DPPC12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2743,7 +2745,7 @@
       *                                                               *
       *****************************************************************
      C     PayAmtERR     BEGSR
- 
+
      C                   SELECT
       *
      C                   WHEN      Wx = 1
@@ -2795,7 +2797,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DPAM12'
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************                      CSF011A
       /EJECT                                                                                 CSF011A
@@ -2881,17 +2883,17 @@
       *                                                               *
       *****************************************************************
      C     SRINIT        BEGSR
- 
+
       ** Determine Deal Type
- 
+
      C     ##ACTN        IFEQ      'I'
      C                   MOVE      IKTYPE        DLTYPE            2
      C                   ELSE
      C                   MOVE      IKMTYP        DLTYPE
      C                   ENDIF
- 
+
       ** Calculate Total of Principal + Interest of Deal
- 
+
      C     IKAMNP        IFLT      0
      C                   Z-SUB     IKAMNP        UAMNP            15 0
      C                   ELSE
@@ -2907,27 +2909,27 @@
      C     UAMNP         ADD       UMTTI         TotAmIn          15 0
      C                   MOVE      TotAmIn       PAmtInRec
      C                   MOVE      TotAmIn       PAmtInPay
- 
+
       ** Default Receipt Unallocated Account and Account 1
- 
+
      C     DDRMAC        IFEQ      'Y'
      C     DRUAC         IFEQ      *BLANKS
      C                   MOVEL     DDRONX        DRUAC
      C                   ENDIF
      C                   MOVEL     DDRONX        DRAC01
      C                   ENDIF
- 
+
       ** Default Payment Unallocated Account and Account 1
- 
+
      C     DDPMAC        IFEQ      'Y'
      C     DPUAC         IFEQ      *BLANKS
      C                   MOVEL     DDPONX        DPUAC
      C                   ENDIF
      C                   MOVEL     DDPONX        DPAC01
      C                   ENDIF
- 
+
       ** Set RECEIPT details
- 
+
      C     DDRMAC        IFEQ      'Y'
       *
       ** Get Receipt currency details
@@ -3018,9 +3020,9 @@
      C                   MOVE      DRAM12        WSRAMT(12)
       *
      C                   ENDIF
- 
+
       ** Set PAYMENT details
- 
+
      C     DDPMAC        IFEQ      'Y'
       *
       ** Get Payment currency details
@@ -3111,14 +3113,14 @@
      C                   MOVE      DPAM12        WSPAMT(12)
       *
      C                   ENDIF
- 
+
       ** Initialize Effective Receive and Payment Currencies
- 
+
      C                   MOVEL     ##RCCY        E#RCCY            3
      C                   MOVEL     ##PCCY        E#PCCY            3
- 
+
      C**********         EVAL      WIdx = *ZEROS                                             BUG4478
- 
+
       ** Initialise customer name on input fields                                            CSF011A
                                                                                              CSF011A
      C                   EVAL      Wx = 1                                                    CSF011A
@@ -3157,110 +3159,110 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUTS
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Calling program
      C                   PARM                    ##CALP            4
- 
+
       ** Payment currency
      C                   PARM                    ##PCCY            3
- 
+
       ** Receive currency
      C                   PARM                    ##RCCY            3
- 
+
       ** Transaction Type
      C                   PARM                    ##TTYP            2
- 
+
       ** Booking branch
      C                   PARM                    ##BRCA            3
- 
+
       ** Receipt Date
       ** (must = 99999 if no back valuation validation to be done)
      C                   PARM                    ##DATR            5 0
- 
+
       ** Payment Date
       ** (must = 99999 if no back valuation validation to be done)
      C                   PARM                    ##DATP            5 0
- 
+
       ** Payment - Settle instructions - Screen format
      C                   PARM                    ##PAYS
- 
+
       ** Receive - Settle instructions - Screen format
      C                   PARM                    ##RECS
- 
+
       ** Payment - Further Settle instructions - Screen format
      C                   PARM                    #FPAYS
- 
+
       ** Receive - Further Settle instructions - Screen format
      C                   PARM                    #FRECS
- 
+
       ** Action Code
      C                   PARM                    ##ACTN            1
- 
+
       ** Protect Payment Field
      C                   PARM                    ##PPAY            1
- 
+
       ** Protect Receipt Field
      C                   PARM                    ##PREC            1
- 
+
       ** LDNI Deal details
      C                   PARM                    NwDlFilFmt
- 
+
       ** OUTPUTS
       ** Payment - Further Settle instructions OK
      C                   PARM                    #FPAYE
- 
+
       ** Receive - Further Settle instructions OK
      C                   PARM                    #FRECE
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning Messages
      C                   PARM                    WFldNameArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
- 
+
       ** Payment - Further Settle instructions - File format
      C                   PARM                    #FPAYF
- 
+
       ** Receive - Further Settle instructions - File format
      C                   PARM                    #FRECF
- 
- 
+
+
       ** Read Data Area - RUNDAT
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Access Bank Details via access program
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Access Dealing details via access program
- 
+
      C                   CALLB     'AODEALR0'
      C                   PARM      '*DBERR '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDDEAL        PARM      SDDEAL        DSFDY
- 
+
       ** Check if switchable feature CDL008 is switched on
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY '    POPTN
@@ -3272,21 +3274,21 @@
      C                   ELSE
      C                   MOVE      'N'           CDL008
      C                   ENDIF
- 
+
       ** Check if Cash Management is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY '    POPTN
      C                   PARM      'CRE008'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
      C                   MOVE      'Y'           CRE008            1
      C                   ELSE
      C                   MOVE      'N'           CRE008
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

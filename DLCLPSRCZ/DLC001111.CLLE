@@ -1,0 +1,59 @@
+000100210605/*********************************************************************/
+000101210605/*STD    CLPBASEBND                                                  */
+000102210607/*EXI    TEXT('Midas DL Initialise BckwrdLookng Rate Fld in Deals')  */
+000103210605/*********************************************************************/
+000104210605/*                                                                   */
+000105210607/*       Midas - Customer Dealing Module                             */
+000106210605/*                                                                   */
+000107210605/*       DLC001111 - Initialise Backward-Looking Rate Field in       */
+000108210605/*                   Deals File (CDL102 Take-On Program)             */
+000109210605/*                                                                   */
+000110210605/*       (c) Finastra International Limited 2021                     */
+000111210605/*                                                                   */
+000112210605/*       Last Amend No. CDL102  *CREATE    Date 01Jun21              */
+000113210605/*                                                                   */
+000114210605/*-------------------------------------------------------------------*/
+000115210605/*                                                                   */
+000116210605/*       CDL102 - LIBOR Deregulation - Dealing                       */
+000117210605/*                                                                   */
+000118210605/*********************************************************************/
+000119210605             PGM        PARM(&RTCDE &PMODE)
+000120210605
+000121210605             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+000122210605             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+000123210605
+000124210605             COPYRIGHT  TEXT('(c) Finastra International Limited 2021')
+000126210605
+000127210605/* Global monitor message */
+000128210605
+000129210605             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+000131210605
+000132210605             CHGJOB     SWS(XXXXXX00)
+000133210605
+000134210605/* Mode 1 - First call */
+000135210605
+000136210605             IF         COND(&PMODE *EQ '1') THEN(DO)
+000137210605                CALL       PGM(DL001111)
+000138210605             ENDDO
+000139210605
+000140210605/* Mode 2 - Second call */
+000141210605
+000142210605             IF         COND(&PMODE *EQ '2') THEN(DO)
+000143210605                CALL       PGM(DL001111)
+000144210605             ENDDO
+000145210605
+000146210605/* Check if program call is successful */
+000147210605
+000148210605             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+000149210605                GOTO       CMDLBL(ABNOR)
+000150210605             ENDDO
+000151210605
+000152210605             GOTO       CMDLBL(END)
+000153210605
+000154210605/* Program abnormal processing */
+000155210605 ABNOR:
+000156210605             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+000157210605             SNDPGMMSG  MSG('Program DLC001111 ended abnormally') TOMSGQ(MOPERQ)
+000159210605
+000160210605 END:
+000161210605             ENDPGM

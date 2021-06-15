@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD04624            Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 AR704846           Date 15Feb11               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -70,7 +72,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
@@ -102,41 +104,41 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D INFDS           DS
      D**  Data structure for file status of MM deals file.
      D*
@@ -144,7 +146,7 @@
      D  @DMVYR                51     52
      D  @DMVMT                53     54
      D  @DMVDY                55     56
- 
+
      D                 DS
      D**  Data structure for convertion of YYMMDD to DDMMYY
      D  @DMVDT                 1      6
@@ -155,33 +157,33 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MSGID)
- 
+
       ** Deal Amendment Type received as a paramater
      D DDMTYP          S              2A
- 
+
       ** Deal Number received as a paramater
      D DDDLNO          S              6A
- 
+
       ** Deal Amendment Amount received as a parameter
      D DDAMNP          S             15A
- 
+
       ** Deal Amendment Value Date received as a parameter
      D DDVDAT          S              6A
- 
+
       ** Deal Number received as a paramater
      D DDDS38          S              3A
- 
+
       ** Action Code received as a paramater                                    CAP004
      D DDACTN          S              1A                                        CAP004
- 
+
       ** Customer from original deal                                            CDL006  174313
      D*H@CNUM**********S              6  0 IMPORT                               CDL006  174313
      D*H@CNUM***       S              6  0                                             174313 CSD027
@@ -201,27 +203,27 @@
                                                                                 CDL006  174313
       ** Deal Amount from original deal received as a parameter
      D H@AMNP          S             15  0
- 
+
       ** Warning message code 1 received as a parameter                                       CGL011
      D WMSGID1         S                   LIKE(#MSGID)                                       CGL011
                                                                                               CGL011
       ** Currency number of decimal places (from SDCURRPD)
       ** received as a parameter
      D A6NBDP          S              1S 0
- 
+
       ** Decimal separator (from SDDEALPD) received as a parameter
      D BNDCSP          S              1A
- 
+
       ** Date Format Indicator (from SDBANKPD) received as a parameter
      D BJDFIN          S              1A
- 
+
       ** Currency Field in error flag received as a parameter
      D DDCcyOK         S              1A
- 
+
       ** Index of errors accumulated from previous modules
       ** received as a parameter
      D Idx             S              3  0
- 
+
       ** Deal Amount passed as a parameter
      D IGAMNP          S             15  0
                                                                                 CDL006
@@ -233,15 +235,15 @@
                                                                                 CDL006
       ** Deal Fiduciary Charge Amount passed as a return parameter              CDL006
      D IGFXGA          S             13  0                                      CDL006
- 
+
       ** Base Rate received as a parameter                                                    CDL017
      D DDBSRT          S              2A                                                      CDL017
                                                                                               CDL017
       ** Rate/Spread received as a parameter                                                  CDL017
      D DDINTR          S             12A                                                      CDL017
- 
+
       ** Fields used in call to Module ZA0840
- 
+
       ** Alpha field for numeric validation
      D @@ALPH          S             16A
       ** Millions/Thousands id (Y=function on)
@@ -254,15 +256,15 @@
      D @@IDP           S              3  0
       ** Number of integers
      D @@IINT          S              3  0
- 
+
       ** Fields used in call to Module ZDATE1
- 
+
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D Errorflag       S              1A
      D DDVDATN         S              5P 0
      D @DMVDTN         S              5P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -270,7 +272,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -278,7 +280,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -294,7 +296,7 @@
      C                   PARM                    BJDFIN                         CAP004
      C                   PARM                    Errorflag                      CAP004
      C                   Z-ADD     DaynoOut      DDVDATN                        CAP004
- 
+
      C*  *-----------------*
      C*  * Validate Amount *
      C*  *-----------------*
@@ -488,7 +490,7 @@
      C                   ENDSL                                                                CGL011
                                                                                               CGL011
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT                                                                    CDL006
       *****************************************************************         CDL006
@@ -595,7 +597,7 @@
      C                   GOTO      #ZQ9
      C                   END
      C                   END
- 
+
      C     DDMTYP        IFEQ      'PD'
      C*
      C     HNMTYP        IFEQ      'PD'
@@ -606,7 +608,7 @@
      C                   END
      C                   END
      C                   END
- 
+
      C     H@AMNP        IFLT      *ZERO
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0295'     Msgid1
@@ -674,9 +676,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -713,7 +715,7 @@
      C                   PARM                    DDBSRT                                       CDL017
      C** Define work fields
      C     *LIKE         DEFINE    @@Amt         ThisDMAmt
- 
+
      C** Key Lists.
      C     @DMKY2        KLIST
      C                   KFLD                    KeyDealNo
@@ -730,14 +732,14 @@
      C*******            PARM                    BJDFIN                         CAP004
      C*******            PARM                    Errorflag                      CAP004
      C*******            Z-ADD     DaynoOut      DDVDATN                        CAP004
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

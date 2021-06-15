@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD056557           Date 31Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CMG008             Date 20Feb20               *
       *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 MD053583           Date 10Jun19               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056557 - Deliverable Data Split for Pulldown               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table                   *
@@ -305,8 +307,14 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDNOSTPD'    GLOB_SDNOSTPD
      C     PFLNAME       CASEQ     'SDNOST2D'    GLOB_SDNOST2D                               CGL135A
      C     PFLNAME       CASEQ     'SDOPESPD'    GLOB_SDOPESPD                                CFT045
-     C     PFLNAME       CASEQ     'SDPDWHPD'    GLOB_SDPDWHPD
-     C     PFLNAME       CASEQ     'SDPDWNPD'    GLOB_SDPDWNPD
+     C*****PFLNAME       CASEQ     'SDPDWHPD'    GLOB_SDPDWHPD                              MD056557
+     C     PFLNAME       CASEQ     'SDPWHCTD'    GLOB_SDPDWHPD                              MD056557
+     C     PFLNAME       CASEQ     'SDPWHBTD'    GLOB_SDPDWHPD                              MD056557
+     C     PFLNAME       CASEQ     'SDPWHXTD'    GLOB_SDPDWHPD                              MD056557
+     C*****PFLNAME       CASEQ     'SDPDWNPD'    GLOB_SDPDWNPD                              MD056557
+     C     PFLNAME       CASEQ     'SDPWNCTD'    GLOB_SDPDWNPD                              MD056557
+     C     PFLNAME       CASEQ     'SDPWNBTD'    GLOB_SDPDWNPD                              MD056557
+     C     PFLNAME       CASEQ     'SDPWNXTD'    GLOB_SDPDWNPD                              MD056557
      C     PFLNAME       CASEQ     'SDPLINPD'    GLOB_SDPLINPD
      C     PFLNAME       CASEQ     'SDPRFCPD'    GLOB_SDPRFCPD
      C     PFLNAME       CASEQ     'SDSECSPD'    GLOB_SDSECSPD                               BUG3122

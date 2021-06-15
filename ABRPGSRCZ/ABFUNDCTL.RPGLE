@@ -73,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1372,6 +1373,1295 @@
      C                   PARM                    TranScnBlrt                                  CDL102
       ** (Current) Backward-Looking Rate fields in Screen Format :                            CDL102
      C                   PARM                    CurrScnBlrt                                  CDL102
+=======
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  CSD102 - Password Length Extension (Recompile)               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  261140 - Missing Front Office ID / Assoc Front Office ID     *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CDL020 - Apply Base Rate at Value Date                       *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *  CAP076 - Lending API enhancements - Rollover details         *
+      *           Recompile due to change in MM1010                   *
+      *           (new parameter to ZINTDY)                           *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A                            *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in MMVLDNIPD*
+      *  CSC011 - 24x7 Midas Availability                             *
+      *  195001 - Don't access SDBRTDPD if BRT not switched on.       *
+      *  CAP042 - Conversion of Internal Funding Deal inputs into     *
+      *           modular structure to use as APIs.                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    01         Used for Scan Indicator                         *
+      *    02         Used for Chain Indicator                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * SRCallMsgH  - Call the Message Handling module                *
+      * SRChkWrite  - Controls the checking of error status and       *
+      *               sending of messages/writing to the database     *
+      * SRReset     - Reset error information that is gradually       *
+      *               updated during each run of this program         *
+      * SRSetIMAT   - Calculate Interest at Maturity                  *
+      * SRSetInval  - Set up additional fields that are needed on the *
+      *               valid file record                               *
+      * SRSetupDln  - Set up Deal Number for Inserts                  *
+      * SRSetValid  - Set up additional fields that are needed on the *
+      *               valid file record                               *
+      * SRSubsDtas  - Transaction Details Data Substitution           *
+      * SRValActCde - Validate action code versus the transaction     *
+      *               IDs supplied                                    *
+      * SRValAmd    - Check whether the fields amended are amendable  *
+      * SRValDeal   - Check if valid deal exists for Front Office ID  *
+      * SRValMiDeal - Check if valid deal exists for Midas Deal No.   *
+      * SRValTrans  - Validate the main Transaction details           *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+
+      ** MM Valid Loan/Deposit/NA Issued
+     FMMVLDNIPD UF A E             DISK    INFSR(*PSSR)
+     F                                     COMMIT
+
+      ** Invalid Internal Funding Deals File
+     FABIFUNDPD UF A E             DISK    INFSR(*PSSR)
+     F                                     PREFIX(DD:2)
+     F                                     COMMIT
+
+      ** BRT Control Data
+     FSDBRTDL1  IF A E           K DISK    INFSR(*PSSR)
+
+      ** MM Valid Loans & Deposits by Front Office ID
+     FMMVLDNIL0 IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(MMVLDNID0:MMVLDNICHK)
+
+      ** MM Valid Deals by Deal no/timestamp
+     FMMVLDNIL1 IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(MMVLDNID0:MMVLDNICK1)
+
+      ** ZA Sequence numbbers for input fields
+     FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
+
+      ** Hook to enable non-core files to be included
+      /COPY WNCPYSRC,ABFUNDC001
+
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+
+      ** Standard D-specs
+      ** ================
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indicator processing)
+      **    False      logical = *off (for indicator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+      *
+      /COPY ZACPYSRC,STD_D_SPEC
+      *
+      ** Program Status Data Structure
+      ** =============================
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+      *
+      /COPY ZACPYSRC,PSDS
+      *
+      ** The following /COPY line includes definition  for the above fields
+      ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
+      ** corresponding fields in the PSDS /COPY member, so that member
+      ** must be included where this one is used.
+      *
+      /COPY ZACPYSRC,PROCPARMS
+      *
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+      *
+      /COPY ZACPYSRC,ERR_ARRAYS
+      *
+      ** The following /COPY line includes the definitions for arrays
+      ** specific to API *CTL modules.
+      *
+      /COPY ZACPYSRC,APICTLARR
+      *
+      ** The following /COPY line includes the definitions for fields
+      ** used in checking whether there are messages on the data queue.
+      *
+      /COPY ZACPYSRC,DTAQCHKDCL
+
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+
+
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+
+      ** String for error messages to the operator
+     D ProcErr         C                   CONST('Error in module')
+
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+
+      * Incoming Header
+     D PHeadIn       E DS                  EXTNAME(APHEADPD)
+
+      * Incoming Transaction
+     D NwDlScnFmt    E DS                  EXTNAME(ABFUNDPD)
+     D                                     Prefix(DD:2)
+
+      * MM Extra Data - File (D/B) format
+     D ExtData       E DS                  EXTNAME(ABFUEXPD)
+
+      ** Valid Deals layout
+     D ValidDeal     E DS                  EXTNAME(MMVLDNIPD)
+
+      ** AB Internal Funding for file update - file format
+     D CrDlFilFmt1   E DS                  EXTNAME(MMVLDNIPD)
+     D                                     Prefix(C1:2)
+     D  QQDoriC1     E                     EXTFLD(QQDORI)                                     CGL029
+     D  QQMoriC1     E                     EXTFLD(QQMORI)                                     CGL029
+     D  QQDopiC1     E                     EXTFLD(QQDOPI)                                     CGL029
+     D  QQMopiC1     E                     EXTFLD(QQMOPI)                                     CGL029
+     D  QQRonsC1     E                     EXTFLD(QQRONS)                                     CGL029
+     D  QQPonsC1     E                     EXTFLD(QQPONS)                                     CGL029
+     D  QQInsaC1     E                     EXTFLD(QQINSA)                                     CGL029
+
+      ** AB Internal Funding for file update - file format
+     D CrDlFilFmt2   E DS                  EXTNAME(MMVLDNIPD)
+     D                                     Prefix(C2:2)
+     D  QQDoriC2     E                     EXTFLD(QQDORI)                                     CGL029
+     D  QQMoriC2     E                     EXTFLD(QQMORI)                                     CGL029
+     D  QQDopiC2     E                     EXTFLD(QQDOPI)                                     CGL029
+     D  QQMopiC2     E                     EXTFLD(QQMOPI)                                     CGL029
+     D  QQRonsC2     E                     EXTFLD(QQRONS)                                     CGL029
+     D  QQPonsC2     E                     EXTFLD(QQPONS)                                     CGL029
+     D  QQInsaC2     E                     EXTFLD(QQINSA)                                     CGL029
+
+      ** Deal in File Format
+     D DealFilFmt1   E DS                  EXTNAME(MMDELDPP)
+     D                                     PREFIX(D1:2)
+     D  QQDoriD1     E                     EXTFLD(QQDORI)                                     CGL029
+     D  QQMoriD1     E                     EXTFLD(QQMORI)                                     CGL029
+     D  QQDopiD1     E                     EXTFLD(QQDOPI)                                     CGL029
+     D  QQMopiD1     E                     EXTFLD(QQMOPI)                                     CGL029
+     D  QQRonsD1     E                     EXTFLD(QQRONS)                                     CGL029
+     D  QQPonsD1     E                     EXTFLD(QQPONS)                                     CGL029
+     D  QQInsaD1     E                     EXTFLD(QQINSA)                                     CGL029
+
+      ** Associated Deal in File Format
+     D DealFilFmt2   E DS                  EXTNAME(MMDELDPP)
+     D                                     PREFIX(D2:2)
+     D  QQDoriD2     E                     EXTFLD(QQDORI)                                     CGL029
+     D  QQMoriD2     E                     EXTFLD(QQMORI)                                     CGL029
+     D  QQDopiD2     E                     EXTFLD(QQDOPI)                                     CGL029
+     D  QQMopiD2     E                     EXTFLD(QQMOPI)                                     CGL029
+     D  QQRonsD2     E                     EXTFLD(QQRONS)                                     CGL029
+     D  QQPonsD2     E                     EXTFLD(QQPONS)                                     CGL029
+     D  QQInsaD2     E                     EXTFLD(QQINSA)                                     CGL029
+
+      ** (Current) Deal in Screen Format
+     D CrDlScnFmt    E DS                  EXTNAME(ABFUNDPD)
+     D                                     PREFIX(Cr)
+
+      ** Internal Funding Deals Error Indicator File
+     D OkFlagsDS     E DS                  EXTNAME(ABEFUNDPD)
+
+      * First DS for Access programs - short data structure
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+
+      ** External DS for Bank Details
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+
+      ** External DS for API ICD
+     D SDAPI         E DS                  EXTNAME(SDAPIPD)
+
+      ** External DS for General Ledger ICD
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)
+
+      ** External DS Trading ICD
+     D SDTRAD        E DS                  EXTNAME(SDTRADPD)
+     D  QQAccd1      E                     EXTFLD(QQACCD)                                     CGL029
+
+      ** External DS Midas Modules
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)
+
+      ** External DS Dealing Data
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)
+     D  QQAccd2      E                     EXTFLD(QQACCD)                                     CGL029
+
+      ** Externam DS SC Switchable Features
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)
+
+     D MMLDNIUPC       DS             1    DTAARA(MMLDNIUPC)
+
+      ** Midas Run Date
+     D                 DS
+     D WkBJMRDT                1      7
+     D WkDLUP                  1      2  0
+     D WkMLUP                  3      5
+     D WkYLUP                  6      7  0
+
+      ** YYYYMMDD date format of Deal Date
+     D PDateOutZ9      DS
+     D  DDATYr                 1      4  0
+     D  DDATMn                 5      6  0
+     D  DDATDy                 7      8  0
+
+      ** Data Area giving Installation Control Details
+     D RUNDAT        E DS                  EXTNAME(RUNDAT)
+
+     D ZMUSER        E DS                  EXTNAME(ZMUSER)
+
+      ** 24X7 status data area                                                                CSC011
+     D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
+                                                                                              CSC011
+      ** SD Data Area                                                                         CSC011
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
+                                                                                              CSC011
+      ** Jobs Handling Commitment Control                                                     CSC022
+     D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
+     D  COMITARR               4    103                                                       CSC022
+                                                                                              CSC022
+      ** Array of Commitment Job Names                                                        CSC022
+     D COMITJOB        S             10A   DIM(10)                                            CSC022
+                                                                                              CSC011
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+
+     D PLnkFlag        S              1A
+     D PValFlg         S              1A
+
+     D PKey            S              1A
+     D PReDsp          S              1A
+
+     D PRTCD           S              7A
+     D POPTN           S              7A
+     D PSARD           S              6A
+
+      ** Mode of Operation
+     D PModeofop       S              6A
+
+      ** Reset of Fields required
+     D PResetErrs      S              1A
+
+      ** Error message field(s)
+     D PMsg1           S                   LIKE(#MsgID)
+
+      ** Index for arrays of error message ids etc
+     D PIdx            S              3P 0
+
+      ** Index for arrays of warning message ids etc
+     D PWIdx           S              3P 0
+
+      ** Field (500A) to receive the incoming transaction
+     D PTrans500       S            500A
+
+      ** Field (500A) to receive the incoming Extra Data
+     D PExtData500     S            500A
+
+      ** Index for arrays of error message ids etc in Amend validation
+     D PAmIdx          S              3P 0
+
+      ** Indicies for arrays used to set up corresponding sequence numbers
+      **  for the fields that are in error
+     D Ix              S              3P 0
+     D Iy              S              3P 0
+
+      ** Flag to indicate outcome of call to lower level module
+     D PAmendOK        S              1A   INZ('Y')
+
+      ** Substitution Character
+     D PSubsChar       S              1A
+
+      ** Incoming Data
+     D PIncDATA        S           2000A
+
+      ** Current Data
+     D PCurDATA        S           2000A
+
+      ** Overall Transaction status, to be passed to the Message Handler
+     D PTranStatus     S              1A
+
+      ** Whether or not to clear the program message queue
+     D PClrPgmMsgQ     S              1A
+
+      ** Module ID, to be passed to the Message Handler
+     D PModuleID       S              2A
+
+      ** Deal Status Flag
+     D PStatus         S              7A
+
+      ** Generated Deal Number
+     D PDealNo         S              6S 0
+
+      ** Work Variables
+     D WMQError        S             28A
+     D PMQErrLong      S            132A
+     D PMQReturn       S             10A
+     D WSetFld         S              1A
+
+      ** Parameters for APCALCOBJ
+     D PObject         S             10A   INZ('MMLDNIUPC')
+     D PLib            S             10A   INZ('*LIBL')
+     D PObjType        S              7A
+     D PLockState      S              7A   INZ('*SHRRD')
+     D PMember         S             10A
+     D PWaitTime       S              6A   INZ('0     ')
+     D PDlcobj         S              1A   INZ('Y')
+     D PReturn         S              7A
+
+      ** Dummy message ID and message file fields for use on the calls to
+      ** ZAMSGTOOPR
+     D PDummyMsgID     S                   LIKE(#MsgID)
+     D PDummyMsgF      S             10A
+
+      ** Profit Centre Description
+     D PPCDesc1        S             30A
+     D PPCDesc2        S             30A
+
+      ** Front Office Transaction ID                                                          261140
+     D FRNT            S             20A                                                      261140
+     D AFRT            S             20A                                                      261140
+                                                                                              261140
+      ** Timestamp for the transaction
+     D PTimeStamp      S               Z
+
+      ** Midas Transaction ID
+     D PTranID         S             20A
+
+      ** Parameters for ZDATE2
+     D PDaynoIn        S              5P 0
+     D PRetCode        S              1  0
+
+      ** Parameters for MM1010
+     D PMTTI           S             15P 0
+     D PINTD           S             13P 0
+     D PIPFQ           S              1A
+     D PNIPD           S              5P 0
+     D PDVSD           S              5P 0
+     D PICMT           S              1A
+     D PAMNP           S             15P 0
+     D PINTR           S             11P 7
+     D PRDFC           S              1A
+     D PMTAX           S              1A
+     D PDeal           S              6  0
+     D PBRMD           S              5P 0
+     D S01383          S              1A
+     D*PCNUM****       S              6  0                                                    CSD027
+     D PCNUM           S              6A                                                      CSD027
+     D PZCCY           S              3A
+     D PZLOC           S              3A
+     D PIMAT           S             15  0
+
+      ** Parameters for ZALIGN
+     D PZAlignOk       S              1A
+     D PZField         S             16A
+     D PZADEC          S              1P 0
+     D PZADIG          S              2P 0
+
+     D CSC011          S              1A                                                      CSC011
+     D CSC022          S              1A   INZ('N')                                           CSC022
+     D CNT             S              3  0                                                    CSC022
+     D COMITSKIP       S              1A                                                      CSC022
+     D WRunDay         S                   LIKE(BJRDNB)                                       CSC011
+     D***PDealNum        S             18A                                             CSC011 CGL029
+     D***PADealNum       S             18A                                             CSC011 CGL029
+     D PDealNum        S             24A                                                      CGL029
+     D PADealNum       S             24A                                                      CGL029
+     D TRANSDTL        S           5800A                                                      CSC011
+                                                                                              CSC011
+     D CAS004          S              1A                                                      CAS004
+                                                                                              CAS004
+      *                                                                                       CGL029
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
+      *                                                                                       CGL029
+     D CDL019          S              1A                                                      CDL019
+                                                                                              CDL019
+     D CDL020          S              1A                                                      CDL020
+                                                                                              CDL020
+      /COPY WNCPYSRC,ABFUNDC002
+
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+
+      /COPY WNCPYSRC,ABFUNDC003
+
+      ** Incoming transaction is in a 500A field, so that a common CLP
+      ** can be used between this module and the one that read the MQ queue.
+      ** This module needs to break that 500A by loading it into the
+      ** appropriate (externally described) data structure.
+
+     C                   EVAL      NwDlScnFmt = PTrans500
+     C                   EVAL      Extdata = PExtData500
+
+      ** Generate a timestamp for this transaction
+
+     C                   CALLB     'ZAGENTMSTM'
+     C                   PARM                    PTimeStamp
+
+      ** Reset variables gradually updated
+
+     C                   EXSR      SRReset
+     C
+
+      /COPY WNCPYSRC,ABFUNDC004
+
+      ** Check if valid deal exists for Front Office ID
+
+     C                   EXSR      SRValDeal
+
+      ** If valid deal does exist (even after delay), fail this input
+
+     C                   IF        PIdx <> 0
+     C                   GOTO      INVALID
+     C                   END
+
+      ** Check if valid deal exists for Midas Deal Number
+
+     C                   EXSR      SRValMiDeal
+
+      ** If valid deal does exist (even after delay), fail this input
+
+     C                   IF        PIdx <> 0
+     C                   GOTO      INVALID
+     C                   END
+
+      ** Reset variables again in case the details have been corrupted
+      ** by previous chain to valid deals file.
+
+     C                   EXSR      SRReset
+     C
+
+      /COPY WNCPYSRC,ABFUNDC005
+
+      ** Validate Action Code
+
+     C                   EXSR      SRValActCde
+
+      /COPY WNCPYSRC,ABFUNDC006
+
+      ** If error in validation of action code, fail this input
+
+     C                   IF        PIdx <> 0
+     C                   GOTO      INVALID
+     C                   END
+
+      ** Processing depends upon Action Code
+
+     C                   SELECT
+
+      ** Processing for Inserts
+
+     C                   WHEN      DDACTN = 'I'
+
+      /COPY WNCPYSRC,ABFUNDC007
+
+      ** Validate Main Transaction Details
+
+     C                   EXSR      SRValTrans
+
+      /COPY WNCPYSRC,ABFUNDC008
+
+      ** Processing for Amends, Deletes, and Enquiries
+
+     C                   OTHER
+
+      /COPY WNCPYSRC,ABFUNDC009
+
+      ** Convert original details from file to screen format
+
+     C                   EXSR      SRCvtDta
+
+      /COPY WNCPYSRC,ABFUNDC010
+
+      ** Transaction Details Data Substitution
+
+     C                   IF        GHSUBS <> *Blanks
+     C     GHSUBS        SCAN      NwDlScnFmt                             01
+     C                   IF        *IN01 = *On
+     C                   EXSR      SRSubsDtas
+     C                   ENDIF
+     C                   ENDIF
+
+      /COPY WNCPYSRC,ABFUNDC011
+
+      ** Processing for Amend Only
+
+     C                   IF        DDACTN = 'A'
+
+      ** Validate Main transaction details
+
+     C                   EXSR      SRValTrans
+
+      /COPY WNCPYSRC,ABFUNDC012
+
+      ** Check whether fields amended are amendable
+
+     C                   EXSR      SRValAmd
+
+      /COPY WNCPYSRC,ABFUNDC013
+
+     C                   ELSE
+     C                   EVAL      DealFilFmt1 = CrDlFilFmt1
+     C                   EVAL      DealFilFmt2 = CrDlFilFmt2
+     C                   ENDIF
+
+      /COPY WNCPYSRC,ABFUNDC014
+
+     C                   ENDSL
+
+     C     INVALID       TAG
+
+      ** Check for exception error from any program lower in the stack
+      ** If error detected, send message to system operator and
+      ** return to calling program without updating database or
+      ** prompting the database update program
+
+     C                   IN        APDUMP
+
+      /COPY WNCPYSRC,ABFUNDC015
+
+     C                   IF        ARERRMOD <> *BLANK
+     C                   EVAL      PMQErrLong = *Blanks
+     C                   EVAL      WMQError = ProcErr
+     C                   EVAL      WMQError = ARERRMOD
+     C                   EVAL      PMQErrLong = WMQError
+
+     C                   CALLB     'ZAMSGTOOPR'
+     C                   PARM                    PMQReturn
+     C                   PARM                    PMQErrLong
+     C                   PARM                    PDummyMsgID
+     C                   PARM                    PDummyMsgF
+
+     C                   MOVEL     ARERRMOD      APRETCODE
+     C     *LOCK         IN        APDUMP
+     C                   EVAL      ARERRMOD = *BLANK
+     C                   OUT       APDUMP
+     C                   RETURN
+
+     C                   ELSE
+
+      /COPY WNCPYSRC,ABFUNDC016
+
+      ** Processing for Error checking/write to database
+
+     C                   EXSR      SRChkWrite
+
+      /COPY WNCPYSRC,ABFUNDC017
+
+      ** If valid, send data queue entry to prompt DB update program
+
+     C                   IF        PIdx = 0
+     C                   EVAL      PObjType = '*DTAARA'
+
+      ** Check if update program active using Allocate Object API
+      ** No prompting necessary if program is running
+
+     C                   CALLB     'APCALCOBJ'
+     C                   PARM                    PObject
+     C                   PARM                    PLib
+     C                   PARM                    PObjType
+     C                   PARM                    PLockState
+     C                   PARM                    PMember
+     C                   PARM                    PWaitTime
+     C                   PARM                    PDlcobj
+     C                   PARM      *BLANK        PReturn
+
+     C                   IF        PReturn = *Blanks
+
+      ** Check if any messages are already on the data queue
+      ** No need to send duplicate prompt messages
+
+      ** The following /COPY line includes a check for whether there
+      ** are messages on the server/updater data queue, and sends a 'GO'.
+      ** message to the data queue if there are not.
+      /COPY ZACPYSRC,DTAQCHK
+
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   RETURN
+
+      ** Hook to enable non-core subroutines to be included
+
+      /COPY WNCPYSRC,ABFUNDC018
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRValDeal  - Check if valid deal exists for Front Office ID   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SRValDeal     BEGSR
+
+      ** Check for front office Id in the valid records file.
+      ** Run delay program if record found.
+
+     C     APFOTRANID    CHAIN     MMVLDNIL0                          02
+
+      ** If record found...
+
+     C                   IF        *IN02 = *Off
+
+      ** ..delay, then repeat check
+
+     C                   CALLB     'ZACDELAY'
+
+     C     APFOTRANID    CHAIN     MMVLDNIL0                          02
+
+      ** Error if still present
+
+     C                   IF        *IN02 = *Off
+     C                   ADD       1             PIdx
+     C                   EVAL      FldNameArr(PIdx) = '#1DLNO'
+     C                   EVAL      MsgIDArr(PIdx) = 'APM0900'
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Check for associated front office Id in the valid records file.
+
+     C                   IF        APFOASOCID <> *BLANK
+
+     C     APFOASOCID    CHAIN     MMVLDNIL0                          02
+
+      ** If record found...
+
+     C                   IF        *IN02 = *Off
+
+      ** ..delay, then repeat check
+
+     C                   CALLB     'ZACDELAY'
+
+     C     APFOASOCID    CHAIN     MMVLDNIL0                          02
+
+      ** Error if still present
+
+     C                   IF        *IN02 = *Off
+     C                   ADD       1             PIdx
+     C                   EVAL      FldNameArr(PIdx) = '#1DADN'
+     C                   EVAL      MsgIDArr(PIdx) = 'APM0900'
+     C                   ENDIF
+
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRValMiDeal- Check if valid deal exists for Midas Deal number *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SRValMiDeal   BEGSR
+
+      ** If (numeric) Midas deal number supplied
+
+     C                   IF        DDDLNO <> *BLANKS
+
+     C                   MOVE      *Blanks       PZField
+     C                   MOVE      DDDLNO        PZField
+     C                   Z-ADD     0             PZADEC
+     C                   Z-ADD     6             PZADIG
+     C                   EXSR      SRZAlign
+
+     C                   IF        PZAlignOk = 'Y'
+
+      ** Check for deal on Valid file
+
+     C                   MOVEL     DDDLNO        IKDN38
+     C     IKDN38        CHAIN     MMVLDNIL1                          02
+
+      ** If record found...
+
+     C                   IF        *IN02 = *Off
+
+      ** ..delay, then repeat check
+
+     C                   CALLB     'ZACDELAY'
+
+     C     IKDN38        CHAIN     MMVLDNIL1                          02
+
+      ** Error if still present
+
+     C                   IF        *IN02 = *Off
+     C                   ADD       1             PIdx
+     C                   EVAL      FldNameArr(PIdx) = '#1DLNO'
+     C                   EVAL      MsgIDArr(PIdx) = 'APM0900'
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** If (numeric) Midas associated deal number supplied
+
+     C                   IF        DDDADN <> *BLANKS
+
+     C                   MOVE      *Blanks       PZField
+     C                   MOVE      DDDADN        PZField
+     C                   Z-ADD     0             PZADEC
+     C                   Z-ADD     6             PZADIG
+     C                   EXSR      SRZAlign
+
+     C                   IF        PZAlignOk = 'Y'
+
+      ** Check for associated deal on Valid file
+
+     C                   MOVEL     DDDADN        IKDN38
+     C     IKDN38        CHAIN     MMVLDNIL1                          02
+
+      ** If record found...
+
+     C                   IF        *IN02 = *Off
+
+      ** ..delay, then repeat check
+
+     C                   CALLB     'ZACDELAY'
+
+     C     IKDN38        CHAIN     MMVLDNIL1                          02
+
+      ** Error if still present
+
+     C                   IF        *IN02 = *Off
+     C                   ADD       1             PIdx
+     C                   EVAL      FldNameArr(PIdx) = '#1DADN'
+     C                   EVAL      MsgIDArr(PIdx) = 'APM0900'
+     C                   ENDIF
+
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRValActCde - Validate action code versus the transaction IDs *
+      *               supplied                                        *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SRValActCde   BEGSR
+
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)
+      ** if insert
+      ** if not insert and Midas transaction ID is not present
+      ** Otherwise
+      ** Set retrieve mode to blank  (Access using Midas transaction ID).
+
+     C                   IF        DDACTN = 'I'
+     C                   EVAL      PModeofOp = '*FRONT'
+     C                   ELSE
+     C                   IF        DDDLNO = *BLANK
+     C                   EVAL      PModeofOp = '*FRONT'
+     C                   ELSE
+     C                   EVAL      PModeofOp = *Blanks
+     C                   ENDIF
+     C                   ENDIF
+
+      ** Validate action code versus transaction IDs supplied
+      ** This function will set the Midas deal number and the Midas
+      ** associated deal number.
+      ** The deal in file format from the MM database is retrieved as well.
+
+     C                   RESET                   ReturnCode
+     C                   CALLB     'ABFUNDRTV'
+
+      ** Inputs
+      ** ======
+      ** Return code
+      ** Mode= '*FRONT' (Front Office Transaction Interface)
+      ** Mode = '     ' (Not Front Office Transaction Interface)
+      ** Mode = '*RPR  ' (Repair function)
+      ** Mode = '*SIN  ' (Screen Input function)
+
+     C                   PARM                    ReturnCode
+     C                   PARM                    PModeofOp
+
+      ** Response mode
+      ** Action Code
+      ** Front Office Transaction ID
+      ** Front Office Associated Transaction Id
+      ** (Midas) Deal Number
+      ** (Midas) Associated Deal Number
+      ** (Midas) Booking Branch
+      ** (Midas) Booking Branch for Associated Deal
+
+     C                   PARM                    APRESPMODE
+     C                   PARM                    DDACTN
+     C                   PARM                    APFOTRANID
+     C                   PARM                    APFOASOCID
+     C                   PARM                    DDDLNO
+     C                   PARM                    DDDADN
+     C                   PARM                    DDBRC1
+     C                   PARM                    DDBRC2
+
+      ** Linked maintenance flag
+
+     C                   PARM                    PLnkFlag
+
+      ** Standing Data
+      ** =============
+      ** SDBANKPD
+
+     C                   PARM                    BJSBRC
+
+      ** SDGELRPD
+
+     C                   PARM                    BKOBUV
+
+      ** ZMUSER
+
+     C                   PARM                    DBRN
+
+      ** Outputs
+      ** =======
+      ** Current deal in file format
+      ** Associated deal in file format
+      ** OK - Action code
+      ** OK - Deal Number
+      ** OK - Booking branch
+      ** OK - Booking branch for associated deal number
+
+     C                   PARM                    CrDlFilFmt1
+     C                   PARM                    CrDlFilFmt2
+     C                   PARM                    OkACTN
+     C                   PARM                    OkDLNO
+     C                   PARM                    OkBRC1
+     C                   PARM                    OkBRC2
+
+      ** Error fields/message IDs/message data (arrays) from/to caller
+
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIDArr
+     C                   PARM                    MsgDtaArr
+
+      ** Array index (3P0) from/to caller
+
+     C                   PARM                    PIdx
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRValTrans - Validate the main transaction details            *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SRValTrans    BEGSR
+
+     C                   MOVE      *All'Y'       OkFlagsDS
+     C                   MOVE      CrDlFilFmt1   DealFilFmt1
+     C                   MOVE      CrDlFilFmt2   DealFilFmt2
+
+     C                   CALLB     'ABFUNDVAL'
+
+      ** Input
+      ** =====
+      ** Return Code
+
+     C                   PARM                    ReturnCode
+
+      ** Mode = '*FRONT' (Front Office Transaction Interface)
+      ** Mode = '      ' (Not Front Office Transaction Interface)
+      ** Mode = '*RPR  ' (Repair function)
+      ** Mode = '*SIN  ' (Screen Input function)
+
+     C                   PARM                    PModeOfOp
+
+      ** Response mode (1A), from source system common header
+
+     C                   PARM                    APRESPMODE
+
+      ** Transaction information (DS) from source system
+
+     C                   PARM                    NwDlScnFmt
+
+      ** Current Screen Format
+
+     C                   PARM                    CrDlScnFmt
+
+      ** Current File Format 1
+      ** Current File Format 2
+
+     C                   PARM                    CrDlFilFmt1
+     C                   PARM                    CrDlFilFmt2
+
+      ** STANDING DATA
+      ** =============
+
+      ** SDBANKPD
+      ** ========
+      ** Date Format Indicator
+      ** Currency Code
+      ** Single Branch Code
+      ** System Location Code
+      ** Local Currency Code
+      ** Customer Number
+      ** Run Day Number
+      ** Back Value Period in Days
+
+     C                   PARM                    BJDFIN
+     C                   PARM                    BJCYCD
+     C                   PARM                    BJSBRC
+     C                   PARM                    BJSLCD
+     C                   PARM                    BJLCCY
+     C                   PARM                    BJCUST
+     C**********         PARM                    BJRDNB                                       CSC011
+     C                   PARM                    WRunDay                                      CSC011
+     C                   PARM                    BJBVPD
+
+      ** SDGELRPD
+      ** ========
+      ** Profit Centres Used
+      ** Originating Branch Used
+      ** Originating Branch/User Valid
+      ** Profit Centres Amendable
+      ** Profit Centre Deafults Used
+
+     C                   PARM                    BKPRCU
+     C                   PARM                    BKOBRU
+     C                   PARM                    BKOBUV
+     C                   PARM                    BKPRCA
+     C                   PARM                    BKPCDU
+
+      ** SDDEALPD
+      ** ========
+      ** Decimal Separator
+
+     C                   PARM                    BNDCSP
+
+      ** SDMMODPD
+      ** ========
+      ** Leo Letters of Credit
+
+     C                   PARM                    BGNOST
+
+      ** SDTRADPD
+      ** ========
+      ** Base Rate Change Facility
+
+     C                   PARM                    BLBRCF
+
+      ** RUNDAT: Multibranching Indicator
+
+     C                   PARM                    AGMBIN
+
+      ** ZMUSER: Default Branch
+      ** Department Code
+
+     C                   PARM                    DBRN
+     C                   PARM                    DPPT
+                                                                                              CAS004
+     C                   PARM                    CAS004                                       CAS004
+                                                                                              CDL019
+     C                   PARM                    CDL019                                       CDL019
+                                                                                              CDL020
+     C                   PARM                    CDL020                                       CDL020
+
+      ** Output
+      ** ======
+      ** Error fields/message IDs/message data (arrays) from/to caller
+
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIDArr
+     C                   PARM                    MsgDtaArr
+
+      ** Array index (3P0) from/to caller
+
+     C                   PARM                    PIdx
+
+      ** Warning fields/message IDs/message data (arrays) from/to caller
+
+     C                   PARM                    WFldNamArr
+     C                   PARM                    WMsgIDArr
+     C                   PARM                    WMsgDtaArr
+
+      ** Array index (3P0) from/to caller
+
+     C                   PARM                    PWIdx
+
+      ** AB Internal Funding screen error indicators
+
+     C                   PARM                    OkFlagsDS
+
+      ** AB Internal Funding for file update - file format
+
+     C                   PARM                    DealFilFmt1
+
+      ** Associated Deal Number fields
+
+     C                   PARM                    DealFilFmt2
+
+      ** Redisplay flag
+
+     C                   PARM                    PReDsp
+
+      ** Profit Centre Description 1
+      ** Profit Centre Description 2
+
+     C                   PARM                    PPCDesc1
+     C                   PARM                    PPCDesc2
+
+      ** Amended by validation module flag
+
+     C                   PARM                    PValFlg
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRCvtDta - Convert Data                                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     SRCvtDTa      BEGSR
+
+      ** Conversion of file fields to screen format
+
+     C                   RESET                   ReturnCode
+     C                   CALLB     'ABFUNDCVT'
+
+      ** Inputs
+      ** ======
+      ** Return Code
+      ** Action Code
+
+     C                   PARM                    ReturnCode
+     C                   PARM                    DDACTN
+
+      ** Current Deal in file format
+      ** Current Associated Deal in file format
+
+     C                   PARM                    CrDlFilfmt1
+     C                   PARM                    CrDlFilfmt2
+
+      ** Standing Data
+      ** =============
+      ** SDBANKPD
+
+     C                   PARM                    BJDFIN
+
+      ** SDDEALPD
+
+     C                   PARM                    BNDCSP
+                                                                                              CAS004
+     C                   PARM                    CAS004                                       CAS004
+                                                                                              CDL019
+     C                   PARM                    CDL019                                       CDL019
+                                                                                              CDL020
+     C                   PARM                    CDL020                                       CDL020
+
+      ** Outputs
+      ** =======
+      ** Current Deal in screen format
+      ** Deal Status Flag
+
+     C                   PARM                    CrDlScnFmt
+     C                   PARM                    PStatus
+
+      ** Profit Centre Description 1
+      ** Profit Centre Description 2
+
+     C                   PARM                    PPCDesc1
+     C                   PARM                    PPCDesc2
+
+      ** Front Office Transaction ID                                                          261140
+     C                   PARM                    FRNT                                         261140
+                                                                                              261140
+      ** Associated Front Office Transaction ID                                               261140
+     C                   PARM                    AFRT                                         261140
+                                                                                              261140
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRSubsDtas - Transaction Details Data Substitution            *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SRSubsDtas    BEGSR
+
+      ** Data Substitution
+
+     C                   RESET                   ReturnCode
+     C                   CLEAR                   PIncDATA
+     C                   CLEAR                   PCurDATA
+     C                   CALLB     'APDTASUBS'
+
+      ** Return Code
+      ** Substitution character
+      ** Incoming Data
+      ** Current Data
+
+     C                   PARM                    ReturnCode
+     C                   PARM      GHSUBS        PSubsChar
+     C                   PARM      NwDlScnFmt    PIncDATA
+     C                   PARM      CrDlScnFmt    PCurDATA
+
+     C                   EVAL      NwDlScnFmt = PIncDATA
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRValAmd   - Check whether the fields amended are amendable   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SRValAmd      BEGSR
+
+      ** This subroutine calls a procedure which checks whether it
+      ** was valid to amend any of the fields which have been
+      ** changed.  Some are never amendable and some depend upon ICD
+      ** settings as to whether they are amendable.
+
+      ** To determine what fields have changed, the current fields
+      ** on file must be converted to a 'screen' format.
+
+      ** These fields are then compared with the fields on the input
+      ** transaction.
+
+      ** Any errors detected by the called procedure take precedence
+      ** over any errors found during the validation of the complete
+      ** transaction.  The errors from the called procedure are kept
+      ** separately and, if any are found, these errors will REPLACE
+      ** the normal validation errors.
+
+      ** Amend Checking
+
+     C                   RESET                   ReturnCode
+     C                   CALLB     'ABFUNDAMD'
+
+      ** Inputs
+      ** ======
+      ** Return Code
+      ** New Deal in Screen Format (Incoming Transaction)
+      ** Current Deal in Screen Format
+      ** Reset of Fields in Error Required (Y/N)
+      ** Originating Branch Used
+      ** Decimal Separator
+
+     C                   PARM                    ReturnCode
+     C                   PARM                    NwDlScnFmt
+     C                   PARM                    CrDlScnfmt
+>>>>>>> branch 'feature/LIBOR_DL' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      C                   PARM      'N'           PResetErrs
      C                   PARM                    BKOBRU
      C                   PARM                    BNDCSP

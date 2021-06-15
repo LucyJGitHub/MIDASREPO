@@ -1,0 +1,142 @@
+     H DEBUG
+      *****************************************************************
+/**** *  RPGBASE                                                      *                     MD056567
+/*STD *  RPGSQLBND                                                    *                     MD056567
+/*EXI *  TEXT('Midas CB Retrieve condition name')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Synon-supplied objects                               *
+      *                                                               *
+      *  CBRVCNR - Retrieve condition name from condition values list *
+      *            This program is a copy of Y2RVCNR.                 *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD056567           Date 20Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 098230  *CREATE    Date 11Jan96               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD056567 - Deliverable Data Split for Validation Lists       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  098230 - Created by copying Y2RVCNR, because this source     *
+      *           was missing.                                        *
+      *                                                               *
+      *****************************************************************
+     F*Y2VLLSL0* IF   E           K DISK    INFDS(INFDS1)                                   MD056567
+     F**********                           USROPN                                           MD056567
+      * Values list               Retrieval index
+      *
+      /EJECT
+     D @OV             S              2    DIM(19) CTDATA PERRCD(19)
+      * Override to correct values list file.
+      /EJECT
+     D PGMDS         ESDS                  EXTNAME(Y2PGDSP)
+      * Program data structure.
+     D INFDS1        E DS                  EXTNAME(Y2I1DSP)
+      * File information data structure.
+      /EJECT
+      * Parameter declarations.
+     D P1PARM          DS
+      * FLD: Values list               Retrieval index
+      * List number
+     D  P1LSNO                 1      4P 0
+      * External value.
+     D  P1INVL                 5     24
+      * Value mapped field?
+     D  P1VLMP                25     25
+      * Retrieved condition name
+     D  P1CNNM                26     50
+     D Y2VLLS        E DS                  EXTNAME(CBVLLJW0)                                MD056567
+     D  Y2LSNO       E                     EXTFLD(@@CND)                                    MD056567
+     D  Y2CNTP       E                     EXTFLD(CNDTYP)                                   MD056567
+     D  Y2EXVL       E                     EXTFLD(EXTVAL)                                   MD056567
+     D  Y2INVL       E                     EXTFLD(INTVAL)                                   MD056567
+     D  Y2CNTX       E                     EXTFLD(CNDTXT)                                   MD056567
+      /EJECT
+      *****************************************************************
+     C     *ENTRY        PLIST                                                  Entry parameter
+     C                   PARM                    P0RTN             7            Return code
+     C     P1LSNO        PARM                    WP0001            7 0          List number
+     C     P1INVL        PARM                    WP0002           20            Internal value
+     C     P1VLMP        PARM                    WP0003            1            Value Mapped?
+     C                   PARM      P1CNNM        WP0004           25            Condition Name
+      *****************************************************************
+     C                   MOVE      *BLANK        P0RTN                          Return code
+      * Initialise
+     C                   EXSR      ZZINIT
+      *
+      * Define Keylist
+     C     KINEX         KLIST
+     C                   KFLD                    Y2LSNO                         List Number
+     C                   KFLD                    Y2INVL                         Internal Value
+      *
+      * Setup Key fields
+     C                   Z-ADD     P1LSNO        Y2LSNO                         List number
+     C                   MOVEL     P1INVL        Y2INVL                         Internal value
+      *
+      * Fetch Condition Name from appropriate format
+      * Use @Y2EXIN if field is not value mapped
+      * Since it will not be in @Y2INEX
+     C     P1VLMP        IFEQ      'Y'
+     C*****KINEX         CHAIN     @Y2INEX                            90        *           MD056567
+     C/EXEC SQL                                                                             MD056567
+     C+ SELECT *                                                                            MD056567
+     C+ into :Y2VLLS                                                                        MD056567
+     C+ from CBVLLJW0                                                                       MD056567
+     C+ where @@CND   = :Y2LSNO and VALMAP = 'Y' and CNDTYP = 'VAL'                         MD056567
+     C+ and INTVAL = :Y2INVL                                                                MD056567
+     C/END-EXEC                                                                             MD056567
+     C                   ELSE
+     C*****KINEX         CHAIN     @Y2EXIN                            90        *           MD056567
+     C/EXEC SQL                                                                             MD056567
+     C+ SELECT *                                                                            MD056567
+     C+ into :Y2VLLS                                                                        MD056567
+     C+ from CBVLLJW0                                                                       MD056567
+     C+ where @@CND   = :Y2LSNO and EXTVAL >= :Y2EXVL and CNDTYP = 'VAL'                    MD056567
+     C/END-EXEC                                                                             MD056567
+     C                   END
+     C******IN90         IFEQ      '1'                                                      MD056567
+     C     SQLCODE       IFNE      0                                                        MD056567
+     C                   MOVEL     *BLANKS       P1CNNM                         * Not found
+     C                   MOVEL     'Y2U0014'     P0RTN                          * Not found
+     C                   ELSE
+     C                   MOVEL     Y2CNTX        P1CNNM                         Condition Name
+     C                   END
+      *
+     C                   RETURN
+      *****************************************************************
+      /EJECT
+     CSR   ZZINIT        BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+      * File already opened?
+     C     ZZOPN         IFNE      'N'                                          *IF
+      * Open file xxVLLSL0 where xx is 1st 2 char of program name.
+     C                   MOVEL     ##PGM         @OV(9)
+      * OVRDBF to correct file name.
+     C**********         CALL      'QCAEXEC'                                                MD056567
+     C**********         PARM                    @OV                                        MD056567
+     C**********         PARM      38            WKOVLN           15 5                      MD056567
+     C**********         OPEN      Y2VLLSL0                             90                  MD056567
+     C******IN90         IFEQ      '1'                                          *IF         MD056567
+     C**********         MOVEL     @1MSID        P0RTN                          Exception msMD056567
+     C**********         MOVEL     *BLANKS       P1CNNM                         * Not found MD056567
+     C**********         RETURN                                                             MD056567
+     C**********         END                                                    *FI 90      MD056567
+     C                   END                                                    *FI ZZOPN
+     C                   MOVE      'N'           ZZOPN             1
+      *================================================================
+     CSR   ZZEXIT        ENDSR
+** @OV4 5 6 7 8 9
+OVRDBF Y2VLLSL0 ??VLLSL0 SECURE(*YES)

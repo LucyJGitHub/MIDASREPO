@@ -29,7 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058195 - SEC4664 00001 fails during COB due to MQOPEN call *
+      *  MD058195 - SEC4664 00001 fails during COB due to MQOPEN call.*
+      *             Changed the call of IBM MQ functions from CALLP   *
+      *             to CALL operation.                                *
       *  CSE040 - Securities Statement Processing                     *
       *           Applied for MD-55740                                *
       *  MD056262 - Allow MQseries to support Meridian 5 and 6        *

@@ -142,11 +142,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
       *  CDL102 - LIBOR Deregulation - Dealing                        *
-=======
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
->>>>>>> branch 'feature/LIBOR_DL' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  250161 - Ensure that maturity date and value date of deals   *
       *           is validated against DACO of ACCNTAB.               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

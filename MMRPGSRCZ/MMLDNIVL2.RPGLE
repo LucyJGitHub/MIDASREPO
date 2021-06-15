@@ -1259,6 +1259,20 @@
      C                   EVAL      CDL093 = 'N'                                               CDL093
      C                   ENDIF                                                                CDL093
                                                                                               CDL093
+      ** Check if CDL102 is installed                                                         CDL102
+                                                                                              CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       @RTCD                                        CDL102
+     C                   PARM      '*VERIFY'     @OPTN                                        CDL102
+     C                   PARM      'CDL102'      @SARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C                   IF        @RTCD = *Blanks                                            CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1800,6 +1814,8 @@
      C                   PARM                    BJRDNB                                     BUG10810
      C                   PARM                    IKSPRD                                     BUG10810
      C                   PARM                    IKINTR                                     BUG10810
+     C                   PARM                    TranScnBlrt                                  CDL102
+     C                   PARM                    CDL102            1                          CDL102
                                                                                             BUG10810
      C                   IF        MSG1 <> *Blanks                                          BUG10810
      C                   EVAL      Idx = Idx + 1                                            BUG10810

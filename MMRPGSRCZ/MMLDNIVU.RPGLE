@@ -2669,6 +2669,7 @@
      C                   PARM                    PayNostro                                   BUG3992
      C                   PARM      HKFRNT        @@FRNT           20                         BUG3992
      C                   PARM                    ExtData                                     BUG3992
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Field OK flags (DS) from/to caller                                                   BUG3992
      C                   PARM                    MMELDN                                      BUG3992
      C                   PARM                    MMELDN2                                     BUG5169

@@ -5728,6 +5728,8 @@
      C                   PARM                    BJRDNB                                     AR876535
      C                   PARM                    IKSPRD                                     AR876535
      C                   PARM                    IKINTR                                     AR876535
+     C                   PARM                    TranScnBlrt                                  CDL102
+     C                   PARM                    CDL102                                       CDL102
                                                                                             AR876535
      C                   IF        MSG1 <> *Blanks                                          AR876535
      C                   EVAL      Idx = Idx + 1                                            AR876535

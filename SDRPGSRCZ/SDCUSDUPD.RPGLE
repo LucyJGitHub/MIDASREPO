@@ -6,13 +6,13 @@
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
-	      *
+      *                                                               *
       *  SDCUSDUPD - STANDING DATA CUSTOMERS DATABASE UPDATE          *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD056548           Date 10Sep20               *
-      *  Prev Amend No. 252069             Date 22May20               *      
+      *  Prev Amend No. 252069             Date 22May20               *
       *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -159,7 +159,7 @@
       *                                                               *
       *  MD056548 - Customer Fees Maintenance is missing              *
       *  252069 - Database error message occurs when there is a       *
-      *           record locking issue.                               *      
+      *           record locking issue.                               *
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *

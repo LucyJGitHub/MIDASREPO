@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD05402            Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 MD036070           Date 19Oct15               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -153,7 +155,7 @@
       *  CSE006 - Create Repo maintenance program                     *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -172,34 +174,34 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -219,27 +221,27 @@
      D ##CT1           S              1    DIM(81) CTDATA PERRCD(81)
      D ##CN2           S              1    DIM(78) CTDATA PERRCD(78)
      D ##CT2           S              1    DIM(78) CTDATA PERRCD(78)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
      D InfData       E DS                  EXTNAME(MMLDIFPD)
      D                                     PREFIX(IF_)
       * MM Extra Data - File (D/B) format
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       * New Deal in File Format
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
@@ -251,35 +253,35 @@
      D QQINS1        E                     EXTFLD(QQINSA)                                     CGL029
      D  IKREC                456    524
      D  IKPAY                525   1083
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * New Deal in Screen Format
- 
+
      D MMELDN        E DS                  EXTNAME(MMELDNIPD)
       * Error indicators
- 
+
      D**  Data structure of Depot Movement File                                               CAP087
      D DPTXX         E DS                  EXTNAME(DPTMVDL1) PREFIX(D)                        CAP087
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D**FLREC***               1     69                                                       CGL029
      D  FLREC                  1     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D**FLPAY***               1    559                                                       CGL029
      D  FLPAY                  1    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
                                                                                               CDL033
@@ -288,7 +290,7 @@
                                                                                               CDL033
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                  CDL033
       ** File - Receive Further Settlement Instructions                                       CDL033
- 
+
      D @SETIN          DS
       ** Receive / Pay Settlement Currency, Method & Nostro
      D  @@RSCY                 1      3
@@ -297,7 +299,7 @@
      D  @@PSCY                18     20
      D  @@PSTM                21     22  0
      D  @@PONS                23     34
- 
+
      D @CCI@M          DS
       ** CURRENT CONTROL INDICATORS FOR MAIN DETAIL SCREEN
      D  @EKYFD                 1      1
@@ -307,10 +309,10 @@
      D  @EINKJ                 5      5
      D  @EINKN                 6      6
      D  @EINKP                 7      7
- 
+
      D @PCI@M          DS             7
       ** PREVIOUS CONTROL INDICATORS FOR MAIN DETAIL SCREEN
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
@@ -322,27 +324,27 @@
       ***Midas*Our Receive / Pay  Instructions (for Settl Meth = 04 )                  179510 200400
      D**@@MORI****             1     12                                                179510 200400
      D**@@MOPI****            13     24                                                179510 200400
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM (LDNI) Extra Data - File (D/B) format
- 
+
      D*CO*Y*QWINDSRC*MMLDNISDTA*******************                                            177547
      D/COPY QWINDSRC,MMREPOSDTA                                                               177547
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
@@ -358,12 +360,12 @@
                                                                                               CAP087
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -371,7 +373,7 @@
       ** +----------------------------------------+
       *CO*Y*WNCPYSRC*MMLDNIS008*******************                                            177547
       /COPY WNCPYSRC,MMREPOS008                                                               177547
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -382,76 +384,76 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS001*******************                                            177547
       /COPY WNCPYSRC,MMREPOS001                                                               177547
- 
+
       * READ NEXT BROWSE SUBFILE RECORD
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS002**********************                                         177547
       /COPY WNCPYSRC,MMREPOS002                                                               177547
- 
+
       * DO WHILE SCREEN: MAIN DETAILS
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS003**********************                                         177547
       /COPY WNCPYSRC,MMREPOS003                                                               177547
- 
+
       * SCREEN: WINDOW
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS004**********************                                         177547
       /COPY WNCPYSRC,MMREPOS004                                                               177547
- 
+
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS005**********************                                         177547
       /COPY WNCPYSRC,MMREPOS005                                                               177547
- 
+
       * DO WHILE SCREEN: REPO DELIVERY DETAILS
      C     @SCRN         DOWEQ     'D'
      C                   EXSR      SCRN@D
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS005**********************                                         177547
       /COPY WNCPYSRC,MMREPOS011                                                               177547
- 
+
       * SCREEN: CONFIRMATION OF INPUT
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS006**********************                                         177547
       /COPY WNCPYSRC,MMREPOS006                                                               177547
- 
+
       * DO FILE UPDATES
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   END
- 
+
       *CO*Y*WNCPYSRC*MMLDNIS007**********************                                         177547
       /COPY WNCPYSRC,MMREPOS007                                                               177547
- 
+
       * TERMINATE PROGRAM
      C     @SCRN         IFEQ      'T'
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       *CO*Y*WNCPYSRC*MMLDNIS009**********************                                         177547
       /COPY WNCPYSRC,MMREPOS009                                                               177547
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -1845,7 +1847,7 @@
       * SET SCREEN INDICATOR TO PROCESS THIRD SCREEN
       *
      C                   EVAL      @SCRN='D'
- 
+
      C                   END
       *
      C                   ENDSR
@@ -2057,12 +2059,12 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CN2
      C                   PARM                    MESLEN
- 
+
      C                   Z-ADD     78            MESLEN
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CT2
      C                   PARM                    MESLEN
- 
+
      C*
      C* Override SECRTNTPPD to QTEMP/SECRTNTPPD
      C*
@@ -2325,12 +2327,12 @@
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CN2
      C                   PARM                    MESLEN
- 
+
      C                   Z-ADD     78            MESLEN
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    ##CT2
      C                   PARM                    MESLEN
- 
+
      C                   END
      C
       * BLANK THE MAIN DETAILS SCREEN
@@ -2433,7 +2435,7 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CN1
      C                   PARM                    MESLEN
- 
+
      C                   Z-ADD     81            MESLEN
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CT1
@@ -2448,12 +2450,12 @@
       *
      C                   EXSR      IFDS@M
      C                   EXSR      IFKS@M
- 
+
       *  Hook to enable non-core initial processing to be included
       *CO*Y*WNCPYSRC*MMLDNIS010**********************                                         177547
       /COPY WNCPYSRC,MMREPOS010                                                               177547
      C
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

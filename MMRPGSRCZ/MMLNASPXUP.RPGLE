@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2000                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD04624            Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN022             Date 24Jan05               *
       *                 LLN016             Date 09May00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
       *  LLN016 - Upgrade BoE to DBAR3                                *
@@ -45,68 +47,68 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
- 
- 
+
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * DATA STRUCTURE FOR DEAL DATA CODES
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR MODULE DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       * RUN DATE & MULTI-BRANCHING INDICATOR
- 
+
      D RUNDAT          DS
      D  @DLUP                  1      2  0
      D  @MLUP                  3      5
      D  @YLUP                  6      7  0
      D  @MBIN                 13     13
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Key for chain to BYNASPX0
      D ULBYKEY         S              6S 0
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *

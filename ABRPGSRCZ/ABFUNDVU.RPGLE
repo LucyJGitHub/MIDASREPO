@@ -67,7 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -179,6 +179,8 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
+     D BLKFLR          C                   CONST('            ')                              CDL102
+     D SCNSTR          C                   CONST('9999.9999999')                              CDL102
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -190,6 +192,9 @@
 
       * Incoming transaction in screen format
      D TranInFUND    E DS                  EXTNAME(ABFUNDPD)
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
+     D NewLibor        S             50                                                       CDL102
 
       * Incoming FUND extra data layout                                                       CAP191
      D ExtData       E DS                  EXTNAME(ABFUEXPD)                                  CAP191
@@ -204,6 +209,9 @@
      D QQPONS1       E                     EXTFLD(QQPONS)                                     CGL029
      D QQINSA1       E                     EXTFLD(QQINSA)                                     CGL029
      D QQMOPI1       E                     EXTFLD(QQMOPI)                                     CGL029
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CDL102
+     D CurrScnBlrt     DS            50                                                       CDL102
+                                                                                              CDL102
 
       ** Current Deal in File Format of associated deal
      D CrDlFilFmt2   E DS                  EXTNAME(MMDELDPP)
@@ -338,6 +346,7 @@
 
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
+     D Pos             S              3P 0                                                    CDL102
 
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
@@ -426,6 +435,14 @@
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     TranInFUND
      C                   MOVEL     PExtData500   ExtData                                      CAP191
+      *                                                                                       CDL102
+      ** ExtData Buffer Pointer                                                               CDL102
+     C                   Z-ADD     1             eBfp              4 0                        CDL102
+     C                   MOVEL     'ABFUEXPD'    Filename                                     CDL102
+     C                   EXSR      GETRCDLN                                                   CDL102
+     C                   ADD       RecordLen     eBfp                                         CDL102
+     C                   EVAL      TranScnBlrt = %SUBST(PExtData500:eBfp:50)                  CDL102
+      *                                                                                       CDL102
      C                   EVAL      PFrntId = FRNT                                             261910
      C                   EVAL      PFrntAsId = AFRT                                           261910
 
@@ -458,6 +475,14 @@
      C                   EXSR      ValAmd                                                     CDL038
 
      C                   ENDSL
+      *                                                                                       CDL102
+     C                   EVAL       NewLibor = TranScnBlrt                                    CDL102
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                              CDL102
+     C                   IF         Pos <> 0                                                  CDL102
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)              CDL102
+     C                   EVAL       TranScnBlrt = NewLibor                                    CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
 
       * Write to database
      C     UpdateYN      IFEQ      'Y'
@@ -484,7 +509,7 @@
      C                   EVAL      Buffer = TranInFUND + PDDSTS + @TimeStamp +                CAP191
      C**********                   ExtData + AAuth                                     CAP191 261140
      C                             ExtData + AAuth + FRNT + AFRT                              261140
-
+     C                             + TranScnBlrt                                              CDL102
      C     INVALID       TAG
      C                   SETON                                        LR
 
@@ -851,6 +876,7 @@
 
      C                   PARM                    CrDlFilFmt1
      C                   PARM                    CrDlFilFmt2
+     C**********         PARM                    CurrScnBlrt                                  CDL102
      C                   PARM      *BLANK        OKACTN            1
      C                   PARM      *BLANK        OKDLNO            1
      C                   PARM      *BLANK        OKBRC1            1
@@ -919,6 +945,8 @@
       ** Deal in screen format
 
      C                   PARM                    CrDlScnFmt
+      ** Backward-Looking Rate Fields from file                                               CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
 
       ** Deal Status
 
@@ -1058,6 +1086,8 @@
      C                   PARM                    CDL019                                    CDL019
                                                                                            CDL020
      C                   PARM                    CDL020                                    CDL020
+                                                                                              CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Output Parameters
       ** =================
@@ -1133,6 +1163,10 @@
      C                   PARM                    ReturnCode                                   CDL038
      C                   PARM                    NwDlScnFmt                                   CDL038
      C                   PARM                    CrDlScnfmt                                   CDL038
+      ** Incoming Backward-Looking Rate fields in Screen Format :                             CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+      ** (Current) Backward-Looking Rate fields in Screen Format :                            CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM      'N'           ResetErrs         1                          CDL038
      C                   PARM                    BKOBRU                                       CDL038
      C                   PARM                    BNDCSP                                       CDL038
@@ -1659,6 +1693,23 @@
 
      C                   ENDSR
       /EJECT
+      ****************************************************************                        CDL102
+      *  Get Record Lengths of Transaction Data Blocks               *                        CDL102
+      ****************************************************************                        CDL102
+     C     GETRCDLN      BEGSR                                                                CDL102
+                                                                                              CDL102
+     C                   CALLB     'UTGETRCDLN'                                               CDL102
+     C                   PARM                    ReturnCode       10                          CDL102
+     C                   PARM      *ZERO         RecordLen         5 0                        CDL102
+     C                   PARM                    FileName         10                          CDL102
+     C                   PARM      '*LIBL     '  FileLib          10                          CDL102
+                                                                                              CDL102
+      ** If file not found (or any other error) shut down the program                         CDL102
+     C     ReturnCode    Ifne      *Blanks                                                    CDL102
+     C                   EXSR      *pssr                                                      CDL102
+     C                   EndIf                                                                CDL102
+                                                                                              CDL102
+     C                   ENDSR                                                                CDL102
       *****************************************************************
       * The following /COPY contains the standard program status
       * subroutine, including a bound call to the DBERRCTL module.

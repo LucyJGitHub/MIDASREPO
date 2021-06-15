@@ -73,7 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -537,6 +537,10 @@
      D CDL019          S              1A                                                      CDL019
                                                                                               CDL019
      D CDL020          S              1A                                                      CDL020
+     D TranScnBlrt     DS            50                                                       CDL102
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CDL102
+     D CurrScnBlrt     DS            50                                                       CDL102
+                                                                                              CDL102
                                                                                               CDL020
       /COPY WNCPYSRC,ABFUNDC002
 
@@ -1159,6 +1163,8 @@
      C                   PARM                    CDL019                                       CDL019
                                                                                               CDL020
      C                   PARM                    CDL020                                       CDL020
+                                                                                              CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Output
       ** ======
@@ -1263,6 +1269,8 @@
       ** Deal Status Flag
 
      C                   PARM                    CrDlScnFmt
+      ** Backward-Looking Rate Fields from file                                               CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM                    PStatus
 
       ** Profit Centre Description 1
@@ -1360,6 +1368,10 @@
      C                   PARM                    ReturnCode
      C                   PARM                    NwDlScnFmt
      C                   PARM                    CrDlScnfmt
+      ** Incoming Backward-Looking Rate fields in Screen Format :                             CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+      ** (Current) Backward-Looking Rate fields in Screen Format :                            CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM      'N'           PResetErrs
      C                   PARM                    BKOBRU
      C                   PARM                    BNDCSP

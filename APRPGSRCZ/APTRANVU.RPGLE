@@ -245,7 +245,6 @@
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
       *  MD044553 - Corrected buffer position for WIP timestamp       *
-      *  MD044553 - Corrected buffer position for WIP timestamp       *
       *  MD055373 - Audit trail not available                         *
       *           - Include DDIUSR and DDAUSR fields on TransInEx2.   *
       *  MD030856 - Introduced reject processing to FEEM              *

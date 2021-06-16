@@ -15,8 +15,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD03103            Date 24Feb15               *
-      *                 MD05402            Date 05Sep19               *
+      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -104,7 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -330,6 +330,8 @@
      D @EI             S              1    DIM(60)
      D***Inv_FIDT        S             42    DIM(99)                                   209905 CGL029
      D Inv_FIDT        S             48    DIM(99)                                            CGL029
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
 
 
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
@@ -1423,6 +1425,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    MMELDNI
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1703,6 +1706,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      IKINTR        SRate                                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
       *                                                                                       CDL016
       * If errors returned                                                                    CDL016
       *                                                                                       CDL016
@@ -2155,6 +2159,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
      C/COPY WNCPYSRC,MMLDNIRC28
       *
       * Deal Status
@@ -2744,6 +2749,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    MMELDNI
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr

@@ -219,7 +219,6 @@
       ** Midas SD Dealing Data
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL102
       ** First DS for Access Programs, Short Data Structure
 
       ** +--------------------------------------+
@@ -227,9 +226,6 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
-     D CDL019          S              1A                                                      CDL102
-     D CDL020          S              1A                                                      CDL102
-     D PSARD           S              6A                                                      CDL102
      D PACTN           S              1A
      D PRTCD           S              7A
      D POPTN           S              7A
@@ -245,15 +241,14 @@
 
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
       ** Define fields used in MD054028                                                     MD054028
      D DDAPRC          S              1A                                                    MD054028
      D DDAPRR          S              8A                                                    MD054028
-      ** (Current) Backward-Looking Rate Fields in Screen Format                              CDL102
-     D CurrScnBlrt     DS            50                                                       CDL102
-                                                                                              CDL102
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -317,11 +312,7 @@
      C                   PARM                    BJDFIN
      C                   PARM                    BNDCSP
      C                   PARM                    CAS004                                       222373
-     C                   PARM                    CDL019                                       CDL102
-     C                   PARM                    CDL020                                       CDL102
      C                   PARM                    FUNDScnFmt
-      ** Backward-Looking Rate Fields from file                                               CDL102
-     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM                    PSTSA
      C                   PARM                    PCDES
      C                   PARM                    PCDES2
@@ -347,6 +338,7 @@
      C                   PARM                    DDAPRC                         MD054028
      C                   PARM                    DDAPRR                         MD054028
      C                   PARM                    LDNIScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    PSTS
      C                   PARM                    PCSTS
 
@@ -498,32 +490,6 @@
      C                   EVAL      DBASE = 901
      C                   EXSR      *PSSR
      C                   ENDIF
-                                                                                              CDL102
-      ** Check if CDL019 is installed                                                         CDL102
-                                                                                              CDL102
-     C                   EVAL      CDL019 = 'N'                                               CDL102
-     C                   CALL      'AOSARDR0'                                                 CDL102
-     C                   PARM      *Blanks       PRTCD                                        CDL102
-     C                   PARM      '*VERIFY'     POPTN                                        CDL102
-     C                   PARM      'CDL019'      PSARD                                        CDL102
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
-                                                                                              CDL102
-     C                   IF        PRTCD = *Blanks                                            CDL102
-     C                   EVAL      CDL019 = 'Y'                                               CDL102
-     C                   ENDIF                                                                CDL102
-                                                                                              CDL102
-      ** Check if CDL020 is installed                                                         CDL102
-                                                                                              CDL102
-     C                   EVAL      CDL020 = 'N'                                               CDL102
-     C                   CALL      'AOSARDR0'                                                 CDL102
-     C                   PARM      *Blanks       PRTCD                                        CDL102
-     C                   PARM      '*VERIFY'     POPTN                                        CDL102
-     C                   PARM      'CDL020'      PSARD                                        CDL102
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
-                                                                                              CDL102
-     C                   IF        PRTCD = *Blanks                                            CDL102
-     C                   EVAL      CDL020 = 'Y'                                               CDL102
-     C                   ENDIF                                                                CDL102
 
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD05402            Date 05Sep19               *
+      *                 MD054028           Date 05Sep19               *
       *                 MD039617           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -76,7 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -263,6 +263,20 @@
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
+                                                                                              CDL102
+     D DealScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+      ** LDNI Backward-Looking Rate Screen Fields                                             CDL102
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -293,6 +307,7 @@
      D CDL096          S              1A                                                      CDL096
      D CGL165          S              1A                                                      CGL165
      D CER050          S              1A                                                      CER050
+     D CDL102          S              1A                                                      CDL102
       *                                                                                       CER020
       ** Defined fields for parameter to be passed to SRZDate2                                CER020
       *                                                                                       CER020
@@ -1077,6 +1092,68 @@
      C                   Move      *BLANKS       DDAPRR                                       CER050
      C                   Endif                                                                CER050
      C                   Endif                                                                CER050
+                                                                                              CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+      ** Backward-Looking Rate                                                                CDL102
+                                                                                              CDL102
+     C                   MOVE      HKBLRT        DDBLRT                                       CDL102
+                                                                                              CDL102
+      ** Risk Free Rate                                                                       CDL102
+                                                                                              CDL102
+     C                   MOVE      HKRFRR        DDRFRR                                       CDL102
+                                                                                              CDL102
+      ** Calculation Method                                                                   CDL102
+                                                                                              CDL102
+     C                   MOVE      HKCALM        DDCALM                                       CDL102
+                                                                                              CDL102
+      ** Observation Period Shift                                                             CDL102
+                                                                                              CDL102
+     C                   MOVE      HKOPSH        DDOPSH                                       CDL102
+                                                                                              CDL102
+      ** Rates Known                                                                          CDL102
+                                                                                              CDL102
+     C                   MOVE      HKRTKN        DDRTKN                                       CDL102
+                                                                                              CDL102
+      ** Convert numeric fields into screen field                                             CDL102
+      ** if Backward-Looking Rate is Y                                                        CDL102
+                                                                                              CDL102
+     C                   IF        HKBLRT = 'Y'                                               CDL102
+                                                                                              CDL102
+      ** Benchmark Adjustment                                                                 CDL102
+                                                                                              CDL102
+     C                   Z-ADD     0             @@AMTW                                       CDL102
+     C                   MOVE      HKBADJ        @@AMTW                                       CDL102
+     C                   Z-ADD     7             @@QECN                                       CDL102
+     C                   EXSR      FMTAMT                                                     CDL102
+     C                   MOVE      @@AMTD        DDBADJ                                       CDL102
+                                                                                              CDL102
+      ** Floor                                                                                CDL102
+                                                                                              CDL102
+     C                   Z-ADD     0             @@AMTW                                       CDL102
+     C                   MOVE      HKFLOR        @@AMTW                                       CDL102
+     C                   Z-ADD     7             @@QECN                                       CDL102
+     C                   EXSR      FMTAMT                                                     CDL102
+     C                   MOVE      @@AMTD        DDFLOR                                       CDL102
+                                                                                              CDL102
+      ** Lookback Days                                                                        CDL102
+                                                                                              CDL102
+     C                   MOVE      HKLBDY        DDLBDY                                       CDL102
+                                                                                              CDL102
+      ** Lockout Days                                                                         CDL102
+                                                                                              CDL102
+     C                   MOVE      HKLODY        DDLODY                                       CDL102
+                                                                                              CDL102
+      ** Rate Rounding Decimal Places                                                         CDL102
+                                                                                              CDL102
+     C                   MOVE      HKRRDP        DDRRDP                                       CDL102
+                                                                                              CDL102
+      ** Day Basis for Average                                                                CDL102
+                                                                                              CDL102
+     C                   MOVE      HKDBAV        DDDBAV                                       CDL102
+                                                                                              CDL102
+     C                   ENDIF                                                                CDL102
+     C                                                                                        CDL102
+     C                   ENDIF                                                                CDL102
 
      C                   ENDSR
       *****************************************************************
@@ -1204,6 +1281,7 @@
       *
       * Deal in screen format
      C                   PARM                    DealScnFmt
+     C                   PARM                    DealScnBlrt                                  CDL102
      C/COPY WNCPYSRC,MMLDNINC03
       *
       * Deal Status
@@ -1578,6 +1656,22 @@
      C                   EVAL      CRE073 = 'N'                                               CRE073
       *                                                                                       CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                       CDL102
+      ** Access SAR details file to determine if CDL102 is on.                                CDL102
+      *                                                                                       CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRTCD                                        CDL102
+     C                   PARM      '*VERIFY'     POPTN                                        CDL102
+     C                   PARM      'CDL102'      PSARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+     C                   IF        PRTCD = *BLANKS                                            CDL102
+      *                                                                                       CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+      *                                                                                       CDL102
+     C                   ENDIF                                                                CDL102
       *
       *                                                                                       CDL096
       ** Access SAR details file to determine if CDL096 is on.                                CDL096

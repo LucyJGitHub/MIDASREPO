@@ -16,7 +16,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD05402            Date 05Sep19               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -78,7 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -256,6 +256,8 @@
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
 
      D ZMUSER          DS            17
      D  BRC                   11     13
@@ -659,6 +661,7 @@
       *
       * Deal in screen format
      C                   PARM                    DlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
      C/COPY WNCPYSRC,MMLDNIHC09
       *
       * Deal Status

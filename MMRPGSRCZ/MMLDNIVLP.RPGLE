@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
       *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD04624            Date 27Oct17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031494           Date 13Feb15               *
       *                 MD030409           Date 25Nov14               *
@@ -55,7 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165   - Dual Withholding Tax (Recompile)                  *
@@ -395,6 +395,19 @@
      D  DDSOFDOK                      1A                                                     BUG5169
      D  DDFBRTOK                      1A                                                     BUG5169
      D  DDAIROK                       1A                                                     BUG5169
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
 
       ** Error flags from Dates validation routine
      D ErrDealDat      S              1A   INZ('N')
@@ -987,6 +1000,8 @@
      C                   PARM                    BJRDNB                                      BUG5169
      C                   PARM                    IKSPRD                                      BUG5169
      C                   PARM                    IKINTR                                      BUG5169
+     C                   PARM                    TranScnBlrt                                  CDL102
+     C                   PARM                    CDL102            1                          CDL102
                                                                                              BUG5169
      C                   IF        MSG1 <> *Blanks                                           BUG5169
      C                   EVAL      Idx = Idx + 1                                             BUG5169
@@ -1200,6 +1215,7 @@
      C                   PARM                    PayNostro
      C                   PARM                    FrontOffice
      C                   PARM                    ExtData
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
      C                   PARM                    OKFlagsDS2                                  BUG5169
@@ -1783,6 +1799,20 @@
      C                   EVAL      CER069 = 'N'                                             MD030409
      C                   ENDIF                                                              MD030409
                                                                                             MD030409
+      ** Check if CDL102 is installed                                                         CDL102
+                                                                                              CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRtCd                                        CDL102
+     C                   PARM      '*VERIFY'     POptn                                        CDL102
+     C                   PARM      'CDL102'      PSard                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C                   IF        PRtCd = *Blanks                                            CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'

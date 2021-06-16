@@ -15,7 +15,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD05402            Date 05Sep19               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -58,7 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -313,6 +313,8 @@
       ** 'N' - called from Money Markey module                                                CAP087
      D DepotPos        S              1A                                                      CAP087
                                                                                               CAP087
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
       ** Formatted date field for use in the parameter list
      D                 DS
      D DateOut                 1      8  0
@@ -1202,6 +1204,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       *
       * Deal Status
      C                   PARM                    DDSTS            24

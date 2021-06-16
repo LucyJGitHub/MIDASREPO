@@ -4317,7 +4317,7 @@
      C                   CALLB     'ZAVBLRTE'                                                 CDL102
      C                   PARM      'LDNI'        ApiName           4                          CDL102
      C                   PARM                    DDDLNO            6                          CDL102
-     C                   PARM                    PTransType        2                          CDL102
+     C                   PARM      DDTYPE        PTransType        2                          CDL102
      C                   PARM      DDCCY         PCCY              3                          CDL102
      C                   PARM      DDBSRC        PBRTT             2                          CDL102
      C                   PARM                    PICBS             1 0                        CDL102

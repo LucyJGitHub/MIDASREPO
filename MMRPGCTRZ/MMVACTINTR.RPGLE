@@ -386,6 +386,7 @@
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
                                                                                              BUG5169
      C     WkBaseRate    ADD       IKSPRD        IKINTR
+     C                   EVAL      IKINTR = IKINTR + wBADJ                                    CDL102
      C     WkBaseRate    ADD       IKSPRD        WAIR             11 7
      C                   EVAL      WAIR = WAIR + wBADJ                                        CDL102
      C                   Z-ADD     0             PAmtIn

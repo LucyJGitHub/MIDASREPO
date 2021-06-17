@@ -114,7 +114,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *           (Recompile)                                         *
       *  MD057049 - Moved IKRRAT to HKRRAT                            *
@@ -909,6 +909,10 @@
                                                                                               CSD015
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EXSR      SRMOVF                                                     CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
      C*  WRITE (OR UPDATE IF PRESENT) NEW DEAL
      C*
      C     *IN99         IFEQ      '0'
@@ -1171,6 +1175,10 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   ENDIF                                                                CSD015
+                                                                                              CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EXSR      SRMOVF                                                     CDL102
+     C                   ENDIF                                                                CDL102
                                                                                               CSD015
      C**  UPDATE RECORD
       ** User Authorisation details when CDL010 is ON                                         CDL010
@@ -3500,6 +3508,19 @@
      C                   Eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
+      ** Access SAR details file to determine if CDL102 is on.                                CDL102
+      *                                                                                       CDL102
+     C                   MOVE      'N'           CDL102            1                          CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       @RTCD                                        CDL102
+     C                   PARM      '*VERIFY '    @OPTN                                        CDL102
+     C                   PARM      'CDL102'      @SAR              6                          CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+     C     @RTCD         IFEQ      *BLANK                                                     CDL102
+     C                   MOVE      'Y'           CDL102                                       CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
      C                   ENDSR
       *****************************************************************
       *****************************************************************                       CSD015
@@ -3712,6 +3733,29 @@
      C                   PARM                    PDummy16                                     CSD015
                                                                                               CSD015
      C                   ENDSR                                                                CSD015
+     C
+      ****************************************************************                        CDL102
+      /EJECT                                                                                  CDL102
+      ****************************************************************                        CDL102
+      *                                                              *                        CDL102
+      * SRMOVF  - Move fields from valid file to main file           *                        CDL102
+      *                                                              *                        CDL102
+      ****************************************************************                        CDL102
+     C     SRMOVF        BEGSR                                                                CDL102
+                                                                                              CDL102
+     C                   MOVE      IKBLRT        HKBLRT                                       CDL102
+     C                   MOVE      IKRFRR        HKRFRR                                       CDL102
+     C                   MOVE      IKCALM        HKCALM                                       CDL102
+     C                   MOVE      IKBADJ        HKBADJ                                       CDL102
+     C                   MOVE      IKFLOR        HKFLOR                                       CDL102
+     C                   MOVE      IKLBDY        HKLBDY                                       CDL102
+     C                   MOVE      IKLODY        HKLODY                                       CDL102
+     C                   MOVE      IKOPSH        HKOPSH                                       CDL102
+     C                   MOVE      IKRRDP        HKRRDP                                       CDL102
+     C                   MOVE      IKDBAV        HKDBAV                                       CDL102
+     C                   MOVE      IKRTKN        HKRTKN                                       CDL102
+                                                                                              CDL102
+     C                   ENDSR                                                                CDL102
       *****************************************************************                       CSD015
       /EJECT
      C*****************************************************

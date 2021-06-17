@@ -105,7 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057049 - Moved IKRRAT to FSRRAT                            *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1294,6 +1294,10 @@
      C                   If        CER050 = 'Y'                                               CER050
      C                   Move      IKAPRC        APRC                                         CER050
      C                   Endif                                                                CER050
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EXSR      SRMOVF                                                     CDL102
+     C                   ENDIF                                                                CDL102
       *
       * WRITE DEAL
       *
@@ -1821,6 +1825,10 @@
      C                   If        CER050 = 'Y'                                               CER050
      C                   Move      IKAPRC        APRC                                         CER050
      C                   Endif                                                                CER050
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EXSR      SRMOVF                                                     CDL102
+     C                   ENDIF                                                                CDL102
       *
      C                   UPDATE    DEALSDCF
                                                                                               CRE020
@@ -3645,7 +3653,43 @@
      C                   Eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
       *                                                                                       CER050
+      ** Access SAR details file to determine if CDL102 is on.                                CDL102
+      *                                                                                       CDL102
+     C                   MOVE      'N'           CDL102            1                          CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       @RTCD                                        CDL102
+     C                   PARM      '*VERIFY '    @OPTN                                        CDL102
+     C                   PARM      'CDL102'      @SAR              6                          CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+     C     @RTCD         IFEQ      *BLANK                                                     CDL102
+     C                   MOVE      'Y'           CDL102                                       CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
      C                   ENDSR
+      ****************************************************************                        CDL102
+      /EJECT                                                                                  CDL102
+      ****************************************************************                        CDL102
+      *                                                              *                        CDL102
+      * SRMOVF  - Move fields from valid file to main file           *                        CDL102
+      *                                                              *                        CDL102
+      ****************************************************************                        CDL102
+     C     SRMOVF        BEGSR                                                                CDL102
+                                                                                              CDL102
+     C                   MOVE      IKBLRT        BLRT                                         CDL102
+     C                   MOVE      IKRFRR        RFRR                                         CDL102
+     C                   MOVE      IKCALM        CALM                                         CDL102
+     C                   MOVE      IKBADJ        BADJ                                         CDL102
+     C                   MOVE      IKFLOR        FLOR                                         CDL102
+     C                   MOVE      IKLBDY        LBDY                                         CDL102
+     C                   MOVE      IKLODY        LODY                                         CDL102
+     C                   MOVE      IKOPSH        OPSH                                         CDL102
+     C                   MOVE      IKRRDP        RRDP                                         CDL102
+     C                   MOVE      IKDBAV        DBAV                                         CDL102
+     C                   MOVE      IKRTKN        RTKN                                         CDL102
+                                                                                              CDL102
+     C                   ENDSR                                                                CDL102
+
      C****************************************************************
       /EJECT
      C****************************************************************

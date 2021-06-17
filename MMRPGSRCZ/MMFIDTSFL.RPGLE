@@ -64,7 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -223,6 +223,19 @@
      D ZMUSER          DS            17
      D  ZMBRCA                11     13
      D  ZMDEPT                14     16
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
 
      D PCYDP           S              1S 0
      D PNTCE           S              3S 0
@@ -2381,6 +2394,7 @@
      C                   PARM                    FIRDFC
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    NNDCSP
+     C                   PARM                    TranScnBlrt                                  CDL102
 
      C     ReturnCode    IfNe      *BLANKS
      C     *LOCK         In        LDA

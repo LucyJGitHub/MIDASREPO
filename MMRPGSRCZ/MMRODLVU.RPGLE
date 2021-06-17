@@ -83,7 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -360,6 +360,8 @@
       ** SD data area
 
      D MMLDNIUPC       DS             1    DTAARA(MMLDNIUPC)
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1272,6 +1274,7 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS            24
       *

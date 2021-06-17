@@ -98,7 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -270,6 +270,8 @@
      D***Inv_FIDT        S             42    DIM(99)                                   209905 CGL029
      D Inv_FIDT        S             48    DIM(99)                                            CGL029
                                                                                               209905
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
 
@@ -968,6 +970,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    MMELDN
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1274,6 +1277,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      IKINTR        SRate            11 7                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
       *                                                                                       CDL016
       * If errors returned                                                                    CDL016
       *                                                                                       CDL016
@@ -1856,6 +1860,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
      C/COPY WNCPYSRC,MMLDNISC61
       *
       * Deal Status
@@ -2582,6 +2587,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    MMELDN
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -2638,6 +2644,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      IKINTR        SRate            11 7                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
                                                                                               CDL020
       * Recalculate Total Interest here so that it can be shown on the                        CDL020
       * confirmation screen and updated on the file without being validated.                  CDL020

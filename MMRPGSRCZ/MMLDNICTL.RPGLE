@@ -128,7 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -397,6 +397,8 @@
      D RChgArr         S              6A   DIM(82)                                            CDL033
      D PChgArr         S              6A   DIM(82)                                            CDL033
                                                                                               CDL033
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
      D WMSGTYPE                1      6                                                       209905
@@ -1883,6 +1885,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1966,6 +1969,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      *ZERO         SRATE                                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
                                                                                               CDL016
      C                   ENDIF                                                                CDL016
      C                   ENDIF                                                                CDL016
@@ -2117,6 +2121,7 @@
       * OUTPUTS                                                                 CAP011
       * (Current) Deal in screen format                                         CAP011
      C                   PARM                    DealScnfmt                     CAP011
+     C                   PARM                    TranscnBlrt                                  CDL102
      C/COPY WNCPYSRC,MMLDNICC12
       * Deal Status                                                             CAP011
      C                   PARM                    DDSTS                          CAP011
@@ -2227,6 +2232,7 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+     C                   PARM                    TranscnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS            24
       *                                                                         CGL011
@@ -2987,6 +2993,7 @@
      C                   PARM                    JWIKRDFC                                     209905
       ** Decimal separator (1A, from SDDEALPD)                                                209905
      C                   PARM                    NNDCSP                                       209905
+     C                   PARM                    TranScnBlrt                                  CDL102
                                                                                               209905
      C                   IF        RETURNCODE <> *BLANKS                                      209905
      C     *LOCK         IN        LDA                                                        209905

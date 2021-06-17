@@ -40,7 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -312,8 +312,17 @@
      C                   ELSE
 
      C                   IF        DDACTN = 'I'
+      *                                                                                       CDL102
+      ** For transactions using backward looking rate, the calculation of interest will be    CDL102
+      ** zero during input because the base rate code is linked to a sero value.              CDL102
+      *                                                                                       CDL102
+     C                   IF        N1BLRT = 'Y'                                               CDL102
+     C                   EVAL      N1MTTI = *ZEROS                                            CDL102
+     C                   EVAL      N2MTTI = *ZEROS                                            CDL102
+     C                   ELSE                                                                 CDL102
      C                   EVAL      N1MTTI = WTotIntAmt
      C                   EVAL      N2MTTI = WTotIntAmt
+     C                   ENDIF                                                                CDL102
      C                   ENDIF
 
      C                   ENDIF

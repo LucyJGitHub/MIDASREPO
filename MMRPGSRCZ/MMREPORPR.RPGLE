@@ -67,7 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -356,6 +356,8 @@
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM (LDNI) Extra Data - File (D/B) format
 
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
      D/COPY QWINDSRC,MMLDNISDTA
 
      D/COPY ZACPYSRC,APICTLARR
@@ -1461,6 +1463,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       *
       * Deal Status
      C                   PARM                    DDSTS            24

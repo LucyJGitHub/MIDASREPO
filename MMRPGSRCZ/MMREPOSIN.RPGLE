@@ -76,7 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -290,6 +290,8 @@
                                                                                               CDL033
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                  CDL033
       ** File - Receive Further Settlement Instructions                                       CDL033
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
 
      D @SETIN          DS
       ** Receive / Pay Settlement Currency, Method & Nostro
@@ -1322,6 +1324,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       *
       * Deal Status
      C                   PARM                    DDSTS            24

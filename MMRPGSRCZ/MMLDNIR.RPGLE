@@ -67,7 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -189,6 +189,8 @@
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CSF011
      D                                     PREFIX(AC_)                                        CSF011
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)                                  CSF011
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
      D @TYPE           S              7                                                      CSF011A
      D @ACID           S             10                                                      CSF011A
      D @CYCD           S              3                                                      CSF011A
@@ -547,6 +549,7 @@
      C                   EVAL      Buffer2 = %SUBST(Filler2:357)                            MD054028
      C                                       + TranQExt                                       CSF011
      C                                       + DDAPRC + DDAPRR                              MD054028
+     C                                       + TranScnBlrt                                    CDL102
      C                                       + FIDTScnRpt                                     CSF011
      C**********         EVAL      BufferEx2 = RatDateDS + PayDateDS                 CDL033 BUG10943
      C**********                              + RegData                            BUG10563 BUG10943
@@ -1085,6 +1088,7 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS            24
       * Collateral Status

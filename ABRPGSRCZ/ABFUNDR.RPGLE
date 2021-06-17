@@ -15,8 +15,8 @@
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
       *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD04624            Date 27Oct17               *
-      *   	            CGL165             Date 17Feb15               *
+      *                 MD046248           Date 27Oct17               *
+      *   	     CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -39,7 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -136,6 +136,9 @@
 
      D FUNDScnFmt    E DS                  EXTNAME(ABFUNDPD)
       * Internal Funding Deals in screen format
+                                                                                              CDL102
+      ** CLIP Backward-Looking Rate Fields                                                    CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
 
      D ExtData       E DS                  EXTNAME(ABFUEXPD)                                  CAP191
       * Internal Funding Deals Extra Data Layout                                              CAP191
@@ -174,6 +177,10 @@
      D  PDBRN                 11     13A
      D  PDPPT                 14     16A
 
+      **-----------------------------------------------------------------------               CDL102
+      ** Variables                                                                            CDL102
+      **-----------------------------------------------------------------------               CDL102
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
 
@@ -186,6 +193,15 @@
      D CDL020          S              1A                                                      CDL020
      D @TimeStamp      S             26A                                                      CAP191
      D AAuth           S              1A                                                      CAP191
+     D NewLibor        S             50A                                                      CDL102
+     D Pos             S              3P 0                                                    CDL102
+                                                                                              CDL102
+      **-----------------------------------------------------------------------               CDL102
+      ** Constants                                                                            CDL102
+      **-----------------------------------------------------------------------               CDL102
+                                                                                              CDL102
+     D BLKFLR          C                   CONST('            ')                              CDL102
+     D SCNSTR          C                   CONST('9999.9999999')                              CDL102
 
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
@@ -358,6 +374,13 @@
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
+      *                                                                                       CDL102
+     C                   EVAL       NewLibor = TranScnBlrt                                    CDL102
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                              CDL102
+     C                   IF         Pos <> 0                                                  CDL102
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)              CDL102
+     C                   EVAL       TranScnBlrt = NewLibor                                    CDL102
+     C                   ENDIF                                                                CDL102
 
       * Build buffer with required output
      C                   MOVEL     D1TMST        @TimeStamp                                   CAP191
@@ -365,6 +388,7 @@
      C                   EVAL      Buffer = FUNDScnFmt + PDDSTS + @TimeStamp +                CAP191
      C**********                   ExtData + AAuth                                     CAP191 261140
      C                             ExtData + AAuth + FRNT + AFRT                              261140
+     C                             + TranScnBlrt                                              CDL102
 
      C                   SETON                                        LR
      C                   RETURN
@@ -550,6 +574,9 @@
       ** Deal in screen format
 
      C                   PARM                    FUNDScnFmt
+                                                                                              CDL102
+      ** Backward-Looking Rate Fields from file                                               CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Deal Status
 

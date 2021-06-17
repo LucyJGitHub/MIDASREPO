@@ -51,7 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -241,6 +241,8 @@
 
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
@@ -336,6 +338,7 @@
      C                   PARM                    DDAPRC                         MD054028
      C                   PARM                    DDAPRR                         MD054028
      C                   PARM                    LDNIScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    PSTS
      C                   PARM                    PCSTS
 

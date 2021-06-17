@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031119           Date 18Feb15               *
       *                 MD023416           Date 16Nov13               *
       *                 MD023121           Date 05Nov13               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031119 - Interest History Enquiry shows a wrong plus sign  *
@@ -68,7 +70,7 @@
       *  CDL020 - Apply Base Rate at Value Date                       *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
@@ -97,99 +99,99 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D INFDS           DS
       **  Data structure for file status of MM deals file.
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** External DS for Base Rate details
- 
+
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
       ** External DS for Historic Base Rate details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** External data structure for access programs (short)
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** External data structure for access programs (long)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MSGID)
- 
+
       ** Interest Rate/Spread received as a parameter
      D DDAIR           S             12A
- 
+
       ** Analytical Accounting Installed Indicator (from SDMMODPD)
       ** received as a parameter
      D BGN0ST          S              1A
- 
+
       ** Decimal separator from SDDEALPD received as a parameter
      D BNDCSP          S              1A
- 
+
       ** Currency received as a parameter
      D DDCCY           S              3A
- 
+
       ** Base Rate received as a parameter
      D DDBSRC          S              2A
- 
+
       ** Value Date received as a parameter
      D ValDate         S              5  0
- 
+
       ** Run Date received as a parameter
      D BJRDNB          S              5  0
- 
+
       ** Interest Rate/Spread received as a parameter
      D IKSPRD          S             11  7
- 
+
       ** Interest Rate returned to caller
      D IKINTR          S             11  7
- 
+
       ** Fields used in call to Module ZA0840
- 
+
       ** Alpha field for numeric validation
      D @@ALPH          S             16A
       ** Millions/Thousands id (Y=function on)
@@ -202,7 +204,23 @@
      D @@IDP           S              3  0
       ** Number of integers
      D @@IINT          S              3  0
- 
+                                                                                              CDL102
+     D wBADJ           S             11  7                                                    CDL102
+     D wSAVAIR         S             11  7 INZ(*ZEROS)                                        CDL102
+                                                                                              CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -210,7 +228,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -218,7 +236,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -245,12 +263,21 @@
      C**********         ENDIF                                                       BUG4837 BUG5169
       **********                                                                     BUG4837 BUG5169
      C**********         GOTO      BYPASS                                            BUG4837 BUG5169
- 
+
       ** Save Input field DDAIR to work field                                                BUG5169
                                                                                              BUG5169
      C                   MOVEL     *BLANKS       WWAIR                                      MD023416
      C     DDAIR         IFNE      *BLANKS                                                  MD023416
+     C     CDL102        ANDEQ     'N'                                                        CDL102
+     C     CDL102        OREQ      'Y'                                                        CDL102
+     C     DDBLRT        ANDEQ     'N'                                                        CDL102
      C                   MOVEL     DDAIR         WWAIR            12                         BUG5169
+     C                   ELSE                                                                 CDL102
+     C                   MONITOR                                                              CDL102
+     C                   EVAL      wSAVAIR = %DEC(DDAIR:11:7)                                 CDL102
+     C                   ON-ERROR                                                             CDL102
+     C                   EVAL      wSAVAIR = 0                                                CDL102
+     C                   END                                                                  CDL102
      C                   ENDIF                                                              MD023416
       *                                                                                     MD023416
      C                   Z-ADD     *ZEROS        WkBaseRate       11 7                       BUG5169
@@ -258,52 +285,52 @@
                                                                                              BUG5169
       ** Actual Interest Rate can not be amended if Base Rate Code is blank
       ** Actual Interest Rate must be blank if Base Rate Code is blank                       BUG5169
- 
+
      C     DDBSRC        IFEQ      *BLANKS
- 
+
      C     DDAIR         IFNE      *BLANKS
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0352'     Msgid1
      C                   ENDIF
- 
+
       ** Actual Interest Rate is only valid if Base Rate Code entered
      C                   ELSE
- 
+
       ***If*Actual*Interest*Rate*is*Blank,*then*default*base*rate******                      BUG5169
       **********                                                                             BUG5169
      C*****DDAIR         IFEQ      *BLANKS                                                   BUG5169
- 
+
       ** Access Current Base Rate
- 
+
      C                   CALL      'AOBSRTR0'
      C                   PARM      *BLANKS       @RETURN           7
      C                   PARM      '*KEY   '     @OPTION           7
      C                   PARM      DDCCY         @CURRCY           3
      C                   PARM      DDBSRC        @ALPHBSRC         2
      C     SDBSRT        PARM      SDBSRT        DSSDY
- 
+
       ** Get Historic Base Rate or Current Base Rate depending on
       ** Value Date of the Deal
- 
+
      C     @RETURN       IFEQ      *BLANKS                                                   BUG5169
                                                                                              BUG5169
      C     ValDate       IFGE      BAVDRC
      C     ValDate       ORGE      BAVDNR                                                    BUG5169
- 
+
       ** Determine actual base rate
- 
+
      C     ValDate       IFLT      BAVDNR
      C                   Z-ADD     BACBSR        WkBaseRate       11 7
      C                   ELSE
      C                   Z-ADD     BANBRT        WkBaseRate
      C                   ENDIF
- 
+
       ** Access Historic Base Rates
      C                   ELSE
      C**********         Z-ADD     0             @BSRT             2 0                        CSD103
      C                   MOVE      *BLANKS       @BSRT             2                          CSD103
      C                   MOVE      DDBSRC        @BSRT
- 
+
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN
      C                   PARM      '*KEY   '     @OPTION
@@ -312,7 +339,7 @@
      C                   PARM      @BSRT         @DEFFNDRT         2                          CSD103
      C                   PARM      ValDate       @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
- 
+
      C     @RETURN       IFEQ      *BLANKS                                                   BUG5169
                                                                                              BUG5169
      C     BAVDNR        IFGE      G0HIDT                                                    BUG5169
@@ -333,13 +360,18 @@
      C                   ENDIF                                                               BUG5169
                                                                                              BUG5169
      C                   ENDIF                                                               BUG5169
- 
+
      C                   ENDIF
                                                                                              BUG5169
      C                   ENDIF                                                  @RETURN      BUG5169
      C                   ENDIF                                                  DDBSRC       BUG5169
- 
+
       ** Compute Actual Interest Rate from Base Rate and Spread                              BUG5169
+     C                   MONITOR                                                              CDL102
+     C                   EVAL      wBADJ = %DEC(DDBADJ:11:7)                                  CDL102
+     C                   ON-ERROR                                                             CDL102
+     C                   EVAL      wBADJ = 0                                                  CDL102
+     C                   END                                                                  CDL102
                                                                                              BUG5169
       ** Always clear Actual Interest Rate field                                            AR876535
      C                   IF        WkBaseRate <> 0                                          AR876535
@@ -350,9 +382,13 @@
      C     @RETURN       IFEQ      *BLANKS
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
      C     DDAIR         ANDEQ     *BLANKS                                                   BUG5169
+     C     CDL102        OREQ      'Y'                                                        CDL102
+     C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
                                                                                              BUG5169
      C     WkBaseRate    ADD       IKSPRD        IKINTR
+     C                   EVAL      IKINTR = IKINTR + wBADJ                                    CDL102
      C     WkBaseRate    ADD       IKSPRD        WAIR             11 7
+     C                   EVAL      WAIR = WAIR + wBADJ                                        CDL102
      C                   Z-ADD     0             PAmtIn
      C                   MOVE      WAIR          PAmtIn
      C                   Z-ADD     7             PNoOfDecPl
@@ -367,12 +403,18 @@
      C**********         MOVE      PAmtOutS      DDAIR                                        247452
      C**********         MOVE      PAmtOutU      DDAIR                               247452 AR891660
      C**********         MOVE      PAmtOutS      DDAIR                             AR891660 MD031119
+     C                   IF        (wSAVAIR  <> WAIR) AND                                     CDL102
+     C                             (wSAVAIR <> 0) AND DDBLRT = 'Y'                            CDL102
+     C                   MOVE      'Y'           ErrorFound                                   CDL102
+     C                   MOVEL     '5049499'     Msgid1                                       CDL102
+     C                   ELSE                                                                 CDL102
      C                   MOVE      PAmtOutU      DDAIR                                      MD031119
+     C                   ENDIF                                                                CDL102
       *
      C**********         ELSE                                                                BUG5169
      C**********         MOVE      *BLANKS       DDAIR                                       BUG5169
      C                   ENDIF
- 
+
       ****Actual*Interest*Rate*is*not*Blank****************************                      BUG5169
      C**********         ELSE                                                                BUG5169
       *
@@ -413,19 +455,19 @@
      C                   Z-ADD     0             IKINTR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C**********         ENDIF                                                               BUG5169
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
                                                                                              BUG4837
      C     BYPASS        TAG                                                                 BUG4837
- 
+
      C                   SETON                                        LR                    MD023416
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -437,9 +479,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -452,16 +494,18 @@
      C                   PARM                    BJRDNB
      C                   PARM                    IKSPRD
      C                   PARM                    IKINTR
- 
+     C                   PARM                    TranScnBlrt                                  CDL102
+     C                   PARM                    CDL102            1                          CDL102
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

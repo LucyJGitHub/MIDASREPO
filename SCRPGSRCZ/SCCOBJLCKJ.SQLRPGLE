@@ -13,10 +13,13 @@
       *                                                               *
       *  ((c) Finastra International Limited 2013                     *
       *                                                               *
-      *  Last Amend No. MD021351  *CREATE  Date 19Jul13               *
+      *  Last Amend No. MD057545           Date 16Jun21               *
+      *  Prev Amend No. MD021351  *CREATE  Date 19Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057545 - COB: LEC000460 not flagged as failed. Set on U7   *
+      *             and U8 indicators in *PSSR.                       *
       *  MD021351 - Design for Kill object locks                      *
       *                                                               *
       *****************************************************************
@@ -337,6 +340,7 @@
       *****************************************************************
      C     *PSSR         BEGSR
 
+     C                   SETON                                          U7U8                MD057545
      C                   DUMP
      C                   SETON                                            LR
      C                   RETURN

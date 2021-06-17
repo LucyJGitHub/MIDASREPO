@@ -12,7 +12,7 @@
       *  (c) Finastra International Limited 2000                      *
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD04624            Date 27Oct17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 LLN022             Date 24Jan05               *
       *                 LLN016             Date 09May00               *

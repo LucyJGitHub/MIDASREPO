@@ -196,7 +196,7 @@
 
      D PCNUM           S             10                                                      BUG5670
      D PCNST           S              7                                                      BUG5670
-      *
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1359,7 +1359,6 @@
      C                   BITOFF    '01234567'    HI                1            *FOR HI INTNSTY
      C                   BITON     '267'         HI
      C                   MOVEL     HI            ERR
-     C                   Z-ADD     1             SCRN              1 0
      C                   Z-ADD     1             SCRN              1 0
      C                   Z-ADD     1             OFFS              3 0
 

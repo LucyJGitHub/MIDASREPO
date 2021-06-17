@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CMG003             Date 04Oct12               *
+      *  Last Amend No. MD058326           Date 17Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CMG003             Date 04Oct12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058326 - Corrected the display of the blank floor.         *
       *  MD046248 - Finastra Rebranding                               *
       *  CMG003 - SWIFT MT600 Message Generation                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -65,29 +67,29 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDAUTHCDF CF   E             WORKSTN
      F                                     SFILE(SUBFLREC:RRN)
       ** Midas SD Authorisation Compare Display
- 
+
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Log - by Key
- 
+
      FSDAUEFPD  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Extension File Names
- 
+
      FSDAUFCPD  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Fields to be Converted
- 
+
      FSDAUFSL0  IF   E           K DISK    INFSR(*PSSR)                                      BUG5780
       ** Midas SD Authorisation Fields to be Suppressed                                      BUG5780
                                                                                              BUG5780
      FSDAUFDL0  IF A E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Field Data - by File, Seq, Field No.
- 
+
      FFFD       IF   E           K DISK    USROPN
       ** Output file for DSPFFD
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -106,42 +108,42 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D*ERR******       S             76    DIM(3) CTDATA PERRCD(1)                           BUG2469
      D ERR             S             76    DIM(4) CTDATA PERRCD(1)                           BUG2469
      D MMF             S              1    DIM(80) CTDATA PERRCD(80)
@@ -151,7 +153,7 @@
      D RETBD           S             30    DIM(7) CTDATA PERRCD(1)
      D***NARREP*         S             30    DIM(8) CTDATA PERRCD(1)                  BUG5780 CMG003
      D NARREP          S             30    DIM(10) CTDATA PERRCD(1)                           CMG003
- 
+
      D UBA             S              1    DIM(5000)
      D UPA             S              1    DIM(5000)
      D AR              S              1    DIM(5000)
@@ -160,7 +162,7 @@
      D OTB             S              1    DIM(240)
      D OTP             S              1    DIM(240)
      D OTW             S              1    DIM(240)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                 BUG5670
       ** External DS for customer details                                                    BUG5670
                                                                                              BUG5670
@@ -169,15 +171,15 @@
                                                                                              BUG5670
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D                 DS                                                                     239499
      D  ZOUT15                 1     15A                                                      239499
      D  ZFSIGN                16     16A                                                      239499
@@ -191,15 +193,15 @@
      D  DATA                   1     41
      D  DAT                    1     41
      D                                     DIM(41)
- 
+
      D PCNUM           S             10                                                      BUG5670
      D PCNST           S              7                                                      BUG5670
- 
+      *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -209,29 +211,29 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Output File/Field Details if not found
- 
+
      C     FLDDTP        CHAIN     SDAUFDD0                           80
      C     *IN80         IFEQ      '1'
      C                   EXSR      SRFilFldDet
      C                   ENDIF
- 
+
      C                   Z-ADD     *ZERO         SEQN
      C                   Z-ADD     *ZERO         FLDN
- 
+
       ** Display Screen until F3 - Exit
- 
+
      C     *INKC         DOWEQ     '0'
      C                   EXSR      SRDisplay
      C                   ENDDO
- 
+
       ** End Program and Exit
- 
+
      C                   EXSR      SREnd
       /EJECT
       *****************************************************************
@@ -241,10 +243,10 @@
       * Calls     : SRFilSubf, SREnd, SRDetNar, SRRolldown            *
       *****************************************************************
      C     SRDisplay     BEGSR
- 
+
       ** Fill Subfile
      C                   EXSR      SRFilSubf
- 
+
       ** Display Subfile
      C****************** WRITE     SUBFLCTL                                                   CAAA02
      C     RRN           IFEQ      0                                                         BUG2469
@@ -263,7 +265,7 @@
      C                   WRITE     SUBFLCTL                                                   CAAA02
      C                   READ      SUBFLCTL                               99
      C                   MOVEL     *BLANK        DDERR
- 
+
       ** Check if record still exists
      C     DDKEY         CHAIN     SDAULGL0                           80
       *
@@ -273,13 +275,13 @@
      C                   MOVE      '1'           @INKL
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** F3 - Exit function
      C     *INKC         IFEQ      '1'
      C                   MOVE      '1'           @INKC
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** F6 - Before/After
      C     *INKF         IFEQ      '1'
      C                   ADD       1             SCRN
@@ -291,7 +293,7 @@
      C                   ENDIF
       ** Determine if Insert, Delete or Before/After Narrative
      C                   EXSR      SRDetNar
- 
+
       ** F7 - Window Left
      C     *INKG         IFEQ      '1'
      C     SCRN          IFEQ      1
@@ -308,7 +310,7 @@
      C                   Z-ADD     #SEQN         SEQN
      C                   Z-ADD     #FLDN         FLDN
      C                   ENDIF
- 
+
       ** F8 - Window Right
      C     *INKH         IFEQ      '1'
      C     SCRN          IFEQ      1
@@ -325,30 +327,30 @@
      C                   Z-ADD     #SEQN         SEQN
      C                   Z-ADD     #FLDN         FLDN
      C                   ENDIF
- 
+
       ** F9 - Authorise
      C     *INKI         IFEQ      '1'
      C                   MOVE      '1'           @INKI
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** F10 - Delete
      C     *INKJ         IFEQ      '1'
      C                   MOVE      '1'           @INKJ
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** F12 - Return to Previous screen
      C     *INKL         IFEQ      '1'
      C                   MOVE      '1'           @INKL
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** Rolldown
      C     *IN05         IFEQ      '1'
      C                   EXSR      SRRolldown
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -358,7 +360,7 @@
       * Calls     : SRMatchComp                                       *
       *****************************************************************
      C     SRFilSubf     BEGSR
- 
+
      C                   MOVEA     '000'         *IN(1)
      C                   MOVEA     '1'           *IN(4)
      C                   MOVEA     '1'           *IN(89)                                     BUG5780
@@ -379,14 +381,29 @@
      C                   MOVEL     ERR(1)        DDERR                          *END OF FILE
      C                   ENDIF
      C                   ENDIF
- 
+
      C     *IN99         DOWEQ     '0'
- 
+
       ** Match Data to field and Compare the Data
      C                   EXSR      SRMatchComp
- 
+
       ** Output the Differences if action is Amend
      C     ENTT          IFEQ      'UB'
+      *                                                                                     MD058326
+     C                   MOVEA     OTB(OFFS)     OTBT            240                        MD058236
+     C                   MOVEA     OTP(OFFS)     OTPT            240                        MD058236
+     C     FILE          IFEQ      'SDBSRTPD'                                               MD058326
+     C     RPGN          IFEQ      'BAFLOR'                                                 MD058326
+     C                   EVAL      OTBT = %TRIML(OTBT)                                      MD058326
+     C                   EVAL      OTPT = %TRIML(OTPT)                                      MD058326
+     C     OTBT          IFEQ      '9999.9999999'                                           MD058326
+     C                   MOVEA     *BLANKS       OTB(OFFS)                                  MD058326
+     C                   ENDIF                                                              MD058326
+     C     OTPT          IFEQ      '9999.9999999'                                           MD058326
+     C                   MOVEA     *BLANKS       OTP(OFFS)                                  MD058326
+     C                   ENDIF                                                              MD058326
+     C                   ENDIF                                                              MD058326
+     C                   ENDIF                                                              MD058326
       *
      C     SCRN          IFEQ      1
      C                   MOVEA     OTB(OFFS)     DAT(1)
@@ -403,7 +420,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** If Action is not Amend then Display all the fields
       ** except internal fields suppressed in file SDAUFSPD and specific fields              BUG5780
       ** switched off in client zone in the file SDAUFXPD.                                   BUG5780
@@ -422,7 +439,7 @@
      C                   WRITE     SUBFLREC
      C                   ENDIF
      C                   ENDIF
- 
+
  B1  C     RRN           IFEQ      #C
      C     FLDDTP        READE     SDAUFDD0                               99
      C                   SETON                                        89                     BUG5780
@@ -535,15 +552,15 @@
  E3  C                   ENDIF
  E2  C                   ENDIF
  E1  C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     *IN(4)        IFEQ      '1'
      C                   MOVEA     '010'         *IN(1)
      C                   ELSE
      C                   MOVEA     '111'         *IN(1)
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -553,7 +570,7 @@
       * Calls     : SRMatchComp                                       *
       *****************************************************************
      C     SRRolldown    BEGSR
- 
+
      C                   Z-ADD     *ZERO         RRN
      C                   Z-ADD     #SEQN         SEQN
      C                   Z-ADD     #FLDN         FLDN
@@ -577,13 +594,13 @@
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C     *IN99         IFEQ      '1'
      C                   Z-ADD     *ZERO         SEQN
      C                   Z-ADD     *ZERO         FLDN
      C                   MOVEL     ERR(2)        DDERR                          *START OF FILE
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -593,23 +610,32 @@
       * Calls     : SRMatchData, SRFldCnvRqd                          *
       *****************************************************************
      C     SRMatchComp   BEGSR
- 
+
       ** UBA - Match Data to Field for first record
- 
+
      C                   MOVEA     UBA           AR
      C                   EXSR      SRMatchData
       ** Check if field conversion is required
      C                   EXSR      SRFldCnvRqd
      C                   MOVEA     OT            OTB
- 
+
       ** If not Amend mode, output first record
- 
+
  B1  C     ENTT          IFNE      'UB'
      C                   MOVEA     OTB(OFFS)     DAT(1)
      C                   MOVEL     ' '           DAT(41)
- 
+      *                                                                                     MD058326
+     C     FILE          IFEQ      'SDBSRTPD'                                               MD058326
+     C     RPGN          IFEQ      'BAFLOR'                                                 MD058326
+     C                   EVAL      DATA = %TRIML(DATA)                                      MD058326
+     C     DATA          IFEQ      '9999.9999999'                                           MD058326
+     C                   MOVEL     *BLANKS       DATA                                       MD058326
+     C                   ENDIF                                                              MD058326
+     C                   ENDIF                                                              MD058326
+     C                   ENDIF                                                              MD058326
+
       ** UPA - Match Data to Field for second record
- 
+
  X1  C                   ELSE
      C                   MOVEA     UPA           AR
      C                   EXSR      SRMatchData
@@ -630,9 +656,9 @@
      C                   ADD       1             X
      C                   ENDIF
      C                   ENDDO
- 
+
  E1  C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -642,20 +668,20 @@
       * Calls     : SRCvtPack, SRCvtSign                              *
       *****************************************************************
      C     SRMatchData   BEGSR
- 
+
      C                   Z-ADD     1             Z                 4 0
      C                   MOVEL     *BLANK        OT
      C                   Z-ADD     BUF           SAVBUF            4 0
- 
+
       ** Alpha Field
- 
+
      C     TYP           IFEQ      'A'
      C                   MOVEA     AR(BUF)       OT(Z)
      C                   ADD       LEN           Z
      C                   ENDIF
- 
+
       ** Packed Field
- 
+
      C     TYP           IFEQ      'P'
      C                   Z-ADD     *ZERO         CNT               1 0
      C                   Z-ADD     *ZERO         Y                 4 0          * No of DIGS Proc
@@ -685,9 +711,9 @@
      C                   ENDDO
       *
      C                   ENDIF
- 
+
       ** Signed Field
- 
+
      C     TYP           IFEQ      'S'
      C                   Z-ADD     *ZERO         CNT               1 0
      C                   Z-ADD     *ZERO         Y                 4 0          * Field Length
@@ -713,13 +739,13 @@
      C                   ENDDO
       *
      C                   ENDIF
- 
+
      C     Z             IFLE      240
      C                   MOVEA     BLK           OT(Z)
      C                   ENDIF
- 
+
      C                   Z-ADD     SAVBUF        BUF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -729,11 +755,11 @@
       * Calls     : SRBitset                                          *
       *****************************************************************
      C     SRCvtPack     BEGSR
- 
+
       ** Set Bits
- 
+
      C                   EXSR      SRBitset
- 
+
      C     CHCK1         IFLE      9
      C                   MOVEL     FLD1N         FLD1              1
      C                   ELSE
@@ -751,7 +777,7 @@
      C                   MOVEL     '-'           SIGN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FLD1          IFEQ      '0'
      C     CNT           ANDEQ     *ZERO
      C                   MOVEL     *BLANK        FLD1
@@ -765,7 +791,7 @@
      C                   ELSE
      C                   Z-ADD     1             CNT
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -775,7 +801,7 @@
       * Calls     : SRBitset                                          *
       *****************************************************************
      C     SRCvtSign     BEGSR
- 
+
      C                   EXSR      SRBitset
       *
      C     CHCK1         IFEQ      15
@@ -789,7 +815,7 @@
      C                   ELSE
      C                   MOVEL     '*'           FLD2
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -799,67 +825,67 @@
       * Calls     :                                                   *
       *****************************************************************
      C     SRBitset      BEGSR
- 
+
      C                   Z-ADD     *ZERO         FLD1N
      C                   Z-ADD     *ZERO         CHCK1
      C                   Z-ADD     *ZERO         FLD2N
      C                   Z-ADD     *ZERO         CHCK2
- 
+
      C                   TESTB     '0'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       8             FLD1N             1 0
      C                   ADD       8             CHCK1             2 0
      C                   ENDIF
- 
+
      C                   TESTB     '1'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       4             FLD1N
      C                   ADD       4             CHCK1
      C                   ENDIF
- 
+
      C                   TESTB     '2'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       2             FLD1N
      C                   ADD       2             CHCK1
      C                   ENDIF
- 
+
      C                   TESTB     '3'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       1             FLD1N
      C                   ADD       1             CHCK1
      C                   ENDIF
- 
+
      C                   TESTB     '4'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       8             FLD2N             1 0
      C                   ADD       8             CHCK2             2 0
      C                   ENDIF
- 
+
      C                   TESTB     '5'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       4             FLD2N
      C                   ADD       4             CHCK2
      C                   ENDIF
- 
+
      C                   TESTB     '6'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       2             FLD2N
      C                   ADD       2             CHCK2
      C                   ENDIF
- 
+
      C                   TESTB     '7'           FLD                      30
      C     *IN30         IFEQ      '1'
      C                   ADD       1             FLD2N
      C                   ADD       1             CHCK2
      C                   ENDIF
- 
+
      C                   Z-ADD     1             BS                2 0
      C     CHCK1         LOOKUP    BIT(BS)                                99
      C                   MOVEL     ALP(BS)       FLD1A             1
      C                   Z-ADD     1             BS
      C     CHCK2         LOOKUP    BIT(BS)                                99
      C                   MOVEL     ALP(BS)       FLD2A             1
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -875,29 +901,29 @@
       *  Calls     : ZDATE2, ZALIGN, ZEDIT                            *
       *****************************************************************
      C     SRFldCnvRqd   BEGSR
- 
+
      C     RPGN          CHAIN     SDAUFCPD                           80
       *
  B1  C     *IN80         IFEQ      *OFF
- 
+
       ** Field is a Date
- 
+
      C     ALFTYP        IFEQ      'D'
      C                   MOVEA     OT            WDAYN             5
      C                   MOVE      WDAYN         ZDAYNO
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    DATEB             7
- 
+
      C                   MOVE      ZDATE         WDATE             6
      C                   MOVEA     WDATE         OT
      C                   ENDIF
- 
+
       ** Field is a Numeric
- 
+
      C     ALFTYP        IFEQ      'N'
      C                   MOVEA     OT            ZFIELD
      C     '-'           SCAN      ZFIELD:1                                                   239499
@@ -932,11 +958,11 @@
      C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
       ** Convert Account field GLBT and RETB to Screen field values
- 
+
  B1  C     FILE          IFEQ      'ACCNTAB'
- 
+
  B2  C     RPGN          IFEQ      'GLBT'
      C                   EVAL      DESC = *Blanks
      C                   EVAL      DESC = 'Print address Y/N'
@@ -950,7 +976,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Refer all debits'
       *
@@ -963,7 +989,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Refer all credits'
       *
@@ -976,7 +1002,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Block all debits'
       *
@@ -989,7 +1015,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Block all credits'
       *
@@ -1002,7 +1028,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Inactive Account Y/N'
       *
@@ -1015,7 +1041,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Bankrupt/liquidated Y/N'
       *
@@ -1028,7 +1054,7 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  B2  C                   IF        RPGN = 'RETB' AND
      C                             DESC = 'Bad Debt Y/N'
       *
@@ -1041,9 +1067,9 @@
      C                   ENDIF
       *
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
- 
+
      C                   IF        FILE = 'SDEXSTPD'                                         BUG5670
                                                                                              BUG5670
      C                   IF        RPGN = 'BYROBN' or RPGN = 'BYPOBN'                        BUG5670
@@ -1095,9 +1121,9 @@
       * Calls     : QCMDEXC, SRAccFld                                 *
       *****************************************************************
      C     SRFilFldDet   BEGSR
- 
+
       ** Output field details for main file to file FFD
- 
+
      C                   Z-ADD     59            MESLEN           15 5
      C                   MOVEA     FILE          MMF(13)
       *
@@ -1111,14 +1137,14 @@
      C                   MOVEL     ERR(3)        DDERR
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Output field details for any extension files to file FFD
- 
+
      C     FLDDTP        SETLL     SDAUEFPD
      C     FLDDTP        READE     SDAUEFPD                               80
       *
      C     *IN80         DOWEQ     '0'
- 
+
      C                   Z-ADD     79            MESLEN           15 5
      C                   MOVEA     ALEFIL        MEF(13)
       *
@@ -1135,9 +1161,9 @@
       *
      C     FLDDTP        READE     SDAUEFPD                               80
      C                   ENDDO
- 
+
       ** Write field details from file FFD to file SDAUFDPD
- 
+
      C                   OPEN      FFD
       *
      C                   Z-ADD     1             FLDN
@@ -1169,7 +1195,7 @@
      C                   ENDDO
       *
      C                   CLOSE     FFD
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1182,9 +1208,9 @@
       * Calls     :                                                   *
       *****************************************************************
      C     SRAccFld      BEGSR
- 
+
      C                   Z-ADD     1             W                 2 0
- 
+
      C                   DO        7
      C                   MOVEL     WHFLDI        RPGN
      C                   Z-ADD     WHFLDB        LEN
@@ -1198,7 +1224,7 @@
      C                   ADD       1             FLDN
      C                   ADD       1             W
      C                   ENDDO
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1209,7 +1235,7 @@
       * Calls     :                                                   *
       *****************************************************************
      C     SRDetNar      BEGSR
- 
+
      C                   MOVEL     *BLANK        NARR1
      C                   MOVEL     *BLANK        NARR2
      C     ENTT          IFEQ      'PT'
@@ -1230,7 +1256,7 @@
      C     ENTT          IFEQ      'DL'
      C                   MOVEL     'DELETE'      NARR1
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1240,11 +1266,11 @@
       *  Calls     :                                                  *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** End Program and Return
      C                   SETON                                        LR
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1254,7 +1280,7 @@
       *  Calls     : AOBANKR0                                         *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Define Key Lists
      C     FLDDTK        KLIST
      C                   KFLD                    FILE
@@ -1263,10 +1289,10 @@
       *
      C     FLDDTP        KLIST
      C                   KFLD                    FILE
- 
+
       ** Set up copyright parameter
      C                   MOVEA     CPY@          CPY2@            80
- 
+
       ** Receive Parameter List
      C     *ENTRY        PLIST
      C                   PARM                    RTNCDE            7
@@ -1281,10 +1307,10 @@
      C                   PARM                    @INKI             1
      C                   PARM                    @INKJ             1
      C                   PARM                    @INKL             1
- 
+
       ** Initialise LDA field
      C                   MOVEL     'SDAUTHCMP'   DBPGM
- 
+
       ** Access Bank details via access program
      C                   CALL      'AOBANKR0'
      C                   PARM      '       '     PRTCD             7
@@ -1299,14 +1325,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check System Date Format, DDMMYY (*IN98 off)
       *                            MMDDYY (*IN98 on).
- 
+
      C     BJDFIN        IFEQ      'M'
      C                   SETON                                        98
      C                   ENDIF
- 
+
       ** Access Authorisation log
      C     PKEY          CHAIN     SDAULGL0                           80
       *
@@ -1318,7 +1344,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise display fields
      C                   TIME                    DDTIME
      C                   MOVE      PSUSER        DDUSR
@@ -1334,8 +1360,9 @@
      C                   BITON     '267'         HI
      C                   MOVEL     HI            ERR
      C                   Z-ADD     1             SCRN              1 0
+     C                   Z-ADD     1             SCRN              1 0
      C                   Z-ADD     1             OFFS              3 0
- 
+
       ** Initialise display fields and indicators according
       ** to action and selection.
      C     PACTN         IFEQ      'X'
@@ -1358,7 +1385,7 @@
       *
       ** Determine if Insert, Delete or Before/After Narrative
      C                   EXSR      SRDetNar
- 
+
      C                   ENDSR
       /EJECT
       ********************************************************************

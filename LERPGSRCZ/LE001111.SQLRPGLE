@@ -57,7 +57,8 @@
 
      C/EXEC SQL
      C+ update CLOANCL
-     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'Y'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -76,7 +77,8 @@
 
      C/EXEC SQL
      C+ update HISTSHM
-     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'Y'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -95,7 +97,8 @@
 
      C/EXEC SQL
      C+ update HISTSHN
-     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'Y'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -114,7 +117,8 @@
 
      C/EXEC SQL
      C+ update HISTSHQ
-     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'Y'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y' and AMTP = 'RO'
      C+ with nc
      C/END-EXEC

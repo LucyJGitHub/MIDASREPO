@@ -53,7 +53,7 @@
       *****************************************************************
 
       ** Default the Backward-Looking Rate field to 'N'
-      ** and Rates Know to 'N'                                                              MD058321
+      ** and Rates Known field to 'N'                                                       MD058321
 
      C/EXEC SQL
      C+ update CLOANCL

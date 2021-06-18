@@ -20,8 +20,9 @@
      F**                                                                 *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. 253084             Date 22May20               *
-      *  Prev Amend No. 252596             Date 22May20               *
+      *  Last Amend No. MD058246           Date 18Jun21               *
+      *  Prev Amend No. 253084             Date 22May20               *
+      *                 252596             Date 22May20               *
       *                 252447             Date 22May20               *
       *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
@@ -60,6 +61,9 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD058246 - SEC6410 00001 failed during COB.                  *
+      *             Reversed fixes 253084, 252596 and 252447. Ensure  *
+      *             S01464 is switched OFF in the system.             *
       *  253084 - Unprotect action code for possible correction.      *
       *  252596 - Error in validating S1ACCV as numeric because ZALIGN*
       *           caters for 16-digit(with decimal point) numbers     *
@@ -618,10 +622,10 @@
      C                     MOVE *BLANKS   S1PORT
      C                     MOVE *BLANKS   S1BRCH                          S01464
       *                                                                                       252596
-      ** Constant digits variable                                                             252596
+      ***Constant*digits*variable**************************************              252596 MD058246
       *                                                                                       252596
-     C                     MOVEL'01234567'DIGITS 10                                           252596
-     C                     MOVE '89'      DIGITS 10                                           252596
+     C**********           MOVEL'01234567'DIGITS 10                                  252596 MD058246
+     C**********           MOVE '89'      DIGITS 10                                  252596 MD058246
      C*
      C* Initialize Confirm field.
      C*
@@ -1094,7 +1098,7 @@
      C           *IN71     DOWEQ'0'
      C***********WCOUNT    ANDLE7                                         096749
      C***********WCOUNT    ANDLT7                                  096749 174057
-     C           WCOUNT    ANDLT7                                                             252447
+     C********** WCOUNT    ANDLT7                                                    252447 MD058246
      C*
      C**Do*not*show*the*deleted*customer*************************** R0192 049067
      C* Show the deleted customer                                         049067
@@ -1146,7 +1150,7 @@
      C                     MOVE '0'       *IN32
      C                     ELSE
      C                     MOVE '1'       *IN32
-     C                     SETOF                     6481                                     253084
+     C**********           SETOF                     6481                            253084 MD058246
      C                     END
      C*
      C                     ENDSR
@@ -2164,18 +2168,30 @@
      C**********           EXSR ZALIGN                                                        252596
      C*
      C********** *IN99     IFEQ '0'                                                           252596
+      *                                                                                     MD058246
+      ** Call ZALIGN to validate account code (check numeric)                               MD058246
+      *                                                                                     MD058246
+     C                     Z-ADD0         ZADEC                                             MD058246
+     C                     Z-ADD12        ZADIG                                             MD058246
+     C                     MOVE '0'       *IN99                                             MD058246
+     C                     MOVE *BLANKS   ZFIELD                                            MD058246
+     C                     MOVE S1ACCV    ZFIELD                                            MD058246
+     C                     EXSR ZALIGN                                                      MD058246
+      *                                                                                     MD058246
+     C           *IN99     IFEQ '0'                                                         MD058246
       *                                                                                       252596
-      ** To check if partial account is numeric                                               252596
+      ***To*check*if*partial*account*is*numeric************************              252596 MD058246
       *                                                                                       252596
-     C           DIGITS    CHECKS1ACCV    MY      20                                          252596
-     C           MY        IFEQ 0                                                             252596
+     C********** DIGITS    CHECKS1ACCV    MY      20                                 252596 MD058246
+     C********** MY        IFEQ 0                                                    252596 MD058246
      C           ACNTKY    CHAINACCNT                48
      C                     END
      C*
      C           *IN48     IFEQ '1'
      C           RECI      OREQ '*'
-     C           MY        ORNE 0                                                             252596
+     C********** MY        ORNE 0                                                    252596 MD058246
      C********** *IN99     OREQ '1'                                                           252596
+     C           *IN99     OREQ '1'                                                         MD058246
      C*
      C****                 MOVEL'SE05007' ZAMSID                          S01355
      C                     MOVEL'SE05019' ZAMSID                          S01355

@@ -39,7 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058326 - Corrected the display of the blank floor.         *
+      *  MD058326 - Corrected the display of base rates blank Floor,  *
+      *             numeric Floor and Benchmark Adjustment.           *
       *  MD046248 - Finastra Rebranding                               *
       *  CMG003 - SWIFT MT600 Message Generation                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

@@ -18,10 +18,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSD103    *CREATE  Date 10Aug20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
@@ -37,6 +39,8 @@
       ** +--------------------------------------+
      D thisSQL         S            500
      D thisSQL1        S            500
+     D thisSQL2        S            500                                                       CDL102
+     D thisSQL3        S            500                                                       CDL102
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -72,7 +76,31 @@
      C                   SETON                                            91
      C                   EXSR      *PSSR
      C                   ENDIF
-
+      *                                                                                       CDL102
+      ** Housekeeping of Dealing Records                                                      CDL102
+      *                                                                                       CDL102
+     C                   EVAL      thisSQL2 = 'Delete from SDHSDRTD where +                   CDL102
+     C                              CMODID = ''DL'' AND CTRNID not in +                       CDL102
+     C                              (select DLNO from DEALSDC)'                               CDL102
+     C                   EVAL      thisSQL3 = 'Delete from SDARRLOGTD where +                 CDL102
+     C                              SJMODI = ''DL'' AND SJTREF not in +                       CDL102
+     C                              (select DLNO from DEALSDC)'                               CDL102
+      *                                                                                       CDL102
+     C/EXEC SQL                                                                               CDL102
+     C+ EXECUTE IMMEDIATE :thisSQL2                                                           CDL102
+     C/END-EXEC                                                                               CDL102
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                             CDL102
+     C                   SETON                                            90                  CDL102
+     C                   EXSR      *PSSR                                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C/EXEC SQL                                                                               CDL102
+     C+ EXECUTE IMMEDIATE :thisSQL3                                                           CDL102
+     C/END-EXEC                                                                               CDL102
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                             CDL102
+     C                   SETON                                            91                  CDL102
+     C                   EXSR      *PSSR                                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  260173 - Introduce new parameter in DEAM API to be used in   *
       *           the validation of action code during reversal       *
       *           authorization. Apply fix 258724.                    *
@@ -118,6 +120,12 @@
      D TranInCust    E DS                  EXTNAME(SDCUCUPD)                                  CER043
       ** Customers Extension Screen Format based on SDCUCUPD                                  CER043
                                                                                               CER043
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
+     D NewLibor        S             49A                                                      CDL102
+      *                                                                                       CDL102
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
 
@@ -184,6 +192,11 @@
                                                                                               CER043
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
+                                                                                              CDL102
+      ** Index for Blank floor processing                                                     CDL102
+     D Pos             S              3P 0                                                    CDL102
+     D BLKFLR          C                   CONST('            ')                              CDL102
+     D SCNSTR          C                   CONST('9999.9999999')                              CDL102
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
@@ -279,6 +292,15 @@
      C                   EXSR      SrPopCust                                                  CER043
      C                   ENDIF                                                                CER043
       *                                                                                       CER043
+      *                                                                                       CDL102
+     C                   EVAL       NewLibor = DeamScnBlrt                                    CDL102
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                              CDL102
+     C                   IF         Pos <> 0                                                  CDL102
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:DeamScnBlrt:Pos:-             CDL102
+     C                              12)                                                       CDL102
+     C                   EVAL       DeamScnBlrt = NewLibor                                    CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
      C                   EVAL                    Buffer = DealScnfmt
      C**********                                          + @TimeStamp               BUG4146 BUG6534
      C**********                                 + @TimeStamp + LONDEP                BUG6534 CER043
@@ -288,6 +310,7 @@
      C                                           + DDFOID                                     239400
      C                                           + ##RECS  + ##PAYS
      C                                           + InfData                                   BUG6012
+     C                                           + DeamScnBlrt                                CDL102
      C                                           + ExtData                                   BUG6012
 
      C                   SETON                                        LR
@@ -315,7 +338,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
-     C                   PARM                    @ACTRV            1                          260173
+     C**********         PARM                    @ACTRV            1                          260173
 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
@@ -446,7 +469,7 @@
       * Deal Amendment Type
      C                   PARM                    DDMTYP
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM                    @ACTRV                                       260173
+     C**********         PARM                    @ACTRV                                       260173
 
       * OUTPUTS
 
@@ -490,6 +513,10 @@
      C                   PARM                    DealScnfmt
       * Deal Status
      C                   PARM                    DDSTS            24
+      *                                                                                       CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+      *                                                                                       CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode

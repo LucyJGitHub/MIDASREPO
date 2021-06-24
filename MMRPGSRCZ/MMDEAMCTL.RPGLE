@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
       *           parameter mismatch. Apply fix 258724.               *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -369,6 +371,10 @@
      D*ExtData****   E DS                  EXTNAME(MMLDEXPD)             CAP004 194994
      D ExtData       E DS                  EXTNAME(MMDAEXPD)                    194994
       * MM Extra Data - File (D/B) format                                       CAP004
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
                                                                                 CAP051
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP051
       ** External DS for SAR details                                            CAP051
@@ -984,7 +990,7 @@
       * Deal Amendment Type
      C                   PARM                    DDMTYP
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM      *BLANK        @ACTRV            1                          260173
+     C**********         PARM      *BLANK        @ACTRV            1                 temp     260173
 
       * OUTPUTS
 
@@ -1270,6 +1276,8 @@
      C                   PARM                    WIdx
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidDeal
+      * Backward-looking rate fields                                                          CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
 
      C                   ENDSR
       *****************************************************************
@@ -1402,6 +1410,8 @@
      C                   PARM                    DealScnfmt                     CAP011
       * Deal Status                                                             CAP011
      C                   PARM                    DDSTS                          CAP011
+      * Backward-looking rate fields                                                          CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
                                                                                 CAP011
       ** DATA SUBSTITUTION                                                      CAP011
                                                                                 CAP011
@@ -1505,6 +1515,8 @@
      C                   PARM                    DealScnfmt
       * Deal Status
      C                   PARM                    DDSTS            24
+      * Backward-looking rate fields                                                          CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode

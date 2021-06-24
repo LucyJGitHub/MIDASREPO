@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               **
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
       *           parameter mismatch. Apply fix 258724.               *
       *  MD046248 - Finastra Rebranding                               *
@@ -342,6 +344,10 @@
                                                                                               CAP004
      D ExtData       E DS                  EXTNAME(MMDAEXPD)                                  CAP004
       * MM DEAM Extra Data - File (D/B) format                                                CAP004
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
 
      D/COPY QWINDSRC,MMDEAMSDTA
 
@@ -978,6 +984,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * If errors returned
       *
@@ -1462,7 +1469,7 @@
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM      *BLANK        @ACTRV            1                          260173
+     C**********         PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS
       *
@@ -1534,6 +1541,10 @@
       *
       * Deam Status
      C                   PARM                    DDSTS            24
+      *                                                                                       CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+      *                                                                                       CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * Update 'Current' Deam with Deam in Screen Format
       *
@@ -2185,6 +2196,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM      *ZERO         WIdx              3 0
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * If transaction is valid output message 'Press enter to accept'
       *

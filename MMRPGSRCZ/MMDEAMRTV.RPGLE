@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. AR806147           Date 21May18               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  260173 - Introduce new parameter to be used in the vali-     *
       *           dation of action code when authorising a reversal   *
       *           transaction. Apply fix 258724.                      *
@@ -1987,16 +1989,16 @@ E2   C                   ENDDO
      C     @@DLNO        CHAIN     MMDEALLL                           65
       *                                                                                       260173
       ** For reversal transaction, use @ACTRV instead of DDACTN in access security checking   260173
-     C                   MOVE      *BLANK        WACTN             1                          260173
-     C     @ACTRV        IFEQ      'X'                                                        260173
-     C                   MOVE      @ACTRV        WACTN                                        260173
-     C                   ELSE                                                                 260173
-     C                   MOVE      DDACTN        WACTN                                        260173
-     C                   ENDIF                                                                260173
+     C**********         MOVE      *BLANK        WACTN             1                          260173
+     C*****@ACTRV*****   IFEQ      'X'                                                        260173
+     C**********         MOVE      @ACTRV        WACTN                                        260173
+     C**********         ELSE                                                                 260173
+     C**********         MOVE      DDACTN        WACTN                                        260173
+     C**********         ENDIF                                                                260173
      C*
      C                   CALL      'ZVACTBU'
-     C**********         PARM      DDACTN        ZACTN             1                          260173
-     C                   PARM      WACTN         ZACTN             1                          260173
+     C                   PARM      DDACTN        ZACTN             1             deleted by:  260173
+     C**********         PARM      WACTN         ZACTN             1                          260173
      C                   PARM      H@BRCA        ZBR               3
      C                   PARM                    @@ERR             1 0
      C*
@@ -2123,7 +2125,7 @@ E2   C                   ENDDO
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM                    @ACTRV            1                          260173
+     C**********         PARM                    @ACTRV            1                          260173
       *
       * OUTPUTS
       *

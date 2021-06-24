@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -102,60 +104,60 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * New Deal in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(MMDEAMPD)
- 
+
       * (Current) Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDEAMPP)
- 
+
       * (Current) Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMDEAMPD)
      D                                     PREFIX(@)
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
      D*
@@ -186,7 +188,7 @@
       *
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for currency details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
       *
@@ -207,11 +209,11 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ****** Include in /Copy statement ********
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDActnOK                      1A
@@ -228,25 +230,25 @@
      D  DDEmdtOK                      1A                                                      CDL017
      D  DDBsrtOK                      1A                                                      CDL022
      D  DDAirOK                       1A                                                      CDL020
- 
+
       ** Overall Transaction status, to be passed back to calling program
      D AmendOK         S              1A
- 
+
       ** Date out
      D DateOut         S              6P 0
- 
+
       ** Deal Date in Midas Dayno. format
      D DealDate        S              5P 0
- 
+
       ** Value Date in Midas Dayno. format
      D ValDate         S              5P 0
- 
+
       ** Deal Transaction Date in Midas Dayno. format
      D TranDate        S              5P 0
- 
+
       ** Formatted Amount field from ZA0920
      D AmountOut       S             14A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -260,7 +262,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  Convert the dates on the current live deal
       **  from YYYYMMDD format to Midas day number format
       *
@@ -269,16 +271,16 @@
       **  Compare fields with amended values.
       *
      C                   EXSR      COMPFLDS
- 
+
       *  If any errors were found:
       *    Set Amendments OK Indicator to 'N'
- 
+
      C     Idx           IFGT      0
      C                   EVAL      AmendOK = 'N'
      C                   ELSE
      C                   EVAL      AmendOK = 'Y'
      C                   ENDIF
- 
+
       *  If any errors were found:
       *  - and reset of fields in error required, do this
       *
@@ -290,7 +292,7 @@
       * Return
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -303,9 +305,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     FMATDATES     BEGSR
- 
+
      C***********************************************
      C**  Format the DEAM deal date.                *
      C***********************************************
@@ -375,7 +377,7 @@
       *                                                               *
       *****************************************************************
      C     COMPFLDS      BEGSR
- 
+
      C*-----------------------------------------*
      C* Deal Number                             *
      C*-----------------------------------------*
@@ -464,7 +466,7 @@
      C                   PARM      'N'           ZCMPAMTDif        1            CAP084
                                                                                 CAP084
      C     ZCMPAMTDif    IFEQ      'Y'                                          CAP084
- 
+
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDINTR'
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0374'
@@ -565,9 +567,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -599,12 +601,12 @@
       *
       * Amendments OK
      C                   PARM                    AmendOk
- 
+
       * Reset of Fields in Error Required (Y/N)
      C                   PARM                    ResetErrs         1
       *
      C     *LIKE         DEFINE    HNDVSD        ZZMDNO
- 
+
       ** Initialize program name
       *
      C                   MOVEL     'MMDEAMAMD'   DBPGM
@@ -727,7 +729,7 @@
      C                   Endif                                                  CDE002
                                                                                 CDE002
      C                   ENDSR
- 
+
       *****************************************************************
      C*
       /EJECT

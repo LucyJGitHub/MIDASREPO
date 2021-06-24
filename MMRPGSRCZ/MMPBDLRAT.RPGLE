@@ -1241,7 +1241,7 @@
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM      *BLANK        @ACTRV            1                          260173
+     C**********         PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS
       *

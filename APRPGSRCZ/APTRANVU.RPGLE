@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. FCM101             Date 22Mar19               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. MD057804           Date 24Jul21               *
+      *  Prev Amend No. FCM101             Date 22Mar19               *
+      *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -223,6 +224,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057804 - Error in loans input with floor rates because of  *
+      *             mismatch of buffer from Java to RPG. Need to      *
+      *             allign the buffer in RPG.                         *
       *  FCM101 - Floor Rates on LE module                            *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -2554,17 +2558,22 @@ RGC  D RPIF4LN         S              4  0                                      
 
      C     CLEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       CLEXLn        Bfp                                        MD044880
-                                                                                              FCM101
-     C                   If        FCM101 = 'Y'                                               FCM101
-     C     XXCLIQLn      SUBST     Buffer:Bfp    TransQLE                                     FCM101
-     C                   ADD       XXCLIQLn      Bfp                                          FCM101
-     C                   Endif                                                                FCM101
+      **********                                                                     FCM101 MD057804
+     C**********         If        FCM101 = 'Y'                                      FCM101 MD057804
+     C*****XXCLIQLn      SUBST     Buffer:Bfp    TransQLE                            FCM101 MD057804
+     C**********         ADD       XXCLIQLn      Bfp                                 FCM101 MD057804
+     C**********         Endif                                                       FCM101 MD057804
                                                                                             MD044880
       *** APR Fields for CLIP (CER050)                                                      MD054028
      C     CLCR50Ln      SUBST     BUFFER:Bfp    CLAPRDta         24                        MD054028
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn) + CLAPRDta            MD054028
      C                   ADD       CLCR50Ln      Bfp                                        MD054028
                                                                                             MD054028
+     C                   If        FCM101 = 'Y'                                             MD057804
+     C     XXCLIQLn      SUBST     Buffer:Bfp    TransQLE                                   MD057804
+     C                   ADD       XXCLIQLn      Bfp                                        MD057804
+     C                   Endif                                                              MD057804
+                                                                                            MD057804
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001

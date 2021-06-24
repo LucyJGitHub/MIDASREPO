@@ -4133,8 +4133,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       20            Bfp                                          261140
      C     20            SUBST     BUFFER:Bfp    AFRT                                         261140
      C                   ADD       20            Bfp                                          261140
-     C     DLBSRTLn      SUBST     BUFFER:Bfp    ExtData                                      CDL102
-     C                   ADD       50            Bfp                                          CDL102
+      ** Backward-Looking Rate Fields (CDL102)                                                CDL102
+     C     DLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           50                          CDL102
+     C                   EVAL      ExtData = %SUBST(ExtData:1:FUEXLn) + BSRDta                CDL102
+     C                   ADD       DLBSRTLn      Bfp                                          CDL102
+                                                                                              CDL102
 
      C                   CALL      'ABFUNDVU'
      C                   PARM                    HeadIn

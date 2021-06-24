@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1088819          Date 03Jun20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD021425           Date 31May21               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
@@ -152,6 +153,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021425 - Prevent blank error message when closing a        *
+      *             Customer. Added specific error messages when      *
+      *             closing Customers. Applied AR856728 and AR887297  *
+      *             but error message ID to event codes.              *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *
@@ -828,6 +833,7 @@
      D   WDS2048              48     48
      D   WDS2049              49     49
      D   WDS2050              50     50
+     D   WDS2051              51     51                                                     MD021425
 
      D @WCDS3          DS           200
      D   WDS3000               1    200
@@ -3275,6 +3281,24 @@
      C                   ENDIF                                                              MD052297
      C                   GOTO      EVALAC                                                   MD052297
      C                   ENDIF                                                              MD052297
+      *                                                                                     MD021425
+      ** Customer has an open/active non-retail account.                                    MD021425
+      ** CASE: WRK.Customer Deln Flag 232 is Do not close                                   MD021425
+      *                                                                                     MD021425
+     C     WDS2032       IFEQ      'F'                                                      MD021425
+     C                   MOVEL     '5046027'     MsgIdArr(Ix)                               MD021425
+     C                   GOTO      EVALAC                                                   MD021425
+     C                   ENDIF                                                              MD021425
+      *                                                                                     MD021425
+      ** Customer has GL account with outstanding balance.                                  MD021425
+      ** CASE: WRK.Customer Deln Flag 233 is Do not close                                   MD021425
+      *                                                                                     MD021425
+     C     WDS2033       IFEQ      'F'                                                      MD021425
+     C                   MOVEL     '5046017'     MsgIdArr(Ix)                               MD021425
+     C                   GOTO      EVALAC                                                   MD021425
+     C                   ENDIF                                                              MD021425
+     C                                                                                      MD021425
+      *                                                                                     MD021425
       *                                                                                     MD052297
       ** Customer has a retail account closed today.                                        MD052297
       ** CASE: WRK.Customer Deln Flag 211 is Do not close                                   MD052297
@@ -3468,6 +3492,20 @@
      C                   MOVEL     'USR9472'     MsgIdArr(Ix)                                 246639
      C                   GOTO      EVALAC                                                     246639
      C                   ENDIF                                                                246639
+      *                                                                                     MD021425
+      ** FUND TRANSFER CHECKS:                                                              MD021425
+      ** Customer defined on OTPAYDD & INPAYDD.                                             MD021425
+      ** CASE: WRK.Customer Deln Flag 051 is Do not close                                   MD021425
+      *                                                                                     MD021425
+     C     WDS2051       IFEQ      'F'                                                      MD021425
+     C                   MOVEL     '5046003'     MsgIdArr(Ix)                               MD021425
+     C                   GOTO      EVALAC                                                   MD021425
+     C                   ENDIF                                                              MD021425
+      *                                                                                     MD021425
+      ** Any other error...                                                                 MD021425
+      *                                                                                     MD021425
+     C                   MOVEL     '5046004'     MsgIdArr(Ix)                               MD021425
+      *                                                                                     MD021425
      C                   ENDIF                                                                CSD007
      C                   ENDIF                                                                215524
       *                                                                                     MD052297

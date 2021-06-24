@@ -1,0 +1,882 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check deletion of FT clients')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0341U - Check Fund Transfer Files for Customer Refs.       *
+      *                                                               *
+      *  Function:  This program checks Fund Transfer files for any   *
+      *             live customer references.                         *
+      *                                                               *
+      *  Called By: SD0010U                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  NOTE: PLEASE REFER TO THE STANDING DATA MODULE PROFILE       *
+      *        VOLUME 1 FOR THE USE OF DATA STRUCTURES STRNG2         *
+      *        AND STRNG3.                                            *
+      *                                                               *
+      *  Last Amend No. AR887297 *CREATE   Date 31May21               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR887297 - Not to allow closure/deletion of customers linked *
+      *             to a live FT transaction. Applied 262144.         *
+      *             (Child: AR887298)                                 *
+      *           - Applied for MD021425.                             *
+      *                                                               *
+      *****************************************************************
+     FSDCUSTL1IF  E           K        DISK
+     FOTPAYL1 IF  E           K        DISK
+     FINPAYL1 IF  E           K        DISK
+     FOTPAYXL2IF  E           K        DISK
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ISTRNG2      DS                            200
+     I                                        1 200 WUCDS2
+     I                                       13  13 WUD213
+     I                                       14  14 WUD214
+     I                                       15  15 WUD215
+     I                                       16  16 WUD216
+     I                                       17  17 WUD217
+     I                                       19  19 WUD219
+     I                                       20  20 WUD220
+     I                                       21  21 WUD221
+     I                                       22  22 WUD222
+     I                                       23  23 WUD223
+     I                                       24  24 WUD224
+     I                                       25  25 WUD225
+     I                                       26  26 WUD226
+     I                                       27  27 WUD227
+     I                                       28  28 WUD228
+     I                                       29  29 WUD229
+     I                                       51  51 WUD251
+      *
+     ISTRNG3      DS                            200
+     I                                        1 200 WUCDS3
+     I                                        1   1 WUD401
+     I                                        2   2 WUD402
+     I                                        3   3 WUD403
+     I                                        4   4 WUD404
+     I                                        5   5 WUD405
+     I                                        6   6 WUD406
+     I                                        7   7 WUD407
+     I                                        8   8 WUD408
+     I                                        9   9 WUD409
+     I                                       10  10 WUD410
+      *
+      *****************************************************************
+      * Indicators:                                                   *
+      * 99 - Chain processing for SDCUSTL1                            *
+      * 98 - End of processing for OTPAYL1                            *
+      * 97 - End of processing for INPAYL1                            *
+      * 96 - End of processing for SDCUSTL7                           *
+      *****************************************************************
+      *
+      ** Entry Parameters List Definition
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PCNUM   6
+     C                     PARM           W0RTN   7
+     C                     PARM           PCDS2 200
+     C                     PARM           PCDS3 200
+     C                     PARM           QUIT    1
+      *
+      ** Key list Definition
+      *
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVE *BLANKS   W0RTN
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVE PCNUM     NCNUM   60
+     C                     MOVELPCDS2     WUCDS2
+     C                     MOVELPCDS3     WUCDS3
+      *
+      ** Set up temporary variables.
+      *
+     C                     MOVE *BLANKS   TBCSID 35
+     C                     MOVE *BLANKS   TBCSSN 35
+     C                     MOVELPCNUM     TPCNUM 35
+     C                     MOVE *BLANKS   K1CSID 12
+     C                     MOVE *BLANK    VARCHC  1
+     C                     MOVE *BLANK    VARTYP  1
+     C                     MOVE *BLANK    VARTST 35
+      *
+      ** If Quit is equal to 'L', close down the program.
+      ** Because when the program runs during the close of business
+      ** the value of QUIT is 'Y' and LR is not set ON, this causes
+      ** SDC0013 to fall over while ending journalling.
+      *
+     C           QUIT      IFEQ 'L'
+     C                     SETON                         LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Extract Customer Swift ID and Shortname.
+      *
+     C           PCNUM     CHAINSDCUSTL1             99
+     C           *IN99     IFEQ *OFF
+     C                     MOVELBBCSID    TBCSID    P
+     C                     MOVELBBCSID    K1CSID    P
+     C                     MOVELBBCSSN    TBCSSN    P
+     C                     ENDIF
+      *
+      ** Validate customer live FT transaction for Outgoing Payments
+      *
+     C           *LOVAL    SETLLOTPAYL1
+     C                     READ OTPAYL1                  98
+     C           *IN98     DOWEQ*OFF
+      *
+      *  Outgoing Payments - Intermediary Bank
+     C                     EXSR VALOP1
+      *  Outgoing Payments - Account With Bank
+     C                     EXSR VALOP2
+      *  Outgoing Payments - Beneficiary
+     C                     EXSR VALOP3
+      *  Outgoing Payments - Destination
+     C                     EXSR VALOP4
+      *  Outgoing Payments - Ordering Customer
+     C                     EXSR VALOP5
+      *  Outgoing Payments - Receiver's Correspondence
+     C                     EXSR VALOP6
+      *  Outgoing Payments - Third Party Reimbursement
+     C                     EXSR VALOP7
+      *  Outgoing Payments - MT100 Customer
+     C                     EXSR VALOP8
+      *
+     C                     READ OTPAYL1                  98
+     C                     ENDDO
+      *
+      ** Validate customer live FT transaction for Incoming Payments
+      *
+     C           *LOVAL    SETLLINPAYL1
+     C                     READ INPAYL1                  97
+     C           *IN97     DOWEQ*OFF
+      *
+      *  Incoming Payments - Intermediary Bank
+     C                     EXSR VALIP1
+      *  Incoming Payments - Account With Bank
+     C                     EXSR VALIP2
+      *  Incoming Payments - Beneficiary
+     C                     EXSR VALIP3
+      *  Incoming Payments - Sender
+     C                     EXSR VALIP4
+      *  Incoming Payments - Ordering Bank
+     C                     EXSR VALIP5
+      *  Incoming Payments - Senders Correspondence
+     C                     EXSR VALIP6
+      *  Incoming Payments - Ordering Customer
+     C                     EXSR VALIP7
+      *  Incoming Payments - Intermediary Bank
+     C                     EXSR VALIP8
+      *  Incoming Payments - Receiver's Correspondent
+     C                     EXSR VALIP9
+      *
+     C                     READ INPAYL1                  97
+     C                     ENDDO
+      *
+      ** If all checks have successfully completed,
+      *
+     C                     EXSR ENDRTN
+      *****************************************************************
+      *                                                               *
+      * VALOP1 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Intermediary Bank Field. *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP1    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check INB3 field if blanks, otherwise proceed to next field validation.
+      *
+     C           INB3      IFEQ *BLANKS
+      ** Test value for INB1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTINB1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE INBT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELINB2      VARTST
+     C                     ELSE
+     C                     MOVELINB1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP2 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Account With Bank Field. *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP2    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check ACB3 field if blanks, otherwise proceed to next field
+      ** validation.
+      *
+     C           ACB3      IFEQ *BLANKS
+      ** Test value for ACB1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTACB1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE ACBT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELACB2      VARTST
+     C                     ELSE
+     C                     MOVELACB1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP3 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Beneficiary field.       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP3    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check BNC3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           BNC3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTBNC1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE BNCT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELBNC2      VARTST
+     C                     ELSE
+     C                     MOVELBNC1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP4 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Destination field.       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP4    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check DST3 field if blanks, otherwise proceed to next file validation.
+      *
+     C           DST3      IFEQ *BLANKS
+      ** Test value for DST1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTDST1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE DSTT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELDST2      VARTST
+     C                     ELSE
+     C                     MOVELDST1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP5 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Ordering Customer field. *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP5    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check ORC3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           ORC3      IFEQ *BLANKS
+      ** Test value for DST1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTORC1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE ORCT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELORC2      VARTST
+     C                     ELSE
+     C                     MOVELORC1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP6 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Receiver' Correspondence.*
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP6    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check RCO3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           RCO3      IFEQ *BLANKS
+      ** Test value for DST1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTRCO1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE RCRT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELRCO2      VARTST
+     C                     ELSE
+     C                     MOVELRCO1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP7 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, Third Party Reimbursment.*
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP7    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Chain to OTPAYXL2 to retrieve third party reimbursement
+      ** details.
+      *
+     C           PREF      CHAINOTPAYXL2             99
+     C           *IN99     IFEQ *OFF
+      *
+      ** Check OPTRI3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           OPTRI3    IFEQ *BLANKS
+      ** Test value for DST1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTOPTRI1:1  VARCHC
+      ** Prepare Test Variables
+     C                     MOVE OPTRIT    VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELOPTRI2    VARTST
+     C                     ELSE
+     C                     MOVELOPTRI1    VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALOP8 - Validate customer live FT transaction for Outgoing   *
+      *          Payments in OTPAYDD Master, MT100 Customer.          *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOP8    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+     C                     MOVE 'C'       VARTYP
+     C                     MOVELODMT      VARTST
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP1 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Ordering Customer field. *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP1    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check INACB3 field if blanks, otherwise proceed to next field
+      ** validation.
+      *
+     C           INACB3    IFEQ *BLANKS
+      ** Test value for INACB1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTINACB1:1  VARCHC
+      ** Prepare Test Variables
+     C                     MOVE INACBT    VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELINACB2    VARTST
+     C                     ELSE
+     C                     MOVELINACB1    VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP2 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Account With Bank Field. *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP2    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check ACB3 field if blanks, otherwise proceed to next field
+      ** validation.
+      *
+     C           ACB3      IFEQ *BLANKS
+      ** Test value for ACB1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTACB1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE ACBT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELACB2      VARTST
+     C                     ELSE
+     C                     MOVELACB1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP3 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Beneficiary field.       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP3    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check BNC3 field if blanks, otherwise proceed to next file validation.
+      *
+     C           BNC3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTBNC1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE BNCT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELBNC2      VARTST
+     C                     ELSE
+     C                     MOVELBNC1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP4 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Sender field.            *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP4    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check SND3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           SND3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTSND1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE SNTP      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELSND2      VARTST
+     C                     ELSE
+     C                     MOVELSND1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP5 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Ordering Bank field.     *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP5    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check ORB3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           ORB3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTORB1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE ORBT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELORB2      VARTST
+     C                     ELSE
+     C                     MOVELORB1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP6 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Senders Correspondent.   *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP6    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check SNC3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           SNC3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTSNC1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE SNCT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELSNC2      VARTST
+     C                     ELSE
+     C                     MOVELSNC1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP7 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Ordering Customer.       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP7    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check ORC3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           ORC3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTORC1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE ORCT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELORC2      VARTST
+     C                     ELSE
+     C                     MOVELORC1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP8 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Intermediary Bank.       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP8    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check INB3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           INB3      IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTINB1:1    VARCHC
+      ** Prepare Test Variables
+     C                     MOVE INBT      VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELINB2      VARTST
+     C                     ELSE
+     C                     MOVELINB1      VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALIP9 - Validate customer live FT transaction for Incoming   *
+      *          Payments in INPAYDD Master, Receiver's Correspondent *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: VALRTN                                                 *
+      *                                                               *
+      *****************************************************************
+     C           VALIP9    BEGSR
+      *
+     C                     MOVE *BLANK    VARCHC
+     C                     MOVE *BLANK    VARTYP
+     C                     MOVE *BLANK    VARTST
+      *
+      ** Check INRCO3 field if blanks, otherwise proceed to next file
+      ** validation.
+      *
+     C           INRCO3    IFEQ *BLANKS
+      ** Test value for BNC1 position 1 of length 1 if value = '/'.
+     C           1         SUBSTINRCO1:1  VARCHC
+      ** Prepare Test Variables
+     C                     MOVE INRCRT    VARTYP
+     C           VARCHC    IFEQ '/'
+     C                     MOVELINRCO2    VARTST
+     C                     ELSE
+     C                     MOVELINRCO1    VARTST
+     C                     ENDIF
+      *
+      ** Process validation routine.
+      *
+     C                     EXSR VALRTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VALRTN - Validate customer live FT transaction.               *
+      *                                                               *
+      * Called by: VALOP1, VALOP2, VALOP3, VALOP4, VALOP5, VALOP6,    *
+      *            VALOP7, VALOP8, VALIP1, VALIP2, VALIP3, VALIP4,    *
+      *            VALIP5, VALIP6, VALIP7, VALIP8, and VALIP9         *
+      *                                                               *
+      * Calls: ENDRTN                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Validate customer live FT transaction.
+      *
+     C           VALRTN    BEGSR
+      *
+     C                     SELEC
+      *
+      ** Customer Swift Type
+      *
+     C           VARTYP    WHEQ 'S'
+     C           VARTST    IFEQ TBCSID
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD251
+     C           QUIT      IFEQ 'Y'
+     C                     RETRN
+     C                     ENDIF
+      ** Force to end if error occured.
+     C                     EXSR ENDRTN
+     C                     ENDIF
+      *
+      ** Customer No. or Customer Shortname
+      *
+     C           VARTYP    WHEQ 'C'
+     C           VARTST    IFEQ TPCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD251
+     C           QUIT      IFEQ 'Y'
+     C                     RETRN
+     C                     ENDIF
+      ** Force to end if error occured.
+     C                     EXSR ENDRTN
+     C                     ELSE
+      *
+     C           VARTST    IFEQ TBCSSN
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD251
+     C           QUIT      IFEQ 'Y'
+     C                     RETRN
+     C                     ENDIF
+      ** Force to end if error occured.
+     C                     EXSR ENDRTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     OTHER
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * ENDRTN - If all checks have successfully completed, change    *
+      *          the return code to delete.                           *
+      *                                                               *
+      * Called by: MAIN, and VALRTN                                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           ENDRTN    BEGSR
+      *
+     C           W0RTN     IFEQ *BLANKS
+     C                     MOVEL'DELETE'  W0RTN
+     C                     ENDIF
+      *
+      ** Move failure strings back into the parameter fields.
+      *
+     C                     MOVELWUCDS2    PCDS2
+     C                     MOVELWUCDS3    PCDS3
+      *
+     C           QUIT      IFEQ 'N'
+     C                     SETON                         LR
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2012

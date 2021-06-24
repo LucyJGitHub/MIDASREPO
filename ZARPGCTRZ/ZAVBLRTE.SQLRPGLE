@@ -23,8 +23,8 @@
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
       *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Last Amend No. MD057871           Date 08Apr21               *
-      *  Prev amend No. MD057930           Date 26Apr21               *
+      *  Prev Amend No. MD057871           Date 08Apr21               *
+      *                 MD057930           Date 26Apr21               *
       *                 MD057934           Date 23Apr21               *
       *                 MD057889           Date 19Apr21               *
       *                 MD057794           Date 24Mar21               *
@@ -126,6 +126,9 @@
       ** Array for allowed processing type for loan
      D WLPtyp          S              2A   DIM(9) CTDATA PERRCD(20)
 
+      ** Array for allowed processing type for deals                                          CDL102
+     D WDLTyp          S              2A   DIM(10) CTDATA PERRCD(20)                          CDL102
+                                                                                              CDL102
       ** DS for Access programs: Long Sata Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
@@ -298,7 +301,11 @@
      C                   ENDIF
 
      C                   IF        ApiName = 'CLIP' or                                        CLE172
-     C                             ApiName = 'LERI'                                           CLE172
+     C**********                   ApiName = 'LERI'                                    CLE172 CDL102
+     C                             ApiName = 'LERI' or                                        CDL102
+     C                             ApiName = 'FUND' or                                        CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'DEAM'                                           CDL102
      C                   EVAL      BNDCSP = '.'                                               CLE172
      C                   ENDIF                                                                CLE172
                                                                                               CLE172
@@ -415,12 +422,19 @@
      C                   EVAL      DDBLRT = 'N'
 
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
+     C                             DDBLRT  = *BLANKS  and                                     CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDBLRT = BABLRT                                            CLE172
                                                                                               CLE172
       ** Default to N if base rate code not exists                                          MD057889
-     C                   WHEN      ApiName = 'CLIP' and                                     MD057889
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'N'                                       MD057889
      C                   EVAL      DDBLRT = 'N'                                             MD057889
                                                                                             MD057889
@@ -468,7 +482,20 @@
      C                   ENDIF                                                                CLE172
      C                                                                                        CLE172
      C                   ENDIF                                                                CLE172
-
+      ** Issue error if the deal type used is not allowed for                                 CDL102
+      ** backward looking rate                                                                CDL102
+     C                   IF        ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND'                                           CDL102
+                                                                                              CDL102
+     C                   IF        %LOOKUP(TransType:WDLTyp) = 0 and                          CDL102
+     C                             DDBLRT = 'Y'                                               CDL102
+     C                   EVAL      DDBLRTOK = 'N'                                             CDL102
+     C                   EVAL      Idx = Idx + 1                                              CDL102
+     C                   EVAL      FldNamXAr(Idx) = 'DDBLRT'                                  CDL102
+     C                   EVAL      MsgIdXAr(Idx) = '5049500'                                  CDL102
+     C                   ENDIF                                                                CDL102
+     C                                                                                        CDL102
+     C                   ENDIF                                                                CDL102
       ** Issue error if existing base rate is used in a loan
       ** and its backward looking rate value is changed
      C                   IF        ApiName = 'BSRT' and
@@ -512,7 +539,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDRFRR = BARFRR                                            CLE172
                                                                                               CLE172
@@ -586,7 +616,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDCALM = BACALM                                            CLE172
                                                                                               CLE172
@@ -661,7 +694,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      WNumBADJ = BABADJ                                          CLE172
                                                                                               CLE172
@@ -774,7 +810,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      WNumFLOR = BAFLOR                                          CLE172
                                                                                               CLE172
@@ -908,7 +947,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BALBDY        WDAY                                         CLE172
                                                                                               CLE172
@@ -1006,7 +1048,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BALODY        WDAY                                         CLE172
                                                                                               CLE172
@@ -1107,7 +1152,10 @@
      C                   EVAL      DDOPSH = 'N'
 
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDOPSH = BAOPSH                                            CLE172
                                                                                               CLE172
@@ -1189,7 +1237,9 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDOPSH <> 'N'
+     C**********                   DDOPSH <> 'N'                                              CDL102
+     C                             DDOPSH <> 'N' and                                          CDL102
+     C                             DDOPSH <>  *BLANKS                                         CDL102
      C                   EVAL      DDOPSHOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -1226,7 +1276,10 @@
      C                   MOVE      '05'          WDAY
 
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BARRDP        WDAY                                         CLE172
                                                                                               CLE172
@@ -1338,7 +1391,10 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+    C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             BSRTRecFound = 'Y' and                                     CLE172
      C                             DDBLRT = 'Y'                                               CLE172
      C                   EVAL      WDBAV = BADBAV                                             CLE172
@@ -1438,7 +1494,10 @@
      C     SRRTKN        BEGSR                                                                CLE172
                                                                                               CLE172
       ** Default value to 'N' when transaction is created                                     CLE172
-     C                   IF        ApiName = 'CLIP' and                                       CLE172
+     C**********         IF        ApiName = 'CLIP' and                                CLE172 CDL102
+     C                   IF        (ApiName = 'CLIP' or                                       CDL102
+     C                             ApiName = 'LDNI' or                                        CDL102
+     C                             ApiName = 'FUND') and                                      CDL102
      C                             TransCHTP = 'I'                                            CLE172
      C                   EVAL      DDRTKN = 'N'                                               CLE172
      C                   EVAL      VRTKN = 'N'                                                CLE172
@@ -1550,10 +1609,10 @@
                                 ' fetch first row only';                                    //CDL102
                    endif;                                                                   //CDL102
                                                                                             //CDL102
-                   exec sql prepare P1 from :wSQLStr1;                                      //CDL102
-                   exec sql declare P1 cursor for P1;                                       //CDL102
-                   exec sql open P1;                                                        //CDL102
-                   exec sql fetch next From P1 into :DEALSDS;                               //CDL102
+                   exec sql prepare P2 from :wSQLStr1;                                      //CDL102
+                   exec sql declare P2 cursor for P2;                                       //CDL102
+                   exec sql open P2;                                                        //CDL102
+                   exec sql fetch next From P2 into :DEALSDS;                               //CDL102
                                                                                             //CDL102
                  if sqlCod <> NO_ERROR1 and sqlCod <> NO_RECORD1;                           //CDL102
                       dBase    = 001;                                                       //CDL102
@@ -1573,7 +1632,7 @@
                       exsr *pssr;                                                           //CDL102
                    endif;                                                                   //CDL102
                                                                                             //CDL102
-                   exec sql close P1;                                                       //CDL102
+                   exec sql close P2;                                                       //CDL102
       /end-free                                                                             //CDL102
      C                   ENDSR                                                                CDL102
       *****************************************************************
@@ -1654,3 +1713,5 @@
 (c) Finastra International Limited 2020
 ** WLPtyp ** Array for allowed processing type for loan
 616264666869707172
+** WDLTyp ** Array for allowed processing type for deals
+CDCICLDLIPITTDTIILID

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031031           Date 24Feb15               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -96,6 +97,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -529,6 +531,8 @@
      D DLNOOK        E                     EXTFLD(OKDLNO)
 
      D MMREPOUPC       DS             1    DTAARA(MMREPOUPC)
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -2033,6 +2037,7 @@
       * Output parameters
       * REPO Details - screen formats
      C                   PARM                    CurTrREPO
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS
       *
@@ -2149,6 +2154,7 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    CurTrREPO
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Deal Status
      C                   PARM                    DDSTS            24
       *

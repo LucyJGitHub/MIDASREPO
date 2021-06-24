@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSE040             Date 10Mar21               *
-      *  Prev Amend No. MD056262           Date 10Mar21               *
+      *  Last Amend No. MD058195           Date 09Jun21               *
+      *  Prev Amend No. CSE040             Date 10Mar21               *
+      *                 MD056262           Date 10Mar21               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058195 - SEC4664 00001 fails during COB due to MQOPEN call.*
+      *             Changed the call of IBM MQ functions from CALLP   *
+      *             to CALL operation.                                *
       *  CSE040 - Securities Statement Processing                     *
       *           Applied for MD-55740                                *
       *  MD056262 - Allow MQseries to support Meridian 5 and 6        *
@@ -330,8 +334,13 @@
       *                                                                                     MD056262
       ** Connect to the queue manager                                                       MD056262
       *                                                                                     MD056262
-     C                   CALLP     MQCONN( ODMN : HCONN :                                   MD056262
-     C                                     OCODE  : REASON )                                MD056262
+     C**********         CALLP     MQCONN( ODMN : HCONN :                          MD056262 MD058195
+     C**********                           OCODE  : REASON )                       MD056262 MD058195
+     C                   CALL      'MQCONN'                                                 MD058195
+     C                   PARM                    ODMN                                       MD058195
+     C                   PARM                    HCONN                                      MD058195
+     C                   PARM                    OCODE                                      MD058195
+     C                   PARM                    REASON                                     MD058195
       *                                                                                     MD056262
       ** If connect failed, indicate abnormal end                                           MD056262
       *                                                                                     MD056262
@@ -343,8 +352,15 @@
       *                                                                                     MD056262
      C     OOOUT         ADD       OOFIQ         OPTS                                       MD056262
       *                                                                                     MD056262
-     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD056262
-     C                                     HIN : OCODE : REASON )                           MD056262
+     C**********         CALLP     MQOPEN( HCONN : MQOD : OPTS :                   MD056262 MD058195
+     C**********                           HIN : OCODE : REASON )                  MD056262 MD058195
+     C                   CALL      'MQOPEN'                                                 MD058195
+     C                   PARM                    HCONN                                      MD058195
+     C                   PARM                    MQOD                                       MD058195
+     C                   PARM                    OPTS                                       MD058195
+     C                   PARM                    HIN                                        MD058195
+     C                   PARM                    OCODE                                      MD058195
+     C                   PARM                    REASON                                     MD058195
       *                                                                                     MD056262
       ** If open queue failed, indicate abnormal end                                        MD056262
       *                                                                                     MD056262
@@ -373,8 +389,14 @@
       *                                                                                     MD056262
       ** Close queue                                                                        MD056262
       *                                                                                     MD056262
-     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD056262
-     C                                      CCODE : REASON )                                MD056262
+     C**********         CALLP     MQCLOSE( HCONN : HIN : OPTS :                   MD056262 MD058195
+     C**********                            CCODE : REASON )                       MD056262 MD058195
+     C                   CALL      'MQCLOSE'                                                MD058195
+     C                   PARM                    HCONN                                      MD058195
+     C                   PARM                    HIN                                        MD058195
+     C                   PARM                    OPTS                                       MD058195
+     C                   PARM                    CCODE                                      MD058195
+     C                   PARM                    REASON                                     MD058195
       *                                                                                     MD056262
       ** If close queue failed, indicate abnormal end                                       MD056262
       *                                                                                     MD056262
@@ -384,7 +406,11 @@
       *                                                                                     MD056262
       ** Close connection                                                                   MD056262
       *                                                                                     MD056262
-     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD056262
+     C**********         CALLP     MQDISC( HCONN : OCODE : REASON )                MD056262 MD058195
+     C                   CALL      'MQDISC'                                                 MD058195
+     C                   PARM                    HCONN                                      MD058195
+     C                   PARM                    OCODE                                      MD058195
+     C                   PARM                    REASON                                     MD058195
       *                                                                                     MD056262
       ** If disconnect failed, indicate abnormal end                                        MD056262
       *                                                                                     MD056262
@@ -430,14 +456,27 @@
       *                                                                                     MD056262
       ** Send message to queue                                                              MD056262
       *                                                                                     MD056262
-     C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD056262
-     C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD056262
-     C                                    CCODE : REASON )                                  MD056262
+     C**********         CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :             MD056262 MD058195
+     C**********                          P@MsgLen : %ADDR(P@MsgBuf) :             MD056262 MD058195
+     C**********                          CCODE : REASON )                         MD056262 MD058195
+     C                   IF        P@MsgBuf <> *BLANKS                                      MD058195
+      *                                                                                     MD058195
+     C                   CALL      'MQPUT'                                                  MD058195
+     C                   PARM                    HCONN                                      MD058195
+     C                   PARM                    HIN                                        MD058195
+     C                   PARM                    MQMD                                       MD058195
+     C                   PARM                    MQPMO                                      MD058195
+     C                   PARM                    P@MsgLen                                   MD058195
+     C                   PARM                    P@MsgBuf                                   MD058195
+     C                   PARM                    CCODE                                      MD058195
+     C                   PARM                    REASON                                     MD058195
       *                                                                                     MD056262
      C     REASON        IFNE      RCNONE                                                   MD056262
      C     REASON        ANDNE     RC2033                                                   MD056262
      C                   EXSR      *PSSR                                                    MD056262
      C                   ENDIF                                                              MD056262
+      *                                                                                     MD058195
+     C                   ENDIF                                                              MD058195
       *                                                                                     MD056262
       ** Clear message data                                                                 MD056262
       *                                                                                     MD056262

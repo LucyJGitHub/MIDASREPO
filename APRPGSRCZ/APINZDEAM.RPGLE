@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompiled)                                        *
@@ -46,21 +48,21 @@
       *  CAP004 - APIs phase 3.                                       *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEAMPP  UP   E             DISK
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
      D @YD             S              5  0 DIM(4) CTDATA PERRCD(4) ASCEND
      D @MD             S              5  0 DIM(13) CTDATA PERRCD(13) ASCEND
- 
+
      D @MMDL         E DS                  EXTNAME(MMDEAMPP)
      D  @DVSD                 49     56  0
- 
+
      D                 DS
      D  @@DTIN                 1      8  0
      D  @@YYYY                 1      4  0
@@ -68,19 +70,19 @@
      D  @@CC                   1      2  0
      D  @@MTH                  5      6  0
      D  @@DAY                  7      8  0
- 
+
       * Parameters
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
- 
+
       * Value Date
      C                   MOVE      @DVSD         @@DTIN
      C                   EXSR      ZA0680
      C                   MOVE      @@MDNO        HNDVSD
- 
+
       * UPDATE DEAL AMENDMENT
      C                   EXCEPT    MMDEAM
- 
+
       *******************************************************************
       /EJECT
       *******************************************************************
@@ -89,56 +91,56 @@
       *          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
       *
       *******************************************************************
- 
+
      C     ZA0680        BEGSR
- 
+
       **  CLEAR OUT ANY 'OLD' DATA IN FIELD
      C                   Z-ADD     0             @@MDNO            5 0
- 
+
       **   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
      C     @@YYYY        IFGE      2072
- 
+
       **    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
      C     @@CC          SUB       19            @@WK2             2 0
      C     @@WK2         MULT      36524         @@MDNO
- 
+
       **  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
      C                   ADD       1             @@MDNO
      C                   END
- 
+
      C     @@YYYY        ADD       28            @@WK2
- 
+
      C     @@WK2         DIV       4             @@WK2
      C                   MVR                     @@REM             1 0
- 
+
       **    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
      C     @@WK2         MULT      1461          @@WK5             5 0
      C                   ADD       @@WK5         @@MDNO
- 
+
       **  CHECK REMAINDER AND MONTH NUMBER
      C     @@REM         IFEQ      0
      C     @@MTH         ANDGT     2
      C                   ADD       1             @@MDNO
      C                   END
- 
+
       **  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
      C     @@REM         IFNE      0
      C                   ADD       @YD(@@REM)    @@MDNO
      C                   END
- 
+
       **  ADD MONTHS THIS YEAR
      C                   ADD       @MD(@@MTH)    @@MDNO
- 
+
       **  ADD DAYS THIS MONTH
      C                   ADD       @@DAY         @@MDNO
- 
+
      C     ZA0689        ENDSR
- 
+
       *****************************************************************
- 
+
      OMMDEAMP0  E            MMDEAM
      O                       HNDVSD
- 
+
 **  CPY@
 (c) Finastra International Limited 2001
 ** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN

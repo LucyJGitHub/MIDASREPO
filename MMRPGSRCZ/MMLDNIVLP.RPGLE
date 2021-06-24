@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031494           Date 13Feb15               *
       *                 MD030409           Date 25Nov14               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165   - Dual Withholding Tax (Recompile)                  *
@@ -115,12 +117,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FSDBRTDL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,MMLDNVP001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -139,150 +141,150 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D QQACC1        E                     EXTFLD(QQACCD)
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** EXTERNAL DS FOR Trading Data
      D QQACC2        E                     EXTFLD(QQACCD)
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       **  Data structure for Portfolio Management ICD File
- 
+
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
       **  Data structure for Profit Centre Accounting ICD File
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
       ** EXTERNAL DS FOR RETAIL DETAILS
      D QQACC3        E                     EXTFLD(QQACCD)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
       ** External data structure for portfolio management details
- 
+
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
       ** EXTERNAL DS FOR DEAL SUBTYPE DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External data structure for customer details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for currency details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External data structure for branch details
      D QQDFC1        E                     EXTFLD(QQDFAC)
- 
+
      D SDBROK        E DS                  EXTNAME(SDBROKPD)
       ** External data structure for broker details
- 
+
      D SDACTX        E DS                  EXTNAME(SDACTXPD)                                MD030409
       ** External data structure for customer details by country of tax                     MD030409
                                                                                             MD030409
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       * THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE
- 
+
      D ValidDeal     E DS                  EXTNAME(MMVLDNIPD)
       * Valid Deals layout
- 
+
      D ZMUSER          DS            17
      D  ZUSER                  1     10
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D TranIn        E DS                  EXTNAME(MMLDNIPD)
       * Incoming Transaction
- 
+
      D InfData       E DS                  EXTNAME(MMLDIFPD)
      D                                     PREFIX(IF_)
       * MM Extra Data - File (D/B) format
- 
+
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM Extra Data - File (D/B) format
- 
+
       **  Front Office (2 First characters determine System Front Office)
      D FrontOffice     DS            20
      D  W_System               1      2
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
      D/COPY WNCPYSRC,MMLDNVP002
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message fields received as parameters
      D     Msg1        S                   LIKE(#MsgID)
      D     Msg2        S                   LIKE(#MsgID)
@@ -292,7 +294,7 @@
      D     Msg6        S                   LIKE(#MsgID)
      D     Msg7        S                   LIKE(#MsgID)
      D     Msg8        S                   LIKE(#MsgID)                                     BUG23732
- 
+
       ** Warning error message fields received as parameters
      D     WMSGID1     S                   LIKE(#MsgID)
      D     WMSGID2     S                   LIKE(#MsgID)
@@ -305,19 +307,19 @@
      D WMsgid8         S                   LIKE(#MsgID)                                       CDL096
      D WMsgDta8        S                   LIKE(#MsgData)                                     CDL096
      D PCurrency       S              3A   Dim(10)                                            CDL096
- 
+
       ** Error message substitution data received as a parameter
      D MSGDATA         S                   LIKE(#MsgData)
      D MSGDATA2        S                   LIKE(#MsgData)
      D MSGDATA3        S                   LIKE(#MsgData)
      D MSGDATA4        S                   LIKE(#MsgData)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
       ** These have been declared for all MM0089D3 fields, some may not
       **  actually be needed if the field is not used/not validated
@@ -387,38 +389,51 @@
      D  DDIsDtOK                      1A                                                      CER020
      D  DDFmDtOK                      1A                                                      CER020
      D  DDOrDnOK                      1A                                                      CER020
- 
+
       ** Flags to indicate whether transaction fields are valid                              BUG5169
      D OKFlagsDS2      DS                                                                    BUG5169
      D  DDSOFDOK                      1A                                                     BUG5169
      D  DDFBRTOK                      1A                                                     BUG5169
      D  DDAIROK                       1A                                                     BUG5169
- 
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+
       ** Error flags from Dates validation routine
      D ErrDealDat      S              1A   INZ('N')
      D ErrValDate      S              1A   INZ('N')
      D ErrMatDate      S              1A   INZ('N')
      D ErrNxInDat      S              1A   INZ('N')
- 
+
       ** Error flags from int settle ccy & 'in' ccy validation routine
      D ErrIntSetc      S              1A   INZ('N')
      D ErrIntin72      S              1A   INZ('N')
- 
+
       ** Error flags from funding details validation routine
      D ErrFundRat      S              1A   INZ('N')
      D ErrFundSgn      S              1A   INZ('N')
      D ErrFundPrf      S              1A   INZ('N')
- 
+
       ** Default Round Down indicators for Branch & Currency
      D BrRdfc          S              1A
- 
+
       ** Portfolio reference (default value, received from AOPLCSR1 in
       ** MMVBOOKCDE, passed to MMVPORTREF)
      D PortRef         S              4A
- 
+
       ** Extended Settlement fields used by MMVVALDATE
      D PMERCD          S            150A
- 
+
       ** Receive / Pay Settlement Currency, Method & Nostro
      D RecSetCcy       S              3A
      D RecSetMeth      S              2S 0
@@ -427,45 +442,45 @@
      D PaySetCcy       S              3A
      D PaySetMeth      S              2S 0
      D PayNostro       S             18A
- 
+
       ** Flag for whether an error was found in the call to ZDATE1
      D ZDATE1Err       S              1A
- 
+
       ** Numeric version of spread/rate
      D @SPRD           S             11P 7
- 
+
       ** A code to indicate the calling function to the lower level modules
      D LDNI            S              4A   INZ('LDNI')
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       ** Previous Maturity Date
      D OLD_IKMATD      S              5P 0 INZ(0)
- 
+
      D CDL006          S              1A   IMPORT
- 
+
       ** Repos indicator
      D Repo            S              1A
- 
+
      D CGL011          S              1A   IMPORT
- 
+
      D CSC011          S              1A   INZ('N')
      D WProcDate       S                   LIKE(BJRDNB)
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
- 
+
       ** Define fields used in CAS001
      D CAS001          S              1A
      D PYCFN           S              6A
      D PERTP           S              1A
- 
+
       ** Fields defined for Enhancement CDL010
      D CDL010          S              1A
- 
+
       ** Define fields used in CAS005
- 
+
      D CAS005          S              1A
      D PFwRv           S              1A
      D PFwYC           S              5A
@@ -485,21 +500,21 @@
       *                                                                                       CER020
      D PDefISVal       S              6P 0                                                    CER020
      D PDefFMVal       S              6P 0                                                    CER020
- 
+
      D CGL058          S              1A                                                    MD026390
      D CER069          S              1A                                                    MD030409
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,MMLDNVP003
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -515,14 +530,14 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,MMLDNVP004
       *                                                                                      BUG5517
       **  Get default branch and user from ZMUSER                                            BUG5517
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG5517
      C                   IN        ZMUSER                                                    BUG5517
      C                   UNLOCK    ZMUSER                                                    BUG5517
- 
+
       ** Validate Branch Code                                                               MD026390
       *                                                                                     MD026390
      C                   IF        CGL058 <> 'Y'                                            MD026390
@@ -557,7 +572,7 @@
       *  *------------------------*
       *  * Validate All Dates     *  #03
       *  *------------------------*
- 
+
      C                   EXSR      GetTaxInd                                                MD030409
                                                                                             MD030409
      C                   Z-ADD     IKMATD        OLD_IKMATD
@@ -682,9 +697,9 @@
      C                   PARM                    PCurrency                                    CDL096
       ** Taxable Indicator                                                                  MD029724
      C                   PARM                    TaxInd            1                        MD030409
- 
+
       /COPY WNCPYSRC,MMLDNVP005
- 
+
      C     MSG1          IFNE      *BLANK
      C     MSG1          LOOKUP    MsgIDArr                               99                 BUG8024
      C     *IN99         IFEQ      '0'                                                       BUG8024
@@ -750,7 +765,7 @@
      C                   EVAL      MsgIDArr(Idx) = MSG8                                     BUG23732
      C                   ENDIF                                                              BUG23732
      C                   ENDIF                                                              BUG23732
- 
+
      C     WMSGID1       IFNE      *BLANK
      C     WMSGID1       LOOKUP    WMsgIDArr                              99                 BUG3992
      C     *IN99         IFEQ      '0'                                                       BUG3992
@@ -807,7 +822,7 @@
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID7
      C                   ENDIF                                                               BUG3992
      C                   ENDIF
- 
+
      C*****WMsgId8       IFNE      *BLANK                                            CER048 BUG23732
      C*****WMsgId8       LOOKUP    WMsgIDArr                              99         CER048 BUG23732
      C******IN99         IFEQ      '0'                                               CER048 BUG23732
@@ -823,31 +838,31 @@
      C                   CALLB     'ZACVTFLG'
      C                   PARM                    DDDlDtOK
      C                   PARM                    ErrDealDat
- 
+
      C                   CALLB     'ZACVTFLG'
      C                   PARM                    DDVDatOK
      C                   PARM                    ErrValDate
- 
+
      C                   CALLB     'ZACVTFLG'
      C                   PARM                    DDMDatOK
      C                   PARM                    ErrMatDate
- 
+
      C                   CALLB     'ZACVTFLG'
      C                   PARM                    DDNDatOK
      C                   PARM                    ErrNxInDat
- 
+
      C                   IF        WMSGID1 <> *BLANK OR WMSGID2 <> *BLANK
      C                             OR WMSGID3 <> *BLANK OR WMSGID4 <> *BLANK
      C                             OR WMSGID5 <> *BLANK
      C                   EVAL      WarnGlobal = 'Y'
      C                   ENDIF
- 
+
      C     DDMDAT        IfNe      *BLANKS
      C                   Move      'Y'           W_Maturity        1
      C                   Else
      C                   Move      'N'           W_Maturity
      C                   Endif
- 
+
       *  *-------------------------*                                                         BUG4761
       *  * Validate Base Rate Code *  #18                                                    BUG4761
       *  *-------------------------*                                                         BUG4761
@@ -985,6 +1000,8 @@
      C                   PARM                    BJRDNB                                      BUG5169
      C                   PARM                    IKSPRD                                      BUG5169
      C                   PARM                    IKINTR                                      BUG5169
+     C                   PARM                    TranScnBlrt                                  CDL102
+     C                   PARM                    CDL102            1                          CDL102
                                                                                              BUG5169
      C                   IF        MSG1 <> *Blanks                                           BUG5169
      C                   EVAL      Idx = Idx + 1                                             BUG5169
@@ -1004,13 +1021,13 @@
      C                   EVAL      IKINTR = IKSTRT                                            247452
      C                   ENDIF                                                                247452
       /COPY WNCPYSRC,MMLDNVP006
- 
+
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
       /COPY WNCPYSRC,MMLDNVP007
- 
+
       *                                                                                       CER020
       ** Validate the Original Deal Number, Initial and Final                                 CER020
       ** Maturity Date if feature is installed                                                CER020
@@ -1160,14 +1177,14 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,MMLDNVP008
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMLDNVP009
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1179,9 +1196,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -1198,6 +1215,7 @@
      C                   PARM                    PayNostro
      C                   PARM                    FrontOffice
      C                   PARM                    ExtData
+     C                   PARM                    TranScnBlrt                                  CDL102
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
      C                   PARM                    OKFlagsDS2                                  BUG5169
@@ -1275,9 +1293,9 @@
      C                   PARM      '*FIRST'      @OPTN
      C     SDPORT        PARM      SDPORT        DSFDY
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CDE002 is switched on
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       PRTCD             7
      C                   Parm      '*VERIFY'     POPTN             7
@@ -1569,10 +1587,10 @@
      C                   ELSE
      C                   MOVEL     'N'           CDL007
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CAS001 is on.
       ** (Net Present Value Accounting)
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
@@ -1595,26 +1613,26 @@
      C                   ELSE
      C                   EVAL      CAS001 = 'N'
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'CSC011'
@@ -1623,12 +1641,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CDL010 is on.
       ** (Dealing Transaction Authorisation)
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
@@ -1651,27 +1669,27 @@
      C                   ELSE
      C                   EVAL      CDL010 = 'N'
      C                   ENDIF
- 
+
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EVAL      WProcDate = S1DATE
      C                   ELSE
      C                   EVAL      WProcDate = BJRDNB
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CAS005 is on.
       ** (Enhancements to CAS001, CAS002 and CAS004)
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CAS005'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS AND
      C                             PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -1681,16 +1699,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CAS005 = 'Y'
      C                   ELSE
      C                   EVAL      CAS005 = 'N'
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CDL016 is switched on
       ** (Autumatic Rollover of Fixed Term Loan/Deposit)
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       PRTCD
      C                   Parm      '*VERIFY'     POPTN
@@ -1766,7 +1784,7 @@
       *                                                                                     MD026390
      C                   EVAL      CGL058 = 'N'                                             MD026390
      C                   ENDIF                                                              MD026390
- 
+
       ** Check if CER069 is installed                                                       MD030409
                                                                                             MD030409
      C                   CALLB     'AOSARDR0'                                               MD030409
@@ -1781,14 +1799,28 @@
      C                   EVAL      CER069 = 'N'                                             MD030409
      C                   ENDIF                                                              MD030409
                                                                                             MD030409
+      ** Check if CDL102 is installed                                                         CDL102
+                                                                                              CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRtCd                                        CDL102
+     C                   PARM      '*VERIFY'     POptn                                        CDL102
+     C                   PARM      'CDL102'      PSard                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C                   IF        PRtCd = *Blanks                                            CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMLDNVP012
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1802,9 +1834,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   RESET                   Msg1
      C                   RESET                   Msg2
      C                   RESET                   Msg3
@@ -1812,7 +1844,7 @@
      C                   RESET                   Msg5
      C                   RESET                   Msg6
      C                   RESET                   Msg7
- 
+
      C                   RESET                   WMsgID1
      C                   RESET                   WMsgID2
      C                   RESET                   WMsgID3
@@ -1822,11 +1854,11 @@
      C                   RESET                   PMsg10                                       CER020
      C                   RESET                   PWMsgID8                                     CER020
      C                   RESET                   PWMsgID9                                     CER020
- 
+
      C                   RESET                   MSGDATA
- 
+
      C                   EVAL      ReturnCode= *Blanks
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1836,9 +1868,9 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
      C                   IF        CSE006='Y' and RepoFlag='Y'
      C
      C                   IF        DDTRTP='PR' or DDTRTP='RR'
@@ -1855,12 +1887,12 @@
      C
      C                   ENDIF
      C
- 
+
       * Other IKxxxx fields are set up during the individual date
       *  validation, such as the ones where the input & database formats
       *  are different, e.g. dates, amounts.
       * This SR sets up the fields with the same (or compatible) attributes
- 
+
      C                   MOVE      DDTYPE        IKTYPE
      C                   MOVE      DDSTYP        IKSTYP
      C                   MOVE      DDFEDF        IKFEDF
@@ -1891,7 +1923,7 @@
      C                   MOVE      DDRLDN        IKRLDN
      C                   MOVE      DDINOS        IKINOS
      C                   MOVE      DDRACD        IKRACD
- 
+
       **  If screen Portfolio Reference is the Non-Portfolio value default
       **   in the file equivalent of this
      C*****DDPTFR        IFEQ      FCR997                                                   BUG10343
@@ -1905,43 +1937,43 @@
      C**********         ELSE                                                               BUG10343
      C**********         MOVE      DDPTFR        IKPTFR                                     BUG10343
      C**********         END                                                                BUG10343
- 
+
       **  This routine may be called as part of amend processing, only do
       **   following sections if the relevant fields are valid
- 
+
      C                   IF        (DDAmnpOK <> 'N') AND
      C                             (DDTotIOK <> 'N')
- 
+
       **  Set the sign of the Amount and Total Interest depending upon the
       **  type of deal.  Signs of these two fields will always be opposite.
       **  Amount is -ive for a Loan, +ive for a deposit.
- 
+
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'TI'
      C     DDTYPE        OREQ      'CL'
      C     DDTYPE        OREQ      'LN'
      C     DDTYPE        OREQ      'DL'
- 
+
      C     IKAMNP        IFGT      0
      C                   Z-SUB     IKAMNP        IKAMNP
      C                   ENDIF
      C     IKMTTI        IFLT      0
      C                   Z-SUB     IKMTTI        IKMTTI
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     IKAMNP        IFLT      0
      C                   Z-SUB     IKAMNP        IKAMNP
      C                   ENDIF
      C     IKMTTI        IFGT      0
      C                   Z-SUB     IKMTTI        IKMTTI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        (DDBsRCOK <> 'N')
       **  Set spread field to spread/rate if base rate code entered,
       **  if not, set input interest field to spread/rate.
@@ -1954,18 +1986,18 @@
      C                   Z-ADD     IKINTR        IKIIRT                                     MD031494
      C                   END
      C                   END
- 
+
      C                   ENDIF
- 
+
       ** Set up The user field from ZMUSER which is the front office
       ** user if sent . Only if CDL010 is installed
- 
+
      C     CDL010        IFEQ      'Y'
      C                   MOVE      ZUSER         IKUSER
      C                   END
- 
+
       ** Set up Rollover Indicator field if CDL016 is on
- 
+
      C     CDL016        IFEQ      'Y'
      C                   MOVE      DDROLI        IKROLI
      C                   ENDIF
@@ -1973,7 +2005,7 @@
      C                   IF        CER020 = 'Y'                                               CER020
      C                   MOVEL     DDORDN        IKORDN                                       CER020
      C                   ENDIF                                                                CER020
- 
+
      C                   ENDSR
       *****************************************************************                     MD030409
       *                                                               *                     MD030409

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -189,8 +191,13 @@
       ** External DS for profit centre details
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
 
+      ***  First DS for access programs, short data structure                                 CDL102
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDL102
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+                                                                                              CDL102
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL102
 
       ** Current Deal in File Format of main deal
      D CrDlFilFmt1   E DS                  EXTNAME(MMDELDPP)
@@ -217,6 +224,20 @@
       ** Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(ABFUNDPD)
      D                                     Prefix(DD:2)
+     D CurrScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+      ** FUND Backward-Looking Rate Screen Fields                                             CDL102
+      *                                                                                       CDL102
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -244,12 +265,21 @@
      D PPCDesc2        S             30A
      D FRNT            S             20A                                                      261140
      D AFRT            S             20A                                                      261140
+     D CDL102          S              1A                                                      CDL102
 
       ** Parameters for ZALIGN
      D PZAlignOk       S              1A
      D PZField         S             16A
      D PZADEC          S              1P 0
      D PZADIG          S              2P 0
+                                                                                              CDL102
+      ** Parameters for ZA0920                                                                CDL102
+     D @@RETC          S             10A                                                      CDL102
+     D @@AMTW          S             13P 0                                                    CDL102
+     D @@QECN          S              1P 0                                                    CDL102
+     D @@DCSP          S              1A                                                      CDL102
+     D @@AMTD          S             14A                                                      CDL102
+                                                                                              CDL102
 
      D WPOS1           S              1  0
      D WDDACTN         S              1A
@@ -258,6 +288,13 @@
                                                                                               CAS004
      D CDL019          S              1A                                                      CDL019
      D CDL020          S              1A                                                      CDL020
+                                                                                              CDL102
+      ** Access Object parameter                                                              CDL102
+     D PRtcd           S              7                                                       CDL102
+     D POptn           S              7                                                       CDL102
+     D PSARD           S              6                                                       CDL102
+     D WWBadj          S             11P 7                                                    CDL102
+     D WWFlor          S             11P 7                                                    CDL102
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -634,7 +671,9 @@
                                                                                               CDL020
       ** Format Actual Interest Rate, using 7 decimal places                                  CDL020
                                                                                               CDL020
-     C                   IF        CDL020 = 'Y'                                               CDL020
+     C**********         IF        CDL020 = 'Y'                                        CDL020 CDL102
+     C                   IF        CDL020 = 'Y' OR                                            CDL102
+     C                             CDL102 = 'Y'                                               CDL102
      C                   IF        D1BSRC  <> *BLANKS                                         CDL020
      C                   Z-ADD     0             PAmtIn                                       CDL020
      C                   MOVE      D1INTR        PAmtIn                                       CDL020
@@ -662,6 +701,68 @@
       ** Associated Front Office Transaction ID                                               261140
      C                   EVAL      AFRT = D1AFRT                                              261140
                                                                                               261140
+      ** Setup screen fields for LIBOR related fields if CDL102 is switched ON                CDL102
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+      *                                                                                       CDL102
+      ** Backward looking rate flag                                                           CDL102
+      *                                                                                       CDL102
+     C                   EVAL      DDBLRT = D1BLRT                                            CDL102
+      *                                                                                       CDL102
+      ** Risk free rate                                                                       CDL102
+      *                                                                                       CDL102
+     C                   EVAL      DDRFRR = D1RFRR                                            CDL102
+      *                                                                                       CDL102
+      ** Calculation method                                                                   CDL102
+      *                                                                                       CDL102
+     C                   EVAL      DDCALM = D1CALM                                            CDL102
+      *                                                                                       CDL102
+      ** Observation period shift                                                             CDL102
+      *                                                                                       CDL102
+     C                   EVAL      DDOPSH = D1OPSH                                            CDL102
+      *                                                                                       CDL102
+      ** Rates known                                                                          CDL102
+      *                                                                                       CDL102
+     C                   EVAL      DDRTKN = D1RTKN                                            CDL102
+      *                                                                                       CDL102
+     C                   IF        D1BLRT = 'Y'                                               CDL102
+      *                                                                                       CDL102
+      ** Benchmark adjustment                                                                 CDL102
+      *                                                                                       CDL102
+     C                   Z-ADD     D1BADJ        WWBadj                                       CDL102
+     C                   Z-ADD     *ZEROS        @@AMTW                                       CDL102
+     C                   MOVE      WWBadj        @@AMTW                                       CDL102
+     C                   EXSR      FMTRATE                                                    CDL102
+     C                   MOVE      @@AMTD        DDBADJ                                       CDL102
+      *                                                                                       CDL102
+      ** Floor                                                                                CDL102
+      *                                                                                       CDL102
+     C                   Z-ADD     D1FLOR        WWFlor                                       CDL102
+     C                   Z-ADD     *ZEROS        @@AMTW                                       CDL102
+     C                   MOVE      WWFlor        @@AMTW                                       CDL102
+     C                   EXSR      FMTRATE                                                    CDL102
+     C                   MOVE      @@AMTD        DDFLOR                                       CDL102
+      *                                                                                       CDL102
+      ** Lookback days                                                                        CDL102
+      *                                                                                       CDL102
+     C                   MOVE      D1LBDY        DDLBDY                                       CDL102
+      *                                                                                       CDL102
+      ** Lockout days                                                                         CDL102
+      *                                                                                       CDL102
+     C                   MOVE      D1LODY        DDLODY                                       CDL102
+      *                                                                                       CDL102
+      ** Rate rounding decimal places                                                         CDL102
+      *                                                                                       CDL102
+     C                   MOVE      D1RRDP        DDRRDP                                       CDL102
+      *                                                                                       CDL102
+      ** Daily basis for average                                                              CDL102
+      *                                                                                       CDL102
+     C                   MOVE      D1DBAV        DDDBAV                                       CDL102
+      *                                                                                       CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -739,6 +840,7 @@
 
      C                   EVAL      WDDACTN = ActionCode
      C                   EVAL      DealScnFmt = *BLANK
+     C                   EVAL      CurrScnBlrt = *BLANK                                       CDL102
      C                   EVAL      PStatus = *BLANKS
 
      C                   ENDSR
@@ -789,6 +891,7 @@
       ** =================
       ** Deal in screen format
      C                   PARM                    DealScnFmt
+     C                   PARM                    CurrScnBlrt                                  CDL102
 
       ** Deal Status
      C                   PARM                    PStatus
@@ -808,9 +911,38 @@
       ** The following /COPY sets these values.
 
       /COPY ZACPYSRC,DBFIELDS
+                                                                                              CDL102
+      ** Check if CDL102 is installed                                                         CDL102
+                                                                                              CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRtcd                                        CDL102
+     C                   PARM      '*VERIFY'     POptn                                        CDL102
+     C                   PARM      'CDL102'      PSARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C                   IF        PRtcd = *Blanks                                            CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ENDIF                                                                CDL102
 
      C                   ENDSR
-
+      *****************************************************************                       CDL102
+      /EJECT                                                                                  CDL102
+      *****************************************************************                       CDL102
+      * FMTRATE - Format Rate for Display                             *                       CDL102
+      *****************************************************************                       CDL102
+     C     FMTRATE       BEGSR                                                                CDL102
+                                                                                              CDL102
+      ** Format using 7 decimal places                                                        CDL102
+     C                   Z-ADD     7             @@QECN                                       CDL102
+     C                   CALLB     'ZA0920'                                                   CDL102
+     C                   PARM      *BLANK        @@RETC                                       CDL102
+     C                   PARM                    @@AMTW                                       CDL102
+     C                   PARM                    @@QECN                                       CDL102
+     C                   PARM      '.'           @@DCSP                                       CDL102
+     C                   PARM      *BLANK        @@AMTD                                       CDL102
+                                                                                              CDL102
+     C                   ENDSR                                                                CDL102
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 MD036070           Date 19Oct15               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -202,7 +204,7 @@
      FSDCCGRL1  IF   E           K DISK    USROPN                                             CDL006
      F                                     INFSR(*PSSR)                                       CDL006
      F/COPY WNCPYSRC,MMLDNISF01
- 
+
      F/COPY WNCPYSRC,MMLDNISF02
       *****************************************************************
       ** +--------------------------------------+
@@ -222,59 +224,61 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D***Inv_FIDT        S             42    DIM(99)                                   209905 CGL029
      D Inv_FIDT        S             48    DIM(99)                                            CGL029
                                                                                               209905
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
      D QQMOR1        E                     EXTFLD(QQMORI)                                     CGL029
@@ -288,32 +292,32 @@
      D***IKPAY**              525   1083                                                      CGL029
      D  IKREC                470    524                                                       CGL029
      D  IKPAY                539   1083                                                       CGL029
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * New Deal in Screen Format
- 
+
      D MMELDN        E DS                  EXTNAME(MMELDNIPD)
       * Error indicators
- 
+
      D MMELDN2       E DS                  EXTNAME(MMELDN2PD)                                 CDL016
       * Error indicators screen 2                                                             CDL016
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
                                                                                               CDL018
@@ -322,10 +326,10 @@
                                                                                               CDL018
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                  CDL018
       ** File - Receive Further Settlement Instructions                                       CDL018
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
- 
+
      D @SETIN          DS
       ** Receive / Pay Settlement Currency, Method & Nostro
      D  @@RSCY                 1      3
@@ -338,7 +342,7 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
- 
+
      D @CCI@M          DS
       ** CURRENT CONTROL INDICATORS FOR MAIN DETAIL SCREEN
      D  @EKYFD                 1      1
@@ -348,10 +352,10 @@
      D  @EINKJ                 5      5
      D  @EINKN                 6      6
      D  @EINKP                 7      7
- 
+
      D @PCI@M          DS             7
       ** PREVIOUS CONTROL INDICATORS FOR MAIN DETAIL SCREEN
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
@@ -364,10 +368,10 @@
       ***Midas*Our Receive / Pay  Instructions (for Settl Meth = 04 )                  179510 200400
      D**@@MORI****             1     12                                                179510 200400
      D**@@MOPI****            13     24                                                179510 200400
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
                                                                                               CDL006
@@ -379,7 +383,7 @@
                                                                                               CDL006
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CDL006
       ** External data structure for customer details                                         CDL006
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
                                                                                               CDL006
@@ -393,7 +397,7 @@
                                                                                               CAP004
      D ExtData       E DS                  EXTNAME(MMLDEXPD)                                  CAP004
       * MM (LDNI) Extra Data - File (D/B) format                                              CAP004
- 
+
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WCMTJOBS               4    103A                                                      CSC022
       ** Commitment Control dataarea                                                          CSC022
@@ -405,19 +409,19 @@
      D WCMT            S             10A   DIM(10)                                            CSC022
                                                                                               CSC022
      D/COPY QWINDSRC,MMLDNISDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
                                                                                               CDL006
       ** Dealing Fiduciary                                                                    CDL006
      D CDL006          S              1A   IMPORT                                             CDL006
- 
+
      D PFrontId1       S             20A                                                      209905
      D PFrontId2       S             20A                                                      209905
      D PAsocId         S             20A                                                      209905
@@ -443,14 +447,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,MMLDNIS008
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -461,16 +465,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,MMLDNIS001
- 
+
       * READ NEXT BROWSE SUBFILE RECORD
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   END
- 
+
       /COPY WNCPYSRC,MMLDNIS002
- 
+
       * DO WHILE SCREEN: MAIN DETAILS
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
@@ -491,37 +495,37 @@
      C                   IF        CDL033 = 'Y' AND @SCRN = 'X'                               CDL033
      C                   EXSR      SRSched                                                    CDL033
      C                   ENDIF                                                                CDL033
- 
+
       /COPY WNCPYSRC,MMLDNIS003
- 
+
       * SCREEN: WINDOW
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   END
- 
+
       /COPY WNCPYSRC,MMLDNIS004
- 
+
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   END
- 
+
       /COPY WNCPYSRC,MMLDNIS005
- 
+
       * SCREEN: CONFIRMATION OF INPUT
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   END
- 
+
       /COPY WNCPYSRC,MMLDNIS006
- 
+
       * DO FILE UPDATES
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   END
- 
+
       /COPY WNCPYSRC,MMLDNIS007
- 
+
       * TERMINATE PROGRAM
      C     @SCRN         IFEQ      'T'
      C                   IF        (CSC022 = 'N')                                             CSC022
@@ -533,10 +537,10 @@
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMLDNIS009
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -966,6 +970,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    MMELDN
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1272,6 +1277,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      IKINTR        SRate            11 7                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
       *                                                                                       CDL016
       * If errors returned                                                                    CDL016
       *                                                                                       CDL016
@@ -1854,6 +1860,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
      C/COPY WNCPYSRC,MMLDNISC61
       *
       * Deal Status
@@ -2580,6 +2587,7 @@
      C                   PARM                    ExtData                        CAP004
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    MMELDN
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -2636,6 +2644,7 @@
      C                   PARM                    CAS005                                       CDL033
      C                   PARM                    CDL033                                       CDL033
      C                   PARM      IKINTR        SRate            11 7                        CDL033
+     C                   PARM                    TranScnBlrt                                  CDL102
                                                                                               CDL020
       * Recalculate Total Interest here so that it can be shown on the                        CDL020
       * confirmation screen and updated on the file without being validated.                  CDL020
@@ -3644,10 +3653,10 @@
      C                   EXSR      IFDS@M
      C                   EXSR      IFKS@M
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMLDNIS010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

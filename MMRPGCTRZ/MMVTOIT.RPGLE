@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057167           Date 10Nov20               *
-      *  Prev Amend No. MD047719           Date 24Jul18               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD057167           Date 10Nov20               *
+      *                 MD047719           Date 24Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD025884           Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD057167 - Serious Midas Error encountered during completion *
       *             of LDNI transaction                               *
       *           - Compute the total interest only when CurrOk is Y  *
@@ -194,6 +196,9 @@
 
       ** Decimal separator
      D BNDCSP          S              1A
+                                                                                              CDL102
+      ** Backward looking rate flag                                                           CDL102
+     D DDBLRT          S              1A                                                      CDL102
 
       ** End of parameters
       ** =================
@@ -265,6 +270,10 @@
      C* If the total interest has NOT been entered...
      C*
      C     DDTOTI        IFEQ      *BLANKS
+     C     DDBLRT        IFEQ      'Y'                                                        CDL102
+     C                   GOTO      SKIPV                                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C*
                                                                                             MD057167
       ** No error in currency field                                                         MD057167
      C                   IF        CurrOk = 'Y'                                             MD057167
@@ -416,6 +425,10 @@
      C     DDACTN        OREQ      'A'                                                      MD047719
      C                   Z-ADD     @@INTR        @TOTIN
      C                   END
+     C     DDBLRT        IFEQ      'Y'                                                        CDL102
+     C                   EVAL      @@INTR = *ZERO                                             CDL102
+     C                   EVAL      @TOTIN = *ZERO                                             CDL102
+     C                   ENDIF                                                                CDL102
      C*
      C**  Find the difference between the input and calculated interest
      C**  - if the difference is greater than 1 currency unit, this is
@@ -579,6 +592,8 @@
      C                   PARM                    DDRDFC
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    BNDCSP
+      ** Backward Looking Rate flag                                                           CDL102
+     C                   PARM                    DDBLRT                                       CDL102
 
 
       ** Program, module and procedure names for database error processing.

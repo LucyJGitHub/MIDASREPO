@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD057167           Date 10Nov20               *
-      *  Prev Amend No. MD047719           Date 24Jul18               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD057167           Date 10Nov20               *
+      *                 MD047719           Date 24Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR814519           Date 09Mar15               *
       *                 MD000091           Date 23May13               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD057167 - Serious Midas Error encountered during completion *
       *             of LDNI transaction                               *
       *           - Compute the total interest only when CurrOk is Y  *
@@ -292,6 +294,19 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
                                                                                             MD000091
+                                                                                              CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -312,6 +327,9 @@
      C* If the total interest has NOT been entered...
      C*
      C     DDTOTI        IFEQ      *BLANKS
+     C     DDBLRT        IFEQ      'Y'                                                        CDL102
+     C                   GOTO      SKIPV                                                      CDL102
+     C                   ENDIF                                                                CDL102
                                                                                             MD057167
       ** No error in currency field                                                         MD057167
      C                   IF        CurrOk = 'Y'                                             MD057167
@@ -515,6 +533,10 @@
      C     DDACTN        OREQ      'A'                                                      MD047719
      C                   Z-ADD     @@INTR        @TOTIN
      C                   END
+     C     DDBLRT        IFEQ      'Y'                                                        CDL102
+     C                   EVAL      @@INTR = *ZERO                                             CDL102
+     C                   EVAL      @TOTIN = *ZERO                                             CDL102
+     C                   ENDIF                                                                CDL102
      C*
      C**  Find the difference between the input and calculated interest
      C**  - if the difference is greater than 1 currency unit, this is
@@ -680,6 +702,7 @@
      C                   PARM                    DDRDFC
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    BNDCSP
+     C                   PARM                    TranScnBlrt                                  CDL102
 
       *                                                                                       CER043
       ** Check if CER043 is switched on                                                       CER043

@@ -18,10 +18,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE172    *CREATE  Date 01Oct20               *
+      *  Last Amend No. MD058321           Date 18Jun21               *
+      *  Prev Amend No. CLE172    *CREATE  Date 01Oct20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058321 - Default Rates Known to 'N'                        *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *                                                               *
       *****************************************************************
@@ -51,10 +53,12 @@
       *****************************************************************
 
       ** Default the Backward-Looking Rate field to 'N'
+      ** and Rates Known field to 'N'                                                       MD058321
 
      C/EXEC SQL
      C+ update CLOANCL
-     C+ set BLRT = 'N', OPSH = 'N'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -73,7 +77,8 @@
 
      C/EXEC SQL
      C+ update HISTSHM
-     C+ set BLRT = 'N', OPSH = 'N'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -92,7 +97,8 @@
 
      C/EXEC SQL
      C+ update HISTSHN
-     C+ set BLRT = 'N', OPSH = 'N'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -111,7 +117,8 @@
 
      C/EXEC SQL
      C+ update HISTSHQ
-     C+ set BLRT = 'N', OPSH = 'N'
+     C**set*BLRT*=*'N',*OPSH*=*'N'*                                                         MD058321
+     C+ set BLRT = 'N', OPSH = 'N', RTKN = 'N'                                              MD058321
      C+ where BLRT <> 'Y' and AMTP = 'RO'
      C+ with nc
      C/END-EXEC

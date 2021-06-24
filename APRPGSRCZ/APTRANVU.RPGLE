@@ -226,7 +226,7 @@
       *                                                               *
       *  MD057804 - Error in loans input with floor rates because of  *
       *             mismatch of buffer from Java to RPG. Need to      *
-      *             allign the buffer in RPG.                         *
+      *             align the buffer in RPG.                          *
       *  FCM101 - Floor Rates on LE module                            *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *

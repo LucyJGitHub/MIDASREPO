@@ -28,20 +28,20 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
-
+ 
      FPOSTNK2   IF   E           K DISK    INFSR(*PSSR)
      FMARKT     IF   E           K DISK    INFSR(*PSSR) PREFIX(MK_)
      FINTYP     IF   E           K DISK    INFSR(*PSSR) PREFIX(IN_)
-
-
+ 
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
-
+ 
+ 
      D FBPS          E DS                  EXTNAME(POSTNKD)
      D MARKTX        E DS                  EXTNAME(MARKTD)  PREFIX(MK_)
      D INTYPX        E DS                  EXTNAME(INTYPD)  PREFIX(IN_)
-
-
+ 
+ 
      C     *ENTRY        PLIST
       /COPY GOCPYSRC,GOXCEPARM
       *
@@ -124,17 +124,17 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
-
+ 
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
-
+ 
      C                   PARM                    FBPS
      C                   PARM                    MARKTX
      C                   PARM                    INTYPX
-
+ 
       * If data error encountered, log error
-
+ 
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = 'FBPS' + I#EXTT + I#TREF
@@ -150,38 +150,38 @@
       * Access instrument details
       ********************************************************************
      C     ACS_INSTRUMNT BEGSR
-
+ 
       * Extract position
-
+ 
      C                   MOVEL     'Y'           Extract_POSN      1
-
+ 
       * Get instrument details
-
+ 
      C     ISTT          CHAIN     INTYPDF                            99        *
-
+ 
       * Do not extract position if instrument not found or if deleted
-
+ 
      C     *IN99         IFEQ      '1'
      C     IN_RECI       OREQ      '*'
      C                   MOVEL     'N'           Extract_POSN
      C                   ELSE
-
+ 
       * Get market details
-
+ 
      C                   CLEAR                   MARKTX
      C     MTHN          IFNE      0
      C                   MOVEL     ISTT          Market            2
      C     Market        CHAIN     MARKTDF                            99        *
-
+ 
       * Do not extract position if market not found or if deleted
-
+ 
      C     *IN99         IFEQ      '1'
      C     MK_RECI       OREQ      '*'
      C                   MOVEL     'N'           Extract_POSN
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -189,14 +189,14 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
-
+ 
       * Get Extract control information
-
+ 
       /COPY GOCPYSRC,GOGETEXCT
-
-
+ 
+ 
       * key lists
-
+ 
      C     POSTNKK       KLIST
      C                   KFLD                    W#BRCA
      C                   KFLD                    W#ISTT

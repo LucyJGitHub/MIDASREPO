@@ -821,6 +821,7 @@
      C                   ENDIF                                                                CRE073
                                                                                               CDL102
       ** Determine if CDL102 is switched on                                                   CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
      C                   CALL      'AOSARDR0'                                                 CDL102
      C                   PARM      *BLANKS       PRTCD                                        CDL102
      C                   PARM      '*VERIFY'     POPTN                                        CDL102

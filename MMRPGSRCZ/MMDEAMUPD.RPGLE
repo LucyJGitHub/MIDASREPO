@@ -1428,6 +1428,7 @@
       *                                                                                       CDL102
       ** Check if CDL102 is installed                                                         CDL102
       *                                                                                       CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
      C                   CALLB     'AOSARDR0'                                                 CDL102
      C                   PARM      *BLANKS       PRetCode                                     CDL102
      C                   PARM      '*VERIFY'     POption                                      CDL102

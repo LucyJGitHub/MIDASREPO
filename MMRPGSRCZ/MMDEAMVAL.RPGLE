@@ -1497,8 +1497,9 @@
      C                   Eval      CRE073 = 'Y'                                               CRE073
      C                   Endif                                                                CRE073
       *                                                                                       CDL102
-      ** Access SAR details file to determine if CRE073 is switched on                        CDL102
+      ** Access SAR details file to determine if CDL102 is switched on                        CDL102
       *                                                                                       CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
      C                   CallB     'AOSARDR0'                                                 CDL102
      C                   Parm      *Blanks       PRTCD                                        CDL102
      C                   Parm      '*VERIFY'     POPTN                                        CDL102

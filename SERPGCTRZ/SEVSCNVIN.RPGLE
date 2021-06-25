@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -158,7 +160,7 @@
       *
       ** Index for arrays of warning error message ids, etc.
      D WIx             S              3P 0
- 
+
      D PPROT           S              1A
      D PRtCd           S              7A                                                      224206
      D POptn           S              7A                                                      224206
@@ -207,11 +209,11 @@
      C                   IF        OKSCVI <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSCVI <> 'N'
      C                   MOVE      DDSCVI        S1SCVI
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -222,7 +224,7 @@
       *                                                               *
       *****************************************************************
      C     SRValCnvInd   BEGSR
- 
+
      C                   IF        DDSCVI <> *BLANKS AND
      C                             DDSCVI <> 'Y' AND
      C                             DDSCVI <> 'N'
@@ -255,7 +257,7 @@
      C                   MOVEL     'SEA0214'     WMsgIdXAr(WIx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056949           Date 13Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035962           Date 25May16               *
       *                 MD000091           Date 16May13               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
       *             date array - which is not an error                *
@@ -368,80 +370,80 @@
       ** M A I N  P R O C E S S I N G
       ** ============================
       *
- 
+
       /COPY WNCPYSRC,SESEC2V003
       *
       ** Validate value date positions.
       *
       /COPY WNCPYSRC,SESEC2V004
- 
+
      C                   EXSR      SRVVldPos
       *
       ** Share entries
       ** =============
       *
       /COPY WNCPYSRC,SESEC2V005
- 
+
      C                   EVAL      WShare = *BLANK
- 
+
      C                   IF        PPROT = '4' OR PPROT = '7'
- 
+
       /COPY WNCPYSRC,SESEC2V006
       *
       ** Validate initial dividend date
       *
       /COPY WNCPYSRC,SESEC2V007
- 
+
      C                   EXSR      SRVIDivDt
- 
+
       /COPY WNCPYSRC,SESEC2V008
       *
       ** Validate dividend payment dates/Coupon rate/days & ind.
       *
       /COPY WNCPYSRC,SESEC2V009
- 
+
      C                   EXSR      SRVDivP_CpnR
- 
+
       /COPY WNCPYSRC,SESEC2V010
       *
       ** Validate next expected dividend
       *
       /COPY WNCPYSRC,SESEC2V011
- 
+
      C                   EXSR      SRVNExpD
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WShare = 'N'
- 
+
      C                   EVAL      DDIDIV = *BLANKS
      C                   EVAL      S1IDIV = *ZEROS
- 
+
      C                   EVAL      DDNEXD = *BLANKS
      C                   EVAL      S1NEXD = *ZEROS
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V012
       *
       ** Validate roll forward dividend date
       *
       /COPY WNCPYSRC,SESEC2V013
- 
+
      C                   IF        BGRKMG = 'Y' AND
      C                             (PPROT  = '4' OR PPROT = '7')
      C                   EXSR      SRVRFDivI
      C                   ELSE
      C                   EVAL      S1RFDI = 'N'
- 
+
      C                   IF        BGRKMG = 'Y'
      C                   EVAL      DDRFDI = 'N'
      C                   ELSE
      C                   EVAL      DDRFDI = *BLANK
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V014
       *
       ** Discount entries
@@ -454,66 +456,66 @@
       ** Validate maturity date
       *
       /COPY WNCPYSRC,SESEC2V016
- 
+
      C                   EXSR      SRVMatDat1
- 
+
       /COPY WNCPYSRC,SESEC2V017
       *
       ** Validate maturity date indicator
       *
       /COPY WNCPYSRC,SESEC2V018
- 
+
      C                   EXSR      SRVMatDtI1
- 
+
       /COPY WNCPYSRC,SESEC2V019
       *
       ** Validate day basis
       *
       /COPY WNCPYSRC,SESEC2V020
- 
+
      C                   EXSR      SRVDayBs1
- 
+
       /COPY WNCPYSRC,SESEC2V021
       *
       ** Validate divisor basis
       *
       /COPY WNCPYSRC,SESEC2V022
- 
+
      C                   EXSR      SRVDivBs1
- 
+
       /COPY WNCPYSRC,SESEC2V023
       *
       ** Validate contingency liability indicator 1
       *
       /COPY WNCPYSRC,SESEC2V024
- 
+
      C                   EXSR      SRVCLInd
- 
+
      C                   ELSE
      C                   EVAL      DDMATY1 = *BLANKS
      C                   EVAL      S1MATY = *ZERO
- 
+
      C                   EVAL      DDMDTI1 = *BLANKS
      C                   EVAL      S1MDTI = *BLANKS
- 
+
      C                   EVAL      DDDYBS1 = *BLANKS
      C                   EVAL      S1DYBS = *BLANKS
- 
+
      C                   EVAL      DDDVBS1 = *BLANKS
      C                   EVAL      S1DVBS = *BLANKS
- 
+
      C                   EVAL      DDCNLI1 = *BLANKS
      C                   EVAL      S1CNLI = *BLANKS
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V025
       *
       ** Interest security entries 1
       ** ===========================
       *
      C                   EVAL      WIntst = *BLANK
- 
+
      C                   IF        (S1STBS = 'P' AND PPROT <> '2' AND
      C                             PPROT <> '4' AND PPROT <> '7') OR
      C                             (S1STBS = 'Y' AND PPROT <> '2' AND
@@ -524,17 +526,17 @@
       ** Validate coupon rate
       *
       /COPY WNCPYSRC,SESEC2V027
- 
+
      C                   EXSR      SRVCpnRt
- 
+
       /COPY WNCPYSRC,SESEC2V028
       *
       ** Validate base rate code
       *
       /COPY WNCPYSRC,SESEC2V029
- 
+
      C                   EXSR      SRVBsRtCd
- 
+
       /COPY WNCPYSRC,SESEC2V030
       *                                                                                       CRE073
       ** Retrieve Base Rate                                                                   CRE073
@@ -578,17 +580,17 @@
       ** Validate base rate spread
       *
       /COPY WNCPYSRC,SESEC2V031
- 
+
      C                   EXSR      SRVBsRtSpd
- 
+
       /COPY WNCPYSRC,SESEC2V032
       *
       ** Validate spread indicator
       *
       /COPY WNCPYSRC,SESEC2V033
- 
+
      C                   EXSR      SRVSpdInd
- 
+
       /COPY WNCPYSRC,SESEC2V034
       *                                                                                       CRE073
      C                   ENDIF                                                                CRE073
@@ -596,84 +598,84 @@
       ** Validate minimum coupon
       *
       /COPY WNCPYSRC,SESEC2V035
- 
+
      C                   EXSR      SRVMinCpn
- 
+
       /COPY WNCPYSRC,SESEC2V036
       *
       ** Validate maturity date
       *
       /COPY WNCPYSRC,SESEC2V037
- 
+
      C                   EXSR      SRVMatDat2
- 
+
       /COPY WNCPYSRC,SESEC2V038
       *
       ** Validate maturity date indicator
       *
       /COPY WNCPYSRC,SESEC2V039
- 
+
      C                   EXSR      SRVMatDtI2
- 
+
       /COPY WNCPYSRC,SESEC2V040
       *
       ** Validate long term maturity indicator
       *
       /COPY WNCPYSRC,SESEC2V041
- 
+
      C                   EXSR      SRVLTMatI
- 
+
       /COPY WNCPYSRC,SESEC2V042
       *
       ** Validate day basis
       *
       /COPY WNCPYSRC,SESEC2V043
- 
+
      C                   EXSR      SRVDayBs2
- 
+
       /COPY WNCPYSRC,SESEC2V044
       *
       ** Validate divisor basis
       *
       /COPY WNCPYSRC,SESEC2V045
- 
+
      C                   EXSR      SRVDivBs2
- 
+
       /COPY WNCPYSRC,SESEC2V046
       *
       ** Validate interest adjustment
       *
       /COPY WNCPYSRC,SESEC2V047
- 
+
      C                   EXSR      SRVIntAdj
- 
+
       /COPY WNCPYSRC,SESEC2V048
       *
       ** Validate initial date
       *
       /COPY WNCPYSRC,SESEC2V049
- 
+
      C                   EXSR      SRVIntlDat
- 
+
       /COPY WNCPYSRC,SESEC2V050
       *
       ** Validate contingency liability indicator 2
       *
       /COPY WNCPYSRC,SESEC2V051
- 
+
      C                   EXSR      SRVCLInd
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WIntst = 'N'
- 
+
      C                   EVAL      DDCPNR = *BLANKS
      C                   EVAL      S1CPNR = *ZEROS
- 
+
      C                   EVAL      DDBASC = *BLANKS
      C**********         EVAL      S1BASC = *ZEROS                                            CSD103
      C                   EVAL      S1BASC = *BLANKS                                           CSD103
- 
+
      C                   EVAL      DDBASS = *BLANKS
      C                   EVAL      S1BASS = *ZEROS
      C
@@ -691,37 +693,37 @@
      C
      C                   EVAL      DDDYBS2 = *BLANKS
      C                   EVAL      DDDVBS2 = *BLANKS
- 
+
      C                   EVAL      DDIADJ = *BLANKS
      C                   EVAL      S1IADJ = *ZEROS
- 
+
      C                   EVAL      DDITLD = *BLANKS
      C                   EVAL      S1ITLD = *ZEROS
- 
+
      C                   EVAL      DDCNLI2 = *BLANKS
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V052
       *
       ** Validate risk customer
       *
       /COPY WNCPYSRC,SESEC2V053
- 
+
      C                   EXSR      SRVRCust
- 
+
       /COPY WNCPYSRC,SESEC2V054
       *
       ** Validate business day convention
       *
       /COPY WNCPYSRC,SESEC2V055
- 
+
      C                   IF        CSE005 = 'Y'
      C                   EXSR      SRVBDCnv
      C                   ELSE
      C                   EVAL      DDBCNV = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        CSE031 = 'Y'                                               CSE031
      C                             OR CSE071 = 'Y'                                            CSE071
      C                   IF        PPROT = '3' OR PPROT = '8'                                 CSE031
@@ -738,7 +740,7 @@
                                                                                             BUG10847
      C                   IF        DDACTN <> 'I'                                            MD056949
      C                   EXSR      SRValCPDRT                                               MD056949
-     C                   ENDIF                                                              MD056949     
+     C                   ENDIF                                                              MD056949
       ** Get default value of Last Coupon Date                                              BUG10847
                                                                                             BUG10847
      C                   IF        DDACTN =  'I'  AND DDLCPN = *BLANKS                      BUG10847
@@ -793,9 +795,9 @@
       ** Validate first coupon date
       *
       /COPY WNCPYSRC,SESEC2V057
- 
+
      C                   EXSR      SRVFstCpn
- 
+
      C                   IF        DDFCPN = *BLANKS                                         MD035962
      C                             AND S1FCPN <> 0                                          MD035962
       *                                                                                     MD035962
@@ -826,30 +828,30 @@
       ** Validate dividend payment dates/Coupon rate/days & ind.
       *
       /COPY WNCPYSRC,SESEC2V059
- 
+
      C                   EXSR      SRVDivP_CpnR
- 
+
       /COPY WNCPYSRC,SESEC2V060
       *
       ** Validate rate change frequency
       *
       /COPY WNCPYSRC,SESEC2V061
- 
+
      C                   EXSR      SRVRChgFrq
- 
+
       /COPY WNCPYSRC,SESEC2V062
       *
       ** Validate next change date
       *
       /COPY WNCPYSRC,SESEC2V063
- 
+
      C                   EXSR      SRVNChgDat
- 
+
      C                   ELSE
- 
+
      C                   EVAL      DDFCPN = *BLANKS
      C                   EVAL      S1FCPN = *ZEROS
- 
+
      C                   EVAL      DDCR01 = *BLANKS
      C                   EVAL      DDCR02 = *BLANKS
      C                   EVAL      DDCR03 = *BLANKS
@@ -863,7 +865,7 @@
      C                   EVAL      DDCR11 = *BLANKS
      C                   EVAL      DDCR12 = *BLANKS
      C                   EVAL      CRArr = *BLANKS
- 
+
      C                   IF        WShare = 'N'
      C                   EVAL      DDCD01 = *BLANKS
      C                   EVAL      DDCD02 = *BLANKS
@@ -879,17 +881,17 @@
      C                   EVAL      DDCD12 = *BLANKS
      C                   EVAL      CDArr = *ZEROS
      C                   ENDIF
- 
+
      C                   EVAL      DDRCFQ = *BLANK
      C                   EVAL      S1RCFQ = *BLANK
- 
+
      C                   EVAL      DDNCHD = *BLANKS
      C                   EVAL      S1NCHD = *ZEROS
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V064
- 
+
       *
       ** Screen defaults
       ** ===============
@@ -899,79 +901,79 @@
       ** Validate depot security references
       *
       /COPY WNCPYSRC,SESEC2V066
- 
+
      C                   EXSR      SRVDptSRef
- 
+
       /COPY WNCPYSRC,SESEC2V067
       *
       ** Validate market center
       *
       /COPY WNCPYSRC,SESEC2V068
- 
+
      C                   EXSR      SRVMktCtr
- 
+
       /COPY WNCPYSRC,SESEC2V069
       *
       ** Validate convertible indicator
       *
       /COPY WNCPYSRC,SESEC2V070
- 
+
      C                   EXSR      SRVCnvInd
- 
+
       /COPY WNCPYSRC,SESEC2V071
       *
       ** Validate price basis
       *
       /COPY WNCPYSRC,SESEC2V072
- 
+
      C                   EXSR      SRVPrcBs
- 
+
       /COPY WNCPYSRC,SESEC2V073
       *
       ** Validate yield basis
       *
       /COPY WNCPYSRC,SESEC2V074
- 
+
      C                   EXSR      SRVYldBs
- 
+
       /COPY WNCPYSRC,SESEC2V075
- 
+
      C                   IF        DDSYBS = 'AU'
       *
       ** Validate compounding frequency
       *
       /COPY WNCPYSRC,SESEC2V076
- 
+
      C                   EXSR      SRVCpdFrq
- 
+
       /COPY WNCPYSRC,SESEC2V077
       *
       ** Validate discount basis
       *
       /COPY WNCPYSRC,SESEC2V078
- 
+
      C                   EXSR      SRVDscBs
- 
+
       /COPY WNCPYSRC,SESEC2V079
       *
       ** Validate discount last coupon
       *
       /COPY WNCPYSRC,SESEC2V080
- 
+
      C                   EXSR      SRVDscLCpn
- 
+
      C                   ELSE
      C                   EVAL      DDCMFQ = *BLANKS
      C                   EVAL      S1CMFQ = *ZEROS
- 
+
      C                   EVAL      DDDSCB = *BLANKS
      C                   EVAL      S1DSCB = *BLANKS
- 
+
      C                   EVAL      DDDSLC = *BLANKS
      C                   EVAL      S1DSLC = *BLANKS
- 
+
      C                   ENDIF
- 
+
       *
       ** Partly paid entries
       ** ===================
@@ -983,17 +985,17 @@
       ** Validate initial price
       *
       /COPY WNCPYSRC,SESEC2V082
- 
+
      C                   EXSR      SRVIntlPrc
- 
+
       /COPY WNCPYSRC,SESEC2V083
       *
       ** Validate fully paid price
       *
       /COPY WNCPYSRC,SESEC2V084
- 
+
      C                   EXSR      SRVFulPrc
- 
+
      C                   ELSE
      C                   EVAL      DDSINP = *BLANKS
      C                   EVAL      DDSFPP = *BLANKS
@@ -1002,7 +1004,7 @@
      C                   EVAL      S1CPDP = CPDP
      C                   EVAL      S1TPHD = TPHD
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V085
       *
       ** Issue amount
@@ -1016,15 +1018,15 @@
      C                   EVAL      DDISA1 = *BLANKS
      C                   EVAL      S1ISSA = ISSA
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC2V087
- 
+
       *                                                                                       CSE037
       ** Countervalue rounding (no switch check here, must always default)                    CSE037
       *                                                                                       CSE037
      C                   EXSR      SRVndec                                                    CSE037
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1038,13 +1040,13 @@
       *  SRVVldPos - Validate value data positions.                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVVldPos     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSVDPOS'
       *                             =========
       ** INPUT
@@ -1080,7 +1082,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1090,13 +1092,13 @@
       *  SRVIDivDt - Validate Initial Dividend Date                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVIDivDt     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSIDVDT'
       *                             =========
       ** INPUT
@@ -1134,7 +1136,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1144,13 +1146,13 @@
       *  SRVRFDivI - Validate Roll Forward Dividend Indicator         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVRFDivI     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSRFDI'
       *                             =========
       ** INPUT
@@ -1182,7 +1184,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1192,13 +1194,13 @@
       *  SRVNExpD - Validate Next Expected Dividend                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVNExpD      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSNEDIV'
       *                             =========
       ** INPUT
@@ -1233,7 +1235,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1244,13 +1246,13 @@
       *                Rate/Days & Indicators.                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDivP_CpnR  BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSCPDRT'
       *                             =========
       ** INPUT
@@ -1322,7 +1324,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1332,13 +1334,13 @@
       *  SRVMatDat1 - Validate Maturity Date                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVMatDat1    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSMDAT1'
       *                             =========
       ** INPUT
@@ -1391,7 +1393,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1401,13 +1403,13 @@
       *  SRVMatDtI1 - Validate Maturity Date Indicator                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVMatDtI1    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSMDTI1'
       *                             =========
       ** INPUT
@@ -1442,7 +1444,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1452,13 +1454,13 @@
       *  SRVDayBs1 - Validate Day Basis                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDayBs1     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSDYBS1'
       *                             =========
       ** INPUT
@@ -1490,7 +1492,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1500,13 +1502,13 @@
       *  SRVDivBs1 - Validate Divisor Basis                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDivBs1     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSDVBS1'
       *                             =========
       ** INPUT
@@ -1554,7 +1556,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1564,13 +1566,13 @@
       *  SRVCLInd - Validate Contingency Liability Indicator          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVCLInd      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSCNLBI'
       *                             =========
       ** INPUT
@@ -1605,7 +1607,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1615,13 +1617,13 @@
       *  SRVRCust - Validate Risk Customer                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVRCust      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSRCUST'
       *                             =========
       ** INPUT
@@ -1665,7 +1667,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1675,13 +1677,13 @@
       *  SRVCpnRt - Validate Coupon Rate                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVCpnRt      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSCPNRT'
       *                             =========
       ** INPUT
@@ -1721,7 +1723,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1761,13 +1763,13 @@
       *  SRVBsRtCd - Validate Base Rate Code                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVBsRtCd     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSBSRTC'
       *                             =========
       ** INPUT
@@ -1808,7 +1810,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1824,7 +1826,7 @@
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSBSRTSP'
       *                             ==========
       ** INPUT
@@ -1859,7 +1861,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1869,13 +1871,13 @@
       *  SRVSpdInd - Validate Spread Indicator                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVSpdInd     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSSPIND'
       *                             =========
       ** INPUT
@@ -1910,7 +1912,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2114,13 +2116,13 @@
       *  SRVMinCpn - Validate Minimum Coupon                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVMinCpn     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSMINCP'
       *                             =========
       ** INPUT
@@ -2155,7 +2157,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2165,13 +2167,13 @@
       *  SRVMatDat2 - Validate Maturity Date 2                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVMatDat2    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSMDAT2'
       *                             =========
       ** INPUT
@@ -2236,7 +2238,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2246,13 +2248,13 @@
       *  SRVMatDtI2 - Validate Maturity Date Indicator 2              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVMatDtI2    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSMDTI2'
       *                             =========
       ** INPUT
@@ -2287,7 +2289,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2303,7 +2305,7 @@
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSLTMIN'
       *                             =========
       ** INPUT
@@ -2335,7 +2337,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2345,13 +2347,13 @@
       *  SRVDayBs2 - Validate Day Basis 2                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDayBs2     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSDYBS2'
       *                             =========
       ** INPUT
@@ -2383,7 +2385,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2399,7 +2401,7 @@
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSDVBS2'
       *                             =========
       ** INPUT
@@ -2451,7 +2453,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2461,13 +2463,13 @@
       *  SRVIntAdj - Validate Interest Adjustment                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVIntAdj     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSINTAD'
       *                             =========
       ** INPUT
@@ -2499,7 +2501,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2509,13 +2511,13 @@
       *  SRVIntlDat - Validate Initial Date                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVIntlDat    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSINDAT'
       *                             =========
       ** INPUT
@@ -2563,7 +2565,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2573,13 +2575,13 @@
       *  SRVFstCpn - Validate First Coupon Date                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVFstCpn     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSFSTCP'
       *                             =========
       ** INPUT
@@ -2644,7 +2646,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2654,13 +2656,13 @@
       *  SRVRChgFrq - Validate Rate Change Frequency                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVRChgFrq    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSRCFRQ'
       *                             =========
       ** INPUT
@@ -2692,7 +2694,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2702,13 +2704,13 @@
       *  SRVNChgDat - Validate Next Change Date                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVNChgDat    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSNCHDT'
       *                             =========
       ** INPUT
@@ -2749,7 +2751,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2759,13 +2761,13 @@
       *  SRVBdCnv - Validate Business Day Convetion                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVBdCnv      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSBDCNV'
       *                             =========
       ** INPUT
@@ -2809,7 +2811,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3037,13 +3039,13 @@
       *  SRVDptSRef - Validate Depot Security References              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDptSRef    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSSECRF'
       *                             =========
       ** INPUT
@@ -3095,7 +3097,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3105,13 +3107,13 @@
       *  SRVMktCtr - Validate Market Center                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVMktCtr     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSMKTCT'
       *                             =========
       ** INPUT
@@ -3149,7 +3151,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3159,13 +3161,13 @@
       *  SRVCnvInd - Validate Convertible Indicator                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVCnvInd     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSCNVIN'
       *                             =========
       ** INPUT
@@ -3223,7 +3225,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3233,13 +3235,13 @@
       *  SRVPrcBs - Validate Price Basis                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVPrcBs      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSPRCBS'
       *                             =========
       ** INPUT
@@ -3271,7 +3273,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3281,13 +3283,13 @@
       *  SRVYldBs - Validate Yield Basis                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVYldBs      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSYLDBS'
       *                             =========
       ** INPUT
@@ -3319,7 +3321,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3329,13 +3331,13 @@
       *  SRVCpdFrq - Validate Compounding Frequency                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVCpdFrq     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSCMFRQ'
       *                             =========
       ** INPUT
@@ -3367,7 +3369,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3377,13 +3379,13 @@
       *  SRVDscBs - Validate Discount Basis                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDscBs      BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSDSCBS'
       *                             =========
       ** INPUT
@@ -3415,7 +3417,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3425,13 +3427,13 @@
       *  SRVDscLCpn - Validate Discount Last Coupon                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDscLCpn    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSDSCLC'
       *                             =========
       ** INPUT
@@ -3463,7 +3465,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3473,13 +3475,13 @@
       *  SRVIntlPrc - Validate Initial Price                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVIntlPrc    BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSIPYMT'
       *                             =========
       ** INPUT
@@ -3525,7 +3527,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3535,13 +3537,13 @@
       *  SRVFulPrc - Validate Full Price                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVFulPrc     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSFPDPR'
       *                             =========
       ** INPUT
@@ -3579,7 +3581,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3589,13 +3591,13 @@
       *  SRVIssAmt - Validate Issue Amount                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVIssAmt     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSISAM1'
       *                             =========
       ** INPUT
@@ -3627,7 +3629,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3694,9 +3696,9 @@
       *                received from each validation module           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRResetErrs   BEGSR
- 
+
      C                   EVAL      RetCodeOut = *BLANKS
       *
       ** Reset error and warning fields/message IDs/message
@@ -3705,11 +3707,11 @@
      C                   EVAL      FldNamXAr = *BLANKS
      C                   EVAL      MsgIDXAr  = *BLANKS
      C                   EVAL      MsgDtaXAr = *BLANKS
- 
+
      C                   EVAL      WFldNmXAr = *BLANKS
      C                   EVAL      WMsgIDXAr = *BLANKS
      C                   EVAL      WMsgDtXAr = *BLANKS
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3720,7 +3722,7 @@
       *                received back from each validation module      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdatErrs   BEGSR
       *
       ** Update error fields/message IDs/message data (arrays).
@@ -3770,7 +3772,7 @@
      C                   MOVE      *BLANKS       WMSGDTAARR(Ix)
      C                   EVAL      WIdx = ArrayMax - 1
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************                     BUG10847
       *                                                               *                     BUG10847
@@ -4034,7 +4036,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

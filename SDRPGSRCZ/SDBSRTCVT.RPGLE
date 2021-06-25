@@ -403,6 +403,8 @@
      C                   MOVE      WWFlor        @@AMTW                                       CSD103
      C                   EXSR      FMTRATE                                                    CSD103
      C                   MOVE      @@AMTD        DDFLOR                                       CSD103
+     C                   ELSE                                                               MD058326
+     C                   MOVEL     *BLANKS       DDFLOR                                     MD058326
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
       * Lookback Days                                                                         CSD103

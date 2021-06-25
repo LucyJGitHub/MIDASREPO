@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 10Dec06               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -264,9 +266,9 @@
       ** Security report name validation
       *
       /COPY WNCPYSRC,SESEC1V004
- 
+
      C                   EXSR      SRRptNm
- 
+
       /COPY WNCPYSRC,SESEC1V005
       *                                                                                       CAP060
       ** Security Price ID validation                                                         CAP060
@@ -288,49 +290,49 @@
       ** Incomplete indicator validation
       *
       /COPY WNCPYSRC,SESEC1V006
- 
+
      C                   EXSR      SRIncIn
- 
+
       /COPY WNCPYSRC,SESEC1V007
       *
       ** Issuer validation
       *
       /COPY WNCPYSRC,SESEC1V008
- 
+
      C                   EXSR      SRIssr
- 
+
       /COPY WNCPYSRC,SESEC1V009
       *
       ** New issue validation
       *
       /COPY WNCPYSRC,SESEC1V010
- 
+
      C                   EXSR      SRNewIss
- 
+
       /COPY WNCPYSRC,SESEC1V011
       *
       ** Nominal currency validation
       *
       /COPY WNCPYSRC,SESEC1V012
- 
+
      C                   EXSR      SRNomCcy
- 
+
       /COPY WNCPYSRC,SESEC1V013
       *
       ** Investment type validation
       *
       /COPY WNCPYSRC,SESEC1V014
- 
+
      C                   EXSR      SRInvTyp
- 
+
       /COPY WNCPYSRC,SESEC1V015
       *
       ** Partly paid indicator validation
       *
       /COPY WNCPYSRC,SESEC1V016
- 
+
      C                   EXSR      SRPartPd
- 
+
       /COPY WNCPYSRC,SESEC1V017
                                                                                               CGL032
       ** Taxation on Savings Income                                                           CGL032
@@ -342,7 +344,7 @@
       ** Trade basis override validation
       *
       /COPY WNCPYSRC,SESEC1V018
- 
+
      C                   EXSR      SRTrBsOv
       *                                                                         183604
       ** Rating Code validation                                                 183604
@@ -351,99 +353,99 @@
      C                   IF        BGN4ST = 'Y'                                 183604
      C                   EXSR      SRRtgCod                                     183604
      C                   ENDIF                                                  183604
- 
+
       /COPY WNCPYSRC,SESEC1V019
       *
       ** Market indicator validation
       *
       /COPY WNCPYSRC,SESEC1V020
- 
+
      C                   EXSR      SRMktInd
- 
+
       /COPY WNCPYSRC,SESEC1V021
       *
       ** Trade denomination validation
       *
       /COPY WNCPYSRC,SESEC1V022
- 
+
      C                   EXSR      SRTrdDnm
- 
+
       /COPY WNCPYSRC,SESEC1V023
       *
       ** Early repayment validation
       *
       /COPY WNCPYSRC,SESEC1V024
- 
+
      C                   EXSR      SRErRpy
- 
+
       /COPY WNCPYSRC,SESEC1V025
       *
       ** Value date default validation
       *
       /COPY WNCPYSRC,SESEC1V026
- 
+
      C                   EXSR      SRVDtDft
- 
+
       /COPY WNCPYSRC,SESEC1V027
       *
       ** Extension date default validation
       *
       /COPY WNCPYSRC,SESEC1V028
- 
+
      C                   EXSR      SREDtDft
- 
+
       /COPY WNCPYSRC,SESEC1V029
       *
       ** Value currency validation
       *
       /COPY WNCPYSRC,SESEC1V030
- 
+
      C                   EXSR      SRValCcy
- 
+
       /COPY WNCPYSRC,SESEC1V031
       *
       ** Multi currency indicator validation
       *
       /COPY WNCPYSRC,SESEC1V032
- 
+
      C                   EXSR      SRMulCcy
- 
+
       /COPY WNCPYSRC,SESEC1V033
       *
       ** Industry code validation
       *
       /COPY WNCPYSRC,SESEC1V034
- 
+
      C                   EXSR      SRIndCd
- 
+
       /COPY WNCPYSRC,SESEC1V035
       *
       ** Country of risk validation
       *
       /COPY WNCPYSRC,SESEC1V036
- 
+
      C                   EXSR      SRCntRsk
- 
+
       /COPY WNCPYSRC,SESEC1V037
       *
       ** ISIN/common code validation. Validate only if MT5xx feature
       ** or Private banking module is present.
       *
       /COPY WNCPYSRC,SESEC1V038
- 
+
      C                   IF        S01401 = 'Y' OR BGN4ST = 'Y'
      C                   EXSR      SRISIN
      C                   ELSE
      C                   EVAL      DDISIN = *BLANKS
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC1V039
       *
       ** Swift security type code validation. Validate only if MT5xx
       ** feature is installed.
       *
       /COPY WNCPYSRC,SESEC1V040
- 
+
      C                   IF        S01401 = 'Y'
      C                   EXSR      SRSwTyp
      C                   ELSE
@@ -453,55 +455,55 @@
      C                   EVAL      DDSWTP = *BLANKS
      C                   ENDIF
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC1V041
       *
       ** Nominal decimal places validation
       *
       /COPY WNCPYSRC,SESEC1V042
- 
+
      C                   EXSR      SRNomDp
- 
+
       /COPY WNCPYSRC,SESEC1V043
       *
       ** Additional validation if feature CSE011 is installed
       *
       /COPY WNCPYSRC,SESEC1V044
- 
+
      C                   IF        CSE011 = 'Y'
- 
+
       /COPY WNCPYSRC,SESEC1V045
       *
       ** Sedol/extel validation
       *
       /COPY WNCPYSRC,SESEC1V046
- 
+
      C                   EXSR      SRSedol
- 
+
       /COPY WNCPYSRC,SESEC1V047
       *
       ** Telekurs validation
       *
       /COPY WNCPYSRC,SESEC1V048
- 
+
      C                   EXSR      SRTlKurs
- 
+
       /COPY WNCPYSRC,SESEC1V049
       *
       ** Cusip validation
       *
       /COPY WNCPYSRC,SESEC1V050
- 
+
      C                   EXSR      SRCusip
      C                   ELSE
      C                   EVAL      S1SREF = DDSREF
      C                   EVAL      S1T2RF = DDT2RF
      C                   EVAL      S1CSPN = DDCSPN
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESEC1V051
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -517,7 +519,7 @@
       *  SRRptNm - Security Report Name validation process            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRptNm       BEGSR
       *
       ** Reset variables updated by each module
@@ -557,9 +559,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                       CAP060
@@ -671,7 +673,7 @@
       *  SRIssr - Issuer validation process                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIssr        BEGSR
       *
       ** Reset variables updated by each module
@@ -720,9 +722,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -730,7 +732,7 @@
       *  SRNewIss - New Issue validation process                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNewIss      BEGSR
       *
       ** Reset variables updated by each module
@@ -773,9 +775,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -783,7 +785,7 @@
       *  SRIncIn - Incomplete Indicator validation process            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIncIn       BEGSR
       *
       ** Reset variables updated by each module
@@ -823,9 +825,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -833,7 +835,7 @@
       *  SRNomCcy - Nominal Currency validation process               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNomCcy      BEGSR
       *
       ** Reset variables updated by each module
@@ -891,9 +893,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -901,7 +903,7 @@
       *  SRInvTyp- Investment Type validation process                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInvTyp      BEGSR
       *
       ** Reset variables updated by each module
@@ -953,9 +955,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -963,7 +965,7 @@
       *  SRPartPd - Partly Paid Indicator validation process          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPartPd      BEGSR
       *
       ** Reset variables updated by each module
@@ -1006,9 +1008,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1016,7 +1018,7 @@
       *  SRTrBsOv - Trade Basis Override validation process           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTrBsOv      BEGSR
       *
       ** Reset variables updated by each module
@@ -1059,9 +1061,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************         183604
@@ -1128,7 +1130,7 @@
       *  SRMktInd - Market Indicator validation process               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMktInd      BEGSR
       *
       ** Reset variables updated by each module
@@ -1181,9 +1183,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1191,7 +1193,7 @@
       *  SRTrdDnm - Trade Denomination validation process             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTrdDnm      BEGSR
       *
       ** Reset variables updated by each module
@@ -1241,9 +1243,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1251,7 +1253,7 @@
       *  SRErRpy - Early Repayment Validation Process                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRErRpy       BEGSR
       *
       ** Reset variables updated by each module
@@ -1294,9 +1296,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1304,7 +1306,7 @@
       *  SRVDtDft - Value Date Default validation process             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVDtDft      BEGSR
       *
       ** Reset variables updated by each module
@@ -1344,9 +1346,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1354,7 +1356,7 @@
       *  SREDtDft - Extension Date Default validation process         *
       *                                                               *
       *****************************************************************
- 
+
      C     SREDtDft      BEGSR
       *
       ** Reset variables updated by each module
@@ -1394,9 +1396,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1404,7 +1406,7 @@
       *  SRValCcy - Value Currency Validation Process                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValCcy      BEGSR
       *
       ** Reset variables updated by each module
@@ -1486,9 +1488,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1496,7 +1498,7 @@
       *  SRMulCcy - Multi-Currency validation process                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMulCcy      BEGSR
       *
       ** Reset variables updated by each module
@@ -1542,9 +1544,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1552,7 +1554,7 @@
       *  SRIndCd - Industry Code Validation Process                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIndCd       BEGSR
       *
       ** Reset variables updated by each module
@@ -1604,9 +1606,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1614,7 +1616,7 @@
       *  SRCntRsk - Country of Risk validation process                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCntRsk      BEGSR
       *
       ** Reset variables updated by each module
@@ -1663,9 +1665,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1673,7 +1675,7 @@
       *  SRISIN - ISIN/COMMON Code validation process                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRISIN        BEGSR
       *
       ** Reset variables updated by each module
@@ -1724,9 +1726,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1734,7 +1736,7 @@
       *  SRSwTyp - SWIFT Security Type Code Validation Process        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSwTyp       BEGSR
       *
       ** Reset variables updated by each module
@@ -1774,9 +1776,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1784,7 +1786,7 @@
       *  SRNomDp - Nominal Decimal Places validation process          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNomDp       BEGSR
       *
       ** Reset variables updated by each module
@@ -1836,9 +1838,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1846,7 +1848,7 @@
       *  SRSedol - SEDOL/EXTEL validation process                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSedol       BEGSR
       *
       ** Reset variables updated by each module
@@ -1886,9 +1888,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1896,7 +1898,7 @@
       *  SRTlKurs - TELEKURS validation process                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTlKurs      BEGSR
       *
       ** Reset variables updated by each module
@@ -1936,9 +1938,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1946,7 +1948,7 @@
       *  SRCusip - CUSIP validation process                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCusip       BEGSR
       *
       ** Reset variables updated by each module
@@ -1986,9 +1988,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CGL032
       *****************************************************************                       CGL032
@@ -2053,9 +2055,9 @@
       *                received from each validation module           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRResetErrs   BEGSR
- 
+
      C                   EVAL      RetCodeOut = *BLANKS
       *
       ** Reset error and warning fields/message IDs/message
@@ -2064,11 +2066,11 @@
      C                   EVAL      FldNamXAr = *BLANKS
      C                   EVAL      MsgIDXAr  = *BLANKS
      C                   EVAL      MsgDtaXAr = *BLANKS
- 
+
      C                   EVAL      WFldNmXAr = *BLANKS
      C                   EVAL      WMsgIDXAr = *BLANKS
      C                   EVAL      WMsgDtXAr = *BLANKS
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2079,7 +2081,7 @@
       *                received back from each validation module      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdatErrs   BEGSR
       *
       ** Update error fields/message IDs/message data (arrays).
@@ -2129,7 +2131,7 @@
      C                   MOVE      *BLANKS       WMSGDTAARR(Ix)
      C                   EVAL      WIDx = ArrayMax - 1
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2141,9 +2143,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

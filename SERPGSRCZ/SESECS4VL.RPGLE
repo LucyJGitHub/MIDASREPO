@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 16May13               *
       *                 AR947093           Date 26Apr12               *
       *                 AR847249           Date 28Jan12               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -307,9 +309,9 @@
       *
      C                   EXSR      SRVSprdIn
      C                   ENDIF                                                                CRE073
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -317,13 +319,13 @@
       *  SRVAppDat - Validate Applicable Date                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVAppDat     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSAPPDT'
       *                             =========
       ** INPUT
@@ -364,7 +366,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -380,7 +382,7 @@
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSBASRC'
       *                             =========
       ** INPUT
@@ -421,7 +423,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -431,13 +433,13 @@
       *  SRVSprdRt - Validate Spread Rate.                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVSprdRt     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSSPDRAT'
       *                             ==========
       ** INPUT
@@ -469,7 +471,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -479,13 +481,13 @@
       *  SRVSprdIn - Validate Spread Indicator                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVSprdIn     BEGSR
       *
       ** Reset variables updated by each module
       *
      C                   EXSR      SRResetErrs
- 
+
      C                   CALLB     'SEVSSPRDIN'
       *                             ==========
       ** INPUT
@@ -517,7 +519,7 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
       *                                                                                       CRE073
       *****************************************************************                       CRE073
@@ -1231,9 +1233,9 @@
       *                received from each validation module           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRResetErrs   BEGSR
- 
+
      C                   EVAL      RetCodeOut = *BLANKS
       *
       ** Reset error and warning fields/message IDs/message
@@ -1253,7 +1255,7 @@
       *                received back from each validation module      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdatErrs   BEGSR
       *
       ** Update error fields/message IDs/message data (arrays).
@@ -1303,7 +1305,7 @@
      C                   MOVE      *BLANKS       WMSGDTAARR(Ix)
      C                   EVAL      WIdx = ArrayMax - 1
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1316,7 +1318,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

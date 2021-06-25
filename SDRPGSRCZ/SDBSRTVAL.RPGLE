@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057746           Date 18Mar21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD057746           Date 18Mar21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  MD057746 - Field in error should be the base rate code       *
       *             instead of base rate name. Changed DDBSRN to      *
       *             DDBSRC.                                           *

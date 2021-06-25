@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -217,11 +219,11 @@
      C                   IF        OKMATY2 <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKMATY2 <> 'N'
      C                   Z-ADD     WMatDNo       S1MATY
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -232,22 +234,22 @@
       *                                                               *
       *****************************************************************
      C     SRValMatDte   BEGSR
- 
+
      C                   IF        DDMATY2 = *BLANKS
- 
+
      C                   IF        DDINCS = 'C'
      C                   MOVE      'N'           OKMATY2
      C                   ADD       1             IDx
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0204'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Trade basis must be 'P' is maturity date '999999'
       *
      C                   IF        DDMATY2 = '999999'
- 
+
      C                   IF        S1STBS <> 'P' AND
      C                             DDSYBS <> 'AU'
      C                   MOVE      'N'           OKMATY2
@@ -256,12 +258,12 @@
      C                   MOVEL     'SEA0155'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   Z-ADD     99999         WMatDno
- 
+
      C                   ELSE
       *
       ** Check valid date
      C                   TESTN                   DDMATY2              01
- 
+
      C                   IF        *IN01 = *OFF
      C                   MOVE      'N'           OKMATY2
      C                   ADD       1             IDx
@@ -269,7 +271,7 @@
      C                   MOVEL     'SEA0204'     MsgIdXAr(IDx)
      C                   GOTO      EValMatDte
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       PDateI
      C                   MOVE      DDMATY2       PDateI
      C                   CALLB     'ZDATE1'
@@ -277,7 +279,7 @@
      C                   PARM                    PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM                    PErrorFlag
- 
+
      C                   IF        PErrorFlag = 'Y'
      C                   MOVE      'N'           OKMATY2
      C                   ADD       1             IDx
@@ -312,19 +314,19 @@
       ** If amended, perform extra validation
       *
      C                   EVAL      WWDAY = PDaynoOut + 36525
- 
+
      C                   IF        DDACTN = 'A' AND
      C                             PDaynoOut <> MATY AND
      C                             WWDAY <> MATY AND
      C                             DDLTMI <> 'Y'
- 
+
      C                   CALL      'SE0041'
      C                   PARM      'M'           PVREQ
      C                   PARM                    DDSESN
      C                   PARM      *BLANKS       PCCY
      C                   PARM      PDaynoOut     PDate
      C                   PARM      *BLANKS       PErrs
- 
+
      C     '500'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'N'           OKMATY2
@@ -332,7 +334,7 @@
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0157'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C     '501'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'N'           OKMATY2
@@ -340,7 +342,7 @@
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0158'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C     '502'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'N'           OKMATY2
@@ -348,7 +350,7 @@
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0159'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C     '503'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'N'           OKMATY2
@@ -356,14 +358,14 @@
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0160'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   IF        PDate <= BJDNWD
      C                   MOVE      'N'           OKMATY2
      C                   ADD       1             IDx
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0142'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C     '506'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *On
      C                   MOVE      'N'           OKMATY2
@@ -371,9 +373,9 @@
      C                   MOVEL     'DDMATY2'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0161'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Check not holiday in value currency (nominal currency if blank)
@@ -384,27 +386,27 @@
      C                   ELSE
      C                   MOVE      DDNMCY        PCurrency
      C                   ENDIF
- 
+
      C                   Z-ADD     PDayNoOut     PDateIn
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    PDateIn
      C                   PARM                    PCurrency
      C                   PARM      *BLANKS       PLocation
      C                   PARM                    PHolInd
- 
+
      C                   IF        PHolInd = 'H'
      C                   MOVE      'W'           OKMATY2
      C                   ADD       1             WIx
      C                   MOVEL     'DDMATY2'     WFldNmXAr(WIx)
      C                   MOVEL     'SEA0162'     WMsgIdXAr(WIx)
      C                   ENDIF
- 
+
      C                   Z-ADD     PDaynoOut     WMatDNo
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValMatDte    ENDSR
       *
       *****************************************************************

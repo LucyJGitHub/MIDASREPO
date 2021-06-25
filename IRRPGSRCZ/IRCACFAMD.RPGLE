@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -470,9 +472,13 @@
      C                   IF        #0BRTT <> CrBRTT
      C                   IF        VDAT < PRunDayNo OR
      C                             (WSide = 'U' AND
-     C                             (UBRTT <> *ZERO OR UINFD > VDAT)) OR
+     C**********                   (UBRTT <> *ZERO OR UINFD > VDAT)) OR                     MD058285
+     C                             (UBRTT <> *BLANKS                                        MD058285
+     C                             OR UINFD > VDAT)) OR                                     MD058285
      C                             (WSide = 'T' AND
-     C                             (TBRTT <> *ZERO OR TINFD > VDAT))
+     C**********                   (TBRTT <> *ZERO OR TINFD > VDAT))                        MD058285
+     C                             (TBRTT <> *BLANKS                                        MD058285
+     C                             OR TINFD > VDAT))                                        MD058285
      C                   ADD       1             WIdx
      C                   EVAL      FldNameArr(WIdx) = '#0BRTT'
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0376'

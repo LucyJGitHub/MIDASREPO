@@ -1,0 +1,482 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Store EIR for SE Book Positions')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  A10100   - Store EIR for SE Book Positions                   *
+      *             End of COB                                        *
+      *                                                               *
+      *  Function:  This program will run at the end of COB and will  *
+      *             calculate Last Effective Interest Rate and output *
+      *             it onto new report                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2021                      *
+      *                                                               *
+      *  Last Amend No. BA1007  *CREATE    Date 01Jun21               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BA1007 - Store EIR for SE Book Positions                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    U7+U8 - Database Error Indicator                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR - Program exception error routine                      *
+      *  *INZSR - Program Initialisation Routine                      *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FBKPHD   IF  E           K        DISK         KINFSR *PSSR
+     FA1BPPNL0UF  E           K        DISK         KINFSR *PSSR A
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+     FSDBOOKL0IF  E           K        DISK         KINFSR *PSSR
+     FA10100P1O   E             09     PRINTER      KINFDS SPOOL
+     E                    ZA1        16  1               ZALIGN SR. ARRAY
+     E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E                    ##CD       12  4               CD01-12 ARRAY
+     E                    ##CR       12  1               CR01-12 ARRAY
+     E/COPY ZSRSRC,ZNCDZ1
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E**
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     ISPOOL       DS
+      * P1 printer file information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 152 1530SFLIN
+     ILDAX       UDS                            600
+     I                                        1 256 ##LDA1
+     I                                      257 512 ##LDA2
+     I                                      513 600 ##LDA3
+     I                                        1 107 ##SECD
+     I                                        1   6 ##MATY
+     I                                       11  22 ##CPNR
+     I                                       31  31 ##DYBS
+     I                                       32  32 ##DVBS
+     I                                       33  33 ##STBS
+     I                                       34  35 ##SYBS
+     I                                       36  83 ##CD
+     I                                       36  39 ##CD01
+     I                                       40  43 ##CD02
+     I                                       44  47 ##CD03
+     I                                       48  51 ##CD04
+     I                                       52  55 ##CD05
+     I                                       56  59 ##CD06
+     I                                       60  63 ##CD07
+     I                                       64  67 ##CD08
+     I                                       68  71 ##CD09
+     I                                       72  75 ##CD10
+     I                                       76  79 ##CD11
+     I                                       80  83 ##CD12
+     I                                       84  95 ##CR
+     I                                       84  84 ##CR01
+     I                                       85  85 ##CR02
+     I                                       86  86 ##CR03
+     I                                       87  87 ##CR04
+     I                                       88  88 ##CR05
+     I                                       89  89 ##CR06
+     I                                       90  90 ##CR07
+     I                                       91  91 ##CR08
+     I                                       92  92 ##CR09
+     I                                       93  93 ##CR10
+     I                                       94  94 ##CR11
+     I                                       95  95 ##CR12
+     I                                       96 101 ##LCPN
+     I                                      102 107 ##NCD
+      *
+     I                                      116 180 SECD
+     I                                      116 1170CMFQ
+     I                                      118 118 DSCB
+     I                                      119 119 DSLC
+     I                                      120 120 PROT
+     I                                      121 123 NMCY
+     I                                      124 1240CDP
+     I                                      125 1250NMDP
+     I                                    P 126 1280MATY
+     I                                    P 129 1310LCPN
+     I                                    P 132 1340NCD
+     I                                    P 135 1370ISSD
+     I                                    P 138 1400ITLD
+     I                                    P 141 1430FCPN
+     I                                    P 144 1497CPNR
+     I                                    P 150 1559CFCT
+     I                                    P 156 1630CPDP
+     I                                    P 164 1710SFPP
+     I                                    P 172 1730IADJ
+     I                                    P 174 1760FNCD
+     I                                      177 177 DYBS
+     I                                      178 178 DVBS
+     I                                      179 179 STBS
+     I                                      180 181 SYBS
+     I                                      182 182 SPBS
+     I                                      183 183 PPDI
+     I                                      201 248 CD
+     I                                      201 2040CD01
+     I                                      205 2080CD02
+     I                                      209 2120CD03
+     I                                      213 2160CD04
+     I                                      217 2200CD05
+     I                                      221 2240CD06
+     I                                      225 2280CD07
+     I                                      229 2320CD08
+     I                                      233 2360CD09
+     I                                      237 2400CD10
+     I                                      241 2440CD11
+     I                                      245 2480CD12
+     I                                      249 260 CRDS
+     I                                      249 260 CR
+     I                                      249 249 CR01
+     I                                      250 250 CR02
+     I                                      251 251 CR03
+     I                                      252 252 CR04
+     I                                      253 253 CR05
+     I                                      254 254 CR06
+     I                                      255 255 CR07
+     I                                      256 256 CR08
+     I                                      257 257 CR09
+     I                                      258 258 CR10
+     I                                      259 259 CR11
+     I                                      260 260 CR12
+     I                                      261 2650IDAYS
+     I                                      266 2700IDYYR
+     I                                      271 280 SESN
+      *
+     I                                      281 403 ##TRDD
+     I                                      281 292 ##NOML
+     I                                      293 308 ##SYLP
+     I                                      309 314 ##TDVD
+     I                                      315 315 ##ACIN
+     I                                      316 331 ##FYLP
+     I                                      332 349 ##CONS
+     I                                      350 367 ##DSPR
+     I                                      368 385 ##INTR
+     I                                      386 403 ##CVAL
+     I                                      404 409 ##PUPP
+      *
+     I                                      410 4200NOML
+     I                                      421 4358TPDY
+     I                                      436 4400TDVD
+     I                                      441 441 ACIN
+     I                                      442 4568PRIC
+     I                                      457 4710CONS
+     I                                      472 4860DSPR
+     I                                      487 5010INTR
+     I                                      502 5160CVAL
+     I                                      517 5214PUPP
+      *
+     I                                      522 522 YP
+     I                                      523 523 LDAC
+      *
+     IWLDA        DS                            256
+     I                                      134 183 DBINF
+      *
+     IDBERR       DS
+     I                                        1   8 DBFILE
+     I                                        9  37 DBKEY
+     I                                       38  47 DBPGM
+     I                                       48  500DBASE
+      *
+     IDSFDY     E DSDSFDY
+     ISDBANK    E DSSDBANKPD
+      *
+      *****************************************************************
+      *                    MAIN PROCESSING                            *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C                     MOVE 'N'       REPT    1
+      *
+     C           *LOVAL    SETLLBKPHD
+     C                     READ BKPHDDF                  73
+     C           *IN73     DOWEQ'0'
+      *
+      * GET SECURITY DETAILS
+      *
+     C           BHSC      CHAINSECTYDF              70
+      *
+      * PROCESS ONLY FOUND LIVE SECURITY
+      *
+     C           *IN70     IFEQ '0'
+     C           RECI      IFEQ 'D'
+     C           SYBS      ANDNE*BLANK
+      *
+      *
+      * SET NOMINAL CURRENCY DECIMAL PLACES
+      *
+     C           NMCY      IFEQ 'JPY'
+     C           NMCY      OREQ 'ITL'
+     C                     Z-ADD0         CDP
+     C                     END
+      *
+      * GET INVESTMENT TYPE DETAILS
+      *
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C           INVTPK    CHAININVTPDF              71
+     C           *IN71     IFEQ '0'
+      *
+      * ONLY PROCESS IS PROCESSING TYPE IS NOT 2 4 OR 6
+      *
+     C           PROT      IFNE '2'
+     C           PROT      ANDNE'4'
+     C           PROT      ANDNE'6'
+      *
+     C           PROT      IFEQ '7'
+     C                     Z-ADD4         NMDP
+     C                     ELSE
+     C           PROT      IFEQ '8'
+     C                     Z-ADD2         NMDP
+     C                     END
+      *
+      * SET DAY/MONTH ARRAYS FOR SCREEN DISPLAY
+      *
+     C                     MOVEL*BLANK    ##CD
+     C                     Z-ADD1         X       30
+     C           X         DOUGT12
+     C           CD,X      IFNE *ZERO
+     C                     MOVE CD,X      ##CD,X
+     C                     END
+     C                     ADD  1         X
+     C                     END
+      *
+     C                     MOVE CR        ##CR
+      *
+      * SET TRADE/YIELD BASIS & DAY/DIVISOR BASIS
+      *
+     C           SYBS      IFNE *BLANK
+     C           STBS      ANDNE'Y'
+     C                     MOVEL'Y'       STBS
+     C                     END
+     C                     MOVELSTBS      ##STBS
+     C                     MOVELSYBS      ##SYBS
+      *
+     C                     MOVELDYBS      ##DYBS
+     C                     MOVELDVBS      ##DVBS
+     C                     MOVEL'Y'       YP
+      *
+      * SET Price
+      *
+     C                     Z-ADDLAVP      PRIC
+     C                     Z-ADD0         TPDY
+     C                     Z-ADD0         PUPP
+     C                     Z-ADD0         NOML
+      *
+      * SET value date
+      *
+      * GET Book Code
+     C           BHBK      CHAINSDBOOKL0             74
+     C           *IN74     IFEQ *OFF
+      *
+     C           BDSTAM    IFEQ 'N'
+     C                     Z-ADDLPSD      TDVD
+     C                     ELSE
+     C                     Z-ADDBJRDNB    TDVD
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADDBJRDNB    TDVD
+     C                     ENDIF
+      *
+      * CALCULATE YIELD/PRICE AND INTEREST
+      *
+     C                     OUT  LDAX
+     C                     CALL 'A10101'
+     C           *LOCK     IN   LDAX
+     C                     Z-ADDLPSD      TDVD
+      *
+      * FORMAT and output EIR in A1BPPNPD
+      *
+     C           BKPE      KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C           *IN09     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     SETOF                     09
+     C                     END
+      * Update if found Write if not found
+     C           BKPE      CHAINA1BPPNDF             72
+     C           *IN72     IFEQ '0'
+      * If change today
+      *  LAVP <> to PRIC
+      * or LEIR <> TPDY
+      * or LPSD <> TDVD
+     C           LAVP      IFNE PRIC
+     C           LEIR      ORNE TPDY
+     C           LPSD      ORNE TDVD
+     C                     Z-ADDTPDY      PRICP
+     C                     Z-ADDLEIR      LEIRP
+     C                     WRITEDETAIL
+     C                     Z-ADDPRIC      LAVP
+     C                     Z-ADDTPDY      LEIR
+     C                     Z-ADDTDVD      LPSD
+     C                     Z-ADDBJRDNB    LCHD
+     C                     UPDATA1BPPNDF
+     C                     MOVE 'Y'       REPT    1
+     C                     END
+     C                     ELSE
+     C                     Z-ADDTPDY      PRICP
+     C                     Z-ADD0         LEIRP
+     C                     WRITEDETAIL
+     C                     Z-ADDPRIC      LAVP
+     C                     Z-ADDTPDY      LEIR
+     C                     Z-ADDTDVD      LPSD
+     C                     Z-ADDBJRDNB    LCHD
+     C                     WRITEA1BPPNDF
+     C                     MOVE 'Y'       REPT    1
+     C                     END
+      * End of fOUND INVETMENT TYPE WITH VALID prot
+     C                     END
+     C                     END
+     C                     END
+      * End of fOUND live security with Yield basis defined
+     C                     END
+     C                     END
+     C                     READ BKPHDDF                  73
+     C                     ENDDO
+      *
+     C           REPT      IFEQ 'N'
+     C                     EXSR #NUL
+     C                     ENDIF
+      *
+     C                     EXSR TERM
+      *
+      ********************************************************************
+      *                                                               *
+      *   INIT      - Initilisation Subroutine                        *
+      *                                                               *
+      *   CALLED BY - MAIN PROCESSING                                 *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     SETOF                     2098
+     C           *NAMVAR   DEFN           LDAX
+     C           *LOCK     IN   LDAX
+      *
+      **   ACCESS BANK DETAILS
+     C                     CALL 'AOBANKR0'                 Bank details
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'001'     DBASE            *             *
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERR  001 *
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       UPSSR   1        *PSSR Control
+     C                     Z-ADD0         PAGE
+     C                     MOVE BJMRDT    MRDT
+     C                     MOVELBJURPT    TITL
+     C                     WRITEHEADP1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *   *PSSR     - File error handler                              *
+      *                                                               *
+      *   CALLS     - N/A                                             *
+      *                                                               *
+      *   CALLED BY - All subroutines from error processing           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Prevent recursive call
+      *
+     C           UPSSR     IFEQ 'N'                        Recursive call
+      *
+     C                     MOVE 'Y'       UPSSR            *PSSR Executed
+      *
+      ** Update local data area
+      *
+     C                     MOVEL'A10100'  DBPGM     P      Set program id
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     DBINF
+     C                     OUT  WLDA
+      *
+     C                     MOVE *ON       *INU7            Database error
+     C                     MOVE *ON       *INU8            Database error
+     C                     DUMP                            Dump system var
+      *
+     C                     EXSR TERM                       Stop run
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  #NUL   Print EMPTY REPORT                                    *
+      *                                                               *
+      *  The sub-routine writes the empty header                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #NUL      BEGSR
+      *
+     C                     WRITEP1NULL                     Null report
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *    #TERM  Program termination                                 *
+      *                                                               *
+      *    The sub-routine handles the program termination            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *
+     C                     WRITEP1FOOT                     Footer
+      *
+     C                     MOVE *ON       *INLR            Last record
+     C                     RETRN                           Return control
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZSEDITZ3
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -133,8 +133,8 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ï¿½ F-specs                              ï¿½
-      ** ï¿½ =======                              ï¿½
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
       ** +--------------------------------------+
       *
       ** Valid securities
@@ -196,8 +196,8 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ï¿½ Automatically included D-specs       ï¿½
-      ** ï¿½ ==============================       ï¿½
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
       ** +--------------------------------------+
       *
       ** Standard D-specs
@@ -245,8 +245,8 @@
       /COPY ZACPYSRC,DTAQCHKDCL
       *
       ** +--------------------------------------+
-      ** ï¿½ End of automatically included D-specsï¿½
-      ** ï¿½ =====================================ï¿½
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -254,21 +254,21 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ï¿½ Manually included D-specs            ï¿½
-      ** ï¿½ =========================            ï¿½
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ï¿½ Named constants                      ï¿½
-      ** ï¿½ ===============                      ï¿½
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
       ** +--------------------------------------+
       *
       ** String for error messages to the operator
      D WProcErr        C                   CONST('Error in module')
       *
       ** +--------------------------------------+
-      ** ï¿½ Arrays and Data Structures           ï¿½
-      ** ï¿½ ==========================           ï¿½
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
       ** Work array for setting up new security shortname
@@ -421,8 +421,8 @@
       ** Midas SC Jobs handling commitment control data area                                  CSC022
       *
       ** +--------------------------------------+
-      ** ï¿½ Declared variables                   ï¿½
-      ** ï¿½ ==================                   ï¿½
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
       ** +--------------------------------------+
       *
       ** Index for arrays of error messages
@@ -567,9 +567,9 @@
       ** Commitment Skip Field                                                                CSC022
       *
       ** +----------------------------------------+
-      ** ï¿½ Hook for non-core D-specs (all types)  ï¿½
-      ** ï¿½ also any I-specs (if necessary)        ï¿½
-      ** ï¿½ =====================================  ï¿½
+      ** ¦ Hook for non-core D-specs (all types)  ¦
+      ** ¦ also any I-specs (if necessary)        ¦
+      ** ¦ =====================================  ¦
       ** +----------------------------------------+
       *
       /COPY WNCPYSRC,SESECSC002
@@ -622,8 +622,8 @@
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CER001
       *
       ** +--------------------------------------+
-      ** ï¿½ End of D-specs                       ï¿½
-      ** ï¿½ ==============                       ï¿½
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -631,9 +631,9 @@
       *****************************************************************
       *
       ** +--- Start of Main processing -------------------------------+
-      ** ï¿½                                                            ï¿½
-      ** ï¿½ *INZSR is executed at program activation.                  ï¿½
-      ** ï¿½                                                            ï¿½
+      ** ¦                                                            ¦
+      ** ¦ *INZSR is executed at program activation.                  ¦
+      ** ¦                                                            ¦
       ** +------------------------------------------------------------+
       *
       /COPY WNCPYSRC,SESECSC003
@@ -2667,37 +2667,37 @@
       ** - use std message handler to report transaction status
       ** The index to the error arrays is checked for presence/absence of
       ** errors.
-ï¿½ï¿½ï¿½ï¿½ï¿½ *
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** +--- Note for a later release -------------------------------+
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |                                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | At a later date, this routine will have to cater for       |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | warning messages.  The following logic will have to be     |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | inserted before "If no errors were found", in the          |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | above comments (and the code):                             |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |                                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | If 'Ignore warning messages' (from API ICD) is 'N', AND    |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | any warning messages were returned (WIDx <> 0)             |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |                                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | -ï¿½ï¿½ï¿½If errors exist                                        |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½Add the warning array index to the error array   |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½index                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½Append the contents of the warning arrays to the |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½end of the error arrays                          |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | -ï¿½ï¿½ï¿½Else                                                   |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½Set the error array index equal to the warning   |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½array index                                      |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½Copy the contents of the warning arrays to the   |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½error arrays                                     |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | -ï¿½ï¿½ï¿½Endif                                                  |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |                                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | Endif                                                      |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |                                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | Note that the "If errors exist ... Else ... " block above  |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | can probably be implemented unconditionally (i.e. the same |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | logic will apply whether errors exist as well as warnings  |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** | or not).  It is shown in the above form for clarity.       |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** |                                                            |
-ï¿½ï¿½ï¿½ï¿½ï¿½ ** +------------------------------------------------------------+
+      *
+      ** +--- Note for a later release -------------------------------+
+      ** |                                                            |
+      ** | At a later date, this routine will have to cater for       |
+      ** | warning messages.  The following logic will have to be     |
+      ** | inserted before "If no errors were found", in the          |
+      ** | above comments (and the code):                             |
+      ** |                                                            |
+      ** | If 'Ignore warning messages' (from API ICD) is 'N', AND    |
+      ** | any warning messages were returned (WIDx <> 0)             |
+      ** |                                                            |
+      ** | -   If errors exist                                        |
+      ** |     -     Add the warning array index to the error array   |
+      ** |           index                                            |
+      ** |     -     Append the contents of the warning arrays to the |
+      ** |           end of the error arrays                          |
+      ** | -   Else                                                   |
+      ** |     -     Set the error array index equal to the warning   |
+      ** |           array index                                      |
+      ** |     -     Copy the contents of the warning arrays to the   |
+      ** |           error arrays                                     |
+      ** | -   Endif                                                  |
+      ** |                                                            |
+      ** | Endif                                                      |
+      ** |                                                            |
+      ** | Note that the "If errors exist ... Else ... " block above  |
+      ** | can probably be implemented unconditionally (i.e. the same |
+      ** | logic will apply whether errors exist as well as warnings  |
+      ** | or not).  It is shown in the above form for clarity.       |
+      ** |                                                            |
+      ** +------------------------------------------------------------+
       *
      C     IDx           IFEQ      0
      C                   EXSR      SRSetValid

@@ -32,7 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD058159 - ZDBU failed during installation (file PMPSTMQ0)   *
       *             (Recompile)                                       *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *

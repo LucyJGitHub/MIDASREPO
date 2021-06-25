@@ -156,7 +156,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD056888 - Deliverable Data Split for SDCODEPD               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

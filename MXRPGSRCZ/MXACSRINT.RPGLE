@@ -27,7 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CMX002 - Meridian Export Enhancements - Phase 1              *
       *                                                               *

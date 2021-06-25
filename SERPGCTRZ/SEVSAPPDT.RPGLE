@@ -39,7 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  261824 - Error messages appear which should not be as field  *
       *           being validate is valid when compare to the input - *
       *           Maturity Date. Fix is to make sure that field will  *

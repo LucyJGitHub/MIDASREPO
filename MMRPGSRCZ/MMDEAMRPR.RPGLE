@@ -65,7 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
       *           parameter mismatch. Apply fix 258724.               *
       *  MD046248 - Finastra Rebranding                               *
@@ -341,6 +341,10 @@
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(MMDAEXPD)                    CAP004
       * MM DEAM Extra Data - File (D/B) format                                  CAP004
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
 
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
@@ -1120,6 +1124,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * If errors returned
       *
@@ -1322,7 +1327,7 @@
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM      *BLANK        @ACTRV            1                          260173
+     C**********         PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS
       *
@@ -1376,6 +1381,10 @@
       *
       * Deal Status
      C                   PARM                    DDSTS            24
+      *                                                                                       CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+      *                                                                                       CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * Update 'Current' Deal with Deal in Screen Format
       *
@@ -1852,6 +1861,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM      *ZERO         WIdx              3 0
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * If transaction is valid output message 'Press enter to accept'
       *

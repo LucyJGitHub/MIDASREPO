@@ -1989,16 +1989,16 @@ E2   C                   ENDDO
      C     @@DLNO        CHAIN     MMDEALLL                           65
       *                                                                                       260173
       ** For reversal transaction, use @ACTRV instead of DDACTN in access security checking   260173
-     C                   MOVE      *BLANK        WACTN             1                          260173
-     C     @ACTRV        IFEQ      'X'                                                        260173
-     C                   MOVE      @ACTRV        WACTN                                        260173
-     C                   ELSE                                                                 260173
-     C                   MOVE      DDACTN        WACTN                                        260173
-     C                   ENDIF                                                                260173
+     C**********         MOVE      *BLANK        WACTN             1                          260173
+     C*****@ACTRV*****   IFEQ      'X'                                                        260173
+     C**********         MOVE      @ACTRV        WACTN                                        260173
+     C**********         ELSE                                                                 260173
+     C**********         MOVE      DDACTN        WACTN                                        260173
+     C**********         ENDIF                                                                260173
      C*
      C                   CALL      'ZVACTBU'
-     C**********         PARM      DDACTN        ZACTN             1                          260173
-     C                   PARM      WACTN         ZACTN             1                          260173
+     C                   PARM      DDACTN        ZACTN             1             deleted by:  260173
+     C**********         PARM      WACTN         ZACTN             1                          260173
      C                   PARM      H@BRCA        ZBR               3
      C                   PARM                    @@ERR             1 0
      C*
@@ -2125,7 +2125,7 @@ E2   C                   ENDDO
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
       * Action Code (Reversal transaction)                                                    260173
-     C                   PARM                    @ACTRV            1                          260173
+     C**********         PARM                    @ACTRV            1                          260173
       *
       * OUTPUTS
       *

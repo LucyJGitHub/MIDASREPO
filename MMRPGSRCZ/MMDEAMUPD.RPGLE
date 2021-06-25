@@ -50,7 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053472 - Payment settlement details cleared for Early      *
       *             Maturity                                          *
@@ -204,6 +204,8 @@
      D WEvent          S              8A                                                      CRE020
      D WNew            S              1A                                                      CRE020
      D CRE073          S              1A                                                      CRE073
+      ** Switchable feature CDL102                                                            CDL102
+     D CDL102          S              1A                                                      CDL102
      D*
      D* DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
      D*
@@ -539,6 +541,19 @@
      C                   EVAL      RDMT = IGRDMT                                              CRE073
      C                   EVAL      RDFD = IGRDFD                                              CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EVAL      BLRT = IGBLRT                                              CDL102
+     C                   EVAL      RFRR = IGRFRR                                              CDL102
+     C                   EVAL      CALM = IGCALM                                              CDL102
+     C                   EVAL      BADJ = IGBADJ                                              CDL102
+     C                   EVAL      FLOR = IGFLOR                                              CDL102
+     C                   EVAL      LBDY = IGLBDY                                              CDL102
+     C                   EVAL      LODY = IGLODY                                              CDL102
+     C                   EVAL      OPSH = IGOPSH                                              CDL102
+     C                   EVAL      RRDP = IGRRDP                                              CDL102
+     C                   EVAL      DBAV = IGDBAV                                              CDL102
+     C                   ENDIF                                                                CDL102
       *
       * WRITE DEAL AMENDMENT
       *
@@ -1410,6 +1425,30 @@
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+      *                                                                                       CDL102
+      ** Check if CDL102 is installed                                                         CDL102
+      *                                                                                       CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRetCode                                     CDL102
+     C                   PARM      '*VERIFY'     POption                                      CDL102
+     C                   PARM      'CDL102'      PSard                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+      ** Database error                                                                       CDL102
+      *                                                                                       CDL102
+     C                   IF        PRetCode <> *BLANKS AND                                    CDL102
+     C                             PRetCode <> '*NRF   '                                      CDL102
+     C                   EVAL      DBKEY = 'CDL102'                                           CDL102
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL102
+     C                   EVAL      DBASE = 7                                                  CDL102
+     C                   EXSR      SRERR                                                      CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
+     C                   IF        PRetCode = *BLANKS                                         CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
      C/COPY WNCPYSRC,MMH00005
      C                   ENDSR
      C****************************************************************

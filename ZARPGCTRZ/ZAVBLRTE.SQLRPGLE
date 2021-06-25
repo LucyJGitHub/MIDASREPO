@@ -1715,3 +1715,4 @@
 616264666869707172
 ** WDLTyp ** Array for allowed processing type for deals
 CDCICLDLIPITTDTIILID
+

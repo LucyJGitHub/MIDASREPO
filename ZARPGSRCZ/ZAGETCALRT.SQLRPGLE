@@ -1356,7 +1356,7 @@
                               ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
 
                    // Start of change CDL102
-                   when moduleID = 'LE';
+                   when moduleID = 'DL';
                    wSqlStr = 'update DLLIBEPD A '  +
                               'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
                               ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF

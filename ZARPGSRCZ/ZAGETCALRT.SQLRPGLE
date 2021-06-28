@@ -12,17 +12,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058182           Date 25May21               *
-      *  Prev Amend No. MD058040A          Date 25May21               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD058182           Date 25May21               *
+      *                 MD058040A          Date 25May21               *
       *                 MD058040           Date 11May21               *
       *                 MD057871           Date 30Apr21               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
-      *             to SDHSDRTD and LELIBEPD with Int Period Date     *                             
+      *             to SDHSDRTD and LELIBEPD with Int Period Date     *
       *             less than or equal Control Date.                  *
       *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
       *              the number of decimal places used in checking    *
@@ -296,6 +298,7 @@
      D strDate         s              5s 0
      D endDate         s              5s 0
      D writeRecord     s              1a                                                    MD058040
+     D FileID          s             10a                                                      CDL102
 
       *---------------*
       ** JSON Details *
@@ -752,11 +755,19 @@
 
                  msg = http_error(err);
                  errorMessage = %trim(msg);
-                 returnCD = 'CONNECTION_ERROR';
-                 isError = True;
-                 AuditLogDS.SJTMST = %timestamp();
-                 AuditLogDS.SJEXMS = %trim(msg);
-                 AuditLogDS.SJCODE = '999';
+                 if errorMessage = 'URL contains a bad port number!';
+                    returnCD = 'EXCEPTION_ERROR';
+                    isError = True;
+                    AuditLogDS.SJTMST = %timestamp();
+                    AuditLogDS.SJEXMS = %trim(msg);
+                    AuditLogDS.SJCODE = '400';
+                 else;
+                    returnCD = 'CONNECTION_ERROR';
+                    isError = True;
+                    AuditLogDS.SJTMST = %timestamp();
+                    AuditLogDS.SJEXMS = %trim(msg);
+                    AuditLogDS.SJCODE = '999';
+                 endif;
                  exsr errorHandler;
 
               endmon;
@@ -1264,13 +1275,25 @@
                    finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
                    ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
 
-                   exec sql insert into LELIBEPD
-                   values (:ExtractFLDS);
+                   // Start of change CDL102
+                   select;
+                   when moduleID  = 'LE';
+                      FileID = 'LELIBEPD';
+                      exec sql insert into LELIBEPD
+                      values (:ExtractFLDS);
+                   when moduleID  = 'DL';
+                      FileID = 'DLLIBEPD';
+                      exec sql insert into DLLIBEPD
+                      values (:ExtractFLDS);
 
+                   endsl;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       AuditLogDS.SJTMST = %timestamp();
-                      AuditLogDS.SJEXMS = 'Error in access LELIBEPD '
+                      // Start of change CDL102
+                      //AuditLogDS.SJEXMS = 'Error in access LELIBEPD '
+                      AuditLogDS.SJEXMS = 'Error in access ' + FileID
                                        + 'SQL ERROR ' + %char(sqlCod);
+                      // End of change CDL102
                       AuditLogDS.SJCODE = '010';
                       isError = true;
                       exsr errorHandler;
@@ -1320,11 +1343,27 @@
                    finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
                    ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
 
+                   // Start of change CDL102
+                   select;
+
+                   when moduleID = 'LE';
+                   // End of change CDL102
+
                    wSqlStr = 'update LELIBEPD A '  +
                               'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
                               ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
                                  + QUO +
                               ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
+
+                   // Start of change CDL102
+                   when moduleID = 'LE';
+                   wSqlStr = 'update DLLIBEPD A '  +
+                              'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
+                              ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
+                                 + QUO +
+                              ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
+                   endsl;
+                   // End of change CDL102
 
                    exec sql
                    execute immediate :wSqlStr;

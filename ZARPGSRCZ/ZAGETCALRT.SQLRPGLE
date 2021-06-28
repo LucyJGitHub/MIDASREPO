@@ -21,7 +21,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CDL102 - LIBOR Deregulation - Dealing                        *
+      *  CDL102 - LIBOR Deregulation - Dealing.                       *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
       *             to SDHSDRTD and LELIBEPD with Int Period Date     *

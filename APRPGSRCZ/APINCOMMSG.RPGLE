@@ -1,4 +1,4 @@
-	    H DEBUG
+     H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                     MD039105
@@ -24,15 +24,15 @@
       *                                                               *                       CAP083
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039032           Date 22May20               *
-      *  Prev Amend No. 259813             Date 22May20               *
+      *  Last Amend No. MD058203           Date 28Jun21               *
+      *  Prev Amend No. MD039032           Date 22May20               *
+      *                 259813             Date 22May20               *
       *                 251029             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
-      *  Last Amend No. MD039032           Date 22May20               *
-      *  Prev Amend No. 259813             Date 22May20               *
+      *                 MD039032           Date 22May20               *
+      *                 259813             Date 22May20               *
       *                 251029             Date 22May20               *
-      *                 MD041126           Date 04May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039105           Date 06Jun16               *
@@ -140,6 +140,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058203 - Remove MD041126 completely.                       *
       *  MD039032 - Modified fix 251029 to include checking of the    *
       *             Front Office ID to make sure that new transactions*
       *             will be processed.                                *
@@ -154,8 +155,6 @@
       *           Applied for MD-39032                                *
       *  251029 - Handle file locking properly.  Applied fix 231306   *
       *           and added some checking in field ARERRMODE.         *
-      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
-      *           - Applied for MD055614                              *
       *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039105 - Data truncation encountered when trying to insert *
@@ -383,7 +382,7 @@
      D ConnFailed      C                   CONST('MQSeries MQCONN failed: ')                  245310
      D DiscFailed      C                   CONST('MQSeries MQDISC failed: ')                  245310
      D ProcErr         C                   CONST('Error in module')                           251029
- 
+
       ** Do NOT change the following constant values. Alterations
       ** here require changes to PC applications.
 
@@ -456,28 +455,23 @@
                                                                                             AR401481
       **  Declare MQI structures needed
       * MQI Constants
-     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
-     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
+     D/COPY QMQM/QRPGLESRC,CMQR
 
       ** Object Descriptor
      D MQOD            DS
-     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
-     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODR
 
       ** Message Descriptor
      D MQMD            DS
-     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
-     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDR
 
       ** Get message options
      D MQGMO           DS
-     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
-     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOR
 
       ** Put message options
      D MQPMO           DS
-     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
-     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOR
 
 
       ** The include below brings in the return code structure that
@@ -687,18 +681,7 @@
      D RPIFLn          S              4P 0                                                    CSW213
      D CU13Ln          S              4S 0                                                    CSW213
      D O_BUFFER        S          32000                                                     MD039105
-                                                                                            MD041126
-      ** MQ Parameters                                                                      MD041126
-     D QMNAME          S             48A                                                    MD041126
-     D HANDLE          S             10I 0                                                  MD041126
-     D OCODE           S             10I 0                                                  MD041126
-     D CCODE           S             10I 0                                                  MD041126
-     D REASON          S             10I 0                                                  MD041126
-     D HCONN           S             10I 0                                                  MD041126
-     D OPTS            S             10I 0                                                  MD041126
-     D HIN             S             10I 0                                                  MD041126
-     D BUFLEN          S             10I 0                                                  MD041126
-     D MESLEN          S             10I 0                                                  MD041126
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -869,19 +852,12 @@
                                                                                               245310
       **  Attempt to CONNECT to the MQ Manager                                                245310
       *              ~~~~~~~                                                                  245310
-     C**********         CALL      'QMQM'                                            245310 MD041126
-     C**********         PARM      MQCONN        CID               9 0               245310 MD041126
-     C**********         PARM      QMGR          QMNAME           48                 245310 MD041126
-     C**********         PARM      *ZERO         HANDLE            9 0               245310 MD041126
-     C**********         PARM      *ZERO         OCODE             9 0               245310 MD041126
-     C**********         PARM      *ZERO         REASON            9 0               245310 MD041126
-      *                                                                                     MD041126
-     C                   EVAL      QMNAME = QMGR                                            MD041126
-     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
-     C                   Z-ADD     *ZERO         OCODE                                      MD041126
-     C                   Z-ADD     *ZERO         REASON                                     MD041126
-     C                   CALLP     MQCONN( QMNAME : HANDLE :                                MD041126
-     C                                     OCODE  : REASON )                                MD041126
+     C                   CALL      'QMQM'                                                     245310
+     C                   PARM      MQCONN        CID               9 0                        245310
+     C                   PARM      QMGR          QMNAME           48                          245310
+     C                   PARM      *ZERO         HANDLE            9 0                        245310
+     C                   PARM      *ZERO         OCODE             9 0                        245310
+     C                   PARM      *ZERO         REASON            9 0                        245310
                                                                                               245310
       ** Error processing                                                                     245310
      C     REASON        IFNE      RCNONE                                                     245310
@@ -913,15 +889,11 @@
                                                                                               245310
       **  Attempt to DISCONNECT from the MQ Manager                                           245310
       *                                                                                       245310
-     C**********         CALL      'QMQM'                                            245310 MD041126
-     C**********         PARM      MQDISC        CID               9 0               245310 MD041126
-     C**********         PARM                    HCONN                               245310 MD041126
-     C**********         PARM      *ZERO         OCODE                               245310 MD041126
-     C**********         PARM      *ZERO         REASON                              245310 MD041126
-      *                                                                                     MD041126
-     C                   Z-ADD     *ZERO         OCODE                                      MD041126
-     C                   Z-ADD     *ZERO         REASON                                     MD041126
-     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
+     C                   CALL      'QMQM'                                                     245310
+     C                   PARM      MQDISC        CID               9 0                        245310
+     C                   PARM                    HCONN                                        245310
+     C                   PARM      *ZERO         OCODE                                        245310
+     C                   PARM      *ZERO         REASON                                       245310
                                                                                               245310
       ** Error processing                                                                     245310
      C     REASON        IFNE      RCNONE                                                     245310
@@ -959,20 +931,17 @@
      C     OOINPQ        ADD       OOFIQ         OPTS
 
       ** Open queue
-     C**********         Z-ADD     MQOPEN        CID                                        MD041126
-      **********                                                                            MD041126
-     C**********         CALL      'QMQM'                                                   MD041126
-     C**********         PARM                    CID               9 0                      MD041126
-     C**********         PARM                    HCONN             9 0                      MD041126
-     C**********         PARM                    MQOD                                       MD041126
-     C**********         PARM                    OPTS              9 0                      MD041126
-     C**********         PARM                    HIN               9 0                      MD041126
-     C**********         PARM                    OCODE             9 0                      MD041126
-     C**********         PARM                    REASON            9 0                      MD041126
-      *                                                                                     MD041126
-     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
-     C                                     HIN : OCODE : REASON )                           MD041126
- 
+     C                   Z-ADD     MQOPEN        CID
+
+     C                   CALL      'QMQM'
+     C                   PARM                    CID               9 0
+     C                   PARM                    HCONN             9 0
+     C                   PARM                    MQOD
+     C                   PARM                    OPTS              9 0
+     C                   PARM                    HIN               9 0
+     C                   PARM                    OCODE             9 0
+     C                   PARM                    REASON            9 0
+
       ** Error processing
      C     REASON        IFNE      RCNONE
 
@@ -1007,17 +976,14 @@
      C                   Z-ADD     CONONE        OPTS
 
       ** Close queue
-     C**********         Z-ADD     MQCLOS        CID                                        MD041126
-     C**********         CALL      'QMQM'                                                   MD041126
-     C**********         PARM                    CID               9 0                      MD041126
-     C**********         PARM                    HCONN             9 0                      MD041126
-     C**********         PARM                    HIN               9 0                      MD041126
-     C**********         PARM                    OPTS              9 0                      MD041126
-     C**********         PARM                    CCODE             9 0                      MD041126
-     C**********         PARM                    REASON            9 0                      MD041126
-      *                                                                                     MD041126
-     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
-     C                                      CCODE : REASON )                                MD041126
+     C                   Z-ADD     MQCLOS        CID
+     C                   CALL      'QMQM'
+     C                   PARM                    CID               9 0
+     C                   PARM                    HCONN             9 0
+     C                   PARM                    HIN               9 0
+     C                   PARM                    OPTS              9 0
+     C                   PARM                    CCODE             9 0
+     C                   PARM                    REASON            9 0
 
       ** Error processing
      C     REASON        IFNE      RCNONE
@@ -2435,23 +2401,19 @@
 
      C/COPY WNCPYSRC,APH00051
       ** Get message
-     C**********         Z-ADD     MQGET         CID                                        MD041126
-      **********                                                                            MD041126
-     C**********         CALL      'QMQM'                                                   MD041126
-     C**********         PARM                    CID               9 0                      MD041126
-     C**********         PARM                    HCONN             9 0                      MD041126
-     C**********         PARM                    HIN               9 0                      MD041126
-     C**********         PARM                    MQMD                                       MD041126
-     C**********         PARM                    MQGMO                                      MD041126
-     C**********         PARM                    BUFLEN            9 0                      MD041126
-     C**********         PARM                    BUFFER                                     MD041126
-     C**********         PARM                    MESLEN            9 0                      MD041126
-     C**********         PARM                    CCODE             9 0                      MD041126
-     C**********         PARM                    REASON            9 0                      MD041126
-      *                                                                                     MD041126
-     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
-     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
-     C                                    MESLEN : CCODE : REASON )                         MD041126
+     C                   Z-ADD     MQGET         CID
+
+     C                   CALL      'QMQM'
+     C                   PARM                    CID               9 0
+     C                   PARM                    HCONN             9 0
+     C                   PARM                    HIN               9 0
+     C                   PARM                    MQMD
+     C                   PARM                    MQGMO
+     C                   PARM                    BUFLEN            9 0
+     C                   PARM                    BUFFER
+     C                   PARM                    MESLEN            9 0
+     C                   PARM                    CCODE             9 0
+     C                   PARM                    REASON            9 0
       *                                                                                      248095A
       ** If connection handle not valid error, reconnect and try again                       248095A
       *                                                                                      248095A
@@ -2464,22 +2426,18 @@
      C                   Z-ADD     HANDLE        HCONN                                       248095A
      C                   EXSR      OPQIN                                                     248095A
      C/COPY WNCPYSRC,APH00052
-     C**********         Z-ADD     MQGET         CID                                248095A MD041126
-     C**********         CALL      'QMQM'                                           248095A MD041126
-     C**********         PARM                    CID               9 0              248095A MD041126
-     C**********         PARM                    HCONN             9 0              248095A MD041126
-     C**********         PARM                    HIN               9 0              248095A MD041126
-     C**********         PARM                    MQMD                               248095A MD041126
-     C**********         PARM                    MQGMO                              248095A MD041126
-     C**********         PARM                    BUFLEN            9 0              248095A MD041126
-     C**********         PARM                    BUFFER                             248095A MD041126
-     C**********         PARM                    MESLEN            9 0              248095A MD041126
-     C**********         PARM                    CCODE             9 0              248095A MD041126
-     C**********         PARM                    REASON            9 0              248095A MD041126
-      *                                                                                     MD041126
-     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
-     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
-     C                                    MESLEN : CCODE : REASON )                         MD041126
+     C                   Z-ADD     MQGET         CID                                         248095A
+     C                   CALL      'QMQM'                                                    248095A
+     C                   PARM                    CID               9 0                       248095A
+     C                   PARM                    HCONN             9 0                       248095A
+     C                   PARM                    HIN               9 0                       248095A
+     C                   PARM                    MQMD                                        248095A
+     C                   PARM                    MQGMO                                       248095A
+     C                   PARM                    BUFLEN            9 0                       248095A
+     C                   PARM                    BUFFER                                      248095A
+     C                   PARM                    MESLEN            9 0                       248095A
+     C                   PARM                    CCODE             9 0                       248095A
+     C                   PARM                    REASON            9 0                       248095A
      C                   ENDIF                                                               248095A
 
       ** Error processing

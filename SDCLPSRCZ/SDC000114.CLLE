@@ -30,6 +30,7 @@
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CLE172*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CLE172*/
              DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE172*/
+             DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL102*/
 
              DCLF       FILE(SDCSTSTD) OPNID(STAT)
              DCLF       FILE(SDBANKPD) OPNID(BANK)
@@ -112,6 +113,27 @@ CONTINUE:
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE172*/
                 CHGVAR     VAR(&CLE172) VALUE('Y')                                        /*CLE172*/
              ENDDO                                                                        /*CLE172*/
+                                                                                          /*CDL102*/
+/** Check if the CLE172 feature is on */                                                  /*CDL102*/
+                                                                                          /*CDL102*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CDL102*/
+             CHGVAR     VAR(&SARD) VALUE('CDL102')                                        /*CDL102*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CDL102*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &SCSARD)                                                        /*CDL102*/
+                                                                                          /*CDL102*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CDL102*/
+                                                                                          /*CDL102*/
+             IF         COND(&RTCD *NE '       ' *AND +
+                          &RTCD *NE '*NRF   ') THEN(DO)                                   /*CDL102*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CDL102*/
+                GOTO       CMDLBL(ERROR)                                                  /*CDL102*/
+             ENDDO                                                                        /*CDL102*/
+                                                                                          /*CDL102*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CDL102*/
+                CHGVAR     VAR(&CDL102) VALUE('Y')                                        /*CDL102*/
+             ENDDO                                                                        /*CDL102*/
 
 /** Retrieve zone system prefix */
 
@@ -133,6 +155,10 @@ CONTINUE:
              CLRPFM     FILE(LELIBEPD)
              CLRPFM     FILE(DLLIBEPD)                                                    /*CDL102*/
              CLRPFM     FILE(SDBJEXPD)                                                    /*CDL102*/
+                                                                                          /*CDL102*/
+             IF         COND(&CLE172 *EQ 'Y' *OR +
+                           &CDL102 *EQ 'Y') THEN(DO)                                      /*CDL102*/
+
              CALL       PGM(SD000114)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
@@ -152,6 +178,8 @@ CONTINUE:
                 GOTO       CMDLBL(ERROR)
              ENDDO
 
+             ENDDO                                                                        /*CDL102*/
+                                                                                          /*CDL102*/
 /** If sucessful completion, update status file to Completed */
 
              CALL       PGM(SD000118) PARM('C')

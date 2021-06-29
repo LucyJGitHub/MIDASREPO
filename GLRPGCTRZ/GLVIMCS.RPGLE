@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD058336           Date 29Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058336 - Not enough information in the error message shown *
+      *             when inserting a batch item where account customer*
+      *             number is the same with the associated customer.  *
+      *             Remove 2 characters in the error message by       *
+      *             changing 'Account' to 'Accnt'.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  243965 - Do not compare associated customer number with      *
@@ -361,4 +367,4 @@
 ** CPY@
 (c) Finastra International Limited 2001
 ** WMsgArr
-XXXXXX Ass. Cust. cant be eq to Account Cust.
+XXXXXX Ass. Cust. cant be eq to Accnt Cust.                                                 MD058336

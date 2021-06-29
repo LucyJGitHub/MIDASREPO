@@ -1090,11 +1090,11 @@
                                   ' and CTRNID = ' + QUO + transactREF + QUO +
                                   ' and CINPDT = ' +
                                     %char(result.list(i).intPDMidas);
-                   elseif fileToCheck = LELIBEPD;
-                        wSQLStr = 'select * from LELIBEPD ' +
-                                  'where LDLNRF = ' + QUO + transactREF + QUO +
-                                  ' and LDINDT = ' +
-                                    %char(result.list(i).intPDMidas);
+       //**********elseif fileToCheck = LELIBEPD;                                             CDL102
+       //**********  wSQLStr = 'select * from LELIBEPD ' +                                    CDL102
+       //**********               'where LDLNRF = ' + QUO + transactREF + QUO +               CDL102
+       //**********               ' and LDINDT = ' +                                          CDL102
+       //**********                 %char(result.list(i).intPDMidas);                         CDL102
                    elseif fileToCheck = SDHSDRTD2;                                        //MD058040
                         wSQLStr = 'select * from SDHSDRTD ' +                             //MD058040
                                   'where CMODID = '  + QUO + moduleID + QUO +             //MD058040
@@ -1313,71 +1313,56 @@
        //                                                            *
        //*************************************************************
 
-       begsr updateExtractFile;
+       //begsr updateExtractFile;                                                             CDL102
 
-                   clear ExtractFLDS;
-                   clear compAveRate;
-                   clear finalAveRate;
-                   ExtractFLDS.LDLNRF = transactREF;
-                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
-                   ExtractFLDS.LDINDT = result.list(i).intPDMidas;
-                   ExtractFLDS.LDINPD = result.list(i).intPrdDays;
+       //**********clear ExtractFLDS;                                                         CDL102
+       //**********clear compAveRate;                                                         CDL102
+       //**********clear finalAveRate;                                                        CDL102
+       //**********ExtractFLDS.LDLNRF = transactREF;                                          CDL102
+       //**********ExtractFLDS.LDVDAT = result.list(i).intPDMidas;                            CDL102
+       //**********ExtractFLDS.LDINDT = result.list(i).intPDMidas;                            CDL102
+       //**********ExtractFLDS.LDINPD = result.list(i).intPrdDays;                            CDL102
 
-                   select;
-                        when calcMethod = 'NCCR';
-                             compAveRate =
-                               %dec(Result.List(i).dlyCompRate:11:7);
-                        when calcMethod = 'CCR';
-                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
-                             compAveRate =
-                               %dec(Result.List(i).aveCompRate:11:7);
-                        when calcMethod = 'SARR';
-                             compAveRate =
-                               %dec(Result.List(i).rateApplied:11:7);
-                        when calcMethod = 'SAVG';
-                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
-                             compAveRate =
-                               %dec(Result.List(i).simpleAve:11:7);
-                   endsl;
+       //**********select;                                                                    CDL102
+       //**********     when calcMethod = 'NCCR';                                             CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).dlyCompRate:11:7);                         CDL102
+       //**********     when calcMethod = 'CCR';                                              CDL102
+       //**********          ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);                    CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).aveCompRate:11:7);                         CDL102
+       //**********     when calcMethod = 'SARR';                                             CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).rateApplied:11:7);                         CDL102
+       //**********     when calcMethod = 'SAVG';                                             CDL102
+       //**********          ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);                    CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).simpleAve:11:7);                           CDL102
+       //**********endsl;                                                                     CDL102
 
-                   finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
-                   ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
+       //**********finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);                      CDL102
+       //**********ExtractFLDS.LDCART = %dech(finalAveRate:11:7);                             CDL102
 
-                   // Start of change CDL102
-                   select;
+       //**********wSqlStr = 'update LELIBEPD A '  +                                          CDL102
+       //**********           'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +                 CDL102
+       //**********           ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF                 CDL102
+       //**********              + QUO +                                                      CDL102
+       //**********           ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);              CDL102
 
-                   when moduleID = 'LE';
-                   // End of change CDL102
 
-                   wSqlStr = 'update LELIBEPD A '  +
-                              'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
-                              ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
-                                 + QUO +
-                              ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
+       //**********exec sql                                                                   CDL102
+       //**********execute immediate :wSqlStr;                                                CDL102
 
-                   // Start of change CDL102
-                   when moduleID = 'DL';
-                   wSqlStr = 'update DLLIBEPD A '  +
-                              'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
-                              ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
-                                 + QUO +
-                              ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
-                   endsl;
-                   // End of change CDL102
+       //**********if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;                             CDL102
+       //**********   AuditLogDS.SJTMST = %timestamp();                                       CDL102
+       //**********   AuditLogDS.SJEXMS = 'Error in access LELIBEPD '                         CDL102
+       //**********                    + 'SQL ERROR ' + %char(sqlCod);                        CDL102
+       //**********   AuditLogDS.SJCODE = '011';                                              CDL102
+       //**********   isError = true;                                                         CDL102
+       //**********   exsr errorHandler;                                                      CDL102
+       //**********endif;                                                                     CDL102
 
-                   exec sql
-                   execute immediate :wSqlStr;
-
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      AuditLogDS.SJTMST = %timestamp();
-                      AuditLogDS.SJEXMS = 'Error in access LELIBEPD '
-                                       + 'SQL ERROR ' + %char(sqlCod);
-                      AuditLogDS.SJCODE = '011';
-                      isError = true;
-                      exsr errorHandler;
-                   endif;
-
-       endsr;
+       //endsr;                                                                               CDL102
 
        //*************************************************************
        /EJECT

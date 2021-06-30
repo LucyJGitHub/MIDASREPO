@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 257276             Date 10Dec12              */
+/*       Last Amend No. MD058390           Date 30Jun21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      257276             Date 10Dec12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +29,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058390 - Component restart looping due to error           */
+/*                  in RMVJRNCHG. Add CPD7016, CPF70A7 to trap error.*/
 /*       MD046248 - Finastra Rebranding                              */
 /*       257276 - Initialise trailer file RTZZ member RACT if        */
 /*                PF/ACCNTAB has no records. Applied Fix 217502.     */
@@ -195,7 +198,9 @@
                           THEN(DO)                                    /*CCB009*/
              RMVJRNCHG  JRN(*LIBL/ICJRN) FILE((*LIBL/REHPOSPP)) +
                           FROMENT(&START) TOENT(&FINISH)              /*CCB009*/
-             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
+/**********  MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +      */                /*MD058390*/
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041 +
+                              CPD7016 CPF70A7)                                          /*MD058390*/
                                                                       /*CCB009*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
@@ -370,7 +375,9 @@ NOJRNRCV:  ENDDO
                           THEN(DO)                                    /*CCB009*/
              RMVJRNCHG  JRN(*LIBL/ICJRN) FILE((*LIBL/REHPOSPP)) +
                           FROMENT(&START) TOENT(&FINISH)              /*CCB009*/
-             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
+/**********  MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +      */                /*MD058390*/
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041 +
+                              CPD7016 CPF70A7)                                          /*MD058390*/
                                                                       /*CCB009*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/

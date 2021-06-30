@@ -146,7 +146,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058391 - GLAMAD API’s failing due to blank Statement Freq. *
+      *  MD058391 - GLAMAD API's failing due to blank Statement Freq. *
       *             Rework AR398205 since GLAMADVU now also used by   *
       *             API processing so DDSTFQ can't be blanks as per   *
       *             IC. For insert of API transactions statement freq.*

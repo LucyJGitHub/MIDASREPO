@@ -30,7 +30,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD021425           Date 31May21               *
+      *  Last Amend No. MD021425           Date 01Jul21               *
       *  Prev Amend No. AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *

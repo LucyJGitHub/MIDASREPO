@@ -593,10 +593,15 @@
       ** First read of SDSCODL1
       *
      C**********         READ      SDSCODD1                               27                MD056812
+     C/EXEC SQL                                                                             MD058399
+     C+ close ACursor                                                                       MD058399
+     C/END-EXEC                                                                             MD058399
+                                                                                            MD058399
      C/EXEC SQL                                                                             MD056812
      C+ declare ACursor insensitive scroll cursor for                                       MD056812
      C+ select * from SDSCOJW0                                                              MD056812
-     C+ where SRCDTP >=:KeyCDTP                                                             MD056812
+     C**where*SRCDTP >=:KeyCDTP                                                    MD056812 MD058399
+     C+ where SRCDTP >= :KeyCDTP and SRCDDP >= :KeyCDDP and SRCODE >= :KeyCODE              MD058399
      C+ order by SRCDTP, SRCDDP, SRCODE                                                     MD056812
      C/END-EXEC                                                                             MD056812
                                                                                             MD056812

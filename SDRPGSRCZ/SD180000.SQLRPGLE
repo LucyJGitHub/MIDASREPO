@@ -55,8 +55,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056812           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058399           Date 01Jul21               *
+      *  Prev Amend No. MD056812           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -65,6 +66,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058399 - Incorrect MSGF name                               *
+      *             Indicator IN27 not set up correctly               *
       *  MD056812  - Deliverable Data Split for SDSCODPD              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE039 - Automatic Settlement of Trades                      *
@@ -544,7 +547,8 @@
      C+ where SRCDTP = :KeyCDTP and SRCDDP = :KeyCDDP and SRCODE = :KeyCODE                 MD056812
      C/END-EXEC                                                                             MD056812
      C                   Setoff                                       27                    MD056812
-     C                   If        SQLCODE = 100                                            MD056812
+     C**********         If        SQLCODE = 100                                   MD056812 MD058399
+     C                   If        SQLCODE = 0                                              MD058399
      C                   SETON                                        27                    MD056812
      C                   ENDIF                                                              MD056812
 
@@ -777,7 +781,8 @@
       ** Re-initialise fields
       *
      C                   MOVEL     PSProcName    ZAPGM
-     C                   MOVEL (P) 'SDUSRMSG'    ZAMSGF
+     C**********         MOVEL (P) 'SDUSRMSG'    ZAMSGF                                     MD058399
+     C                   MOVEL (P) 'SEUSRMSG'    ZAMSGF                                     MD058399
      C                   MOVEL     '*SAME'       ZAPGRL
      C                   MOVEL     *Blanks       ZAMSID
      C                   MOVEL     *Blanks       ZAMSDA
@@ -801,7 +806,8 @@
       ** Define fields used by the message sending function
       *
      C                   MOVEL     PSProcName    ZAPGM            10
-     C                   MOVEL (P) 'SDUSRMSG'    ZAMSGF           10
+     C**********         MOVEL (P) 'SDUSRMSG'    ZAMSGF           10                        MD058399
+     C                   MOVEL (P) 'SEUSRMSG'    ZAMSGF           10                        MD058399
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132

@@ -24,13 +24,8 @@
       *                                                               *                       CAP083
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058203           Date 28Jun21               *
+      *  Last Amend No. MD058203           Date 01Jul21               *
       *  Prev Amend No. MD039032           Date 22May20               *
-      *                 259813             Date 22May20               *
-      *                 251029             Date 22May20               *
-      *                 CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
-      *                 MD039032           Date 22May20               *
       *                 259813             Date 22May20               *
       *                 251029             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
@@ -141,13 +136,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058203 - Remove MD041126 completely.                       *
-      *  MD039032 - Modified fix 251029 to include checking of the    *
-      *             Front Office ID to make sure that new transactions*
-      *             will be processed.                                *
-      *  259813 - Clear APDUMP before giving it a new value.          *
-      *           Applied for MD-39032                                *
-      *  251029 - Handle file locking properly.  Applied fix 231306   *
-      *           and added some checking in field ARERRMODE.         *
       *  MD039032 - Modified fix 251029 to include checking of the    *
       *             Front Office ID to make sure that new transactions*
       *             will be processed.                                *

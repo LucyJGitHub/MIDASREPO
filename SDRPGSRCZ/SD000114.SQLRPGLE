@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058182           Date 25May21               *
-      *  Prev Amend No. MD058040A          Date 25May21               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD058182           Date 25May21               *
+      *                 MD058040A          Date 25May21               *
       *                 MD058138           Date 18May21               *
       *                 MD058106           Date 18May21               *
       *                 MD058040           Date 11May21               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Pass a Control Date to   *
       *             ZAGETCALRT (used in writing records on SDHSDRTD). *
@@ -62,6 +64,8 @@
       *  SUBROUTINE INDEX                                             *
       *                                                               *
       * SRDltLOGS     - Delete logs for failed transactions on re-run *
+      * SRCrtBLRT     - Insert to extract file all Midas Transactions *                       CDL102
+      *                 using a Backward Looking Rate                 *                       CDL102
       * SRSelTRAN     - Select backward-looking rate transactions     *
       * SRReadNEXT    - Read next record                              *
       * SRCloseCURSOR - Close cursor                                  *
@@ -109,6 +113,9 @@
       ** Data Sructure for general ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
 
+      ** Data Sructure for switchable feature details                                         CDL102
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL102
+                                                                                              CDL102
       ** Short Data Structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
@@ -116,26 +123,27 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
       ** Data Structure for Backward-Looking Rate Loans
-     D LoanBLRT        DS
-     D  TrMODI                        2A
-     D  TrTRAN                        6A
-     D  TrCCY                         3A
-     D  TrVDAT                        5S 0
-     D  TrMDAT                        5S 0
-     D  TrNIDT                        5S 0
-     D  TrNRPD                        5S 0
-     D  TrREPT                        1S 0
-     D  TrADDI                        1A
-     D  TrBLRT                        1A
-     D  TrRFRR                       10A
-     D  TrCALM                        4A
-     D  TrBADJ                       11S 7
-     D  TrFLOR                       11S 7
-     D  TrLBDY                        2S 0
-     D  TrLODY                        2S 0
-     D  TrOPSH                        1A
-     D  TrRRDP                        2S 0
-     D  TrDBAV                        1S 0
+     D TransBLRT     E DS                  EXTNAME(SDBJEXPD)                                  CDL102
+     D***LoanBLRT        DS                                                                   CDL102
+     D**TrMODI**                      2A                                                      CDL102
+     D**TrTRAN**                      6A                                                      CDL102
+     D**TrCCY***                      3A                                                      CDL102
+     D**TrVDAT**                      5S 0                                                    CDL102
+     D**TrMDAT**                      5S 0                                                    CDL102
+     D**TrNIDT**                      5S 0                                                    CDL102
+     D**TrNRPD**                      5S 0                                                    CDL102
+     D**TrREPT**                      1S 0                                                    CDL102
+     D**TrADDI**                      1A                                                      CDL102
+     D**TrBLRT**                      1A                                                      CDL102
+     D**TrRFRR**                     10A                                                      CDL102
+     D**TrCALM**                      4A                                                      CDL102
+     D**TrBADJ**                     11S 7                                                    CDL102
+     D**TrFLOR**                     11S 7                                                    CDL102
+     D**TrLBDY**                      2S 0                                                    CDL102
+     D**TrLODY**                      2S 0                                                    CDL102
+     D**TrOPSH**                      1A                                                      CDL102
+     D**TrRRDP**                      2S 0                                                    CDL102
+     D**TrDBAV**                      1S 0                                                    CDL102
 
       ** Data Structure for ARR Calculator API Parameters
      D ARRCalcParm     DS
@@ -173,6 +181,7 @@
       ** Parameters for calling access programs
      D PRtCd           S              7A
      D POptn           S              7A
+     D PSard           S              6A                                                      CDL102
 
       ** Parameters for calling AOSVALR0
      D RtnCode         S              7A
@@ -203,6 +212,8 @@
      D Error           S              1A
 
       ** Program Variables
+     D CLE172          S              1A                                                      CDL102
+     D CDL102          S              1A                                                      CDL102
      D WRUN            S              1A
      D ARRCalcFreq     S              1A
      D CallARR         S              1A
@@ -241,6 +252,10 @@
       ** Delete logs for failed transactions on re-run
      C                   EXSR      SRDltLOGS
 
+      ** Insert to extract file all Midas Transactions using a                             CDL102
+      ** backward looking rate                                                             CDL102
+     C                   EXSR      SRCrtBLRT                                               CDL102
+                                                                                           CDL102
       ** Select the backward looking rate transactions
      C                   EXSR      SRSelTRAN
 
@@ -386,16 +401,22 @@
       /EJECT
       *****************************************************************
       *                                                               *
-      * SRSelTRAN - Select backward-looking rate transactions         *
+      **SRSelTRAN*-*Select*backward-looking*rate*transactions**********                       CDL102
+      * SRCrtBLRT - Insert to an extract file all Midas Transactions  *                       CDL102
+      *             using a Backward Looking Rate                     *                       CDL102
       *                                                               *
       *****************************************************************
-     C     SRSelTRAN     BEGSR
+     C*****SRSelTRAN     BEGSR                                                                CDL102
+     C     SRCrtBLRT     BEGSR                                                                CDL102
 
       ** Select loan transactions which uses a backward looking-rate
+     C                   IF        CLE172 = 'Y'                                               CDL102
      C/exec SQL
-     C+ declare TransBLRTCursor insensitive scroll cursor for
+     C***declare TransBLRTCursor insensitive scroll cursor for                                CDL102
+     C+ insert into SDBJEXPD                                                                  CDL102
      C+ select 'LE', LNRF, CCY,  VDAT, MDAT,
-     C+        NIDT, NRPD, REPT, ADDI, BLRT,
+     C*********NIDT, NRPD, REPT, ADDI, BLRT,                                                  CDL102
+     C+        NIDT, NRPD, REPT, SLID, ADDI, BLRT,                                            CDL102
      C+        RFRR, CALM, BADJ, FLOR, LBDY,
      C+        LODY, OPSH, RRDP, DBAV
      C+ from CLOANCL
@@ -405,14 +426,78 @@
      C+   and RLDT = 0
      C+ union all                                                                             CLE172
      C+ select 'LE',   LNRF,   CCY,    VDAT,   MDAT,                                          CLE172
-     C+        NIDT,   NRPD,   REPT,   ADDI,   ROBLRT,                                        CLE172
+     C*********NIDT,   NRPD,   REPT,   ADDI,   ROBLRT,                                 CLE172 CDL102
+     C+        NIDT,   NRPD,   REPT,   SLID,   ADDI,   ROBLRT,                                CDL102
      C+        RORFRR, ROCALM, ROBADJ, ROFLOR, ROLBDY,                                        CLE172
      C+        ROLODY, ROOPSH, RORRDP, RODBAV                                                 CLE172
      C+ from LEROBLPD                                                                         CLE172
      C+ left join CLOANCL                                                                     CLE172
      C+ on ROLNRF = LNRF                                                                      CLE172
      C+ where ROLNRF is not null and ROCALM <> 'MANL'                                         CLE172
+     C+ with nc                                                                               CDL102
      C/end-exec
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
+      ** Select deal transactions which uses a backward looking-rate                          CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+                                                                                              CDL102
+      ** Authorised BC deal amendment using backward looking rate                             CDL102
+     C/exec SQL                                                                               CDL102
+     C+ insert into SDBJEXPD                                                                  CDL102
+     C+ select 'DL', digits(DLNO),                                                            CDL102
+     C+        CCY,  VDAT, MDAT,                                                              CDL102
+     C+        NIDT, 0, 0, SLID, JFLID,                                                       CDL102
+     C+        HNBLRT, HNRFRR, HNCALM, HNBADJ, HNFLOR,                                        CDL102
+     C+        HNLBDY, HNLODY, HNOPSH, HNRRDP, HNDBAV                                         CDL102
+     C+ from MMDEAMPP                                                                         CDL102
+     C+ inner join DEALSDC                                                                    CDL102
+     C+ on HNDA38 = DLNO                                                                      CDL102
+     C+ where HNMTYP = 'BC' and HNBLRT = 'Y' and HNDSTS = 'A'                                 CDL102
+     C+   and HNCHTP <> 'R' and HNDVSD < :BJDNWD and HNCALM <> 'MANL'                         CDL102
+     C+ with nc                                                                               CDL102
+     C/end-exec                                                                               CDL102
+                                                                                              CDL102
+      ** Deal transactions not yet inserted in the extract file                               CDL102
+     C/exec SQL                                                                               CDL102
+     C+ insert into SDBJEXPD                                                                  CDL102
+     C+ select 'DL', digits(DLNO),                                                            CDL102
+     C+        CCY,  VDAT, MDAT,                                                              CDL102
+     C+        NIDT, 0, 0, SLID, JFLID,                                                       CDL102
+     C+        BLRT, RFRR, CALM, BADJ, FLOR,                                                  CDL102
+     C+        LBDY, LODY, OPSH, RRDP, DBAV                                                   CDL102
+     C+ from DEALSDC                                                                          CDL102
+     C+ where RECI = 'D' and VDAT < :BJDNWD                                                   CDL102
+     C+   and BLRT = 'Y' and CALM <> 'MANL'                                                   CDL102
+     C+   and DTYP in ('CD','CI','CL','DL','IP',                                              CDL102
+     C+                'IT','TD','TI','IL','ID')                                              CDL102
+     C+   and digits(DLNO) not in                                                             CDL102
+     C+       (select TRTRAN from SDBJEXPD where TRMODI = 'DL')                               CDL102
+     C+ with nc                                                                               CDL102
+     C/end-exec                                                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
+     C                   IF        SQLCODE <> NO_ERROR and                                    CDL102
+     C                             SQLCODE <> NO_RECORD                                       CDL102
+     C                   EVAL      DBFILE = 'SQLERROR'                                        CDL102
+     C                   EVAL      DBKEY  = 'SQL ERROR'                                       CDL102
+     C                   EVAL      DBASE  = 007                                               CDL102
+     C                   EXSR      *PSSR                                                      CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
+     C                   ENDSR                                                                CDL102
+      *****************************************************************                       CDL102
+      /EJECT                                                                                  CDL102
+      *****************************************************************                       CDL102
+      *                                                               *                       CDL102
+      * SRSelTRAN - Select backward-looking rate transactions         *                       CDL102
+      *                                                               *                       CDL102
+      *****************************************************************                       CDL102
+     C     SRSelTRAN     BEGSR                                                                CDL102
+                                                                                              CDL102
+     C/exec SQL                                                                               CDL102
+     C+ declare TransBLRTCursor insensitive scroll cursor for                                 CDL102
+     C+ select * from SDBJEXPD                                                                CDL102
+     C/end-exec                                                                               CDL102
 
      C/exec SQL
      C+ open TransBLRTCursor
@@ -429,7 +514,8 @@
      C     SRReadNEXT    BEGSR
 
      C/exec SQL
-     C+ fetch next from TransBLRTCursor into :LoanBLRT
+     C***fetch next from TransBLRTCursor into :LoanBLRT                                       CDL102
+     C+ fetch next from TransBLRTCursor into :TransBLRT                                       CDL102
      C/end-exec
 
      C                   ENDSR
@@ -479,11 +565,28 @@
       *****************************************************************
      C     SRUpdFILE     BEGSR
 
+     C                   SELECT                                                               CDL102
+     C                   WHEN      TrMODI = 'LE'                                              CDL102
      C/exec SQL
      C+ update CLOANCL
      C+ set RTKN = :RatesKnown
      C+ where LNRF = :TransREF
      C/end-exec
+
+     C                   WHEN      TrMODI = 'DL'                                              CDL102
+     C/exec SQL                                                                               CDL102
+     C+ update DEALSDC                                                                        CDL102
+     C+ set RTKN = :RatesKnown                                                                CDL102
+     C+ where DLNO = :TransREF                                                                CDL102
+     C/end-exec                                                                               CDL102
+                                                                                              CDL102
+     C/exec SQL                                                                               CDL102
+     C+ update MMDELDPP                                                                       CDL102
+     C+ set HKRTKN = :RatesKnown                                                              CDL102
+     C+ where HKDN38 = :TransREF                                                              CDL102
+     C/end-exec                                                                               CDL102
+                                                                                              CDL102
+     C                   ENDSL                                                                CDL102
 
      C                   IF        SQLCODE <> NO_ERROR and
      C                             SQLCODE <> NO_RECORD
@@ -511,6 +614,7 @@
      C                   ELSE
 
       ** or Last Interest Payment Date
+     C                   IF        TrMODI = 'LE'                                              CDL102
      C                   SELECT
 
      C                   WHEN      TrREPT = 1 or TrREPT = 3
@@ -528,6 +632,11 @@
      C/end-exec
 
      C                   ENDSL
+     C                   ENDIF                                                                CDL102
+     C                                                                                        CDL102
+     C                   IF        TrMODI = 'DL'                                              CDL102
+     C                   EVAL      WrkDATE = TrSLID                                           CDL102
+     C                   ENDIF                                                                CDL102
 
       ** If work date is zero, set to transaction start date
      C                   IF        WrkDATE = 0
@@ -546,6 +655,7 @@
 
       ** Get the Next Interest Payment Date
      C                   EVAL      WrkDATE = 0
+     C                   IF        TrMODI = 'LE'                                              CDL102
      C                   SELECT
      C
      C                   WHEN      (TrREPT = 1 or TrREPT = 3) and
@@ -560,6 +670,15 @@
      C                   EVAL      WrkDATE = TrMDAT
 
      C                   ENDSL
+     C                   ENDIF                                                                CDL102
+     C                                                                                        CDL102
+     C                   IF        TrMODI = 'DL'                                              CDL102
+     C                   IF        TrNIDT <> 0                                                CDL102
+     C                   EVAL      WrkDATE = TrNIDT                                           CDL102
+     C                   ELSE                                                                 CDL102
+     C                   EVAL      WrkDATE = TrMDAT                                           CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
 
       ** Save the actual interest payment date to a work variable                           MD058106
      C                   EVAL      IntPayDate = WrkDATE                                     MD058106
@@ -572,6 +691,8 @@
      C                   EVAL      IntPerEDATE = WrkDATE - 1
      C**********         ENDIF                                                              MD058138
 
+     C                   IF        TrMODI = 'LE'                                              CDL102
+                                                                                              CDL102
       ** If the Additional Day Indicator is B-Both, the last interest                         CLE172
       ** period will be extended by 1 day to include the maturity date                        CLE172
      C                   IF        TrADDI = 'B' and                                           CLE172
@@ -579,6 +700,15 @@
      C                   EVAL      IntPerEDATE = WrkDATE                                      CLE172
      C                   ENDIF                                                                CLE172
                                                                                               CLE172
+     C                   ENDIF                                                                CDL102
+     C                                                                                        CDL102
+     C                   IF        TrMODI = 'DL'                                              CDL102
+     C                   IF        TrADDI = 'Y' and                                           CDL102
+     C                             WrkDATE = TrMDAT                                           CDL102
+     C                   EVAL      IntPerEDATE = WrkDATE                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+
      C                   IF        IntPerEDATE <= 0
      C                   EVAL      WZeroMDATFlag = 'Y'
      C                   EVAL      IntPerEDATE = BJDNWD - 1
@@ -840,6 +970,30 @@
      C                                                                                      MD058182
      C                   MOVEL     EventCtrlDate ControlDate                                MD058182
                                                                                             MD058182
+      ** Determine if CLE172 is installed                                                     CDL102
+     C                   MOVE      'N'           CLE172                                       CDL102
+     C                   CALL      'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANK        PRtCd                                        CDL102
+     C                   PARM      '*VERIFY'     POptn                                        CDL102
+     C                   PARM      'CLE172'      PSard                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C     PRtCd         IFEQ      *BLANK                                                     CDL102
+     C                   MOVE      'Y'           CLE172                                       CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
+      ** Determine if CDL102 is installed                                                     CDL102
+     C                   MOVE      'N'           CDL102                                       CDL102
+     C                   CALL      'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANK        PRtCd                                        CDL102
+     C                   PARM      '*VERIFY'     POptn                                        CDL102
+     C                   PARM      'CDL102'      PSard                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+                                                                                              CDL102
+     C     PRtCd         IFEQ      *BLANK                                                     CDL102
+     C                   MOVE      'Y'           CDL102                                       CDL102
+     C                   ENDIF                                                                CDL102
+
       ** Get setting of system value ARR Calculation Frequency
      C                   EVAL      ARRCalcFreq = *BLANKS
      C                   EVAL      PSysVal01 = 'ARRCalculationFreq'

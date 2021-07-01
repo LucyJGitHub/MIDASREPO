@@ -544,7 +544,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
-     C                   PARM      *BLANK        @ACTRV            1                          260173
+     C**********         PARM      *BLANK        @ACTRV            1                  temp    260173
 
       * GL Collateral Details
 

@@ -2305,8 +2305,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    LONDEP                                      BUG6534
      C                   ADD       1             Bfp                                         BUG6534
       **  Restore Authorise Reversal Action Code                                              260173
-     C     1             SUBST     BUFFER:Bfp    @ACTRV                                       260173
-     C                   ADD       1             Bfp                                          260173
+     C*****1*****        SUBST     BUFFER:Bfp    @ACTRV                                       260173
+     C**********         ADD       1             Bfp                                          260173
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
@@ -2347,7 +2347,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4146
      C                   PARM                    LONDEP                                      BUG6534
      C                   PARM                    DDFOID                                       239400
-     C                   PARM                    @ACTRV                                       260173
+     C**********         PARM                    @ACTRV                                       260173
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'MMDEAMUPD'                                       CRE020
@@ -4138,6 +4138,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      ExtData = %SUBST(ExtData:1:FUEXLn) + BSRDta                CDL102
      C                   ADD       DLBSRTLn      Bfp                                          CDL102
                                                                                               CDL102
+
      C                   CALL      'ABFUNDVU'
      C                   PARM                    HeadIn
      C                   PARM                    Trans1
@@ -6794,7 +6795,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Z-ADD     RecordLen     FUEXLn            4 0                        CAP191
                                                                                               CAP191
      C                   Z-ADD     50            DLBSRTLn          4 0                        CDL102
-
      C                   ENDSR
       *****************************************************************
       /SPACE 5

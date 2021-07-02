@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -40,12 +42,12 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -57,72 +59,72 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D FPRTScnFmt    E DS                  EXTNAME(LEFPRTPD)
       * Fundiing participant in screen format
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D FPRTFilFmt    E DS                  EXTNAME(LEVFCLMPD)
      D  FPREC                455    523
      D  FPPAY                524   1082
       ** Fundiing participant in file format
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D  FLREC                  1     69
       * Receive settlement instructions in file format
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D  FLPAY                  1    559
       * Pay settlement instructions in file format
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS settlement instructions in file format
- 
+
       **-----------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Data structure for additional Funding Participant Screen details
      D FPRTScnFmtAdd   DS            76
      D  S#ANUM                 1      6
@@ -132,10 +134,10 @@
      D  S#FCCY                44     46
      D  S#PRNM                47     66
      D  S#PRTN                67     76
- 
+
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -151,12 +153,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,LEFPRTVM01
       *                                                                                       CLE031
@@ -171,16 +173,16 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       * Set action code to enquire, unless authorising
      C                   CLEAR                   FPRTFilFmt
- 
+
      C     AuthComp      IFEQ      'X'
      C                   MOVEL     'X'           DDACTN
      C                   ELSE
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -193,7 +195,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      LEFPRTRED
@@ -230,20 +232,20 @@
      C                   EXSR      LEFPRTCVT
      C                   EXSR      ZASETINCVT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        @ERRMS <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'S#PMFC'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       * Build buffer with required output
      C                   EVAL                    Buffer = FPRTScnFmt
      C                                           + FPRTScnFmtAdd
      C                                           + ##RECS  + ##PAYS
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -289,11 +291,11 @@
      C                   PARM                    @CNUM             6
      C                   PARM                    @FACT             3
      C                   PARM                    @FCNO             2
- 
+
      C                   ENDSR
       **********************************************************************
      C     LEFPRTRTV     BEGSR
- 
+
      C                   RESET                   RetCodeIn
       *
      C                   CALLB     'LEFPRTRTV'
@@ -311,23 +313,23 @@
      C                   PARM                    DDCNUM
      C                   PARM                    DDFACT            3
      C                   PARM                    DDFCNO            2
- 
+
       * Primary facility customer, type & number
      C                   PARM                    DDPMFC
      C                   PARM                    DDPMFT
      C                   PARM                    DDPMFN
- 
+
       * Outputs
       *
       * Funding participant in file format
      C                   PARM                    FPRTFilFmt
- 
+
       * Action, customer, facility type and facility number OK indicators
      C                   PARM                    S#ACTNok          1
      C                   PARM                    S#CSSNok          1
      C                   PARM                    S#FACTok          1
      C                   PARM                    S#FCNOok          1
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
       *
@@ -338,11 +340,11 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   ENDSR
       **********************************************************************
      C     LEFPRTCVT     BEGSR
- 
+
      C                   RESET                   RetCodeIn
       *
      C                   CALLB     'LEFPRTCVT'
@@ -358,17 +360,17 @@
       *
       * Funding participant in screen format
      C                   PARM                    FPRTScnFmt
- 
+
       * Syndicate member details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#SRNM           20
      C                   PARM                    S#SRTN           10
- 
+
       * Introducing customer details
      C                   PARM                    S#IRNM           20
      C                   PARM                    S#IRTN           10
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -422,17 +424,17 @@
       * Access Primary Facility                                       *
       *****************************************************************
      C     ACSPFA        BEGSR
- 
+
      C                   CALLB     'LE002510'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE
- 
+
       * Primary facility customer, type & number
      C                   PARM                    DDPMFC
      C                   PARM                    DDPMFT
@@ -440,7 +442,7 @@
       *
       * OUTPUTS
       *
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -461,19 +463,19 @@
      C                   PARM                    FccaCANM          6                          CSD027
      C                   PARM                    FccaCAFT          3 0
      C                   PARM                    FccaCAFN          2 0
- 
+
       * Primary customer name & town
      C                   PARM                    S#PRNM           20
      C                   PARM                    S#PRTN           10
- 
+
       * Agent customer number, name & town
      C                   PARM                    S#ANUM            6
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Primary facility amount edited
      C                   PARM                    S#FAMT           14
- 
+
       * Field OK flags
      C                   PARM                    S#PMFCOK          1
      C                   PARM                    S#PMFTOK          1
@@ -491,12 +493,12 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
       * Populate primary facility fields
- 
+
      C                   MOVE      FcbrBranch    S#BRCA
      C                   MOVE      FccyFCCY      S#FCCY
- 
+
      C                   ENDSR
       **********************************************************************
       ** The following /COPY contains the standard program status

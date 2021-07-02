@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058403           Date 02Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Mar15               *
       *                 AR814519           Date 10Mar15               *
@@ -80,6 +81,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058403 - Actual Interest Rate may not be amended is        *
+      *             encountered when amending  a deal                 *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -1034,7 +1037,15 @@
      C*-----------------------------------------*                                            BUG5169
      C** This field is NOT AMENDABLE.                                                        BUG5169
      C*                                                                                      BUG5169
-     C     DDAIR         IFNE      @DDAIR                                                    BUG5169
+     C                   MOVE      DDAIR         XAIR                                       MD058403
+     C                   MOVE      DDAIR         WRATE            12                        MD058403
+     C                   EXSR      ConvRate                                                 MD058403
+     C                   MOVE      CRATE         WAIRT1           11 7                      MD058403
+     C                   MOVE      @DDAIR        WRATE                                      MD058403
+     C                   EXSR      ConvRate                                                 MD058403
+     C                   MOVE      CRATE         WAIRT2           11 7                      MD058403
+     C*****DDAIR         IFNE      @DDAIR                                           BUG5169 MD058403
+     C     WAIRT1        IFNE      WAIRT2                                                   MD058403
      C     CDL020        ANDEQ     'Y'                                                       BUG5169
      C                   ADD       1             Idx                                         BUG5169
      C                   EVAL      FldNameArr(Idx) = 'DDAIR'                                 BUG5169

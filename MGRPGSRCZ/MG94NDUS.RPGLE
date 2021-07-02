@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. EML102C            Date 13Sep20               *
-      *  Prev Amend No. MD055642A          Date 27May20               *
+      *  Last Amend No. MD058309           Date 02Jul21               *
+      *  Prev Amend No. EML102C            Date 13Sep20               *
+      *                 MD055642A          Date 27May20               *
       *                 MD055642           Date 20May20               *
       *                 EML102 *CREATE     Date 06May20               *
       *                 TP448868           Date 21Jan17               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058309 - Recompile due to changes in GLPOSTPD              *
       *  EML102C - Replace MGCONVPD with core SDCONVPD                *
       *  MD055642A - FM 2.1 SP21 Duplicate MultiCash Narr 22 on       *
       *             field 61 subfield 86 ; reverse MD-55642 fix       *

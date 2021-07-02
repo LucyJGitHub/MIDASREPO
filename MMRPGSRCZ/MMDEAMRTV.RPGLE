@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. AR806147           Date 21May18               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  260173 - Introduce new parameter to be used in the vali-     *
       *           dation of action code when authorising a reversal   *
       *           transaction. Apply fix 258724.                      *

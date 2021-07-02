@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -94,7 +96,7 @@
       ** +--------------------------------------+
      FASHGLKL0  UF   E           K DISK
       ** Midas AS Hedge Linkage File Update by Hedge ID
- 
+
      F***ASHTRNL9  IF   E           K DISK                                                    CAS006
      FASHTRNL9  IF   E           K DISK    PREFIX(HT)                                         CAS006
       ** Midas AS Hedge Transaction File Retrieval by Hedge ID
@@ -102,13 +104,13 @@
      FASHTRNLF  IF   E           K DISK    PREFIX(HF)                                         CAS006
      F                                     RENAME(ASHTRND0:ASHTRNDF)                          CAS006
       ** Midas AS Hedge Transaction File Retrieval by Module ID/HedgeId/HedgeInd              CAS006
- 
+
      F***ASHTRNL1  IF   E           K DISK                                                    CAS006
      FASHTRNL1  IF   E           K DISK    PREFIX(HT)                                         CAS006
      F                                     RENAME(ASHTRND0:ASHTRND1)
       ** Midas AS Hedge Transaction File Retrieval by Hedge ID/Hedge
       ** Indicator
- 
+
      FDEALS     IF   E           K DISK
      F                                     IGNORE(DEALSDAF)
      F**********                           IGNORE(DEALSDCF)                                   CAS006
@@ -125,12 +127,12 @@
                                                                                               CAS006
      FGLJENPL0  IF   E           K DISK                                                       CAS006
       ** Midas GL Journal Entry File                                                          CAS006
- 
+
      F***ASFHTRL1  UF   E           K DISK                                                    CAS006
      FASFHTRL1  UF   E           K DISK    PREFIX(FH)                                         CAS006
       ** Midas AS Forecast Transaction Details Master File Retrieval
       ** Index
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -149,32 +151,32 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CAS006
       ** External DS for Switchable Features Details                                          CAS006
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(S)                        CAS006
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                               CAS006
@@ -198,16 +200,16 @@
      D DateDS3         DS                                                                     CAS006
      D  WDay3                  1      2                                                       CAS006
      D  WMonthYr3              3      7                                                       CAS006
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for AOBANKR0
      D PRetrnCde       S              7A
      D POption         S              7A
- 
+
       ** Fields used to define Key List for Midas AS Hedge Transaction File
       ** Retrieval
      D KAShedi         S              6S 0
@@ -215,7 +217,7 @@
      D KASmodF         S              2A                                                      CAS006
      D KAShediF        S              6S 0                                                    CAS006
      D KASdhinF        S              1A                                                      CAS006
- 
+
      D WFSmdat         S              5P 0
      D WRun            S              1A
                                                                                               CAS006
@@ -231,12 +233,12 @@
      D PMDAT           S              5  0                                                    CAS006
      D PMDAT6N         S              6  0                                                    CAS006
      D PMDAT7A         S              7A                                                      CAS006
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -247,30 +249,30 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EXSR      SRMaturFH
- 
+
       ** Read all hedges in the system.
- 
+
      C                   READ      ASHGLKL0
- 
+
       ** Do while not end of file
- 
+
      C                   DOW       NOT %EOF(ASHGLKL0)
- 
+
      C                   IF        FSRECI = 'D' or FSRECI = 'T'
- 
+
       ** Check if hedging forecast transactions
- 
+
      C                   EVAL      KAShedi = FSHEDI
      C                   EVAL      KASdhin = 'H'
- 
+
      C     KHTRNL1       CHAIN     ASHTRNL1                           25
- 
+
      C**********         IF        *IN25 = *OFF and FSMOD = 'FH'                              CAS006
      C                   IF        *IN25 = *OFF AND HTFSMOD = 'FH'                            CAS006
                                                                                               CAS006
@@ -283,11 +285,11 @@
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EXSR      SRFHChk                                                    CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** If end date is less than or equal to rundate
- 
+
      C                   IF        FSENDT <= BJRDNB
- 
+
      C                   IF        (CAS006 ='N') OR (WValidURN = 'Y')                         CAS006
      C                   EVAL      FSRECI = 'E'
      C                   EVAL      FSCHTP = 'E'
@@ -300,13 +302,13 @@
                                                                                               CAS006
      C                   EVAL      FSLCD = BJRDNB
      C                   UPDATE    ASHGLKD0
- 
+
      C                   ELSE
- 
+
      C                   EXSR      SRLstMDAT
- 
+
       ** Expire hedge if all components matured already.
- 
+
      C                   IF        WFSmdat <= BJRDNB
      C                   IF        (CAS006 ='N') OR (WValidURN = 'Y')                         CAS006
      C                   EVAL      FSRECI = 'E'
@@ -321,20 +323,20 @@
      C                   EVAL      FSLCD = BJRDNB
      C                   UPDATE    ASHGLKD0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Read next record on LF/ASHGLKL0
- 
+
      C                   READ      ASHGLKL0
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -347,13 +349,13 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMaturFH     BEGSR
- 
+
      C                   READ      ASFHTRL1                               70
- 
+
       ** Do while not end of file
- 
+
      C                   DOW       NOT %EOF(ASFHTRL1)
                                                                                               CAS006
       ** Check for a valid underlying reference number                                        CAS006
@@ -367,7 +369,7 @@
       ** When Hedge Phase B (CAS006) is installed, forecast transaction                       CAS006
       ** will only be set to matured if a valid underlying reference has                      CAS006
       ** been entered                                                                         CAS006
- 
+
      C**********         IF        FSRECI = 'D' and FSMDAT <= BJRDNB                          CAS006
      C                   IF        FHFSRECI = 'D' AND FHFSMDAT <= BJRDNB AND                  CAS006
      C                             CAS006 = 'N' OR                                            CAS006
@@ -379,7 +381,7 @@
       *
      C                   READ      ASFHTRL1
      C                   ENDDO
- 
+
      C                   ENDSR
                                                                                               CAS006
       *****************************************************************                       CAS006
@@ -580,7 +582,7 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   ENDSR                                                                CAS006
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -593,28 +595,28 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRLstMDAT     BEGSR
- 
+
      C                   EVAL      WFSmdat = *ZERO
- 
+
       **  Read all linked transactions
- 
+
      C     FSHEDI        CHAIN     ASHTRNL9                           25
- 
+
      C                   DOW       *IN25 = *OFF
- 
+
       ** Retrieve transaction
- 
+
      C                   SELECT
- 
+
       ** Forecast Transactions
- 
+
      C**********         WHEN      FSMOD = 'FH'                                               CAS006
      C                   WHEN      HTFSMOD = 'FH'                                             CAS006
- 
+
       ** Validate against Forecast Transactions
- 
+
      C*****FSDLNO        CHAIN     ASFHTRL1                                                   CAS006
      C*****HTFSDLNO      CHAIN     ASFHTRL1                                            CAS006 CLE148
      C                   MOVE      HTFSDLNO      FSDLNO2                                      CLE148
@@ -624,12 +626,12 @@
      C                   IF        %FOUND(ASFHTRL1) AND FHFSMDAT > WFSmdat                    CAS006
      C                   EVAL      WFSmdat = FHFSMDAT                                         CAS006
      C                   ENDIF
- 
+
       ** Foreign Exchange Deals
- 
+
      C*********          WHEN      FSMOD = 'DL'                                               CAS006
      C                   WHEN      HTFSMOD = 'DL'                                             CAS006
- 
+
      C*****FSDLNO        CHAIN     DEALS                                                      CAS006
      C*****HTFSDLNO      CHAIN     DEALS                                               CAS006 CLE148
      C                   MOVE      HTFSDLNO      FSDLNO2                                      CLE148
@@ -644,14 +646,14 @@
      C                   EVAL      WFSmdat = MDAT                                             CAS006
      C                   ENDIF                                                                CAS006
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     FSHEDI        READE     ASHTRNL9                               25
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -663,11 +665,11 @@
       * Calls: AOBANKR0, *PSSR                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPgm
      C                   EVAL      DBMOD = PSProcMod
@@ -675,16 +677,16 @@
      C                   EVAL      DBKEY = *BLANKS
      C                   EVAL      DBASE = *ZERO
      C                   OUT       LDA
- 
+
       **  Use access program to read bank details file
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRetrnCde
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRetrnCde <> *BLANKS
      C                   EVAL      DBASE = 01
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -718,10 +720,10 @@
      C                   ELSE                                                                 CAS006
      C                   MOVEL     'N'           CAS006                                       CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Key List for Midas AS Hedge Transaction File Retrieval by
       ** Hedge ID/Hedge Indicator
- 
+
      C     KHTRNL1       KLIST
      C                   KFLD                    KAShedi
      C                   KFLD                    KASdhin
@@ -741,9 +743,9 @@
      C     KJENTList     KLIST                                                                CAS006
      C                   KFLD                    KBatchNo                                     CAS006
      C                   KFLD                    KBatchItem                                   CAS006
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -758,23 +760,23 @@
       * Calls: DBERRCTL                                                   *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

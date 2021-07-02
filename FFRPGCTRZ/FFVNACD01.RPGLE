@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CFF007  *CREATE    Date 13Feb01               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -45,14 +47,14 @@
       * *INZSR - Initialise                                           *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSECTY     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -64,13 +66,13 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -78,44 +80,44 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDNATU        E DS                  EXTNAME(SDNATUPD)
       ** Midas Nature Code File Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** First DS for Access Programs, Long Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D STNAT           S              3A
      D SUNSE           S             10A
      D BGSECS          S              1A
- 
+
      D PRtCd           S              7A
      D POptn           S              7A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -130,47 +132,47 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error fields
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
       ** MsgDtaXArr, XIdx.  It therefore requires FVAL_ARRAY and STD_D_SPEC.
      C/COPY ZACPYSRC,FVAL_RESET
- 
+
      C                   IF        BGSECS = 'Y'
      C                             AND  STNAT = *Blanks
      C     SUNSE         CHAIN     SECTY                              01
- 
+
       ** Default value from SECTY file
- 
+
      C                   IF        *IN01 = '0'
      C                   EVAL      STNAT = NATU
      C                   ELSE
- 
+
       ** A valid nature code must be entered
- 
+
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'STNAT'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0834'
      C                   EVAL      ReturnCode = 'Error'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        ReturnCode = *Blanks
- 
+
       ** Access Nature Code Description File
- 
+
      C                   CALL      'AONATUR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*KEY  '      POptn
      C                   PARM                    STNAT
      C     SDNATU        PARM      SDNATU        DSSDY
- 
+
       ** A valid nature code must be entered
- 
+
      C                   IF        PRtCd <> *Blanks
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'STNAT'
@@ -179,11 +181,11 @@
      C                   ELSE
      C                   EVAL      STNAT = TNNATU
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -195,9 +197,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    STNAT
@@ -205,15 +207,15 @@
      C                   PARM                    BGSECS
      C                   PARM                    MsgIDXArr
      C                   PARM                    FldNamXArr
- 
+
       **---------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **---------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       **--------------------------------------------------------------+

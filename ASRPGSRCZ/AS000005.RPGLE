@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -159,10 +161,10 @@
       ** +--------------------------------------+
      FASHGLKL0  UF   E           K DISK    INFSR(*PSSR)
       ** Midas AS Hedge Linkage File Update by Hedge ID
- 
+
      FASHTRNL9  IF   E           K DISK    INFSR(*PSSR)
       ** Midas AS Hedge Transaction File Retrieval by Hedge ID
- 
+
      F***DEALALL   IF   E           K DISK    INFSR(*PSSR)                                    CAS005
      F**********                           IGNORE(DEALSDAF)                                   CAS005
      F**********                           IGNORE(DEALSDFF)                                   CAS005
@@ -172,16 +174,16 @@
      F                                     IGNORE(MMDENSP0)                                   CAS005
      F                                     IGNORE(FXDEALP0)                                   CAS005
       ** Midas DL All deals
- 
+
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
       ** Midas LE Loans File
- 
+
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)
       ** Midas SE Book Position Headers
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)                                       CAS005
       ** Midas Securities Details                                                             CAS005
                                                                                               CAS005
@@ -216,25 +218,25 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CAS003
@@ -246,13 +248,13 @@
                                                                                               229418
       ** External DS for Hedge ICD                                                            229418
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)                                  229418
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D                 DS                                                                     CAS003
      D  WDSfpse                1     10                                                       CAS003
      D  WDSistt                1      5                                                       CAS003
@@ -263,7 +265,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for AOBANKR0
      D PRetrnCde       S              7A
      D POption         S              7A
@@ -272,7 +274,7 @@
      D PRtrnCode       S              7A                                                      CAS003
      D POptn           S              7A                                                      CAS003
      D PSard           S              6A                                                      CAS003
- 
+
       ** Parameters for ZFREQB                                                                CAS005
      D PRetCodeIn      S             10A                                                      CAS005
      D PZFreq          S              1A                                                      CAS005
@@ -289,7 +291,7 @@
      D KBKbhbk         S              2A
      D KBKbhmk         S              1A
      D KBKbhtv         S              1A
- 
+
       ** Fields used to define Key List for Midas FF Book Positions by                        CAS003
       ** Branch, Book and Instrument Type                                                     CAS003
      D KPObrca         S              3A                                                      CAS003
@@ -298,7 +300,7 @@
      D KPOyrno         S              2P 0                                                    CAS003
      D KPOmthn         S              2P 0                                                    CAS003
      D KPOpcal         S              1A                                                      CAS003
- 
+
      D WDerivaLive     S              1A
      D WHedgedLive     S              1A
      D WRun            S              1A
@@ -323,12 +325,12 @@
      D WkESCD          S              5P 0                                                    CAS005
      D WFSRECIOrig     S              1A                                                      CAS005
      D CAS006          S              1A                                                      229418
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -339,43 +341,43 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Read all hedges in the system.
- 
+
      C                   READ      ASHGLKL0
- 
+
       ** Do while not end of file
- 
+
      C                   DOW       NOT %EOF(ASHGLKL0)
- 
+
       ** Expires Hedge Linkage if the end date has been reached.
- 
+
      C                   EXSR      SRExpENDT
- 
+
      C**********         IF        FSRECI = 'D'                                               CAS005
      C                   IF        FSRECI = 'D' OR FSRECI = 'T'                               CAS005
      C                             OR FSRECI = 'X'                                            CAS005
                                                                                               CAS005
      C                   EVAL      WFSRECIOrig = FSRECI                                       CAS005
- 
+
       ** Expires Hedge Linkage if any hedged items or hedging instruments
       ** have matured or have been deleted.
- 
+
      C                   EXSR      SREMatDel
- 
+
      C                   ENDIF
- 
+
       ** Read next record on LF/ASHGLKL0
- 
+
      C                   READ      ASHGLKL0
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -388,7 +390,7 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRExpENDT     BEGSR
                                                                                               CAS004
       ** Determine Event Control Date for checking if hedge has expired or matured            CAS004
@@ -399,14 +401,14 @@
      C                   EVAL      EVCD = BKAPDT                                              CAS004
      C                   ENDIF                                                                CAS004
      C                   ENDIF                                                                CAS004
- 
+
       ***If*end*date*is*less*than*or*equal*to*rundate                                         CAS004
       ** If end date is less than or equal to rundate when CAS004 if off                      CAS004
- 
+
      C                   IF        CAS004 = 'N'                                               CAS004
      C                   IF        FSRECI = 'D' AND FSENDT <= BJRDNB
      C                             OR FSRECI = 'T' AND FSENDT <= BJRDNB
- 
+
      C                   EVAL      FSRECI = 'E'
      C                   EVAL      FSCHTP = 'E'
      C                   EVAL      FSLCD = BJRDNB
@@ -429,9 +431,9 @@
      C                   ENDIF                                                                CAS004
      C                   ENDIF                                                                CAS004
      C                   ENDIF                                                                CAS004
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -446,9 +448,9 @@
       *         SRExpirFF                                             *                       CAS003
       *                                                               *
       *****************************************************************
- 
+
      C     SREMatDel     BEGSR
- 
+
      C                   EVAL      WDerivaLive = *BLANKS
      C                   EVAL      WHedgedLive = *BLANKS
      C                   EVAL      WNotAllMatd  = *BLANKS                                     CAS005
@@ -462,42 +464,42 @@
      C                   EVAL      WItemMatured = *BLANKS                                     CAS005
      C                   EVAL      WItemLMatDt  = *ZEROS                                      CAS005
      C                   EVAL      WItemEMatDt  = 99999                                       CAS005
- 
+
       ** Read all linked transactions
- 
+
      C     FSHEDI        CHAIN     ASHTRNL9                           25
- 
+
      C                   DOW       *IN25 = *OFF
- 
+
       ** Retrieve transaction
- 
+
      C                   SELECT
- 
+
       ** Money Market / Foreign Exchange
- 
+
      C                   WHEN      FSMOD = 'DL'
      C                   EXSR      SRExpirDL
- 
+
       ** Customer Loans
- 
+
      C                   WHEN      FSMOD = 'LE'
      C                   EXSR      SRExpirLE
- 
+
       ** Securities
- 
+
      C                   WHEN      FSMOD = 'SE'
      C                   EXSR      SRExpirSE
- 
+
       ** Forecast Transactions
- 
+
      C                   WHEN      FSMOD = 'FH'
- 
+
       ** Forecast Transactions, Expiry of Forecast Transactions is done
       ** by AS000006, thus preserve the live record id.
- 
+
      C                   EVAL      FSRECI = 'D'
      C                   LEAVE
- 
+
      C                   ENDSL
                                                                                               CAS003
       ** If CAS003 is installed, evaluate if any FF Hedging/Derivative                        CAS003
@@ -509,12 +511,12 @@
      C                             AND FSMOD = 'FF'                                           CAS003
      C                   EXSR      SRExpirFF                                                  CAS003
      C                   ENDIF                                                                CAS003
- 
+
      C     FSHEDI        READE     ASHTRNL9                               25
      C                   ENDDO
- 
+
      C                   IF        FSRECI = 'E'
- 
+
      C                   IF        CAS005 = 'Y'                                               CAS005
      C                   EVAL      FSCHTP = 'E'                                               CAS005
                                                                                               CAS005
@@ -586,13 +588,13 @@
      C                   ELSE                                                                 CAS005
                                                                                               CAS005
       ** Flag expired hedges
- 
+
      C                   IF        WDerivaLive = ' '
      C                   EVAL      FSCHTP = 'E'
- 
+
       ** Flag an expired hedged with a live derivative instrument
       ** as Trading
- 
+
      C                   ELSE
      C                   IF        WHedgedLive = *BLANKS
      C                   EVAL      FSRECI = 'T'
@@ -600,20 +602,20 @@
      C                   ELSE
      C                   EVAL      FSCHTP = 'E'
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CAS005
      C                   ENDIF                                                                CAS005
- 
+
      C                   IF        FSRECI <> 'D'                                              CAS005
      C                   EVAL      FSLCD = BJRDNB
      C                   UPDATE    ASHGLKD0
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -626,9 +628,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRExpirDL     BEGSR
- 
+
      C*****FSDLNO        CHAIN     DEALALL                                                    CAS005
      C*****FSDLNO        CHAIN     DEALSALL                                            CAS005 CLE148
      C                   MOVEL     FSDLNO        FSDLNO2           6 0                        CLE148
@@ -638,7 +640,7 @@
      C                   IF        NOT %FOUND(DEALSALL)                                       CAS005
      C                             OR %FOUND(DEALSALL) AND RECI <> 'D'                        CAS005
      C                   EVAL      FSRECI = 'E'
- 
+
      C                   IF        CAS005 = 'Y' AND                                           CAS005
      C                             %FOUND(DEALSALL)                                           CAS005
      C                   SELECT                                                               CAS005
@@ -652,19 +654,19 @@
      C                   ELSE
                                                                                               CAS005
      C                   IF        CAS005 <> 'Y'                                              CAS005
- 
+
       ** Derivative Instrument is Live
- 
+
      C                   IF        FSDHIN = 'D'
      C                   EVAL      WDerivaLive = 'Y'
      C                   ENDIF
- 
+
       ** Hedged Item is Live
- 
+
      C                   IF        FSDHIN = 'H'
      C                   EVAL      WHedgedLive = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE                                                                 CAS005
                                                                                               CAS005
      C                   SELECT                                                               CAS005
@@ -675,9 +677,9 @@
      C                   ENDSL                                                                CAS005
      C                   ENDIF                                                                CAS005
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -690,14 +692,14 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRExpirLE     BEGSR
- 
+
      C     FSDLNO        CHAIN     CLOAN
      C                   IF        NOT %FOUND(CLOAN)
      C                             OR %FOUND(CLOAN) AND RECI <> 'D'
      C                   EVAL      FSRECI = 'E'
- 
+
      C                   IF        CAS005 = 'Y' AND                                           CAS005
      C                             %FOUND(CLOAN)                                              CAS005
      C                   EXSR      SRItem1                                                    CAS005
@@ -709,22 +711,22 @@
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
      C                   ELSE
- 
+
      C                   IF        CAS005 <> 'Y'                                              CAS005
                                                                                               CAS005
       ** Hedged Item is Live
- 
+
      C                   EVAL      WHedgedLive = 'Y'
- 
+
      C                   ELSE                                                                 CAS005
      C                   EXSR      SRItem2                                                    CAS005
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
      C                   ENDIF
- 
+
      C                   ENDSR
- 
- 
+
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -737,41 +739,41 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRExpirSE     BEGSR
- 
+
       ** Validate against Midas SE Book Positions Header
- 
+
      C                   EVAL      KBKbhsc = FSFPSE
      C                   EVAL      KBKbhba = FSBRCA
      C                   EVAL      KBKbhbk = FSBKCD
      C                   EVAL      KBKbhmk = FSMKTI
      C                   EVAL      KBKbhtv = FSBHTV
- 
+
      C     KBKPHD        CHAIN     BKPHD
      C                   IF        NOT %FOUND(BKPHD)
      C                             OR %FOUND(BKPHD) AND RECI <> 'D'
      C                   EVAL      FSRECI = 'E'
- 
+
      C                   IF        CAS005 = 'Y' AND                                           CAS005
      C                             %FOUND(BKPHD)                                              CAS005
      C                   EXSR      SRItem1                                                    CAS005
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
      C                   ELSE
- 
+
      C                   IF        CAS005 <> 'Y'                                              CAS005
                                                                                               CAS005
      C                   EVAL      WHedgedLive = 'Y'
- 
+
      C                   ELSE                                                                 CAS005
      C                   EXSR      SRItem2                                                    CAS005
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************                       CAS003
@@ -1304,11 +1306,11 @@
       *        AOSARDR0                                               *                       CAS003
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPgm
      C                   EVAL      DBMOD = PSProcMod
@@ -1316,16 +1318,16 @@
      C                   EVAL      DBKEY = *BLANKS
      C                   EVAL      DBASE = *ZERO
      C                   OUT       LDA
- 
+
       **  Use access program to read bank details file
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRetrnCde
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRetrnCde <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -1472,9 +1474,9 @@
      C                   EXSR      *PSSR                                                      229418
      C                   ENDIF                                                                229418
      C                   ENDIF                                                                229418
- 
+
       ** Key List for Midas SE Book Position Headers
- 
+
      C     KBKPHD        KLIST
      C                   KFLD                    KBKbhsc
      C                   KFLD                    KBKbhba
@@ -1492,9 +1494,9 @@
      C                   KFLD                    KPOyrno                                      CAS003
      C                   KFLD                    KPOmthn                                      CAS003
      C                   KFLD                    KPOpcal                                      CAS003
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1509,23 +1511,23 @@
       * Calls: DBERRCTL                                                   *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
-      *  Prev Amend No. 223783             Date 28May12               *      
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *                 223783             Date 28May12               *
       *                 MD055642A          Date 27May20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG009             Date 24Oct19               *
@@ -56,10 +57,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
       *           (Recompile)                                         *
       *  223783 - Edit field 86.                                      *
-      *         - Applied for AR973615 (Child: AR973617)              *      
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  MD055642A - FM 2.1 SP21 Duplicate MultiCash Narr 22 on       *
       *             field 61 subfield 86                              *
       *  CMG008 - SWIFT Character Translation Table                   *

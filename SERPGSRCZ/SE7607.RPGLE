@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -237,7 +239,7 @@
      D POptn           S              7A
      D PCcy            S              3A
      D WNBDP           S              1P 0
- 
+
      D RQDLN1          S              3P 0
      D DIFLN1          S              3P 0
      D SENTY           S              3A
@@ -274,7 +276,7 @@
      D WRun            S              1A
      D WriteHead       S              1A
      D W1stRec         S              1A                                                      187808
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -293,7 +295,7 @@
       ** Return.
       *
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -307,9 +309,9 @@
       *
      C     *LOVAL        SETLL     POSETW5
      C                   READ      POSETW5                                02
- 
+
      C                   EVAL      WCount = *ZERO
- 
+
      C                   DOW       *IN02 = *OFF
       *
       ** Process record for reporting.
@@ -324,7 +326,7 @@
       ** Read next record.
       *
      C                   READ      POSETW5                                02
- 
+
      C                   ENDDO
       *
       ** Perform audit reporting if no records processed. Otherwise,
@@ -341,9 +343,9 @@
       *
      C                   CLOSE     SE7607P1
      C                   EXSR      SRRCP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -351,12 +353,12 @@
       *  SRChkPrc - Check if security is to be reported               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkPrc      BEGSR
- 
+
       ** Get dividend/coupon rate amounts from Security events
       ** file using security shortname.
- 
+
      C                   EVAL      WPrtRec = 'Y'
      C                   IF        PEVT = 'CP' OR
      C                             PEVT = 'DV'
@@ -372,9 +374,9 @@
      C                   ELSE                                                                 193312
       *                                                                                       193312
      C     KPARM         CHAIN     SECED                              03
- 
+
      ** If record not found, chain for 'CG' event type
- 
+
      C                   IF        *IN03 AND
      C                             PEVT = 'CP'
      C                   EVAL      WPevt = PEVT
@@ -382,9 +384,9 @@
      C     KPARM         CHAIN     SECED                              03
      C                   EVAL      PEVT = WPevt
      C                   ENDIF
- 
+
       ** database error if not found
- 
+
      C                   IF        *IN03 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PSSH + RDDAT + PEVT
@@ -393,9 +395,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       ** Save coupon rate to be used for output
- 
+
      C                   IF        PEVT = 'CP'
      C                   Z-ADD     FSNCR         WOAmt
      C                   ELSE
@@ -404,21 +406,21 @@
      C                   ENDIF
      C                   ENDIF                                                                193312
      C                   ELSE
- 
+
       ** If event type is not maturity
- 
+
      C                   IF        PEVT <> 'MT'
      C     KPARM         CHAIN     SECORFD0                           03
- 
+
       ** If record found on Corporate actions file - dividend, check on
       ** Corporate Actions dividend file, otherwise, do not process
- 
+
      C                   IF        NOT *IN03
      C     MACORF        CHAIN     SECODVD0                           03
- 
+
       ** If found, use dividend per unit amount for coupon rate,
       ** otherwise, do not process
- 
+
      C                   IF        NOT *IN03
      C**********         EVAL      WOAmt = MDDIVU                                             190204
      C                   EVAL      WOAmt = MDDIV1                                             190204
@@ -431,7 +433,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -440,7 +442,7 @@
       *                                                               *
       *****************************************************************
      C     SRRept        BEGSR
- 
+
      C                   EVAL      WriteHead = 'N'
       *
       ** Check if depot changes.
@@ -467,7 +469,7 @@
      C                   PARM      WCPY          PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = WCPY
@@ -476,10 +478,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RDPOT = BBCUST
      C                   EVAL      RDRPN = BBCRNM
- 
+
      C                   EVAL      WriteHead = 'Y'
      C                   ENDIF
       *
@@ -515,13 +517,13 @@
       *
       ** Get nominal currency details.
      C                   EVAL      RCCCY = PNCY
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      PNCY          PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POptn
@@ -530,19 +532,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     A6NBDP        WNBDP
       *
       ** Amount of Dividend/Coupon Rate.
       *
- 
+
      C                   IF        WPrtRec = 'Y'
- 
+
      C                   EXSR      SRHalfAdj
      C                   Z-ADD     WNBDP         PZDecs
      C                   EXSR      SRFmtAmt
      C                   EVAL      RCDRT = PZout21
- 
+
      C                   WRITE     SE7607H1
      C                   EVAL      WriteHead = 'Y'
      C                   ENDIF
@@ -562,7 +564,7 @@
      C                   ENDIF
      C
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -613,9 +615,9 @@
       ** Write out detail record.
       *
      C                   WRITE     SE7607D1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -668,11 +670,11 @@
       ** Write subtotal format.
       *
      C                   WRITE     SE7607T1
- 
+
      C                   Z-ADD     *ZERO         WTNMP                                        187808
                                                                                               187808
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -682,33 +684,33 @@
       *                                                               *
       *****************************************************************
      C     SRHalfAdj     BEGSR
- 
+
      C                   Z-ADD     *ZERO         PAmtIn
- 
+
      C                   SELECT
      C                   WHEN      WNBDP = 1
      C                   Z-ADD(H)  WOAmt         WAmt1
      C                   Z-ADD     WAmt1         WOamt
      C                   MOVE      WAmt1         PAmtIn
- 
+
      C                   WHEN      WNBDP = 2
      C                   Z-ADD(H)  WOAmt         WAmt2
      C                   Z-ADD     WAmt2         WOamt
      C                   MOVE      WAmt2         PAmtIn
- 
+
      C                   WHEN      WNBDP = 3
      C                   Z-ADD(H)  WOAmt         WAmt3
      C                   Z-ADD     WAmt3         WOamt
      C                   MOVE      WAmt3         PAmtIn
- 
+
      C                   OTHER
      C                   Z-ADD(H)  WOAmt         WAmt0
      C                   Z-ADD     WAmt0         WOamt
      C                   MOVE      WAmt0         PAmtIn
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -717,16 +719,16 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmt      BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    PAmtIn
      C                   PARM                    PZDecs
      C                   PARM      'J'           PZECode
      C                   PARM      *BLANK        PZEChar
      C                   PARM                    PZOut21
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -735,9 +737,9 @@
       *                                                               *
       *****************************************************************
      C     SRRCAu        BEGSR
- 
+
      C                   Z-ADD     SFNUMU        ZSNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PPSEQ
      C                   PARM      *BLANKS       SENTY
@@ -755,9 +757,9 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -766,7 +768,7 @@
       *                                                               *
       *****************************************************************
      C     SRRCP1        BEGSR
- 
+
      C                   Z-ADD     SFNUM1        ZSNUM
       *
       ** Ensure Report Spool File recorded by RCF.
@@ -790,7 +792,7 @@
      C                   ENDIF
      C
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -821,9 +823,9 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -835,11 +837,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPgm
      C                   OUT       LDA
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
@@ -882,9 +884,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -902,17 +904,17 @@
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   EXSR      SRAudt
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *********************************************************************                   193312
       /EJECT                                                                                  193312
       *********************************************************************                   193312

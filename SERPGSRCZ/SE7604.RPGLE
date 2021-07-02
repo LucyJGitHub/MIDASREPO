@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -206,7 +208,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @ExRate         S             15  8                                                    186231
      D @ECcyDP         S              1  0                                                    186231
      D @RccyDP         S              1  0                                                    186231
@@ -227,10 +229,10 @@
      D*WInzFlg***      S              1                                                       186053
      D WSpcFlg         S              1
      D WSpcInd         S              1
- 
+
      D RFDAT           S              5P 0
      D RTDAT           S              5P 0
- 
+
      D RQDLN1          S              3P 0
      D DIFLN1          S              3P 0
      D SENTY           S              3A
@@ -285,7 +287,7 @@
      D WTTXWU          S             15  0                                                    186053
      D*WTNETD****      S             15P 8                                                    186053
      D WTNETD          S             15  0                                                    186053
- 
+
      D*WGGROS****      S             15P 8                                                    186053
      D WGGROS          S             15  0                                                    186053
      D*WGTXWS****      S             15P 8                                                    186053
@@ -294,14 +296,14 @@
      D WGTXWU          S             15  0                                                    186053
      D*WGNETD****      S             15P 8                                                    186053
      D WGNETD          S             15  0                                                    186053
- 
+
      D*WGros*****      S             15P 8                                                    186053
      D WGros           S             15  0                                                    186053
      D*WTxws*****      S             15P 8                                                    186053
      D WTxws           S             15  0                                                    186053
      D*WTxwu*****      S             15P 8                                                    186053
      D WTxwu           S             15  0                                                    186053
- 
+
      D WBenAmt1        S             23P 8 INZ(0)                                             186053
      D WBenAmt2        S             23P 8 INZ(0)                                             186053
      D WBenAmt3        S             23P 8 INZ(0)                                             186053
@@ -329,7 +331,7 @@
      D WCount          S              3P 0
      D WRun            S              1A
      D WriteHead       S              1A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -348,7 +350,7 @@
       ** Return.
       *
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -362,9 +364,9 @@
       *
      C     KPARM         SETLL     SDCUINL0
      C                   READ      SDCUINL0                               02
- 
+
      C                   EVAL      WCount = *ZERO
- 
+
      C                   DOW       *IN02 = *OFF
       *
       ** If event type, customer, beneficiary owner or customer
@@ -396,13 +398,13 @@
      C                   EVAL      WCount = WCount + 1
      C                   EXSR      SRRept
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Read next record.
       *
      C                   READ      SDCUINL0                               02
- 
+
      C                   ENDDO
       *
       ** Perform audit reporting if no records processed. Otherwise,
@@ -420,9 +422,9 @@
       *
      C                   CLOSE     SE7604P1
      C                   EXSR      SRRCP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -431,7 +433,7 @@
       *                                                               *
       *****************************************************************
      C     SRRept        BEGSR
- 
+
      C                   EVAL      WriteHead = 'N'
      C***********        EVAL      WInzFlg = 'N'                                              186053
      C                   EVAL      WSpcFlg = 'N'
@@ -466,9 +468,9 @@
      C                   ENDIF
      C***********        EVAL      RBOWN = CUBNOW                                             186053
      C                   EVAL      WriteHead = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      W_INCD = RINCD                                             186053
      C                   IF        CUINCD <> RINCD
      C                             OR CUBNOW <> W_BOWN                                        186053
@@ -478,14 +480,14 @@
       ** income code.
       *
      C                   IF        RINCD <> *ALL'*'
- 
+
      C                   IF        WSpcInd = 'Y'
      C                   EVAL      WSpcFlg = 'N'
      C                   ELSE
      C                   EVAL      WSpcFlg = 'Y'
      C                   EVAL      WSpcInd = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      RSTLE = 'Income code'
      C                   Z-ADD     WIncAmt1      WTGROS                                       186053
      C                   Z-ADD     WIncAmt2      WTTXWS                                       186053
@@ -499,9 +501,9 @@
      C                   ENDIF
      C***********        EVAL      RINCD = CUINCD                                             186053
      C                   EVAL      WriteHead = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      W_DEPO = RDEPO                                             186053
      C                   IF        CUDPTN <> RDEPO
      C                             OR CUBNOW <> W_BOWN                                        186053
@@ -512,14 +514,14 @@
       ** depot.
       *
      C                   IF        RDEPO <> *ALL'*'
- 
+
      C                   IF        WSpcInd = 'Y'
      C                   EVAL      WSpcFlg = 'N'
      C                   ELSE
      C                   EVAL      WSpcFlg = 'Y'
      C                   EVAL      WSpcInd = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      RSTLE = 'Depot'
      C                   Z-ADD     WDepAmt1      WTGROS                                       186053
      C                   Z-ADD     WDepAmt2      WTTXWS                                       186053
@@ -533,9 +535,9 @@
      C                   ENDIF
      C***********        EVAL      RDEPO = CUDPTN                                             186053
      C                   EVAL      WriteHead = 'Y'
- 
+
      C                   ENDIF
- 
+
       ** Delete level break for Excemption Code:                                              186053
      C***********        IF        CUEXCD <> REXCD                                            186053
       ***********                                                                             186053
@@ -559,7 +561,7 @@
      C***********        EVAL      WriteHead = 'Y'                                            186053
       ***********                                                                             186053
      C***********        ENDIF                                                                186053
- 
+
      C                   IF        CUTXBS <> RTXBS
      C                             OR CUBNOW <> W_BOWN                                        186053
      C                             OR CUINCD <> W_INCD                                        186053
@@ -571,14 +573,14 @@
       ** tax basket.                                                                          186053
       *
      C                   IF        RTXBS <> *ALL'*'
- 
+
      C                   IF        WSpcInd = 'Y'
      C                   EVAL      WSpcFlg = 'N'
      C                   ELSE
      C                   EVAL      WSpcFlg = 'Y'
      C                   EVAL      WSpcInd = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      RSTLE = 'Tax Basket '
      C                   Z-ADD     WTaxAmt1      WTGROS                                       186053
      C                   Z-ADD     WTaxAmt2      WTTXWS                                       186053
@@ -592,9 +594,9 @@
      C                   EXSR      SRTaxRate
      C***********        EVAL      RTXRT = WTaxRateC                                          186231
      C                   EVAL      WriteHead = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      RBOWN = CUBNOW                                             186053
      C                   EVAL      RINCD = CUINCD                                             186053
      C                   EVAL      RDEPO = CUDPTN                                             186053
@@ -606,7 +608,7 @@
      C***********        Z-ADD     *ZERO         WTTXWU                                       186053
      C***********        Z-ADD     *ZERO         WTNETD                                       186053
      C***********        ENDIF                                                                186053
- 
+
       *
       ** Check if customer changes.
       *
@@ -621,7 +623,7 @@
      C***********        Z-ADD     *ZERO         WTTXWS                                       186053
      C***********        Z-ADD     *ZERO         WTTXWU                                       186053
      C***********        Z-ADD     *ZERO         WTNETD                                       186053
- 
+
      C                   Z-ADD     *ZERO         WGGROS
      C                   Z-ADD     *ZERO         WGTXWS
      C                   Z-ADD     *ZERO         WGTXWU
@@ -651,7 +653,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      CUNCY         PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POptn
@@ -660,10 +662,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     A6NBDP        WNBDP
      C                   Z-ADD     A6NBDP        @ECcyDP                                      186231
- 
+
      C                   ENDIF
       *                                                                                       186231
       ** Get report currency no. of decimal places.                                           186231
@@ -711,7 +713,7 @@
      C                   ENDIF                                                                186053
      C
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -745,7 +747,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     FNMDP         WNMDP
       *
       ** Format report amounts.
@@ -917,9 +919,9 @@
       ** Write out detail record.
       *
      C                   WRITE     SE7604D1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -939,7 +941,7 @@
      C                   WRITE     SE7604H1
      C                   WRITE     SE7604H2
      C                   ENDIF
- 
+
      C                   EXSR      SRHash
       *
       ** Write subtotal format.
@@ -947,11 +949,11 @@
      C                   IF        WSpcFlg = 'Y'
      C                   WRITE     SE7604L1
      C                   ENDIF
- 
+
      C                   WRITE     SE7604T1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -970,15 +972,15 @@
      C                   WRITE     SE7604H1
      C                   WRITE     SE7604H2
      C                   ENDIF
- 
+
      C                   EXSR      SRHas2
       *
       ** Write grand total format.
       *
      C                   WRITE     SE7604T2
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1017,9 +1019,9 @@
      C                   EXSR      SRFmtAmt
      C                   EVAL      RTNETD = PZOut21
      C***********        ADD       WOAmt         WGNETD                                       186053
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1054,9 +1056,9 @@
      C                   EXSR      SRHalfAdj
      C                   EXSR      SRFmtAmt
      C                   EVAL      RGNETD = PZOut21
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1066,33 +1068,33 @@
       *                                                               *
       *****************************************************************
      C     SRHalfAdj     BEGSR
- 
+
      C                   Z-ADD     *ZERO         PAmtIn
- 
+
      C                   SELECT
      C                   WHEN      WNBDP = 1
      C                   Z-ADD(H)  WOAmt         WAmt1
      C                   Z-ADD     WAmt1         WOamt
      C                   MOVE      WAmt1         PAmtIn
- 
+
      C                   WHEN      WNBDP = 2
      C                   Z-ADD(H)  WOAmt         WAmt2
      C                   Z-ADD     WAmt2         WOamt
      C                   MOVE      WAmt2         PAmtIn
- 
+
      C                   WHEN      WNBDP = 3
      C                   Z-ADD(H)  WOAmt         WAmt3
      C                   Z-ADD     WAmt3         WOamt
      C                   MOVE      WAmt3         PAmtIn
- 
+
      C                   OTHER
      C                   Z-ADD(H)  WOAmt         WAmt0
      C                   Z-ADD     WAmt0         WOamt
      C                   MOVE      WAmt0         PAmtIn
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1101,16 +1103,16 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmt      BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    PAmtIn
      C                   PARM                    PZDecs
      C                   PARM                    PZECode
      C                   PARM      *BLANK        PZEChar
      C                   PARM                    PZOut21
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1119,9 +1121,9 @@
       *                                                               *
       *****************************************************************
      C     SRRCAu        BEGSR
- 
+
      C                   Z-ADD     SFNUMU        ZSNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSEQ
      C                   PARM      *BLANKS       SENTY
@@ -1139,9 +1141,9 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1150,7 +1152,7 @@
       *                                                               *
       *****************************************************************
      C     SRTaxRate     BEGSR
- 
+
      C                   IF        CUTXBS <> *BLANKS
      C                   CALLB     'AOTXBSR0'
      C                   PARM      *BLANKS       PRtcd
@@ -1160,9 +1162,9 @@
      C                   PARM      CUVALD        PVald
      C                   PARM      *BLANKS       PNarr
      C                   PARM      *ZERO         PTxrt
- 
+
       ** Database error in file SDTXBSPD
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 4
@@ -1173,12 +1175,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PTxrt = 0
      C                   ENDIF
- 
+
      C*************      MOVE      *BLANKS       WTaxRateC                                    186231
      C*************      EVAL      WTaxRate = PTxrt                                           186231
      C*************      CALL      'ZM0010'                                                   186231
@@ -1190,7 +1192,7 @@
      C                   MOVE      *BLANK        PZECode                                      186231
      C                   EXSR      SRFmtAmt                                                   186231
      C                   MOVE      PZout21       RTXRT                                        186231
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1200,7 +1202,7 @@
       *                                                               *
       *****************************************************************
      C     SRRCP1        BEGSR
- 
+
      C                   Z-ADD     SFNUM1        ZSNUM
       *
       ** Ensure Report Spool File recorded by RCF.
@@ -1224,7 +1226,7 @@
      C                   ENDIF
      C
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1255,9 +1257,9 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  186053
       *****************************************************************                       186053
@@ -1334,15 +1336,15 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PSEQ
      C                   PARM                    PPARM
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPgm
      C                   OUT       LDA
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
@@ -1429,9 +1431,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1449,17 +1451,17 @@
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   EXSR      SRAudt
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

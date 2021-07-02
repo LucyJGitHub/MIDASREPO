@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CAS006             Date 21Jan03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -153,7 +155,7 @@
      D CSE010          S              1A
      D PMode           S              6A
      D PReDsp          S              1A
- 
+
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -188,9 +190,9 @@
      C                   ELSE
      C                   MOVE      DDSDCV        S2SDCV
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -198,7 +200,7 @@
       *  SrConvSec - Validate Conversion Security                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SrConvSec     BEGSR
       *
      C                   IF        DDSDCV <> *BLANKS
@@ -206,12 +208,12 @@
       ** Check Security Shortname and call Securities Selection.
      C                   IF        CSE010 = 'Y' AND PMODE <> '*FRONT'
      C     '?'           SCAN      DDSDCV                                 01
- 
+
      C                   IF        *IN01
      C                   CALL      'SE0043'
      C                   PARM                    PACTN
      C                   PARM      '?'           PSECT
- 
+
      C                   EVAL      DDSDCV = PSECT
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF

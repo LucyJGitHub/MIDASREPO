@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD057682           Date 12Apr21               *
-      *  Prev Amend No. MD055694           Date 09Mar20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD057682           Date 12Apr21               *
+      *                 MD055694           Date 09Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CSW216             Date 14Mar16               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD057682 - Populate Seq C tag 34R with buy ccy and buy amt.  *
       *             Map Seq C tag 57 with correct values (same as in  *
       *             Seq B1 tag 57 in MT300).                          *
@@ -219,7 +221,7 @@
 
      D AR8XJ           S             40    DIM(5)                                           MD055694
      D AN8X            S             40    DIM(5)                                           MD055694
-                                                                                            MD055694 
+                                                                                            MD055694
      D AJFORM          C                   CONST('ReplaceJFormatSlash')                     MD055694
      D SWIFT           C                   CONST('SWIFTACTV')                               MD055694
      D JFRMAT          C                   CONST('MG001003')                                MD055694

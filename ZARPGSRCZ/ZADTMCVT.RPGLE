@@ -16,16 +16,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG20932           Date 28Aug08               *
+      *                 BUG20932           Date 28Aug08               *
       *                 BUG20102           Date 15Aug08               *
       *                 BUG19628           Date 29Jul08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG20932 - Wrong date reflected in 98E based on the time     *
       *             conversion                                        *
@@ -62,14 +64,14 @@
       ** Midas SE Securities
       *
      FSECTY     IF   E           K DISK    INFSR(*Pssr)
- 
+
       ** Midas SE Market Centres
       *
      FSEMKC     IF   E           K DISK    INFSR(*Pssr)
- 
+
       ** Midas FF Market Centres (Detail)
       *
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -117,19 +119,19 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for SDMICCPD
      D SDMICC        E DS                  EXTNAME(SDMICCPD)
- 
+
       ** External DS for SDBANKPD
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SCSARDPD
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *
@@ -160,7 +162,7 @@
      D   PSyDt         S              5P 0
      D   PSytOf        S              4S 0
      D   PSytOs        S              1A
- 
+
       *
       ** Work variables
      D   WMicc         S                   LIKE(MICCOD) INZ(*Blanks)
@@ -178,20 +180,20 @@
      D   WSign         S                   LIKE(PSign)
      D   WInDate       S                   LIKE(PFrDt)
      D   PTime         S              6S 0 INZ(*ZEROS)                                     BUG19628
- 
+
      D   WPrvTime      S               T   TIMFMT(*HMS)
      D   WCurTime      S               T   TIMFMT(*HMS)
      D   WCurDate      S               D   DATFMT(*YMD)
      D   WTimeStr      S              6A   INZ(*Blanks)
      D   WDateStr      S              6A   INZ(*Blanks)
- 
+
      D   WOffSet1      DS
      D     S1HH                1      2S 0
      D     S1MM                3      4S 0
      D   WOffSet2      DS
      D     S2HH                1      2S 0
      D     S2MM                3      4S 0
- 
+
      D   WDSTim1       DS
      D     W1HH                1      2S 0
      D     W1MM                3      4S 0
@@ -200,16 +202,16 @@
       ** CSD082 variable for checking of MiFID Feature
      D   CSD082        S              1A   INZ('N')
       *
- 
+
       ** Parameter list for ZDATE2
      D PDateIn         S              5P 0
      D PDateOut        S              6P 0
      D PADateOut       S              7A
- 
+
       ** Parameters for ZDATE1
      D PZDate          S              6P 0 INZ(*Zeros)
      D PZDayNo         S              5P 0 INZ(*Zeros)
- 
+
       ** Parameters for access programs
      D PTzLc           S              1A
      D PZone           S             10A
@@ -219,7 +221,7 @@
      D PInDate         S                   LIKE(PFrDt)
      D PEffOffset      S                   LIKE(PSytof)
      D PSign           S              1A
- 
+
      D PTimeStamp      S             26Z                                                    BUG20932
                                                                                             BUG20932
      D TimeStmpDS      DS                                                                   BUG20932
@@ -279,9 +281,9 @@
      C                   IF        WMktCnvFlg <> 'Y'
      C                   EXSR      srReturn
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PFrTz = 'M'
      C                   EVAL      PMkTm = PFrTm
      C                   EVAL      PMkDt = PFrDt
@@ -292,9 +294,9 @@
      C                   EVAL      WSign1   = PMktOs
      C                   MOVE      PLctOf        WOffset2
      C                   EVAL      WSign2   = PLctOs
- 
+
      C                   EXSR      SrConvert
- 
+
      C                   MOVE      WTimeStr      PLcTm
      C                   EVAL      PlcDt = PZDayNo
       *
@@ -302,12 +304,12 @@
       *
      C                   MOVE      PSytOf        WOffset2
      C                   EVAL      WSign2   = PSytOs
- 
+
      C                   EXSR      SrConvert
- 
+
      C                   MOVE      WTimeStr      PSyTm
      C                   EVAL      PSyDt = PZDayNo
- 
+
      C                   WHEN      PFrTz = 'L'
      C                   EVAL      PLcTm = PFrTm
      C                   EVAL      PLcDt = PFrDt
@@ -318,9 +320,9 @@
      C                   EVAL      WSign1   = PLctOs
      C                   MOVE      PMktOf        WOffset2
      C                   EVAL      WSign2   = PMktOs
- 
+
      C                   EXSR      SrConvert
- 
+
      C                   MOVE      WTimeStr      PMkTm
      C                   EVAL      PMkDt = PZDayNo
                                                                                            BUG19628
@@ -344,10 +346,10 @@
      C                   MOVE      PSytOf        WOffset2
      C                   EVAL      WSign2   = PSytOs
      C                   EXSR      SrConvert
- 
+
      C                   MOVE      WTimeStr      PSyTm
      C                   EVAL      PSyDt = PZDayNo
- 
+
      C                   WHEN      PFrTz = 'S'
      C                   EVAL      PSyTm = PFrTm
      C                   EVAL      PSyDt = PFrDt
@@ -358,9 +360,9 @@
      C                   EVAL      WSign1   = PSytOs
      C                   MOVE      PMktOf        WOffset2
      C                   EVAL      WSign2   = PMktOs
- 
+
      C                   EXSR      SrConvert
- 
+
      C                   MOVE      WTimeStr      PMkTm
      C                   EVAL      PMkDt = PZDayNo
       *                                                                                     BUG20102
@@ -382,14 +384,14 @@
       *
      C                   MOVE      PLctOf        WOffset2
      C                   EVAL      WSign2   = PLctOs
- 
+
      C                   EXSR      SrConvert
- 
+
      C                   MOVE      WTimeStr      PLcTm
      C                   EVAL      PLcDt = PZDayNo
- 
+
      C                   ENDSL
- 
+
      C                   EVAL      *InLR = *On
       *
       *****************************************************************
@@ -456,7 +458,7 @@
      C                   PARM      '*VERIFY'     @Optn
      C                   PARM      'CSD082'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RtCd <> *Blanks
      C                             and @RtCd <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -466,17 +468,17 @@
      C                   EVAL      DBase = 1
      C                   OUT       LDA
      C                   EXSR      *Pssr
- 
+
      C                   ELSEIF    @RtCd = *Blanks
      C                   EVAL      CSD082 = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        @RtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDBANKPD'
@@ -486,7 +488,7 @@
      C                   OUT       LDA
      C                   EXSR      *Pssr
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -501,7 +503,7 @@
       *****************************************************************
       *
      C     SrVerifyInput BEGSR
- 
+
      C                   SELECT
      C                   WHEN      PFrTz = *Blanks
      C                             or (PFrTz <> 'M' and PFrTz <> 'L'
@@ -511,7 +513,7 @@
      C                             or PFrDt = *Zeros
      C                             or PFrTm > 240000
      C                   EXSR      srReturn
- 
+
      C                   WHEN      PFrTm = *Zeros
      C                   EVAL      PMkDt = PFrDt
      C                   EVAL      PLcDt = PFrDt
@@ -519,7 +521,7 @@
      C                   EVAL      PRtCd = '*NOTIME'
      C                   EVAL      *InLR = *On
      C                   RETURN
- 
+
      C                   WHEN      PFrTm <> *Zeros
      C                   MOVE      PFrTm         WDSTim1
      C                   IF        W1HH > 24
@@ -527,10 +529,10 @@
      C                             or W1SS >= 60
      C                   EXSR      srReturn
      C                   ENDIF
- 
+
      C                   OTHER
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -566,7 +568,7 @@
       *
      C                   EVAL      PSytOf  = WEffOffset
      C                   EVAL      PSytOs  = WSign
- 
+
      C                   IF        PSytOs = *Blanks
      C                   IF        PSytOF >= *Zeros
      C                   EVAL      PSytOs  = WPositive
@@ -592,7 +594,7 @@
       *
      C                   EVAL      PLctOf  = WEffOffset
      C                   EVAL      PLctOs  = WSign
- 
+
      C                   IF        PLctOs = *Blanks
      C                   IF        PLctOF >= *Zeros
      C                   EVAL      PLctOs  = WPositive
@@ -600,7 +602,7 @@
      C                   EVAL      PLctOs  = WNegative
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *                                                               *
       *****************************************************************
@@ -614,16 +616,16 @@
       *****************************************************************
       *
      C     SrGetMarket   BEGSR
- 
+
      C                   IF        PMicc <> *Blanks
      C                   EVAL      WMicc = PMicc
- 
+
      C                   ELSE
       *
       ** MIC Code is unknown, determine the MIC Code based on other parameters
       *
      C                   EVAL      WMarketCtr = PMrkt
- 
+
      C                   SELECT
       *
       ** Determine MIC Code for Securities Trading Market
@@ -633,7 +635,7 @@
       ** If Market center passed is blanks then determine the market center
       *
      C                   IF        WMarketCtr = *Blanks
- 
+
      C                   IF        PSesn = *Blanks
      C                   EVAL      WMktCnvFlg = 'N'
      C                   LEAVESR
@@ -642,14 +644,14 @@
       ** Access SECTY to get the Market Centre
       *
      C     PSesn         Chain     SECTY                              50
- 
+
      C                   IF        (*In50 = *Off)
      C                   EVAL      WMarketCtr  = SMCC
      C                   ELSE
      C                   EVAL      WMktCnvFlg = 'N'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access SEMKC to get MIC Code
@@ -665,7 +667,7 @@
       ** Determine MIC Code for Futures and Options Market
       *
      C                   WHEN      (PModu = 'FO')
- 
+
      C                   IF        (CSD082 = 'N')
      C                   EVAL      WMktCnvFlg = 'N'
      C                   LEAVESR
@@ -676,9 +678,9 @@
      C                   OTHER
      C                   EVAL      WMktCnvFlg = 'N'
      C                   LEAVESR
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
       *
       ** Determine the time zone code based on the MIC Code
@@ -716,7 +718,7 @@
       *
      C                   EVAL      PMktOf  = WEffOffset
      C                   EVAL      PMktOs  = WSign
- 
+
      C                   IF        PMktOs = *Blanks
      C                   IF        PMktOF >= *Zeros
      C                   EVAL      PMktOs  = WPositive
@@ -724,7 +726,7 @@
      C                   EVAL      PMktOs  = WNegative
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *                                                               *
       *****************************************************************
@@ -738,10 +740,10 @@
       *****************************************************************
       *
      C     SrGetOffset   BEGSR
- 
+
      C                   EVAL      WEffOffset = *Zeros
      C                   EVAL      WSign = *Blanks
- 
+
      C                   CALL      'SD001008'
      C                   PARM      WTzLc         PTzLc
      C                   PARM      WTizocode     PTzCd
@@ -752,10 +754,10 @@
      C                   PARM      *Zeros        PEffOffset
      C                   PARM      *Blanks       PSign
      C                   PARM                    PTime                                     BUG19628
- 
+
      C                   EVAL      WEffOffset = PEffOffset
      C                   EVAL      WSign = PSign
- 
+
      C                   ENDSR
       *                                                               *
       *****************************************************************
@@ -769,7 +771,7 @@
       *****************************************************************
       *
      C     SrReturn      BEGSR
- 
+
       *
       ** Initialize output parameters
       *
@@ -786,7 +788,7 @@
      C                   EVAL      PSytOf   =   *Zeros
      C                   EVAL      PSytOs   =   *Blanks
      C                   EVAL      PRtCd    =   '*ERROR'
- 
+
      C                   SELECT
      C                   WHEN      PFrTz = 'S'
      C                   EVAL      PSyTm    =   PFrTM
@@ -799,10 +801,10 @@
      C                   EVAL      PMkdt    =   PFrDT
      C                   OTHER
      C                   ENDSL
- 
+
      C                   EVAL      *InLR = *On
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -816,7 +818,7 @@
       *****************************************************************
       *
      C     SrConvert     BEGSR
- 
+
      C                   IF        PFrTm = 240000
      C                   MOVEL     '000000'      WTimeStr
      C                   ELSE
@@ -824,14 +826,14 @@
      C                   ENDIF
      C                   EVAL      WCurTime  = %TIME(WTimeStr:*HMS0)
      C                   EVAL      WPrvTime  = WCurTime
- 
+
      C                   EVAL      PDateIn = PFrDt
      C                   CALL      'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *Zeros        PDateOut
      C                   PARM      *Blanks       PADateOut
- 
+
      C                   MOVEL     PDateOut      WDate1
      C                   IF        (BJDFIN  = 'D')
      C                   EVAL      WCurDate = %DATE(WDate1:*DMY0)
@@ -839,11 +841,11 @@
      C                   EVAL      WCurDate = %DATE(WDate1:*MDY0)
      C                   ENDIF
      C                   EVAL      PTimeStamp = WCurDate + WCurTime                         BUG20932
- 
+
      C                   IF        (WSign1 = WPositive)
      C                   SUBDUR    S1HH:*Hours   WCurTime
      C                   SUBDUR    S1MM:*Minutes WCurTime
- 
+
      C                   SUBDUR    S1HH:*Hours   PTimeStamp                                 BUG20932
      C                   SUBDUR    S1MM:*Minutes PTimeStamp                                 BUG20932
                                                                                             BUG20932
@@ -853,11 +855,11 @@
      C**********                   WPrvTime <= %TIME('11:59:59':*Hms)                       BUG20932
      C**********         SUBDUR    1:*Days       WCurDate                                   BUG20932
      C**********         ENDIF                                                              BUG20932
- 
+
      C                   ELSEIF    (WSign1 = WNegative)
      C                   ADDDUR    S1HH:*Hours   WCurTime
      C                   ADDDUR    S1MM:*Minutes WCurTime
- 
+
      C                   ADDDUR    S1HH:*Hours   PTimeStamp                                 BUG20932
      C                   ADDDUR    S1MM:*Minutes PTimeStamp                                 BUG20932
                                                                                             BUG20932
@@ -867,15 +869,15 @@
      C**********                   WPrvTime <= %TIME('23:59:59':*Hms)                       BUG20932
      C**********         ADDDUR    1:*Days       WCurDate                                   BUG20932
      C**********         ENDIF                                                              BUG20932
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WPrvTime  = WCurTime
- 
+
      C                   IF        (WSign2 = WPositive)
      C                   ADDDUR    S2HH:*Hours   WCurTime
      C                   ADDDUR    S2MM:*Minutes WCurTime
- 
+
      C                   ADDDUR    S2HH:*Hours   PTimeStamp                                 BUG20932
      C                   ADDDUR    S2MM:*Minutes PTimeStamp                                 BUG20932
                                                                                             BUG20932
@@ -885,11 +887,11 @@
      C**********                   WPrvTime <= %TIME('23:59:59':*Hms)                       BUG20932
      C**********         ADDDUR    1:*DAYS       WCurDate                                   BUG20932
      C**********         ENDIF                                                              BUG20932
- 
+
      C                   ELSEIF    (WSign2 = WNegative)
      C                   SUBDUR    S2HH:*Hours   WCurtime
      C                   SUBDUR    S2MM:*Minutes WCurTime
- 
+
      C                   SUBDUR    S2HH:*Hours   PTimeStamp                                 BUG20932
      C                   SUBDUR    S2MM:*Minutes PTimeStamp                                 BUG20932
                                                                                             BUG20932
@@ -899,7 +901,7 @@
      C**********                   WPrvTime <= %TIME('11:59:59':*Hms)                       BUG20932
      C**********         SUBDUR    1:*Days       WCurDate                                   BUG20932
      C**********         ENDIF                                                              BUG20932
- 
+
      C                   ENDIF
      C                   MOVEL     PTimeStamp    TimeStmpDS                                 BUG20932
      C                   MOVEL     RETDAY        #WDAYM            4                        BUG20932
@@ -913,7 +915,7 @@
      C                   ELSE                                                               BUG20932
      C                   EVAL      WCurDate = %DATE(WDate1:*MDY0)                           BUG20932
      C                   ENDIF                                                              BUG20932
- 
+
      C                   IF        BJDFIN  = 'D'
      C                   EVAL      WDateStr   = %CHAR(WCurDate:*DMY0)
      C                   ELSE
@@ -929,7 +931,7 @@
      C                   PARM                    PZDate
      C                   PARM                    BJDFIN
      C                   PARM                    PZDayNo
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -947,21 +949,21 @@
       *****************************************************************
       *
      C     *Pssr         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      PrtCd = '*ERROR'
      C                   EVAL      *InU7 = *On
      C                   EVAL      *InU8 = *On
      C                   EVAL      *InLR = *On
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************

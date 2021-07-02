@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD057255           Date 27Nov20               *
-      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD057255           Date 27Nov20               *
+      *                 CGL194             Date 01Aug20               *
       *                 MD052783           Date 09Mar19               *
       *                 CGL185             Date 13Mar17               *
       *                 MD046248           Date 27Oct17               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD057255 - Controlling Person not removed in report          *
       *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD052783 - CRS - GLCSBAPD: no record was output for each     *

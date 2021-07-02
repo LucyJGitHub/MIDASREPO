@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG27723           Date 07Jun10               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG27723           Date 07Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27723 - SEC7610 00001 Attempt made to divide by zero      *
       *             for fixed point operation                         *
@@ -134,7 +136,7 @@
       *
       ** Corporate Actions Dividend
      FSE7610AU  O    E             PRINTER USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -157,11 +159,11 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -170,7 +172,7 @@
       ** True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -211,7 +213,7 @@
      D*PCPY*****               1      6S 0                                                    CSD027
      D PCPY                    1      6A                                                      CSD027
      D  Cust                   1      6A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -243,7 +245,7 @@
      I              CHTP                        S_CHTP
      I              TNLU                        S_TNLU
      I              EXCD                        S_EXCD
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -254,7 +256,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -302,7 +304,7 @@
       *
      C                   EXSR      SRChkPrc
      C                   IF        WGenRec = 'Y'
- 
+
      C     KSecSName     CHAIN     SECTY                              02
       *
       ** If security is found and country of treaty is not blank
@@ -317,18 +319,18 @@
       *
       ** Write record on customer income detail file.
      C                   WRITE     SDCUIND0
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Read next record to process.
      C                   READ      POSEB1                                 01
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -346,7 +348,7 @@
      C                   IF        PEVT = 'CP' OR
      C                             PEVT = 'DV'
      C     KSecTypDat    CHAIN     SECEO                              06
- 
+
      C                   IF        *IN06 AND
      C                             PEVT = 'CP'
      C                   EVAL      WPevt = PEVT
@@ -388,7 +390,7 @@
      C                   EVAL      SDVA = *ZERO                                             BUG27723
      C                   ENDIF                                                              BUG27723
      C                   ENDIF                                                                187473
- 
+
       ** Check if date generated is zero. In this case,                                       194312
       ** record does not exist in diary events file.                                          194312
                                                                                               194312
@@ -408,16 +410,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   Z-ADD     *ZERO         CURATE
- 
+
      C                   IF        PEVT = 'CP'
      c                   Z-ADD     SNCR          CURATE
      C                   ELSE
- 
+
      C                   Z-ADD     SDVA          CURATE
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ELSE
       *
@@ -601,7 +603,7 @@
       ** Beneficial owner details (name, address1, address2, address3)
       *
      C     KIntermed     CHAIN     SDINTCLL2                          04
- 
+
      C                   IF        *IN04 = *OFF
      C                   EVAL      CUBONM = INBONM
      C                   EVAL      CUBOA1 = INBOA1
@@ -660,7 +662,7 @@
      C                   IF        LCD <> *ZERO
      C                   Z-ADD     LCD           CULCD
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -671,21 +673,21 @@
       *                                                               *
       *****************************************************************
      C     SRAuditRpt    BEGSR
- 
+
      C                   OPEN      SE7610AU
      C                   WRITE     HEADAU
       *
       ** If no record was read, write no details to report.
       *
      C                   IF        WInpRecCnt = *ZEROS
- 
+
      C                   WRITE     NODTLS
- 
+
      C                   ELSE
       *
       ** Retrieve number of live record in audit file.
      C     1             CHAIN     POSETAF                            07
- 
+
      C                   IF        *IN07 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY  = '1'
@@ -709,10 +711,10 @@
       *
       ** Generate audit with details.
      C                   WRITE     DETAILS
- 
+
      C                   ENDIF
      C                   CLOSE     SE7610AU
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -768,7 +770,7 @@
       *                                                               *
       *****************************************************************
      C     SRDBErr       BEGSR
- 
+
      C                   OPEN      SE7610AU
      C                   WRITE     HEADAU
      C                   EVAL      *INU7 = *ON
@@ -776,9 +778,9 @@
      C                   EVAL      *INLR = *ON
      C                   WRITE     DBERROR
      C                   CLOSE     SE7610AU
- 
+
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -857,7 +859,7 @@
      C                   KFLD                    PSSH
      C                   KFLD                    PDUD
      C                   KFLD                    PEVT
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -875,17 +877,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C*                  IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C*                  ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************

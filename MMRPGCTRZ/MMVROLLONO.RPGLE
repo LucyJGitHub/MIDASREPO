@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -120,14 +122,14 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     INFDS(INFDS)
      F                                     INCLUDE(MMDELDP0)
- 
+
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(DEALSDCF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -146,58 +148,58 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of error messages.
      D Msgids          S                   DIM(4) INZ(*BLANK)
      D                                     LIKE(#MsgID)
- 
+
      D INFDS           DS
       **  Data structure for file status of MM deals file.
      D  RECORD           *RECORD
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ** EXTERNAL DS FOR NOSTRO DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                    CAP004
       ** EXTERNAL DS FOR CURRENCY DETAILS                                       CAP004
                                                                                 CAP004
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                       CAP004
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                     CAP004
                                                                                 CAP004
@@ -205,31 +207,31 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message fields returned as parameters
      D Msgid1          S                   LIKE(#MsgID)
      D Msgid2          S                   LIKE(#MsgID)
      D Msgid3          S                   LIKE(#MsgID)
      D Msgid4          S                   LIKE(#MsgID)
- 
+
       ** Warning message ID
      D WMsgID1         S                   LIKE(#MsgID)
- 
+
       ** Rollover deal number received as a parameter
      D DDDADN          S              6A
- 
+
       ** Deal Type received as a parameter
      D DDTYPE          S              2A
       ** Deal Type OK indicator received as a parameter
      D DDTypeOK        S              1A
       ** Deal Sub-Type received as a parameter
      D DDSTYP          S              2A
- 
+
       ** Deal Class received as a parameter                                                   CDL038
      D DDCLAS          S              4A                                                      CDL038
                                                                                               CDL038
@@ -237,25 +239,25 @@
      D DDDLNO          S              6A
       ** Deal Number OK indicator received as a parameter
      D DDDlNoOK        S              1A
- 
+
       ** Currency received as a parameter
      D DDCCY           S              3A
       ** Currency OK indicator received as a parameter
      D DDCcyOK         S              1A
- 
+
       ** Customer OK indicator received as a parameter
      D DDCustOK        S              1A
- 
+
       ** Branch Code received as a parameter
      D DDBRCA          S              3A
       ** Branch Code OK indicator received as a parameter
      D DDBrCAOK        S              1A
- 
+
       ** Profit Centre received as a parameter
      D DDPTFR          S              4A
       ** Profit Centre OK indicator received as a parameter
      D DDPtfrOK        S              1A
- 
+
       *  Customer number in a numeric field received as a parameter
      D*IKCNUM***       S              6S 0                                                    CSD027
      D IKCNUM          S              6A                                                      CSD027
@@ -263,43 +265,43 @@
      D IKRBAT          S             15S 0
       ** Rollover currency received as a parameter                              CAP004
      D IKRTFC          S                   LIKE(HKCCY)                          CAP004
- 
+
       ** Deal amount in a numeric field received as a parameter
      D IKAMNP          S                   LIKE(HKAMNP)
- 
+
       ** Value date as a Midas day number received as a parameter
      D @VDYNO          S              5P 0
- 
+
       ** Deal date OK indicator received as a parameter
      D DDDDatOK        S              1A
- 
+
       ** Amount OK indicator received as a parameter
      D DDAmnpOK        S              1A
- 
+
       ** Interest calculation method OK indicator received as a parameter
      D DDICMtOK        S              1A
- 
+
       ** Interest payment frequecy OK indicator received as a parameter
      D DDIPFqOK        S              1A
- 
+
       ** Total interest OK indicator received as a parameter
      D DDTotIOK        S              1A
- 
+
       ** Tacable indicator OK indicator received as a parameter
      D DDMTaxOK        S              1A
- 
+
       ** Next interest date OK indicator received as a parameter
      D DDNDatOK        S              1A
- 
+
       ** Interest payment frequecy received as a parameter
      D DDIPFQ          S              1A
- 
+
       ** Automatic Rollover Switchable Feature indicator r'ced as a parm
      D S01434          S              1A
- 
+
       ** Basic Rate Tax Switchable Feature indicator received as a parm
      D S01383          S              1A
- 
+
       ** EMU Rollover Switchable Feature indicator received as a parm           CAP004
      D CEU015          S              1A                                        CAP004
                                                                                 CAP004
@@ -308,32 +310,32 @@
      D BRTR            S              7P 5
      D DEFF            S              5P 0
      D PBRTR           S              7P 5
- 
+
       * Hong Kong Tax rate incoming parameter from Dealing ICD
      D BNHKTR          S              5P 2
- 
+
       ** Front up interest indicator received as a parameter
      D DDFUID          S              1A
                                                                                              BUG5813
       ** Automatic rollover indicator received as a parameter                                BUG5813
      D DDAURO          S              1A                                                     BUG5813
- 
+
       ** System Location Code (from SDBANKPD) received as a parameter
      D BJSLCD          S              3A
- 
+
       ** Ref Attched to 9997 (from SDPORTPD) received as a parameter
      D FCR997          S              4A
       ** Portfolios Supported from SDPORTPD) received as a parameter
      D FCPORS          S              1A
       ** Private Banking Module Indicator received as a parameter               CPB001
      D BGN4ST          S              1A                                        CPB001
- 
+
       ** Portfoloio Management Indicator received as a parameter                              215264
      D BGPFMG          S              1A                                                      215264
                                                                                               215264
       ** Action Code - received as a parameter
      D DDACTN          S              1A
- 
+
       ** Work fields
      D @@VDAT          S              5P 0
      D @DLKEY          S              6P 0
@@ -355,7 +357,7 @@
      D @@BRMD          S              5P 0
      D ZCCY            S              3A
      D I#PORS          S                   LIKE(FCPORS)
- 
+
       ** Index for array of message IDs
      D Idx             S              1S 0 INZ(0)
                                                                                 CDL006
@@ -366,7 +368,7 @@
                                                                                               CDL013
       ** Constant paramater for AOSVALR0                                                     255466A
      D ROPA            C                   CONST('RolloverPrinAmount')                       255466A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -374,7 +376,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -382,7 +384,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   DBErrFound
@@ -393,7 +395,7 @@
      C                   RESET                   Msgid2
      C                   RESET                   Msgid3
      C                   RESET                   Msgid4
- 
+
      C*
      C**  If the deal type is valid and is one of CD, CL or DL, and the
      C**  rollover deal no. is non-blank or zero, it is an error.
@@ -456,22 +458,22 @@
      C     *IN65         IFEQ      '1'
      C     HKDLTF        ORNE      *BLANKS
      C     HKDSTS        OREQ      'M'
- 
- 
+
+
      ***If*not*authorisation************************************************    136429
      ** If not authorisation or amendment                                       136429
      C     DDACTN        IFNE      'X'
      C     DDACTN        ANDNE     'A'                                          136429
- 
+
      C                   MOVE      'Y'           ErrorFound
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0184'     Msgids(Idx)
- 
+
      ***If*authorisation***********************************************         136429
      ** If authorisation or amendment                                           136429
      C                   ELSE
- 
- 
+
+
      C     HKDSTS        IFEQ      'M'
      C     DDAURO        ANDNE     'A'                                                       BUG5813
      C                   EVAL      WarnGlobal = 'Y'
@@ -479,7 +481,7 @@
      C                   MOVEL     'MMM1046'     WMsgID1
      C                   END
      C                   END
- 
+
      C                   ELSE
       * Here, a valid record has been found on MMDELDPP
      C*
@@ -572,7 +574,7 @@
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0186'     Msgids(Idx)
      C                   END
- 
+
      C                   END
       *
       ** If Deal Sub-Type is changed no new deal, issue warning error
@@ -588,7 +590,7 @@
      C                   EVAL      WarnFound = 'Y'                                            CDL038
      C                   MOVEL     'MMM0700'     WMsgID1                                      CDL038
      C                   END                                                                  CDL038
- 
+
       **  Format the maturity date of the associated deal.
      C                   Z-ADD     HKMDYY        @YEAR
      C                   Z-ADD     HKMDMM        @MNTH
@@ -600,7 +602,7 @@
      C                   PARM                    @DATE
      C                   PARM                    @MRDYN
      C                   END
- 
+
       **  The value date of the maintained deal must be the same as the
       **  maturity date on the related deal.  If not, it is an error.
      C     @VDYNO        IFNE      @MRDYN
@@ -608,13 +610,13 @@
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0187'     Msgids(Idx)
      C                   END
- 
+
       ** If none of the fields used are invalid or blank, calculate
       ** the interest at maturity.
       **   Deal date and Next Interest Date may have a warning error
       **   in which case, still need to calculate interest, otherwise
       **   Rollover deal amount does not get output to DEALSDC
- 
+
       ** Proceed if there is only a warning message on deal date or next
       ** interest date, or if there are no errors so far.
      C                   IF         ErrorFound = 'N'
@@ -626,16 +628,16 @@
      C                              AND DDMTaxOK = 'Y'
      C                              AND DDDDatOK <> 'N'
      C                              AND DDNDatOK <> 'N'
- 
+
       **  Access the record for the associated deal on the DEALS file,
       **  in order to find the interest to date.  If no valid record is
       **  found, it is a database error, which is passed back to the caller
       **  as a special form of error.
      C     @DLKEY        CHAIN     DEALSDCF                           65
- 
+
      C     *IN65         IFEQ      '1'
      C     RECI          OREQ      '*'
- 
+
       **  Ensure the DBErr message is the only one returned
      C                   RESET                   Msgids
      C                   RESET                   Idx
@@ -643,7 +645,7 @@
      C                   RESET                   Msgid2
      C                   RESET                   Msgid3
      C                   RESET                   Msgid4
- 
+
      C                   MOVE      'Y'           DBErrFound
      C                   ADD       1             Idx
      C                   MOVEL     'MMA0002'     Msgids(Idx)
@@ -652,14 +654,14 @@
      C                   MOVEL     PSProcName    DBPROC
      C                   MOVEL     PSProcMod     DBMOD
      C                   MOVEL     PSProcPgm     DBPGM
- 
+
      C                   EVAL      DBErrData = (PSProcPgm + PSProcMod
      C                              + PSProcName + DBFILE + DBKEY)
- 
+
       ** Run exit routine to set the return code appropriately & return to
       **  the caller
      C                   EXSR      EXIT
- 
+
      C                   END
      C*
      C**  Format the value date of the associated deal.
@@ -880,14 +882,14 @@
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0188'     Msgids(Idx)
      C                   END
- 
- 
+
+
      C                   ELSE
- 
+
       * ERROR IF UP FRONT INTEREST INDICATORS DO NOT MATCH
       *    OR IF UP FRONT INDICATOR IS 'Y' AND PRINCIPAL OF ROLLOVER
       *       DEAL IS NOT EQUAL TO PRINCIPAL OF ROLLED OVER DEAL
- 
+
      C     DDFUID        IFNE      HKFUID
      C     DDFUID        OREQ      'Y'
      C     HKAMNP        ANDNE     RollPrin                                     CAP004
@@ -896,11 +898,11 @@
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0611'     Msgids(Idx)
      C                   ELSE
- 
+
       * IF NOT UP FRONT INTEREST, PRINCIPAL OF ROLLOVER DEAL
       * MUST NOT BE GREATER THAN PRINCIPAL + INTEREST OF ROLLED OVER DEAL
- 
- 
+
+
      C*****IKAMNP********IFGT      @TOTL                                        CAP004
      C     RollPrin      IFGT      @TOTL                                        CAP004
      C*****S01434********ANDNE     'Y'                                                        255466
@@ -912,8 +914,8 @@
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0188'     Msgids(Idx)
      C                   END
- 
- 
+
+
      C                   END
      C                   END
      C                   END
@@ -921,10 +923,10 @@
      C                   END
      C                   END
      C                   END
- 
+
       ** Run exit routine to set the return code appropriately
      C                   EXSR      EXIT
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -937,27 +939,27 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     EXIT          BEGSR
- 
+
       ** If errors or warnings were found, set the return code
       ** appropriately in the /COPY (note that the return code will not
       ** contain a special value if there is a database error, but the
       ** DBErrData field will be set in that case, and that field is
       ** checked by the caller).
      C/COPY ZACPYSRC,SETRETCDE
- 
+
      C     ReturnCode    IFNE      *BLANKS
      C                   MOVEL     Msgids(1)     Msgid1
      C                   MOVEL     Msgids(2)     Msgid2
      C                   MOVEL     Msgids(3)     Msgid3
      C                   MOVEL     Msgids(4)     Msgid4
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -969,9 +971,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       * Following are flag for errors found and error message IDs
      C                   PARM                    ReturnCode
@@ -1054,19 +1056,19 @@
       * Action code
      C                   PARM                    DDACTN
      C                   PARM                    CDL013                                      CDL013
- 
+
       ** Set PM ICD field to the bname used in the code
      C                   EVAL      I#PORS = FCPORS
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

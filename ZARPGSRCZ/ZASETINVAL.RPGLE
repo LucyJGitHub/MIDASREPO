@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057916           Date 18May21               *
-      *  Prev Amend No. CSW221             Date 05Apr21               *
+      *  Last Amend No. MD058393           Date 01Jul21               *
+      *  Prev Amend No. MD057916           Date 18May21               *
+      *                 CSW221             Date 05Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051567           Date 26Sep20               *
       *                 MD056313           Date 21Sep20               *
@@ -147,6 +148,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058393 - Field format error encountered on :77H:           *
+      *             Fields Agreement Date and Agreement Version must  *
+      *             be validated and should not be blank when any of  *
+      *             the ISDA fields are inserted.                     *
       *  MD057916 - No defaulting process should be performed during  *
       *             settlement details amendment.                     *
       *  CSW221   - SWIFT Changes 2021                                *
@@ -7820,7 +7825,10 @@
       *                                                                                       CSW212
       ** ISDA Agreement Date must be valid in YYMMDD format                                   CSW212
       *                                                                                       CSW212
-     C     DDAGDT        IFNE      *BLANKS                                                    CSW212
+     C*****DDAGDT        IFNE      *BLANKS                                           CSW212 MD058393
+     C                   IF        ((DDAGTY = 'OTHER ' AND DDAGDT <> *BLANKS) OR            MD058393
+     C                              (DDAGTY = 'OTHER ' AND DDAGVV <> *BLANKS AND            MD058393
+     C                               DDAGDT = *BLANKS) OR (DDAGTY <> 'OTHER '))             MD058393
      C                   MOVE      '0'           WAGDT                                        CSW212
      C                   MOVEL     DDAGDT        WAGDT                                        CSW212
      C                   TESTN                   WAGDT                99                      CSW212
@@ -7857,8 +7865,11 @@
       *                                                                                       CSW212
       ** ISDA Agreement Version must be numeric                                               CSW212
       *                                                                                       CSW212
-     C     DDAGVV        IFNE      *BLANKS                                                    CSW212
-     C     DDAGVV        ANDNE     '0000'                                                     CSW212
+     C*****DDAGVV        IFNE      *BLANKS                                           CSW212 MD058393
+     C*****DDAGVV        ANDNE     '0000'                                            CSW212 MD058393
+     C                   IF        ((DDAGTY = 'OTHER ' AND DDAGVV <> *BLANKS) OR            MD058393
+     C                              (DDAGTY = 'OTHER ' AND DDAGDT <> *BLANKS AND            MD058393
+     C                               DDAGVV = *BLANKS) OR (DDAGTY <> 'OTHER '))             MD058393
      C                   MOVE      '0'           WAGVV                                        CSW212
      C                   MOVEL     DDAGVV        WAGVV                                        CSW212
      C                   TESTN                   WAGVV                99                      CSW212

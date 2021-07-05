@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058419           Date 05Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1083027          Date 31Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24231           Date 18Jun09               *
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058419 - Error in the MM Maintenance Screen.               *
+      *             Reverse BUG5169. Part of CDL020's functionality   *
+      *             is to give the user option to amend the system    *
+      *             defeaulted Actual Interest Rate.                  *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1083027 - Fix Base Rate error appeared when another field  *
@@ -197,11 +202,11 @@
       ** Internal Funding Deals Error Indicators File
      D OkFlags       E DS                  EXTNAME(ABEFUNDPD)
 
-      **                                                                                    BUG24231
-     D                 DS                                                                   BUG24231
-     D XAIR                    1     12                                                     BUG24231
-     D YAIR                    2     12                                                     BUG24231
-                                                                                            BUG24231
+      ****************************************************************             BUG24231 MD058419
+     D**********       DS                                                          BUG24231 MD058419
+     D*XAIR                    1     12                                            BUG24231 MD058419
+     D*YAIR                    2     12                                            BUG24231 MD058419
+      ****************************************************************             BUG24231 MD058419
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -470,18 +475,18 @@
      C                   ENDIF                                                                CDL019
      C                   ENDIF                                                                CDL019
                                                                                               CDL020
-      ** Actual Interest Rate                                                                 CDL020
-                                                                                              CDL020
-     C                   IF        CDL020 = 'Y'                                               CDL020
-     C                   MOVE      DDAIR         XAIR                                       BUG24231
+      ***Actual Interest Rate****************************************                CDL020 MD058419
+      ***************************************************************                CDL020 MD058419
+     C**********         IF        CDL020 = 'Y'                                      CDL020 MD058419
+     C**********         MOVE      DDAIR         XAIR                              BUG24231 MD058419
      C**********         IF        DDAIR <> CrAIR                                    CDL020 BUG24231
-     C                   IF        YAIR  <> CrAIR                                           BUG24231
-     C                   ADD       1             Idx                                          CDL020
-     C                   EVAL      FldNameArr(Idx) = '#1AIR'                                  CDL020
-     C                   EVAL      MsgIDArr(Idx)   = 'ABM0570'                                CDL020
-     C                   EVAL      OkAIR           = 'N'                                      CDL020
-     C                   ENDIF                                                                CDL020
-     C                   ENDIF                                                                CDL020
+     C**********         IF        YAIR  <> CrAIR                                  BUG24231 MD058419
+     C**********         ADD       1             Idx                                 CDL020 MD058419
+     C**********         EVAL      FldNameArr(Idx) = '#1AIR'                         CDL020 MD058419
+     C**********         EVAL      MsgIDArr(Idx)   = 'ABM0570'                       CDL020 MD058419
+     C**********         EVAL      OkAIR           = 'N'                             CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
                                                                                               CDL038
       ** Deal class #1                                                                        CDL038
       ** Amendable if CDL039 is ON                                                            CDL039
@@ -767,11 +772,11 @@
                                                                                               CDL020
       ** Actual Interest Rate                                                                 CDL020
                                                                                               CDL020
-     C                   IF        CDL020 = 'Y'                                               CDL020
-     C                   IF        OkAIR = 'N'                                                CDL020
-     C                   EVAL      DDAIR = CrAIR                                              CDL020
-     C                   ENDIF                                                                CDL020
-     C                   ENDIF                                                                CDL020
+     C**********         IF        CDL020 = 'Y'                                      CDL020 MD058419
+     C**********         IF        OkAIR = 'N'                                       CDL020 MD058419
+     C**********         EVAL      DDAIR = CrAIR                                     CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
                                                                                               CDL038
       ** Deal class #1                                                                        CDL038
                                                                                               CDL038

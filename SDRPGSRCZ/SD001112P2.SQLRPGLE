@@ -7,16 +7,16 @@
       *                                                               *
       *  Midas - Standing Data Module                                 *
       *                                                               *
-      *  SD001113 - ARR Calculator Batch Job Exception Report Program *
+      *  SD001112P2-ARR Calculator Batch Job Exception Report Program *
       *             (Dealing)                                         *
       *                                                               *
       *  Function:  This program will generate exception report to    *
-      *             list the Loan Transaction for which the call to   *
+      *             list the Deal Transaction for which the call to   *
       *             the calculator has failed.                        *
       *                                                               *
       *  Called By: SDC000114 - Midas SD ARR Calculator Batch Job     *
       *                                                               *
-      *  (c) Finastra International Limited 2019                      *
+      *  (c) Finastra International Limited 2021                      *
       *                                                               *
       *  Last Amend No. CDL102  *CREATE    Date 01Jun21               *
       *                                                               *
@@ -99,7 +99,7 @@
       ** Initialize Report Work Variables
      C                   EVAL      WOPNP1 = 'N'
 
-      ** Create a list of all loan transactions that failed in
+      ** Create a list of all Deal transactions that failed in
       ** ARR Calculator Batch Job
      C/EXEC SQL
      C+ declare ERRCursor insensitive scroll cursor for

@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056543  *CREATE  Date 15Sep20               *
+      *  Last Amend No. MD057989           Date 23Jun21               *
+      *  Prev Amend No. MD056543  *CREATE  Date 15Sep20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057989 - Exclude records already in unicode format.        *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD to readable  *
       *             unicode equivalent.                               *
@@ -61,6 +63,8 @@
      D MBIN                   13     13
 
      D WRUN            S              1
+     D WCMPFLD1        S                   LIKE(CDCORN)                                     MD057989
+     D WCMPFLD2        S             30                                                     MD057989
 
       *****************************************************************
       *                                                               *
@@ -166,7 +170,16 @@
      C                   DOW       NOT %EOF(SMCORXPD)
       *
      C     XXCORR        CHAIN     CGCORRL0                           8081
+      *                                                                                     MD057989
+     C                   CLEAR                   WCMPFLD1                                   MD057989
+     C                   CLEAR                   WCMPFLD2                                   MD057989
+     C     *IN80         IFEQ      '0'                                                      MD057989
+     C                   EVAL      WCMPFLD1 = %UCS2(CDCORN)                                 MD057989
+     C                   EVAL      WCMPFLD2 = %UCS2(WCMPFLD1)                               MD057989
+     C                   ENDIF                                                              MD057989
+      *                                                                                     MD057989
      C     *IN80         IFEQ      '0'
+     C     WCMPFLD1      ANDNE     WCMPFLD2                                                 MD057989
       *
      C                   EVAL      CDCORR =  XXCORR
      C                   EVAL      CDCORN =  XXCORN

@@ -20,8 +20,9 @@
      H*  - at its current value.
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD056567           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058363           Date 25Jun21               *
+      *  Prev Amend No. MD056567           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058363 - Correct error in selection                        *
       *  MD056567 - Deliverable Data Split for Validation Lists       *
      F*     MD046248 - Finastra Rebranding                            *
      F*     041718 - PROGRAM MISSING FROM R10. THIS SOURCE IS A       *
@@ -112,7 +114,8 @@
      C+ SELECT *                                                                            MD056567
      C+ into :Y2VLLS                                                                        MD056567
      C+ from FCVLLJW0                                                                       MD056567
-     C+ where @@CND   = :Y2LSNO and EXTVAL >= :Y2EXVL and CNDTYP = 'VAL'                    MD056567
+     C**where*@@CND   = :Y2LSNO and EXTVAL >= :Y2EXVL and CNDTYP = 'VAL'           MD056567 MD058363
+     C+ where @@CND   = :Y2LSNO and EXTVAL  = :Y2INVL and CNDTYP = 'VAL'                    MD058363
      C/END-EXEC                                                                             MD056567
      C                   END
      C******IN90         IFEQ      '1'                                                      MD056567

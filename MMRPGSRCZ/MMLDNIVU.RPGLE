@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. 250161             Date 22May20               *
+      *  Last Amend No. MD058379           Date 01Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 250161             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 MD056313           Date 21Sep20               *
@@ -142,6 +143,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of refereNce rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  250161 - Ensure that maturity date and value date of deals   *
       *           is validated against DACO of ACCNTAB.               *

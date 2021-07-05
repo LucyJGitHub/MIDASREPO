@@ -246,7 +246,7 @@
       ** Return.
       *
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -287,9 +287,9 @@
      C                   IF        WScrn = 'E'
      C                   EVAL      *INLR = *ON
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -298,7 +298,7 @@
       *                                                               *
       *****************************************************************
      C     SRInit        BEGSR
-
+ 
      C                   CLEAR                   POutFlds
      C                   CLEAR                   SFDAT
      C                   CLEAR                   STDAT
@@ -307,9 +307,9 @@
      C                   CLEAR                   SCUST
      C                   CLEAR                   SBOWN
      C                   CLEAR                   SCDOC
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -337,9 +337,9 @@
      C                             *IN16 = *OFF AND PReDsp <> 'Y'
      C                   EVAL      WScrn = 'U'
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -348,7 +348,7 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate      BEGSR
-
+ 
      C                   EVAL      PFDAT = SFDAT
      C                   EVAL      PTDAT = STDAT
      C                   EVAL      PCTAX = SCTAX
@@ -356,11 +356,11 @@
      C                   EVAL      PCNUM = WCNum
      C                   EVAL      PBOWN = SBOWN
      C                   EVAL      PCDOC = SCDOC
-
+ 
      C                   EVAL      WScrn = 'E'
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -379,9 +379,9 @@
      C                   PARM                    PSProcPgm
      C                   PARM                    PSProcMod
      C                   PARM                    PSProcName
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -415,9 +415,9 @@
       ** Set return keys.
       *
      C                   EVAL      PINKC = *INKC
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -430,7 +430,7 @@
       ** Must be numeric.
       *
      C                   TESTN                   SFDAT                01
-
+ 
      C                   IF        *IN01 = *OFF
      C                   EVAL      *IN10 = *ON
      C                   MOVEL     'SEA0400'     PMsgId
@@ -447,14 +447,14 @@
      C                   PARM      *ZEROS        PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
-
+ 
      C                   IF        PErrorFlag = 'Y'
      C                   EVAL      *IN10 = *ON
      C                   MOVEL     'SEA0400'     PMsgId
      C                   EXSR      SRSndM
      C                   GOTO      EValFDat
      C                   ENDIF
-
+ 
      C                   Z-ADD     PDaynoOut     WFDat
      C                   Z-ADD     *ZERO         WK3N
      C                   EVAL      WK3NX = 31 * 18
@@ -472,7 +472,7 @@
      C                   IF        WK3N < WK3NX
      C                   EVAL      WK3N = WK3NX
      C                   ENDIF
-
+ 
      C                   EVAL      WRetDat = BJRDNB - WK3N
       *
       ** Error if From Date is less than Retention date.
@@ -482,9 +482,9 @@
      C                   MOVEL     'SEA0401'     PMsgId
      C                   EXSR      SRSndM
      C                   ENDIF
-
+ 
      C     EValFDat      ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -497,7 +497,7 @@
       ** Must be numeric.
       *
      C                   TESTN                   STDAT                01
-
+ 
      C                   IF        *IN01 = *OFF
      C                   EVAL      *IN11 = *ON
      C                   MOVEL     'SEA0402'     PMsgId
@@ -514,14 +514,14 @@
      C                   PARM      *ZEROS        PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
-
+ 
      C                   IF        PErrorFlag = 'Y'
      C                   EVAL      *IN11 = *ON
      C                   MOVEL     'SEA0402'     PMsgId
      C                   EXSR      SRSndM
      C                   GOTO      EValTDat
      C                   ENDIF
-
+ 
      C                   Z-ADD     PDaynoOut     WTDat
       *
       ** Error if From Date is greater than To Date.
@@ -532,9 +532,9 @@
      C                   MOVEL     'SEA0403'     PMsgId
      C                   EXSR      SRSndM
      C                   ENDIF
-
+ 
      C     EValTDat      ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -547,7 +547,7 @@
       ** Scan for question mark selection.
       *
      C     '?'           SCAN      SCTAX                                  01
-
+ 
      C                   IF        *IN01 = *ON
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
@@ -559,9 +559,9 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      SCTAX         PCnCd
      C     SDCTRY        PARM      SDCTRY        DSFDY
-
+ 
      C                   IF        PRtCd <> *BLANKS
-
+ 
      C                   IF        PRtCd = '*NOSEL '
      C                   EVAL      SCTAX = *BLANKS
      C                   ELSE
@@ -569,13 +569,13 @@
      C                   MOVEL     'SEA0404'     PMsgId
      C                   EXSR      SRSndM
      C                   ENDIF
-
+ 
      C                   ELSE
      C                   EVAL      SCTAX = A4CNCD
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -594,9 +594,9 @@
      C                   MOVEL     'SEA0405'     PMsgId
      C                   EXSR      SRSndM
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -609,7 +609,7 @@
       ** Validate if not equal to blanks.
       *
      C                   EVAL      WCNum = *BLANKS
-
+ 
      C                   IF        SCUST <> *BLANKS
       *
       ** Scan for question mark selection.
@@ -625,7 +625,7 @@
      C                   PARM      SCUST         PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSLDY
-
+ 
      C                   IF        PRtcd = *BLANKS
       *
       ** If question mark used, display selected customer number.
@@ -641,11 +641,11 @@
      C                   PARM                    BBCUST
      C     SDSECS        PARM      SDSECS        DSSDY
      C                   ENDIF
-
+ 
      C                   IF        PRtcd  <> *BLANKS OR
      C                             (BFCLAS <> 'D' AND
      C                             BFCLAS <> 'S')
-
+ 
      C                   IF        PRtCd = '*NOSEL '
      C                   EVAL      SCUST = *BLANKS
      C                   ELSE
@@ -653,15 +653,15 @@
      C                   MOVEL     'SEA0406'     PMsgId
      C                   EXSR      SRSndM
      C                   ENDIF
-
+ 
      C                   ELSE
      C                   EVAL      WCNum = BBCUST
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -685,7 +685,7 @@
       *
       ** Check if numeric.
      C                   TESTN                   SBOWN                01
-
+ 
      C                   IF        *IN01 = *OFF
      C                   EVAL      *IN15 = *ON
      C                   MOVEL     'SEA0408'     PMsgId
@@ -706,18 +706,18 @@
       *
       ** Check if value exists in Beneficiary Owner file.
      C     KBOWN         CHAIN     SDBNFOL2                           01
-
+ 
      C                   IF        *IN01 = *ON
      C                   EVAL      *IN15 = *ON
      C                   MOVEL     'SEA0409'     PMsgId
      C                   EXSR      SRSndM
      C                   GOTO      EValBOwn
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C     EValBOwn      ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -753,11 +753,11 @@
      C                   MOVEL     'SEA0411'     PMsgId
      C                   EXSR      SRSndM
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C     EValCDoc      ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -768,7 +768,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PSequence
      C                   PARM                    PLevel
@@ -831,7 +831,7 @@
      C                   Z-ADD     3             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CSE007 = 'Y'
      C                   ELSE
@@ -858,7 +858,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CEU017 = 'Y'
      C                   ELSE
@@ -885,15 +885,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        PRtcd = *BLANK
      C                   EVAL      S01496 = 'Y'
      C                   ELSE
      C                   EVAL      S01496 = 'N'
      C                   ENDIF
-
+ 
      C                   EVAL      WScrn = 'P'
-
+ 
      C                   EVAL      PMsgf = 'SEUSRMSG'
       *
       ** Define key list for Beneficiary Owners file
@@ -901,7 +901,7 @@
      C                   KFLD                    WCNum
      C                   KFLD                    SCTAX
      C                   KFLD                    SBOWN
-
+ 
      C                   EVAL      SUSER = PSUser
      C                   EVAL      SWSID = PsJobName
       *

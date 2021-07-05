@@ -182,7 +182,7 @@
       *
       ** Write details to printer fields
       *
-      * Loan Details
+      * Deal Details
      C                   MOVEL     DLNO          P1LNRF
       *
      C                   EVAL      ZDayNo = VDAT

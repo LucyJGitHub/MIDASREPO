@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD058216           Date 06Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058216 - Option labels are clickable as one link           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -217,35 +219,35 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -253,30 +255,30 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** External DS for Security ICD
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** Branch Details
- 
+
      D SDACOD        E DS                  EXTNAME(SDACODPD)
       ** External data structure for account code file
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** External data structure for customer file
- 
+
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
       ** External data structure for security customer file
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for Currency Details
- 
+
      D USER          E DS                  EXTNAME(MUSERDD)
       ** External DS for User Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
       *
@@ -388,7 +390,7 @@
      I              RECI                        WIWO_RECI
      IDPTMVDFL0
      I              RECI                        WIWO_RECI
- 
+
       *****************************************************************
       /EJECT
       ***** ***********************************************************
@@ -409,7 +411,7 @@
      C                   MOVE      *OFF          *IN73
       *
      C                   DO        *HIVAL
- 
+
       * Display select fields and Validate selection entries
       * Do not do this if Sub file for Linked trades is being built
      C     *IN70         IFEQ      *OFF
@@ -2333,7 +2335,7 @@ E1   C                   ENDIF
       * If Order Number is not blank then read all trades with same
       * security and order number if bulk reference isn't blank, otherwise
       * read all with same security and bulk reference.
- 
+
      C     D1ORDE        IFNE      *BLANKS
      C     D1BLKR        IFEQ      *BLANKS
      C                   MOVEL     D1SETY        KSETY
@@ -2805,7 +2807,7 @@ B2   C     @RTCD         IFNE      *BLANKS
      C                   EXSR      ZASNMS
      C
 X2   C                   ELSE
- 
+
       * Check user is authorised to valid branch
       *
      C                   CALL      'ZVBBU'
@@ -2817,9 +2819,9 @@ B3   C     @ERR          IFEQ      1
      C                   MOVEL     'SE06007'     ZAMSID
      C                   EXSR      ZASNMS
 E3   C                   ENDIF
- 
+
 E2   C                   ENDIF
- 
+
 X1   C                   ELSE
       * 'ALL' Entered, check user Authority to Bank level
 B2   C     BANK          IFNE      'Y'
@@ -2832,7 +2834,7 @@ X2   C                   ELSE
       * selection field so all branch records will be displayed.
      C                   MOVE      *BLANKS       D2BRCH
 E2   C                   ENDIF
- 
+
 E1   C                   ENDIF
      C
      C                   ENDIF
@@ -2851,7 +2853,7 @@ E1   C                   ENDIF
       *                                                               *
       *****************************************************************
      C     SRCUST        BEGSR
- 
+
      C                   CALL      'AOCUSTR1'
      C                   PARM      *blanks       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -2874,13 +2876,13 @@ E1   C                   ENDIF
       *                                                               *
       *****************************************************************
      C     SRSECS        BEGSR
- 
+
      C                   CALL      'AOSECSR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      @@CNUM        @CNUM             6
      C     SDSECS        PARM      SDSECS        DSFDY
- 
+
       ** Database Error
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDSECSPD'    DBFILE
@@ -2888,7 +2890,7 @@ E1   C                   ENDIF
      C                   MOVEL     @CNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3014,7 +3016,7 @@ E1   C                   ENDIF
      C                   ENDIF
      C                   READP     MESSAGES11                             62
      C                   MOVEL     TRANS00001    KMESSAGEB
- 
+
      C                   ENDDO
      C
      C                   ENDSR
@@ -3041,7 +3043,7 @@ E1   C                   ENDIF
      C                   EVAL      ##PGM  = PSProcName
      C                   EVAL      DDUSR  = PsUser
      C                   EVAL      DDWID  = PsJobName
- 
+
       ** Initialisation
      C     W0ICL         IFEQ      *BLANK
      C                   MOVEL     'Y'           W0ICL             1            Initial call
@@ -3123,14 +3125,14 @@ E1   C                   ENDIF
      C                   MOVEL     ZDATE         D2TRDTF
      C                   MOVEL     ZDATE         D2TRDTT
      C
- 
+
       * Obtain User's default branch
      C                   CALL      'AOUSERR0'
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    DDUSR
      C     USER          PARM      USER          DSSDY
- 
+
      C                   MOVE      DBRN          D2BRCH
       *
       * Initialise indicator to show Main subfile is to be built
@@ -3145,7 +3147,7 @@ E1   C                   ENDIF
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access Securities Trading details via access program
       *  (database error handling done in access program)
      C                   CALL      'AOSTRDR0'
@@ -3155,7 +3157,7 @@ E1   C                   ENDIF
       *
       ** Initialise subfile control
      C                   EXSR      Sr_InitCFld
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3181,7 +3183,7 @@ E1   C                   ENDIF
       *****************************************************************
 **CTDATA TXT
 F3=Exit
-F3=Exit M=Messages T=Transaction S=Movement Status P=Security L=Linked trades
-F3=Exit F12=Previous M=Messages T=Transaction S=Movement Status P=Security
+F3=Exit  M=Msgs  T=Transactions  S=Mvmt Sts  P=Security  L=Linked trades                    MD058216
+F3=Exit  F12=Previous  M=Msgs  T=Transactions  S=Mvmt Sts  P=Security                       MD058216
 **CTDATA CPY@
 (c) Finastra International Limited 2002

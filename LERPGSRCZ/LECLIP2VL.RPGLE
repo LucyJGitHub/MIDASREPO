@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. FCM101             Date 12Feb19               *
-      *  Prev Amend No. MD055074           Date 21Jan20               *
+      *  Last Amend No. MD057917           Date 02Jul21               *
+      *  Prev Amend No. FCM101             Date 12Feb19               *
+      *                 MD055074           Date 21Jan20               *
       *                 MD053297           Date 06Sep19               *
       *                 MD023254           Date 06Sep19               *
       *                 CLE170             Date 28Feb08               *
@@ -20,8 +21,8 @@
       *                 MD052515           Date 24Jan19               *
       *                 MD036008           Date 24Jan19               *
       *                 MD034449           Date 24Jan19               *
-      *                 AR988460           Date 24Jan19               *      
-      *                 MD053143           Date 04Apr19               *      
+      *                 AR988460           Date 24Jan19               *
+      *                 MD053143           Date 04Apr19               *
       *                 MD052279           Date 14Nov18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057917 - Interest payment date is not allowed for non-     *
+      *              discounted loan with zero interest.              *
       *  FCM101 - Floor Rates on LE Module                            *
       *  MD055074 - Interest for processing type 80 is mandatory.     *
       *  MD053297 - Interest not posted correctly for Part sold       *
@@ -146,7 +149,7 @@
       *           - Applied for MD034449                              *
       *           - Applied for MD052515                              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
-      *             applied for loan start date rate fixing.          *      
+      *             applied for loan start date rate fixing.          *
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -538,7 +541,7 @@
                                                                                             MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -2126,16 +2129,20 @@
      C                   MOVEL     'LEL0145'     MsgIDXAr(Idx)
      C                   LEAVE
      C                   ENDIF
-      *
-      ***  Must be blank for zero interest amounts and discount loans
-      ***  parts purchased and sold
-      *
-     C     WINTT         IFEQ      *ZEROS
+      *****************************************************************                     MD057917
+      *****Must*be*blank*for*zero*interest*amounts*and*discount*loans**                     MD057917
+      *****parts*purchased*and*sold************************************                     MD057917
+      *****************************************************************                     MD057917
+      *                                                                                     MD057917
+      ** Must be blank for discount loans parts purchased and sold                          MD057917
+      *                                                                                     MD057917
+     C*****WINTT         IFEQ      *ZEROS                                                   MD057917
      C**** @@PTFC        ANDEQ     *ZEROS                                           BUG10226 CSD027A
-     C     @@PTFC        ANDEQ     *Blanks                                                   CSD027A
-     C     @@PTFT        ANDEQ     *ZEROS                                                   BUG10226
-     C     @@PTFN        ANDEQ     *ZEROS                                                   BUG10226
-     C     WLNPT         OREQ      63
+     C*****@@PTFC        ANDEQ     *Blanks                                          CSD027A MD057917
+     C*****@@PTFT        ANDEQ     *ZEROS                                          BUG10226 MD057917
+     C*****@@PTFN        ANDEQ     *ZEROS                                          BUG10226 MD057917
+     C*****WLNPT         OREQ      63                                                       MD057917
+     C     WLNPT         IFEQ      63                                                       MD057917
      C     WLNPT         OREQ      65
      C     WLNPT         OREQ      67
      C     WLNPT         OREQ      72
@@ -2143,7 +2150,23 @@
      C                   MOVE      'N'           DDNIDTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDNIDT'      FldNamXAr(Idx)
-     C                   MOVEL     'LEL0159'     MsgIDXAr(Idx)
+     C**********         MOVEL     'LEL0159'     MsgIDXAr(Idx)                              MD057917
+     C                   MOVEL     '5049509'     MsgIDXAr(Idx)                              MD057917
+     C                   ELSE                                                               MD057917
+      *                                                                                     MD057917
+      ** Issue warning message if zero interest and has an interest                         MD057917
+      ** payment date.                                                                      MD057917
+      *                                                                                     MD057917
+     C     WINTT         IFEQ      *ZEROS                                                   MD057917
+     C     @@PTFC        ANDEQ     *Blanks                                                  MD057917
+     C     @@PTFT        ANDEQ     *ZEROS                                                   MD057917
+     C     @@PTFN        ANDEQ     *ZEROS                                                   MD057917
+     C     WLNPT         ANDNE     80                                                       MD057917
+     C                   MOVE      'W'           DDNIDTOK                                   MD057917
+     C                   ADD       1             WId                                        MD057917
+     C                   MOVEL     'DDNIDT'      WFldNmXAr(WId)                             MD057917
+     C                   MOVEL     '5049510'     WMsgIDXAr(WId)                             MD057917
+     C                   ENDIF                                                              MD057917
      C                   ENDIF
       *
       ***  Next interest date must be the same as the rollover date
@@ -3370,7 +3393,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
- 
+
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4510,7 +4533,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
- 
+
      C*****WCHKI         IFLT      *ZEROS                                                   AR988460
      C**********         Z-SUB     WCHKI         WCHKI                                      AR988460
      C**********         MOVE      'Y'           WSUB              1                        AR988460

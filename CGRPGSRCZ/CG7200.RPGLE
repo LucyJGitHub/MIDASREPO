@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CRE095 - Rate fixing for RE Accounts (Recompile)             *
@@ -51,13 +53,13 @@
       *  90  Error in called program                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** Historic deals interest capitalisation records
      FHISTSAA   IP   E           K DISK
- 
+
       ** Account keys file
      FACKEY     IF   E           K DISK
- 
+
       ** Deals file by deal number
      FDEALS     IF   E           K DISK
      F                                     IGNORE(DEALSDAF)
@@ -66,17 +68,17 @@
      F                                     IGNORE(DEALSDEF)
      F                                     IGNORE(DEALSDFF)
      F                                     IGNORE(DEALSDGF)
- 
+
       ** GL Account Extension file
      FGLACNTL3  IF   E           K DISK
- 
+
       ** Interest Scale daily report work file
      FCGISDRL0  UF A E           K DISK
- 
+
       ** Working variables
      D RTCD            S              7A
      D OPTN            S              7A
- 
+
       ** Parameters for called programs
      D PINFD           S              5  0
      D PFRLS           S              5A
@@ -96,7 +98,7 @@
      D @FIRST          S              3A
      D @CUST           S             10A
      D KYST            S              7A
- 
+
       ** Data structure to define the account key
      D @ACKEY          DS
      D  H1DTYP                 1      2
@@ -104,32 +106,32 @@
      D  H1DLST                 4      5
      D  REST                   6     10    INZ('    C')
      D  H1CLAS                11     14
- 
+
       ** Data structure to allow the interest to be passed as alpha
      D DINTA           DS
      D  DINTN                  1      9P 0
- 
+
       ** Data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Program status data structure
      D PSDS           SDS
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
       ** Data structure for definition of customer master file fields
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Data structure for definition of bank specific details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure for definition of long retrieval data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       **  Short data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Redefine the fields in the Historic Deals file
      IHISTSAAF
      I              CNUM                        H1CNUM
@@ -160,10 +162,10 @@
      C                   IF        @FIRST <> 'YES'
      C                   EXSR      FIRST
      C                   ENDIF
- 
+
       ** Detail processing
      C                   EXSR      DETAIL
- 
+
       ** Perform the final housekeeping
      CLR                 EXSR      LAST
       *****************************************************************
@@ -173,7 +175,7 @@
       *  Non-executable code, KLISTs, PLISTs, etc.                    *
       *                                                               *
       *****************************************************************
- 
+
       ** Key list for the account master Interest Scale extention file
      C     ACCTKY        KLIST
      C                   KFLD                    Z5CNUM
@@ -181,7 +183,7 @@
      C                   KFLD                    Z5ACOD
      C                   KFLD                    Z5ACSQ
      C                   KFLD                    Z5BRCA
- 
+
       ** Key list for extracted Interest Scale details file
      C     DRKEY         KLIST
      C                   KFLD                    Z5BRCA
@@ -192,7 +194,7 @@
      C                   KFLD                    Z5REFN
      C                   KFLD                    Z5REFT
      C                   KFLD                    Z5INCD
- 
+
      C     *DTAARA       DEFINE                  LDA
       *****************************************************************
       /EJECT
@@ -205,13 +207,13 @@
       *                                                               *
       *****************************************************************
      C     FIRST         BEGSR
- 
+
       ** Access bank details via an access program
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     RTCD
      C                   PARM      '*FIRST '     OPTN
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Error, record not found
      C                   IF        RTCD <> *BLANK
      C     *LOCK         IN        LDA
@@ -222,7 +224,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call the interest from date program to open the files
      C                   CALL      'CGC7210'
      C                   PARM                    H1DLNO
@@ -231,7 +233,7 @@
      C                   PARM                    PINFD
      C                   PARM      'FIRST'       PFRLS
      C                   PARM                    PRTCD
- 
+
       ** Call the interest extract program to open the files
      C                   CALL      'CGC7220'
      C                   PARM                    PBRCA
@@ -249,10 +251,10 @@
      C                   PARM                    PRDFC
      C                   PARM      'FIRST'       PFRLS
      C                   PARM                    PRTCD
- 
+
       ** Set the flag to say the routine has been run
      C                   EVAL      @FIRST = 'YES'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -265,23 +267,23 @@
       *                                                               *
       *****************************************************************
      C     DETAIL        BEGSR
- 
+
       ** Chain to the account keys file for the account code
      C     @ACKEY        CHAIN     ACKEYALF                           89
- 
+
       ** If the account key is not found ignore
      C                   IF        *IN89 = *OFF
- 
+
       ** Chain to the deals file for the account sequence number
      C     H1DLNO        CHAIN     DEALSDCF                           89
- 
+
       ** Find the customer details
      C                   MOVE      *BLANKS       RTCD
      C                   MOVEL     '*KEY   '     OPTN
      C                   MOVE      *BLANKS       @CUST
      C                   MOVEL     H1CNUM        @CUST
      C                   MOVE      *BLANKS       KYST
- 
+
       ** Check for customer number or shortname
      C                   CALL      'AOCUSTR0'                           90
      C                   PARM                    RTCD
@@ -289,7 +291,7 @@
      C                   PARM                    @CUST
      C                   PARM                    KYST
      C     SDCUST        PARM      *BLANKS       DSSDY
- 
+
       ** If problem calling the program or not found
      C                   IF        *IN90 = *ON OR
      C                             RTCD <> *BLANKS
@@ -301,19 +303,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Load the file fields
      C                   MOVE      H1BRCA        Z5BRCA
      C                   MOVEL     H1CNUM        Z5CNUM
      C                   MOVE      H1CCY         Z5CCY
- 
+
       ** If the deal type is a taking use account code four
      C                   IF        H1DTYP = 'CD' OR
      C                             H1DTYP = 'CI' OR
      C                             H1DTYP = 'IT' OR
      C                             H1DTYP = 'TD'
      C                   Z-ADD     ACD4          Z5ACOD
- 
+
       ** If the deal type is a placing use account code one
      C                   ELSE
      C                   Z-ADD     ACD1          Z5ACOD
@@ -321,19 +323,19 @@
      C                   Z-ADD     CDAS          Z5ACSQ
      C**********         Z-ADD     H1DLNO        Z5REFN                                       CLE148
      C                   MOVE      H1DLNO        Z5REFN                                       CLE148
- 
+
       ** Set reference type flag to D for a dealing record
      C                   MOVE      'D'           Z5REFT
- 
+
       ** Set the capitalisation date as the event date
      C                   Z-ADD     H1EDAT        Z5INCD
- 
+
       ** Check if the record is already on the extract file
      C     DRKEY         CHAIN     CGISDRD0                           89
- 
+
       ** If the record does not exist add it otherwise ignore
      C     *IN89         IFEQ      *ON
- 
+
       ** Find the interest from date
      C                   CALL      'CGC7210'
      C                   PARM                    H1DLNO
@@ -351,7 +353,7 @@
      C                   MOVE      BBCRTN        Z5CRTN
      C                   MOVE      BBCSID        Z5CSID
      C                   Z-ADD     BJRDNB        Z5RNDB
- 
+
       ** If the deal type is a taking credit interest
      C                   IF        H1DTYP = 'CD' OR
      C                             H1DTYP = 'CI' OR
@@ -360,17 +362,17 @@
      C                   Z-ADD     H1EAMT        Z5TOCI
      C                   Z-ADD     0             Z5TODI
      C                   Z-ADD     H1EAMT        Z5NETI
- 
+
       ** If the deal type is a placing debit interest
      C                   ELSE
      C                   Z-ADD     0             Z5TOCI
      C                   Z-SUB     H1EAMT        Z5TODI
      C                   Z-SUB     H1EAMT        Z5NETI
      C                   ENDIF
- 
+
       ** Chain to GL Account Extention for the interest scale flag
      C     ACCTKY        CHAIN     GLACNTL3                           89
- 
+
       ** If the record is not found or the Interest Scale flag is not set
       ** to Y do not extract the record
      C                   IF        *IN89 = *OFF AND
@@ -412,13 +414,13 @@
      C                   MOVE      PINTA         DINTA
      C                   MOVE      *BLANKS       Z5ERRI
      C                   Z-ADD     0             Z5ERRC
- 
+
       ** Write a record to the Interest Scale daily report work file
      C                   WRITE     CGISDRD0
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -441,7 +443,7 @@
      C                   PARM                    PINFD
      C                   PARM      'LAST '       PFRLS
      C                   PARM                    PRTCD
- 
+
       ** Call the interest extract program to close the files
      C                   CALL      'CGC7220'
      C                   PARM                    PBRCA
@@ -459,10 +461,10 @@
      C                   PARM                    PRDFC
      C                   PARM      'LAST '       PFRLS
      C                   PARM                    PRTCD
- 
+
       ** Set the flag to say the routine has been run
      C                   EVAL      @FIRST = 'YES'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -475,15 +477,15 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** If a database error set on U8
      C                   IF        DBFILE <> *BLANK
      C                   EVAL      *INU8 = *ON
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
      C                   RETURN
- 
+
      C                   ENDSR

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -267,7 +269,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -275,9 +277,9 @@
       *  SRDefault - Default second screen fields                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDefault     BEGSR
- 
+
       *
       ** SAR CSE031 switched ON and processing type is 3 or 8.                                CSE031
      C                   IF        CSE031 = 'Y' AND DDACTN = 'I'                              CSE031
@@ -400,7 +402,7 @@
      C                   ENDIF                                                                CSE032
      C                   ENDIF                                                                CSE032
      C                   ENDIF                                                                CSE032
- 
+
       *
       ** Set up defaults for Australian yield basis.
       *
@@ -420,9 +422,9 @@
      C                   IF        DDDSLC =  *BLANKS
      C                   EVAL      DDDSLC = F1DDLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       *
       ** Set up defaults for Discount security entries.
       *
@@ -454,7 +456,7 @@
      C                   IF        F1PROT = '9' AND DDRSKC = *BLANKS
      C                   EVAL      DDRSKC = DDISSR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Set up defaults for Interest security entries.
@@ -489,7 +491,7 @@
      C                   IF        F1PROT = '9' AND DDRSKC = *BLANKS
      C                   EVAL      DDRSKC = DDISSR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Roll forward dividend indicator.
@@ -509,7 +511,7 @@
      C                   ELSE
      C                   EVAL      WCSNM1 = *BLANKS
      C                   ENDIF
- 
+
      C**********         IF        F1SDC2 <> *ZEROS                                           CSD027
      C                   IF        F1SDC2 <> *BLANKS                                          CSD027
      C                                AND F1SDC2 <> '000000'                                BUG11507
@@ -519,7 +521,7 @@
      C                   ELSE
      C                   EVAL      WCSNM2 = *BLANKS
      C                   ENDIF
- 
+
      C**********         IF        F1SDC3 <> *ZEROS                                           CSD027
      C                   IF        F1SDC3 <> *BLANKS                                          CSD027
      C                                AND F1SDC3 <> '000000'                                BUG11507
@@ -548,9 +550,9 @@
       ** use existing value                                                                   CSE037
      C                   MOVEL     NDEC          DDNDEC                                       CSE037
      C                   ENDIF                                                                CSE037
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -559,14 +561,14 @@
       *                                                               *
       *****************************************************************
      C     SRAOCust      BEGSR
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PKeyC
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = PKeyC
@@ -575,9 +577,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -587,9 +589,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

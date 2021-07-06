@@ -18,17 +18,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CGL018  *CREATE    Date 10Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -64,7 +66,7 @@
      F                                     RENAME(SERWABP0:SERWABP1)
      FBKPHJ3V   IF   E           K DISK    INFSR(*PSSR)
      FSDRWASL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -91,37 +93,37 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
- 
- 
+
+
+
       ** +-----------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -132,15 +134,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EXSR      MAIN
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -150,33 +152,33 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     MAIN          BEGSR
       *
       **  Read Risk Weighted Assets File
       *
      C                   READ      SDRWASL1                               01
- 
+
      C     *IN01         DOWEQ     '0'
- 
+
      C     RWRECI        IFNE      '*'
- 
+
      C                   MOVE      RWSETN        WWSetNum
      C                   MOVE      RWCALC        WWCalcMet
- 
+
      C                   EVAL      Count = Count + 1
- 
+
      C                   EXSR      GETBOOKS
- 
+
      C                   MOVE      '1'           *IN20
- 
+
      C                   ENDIF
- 
+
      C                   READ      SDRWASL1                               01
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -185,7 +187,7 @@
       * Calls: LE001241                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     GETBOOKS      BEGSR
       *
       **  Read BKPHJ3V
@@ -195,11 +197,11 @@
      C     *IN20         IFEQ      '1'
      C     *LOVAL        SETLL     BKPHJ3V
      C                   ENDIF
- 
+
      C                   READ      BKPHJ3V                                02
- 
+
      C     *IN02         DOWEQ     '0'
- 
+
      C                   MOVEL     BHSC          WWSecRef
      C                   MOVEL     BHBA          WWSecBrca
      C                   MOVEL     BHBK          WWSecBook
@@ -210,7 +212,7 @@
       *
       ****Chain*to*Securities*file to get the Currency
       *
- 
+
      C                   MOVE      NMCY          WWSecCcy
       *
       ** Call Security Lending Risk Weighted Assets Allocation Program
@@ -230,16 +232,16 @@
       ** Weighted Asset Balance figure
       *
      C                   EXSR      UPDATRWASE
- 
+
       ** Initialise RWA Balance variable for the next call
       *
      C                   Z-ADD     *ZERO         WWRiskWABal
- 
+
      C                   READ      BKPHJ3V                                02
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -248,7 +250,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATRWASE    BEGSR
       *
       **  Move field values for accessing record in the Security Risk
@@ -260,161 +262,161 @@
      C                   MOVEL     WWSecMrkt     WSBpmk
      C                   MOVEL     WWSecBptv     WSBptv
      C                   Z-ADD     WWSecPdat     WSBppd
- 
+
      C     KSEREC        CHAIN     SERWABP1                           03
- 
+
      C     *IN03         IFEQ      '0'
- 
+
      C                   SELECT
      C     Count         WHENEQ    2
      C                   MOVE      WWSetNum      SBSET02
      C                   Z-ADD     WWRiskWABal   SBAB02
- 
+
      C     Count         WHENEQ    3
      C                   MOVE      WWSetNum      SBSET03
      C                   Z-ADD     WWRiskWABal   SBAB03
- 
+
      C     Count         WHENEQ    4
      C                   MOVE      WWSetNum      SBSET04
      C                   Z-ADD     WWRiskWABal   SBAB04
- 
+
      C     Count         WHENEQ    5
      C                   MOVE      WWSetNum      SBSET05
      C                   Z-ADD     WWRiskWABal   SBAB05
- 
+
      C     Count         WHENEQ    6
      C                   MOVE      WWSetNum      SBSET06
      C                   Z-ADD     WWRiskWABal   SBAB06
- 
+
      C     Count         WHENEQ    7
      C                   MOVE      WWSetNum      SBSET07
      C                   Z-ADD     WWRiskWABal   SBAB07
- 
+
      C     Count         WHENEQ    8
      C                   MOVE      WWSetNum      SBSET08
      C                   Z-ADD     WWRiskWABal   SBAB08
- 
+
      C     Count         WHENEQ    9
      C                   MOVE      WWSetNum      SBSET09
      C                   Z-ADD     WWRiskWABal   SBAB09
- 
+
      C     Count         WHENEQ    10
      C                   MOVE      WWSetNum      SBSET10
      C                   Z-ADD     WWRiskWABal   SBAB10
- 
+
      C     Count         WHENEQ    11
      C                   MOVE      WWSetNum      SBSET11
      C                   Z-ADD     WWRiskWABal   SBAB11
- 
+
      C     Count         WHENEQ    12
      C                   MOVE      WWSetNum      SBSET12
      C                   Z-ADD     WWRiskWABal   SBAB12
- 
+
      C     Count         WHENEQ    13
      C                   MOVE      WWSetNum      SBSET13
      C                   Z-ADD     WWRiskWABal   SBAB13
- 
+
      C     Count         WHENEQ    14
      C                   MOVE      WWSetNum      SBSET14
      C                   Z-ADD     WWRiskWABal   SBAB14
- 
+
      C     Count         WHENEQ    15
      C                   MOVE      WWSetNum      SBSET15
      C                   Z-ADD     WWRiskWABal   SBAB15
- 
+
      C     Count         WHENEQ    16
      C                   MOVE      WWSetNum      SBSET16
      C                   Z-ADD     WWRiskWABal   SBAB16
- 
+
      C     Count         WHENEQ    17
      C                   MOVE      WWSetNum      SBSET17
      C                   Z-ADD     WWRiskWABal   SBAB17
- 
+
      C     Count         WHENEQ    18
      C                   MOVE      WWSetNum      SBSET18
      C                   Z-ADD     WWRiskWABal   SBAB18
- 
+
      C     Count         WHENEQ    19
      C                   MOVE      WWSetNum      SBSET19
      C                   Z-ADD     WWRiskWABal   SBAB19
- 
+
      C     Count         WHENEQ    20
      C                   MOVE      WWSetNum      SBSET20
      C                   Z-ADD     WWRiskWABal   SBAB20
- 
+
      C     Count         WHENEQ    21
      C                   MOVE      WWSetNum      SBSET21
      C                   Z-ADD     WWRiskWABal   SBAB21
- 
+
      C     Count         WHENEQ    22
      C                   MOVE      WWSetNum      SBSET22
      C                   Z-ADD     WWRiskWABal   SBAB22
- 
+
      C     Count         WHENEQ    23
      C                   MOVE      WWSetNum      SBSET23
      C                   Z-ADD     WWRiskWABal   SBAB23
- 
+
      C     Count         WHENEQ    24
      C                   MOVE      WWSetNum      SBSET24
      C                   Z-ADD     WWRiskWABal   SBAB24
- 
+
      C     Count         WHENEQ    25
      C                   MOVE      WWSetNum      SBSET25
      C                   Z-ADD     WWRiskWABal   SBAB25
- 
+
      C     Count         WHENEQ    26
      C                   MOVE      WWSetNum      SBSET26
      C                   Z-ADD     WWRiskWABal   SBAB26
- 
+
      C     Count         WHENEQ    27
      C                   MOVE      WWSetNum      SBSET27
      C                   Z-ADD     WWRiskWABal   SBAB27
- 
+
      C     Count         WHENEQ    28
      C                   MOVE      WWSetNum      SBSET28
      C                   Z-ADD     WWRiskWABal   SBAB28
- 
+
      C     Count         WHENEQ    29
      C                   MOVE      WWSetNum      SBSET29
      C                   Z-ADD     WWRiskWABal   SBAB29
- 
+
      C     Count         WHENEQ    30
      C                   MOVE      WWSetNum      SBSET30
      C                   Z-ADD     WWRiskWABal   SBAB30
- 
+
      C     Count         WHENEQ    31
      C                   MOVE      WWSetNum      SBSET31
      C                   Z-ADD     WWRiskWABal   SBAB31
- 
+
      C     Count         WHENEQ    32
      C                   MOVE      WWSetNum      SBSET32
      C                   Z-ADD     WWRiskWABal   SBAB32
- 
+
      C     Count         WHENEQ    33
      C                   MOVE      WWSetNum      SBSET33
      C                   Z-ADD     WWRiskWABal   SBAB33
- 
+
      C     Count         WHENEQ    34
      C                   MOVE      WWSetNum      SBSET34
      C                   Z-ADD     WWRiskWABal   SBAB34
- 
+
      C     Count         WHENEQ    35
      C                   MOVE      WWSetNum      SBSET35
      C                   Z-ADD     WWRiskWABal   SBAB35
- 
+
      C                   OTHER
      C                   MOVE      WWSetNum      SBSET36
      C                   Z-ADD     WWRiskWABal   SBAB36
- 
+
      C                   ENDSL
- 
+
      C                   UPDATE    SERWABP1
- 
+
       ** If no record in SERWABPD for this security yet (this must be the
       ** first set so write the values in 01 fields)
       *
      C                   ELSE
- 
+
      C                   MOVE      'D'           SBRECI
      C                   MOVEL     WWSecRef      SBBPSC
      C                   MOVEL     WWSecBrca     SBBPBA
@@ -424,7 +426,7 @@
      C                   Z-ADD     WWSecPdat     SBBPPD
      C                   MOVE      WWSetNum      SBSET01
      C                   Z-ADD     WWRiskWABal   SBAB01
- 
+
      C                   MOVEL     *BLANKS       SBSET02
      C                   MOVEL     *BLANKS       SBSET03
      C                   MOVEL     *BLANKS       SBSET04
@@ -460,7 +462,7 @@
      C                   MOVEL     *BLANKS       SBSET34
      C                   MOVEL     *BLANKS       SBSET35
      C                   MOVEL     *BLANKS       SBSET36
- 
+
      C                   Z-ADD     *ZERO         SBAB02
      C                   Z-ADD     *ZERO         SBAB03
      C                   Z-ADD     *ZERO         SBAB04
@@ -496,13 +498,13 @@
      C                   Z-ADD     *ZERO         SBAB34
      C                   Z-ADD     *ZERO         SBAB35
      C                   Z-ADD     *ZERO         SBAB36
- 
+
      C                   WRITE     SERWABP0
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -513,9 +515,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *LIKE         DEFINE    BHSC          WWSecRef
      C     *LIKE         DEFINE    NMCY          WWSecCcy
      C     *LIKE         DEFINE    BHBA          WSBrca
@@ -532,10 +534,10 @@
      C     *LIKE         DEFINE    RWSETN        WWSetNum
      C     *LIKE         DEFINE    RWCALC        WWCalcMet
      C     *LIKE         DEFINE    SBAB01        WWRiskWABal
- 
+
      C                   MOVE      '0'           *IN20
      C                   Z-ADD     *ZERO         Count             2 0
- 
+
      C     KSEREC        KLIST
      C                   KFLD                    WSBrca
      C                   KFLD                    WSBpbk
@@ -543,7 +545,7 @@
      C                   KFLD                    WSBpmk
      C                   KFLD                    WSBptv
      C                   KFLD                    WSBppd
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -558,24 +560,24 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
- 
+
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

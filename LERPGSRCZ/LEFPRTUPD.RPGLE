@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *

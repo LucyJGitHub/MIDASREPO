@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR689705           Date 03Jan11               *
       *                 CSW210             Date 04May10               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *

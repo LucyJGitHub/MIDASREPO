@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -145,10 +147,10 @@
       ** +--------------------------------------+
      FASHGLKL0  UF   E           K DISK    INFSR(*PSSR)
       ** Midas AS Hedge Linkage File Update by Hedge ID
- 
+
      FASHTRNL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas AS Hedge Transaction File Retrieval
- 
+
      FASHTRNLB  IF   E           K DISK    INFSR(*PSSR)                                       CAS005
      F                                     RENAME(ASHTRND0:ASHTRND1)                          CAS005
      F                                     PREFIX(HI)                                         CAS005
@@ -158,7 +160,7 @@
      FIRNPVAL0  IF   E           K DISK    INFSR(*PSSR)                                       CAS005
       ** Midas IR Revalued SIRS File                                                          CAS005
       ***Midas*IR*Revalued*FRAs*and*IRSs*File*************************                        CAS005
- 
+
      FIRNPVBL0  IF   E           K DISK    INFSR(*PSSR)                                       CAS005
      F                                     RENAME(IRNPVAD0:IRNPVBD0)                          CAS005
      F                                     PREFIX(SB)                                         CAS005
@@ -184,16 +186,16 @@
                                                                                               CAS006
      FMMNPVLL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas MM Revalued Deals by Deal Number
- 
+
      FLENPVLL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Revalued Customer Loans by Loan Number
- 
+
      FSDHEDGL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Hedging ICD File Retrieval
- 
+
      FSDHGSTL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Hedge Strategy by Shortname Master File
- 
+
       ** Retrieve details from PF/SEMKVLPD for hedged SE book positions                       CAS006
       ** instead of from PF/SENPVLPD.                                                         CAS006
      F***SENPVLL0  IF   E           K DISK    INFSR(*PSSR)                                    CAS006
@@ -201,16 +203,16 @@
                                                                                               CAS006
      FSEMKVLL0  IF   E           K DISK    INFSR(*PSSR)                                       CAS006
       ** Midas SE Market Values Using Net-Treasury-Prices                                     CAS006
- 
+
      FDLNPVLL3  IF   E           K DISK    INFSR(*PSSR)
       ** Midas DL Forward Commitments File
- 
+
      FDLDLDBL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas FX Deals by DLNO for Forward Reval NPV Mtd
- 
+
      FSDDEALL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Dealing data retrieval
- 
+
      FDEALALL   IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(DEALSDAF)
      F                                     IGNORE(DEALSDBF)
@@ -256,7 +258,7 @@
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)                                       CAS006
      F                                     PREFIX(B2)                                         CAS006
       ** Midas SE Book Position Headers                                                       CAS006
- 
+
      FTRANS2    IF   E           K DISK    INFSR(*PSSR)                                       CAS003
       ** Midas FF Transaction details                                                         CAS003
                                                                                               CAS003
@@ -319,42 +321,42 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CAS003
       ** External data structure for Switchable Features Details                              CAS003
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS003
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for General Ledger ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D                 DS                                                                     CAS003
      D  WDSfpse                1     10                                                       CAS003
      D  WDSistt                1      5                                                       CAS003
@@ -365,7 +367,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for AOBANKR0/AOCURRR0
      D PRetrnCde       S              7A
      D POption         S              7A
@@ -375,7 +377,7 @@
      D PRtrnCode       S              7A                                                      CAS003
      D POptn           S              7A                                                      CAS003
      D PSard           S              6A                                                      CAS003
- 
+
       ** Parameters for ZFREQB
      D***PRetCodeIn      S              7A                                                    212408
      D PRetCodeIn      S             10A                                                      212408
@@ -387,7 +389,7 @@
      D***PZMday          S              2P 0                                                  212408
      D PZMday          S              2  0                                                    212408
      D PBJDFIN         S              1A
- 
+
       ** Parameters for ZDATE2                                                                CAS004
      D PzDayNo2        S              5  0                                                    CAS004
      D PBJDFIN2        S              1                                                       CAS004
@@ -405,14 +407,14 @@
      D KDLnpvm         S              1A
      D KDLdlno         S              6P 0
      D KDLcycd         S              3A
- 
+
       ** Fields used to define Key List for Midas AS Hedge Transaction File
       ** Retrieval
      D KAShedi         S              6P 0
      D KASdhin         S              1A
      D KAShed5         S              6P 0                                                    CAS005
      D KASdhi5         S              1A                                                      CAS005
- 
+
       ** Fields used to define Key List for Midas SE Revalued Security
       ** Positions File
      D KSEsesn         S             10A
@@ -420,7 +422,7 @@
      D KSEbokc         S              2A
      D KSEmkti         S              1A
      D KSEbhtv         S              1A
- 
+
       ** Fields used to define Key List for Midas FF Revalued FF Positions                    CAS003
       ** File                                                                                 CAS003
      D KFFbrca         S              3A                                                      CAS003
@@ -532,12 +534,12 @@
      D WDerivPCTG      S              5  4                                                    CAS006
      D WXXDfrd         S              3A                                                      CAS006
      D WXXArea         S              5A                                                      CAS006
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      ISDHGSTD0
      I              FSDVT10                     FSDVT0
      I              FSDST10                     FSDST0
@@ -555,7 +557,7 @@
      I              FSEFUP                      FSEFUPB                                       CAS004
      IDEALSDCF                                                                                CAS004
      I              FSEFUP                      FSEFUPC                                       CAS004
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -566,17 +568,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       **  Read Midas SD Hedging ICD File Retrieval
- 
+
      C                   READ      SDHEDGL1
- 
+
       ** Database error
- 
+
      C                   IF        %EOF(SDHEDGL1)
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -588,26 +590,26 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **  Read Midas SD Dealing data retrieval
- 
+
      C                   READ      SDDEALL1
- 
+
       ** If record found
- 
+
      C                   IF        Not %EOF(SDDEALL1)
- 
+
       ** If Reval NPV method is blank,
- 
+
      C                   IF        BNNPVM = *BLANKS
      C                   EVAL      KDLnpvm = 'N'
- 
+
       ** else,
- 
+
      C                   ELSE
      C                   EVAL      KDLnpvm = BNNPVM
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CAS004
       ** Set the event control date                                                           CAS004
@@ -618,13 +620,13 @@
      C                   EVAL      WkEvCtDt = BKAPDT                                          CAS004
      C                   ENDIF                                                                CAS004
      C                   ENDIF                                                                CAS004
- 
+
       ** Read all hedges in the system.
- 
+
      C                   READ      ASHGLKL0
- 
+
       ** Do while not end of file
- 
+
      C                   DOW       NOT %EOF(ASHGLKL0)
                                                                                               CAS008
       ** If Delayed Hedge Assesment is on and delay days are defined                          CAS008
@@ -648,10 +650,10 @@
      C                   EVAL      FSEFFD = PZDyNbr3                                          CAS008
                                                                                               CAS008
      C                   ENDIF                                                                CAS008
- 
+
       ** For every record in ASHGLKPD, check if the effective date is equal
       ** to rundate.  If so, perform hedge effectiveness assessment.
- 
+
      C                   IF        FSRECI = 'D'
      C                             and FSEFFD = BJRDNB
      C                             AND CAS004 = 'N'                                           CAS004
@@ -668,51 +670,51 @@
      C                   ENDIF                                                                CAS008
                                                                                               CAS005
      C                   EVAL      WkRInd = *BLANKS                                           CAS005
- 
+
       ** Initialize Accumulators
- 
+
      C                   EXSR      SRInitAcc
- 
+
       ** Check if not hedging forecast transactions
- 
+
      C                   EVAL      KAShedi = FSHEDI
      C                   EVAL      KASdhin = 'H'
      C     KASHTRN       CHAIN     ASHTRNL1
       *
      C                   IF        %FOUND(ASHTRNL1)
      C                             and FSMOD <> 'FH'
- 
+
       ** Check if hedging internal contracts
- 
+
      C                   EXSR      SRChkHInt
- 
+
       ** DERIVATIVES - hedging instruments
- 
+
      C                   EXSR      SRDerivat
- 
+
       ** Hedged Items
- 
+
      C                   IF        WNoRec <> 'Y'
- 
+
      C                   EXSR      SRHedgedI
- 
+
      C                   ENDIF
- 
+
       ** Assess Effectiveness
- 
+
      C                   EXSR      SRCalcuHE
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Read next record on LF/ASHGLKL0
- 
+
      C                   READ      ASHGLKL0
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -724,18 +726,18 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInitAcc     BEGSR
- 
+
      C                   EVAL      WDerivAmtA = *ZERO
      C                   EVAL      WDerivURPLA = *ZERO
      C                   EVAL      WDerivURPLyeA = *ZERO
      C                   EVAL      WHedgeAmtA = *ZERO
      C                   EVAL      WHedgeURPLA = *ZERO
      C                   EVAL      WHedgeURPLyeA = *ZERO
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -747,20 +749,20 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkHInt     BEGSR
- 
+
      C                   EVAL      WLinkedDLNO = *ZERO
- 
+
      C*****FSDLNO        CHAIN     DLDLDBL1                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2           6 0                        CLE148
      C     FSDLNO2       CHAIN     DLDLDBL1                                                   CLE148
- 
+
      C                   IF        %FOUND(DLDLDBL1)
      C                             and LNKDN <> *ZERO
- 
+
      C                   EVAL      WLinkedDLNO = LNKDN
- 
+
       ** For Derivatives, access the linked internal contract deal                            CAS004
      C                   IF        FSDHIN = 'D'                                               CAS004
                                                                                               CAS004
@@ -781,11 +783,11 @@
      C                   ELSE
      C                   EVAL      WLinkedDLNO = *ZERO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -800,24 +802,24 @@
       *         SRDerivFF                                             *                       CAS003
       *                                                               *
       *****************************************************************
- 
+
      C     SRDerivat     BEGSR
- 
+
      C                   EVAL      KAShedi = FSHEDI
      C                   EVAL      KASdhin = 'D'
      C                   EVAL      WNoRec = *BLANK
- 
+
      C     KASHTRN       CHAIN     ASHTRNL1                           25
- 
+
      C                   DOW       *IN25 = *OFF
- 
+
      C                   EVAL      WAmount = *ZERO
      C                   EVAL      WUnrealPL = *ZERO
      C                   EVAL      WUnrealPLye = *ZERO
      C                   EVAL      WWCYCD = *BLANKS
- 
+
       ** Retrieve NPV Amounts
- 
+
      C                   IF        FSMOD = 'DL'
                                                                                               CAS008
      C                   IF        CAS008 = 'Y'                                               CAS008
@@ -832,12 +834,12 @@
      C                   IF        FSMOD = 'FF' AND CAS003 = 'Y'                              CAS003
      C                   EXSR      SRDerivFF                                                  CAS003
      C                   ENDIF                                                                CAS003
- 
+
      C     KASHTRN       READE     ASHTRNL1                               25
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -850,9 +852,9 @@
       *  Calls: SRAccuAmt                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDerivDL     BEGSR
- 
+
      C                   EVAL      WTYPE = *BLANKS                                            CAS005
                                                                                               CAS005
       ** If Enhancements to CAS001, CAS002 and CAS004 is installed, check                     CAS005
@@ -977,7 +979,7 @@
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
       ** FRA/IRS
- 
+
      C*****FSDLNO        CHAIN     IRNPVLL0                                                   CAS005
      C*****FSDLNO        CHAIN     IRNPVAL0                                            CAS005 CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
@@ -990,31 +992,31 @@
       ** However, if not satisfied, must do the ELSE part                                     CAS005
                                                                                               CAS005
      C                             CAS005 = 'Y' AND WkFound = 'Y'                             CAS005
- 
+
       ** Move transaction details,
- 
+
      C                   IF        %FOUND(IRNPVAL0) AND CAS005 = 'N'                          CAS005
      C                   EVAL      WAmount = IRPAMT
      C                   EVAL      WUnrealPL = IRURPL
      C                   EVAL      WUnrealPLye = IRYUPL
      C                   EVAL      WWCYCD = IRCYCD
      C                   ENDIF                                                                CAS005
- 
+
      C                   ELSE
- 
+
       ***Cross*Currency*Deals**********************************************                   CAS005
       ** Internal Contracts                                                                   CAS005
- 
+
      C                   IF        WLinkedDLNO <> *ZERO
- 
+
      C**********         EVAL      KDLdlno = FSDLNO                                           CLE148
      C                   EVAL      KDLdlno = FSDLNO2                                          CLE148
- 
+
      C     KDLNPVL       CHAIN     DLNPVLL3
      C                   IF        %FOUND(DLNPVLL3)
- 
+
       ** Move transaction details,
- 
+
      C                   MOVE      DLDLNO        FSDLNO                                       CLE148
      C                   EVAL      WAmount = DLDAMT
      C                   EVAL      WUnrealPL = FSPRLA
@@ -1024,21 +1026,21 @@
      C                   EVAL      WUnrealPLye = FSSYPL                                       CAS004
      C                   ENDIF                                                                CAS004
      C                   EVAL      WWCYCD = FSCYCD
- 
+
      C                   ELSE
      C                   EVAL      WNoRec = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WNoRec = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRAccuAmt
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************                       CAS008
@@ -1459,35 +1461,35 @@
       *  Calls: SRHedgeDL, SRHedgeLE, SRHedgeSE                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRHedgedI     BEGSR
- 
+
      C                   EVAL      KAShedi = FSHEDI
      C                   EVAL      KASdhin = 'H'
- 
+
      C     KASHTRN       CHAIN     ASHTRNL1                           25
- 
+
      C                   DOW       *IN25 = *OFF
       *
      C                   EVAL      WAmount = *ZERO
      C                   EVAL      WUnrealPL = *ZERO
      C                   EVAL      WUnrealPLye = *ZERO
      C                   EVAL      WWCYCD = *BLANKS
- 
+
       ** Retrieve NPV Amounts
- 
+
      C                   SELECT
- 
+
      C                   WHEN      FSMOD = 'DL'
- 
+
      C                   EXSR      SRHedgeDL
- 
+
      C                   WHEN      FSMOD = 'LE'
- 
+
      C                   EXSR      SRHedgeLE
- 
+
      C                   WHEN      FSMOD = 'SE'
- 
+
      C                   IF        CAS008 = 'Y'                                               CAS008
      C                             And FSSECR = 'Y'                                           CAS008
      C                             And FSNDDP <> 0                                            CAS008
@@ -1495,14 +1497,14 @@
      C                   ELSE                                                                 CAS008
      C                   EXSR      SRHedgeSE
      C                   ENDIF                                                                CAS008
- 
+
      C                   ENDSL
- 
+
      C     KASHTRN       READE     ASHTRNL1                               25
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1515,39 +1517,39 @@
       *  Calls: SRAccuAmt                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRHedgeDL     BEGSR
- 
+
      C                   EVAL      WTYPE = *BLANKS                                            CAS005
                                                                                               CAS005
       ** Money Market
- 
+
      C*****FSDLNO        CHAIN     MMNPVLL0                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     MMNPVLL0                                                   CLE148
      C                   IF        %FOUND(MMNPVLL0)
- 
+
       ** Move transaction details,
- 
+
      C                   EVAL      WAmount = MMDAMT
      C                   EVAL      WUnrealPL = MMURPL
      C                   EVAL      WUnrealPLye = MMYUPL
      C                   EVAL      WWCYCD = MMCYCD
- 
+
      C                   ELSE
- 
+
       ** Internal Deals
- 
+
      C                   IF        WLinkedDLNO <> *ZERO
- 
+
      C**********         EVAL      KDLdlno = FSDLNO                                           CLE148
      C                   EVAL      KDLdlno = FSDLNO2                                          CLE148
- 
+
      C     KDLNPVL       CHAIN     DLNPVLL3
      C                   IF        %FOUND(DLNPVLL3)
- 
+
       ** Move transaction details,
- 
+
      C                   MOVE      DLDLNO        FSDLNO                                       CLE148
      C                   EVAL      WAmount = DLDAMT
      C                   EVAL      WUnrealPL = FSPRLA
@@ -1557,21 +1559,21 @@
      C                   EVAL      WUnrealPLye = FSSYPL                                       CAS004
      C                   ENDIF                                                                CAS004
      C                   EVAL      WWCYCD = FSCYCD
- 
+
      C                   ELSE
      C                   EVAL      WNoRec = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WNoRec = 'Y'
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   EXSR      SRAccuAmt
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1584,29 +1586,29 @@
       *  Calls: SRAccuAmt                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRHedgeLE     BEGSR
- 
+
      C                   EVAL      WTYPE = *BLANKS                                            CAS005
                                                                                               CAS005
      C     FSDLNO        CHAIN     LENPVLL0
- 
+
      C                   IF        %FOUND(LENPVLL0)
- 
+
       ** Move transaction details,
- 
+
      C                   EVAL      WAmount = LELAMT
      C                   EVAL      WUnrealPL = LEURPL
      C                   EVAL      WUnrealPLye = LEYUPL
      C                   EVAL      WWCYCD = LECYCD
      C                   EXSR      SRAccuAmt
- 
+
      C                   ELSE
      C                   EVAL      WNoRec = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1619,43 +1621,43 @@
       *  Calls: SRAccuAmt                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRHedgeSE     BEGSR
- 
+
      C                   EVAL      WTYPE = *BLANKS                                            CAS005
                                                                                               CAS005
       **  Move Midas AS Hedge Transaction File Retrieval Fields to
       **  Key List for Midas SE Revalued Security Positions File
- 
+
      C                   EVAL      KSEsesn = FSFPSE
      C                   EVAL      KSEbrca = FSBRCA
      C                   EVAL      KSEbokc = FSBKCD
      C                   EVAL      KSEmkti = FSMKTI
      C                   EVAL      KSEbhtv = FSBHTV
- 
+
       ** Retrieve details from PF/SEMKVLPD for hedged SE book positions                       CAS006
       ** instead of from PF/SENPVLPD.                                                         CAS006
                                                                                               CAS006
      C     KSENPVL       CHAIN     SEMKVLL0                                                   CAS006
      C*****KSENPVL       CHAIN     SENPVLL0                                                   CAS006
- 
+
      C**********         IF        %FOUND(SENPVLL0)                                           CAS006
      C                   IF        %FOUND(SEMKVLL0)                                           CAS006
- 
+
       ** Move transaction details,
- 
+
      C                   EVAL      WAmount = SENAMT
      C                   EVAL      WUnrealPL = SEURPL
      C                   EVAL      WUnrealPLye = SEYUPL
      C                   EVAL      WWCYCD = SECCY
      C                   EXSR      SRAccuAmt
- 
+
      C                   ELSE
      C                   EVAL      WNoRec = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                       CAS008
       /EJECT                                                                                  CAS008
       *****************************************************************                       CAS008
@@ -1714,13 +1716,13 @@
       *  Calls: AOCURRR0, *PSSR                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAccuAmt     BEGSR
- 
+
      C                   IF        WNoRec <> 'Y'
- 
+
       ** If only a percentage is hedged,
- 
+
      C                   IF        FSPCTG <> 0
      C                   MULT(H)   FSPCTG        WAmount
      C                   DIV(H)    100           WAmount
@@ -1729,17 +1731,17 @@
      C                   MULT(H)   FSPCTG        WUnrealPLye
      C                   DIV(H)    100           WUnrealPLye
      C                   ENDIF
- 
+
       ** Retrieve Currency details
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     PRetrnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      WWCYCD        PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error
- 
+
      C                   IF        PRetrnCde <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -1751,9 +1753,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Convert Transaction Amounts to base currency at spot rate
- 
+
      C                   IF        WTYPE = *BLANKS                                            CAS005
                                                                                               CAS005
      C                   IF        A6MDIN = 'M'
@@ -1765,50 +1767,50 @@
      C                   DIV(H)    A6SPRT        WUnrealPL
      C                   DIV(H)    A6SPRT        WUnrealPLye
      C                   ENDIF
- 
+
      C                   ENDIF                                                                CAS005
       ** Accumulate Amounts
- 
+
      C                   SELECT
- 
+
       ** HEDGING AMOUNTS
- 
+
      C                   WHEN      FSDHIN = 'D'
- 
+
       ** Accumulate Current Principal/Face Value
- 
+
      C                   ADD       WAmount       WDerivAmtA
- 
+
       ** Accumulate Unrealized Profit/Loss
- 
+
      C                   ADD       WUnrealPL     WDerivURPLA
- 
+
       ** Accumulate Unrealized P/L As of Yearend
- 
+
      C                   ADD       WUnrealPLye   WDerivURPLyeA
- 
+
       ** Hedged Amounts
- 
+
      C                   WHEN      FSDHIN = 'H'
- 
+
       ** Accumulate Current Principal
- 
+
      C                   ADD       WAmount       WHedgeAmtA
- 
+
       ** Accumulate Unrealized Profit/Loss
- 
+
      C                   ADD       WUnrealPL     WHedgeURPLA
- 
+
       ** Accumulate Unrealized P/L As of Yearend
- 
+
      C                   ADD       WUnrealPLye   WHedgeURPLyeA
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1820,9 +1822,9 @@
       *  Calls: *PSSR, ZFREQB                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCalcuHE     BEGSR
- 
+
      C                   IF        WNoRec <> 'Y'
                                                                                               CAS005
       ** Retrieve Product Type                                                                CAS005
@@ -1893,10 +1895,10 @@
      C                   EXSR      SrRegAsse                                                  CAS006
                                                                                               CAS006
      C                   ELSE                                                                 CAS006
- 
+
       **  If Hedge Linkage starts after previous year end, disregard
       **  Year end Unrealized Profit and Loss
- 
+
      C                   IF        FSSTDT <= BJPEYD
      C                             AND (CAS005 = 'N' OR WkPRTP <> 'CF')                       CAS005
      C     WDerivURPLA   SUB       WDerivURPLyeA WDerivDiff
@@ -1905,26 +1907,26 @@
      C                   Z-ADD     WDerivURPLA   WDerivDiff
      C                   Z-ADD     WHedgeURPLA   WHedgeDiff
      C                   ENDIF
- 
+
      C                   IF        WHedgeDiff = *ZERO
      C                   Z-ADD     *ZERO         WChange
      C                   ELSE
      C     WDerivDiff    DIV       WHedgeDiff    WChange
      C                   ENDIF
- 
+
      C     WChange       MULT(H)   -100          WChngPerc
- 
+
       ** Assess Hedge Effectiveness by virtue of de minimis ruling
       ** i.e. Change difference from yearend is less than or equal
       **      to the Override de minimis percentage.
- 
+
      C     WDerivAmtA    MULT(H)   FSOPCT        WDerivDeMin
      C                   DIV(H)    100           WDerivDeMin
      C     WHedgeAmtA    MULT(H)   FSOPCT        WHedgeDeMin
      C                   DIV(H)    100           WHedgeDeMin
- 
+
       ** Convert to absolute value
- 
+
      C                   IF        WDerivDeMin < *ZERO
      C                   Z-SUB     WDerivDeMin   WDerivDeMin
      C                   ENDIF
@@ -1937,36 +1939,36 @@
      C                   IF        WHedgeDiff < *ZERO
      C                   Z-SUB     WHedgeDiff    WHedgeDiff
      C                   ENDIF
- 
+
       ** If the change in Unrealized P/L is less than or equal to the De
       ** Minimis Portion of the Principal/Face Value for both the Hedging
       ** and Hedged Items, then the Hedge is outright effective.
- 
+
      C                   IF        WDerivDiff <= WDerivDeMin
      C                             and WHedgeDiff <= WHedgeDeMin
- 
+
       ** Hedge Effectiveness Percentage
- 
+
      C                   Z-ADD     FSOPCT        FSHEFP
- 
+
      C                   ELSE
- 
+
       ** Change in Unrealized P/L should go the opposite direction
       ** i.e. If hedged items gain, hedging instruments should lose
       **      Otherwise, the hedge is considered ineffective and thus
       **      should be discontinued.
- 
+
      C                   IF        WChange > *ZERO
      C                   EVAL      FSRECI = 'X'
      C                   EVAL      FSHEFP = *ZERO
- 
+
      C                   ELSE
- 
+
       ** Otherwise, Assess Hedge Effectiveness if within the boundaries
       ** set for the strategy.
- 
+
       ** Retrieve Upper and Lower Effectiveness Percentage
- 
+
      C     FSHGST        CHAIN     SDHGSTL1
      C                   IF        NOT %FOUND(SDHGSTL1)
      C     *LOCK         IN        LDA
@@ -1979,36 +1981,36 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If effectiveness is not within the boundary, the hedge is
       ** considered considered ineffective and thus should be
       ** discontinued.
- 
+
      C                   IF        WChngPerc > FSEFUP
      C                             or WChngPerc < FSEFLO
      C                   EVAL      FSRECI = 'X'
      C                   ENDIF
- 
+
      C**********         Z-ADD     WChngPerc     FSHEFP                                       228011
      C                   Z-ADD(H)  WChngPerc     FSHEFP                                       228011
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Set Next Assessment Date
- 
+
      C     FSRECI        IFEQ      'D'
- 
+
      C                   IF        FSEFFQ <> 'D'                                              CAS004
      C                   EVAL      Pzfreq = FSEFFQ
      C                   EVAL      Pzdayno = FSEFFD
      C                   EVAL      Pzmday = 31
      C                   EVAL      Pzccy = BJCYCD
      C                   EVAL      PBJDFIN = BJDFIN
- 
+
      C                   CALLB     'ZFREQB'
      C                   PARM      *BLANKS       PRetCodeIn
      C                   PARM                    PZFreq
@@ -2018,7 +2020,7 @@
      C                   PARM                    PZMday
      C                   PARM                    PBJDFIN
      C     SDGELR        PARM                    SDGELR
- 
+
      C                   IF        PRetCodeIn <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -2068,18 +2070,18 @@
      C                   ENDIF                                                                CAS004
                                                                                               CAS004
      C                   ENDIF
- 
+
      C                   ELSE                                                                 CAS004
      C                   EVAL      FSEFFD = WkEvCtDt + 1                                      CAS004
      C                   ENDIF                                                                CAS004
                                                                                               CAS004
      C                   ENDIF
- 
+
      C                   EVAL      FSDAMT = WDerivAmtA
      C                   EVAL      FSDUPL =WDerivURPLA
      C                   EVAL      FSHAMT = WHedgeAmtA
      C                   EVAL      FSHUPL = WHedgeURPLA
- 
+
      C                   IF        FSSTDT <= BJPEYD
      C                   EVAL      FSDYPL = WDerivURPLyeA
      C                   EVAL      FSHYPL = WHedgeURPLyeA
@@ -2087,14 +2089,14 @@
      C                   EVAL      FSDYPL = *ZERO
      C                   EVAL      FSHYPL = *ZERO
      C                   ENDIF
- 
+
      C                   EVAL      FSCYCD = BJCYCD
- 
+
      C                   ELSE
      C                   EVAL      FSRECI = 'X'
      C                   EVAL      FSHEFP = *ZERO
      C                   ENDIF
- 
+
      C**********         EVAL      FSLASD = BJRDNB                                            CAS004
      C                   EVAL      FSLASD = WkEvCtDt                                          CAS004
       *                                                                                       CAS008
@@ -2106,9 +2108,9 @@
       *                                                                                       CAS008
      C                   EVAL      FSRIND = WkRInd                                            CAS005
      C                   UPDATE    ASHGLKD0
- 
+
      C                   ENDSR
- 
+
       **********************************************************************                  CAS004
       /EJECT                                                                                  CAS004
       *****************************************************************                       CAS004
@@ -2565,11 +2567,11 @@
       *        AOSARDR0                                               *                       CAS003
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPgm
      C                   EVAL      DBMOD = PSProcMod
@@ -2577,16 +2579,16 @@
      C                   EVAL      DBKEY = *BLANKS
      C                   EVAL      DBASE = *ZERO
      C                   OUT       LDA
- 
+
       **  Use access program to read bank details file
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRetrnCde
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRetrnCde <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -2719,7 +2721,7 @@
      C                   EXSR      *PSSR                                                      CAS006
      C                   ENDIF                                                                CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Check if Delayed Hedge Assessment is installed.                                      CAS008
                                                                                               CAS008
      C                   CALL      'AOSARDR0'                                                 CAS008
@@ -2765,14 +2767,14 @@
      C                   KFLD                    KDeffd                                       CAS008
                                                                                               CAS008
       ** Key List for Midas DL Forward Commitments File
- 
+
      C     KDLNPVL       KLIST
      C                   KFLD                    KDLnpvm
      C                   KFLD                    KDLdlno
      C                   KFLD                    KDLcycd
- 
+
       ** Key List for Midas AS Hedge Transaction File Retrieval
- 
+
      C     KASHTRN       KLIST
      C                   KFLD                    KAShedi
      C                   KFLD                    KASdhin
@@ -2786,9 +2788,9 @@
      C     KRXNPV        KLIST                                                                CAS005
      C                   KFLD                    KRXDlNo                                      CAS005
      C                   KFLD                    KRXCyCd                                      CAS005
- 
+
       ** Key List for Midas SE Revalued Security Positions File
- 
+
      C     KSENPVL       KLIST
      C                   KFLD                    KSEsesn
      C                   KFLD                    KSEbrca
@@ -2858,9 +2860,9 @@
      C     KSdtdtb       KLIST                                                                CAS006
      C                   KFLD                    KXXDfrd                                      CAS006
      C                   KFLD                    KXXArea                                      CAS006
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -2875,23 +2877,23 @@
       * Calls: DBERRCTL                                                   *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

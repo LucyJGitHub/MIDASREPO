@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSE037             Date 29Apr02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -166,13 +168,13 @@
      C                   IF        PRdBck = 'Y'
      C                   EXSR      SRReadBck
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -180,9 +182,9 @@
       *  SRChkAut - Check for user authority if not multi-branching   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkAut      BEGSR
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM      'E'           PActn
      C                   PARM      *ZERO         PError
@@ -193,9 +195,9 @@
      C                   EVAL      PErrMs = 'FXM0292'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -203,7 +205,7 @@
       *  SRReadFwd - Read forwards through the securities file        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRReadFwd     BEGSR
       *
       ** Position to current record on file.
@@ -213,7 +215,7 @@
       ** Read until end of file or a valid record is found.
       *
      C                   DOU       EndOfFile = True OR PError = *ZERO
- 
+
      C                   READ      SECTYDF                                10
       *
       ** If not end of file.
@@ -228,15 +230,15 @@
      C                   PARM      PDBRN         PBrc
      C                   PARM      *ZERO         PError
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** If end of file was encountered, report this fact.
       *
      C                   IF        EndOfFile = True
- 
+
      C     DDSESN        IFEQ      *BLANKS
      C                   EVAL      PErrMs = 'MMM1006'
      C                   ELSE
@@ -247,9 +249,9 @@
      C                   ELSE
      C                   EVAL      PSeSnSel = SESN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -257,7 +259,7 @@
       *  SRReadBck - Read backwards through the securities file       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRReadBck     BEGSR
       *
       ** Position to current record on file.
@@ -267,7 +269,7 @@
       ** Read until start of file or a valid record is found.
       *
      C                   DOU       StrOfFile = True OR PError = *ZERO
- 
+
      C                   READP     SECTYDF                                10
       *
       ** Record found.
@@ -284,9 +286,9 @@
      C                   PARM      PDBRN         PBrc
      C                   PARM      *ZERO         PError
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** If start of file was encountered, report this fact.
@@ -298,9 +300,9 @@
      C                   ELSE
      C                   EVAL      PSeSnSel = SESN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -310,9 +312,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -353,9 +355,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -364,7 +366,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       *
 **  CPY@

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -144,27 +146,27 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FAS000002DFCF   E             WORKSTN SFILE(AS000002S0:#0SFRN)
       ** Forecast Transactions Display File
- 
+
      FASFHTRL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     RENAME(ASFHTRD0:@FHTRD0)
       ** Forecast Transaction Details Master File Update Index
- 
+
      FASFHTRL1  IF   E           K DISK    INFSR(*PSSR)
       ** Forecast Transaction Details Master File Retrieval Index
- 
+
      FSDFCTLL0  UF   E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
       ** Standing Data Controls Update index
- 
+
      FSDLOANL1  IF   E           K DISK    INFSR(*PSSR)                                       CAS006
       ** Midas SD Loan Type/Subtype File by Loan Type/Subtype                                 CAS006
                                                                                               CAS006
@@ -187,7 +189,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       *
       ** Local data area for database error details
@@ -201,52 +203,52 @@
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Deal Types Array                                                                     CAS006
      D DLTYP           S              2A   DIM(22) CTDATA                                     CAS006
                                                                                               CAS006
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Deal Subtype Details
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
- 
+
       ** External data structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Yield Curve
      D SDYLDC        E DS                  EXTNAME(SDYLDCPD)
      D                                     PREFIX(@)
- 
+
       ** External data structure for Switchable Feature Details.                              CAS006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS006
                                                                                               CAS006
       ** Data Structure for Screen Fields
      D #1DBRC          DS           280
- 
+
       ** Hedging ICD File
      D @1DBRC        E DS                  EXTNAME(ASFHTRL0)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Parameter to SD0520X
      D PDeleteRec      DS          3064
      D  WFileName              1     10
@@ -254,7 +256,7 @@
      D  WDeleteR              61   3060
      D  WLstChgDate         3061   3063P 0
      D  WLstChgType         3064   3064
- 
+
       ** Underlying Ref. Number Data Structure for GL                                         CAS006
      D UREF            DS                                                                     CAS006
      D  BatchNo                       3A                                                      CAS006
@@ -264,13 +266,13 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Comparator Field to check if Numeric
      D*WNumeric        C                   '0123456789.- '                                    CAS010
      D WNumeric        C                   '0123456789TM.- '                                  CAS010
      D WDigits         C                   '0123456789'                                       CAS006
      D WPosition       S              1  0
- 
+
       ** Work fields for subfile processing
      D WTranID         S              6  0
      D WFirst          S              1A
@@ -281,12 +283,12 @@
      D WSFCntr         S              2  0
      D WError          S              1A
      D WDelete         S              1A
- 
+
       ** Input/Output Parameters
      D PRetCodeIn      S              7A
      D PMode           S              1A
      D WRun            S              1A
- 
+
       ** Parameters for Standard Access Objects
      D PCurrency       S              3A
      D PBranch         S              3A
@@ -295,11 +297,11 @@
      D PRtCd           S              7A
      D POption         S              7A
      D PSARD           S              6A                                                      CAS006
- 
+
       ** Work Fields for SDBANKPD fields
      D WRunDay         S              5  0
      D WSetUp          S              1A
- 
+
       ** Other Working Variables                                                              CAS006
      D WDTYP           S              2A                                                      CAS006
      D WIdx            S              2P 0                                                    CAS006
@@ -326,7 +328,7 @@
      D PChkFld         S             16A
      D PDigits         S              2  0
      D PFldOut         S             16A
- 
+
       ** Switchable Feature Identifiers                                                       CAS006
      D CAS006          S              1A   INZ('N')                                           CAS006
                                                                                               CAS006
@@ -343,7 +345,7 @@
      D WNumIns         S              5  0
      D WNumAmd         S              5  0
      D WNumDel         S              5  0
- 
+
       ** Fields used for Message Files
      D PMsgFile        S             10A   INZ('SDUSRMSG')
      D PMsgID          S             10A
@@ -358,118 +360,118 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *****************************************************************
- 
+
       **  Clear subfile before refilling by writing control record
       **  with SFLCLR active
- 
+
      C                   EVAL      *IN34 = *ON
      C                   WRITE     AS000002C0
      C                   EVAL      *IN34 = *OFF
      C                   EVAL      *IN35 = *ON
- 
+
       ** Initialise subfile relative record number
- 
+
      C                   Z-ADD     0             WSFRRN
- 
+
       ** Do While not F3
- 
+
      C                   DOU       *INKC = *ON
- 
+
      C                   IF        WBuild = *BLANK
      C                   READ      ASFHTRL1
- 
+
      C                   IF        %EOF(ASFHTRL1) AND WFirst = 'Y'
      C                   EVAL      WEmpty = 'Y'
      C                   ELSE
      C                   EVAL      WFirst = 'N'
      C                   EVAL      WEmpty = 'N'
      C                   ENDIF
- 
+
      C                   Z-ADD     0             WSFCntr
- 
+
       **  Build Subfile
- 
+
      C                   IF        %EOF(ASFHTRL1)
- 
+
       ** Send 'No Details to Display' Error Message
- 
+
      C                   EVAL      PMsgId = 'ASM0001'
      C                   EXSR      SRSndErr
- 
+
      C                   EVAL      *IN27 = *OFF
      C                   EVAL      *IN30 = *ON
      C                   EVAL      *IN35 = *OFF
      C                   EVAL      *IN36 = *ON
      C                   EVAL      WBuild = 'N'
      C                   Z-ADD     1             WSFCntr
- 
+
      C                   ELSE
      C                   EVAL      *IN35 = *ON
      C                   EVAL      *IN30 = *OFF
      C                   EXSR      SRBuild
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     WSFCntr       IFGT      0
      C                   EXSR      SRDispSF
      C                   ELSE
      C                   ITER
      C                   ENDIF
- 
+
       **  If Rollup is not done and F3 is not pressed
- 
+
      C                   IF        *IN27 = *OFF AND *INKC = *OFF
- 
+
      C                   SELECT
- 
+
       ** If F5 is pressed
- 
+
      C                   WHEN      *INKE = *ON
      C                   EXSR      SRRefresh
- 
+
       ** If F9 is pressed
- 
+
      C                   WHEN      *INKI = *ON AND PMode <> 'E'
      C                   EXSR      SRInsert
- 
+
       ** If Position On field is not blank and save variable is not the same
       ** as the value entered.
- 
+
      C                   WHEN      #0RTRI <> *ZEROS AND
      C                             #0RTRI <> WTranId
      C                   EXSR      SRReview
- 
+
       ** If Position On field is the same as the save variable
- 
+
      C                   WHEN      #0RTRI = WTranId AND
      C                             WEmpty = 'N'
      C                   EVAL      WBuild = 'N'
      C                   EXSR      SRValdSele
- 
+
      C                   WHEN      #0RTRI = *ZEROS AND
      C                             #0RTRI <> WTranId AND
      C                             WEmpty = 'N'
      C                   EXSR      SRRefresh
- 
+
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
       **  If Rollup, Build Subfile
- 
+
      C                   EVAL      WBuild = *BLANKS
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -481,28 +483,28 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRefresh     BEGSR
- 
+
       **  Clear subfile before refilling by writing control record
       **  with SFLCLR active
- 
+
      C                   EVAL      *IN34 = *ON
      C                   WRITE     AS000002C0
      C                   EVAL      *IN34 = *OFF
- 
+
      C                   Z-ADD     0             WSFRRN
- 
+
      C                   EVAL      *IN36 = *OFF
      C                   EVAL      #0SELE = *BLANK
      C                   EVAL      #0RTRI = *ZEROS
      C                   EVAL      WBuild = *BLANK
      C                   EVAL      WTranId = *ZEROS
- 
+
      C     *LOVAL        SETLL     ASFHTRL1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -514,29 +516,29 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRReview      BEGSR
- 
+
       **  Move #0RTRI to save variable
- 
+
      C                   EVAL      WTranId = #0RTRI
- 
+
       **  Clear subfile before refilling by writing control record
       **  with SFLCLR active
- 
+
      C                   EVAL      *IN34 = *ON
      C                   WRITE     AS000002C0
      C                   EVAL      *IN34 = *OFF
- 
+
      C                   Z-ADD     0             WSFRRN
      C                   EVAL      *IN36 = *OFF
      C                   EVAL      #0SELE = *BLANK
      C                   EVAL      WBuild = *BLANK
- 
+
      C     WTranId       SETLL     ASFHTRL1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -548,41 +550,41 @@
       *  Calls    : SRSFMove                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBuild       BEGSR
- 
- 
+
+
       ** Do while not End of File
- 
+
      C                   DOW       NOT %EOF(ASFHTRL1) AND WSFCntr < 14
- 
+
       ** Move File Fields to Subfile Screen Fields
- 
+
      C                   EXSR      SRSFMove
- 
+
      C                   ADD       1             WSFCntr
      C                   ADD       1             WSFRRN
      C                   Z-ADD     WSFRRN        #0SFRN
- 
+
      C                   WRITE     AS000002S0
- 
+
      C                   IF        WSFCntr <= 14
      C                   READ      ASFHTRL1
      C                   ENDIF
- 
+
      C                   IF        %EOF(ASFHTRL1)
      C                   EVAL      *IN36 = *ON
      C                   EVAL      *IN27 = *OFF
      C                   ENDIF
- 
+
      C                   IF        NOT %EOF(ASFHTRL1) AND WSFCntr = 14
      C     FSTRID        SETLL     ASFHTRL1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -595,26 +597,26 @@
       *             SRReview                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValdSele    BEGSR
- 
+
       ** Read Subfile
- 
+
      C                   READC     AS000002S0                             50
- 
+
       **  Do while F3 is not pressed, roll-up key is not
       **  pressed and not End of File
- 
+
      C                   DOW       *INKC = *OFF AND
      C                             *IN27 = *OFF AND
      C                             *IN50 = *OFF
- 
+
      C                   EVAL      WError = 'N'
- 
+
       ** Validate selection field while not End of File
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   IF        PMode= 'M' AND
      C                             #0SELE <> 'E' AND
      C                             #0SELE <> 'A' AND
@@ -625,7 +627,7 @@
      C                   EVAL      WError = 'Y'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        PMode= 'E' AND
      C                             #0SELE <> 'E' AND
      C                             #0SELE <> *BLANK
@@ -634,7 +636,7 @@
      C                   EVAL      WError = 'Y'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #0SELE = 'A' AND PMode = 'M'
      C                             AND #0STAT <> *BLANKS OR
      C                             #0SELE = 'D' AND PMode = 'M'
@@ -645,7 +647,7 @@
      C                   EVAL      WError = 'Y'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #0SELE = 'D' AND PMode = 'M'
      C                             AND WSetUp <> 'N'
      C                   EVAL      *IN37 = *ON
@@ -653,120 +655,120 @@
      C                   EVAL      WError = 'Y'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #0STAT <> *BLANKS
      C                   EVAL      *IN38 = *ON
      C                   ELSE
      C                   EVAL      *IN38 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      *IN31 = *ON
      C                   UPDATE    AS000002S0
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN37 = *OFF
      C                   READC     AS000002S0                             50
- 
+
      C                   ENDDO
- 
+
       ** If no errors are found, call Display Detail Screen
- 
+
      C     WError        IFEQ      'N'
- 
+
      C                   EVAL      *IN50 = *OFF
- 
+
      C                   DOW       *IN50 = *OFF AND *INKC = *OFF AND
      C                             *INKL = *OFF
- 
+
      C                   READC     AS000002S0                             50
- 
+
      C                   IF        #0SELE <> *BLANK AND
      C                             *IN50 = *OFF
- 
+
      C                   EXSR      SRAction
- 
+
      C                   IF        FSRECI <> 'D'
      C                   EVAL      *IN38 = *ON
      C                   EXSR      SRSFMove
      C                   ELSE
      C                   EVAL      *IN38 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      #0SELE = *BLANK
      C                   EVAL      *IN31 = *ON
      C                   UPDATE    AS000002S0
      C                   EVAL      *IN31 = *OFF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Display screen if there is an error message, if F12 is pressed
       ** from Detail Screen or if there are no more records selected
       ** to process
- 
+
      C                   IF        WError = 'Y' AND *INKC = *OFF OR
      C                             *INKL = *ON OR
      C                             *IN50 = *ON AND
      C                             #0RTRI = WTranId AND *INKC = *OFF
- 
+
      C                   IF        %EOF(ASFHTRL1)
      C                   EVAL      *IN36 = *ON
      C                   EVAL      *IN27 = *OFF
      C                   ENDIF
- 
+
      C                   EXSR      SRDispSF
- 
+
      C                   EVAL      *IN37 = *OFF
- 
+
      C                   SELECT
- 
+
       ** If F5 is pressed
- 
+
      C                   WHEN      *INKE = *ON
      C                   EXSR      SRRefresh
      C                   LEAVE
- 
+
       ** If F9 is pressed
- 
+
      C                   WHEN      *INKI = *ON AND PMode <> 'E'
      C                   EXSR      SRInsert
      C                   LEAVE
- 
+
       ** If Position On field is not blank and save variable is not the same
       ** as the value entered
- 
+
      C                   WHEN      *INKC <> *ON AND #0RTRI <> *ZEROS
      C                             AND #0RTRI <> WTranId
      C                   EVAL      WView = 'Y'
      C                   EXSR      SRReview
      C                   LEAVE
- 
+
       ** If Rollup is Pressed
- 
+
      C                   WHEN      *IN27 = *ON
      C                   EVAL      WBuild = *BLANKS
      C                   LEAVE
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   READC     AS000002S0                             50
- 
+
      C                   ENDDO
- 
+
      ** When Position on Field is Blank
- 
+
      C                   IF        WView = *BLANK AND #0RTRI = *ZEROS
      C                             AND *IN27 = *OFF
      C                   EXSR      SRRefresh
      C                   ENDIF
- 
+
      C                   EVAL      WView = *BLANK
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -778,27 +780,27 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSFMove      BEGSR
- 
+
       ** Selection Field, Record ID, Transaction ID, Description, Branch,
       ** Subtype, Expenditure/Receipt, Currency, Yield Curve, Last Change
       ** Type and Last Change Date
- 
+
      C                   EVAL      #0SELE = *BLANKS
      C                   EVAL      #0TRID = FSTRID
      C                   EVAL      #0SUBT = FSSUBT
      C                   EVAL      #0ERIN = FSERIN
      C                   EVAL      #0CCY = FSCCY
- 
+
       ** Currency
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POption
      C                   PARM      FSCCY         PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd = *Blanks
      C                   Z-ADD     A6NBDP        WDecPlace
      C                   ELSE
@@ -809,67 +811,67 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Input Date
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      FSINDT        PFInput
      C                   PARM                    PDateFormat
      C                   PARM      *ZEROS        PNInput
      C                   PARM      *BLANKS       PAInput
- 
+
      C                   EVAL      #0INDT = PAInput
- 
+
       ** Maturity Date
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      FSMDAT        PFInput
      C                   PARM                    PDateFormat
      C                   PARM      *ZEROS        PNMaturity
      C                   PARM      *BLANKS       PAMaturity
- 
+
      C                   EVAL      #0MDAT = PAMaturity
- 
+
       ** Transaction Amount
- 
+
      C                   IF        FSAMNT <> *ZEROS
      C                   EVAL      WField = *BLANKS
      C                   MOVE      FSAMNT        WField
      C                   CALL      'ZEDIT'
      C     WField        PARM      WField        PField
      C                   PARM      WDecPlace     PDecPlace
- 
+
      C                   MOVE      WField        #0AMNT
      C                   ENDIF
- 
+
       ** Status
- 
+
      C                   SELECT
- 
+
      C                   WHEN      FSRECI = 'D'
      C                   EVAL      #0STAT = *BLANKS
- 
+
      C                   WHEN      FSRECI = '*'
      C                   EVAL      PMsgID = 'ASM0023'
- 
+
      C**********         WHEN      FSRECI = 'E'                                               CAS006
      C                   WHEN      FSRECI = 'E' AND                                           CAS006
      C                             CAS006 = 'N'                                               CAS006
      C                   EVAL      PMsgID = 'ASM0029'
- 
+
      C                   WHEN      FSRECI = 'M'
      C                   EVAL      PMsgID = 'ASM0030'
- 
+
      C**********         WHEN      FSRECI = 'X'                                               CAS006
      C                   WHEN      FSRECI = 'X' AND                                           CAS006
      C                             CAS006 = 'N'                                               CAS006
      C                   EVAL      PMsgID = 'ASM0031'
- 
+
      C                   WHEN      FSRECI = 'T'
      C                   EVAL      PMsgID = 'ASM0003'
- 
+
      C                   ENDSL
- 
+
      C**********         IF        FSRECI <> 'D'                                              CAS006
      C                   IF        FSRECI <> 'D' AND                                          CAS006
      C                             CAS006 = 'N'  OR                                           CAS006
@@ -883,9 +885,9 @@
      C                   ELSE
      C                   EVAL      *IN38 = *OFF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -898,18 +900,18 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDtlsMove    BEGSR
- 
+
      C     #0TRID        CHAIN     ASFHTRL0
- 
+
      C                   EVAL      #1TRID = FSTRID
      C                   EVAL      #1BRCA = FSBRCA
      C                   EVAL      #1DESC = FSDESC
      C                   EVAL      #1SUBT = FSSUBT
- 
+
       ** Input Date
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      FSINDT        PFInput
      C                   PARM                    PDateFormat
@@ -918,9 +920,9 @@
      C**********         EVAL      #1INDT = PNInput                                           CAS006
      C                   MOVE      PNInput       #1INDT                                       CAS006
      C                   EVAL      #1INDA = PAInput
- 
+
       ** Maturity Date
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      FSMDAT        PFInput
      C                   PARM                    PDateFormat
@@ -929,18 +931,18 @@
      C**********         EVAL      #1MDAT = PNMaturity                                        CAS006
      C                   MOVE      PNMaturity    #1MDAT                                       CAS006
      C                   EVAL      #1MDAA = PAMaturity
- 
+
      C                   EVAL      #1ERIN = FSERIN
- 
+
       ** Currency
- 
+
      C                   EVAL      #1CCY = FSCCY
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POption
      C                   PARM      FSCCY         PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd = *Blanks
      C                   Z-ADD     A6NBDP        WDecPlace
      C                   ELSE
@@ -951,16 +953,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Transaction Amount
- 
+
      C                   EVAL      WField = *BLANKS
      C                   MOVE      FSAMNT        WField
      C                   CALL      'ZEDIT'
      C     WField        PARM      WField        PField
      C                   PARM      WDecPlace     PDecPlace
      C                   MOVE      WField        #1AMNT
- 
+
      C                   IF        CAS006 = 'N'                                               CAS006
      C                   EVAL      #1YLDC = FSYLDC
      C                   ENDIF                                                                CAS006
@@ -995,9 +997,9 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   UNLOCK    ASFHTRL0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1010,62 +1012,62 @@
       *             SRRefresh                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInsert      BEGSR
- 
+
       ** Insert Transaction ID
- 
+
      C                   EXSR      SRInsTranID
- 
+
      C                   EVAL      WError = 'Y'
- 
+
      C                   DOU       *INKC = *ON OR WError = 'N'
- 
+
      C                   EVAL      WError = 'N'
      C                   EVAL      *IN32 = *ON
      C                   EVAL      *IN52 = *OFF
      C                   EVAL      *IN53 = *OFF
      C                   EVAL      *IN54 = *ON
      C                   EVAL      *IN55 = *OFF
- 
+
      C                   WRITE     AS000002F0
      C                   WRITE     AS000002F2
      C                   WRITE     AS000002C1
      C                   EXFMT     AS000002F1
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      *IN39 = *OFF
- 
+
      C                   IF        *INKL = *ON
      C                   EVAL      WError = 'N'
      C                   EVAL      *IN54 = *OFF
      C                   ENDIF
- 
+
      C                   IF        *INKC = *OFF AND *INKL = *OFF
      C                   EXSR      SRValdTranId
      C                   ELSE
      C                   EVAL      *IN32 = *OFF
      C                   ENDIF
       ** Insert Details
- 
+
      C                   IF        *INKC = *OFF AND *INKL = *OFF
      C                             AND WError = 'N'
      C                   EXSR      SRInsDetails
      C                   ENDIF
- 
+
       ** Move Screen Fields to File Fields and Write new record
- 
+
      C                   IF        *INKC = *OFF AND *INKL = *OFF
      C                             AND WError = 'N'
      C                   EXSR      SRWrite
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EXSR      SRRefresh
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1077,24 +1079,24 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInsTranID   BEGSR
- 
+
       ** Initialize Transaction ID
- 
+
      C     *HIVAL        SETGT     ASFHTRL1
      C                   READP     ASFHTRL1
- 
+
      C                   IF        %EOF(ASFHTRL1)
      C                   Z-ADD     1             WTranId
      C                   ELSE
      C     FSTRID        ADD       1             WTranId
      C                   ENDIF
- 
+
      C                   EVAL      #1TRID =  WTranId
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1106,16 +1108,16 @@
       *  Calls    : SRInsTranId, SRSndErr                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValdTranId  BEGSR
- 
+
      C                   IF        #1TRID = *ZEROS
      C                   EVAL      WError = 'Y'
      C                   EXSR      SRInsTranID
      C                   ELSE
- 
+
       ** If Insert, check if Transaction Id already exists
- 
+
      C     #1TRID        CHAIN     ASFHTRL1
      C                   IF        %FOUND(ASFHTRL1)
      C                   EVAL      *IN39 = *ON
@@ -1124,9 +1126,9 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1138,11 +1140,11 @@
       *  Calls    : SRValdDetails                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInsDetails  BEGSR
- 
+
       ** Display Detail Screen
- 
+
      C                   EVAL      WError = 'Y'
      C                   EVAL      #1DESC = *BLANKS
      C                   EVAL      #1BRCA = *BLANKS
@@ -1158,7 +1160,7 @@
      C                   IF        CAS006 = 'N'                                               CAS006
      C                   EVAL      #1YLDC = *BLANKS
      C                   ENDIF                                                                CAS006
- 
+
       ** Clear the Module ID, Start Date, and Underlying Ref. Number                          CAS006
       ** screen fields if CAS006 is enabled.                                                  CAS006
                                                                                               CAS006
@@ -1170,15 +1172,15 @@
                                                                                               CAS006
      C                   DOU       *INKC = *ON OR *INKL = *ON
      C                             OR WError = 'N'
- 
+
      C                   EVAL      WError = 'N'
      C                   EVAL      *IN32 = *OFF
- 
+
      C                   WRITE     AS000002F0
      C                   WRITE     AS000002F2
      C                   WRITE     AS000002C1
      C                   EXFMT     AS000002F1
- 
+
      C                   CALL      'ZA0250'
      C                   MOVEA     '000000000'   *IN(41)
                                                                                               CAS006
@@ -1188,19 +1190,19 @@
      C                   EVAL      *IN61 = *OFF                                               CAS006
      C                   EVAL      *IN62 = *OFF                                               CAS006
      C                   EVAL      *IN63 = *OFF                                               CAS006
- 
+
      C                   IF        *INKL = *ON
      C                   EVAL      WError = 'Y'
      C                   ENDIF
- 
+
      C                   IF        *INKC = *OFF AND *INKL = *OFF
      C                   EXSR      SRValdDetails
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1212,18 +1214,18 @@
       *  Calls    : SRSndErr                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValdDetails BEGSR
- 
+
       ** Validate Branch Details
- 
+
      C                   IF        #1BRCA = *BLANKS
      C                   EVAL      *IN41 = *ON
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0005'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C**********         CALL      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRtCd
@@ -1247,18 +1249,18 @@
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EXSR      SRVModID                                                   CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Validate Description
- 
+
      C                   IF        #1DESC = *BLANKS
      C                   EVAL      *IN42 = *ON
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0007'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Transaction Subtype Details
- 
+
       ** Use the alternate Transaction Subtype validation subroutine                          CAS006
       ** if CAS006 is enabled.                                                                CAS006
                                                                                               CAS006
@@ -1272,7 +1274,7 @@
      C                   EVAL      PMsgId = 'ASM0008'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   CALL      'AODLSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POption
@@ -1288,11 +1290,11 @@
      C                   EVAL      #1SUBT = ASDSTC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
       ** Validate Input Date
- 
+
      C**********         IF        #1INDT = *ZEROS                                            CAS006
      C                   IF        #1INDT = *BLANKS                                           CAS006
      C                   EVAL      *IN44 = *ON
@@ -1300,14 +1302,14 @@
      C                   EVAL      PMsgId = 'ASM0010'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   MOVE      #1INDT        PDate
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDate
      C                   PARM                    PInputDate
      C                   PARM                    PDateFormat
      C                   PARM      *BLANKS       PError
- 
+
      C                   IF        PError = 'Y'
      C                   EVAL      *IN44 = *ON
      C                   EVAL      WError = 'Y'
@@ -1328,9 +1330,9 @@
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EXSR      SRVStrtDate                                                CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Validate Maturity Date
- 
+
      C**********         IF        #1MDAT = *ZEROS                                            CAS006
      C                   IF        #1MDAT = *BLANKS                                           CAS006
      C                   EVAL      *IN45 = *ON
@@ -1338,14 +1340,14 @@
      C                   EVAL      PMsgId = 'ASM0013'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   MOVE      #1MDAT        PDate
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDate
      C                   PARM                    PMatDate
      C                   PARM                    PDateFormat
      C                   PARM      *BLANKS       PError
- 
+
      C                   IF        PError = 'Y'
      C                   EVAL      *IN45 = *ON
      C                   EVAL      WError = 'Y'
@@ -1360,9 +1362,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Expenditure/Receipt
- 
+
      C                   IF        #1ERIN = *BLANKS
      C                   EVAL      *IN46 = *ON
      C                   EVAL      WError = 'Y'
@@ -1376,9 +1378,9 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Currency
- 
+
      C                   IF        #1CCY = *BLANKS
      C                   EVAL      WDecPlace = *ZEROS
      C                   EVAL      *IN47 = *ON
@@ -1386,7 +1388,7 @@
      C                   EVAL      PMsgId = 'ASM0018'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POption
@@ -1404,18 +1406,18 @@
      C                   EVAL      #1CCY = A6CYCD
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Transaction Amount
- 
+
      C                   IF        #1AMNT = *BLANKS OR #1AMNT = *ALL'0'
      C                   EVAL      *IN48 = *ON
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0020'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
       ** Not Numeric
- 
+
      C     WNumeric      CHECK     #1AMNT        WPosition
      C                   IF        WPosition <> *ZEROS
      C                   EVAL      *IN48 = *ON
@@ -1423,9 +1425,9 @@
      C                   EVAL      PMsgId = 'ASM0032'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
       ** Negative Amount
- 
+
      C     '-'           SCAN      #1AMNT                                 51
      C                   IF        *IN51 = *ON
      C                   EVAL      *IN48 = *ON
@@ -1433,50 +1435,50 @@
      C                   EVAL      PMsgId = 'ASM0021'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   EVAL      WField = *BLANKS
      C                   EVAL      WField = #1AMNT
      C     11            SUB       WDecPlace     PDigits
- 
+
       ** Align Screen Field
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM                    PRtCd
      C     WField        PARM      WField        PChkFld
      C                   PARM      WDecPlace     PDecPlace
      C                   PARM                    PDigits
      C                   PARM                    PFldOut
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      *IN48 = *ON
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0022'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   CALL      'ZEDIT'
      C     WField        PARM      WField        PField
      C                   PARM      WDecPlace     PDecPlace
- 
+
      C                   EVAL      #1AMNT = *BLANKS
      C                   MOVE      WField        #1AMNT
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
                                                                                               CAS006
      C                   IF        CAS006 = 'N'                                               CAS006
- 
+
       ** Validate Yield Curve
- 
+
      C                   IF        #1YLDC = *BLANKS
      C                   EVAL      *IN49 = *ON
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0024'
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   CALL      'AOYLDCR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POption
@@ -1494,7 +1496,7 @@
      C                   ENDIF
                                                                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Validate the Underlying Ref. Number if CAS006 is enabled.                            CAS006
                                                                                               CAS006
      C                   IF        CAS006 = 'Y'                                               CAS006
@@ -1502,7 +1504,7 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1514,9 +1516,9 @@
       *  Calls    : SRSndErr, SRSDCntrl                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWrite       BEGSR
- 
+
      C                   EVAL      FSRECI = 'D'
      C                   EVAL      FSTRID = #1TRID
      C                   EVAL      FSDESC = #1DESC
@@ -1560,31 +1562,31 @@
      C**********         EVAL      FSUREF = *ZERO                                      CAS006 CLE148
      C                   EVAL      FSUREF = *BLANKS                                           CLE148
      C                   ENDIF                                                                CAS006
- 
+
       ** Check for Duplicate Primary Key
- 
+
      C     FSTRID        CHAIN     ASFHTRL0
      C                   IF        %FOUND(ASFHTRL0)
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0004'
      C                   EXSR      SRSndErr
- 
+
      C                   ELSE
      C                   WRITE     @FHTRD0
- 
+
       ** Change Standing Data Controls
- 
+
      C                   Z-ADD     1             WNumRec
      C                   Z-ADD     1             WNumIns
      C                   Z-ADD     *ZERO         WNumDel
      C                   Z-ADD     *ZERO         WNumAmd
- 
+
      C                   EXSR      SRSDCntrl
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1596,18 +1598,18 @@
       *  Calls    : SRDtlsMove, SRDisplay, SRAmend, SRDelete          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAction      BEGSR
- 
- 
+
+
      C                   EXSR      SRDtlsMove
- 
+
      C                   MOVEA     '0000'        *IN(52)
- 
+
      C                   SELECT
- 
+
       ** Enquire
- 
+
      C                   WHEN      #0SELE = 'E'
      C                   EVAL      *IN26 = *ON
      C                   EVAL      *IN28 = *OFF
@@ -1615,9 +1617,9 @@
      C                   EVAL      *IN54 = *ON
      C                   EVAL      *IN64 = *OFF                                               CAS006
      C                   EXSR      SRDisplay
- 
+
       ** Amend
- 
+
      C                   WHEN      #0SELE = 'A' AND PMode = 'M'
      C                   EVAL      *IN26 = *ON
      C                   EVAL      *IN28 = *ON
@@ -1625,9 +1627,9 @@
      C                   EVAL      *IN64 = *ON                                                CAS006
      C                   EXSR      SRDisplay
      C                   EXSR      SRAmend
- 
+
       ** Delete
- 
+
      C                   WHEN      #0SELE = 'D' AND PMode = 'M'
      C                             AND WSetUp = 'N'
      C                   EVAL      *IN26 = *ON
@@ -1635,11 +1637,11 @@
      c                   EVAL      *IN55 = *ON
      C                   EVAL      *IN64 = *OFF                                               CAS006
      C                   EXSR      SRDelete
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1651,18 +1653,18 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDisplay     BEGSR
- 
+
       ** Display Screen
- 
+
      C                   WRITE     AS000002F0
      C                   WRITE     AS000002F2
      C                   WRITE     AS000002C1
      C                   EXFMT     AS000002F1
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      *IN42 = *OFF
      C                   EVAL      *IN26 = *OFF
@@ -1672,9 +1674,9 @@
      C                   EVAL      *IN55 = *OFF
      C                   EVAL      *IN63 = *OFF                                               CAS006
      C                   EVAL      *IN64 = *OFF                                               CAS006
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1686,37 +1688,37 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDispSF      BEGSR
- 
+
       ** Condition Footer
- 
+
      C                   IF        WEmpty = 'Y'
      C                   EVAL      *IN40 = *ON
      C                   ELSE
      C                   EVAL      *IN40 = *OFF
      C                   ENDIF
- 
+
      C                   IF        PMode = 'E'
      C                   EVAL      *IN53 = *ON
      C                   ELSE
      C                   EVAL      *IN52 = *ON
      C                   ENDIF
- 
+
      ** Display Subfile
- 
+
      C                   WRITE     AS000002F0
      C                   WRITE     AS000002F2
      C                   WRITE     AS000002C1
      C                   EXFMT     AS000002C0
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      *IN36 = *OFF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1728,51 +1730,51 @@
       *  Calls    : SRDisplay, SRSndErr, SRSDCntrl                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAmend       BEGSR
- 
+
      C                   EVAL      WError = 'Y'
- 
+
      C                   DOU       *INKC = *ON OR *INKL = *ON OR
      C                             WError = 'N'
- 
+
      C                   EVAL      WError = 'N'
- 
- 
+
+
      C                   IF        #1DESC = *BLANKS
      C                   EVAL      *IN42 = *ON
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0007'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate the Underlying Ref. Number if CAS006 is enabled.                            CAS006
                                                                                               CAS006
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EXSR      SRVUndRefNo                                                CAS006
      C                   ENDIF                                                                CAS006
- 
+
      C                   IF        *INKC = *OFF AND *INKL = *OFF AND
      C                             WError = 'N'
- 
+
      C     #1TRID        CHAIN     ASFHTRL0
      C                   IF        %FOUND(ASFHTRL0)
- 
+
      C                   IF        #1DBRC <> @1DBRC
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0025'
      C                   EXSR      SRSndErr
      C                   UNLOCK    ASFHTRL0
- 
+
      C                   ELSE
- 
+
      C                   EVAL      FSDESC = #1DESC
      C                   MOVE      #1UREF        FSUREF                                       CAS006
      C                   EVAL      FSCHTP = 'A'
      C                   EVAL      FSLCD = WRunDay
      C                   UPDATE    @FHTRD0
      C                   EVAL      #1DBRC = @1DBRC
- 
+
      C                   Z-ADD     *ZERO         WNumRec
      C                   Z-ADD     *ZERO         WNumIns
      C                   Z-ADD     *ZERO         WNumDel
@@ -1780,14 +1782,14 @@
      C                   EXSR      SRSDCntrl
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0026'
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WError = 'Y'
      C                   EVAL      *IN26 = *ON
      C                   EVAL      *IN28 = *ON
@@ -1795,11 +1797,11 @@
      C                   EVAL      *IN64 = *ON                                                CAS006
      C                   EXSR      SRDisplay
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1811,27 +1813,27 @@
       *  Calls    : SRDisplay, SRSndErr, SRSDCntrl                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDelete      BEGSR
- 
+
      C                   EVAL      WError = 'Y'
- 
+
      C                   DOU       *INKC = *ON OR *INKL = *ON OR
      C                             *INKJ = *ON OR WError = 'N'
- 
+
      C                   EVAL      WError = 'N'
- 
+
      C                   EXSR      SRDisplay
- 
+
      C                   SELECT
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      WError = 'N'
- 
+
      C                   WHEN      *INKL = *ON
      C                   EVAL      PMsgId = 'ASM0027'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      *INKC = *OFF AND *INKC = *OFF
      C                             AND *INKJ = *OFF
      C                   EVAL      *IN26 = *ON
@@ -1841,20 +1843,20 @@
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0028'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      *INKJ = *ON
- 
+
      C     #1TRID        CHAIN     ASFHTRL0
      C                   IF        %FOUND(ASFHTRL0)
- 
+
      C                   IF        #1DBRC <> @1DBRC
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0025'
      C                   EXSR      SRSndErr
      C                   UNLOCK    ASFHTRL0
- 
+
      C                   ELSE
- 
+
      C                   EVAL      FSRECI = '*'
      C                   EVAL      FSCHTP = 'D'
      C                   EVAL      FSLCD = WRunDay
@@ -1863,36 +1865,36 @@
      C                   EVAL      PMsgID = 'ASM0023'
      C                   EXSR      SRRtvTxt
      C                   EVAL      #0STAT = PMsgText
- 
+
      C                   Z-ADD     *ZERO         WNumRec
      C                   Z-ADD     *ZERO         WNumIns
      C                   Z-ADD     1             WNumDel
      C                   Z-ADD     *ZERO         WNumAmd
      C                   EXSR      SRSDCntrl
- 
+
      C                   EVAL      WDelete = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgId = 'ASM0026'
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        WDelete = 'Y'
- 
+
      C                   CLEAR                   PDeleteRec
- 
+
      C                   EVAL      WFileName = 'ASFHTRPD'
      C                   MOVEL     #1TRID        WTransactID
      C                   EVAL      WDeleteR = @1DBRC
      C                   Z-ADD     FSLCD         WLstChgDate
      C                   EVAL      WLstChgType = 'D'
- 
+
      C                   CALL      'SD0520X'
      C                   PARM                    PRtCd
      C                   PARM                    PDeleteRec
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = '*CALL'
@@ -1904,13 +1906,13 @@
      C                   COMMIT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1922,16 +1924,16 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSDCntrl     BEGSR
- 
+
       ** Move key fields to @AHREAU
- 
+
      C                   EVAL      AHFLNM = *BLANKS
      C                   EVAL      AHFLNM = 'ASFHTRPD'
- 
+
      C     AHFLNM        CHAIN     SDFCTLL0
- 
+
      C                   IF        NOT %FOUND(SDFCTLL0)
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'ASFHTRPD'
@@ -1939,21 +1941,21 @@
      C                   EVAL      DBASE = 3
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
       ** Update SDFCTLPD
- 
+
      C     WNumRec       ADD       AHNORC        AHNORC
      C     WNumIns       ADD       AHNOIN        AHNOIN
      C     WNumAmd       ADD       AHNOAM        AHNOAM
      C     WNumDel       ADD       AHNODL        AHNODL
- 
+
      C                   UPDATE    @AHREAU
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1966,15 +1968,15 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSndErr      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PMsgFile
      C                   PARM                    PMsgID
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1987,12 +1989,12 @@
       *                                                               *
       *****************************************************************
      C     SRRtvTxt      BEGSR
- 
+
      C                   CALL      'SDRTVTXT'
      C                   PARM                    PMsgId
      C                   PARM                    PMsgFile
      C                   PARM                    PMsgText
- 
+
      C                   ENDSR
       *****************************************************************                       CAS006
       /EJECT                                                                                  CAS006
@@ -2265,13 +2267,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRetCodeIn
      C                   PARM                    PMode
- 
+
       ** Midas GL Journal Entry Postings File Key                                             CAS006
                                                                                               CAS006
      C     KJENP         KLIST                                                                CAS006
@@ -2280,18 +2282,18 @@
                                                                                               CAS006
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     PRtCd         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 1
@@ -2322,20 +2324,20 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Move Workstation ID to screen field
- 
+
      C                   EVAL      #0RUNA = BJMRDT
      C                   EVAL      #0USER = PSUser
      C                   EVAL      #0WSID = PSJobName
      C                   EVAL      #1PGMQ = PSProcMod
- 
+
      C                   EVAL      PDateFormat = BJDFIN
      C                   EVAL      WRunDay = BJRDNB
      C                   EVAL      WSetUp = BJSUC
- 
+
       ** Initialise Work Fields
- 
+
      C                   EVAL      WError = 'Y'
      C                   EVAL      WField = *BLANKS
      C                   EVAL      WBuild = *BLANKS
@@ -2344,9 +2346,9 @@
      C                   EVAL      WNumIns = *ZEROS
      C                   EVAL      WNumDel = *ZEROS
      C                   EVAL      WNumAMd = *ZEROS
- 
+
       ** Initialise screen fields, indicators and function key
- 
+
      C                   EVAL      #0RTRI = *ZEROS
      C                   EVAL      #0SELE = *BLANKS
      C                   EVAL      #0TRID = *ZEROS
@@ -2359,21 +2361,21 @@
      C                   EVAL      #0STAT = *BLANKS
      C                   EVAL      WFirst = 'Y'
      C                   EVAL      WEmpty = *BLANK
- 
+
       ** Initialise Indicators
- 
+
      C                   MOVEA     '00000'       *IN(26)
      C                   MOVEA     '000000000'   *IN(37)
      C                   MOVEA     '0000000000'  *IN(46)
- 
+
      C                   IF        PMode = 'E'
      C                   EVAL      *IN26 = *ON
      C                   ELSE
      C                   EVAL      *IN29 = *ON
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2384,23 +2386,23 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 ** CTDATA DLTYP - Deal Types.                                                                 CAS006
 IT                                                                                            CAS006

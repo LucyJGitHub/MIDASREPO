@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *      
-      *  Prev Amend No. MD048708           Date 01Dec17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048708           Date 01Dec17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -63,7 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046248 - Finastra Rebranding                               *      
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD048708 - [MIDAS-QA][FB2.1][SP16][MA][Sprint 3][CDL098] -   *
       *             Error message for cancelled deal only prompted for*
       *             1st leg deal number if both 1st and 2nd leg deal  *

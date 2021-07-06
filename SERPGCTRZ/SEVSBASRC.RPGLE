@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -151,7 +153,7 @@
      D POptn           S              7A
      D PCycd           S              3A
      D PBsrc           S              2A
- 
+
      D PMode           S              6A
       *
       ** Redisplay screen
@@ -266,15 +268,15 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      WSBRCD(Wx)                             25
- 
+
      C                   IF        *IN25 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   ADD       1             IDx
      C                   EXSR      SRBasRcdErr
      C                   MOVE      'SEA0147'     MsgIDXAr(IDx)
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
       *
@@ -286,9 +288,9 @@
      C                   PARM      S1NMCY        PCycd
      C                   PARM      WSBRCD(Wx)    PBsrc
      C     SDBSRT        PARM      SDBSRT        DSFDY
- 
+
      C                   IF        PRtcd <> *BLANKS
- 
+
      C                   IF        PRtcd = '*NOSEL '
      C                   EXSR      SRResetBRCD
      C                   ELSE
@@ -305,7 +307,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ADD       1             Wx

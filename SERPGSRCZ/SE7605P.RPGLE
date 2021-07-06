@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -149,16 +151,16 @@
      D PEntity         S              3A
      D PAction         S              1A
      D PCmd            S              1A
- 
+
      D PRtcd           S              7A
      D POptn           S              7A
       *
       ** Index for arrays of error message IDs
      D IdX             S              3P 0
- 
+
      D PMsgFl          S             10A   INZ('GBSEUSRMSG')
      D PMsgId          S             10A   INZ(*BLANKS)
- 
+
      D WValidSelec     S              1A   INZ('N')
       *
       ** Parameters for ZDATE1
@@ -203,7 +205,7 @@
       *                                                               *
       *****************************************************************
      C     SRInit        BEGSR
- 
+
      C                   EVAL      FromDate = *ZEROS
      C                   EVAL      ToDate = *ZEROS
      C                   EVAL      SecName = *BLANKS                                          189201
@@ -214,7 +216,7 @@
       ** Set mode to I/C for report program.
       *
      C                   EVAL      PMode = '1'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -239,9 +241,9 @@
       *
       ** F3, selected.
      C                   IF        *INKC = *ON
- 
+
      C                   EVAL      PCmd = 'E'
- 
+
      C                   ELSE
       *
       ** Clear message subfile.
@@ -252,15 +254,15 @@
       *
      C***********        MOVEA     '00'          *IN(20)                                      189201
      C                   MOVEA     '000'         *IN(20)                                      189201
- 
+
      C                   EXSR      SRVALIDATE
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = True
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -277,78 +279,78 @@
       ** Must be numeric.
       *
      C                   TESTN                   SFDAT                90
- 
+
      C                   IF        ValNumber = False
      C                   EVAL      *IN20 = True
      C                   EVAL      IdX = IdX +1
      C                   EVAL      PMsgId = 'SEA0421'
      C                   EXSR      SRSndMsg
- 
+
      C                   ELSE
       *
       ** Must be a valid date.
       *
      C                   MOVE      *BLANKS       PDate
      C                   MOVE      SFDAT         PDate
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDate
      C                   PARM      *ZEROS        PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   IF        PErrorFlag = 'Y'
      C                   EVAL      *IN20 = True
      C                   EVAL      IdX = IdX +1
      C                   EVAL      PMsgId = 'SEA0400'
      C                   EXSR      SRSndMsg
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     PDaynoOut     FromDate
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate To Date.
       ** Must be numeric.
       *
      C                   TESTN                   STDAT                90
- 
+
      C                   IF        ValNumber = False
      C                   EVAL      *IN21 = True
      C                   EVAL      IdX = IdX +1
      C                   EVAL      PMsgId = 'SEA0421'
      C                   EXSR      SRSndMsg
- 
+
      C                   ELSE
       *
       ** Must be a valid date.
       *
      C                   MOVE      *BLANKS       PDate
      C                   MOVE      STDAT         PDate
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDate
      C                   PARM      *ZEROS        PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   IF        PErrorFlag = 'Y'
      C                   EVAL      *IN21 = True
      C                   EVAL      IdX = IdX +1
      C                   EVAL      PMsgId = 'SEA0402'
      C                   EXSR      SRSndMsg
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     PDaynoOut     ToDate
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        IdX = 0
      C                   IF        FromDate > ToDate
      C                   EVAL      *IN20 = True
@@ -362,13 +364,13 @@
       ** Security, if entered, must be a valid and live security                              189201
                                                                                               189201
      C                   EXSR      SRValSec                                                   189201
- 
+
      C                   IF        IdX = 0
      C                   EVAL      WValidSelec = 'Y'
      C                   ELSE
      C                   EVAL      WValidSelec = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -406,11 +408,11 @@
       *                                                               *
       *****************************************************************
      C     SRSndMsg      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PMsgFl
      C                   PARM                    PMsgID
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -448,7 +450,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SUSER = PSUser
      C                   EVAL      SJOBNAME = PsJobName
      C                   EVAL      SDATE = BJMRDT                                             189201

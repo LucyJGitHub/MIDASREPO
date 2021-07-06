@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes                                  *
       *  CSW206E - Change Control for SWIFT 2006 Standard Changes     *
@@ -48,11 +50,11 @@
       *  210517 - Misssing TRADSDX2 record from the API               *
       *                                                               *
       *****************************************************************
- 
+
      FTRADSDY2  IF   E           K DISK
- 
+
      FSECTY     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -64,19 +66,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -86,38 +88,38 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Trade Details, A Screen
      D A_TradX2      E DS                  EXTNAME(TRADSDX2)
      D                                     PREFIX(A_)
- 
+
       ** Trade Details, B screen
      D B_TradX2      E DS                  EXTNAME(TRADSDX2)
      D                                     PREFIX(B_)
- 
+
      D TradX2        E DS                  EXTNAME(TRADSDX2)
- 
+
      D PCBSTD        E DS                  OCCURS(2) EXTNAME(STDSED)
- 
+
      D PCBSAD        E DS                  OCCURS(8) EXTNAME(STDADSED)
- 
+
       ** DS Trade Settlement Details
      D TrdSett       E DS                  EXTNAME(STDADSED)
      D                                     PREFIX(TP:2)
- 
+
       ** Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Securitu Customer Details
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
- 
+
       ** Switchable features description file
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  SCLCD        E                     EXTFLD(LCD)
- 
+
       ** Second Data Structure for Access Objects
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D PScreen         S              1A
      D PRetCode        S              7A
      D POption         S              7A
@@ -138,11 +140,11 @@
      D PDepot2         S              6A
      D PSKAL           S             20A
      D PPortRef        S              4A
- 
+
      D CSE022          S              1A
      D CSE028          S              1A
      D CSW210          S              1A                                                      CSW210
- 
+
      D CSW206          S              1A                                                     CSW206E
      D CSW206RC        S              7A                                                     CSW206E
       *****************************************************************
@@ -152,11 +154,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EXSR      SRInit
- 
+
      C                   EXSR      SRProcess
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -164,36 +166,36 @@
       *  SRInit   - Initialization                                    *
       *****************************************************************
      C     SRInit        BEGSR
- 
+
       ** Retrieve the classification of the Counterparty
- 
+
      C                   CALL      'AOSECSR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCtrPty
      C     SDSECS        PARM      SDSECS        DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      DBFILE = 'SDSECSPD'
      C                   EVAL      DBASE  = 902
      C                   EVAL      DBKEY  = PCtrPty
      C                   ENDIF
- 
+
       ** Retrieve the internal branch customer
- 
+
      C**********         CALL      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PBranch
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        PRetCode <> *Blanks
      C                   EVAL      DBFILE = 'SDBRCHPD'
      C                   EVAL      DBASE  = 903
      C                   EVAL      DBKEY  = PBranch
      C                   ENDIF
- 
+
      C                   CLEAR                   TradX2
       *                                                                                      CSW206E
       ** Check if SWIFT Changes 2006 (CSW206) is installed                                   CSW206E
@@ -206,7 +208,7 @@
      C                   ELSE                                                                CSW206E
      C                   EVAL      CSW206 = 'N'                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -214,27 +216,27 @@
       *  SRProcess - Default Fields for TRADSDX2                      *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Check whether record exists
       ** (it would already exist if F14 for Extended Settlements has
       **  been taken more than once during the same insert)
- 
+
      C     KEY001        CHAIN     TRADSDD2                           89
- 
+
       ** If record found then set up screen fields from file;
       ** else initialize screen fields and file fields.
- 
+
      C                   IF        *IN89 = *OFF
      C                   EXSR      SROutFlds
      C                   ELSE
- 
+
       ** If CSE028 is on, call SESSIR0 for default of MT5xx information
- 
+
      C                   IF        CSE028 = 'Y'
- 
+
      C     PSecName      CHAIN     SECTYDF                            99
      C                   MOVEL     SITP          PInvType
- 
+
      C                   CALL      'SESSIR0'
      C                   PARM      'D'           POTYP             1
      C                   PARM                    PBranch
@@ -247,14 +249,14 @@
      C                   PARM                    PCBSTD
      C                   PARM                    PCBSAD
      C                   PARM      *BLANKS       PRTCDE            5
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PTrdType = 'TP'
- 
+
       ** For Trade Purchase, Reg Details should be defaulted
       ** from the book SSI and not from the Counterparty SSI.
- 
+
      C     *LIKE         DEFINE    SARED1        WKRD1
      C     *LIKE         DEFINE    SARED2        WKRD2
      C     1             OCCUR     PCBSAD
@@ -265,19 +267,19 @@
      C                   MOVE      PCBSAD        TrdSett
      C                   MOVE      WKRD1         SARED1
      C                   MOVE      WKRD2         SARED2
- 
+
      C                   WHEN      PTrdType = 'TS'
      C     6             OCCUR     PCBSAD
      C                   MOVE      PCBSAD        TrdSett
- 
+
      C                   ENDSL
- 
+
      C                   EXSR      SRMovFlds
      C                   EXSR      SROutFlds
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -285,7 +287,7 @@
       *  SRMovFlds - Move to TRADSDX2 file fields                     *
       *****************************************************************
      C     SRMovFlds     BEGSR
- 
+
      C                   EVAL      T2AFPN = TPAFPN
      C                   EVAL      T2AFPL = TPAFPL
      C                   EVAL      T2AWIN = TPAWIN
@@ -306,7 +308,7 @@
      C                   EVAL      T2BSSN = TPBSSN
      C                   EVAL      T2BSS1 = TPBSS1
      C                   EVAL      T2BSS2 = TPBSS2
- 
+
      C                   IF        CSE028 = 'Y'
      C                   EVAL      T2IMD1 = TPIMD1
      C                   EVAL      T2IMD2 = TPIMD2
@@ -348,7 +350,7 @@
      C                   EVAL      T2NAC1 = TPNAC1
      C                   EVAL      T2NAC2 = TPNAC2
      C                   ENDIF
- 
+
      C                   IF        CSW210 = 'Y'                                               CSW210
      C                   EVAL      T2DIDN = TPDIDN                                            CSW210
      C                   EVAL      T2DLIN = TPDLIN                                            CSW210
@@ -373,32 +375,32 @@
      C                   EVAL      T2RSS3 = TPDRS3
      C                   EVAL      T2RSS4 = TPDRS4
      C                   ENDIF
- 
+
       ** Default the Deliver/Receiver of Securities if it is blank
- 
+
      C                   IF        PTrdType = 'TP' and T2DSSN = *BLANKS
      C                             and PDelFrom <> *BLANKS                                    237295
      C                             AND PDelFrom <> '0'                                       BUG6794
      C                             AND PDelFrom <> '000000'                                  BUG6794
      C                   EVAL      T2DSSN = PDelFrom
      C                   ENDIF
- 
+
      C                   IF        PTrdType = 'TS' and T2RSSN = *BLANKS
      C                             and PDelTo <> *BLANKS                                      237295
      C                             AND PDelTo <> '0'                                         BUG6794
      C                             AND PDelTo <> '000000'                                    BUG6794
      C                   EVAL      T2RSSN = PDelTo
      C                   ENDIF
- 
+
       ** Set up parameters for SEDORFRTV
       ** Set up Safekeeping Account Line if CSE022 is installed
- 
+
      C                   IF        BFCLAS = 'M'
      C                   EVAL      PCust = A8BICN
      C                   ELSE
      C                   EVAL      PCust = PCtrPty
      C                   ENDIF
- 
+
      C                   IF        PTrdType = 'TP'
      C                   EVAL      PDepot = PDelTo
      C                   EVAL      PDepot2 = PDelFrom
@@ -406,17 +408,17 @@
      C                   EVAL      PDepot = PDelFrom
      C                   EVAL      PDepot2 = PDelTo
      C                   ENDIF
- 
+
       ** Default for the Safekeeping Account and Safekeeping Account Line
- 
+
      C                   IF        CSE022 = 'Y'
- 
+
      C                   CALL      'SEDORFRTV'
      C                   PARM                    PRetCode
      C                   PARM                    PDepot
      C                   PARM                    PCust
      C                   PARM                    PSKAL
- 
+
      C                   IF        PSKAL = *Blanks
      C                   CALL      'SEDORFRTV'
      C                   PARM                    PRetCode
@@ -424,28 +426,28 @@
      C                   PARM                    PDepot
      C                   PARM                    PSKAL
      C                   ENDIF
- 
+
      C                   If        PDepot <> '0' AND                                         BUG8087
      C                             PDepot <> '000000'                                        BUG8087
      C                   EVAL      T2SKAN = PDepot
      C                   EndIf                                                               BUG8087
      C                   EVAL      T2SKAL = PSKAL
- 
+
      C                   CALL      'SEDORFRTV'
      C                   PARM                    PRetCode
      C                   PARM                    PDepot2
      C                   PARM      PCtrPty       PCust
      C                   PARM                    PSKAL
- 
+
      C                   If        PDepot2 <> '0' AND                                        BUG8087
      C                             PDepot2 <> '000000'                                       BUG8087
      C                   EVAL      T2SA1N = PDepot2
      C                   EndIf                                                               BUG8087
      C                   EVAL      T2SA1L = PSKAL
      C                   ENDIF
- 
+
      C                   EVAL      T2WHEN = PScreen
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -453,7 +455,7 @@
       *  SROutFlds - Move to Output Fields                            *
       *****************************************************************
      C     SROutflds     BEGSR
- 
+
      C                   IF        PScreen = 'A'
      C                   CLEAR                   A_TradX2
      C                   EVAL      A_TradX2 = TradX2
@@ -461,7 +463,7 @@
      C                   CLEAR                   B_TradX2
      C                   EVAL      B_TradX2 = TradX2
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -566,7 +568,7 @@
      C                   MOVE      'N'           CSW210                                       CSW210
      C                   ENDIF                                                                CSW210
      C                   ENDIF                                                                CSW210
- 
+
      C     KEY001        KLIST
      C                   KFLD                    PTrdRef
      C                   KFLD                    PScreen

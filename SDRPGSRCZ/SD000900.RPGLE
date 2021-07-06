@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058159           Date 24May21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD058159           Date 24May21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD058159 - ZDBU failed during installation (file PMPSTMQ0)   *
       *             (Recompile)                                       *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *

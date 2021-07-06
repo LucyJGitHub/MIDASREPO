@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -77,7 +79,7 @@
      FMMWFIDDL0 IF   E           K DISK    INFSR(*PSSR)
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -89,56 +91,56 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DealNoARR       S              6A   DIM(88)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Idx             S              3P 0
      D X               S              3P 0
      D WTEST           S              1A
@@ -146,7 +148,7 @@
      D WWDLNO          S              6S 0
      D PDealNo         S              6A
      D PTDealNo        S              6A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -154,27 +156,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EVAL      Idx = 1
      C                   EVAL      OKDealNo = 'Y'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PTDealNo <> *BLANKS
- 
+
       ** Test if deal entered is numeric
- 
+
      C                   TESTN                   PTDealNo             21
      C                   MOVE      PTDealNo      WTEST
      C                   TESTZ                   WTEST                    22
- 
+
      C                   IF        PTDealNo <> *BLANKS and *IN21 = *OFF or
      C                             PTDealNo <> *BLANKS and *IN22 = *OFF
      C                   EVAL      OKDealNo = 'N'
@@ -182,51 +184,51 @@
      C                   EVAL      MsgIDArr(Idx) = 'MMA0568'
      C                   EVAL      MsgDtaArr(Idx) = PTDealNo
      C                   ELSE
- 
+
      C                   MOVE      PTDealNo      WWDLNO
      C     WWDLNO        CHAIN     MMWFIDDL0                          23
- 
+
      C                   IF        *IN23 = *OFF
      C                   EVAL      OKDealNo = 'N'
      C                   EVAL      FldNameArr(Idx) = 'SFDLNO'
      C                   EVAL      MsgIDArr(Idx) = 'MMA0569'
      C                   EVAL      MsgDtaArr(Idx) = PTDealNo
      C                   ELSE
- 
+
      C     WWDLNO        SETLL     DEALSALL                               24
- 
+
      C                   IF        *IN24 = *ON
      C                   EVAL      OKDealNo = 'N'
      C                   EVAL      FldNameArr(Idx) = 'SFDLNO'
      C                   EVAL      MsgIDArr(Idx) = 'MMA0569'
      C                   EVAL      MsgDtaArr(Idx) = PTDealNo
      C                   ELSE
- 
+
       ** Check that the deal number is in the allowed range
- 
+
      C                   IF        WWDLNO < NORDLN  or WWDLNO = 999999
      C                   EVAL      OKDealNo = 'N'
      C                   EVAL      FldNameArr(Idx) = 'SFDLNO'
      C                   EVAL      MsgIDArr(Idx) = 'MMA0570'
      C                   EVAL      MsgDtaArr(Idx) = PTDealNo
      C                   ELSE
- 
+
       ** Deal number cannot be equal
- 
+
      C                   IF        PTDealNo = PDealNo
      C                   EVAL      OKDealNo = 'N'
      C                   EVAL      FldNameArr(Idx) = 'SFDLNO'
      C                   EVAL      MsgIDArr(Idx) = 'MMA0582'
      C                   EVAL      MsgDtaArr(Idx) = PTDealNo
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Copy deal number to the array after passing the validation
- 
+
      C                   IF        OKDealNo = 'Y'
      C     PTDealNo      LOOKUP    DealNoARR                              24
      C                   IF        *IN24 = *ON
@@ -239,11 +241,11 @@
      C                   MOVEA     PTDealNo      DealNoARR(X)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   RETURN
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -251,9 +253,9 @@
       * *INZSR - Program Initialisation Routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** INPUTS
       ** Return Code
@@ -271,11 +273,11 @@
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    OKDealNo
- 
+
       ** Retrieve Deal Numbers Record
- 
+
      C     1             Chain     FDDLNMLL                           25
- 
+
      C                   IF        *IN25 = *ON or NODLTF = '*'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'FDDLNMLL'
@@ -283,16 +285,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

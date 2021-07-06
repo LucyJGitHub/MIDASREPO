@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -177,9 +179,9 @@
      C                   IF        OKNISS = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -188,7 +190,7 @@
       *                                                               *
       *****************************************************************
      C     SRValNISS     BEGSR
- 
+
      C                   IF        DDNISS <> *BLANK AND
      C                             DDNISS <> 'Y' AND
      C                             DDNISS <> 'N'
@@ -198,7 +200,7 @@
      C                   MOVEL     'SEA0125'     MsgIdXAr(IDx)
      C                   GOTO      EValNISS
      C                   ENDIF
- 
+
      C                   IF        DDACTN = 'A' OR DDACTN = 'E'
      C                   IF        ISSD <> ITLD OR
      C                             ISSP <> *ZEROS OR
@@ -216,9 +218,9 @@
      C                   EVAL      DDNISS = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C     EValNISS      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

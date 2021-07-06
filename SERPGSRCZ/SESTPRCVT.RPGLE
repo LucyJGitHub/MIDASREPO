@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -48,10 +50,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR) PREFIX(F1)
       ** Securities
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -63,19 +65,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -87,46 +89,46 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SESTPR        E DS                  EXTNAME(SESTPRPD)
       ** Statement Production Request record layout
- 
+
      D StPRScnIFld   E DS                  EXTNAME(SESTPR1PD)
       ** SESTPR Transaction Details in screen format
- 
+
      D StPRScnOFld   E DS                  EXTNAME(SESTPR2PD)
       ** SESTPR Output only Screen Fields
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External DS for Customer Details
- 
+
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
       ** External DS for Midas BIC Directory Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long DS for access programs
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦

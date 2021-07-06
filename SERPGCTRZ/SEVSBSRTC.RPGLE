@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -150,7 +152,7 @@
      D POptn           S              7A
      D PCycd           S              3A
      D PBsrc           S              2A
- 
+
      D*WBasCd***       S              2P 0                                                    CSD103
      D WBasCd          S              2A                                                      CSD103
      D PMode           S              6A
@@ -188,12 +190,12 @@
      C                   IF        OKBASC = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKBASC <> 'N'
      C**********         Z-ADD     WBasCd        S1BASC                                       CSD103
      C                   MOVE      WBasCd        S1BASC                                       CSD103
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -204,15 +206,15 @@
       *                                                               *
       *****************************************************************
      C     SRValBsRtCd   BEGSR
- 
+
      C                   IF        DDBASC <> *BLANKS
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDBASC                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKBASC
      C                   ADD       1             IDx
@@ -220,7 +222,7 @@
      C                   MOVEL     'SEA0147'     MsgIdXAr(IDx)
      C                   GOTO      ESRValBRCd
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
       *
@@ -233,7 +235,7 @@
      C                   PARM      DDBASC        PBsrc
      C*****SDBSRT        PARM      SDBSRT        DSFDY                          CSD006
      C     SDBSRT        PARM      SDBSRT        DSSDY                          CSD006
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                   IF        PRtcd = '*NOSEL '
      C                   MOVEL     *BLANKS       DDBASC
@@ -247,9 +249,9 @@
      C                   MOVE      BABSRC        WBasCd
      C                   MOVE      BABSRC        DDBASC
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESrValBRCd    ENDSR
       *
       *****************************************************************

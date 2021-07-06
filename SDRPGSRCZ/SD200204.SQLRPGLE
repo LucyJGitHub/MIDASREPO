@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited. 2009                     *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CER069             Date 03Jul14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26816           Date 08Dec09               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CER069 - German Tax Enhancement                              *

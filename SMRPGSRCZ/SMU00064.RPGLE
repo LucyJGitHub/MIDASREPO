@@ -13,12 +13,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993 *CREATE    Date 26Jan10               *
+      *                 BG26993 *CREATE    Date 26Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program SXXXX0101.                         *

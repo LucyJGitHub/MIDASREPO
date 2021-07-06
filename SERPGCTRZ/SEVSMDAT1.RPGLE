@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -169,7 +171,7 @@
       *
       ** Working Variables
      D WMatDNo         S              5P 0
- 
+
      D BJRDNB          S              5P 0
       *
       ** +--------------------------------------+
@@ -206,11 +208,11 @@
      C                   IF        OKMATY1 <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKMATY1 <> 'N'
      C                   Z-ADD     WMatDNo       S1MATY
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -221,19 +223,19 @@
       *                                                               *
       *****************************************************************
      C     SRValMATY1    BEGSR
- 
+
      C                   IF        DDMATY1 = *BLANKS
      C                   MOVE      'N'           OKMATY1
      C                   ADD       1             IDx
      C                   MOVEL     'DDMATY1'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0204'     MsgIdXAr(IDx)
- 
+
      C                   GOTO      EvalMATY1
      C                   ENDIF
       *
       ** Check valid date
      C                   TESTN                   DDMATY1              01
- 
+
      C                   IF        *IN01 = *OFF
      C                   MOVE      'N'           OKMATY1
      C                   ADD       1             IDx
@@ -241,14 +243,14 @@
      C                   MOVEL     'SEA0204'     MsgIdXAr(IDx)
      C                   GOTO      EvalMATY1
      C                   ENDIF
- 
+
      C                   MOVE      DDMATY1       PDate
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDate
      C                   PARM      *ZERO         PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   IF        PErrorFlag = 'Y'
      C                   MOVE      'N'           OKMATY1
      C                   ADD       1             IDx
@@ -256,7 +258,7 @@
      C                   MOVEL     'SEA0204'     MsgIdXAr(IDx)
      C                   GOTO      EvalMATY1
      C                   ENDIF
- 
+
       *
       ** Save the maturity date for later validation
      C                   Z-ADD     PDaynoOut     WMatDNo
@@ -288,20 +290,20 @@
      C                   ELSE
      C                   MOVE      DDNMCY        PCurrency
      C                   ENDIF
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM      PDaynoOut     PDateIn
      C                   PARM                    PCurrency
      C                   PARM      *BLANKS       PLocation
      C                   PARM                    PHolInd
- 
+
      C                   IF        PHolInd = 'H'
      C                   MOVE      'W'           OKMATY1
      C                   ADD       1             WIx
      C                   MOVEL     'DDMATY1'     WFldNmXAr(WIx)
      C                   MOVEL     'SEA0162'     WMsgIdXAr(WIx)
      C                   ENDIF
- 
+
      C     EvalMATY1     ENDSR
       *
       *****************************************************************

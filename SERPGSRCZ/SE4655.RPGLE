@@ -15,12 +15,14 @@
       *                                                                        *
       *  (C) Copyright Finastra International Banking Systems Ltd. 2021        *
       *                                                                        *
-      *  Last Amend No. 252259             Date 10Mar21                        *
-      *  Prev Amend No. CSW207             Date 10Mar21                        *
+      *  Last Amend No. MD058285           Date 22Jun21                        *
+      *  Prev Amend No. 252259             Date 10Mar21                        *
+      *                 CSW207             Date 10Mar21                        *
       *                 CSE040   *Create   Date 10Mar21                        *
       *                                                                        *
       *   ------------------------------------------------------------------   *
       *                                                                        *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile)          *
       *  252259 - MT537 are Nacked,                                            *
       *           For DVP/RVP, load pay amount in all cases                    *
       *           For Contractual transaction, report transaction to client    *

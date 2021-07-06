@@ -4351,7 +4351,8 @@
      C                   MOVEL     'N'           DDFBRTOK                                     CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   EVAL      FldNameArr(Idx) = 'DDFBRT'                                 CDL102
-     C                   EVAL      MsgIDArr(Idx) = '5049498'                                  CDL102
+     C**********         EVAL      MsgIDArr(Idx) = '5049498'                         CDL102 MD058404
+     C                   EVAL      MsgIDArr(Idx) = '5049506'                                MD058404
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
      C                   IF        Idx = 0

@@ -492,7 +492,8 @@
      C                   EVAL      DDBLRTOK = 'N'                                             CDL102
      C                   EVAL      Idx = Idx + 1                                              CDL102
      C                   EVAL      FldNamXAr(Idx) = 'DDBLRT'                                  CDL102
-     C                   EVAL      MsgIdXAr(Idx) = '5049500'                                  CDL102
+     C**********         EVAL      MsgIdXAr(Idx) = '5049500'                         CDL102 MD058404
+     C                   EVAL      MsgIdXAr(Idx) = '5049508'                                MD058404
      C                   ENDIF                                                                CDL102
      C                                                                                        CDL102
      C                   ENDIF                                                                CDL102

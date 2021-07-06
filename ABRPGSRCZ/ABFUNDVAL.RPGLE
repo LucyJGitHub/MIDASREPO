@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058404
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -3257,7 +3258,8 @@
      C                   MOVEL     'N'           OKBLRT                                       CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   MOVEL     'DDBLRT'      FldNamXAr(Idx)                               CDL102
-     C                   MOVEL     '5049497'     MsgIDXAr(Idx)                                CDL102
+     C**********         MOVEL     '5049497'     MsgIDXAr(Idx)                       CDL102 MD058404
+     C                   MOVEL     '5049505'     MsgIDXAr(Idx)                              MD058404
      C                   EXSR      SRUpdatErrs                                                CDL102
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
@@ -3332,7 +3334,8 @@
      C                   MOVEL     'N'           OKFBRT                                       CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   MOVEL     'DDFBRT'      FldNamXAr(Idx)                               CDL102
-     C                   MOVEL     '5049498'     MsgIDXAr(Idx)                                CDL102
+     C**********         MOVEL     '5049498'     MsgIDXAr(Idx)                       CDL102 MD058404
+     C                   MOVEL     '5049506'     MsgIDXAr(Idx)                              MD058404
      C                   EXSR      SRUpdatErrs                                                CDL102
      C                   ENDIF                                                                CDL102
      C                   ELSE                                                                 CDL102

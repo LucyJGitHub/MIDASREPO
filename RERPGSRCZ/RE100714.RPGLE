@@ -748,10 +748,11 @@
 
       * Access details of cash management header branch
 
-     C     CDBRCA        IFEQ      *BLANK                                                     229599
-     C                   MOVEL     #BRCA         CDBRCA                                       229599
-     C                   ENDIF                                                                229599
+     C     CDBRCA        IFNE      *BLANK                                                     229599
      C                   MOVEL     CDBRCA        BRCH
+     C                   ELSE                                                                 229599
+     C                   MOVEL     #BRCA         BRCH                                         229599
+     C                   ENDIF                                                                229599
      C                   EXSR      ACS_BRCH
      C                   MOVEL     A8BICN        HeadBICN          6
      C**********         MOVEL     A8DFAC        HeadDFAC          4                          CGL029

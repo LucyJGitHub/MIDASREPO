@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. MD053472           Date 27Oct20               *
-      *                 MD055318           Date 17Feb20               *
+      *  Last Amend No. MD053472           Date 27Oct20               *
+      *  Prev Amend No. MD055318           Date 17Feb20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 CDL051             Date 02May18               *
@@ -92,9 +91,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  260173 - Introduce new parameter to be used in the vali-     *
-      *           dation of action code when authorising a reversal   *
-      *           transaction. Apply fix 258724.                      *
       *  MD053472 - Payment settlement details cleared for Early      *
       *             Maturity                                          *
       *  MD055318 - Customer may not be amended error                 *
@@ -773,7 +769,6 @@
      C                   PARM                    @MsgDtaArr                                  BUG4808
      C                   PARM                    @MsgFArray                                  BUG4808
      C                   PARM                    @APIRetC          1                         BUG4808
-     C                   PARM                    @ACTRV                                       260173
      C                   MOVEL     DDACTN        Buffer                                      BUG4808
      C                   ELSE                                                                BUG4808
       *                                                                                      BUG6534
@@ -834,7 +829,6 @@
      C                                           + TranInCust                                 CER043
      C                                           + LONDEP                                     CER043
      C                                           + DDFOID                                     239400
-     C                                           + @ACTRV                                     260173
      C                                           + InRecSttmt + InPaySttmt
      C                                           + InfData  + ExtData
      C                   ENDIF                                                               BUG4808
@@ -902,8 +896,6 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP
-      * Action Code (Reversal transaction)                                                    260173
-     C                   PARM                    @ACTRV                                       260173
 
       * OUTPUTS
 
@@ -1995,7 +1987,6 @@
      C                   PARM                    @TimeStamp       26                         BUG4146
      C                   PARM                    LONDEP            1                         BUG6534
      C                   PARM                    DDFOID           20                          239400
-     C                   PARM                    @ACTRV            1                          260173
 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages

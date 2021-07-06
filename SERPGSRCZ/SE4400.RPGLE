@@ -19,7 +19,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD058216           Date 06Jul21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
+      *  MD058216 - Option labels are clickable as one link           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -3183,7 +3185,7 @@ E1   C                   ENDIF
       *****************************************************************
 **CTDATA TXT
 F3=Exit
-F3=Exit M=Messages T=Transaction S=Movement Status P=Security L=Linked trades
-F3=Exit F12=Previous M=Messages T=Transaction S=Movement Status P=Security
+F3=Exit  M=Msgs  T=Transactions  S=Mvmt Sts  P=Security  L=Linked trades                    MD058216
+F3=Exit  F12=Previous  M=Msgs  T=Transactions  S=Mvmt Sts  P=Security                       MD058216
 **CTDATA CPY@
 (c) Finastra International Limited 2002

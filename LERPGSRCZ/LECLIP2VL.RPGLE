@@ -126,8 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057917 - Interest payment date is not allowed for non-     *
-      *              discounted loan with zero interest.              *
+      *  MD057917 - Allow entry of next interest payment date for     *
+      *             non-discount loan with zero interest.             *
       *  FCM101 - Floor Rates on LE Module                            *
       *  MD055074 - Interest for processing type 80 is mandatory.     *
       *  MD053297 - Interest not posted correctly for Part sold       *
@@ -2158,9 +2158,6 @@
       ** payment date.                                                                      MD057917
       *                                                                                     MD057917
      C     WINTT         IFEQ      *ZEROS                                                   MD057917
-     C     @@PTFC        ANDEQ     *Blanks                                                  MD057917
-     C     @@PTFT        ANDEQ     *ZEROS                                                   MD057917
-     C     @@PTFN        ANDEQ     *ZEROS                                                   MD057917
      C     WLNPT         ANDNE     80                                                       MD057917
      C                   MOVE      'W'           DDNIDTOK                                   MD057917
      C                   ADD       1             WId                                        MD057917

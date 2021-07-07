@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               **
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD036070           Date 19Oct15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036070           Date 19Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -69,8 +68,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
-      *           parameter mismatch. Apply fix 258724.               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -1461,8 +1458,6 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
-      * Action Code (Reversal transaction)                                                    260173
-     C                   PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS
       *

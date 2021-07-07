@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD055791           Date 04Jun20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD055791           Date 04Jun20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD055791 - Populate Reference Number from Customer Record    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *

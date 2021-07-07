@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE071             Date 19Jul05               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -48,11 +50,11 @@
       *           include                                             *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
- 
+
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)
- 
+
      FCPOSN     IF   E           K DISK    INFSR(*PSSR)
       *****************************************************************
       ** +--------------------------------------+
@@ -65,28 +67,28 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -95,15 +97,15 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array for manipulating decimal positions
      D POWER8          S              8  4 DIM(8) CTDATA PERRCD(1)
- 
+
      D WSgndNum        S              1    DIM(17)                                            CAS006
                                                                                               CAS006
      D POut21          DS                                                                     CAS006
@@ -112,43 +114,43 @@
                                                                                               CAS006
      D TranFilFmt    E DS                  EXTNAME(PRICED)
       ** Securities Prices Details in File Format
- 
+
      D TrnDets       E DS                  EXTNAME(SEPRCSPD)
      D   DDTSDT                       6    OVERLAY(DDDFTS:3)
      D   DDTSTM                       6    OVERLAY(DDDFTS:9)
       ** Securities Prices Details in Screen Format
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D** Security Trading Detail
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * Midas Module Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D** Currency Details
- 
+
       ** Switchable features Definition file                                                  CAS006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS006
      D SCA_LCD       E                     EXTFLD(LCD)                                        CAS006
                                                                                               CAS006
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** short data structure for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** long data structure for access programs
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D DateIn          S              8S 0
- 
+
      D* Profit Centre Switchable Feature
      D CAC005          S              1A
- 
+
       ** Collateralised Lending Switchable Feature                                            CSD010
      D CSD010          S              1A                                                      CSD010
      D HBDPR           S                   LIKE(PRBDPR)                                       CSD010
@@ -185,31 +187,31 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
- 
+
+
       **************************************************************
       /EJECT
       **************************************************************
- 
+
       ** Initialization
- 
+
      C                   EXSR      INIT
- 
+
       ** Set screen fields
- 
+
      C                   EXSR      SCREEN
- 
+
       ** Return
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SCREEN - SET SCREEN FIELDS
       *****************************************************************
      C     SCREEN        BEGSR
- 
+
       * Recd Status
       * -----------
       * Set up Record Status flag for display
@@ -219,13 +221,13 @@
      C                   ELSE
      C                   MOVEL     *BLANK        DDSTS
      C                   ENDIF
- 
+
       * Price
       * -----
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      PPRC          ZFIELD
      C                   Z-ADD     8             ZADEC
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
@@ -425,11 +427,11 @@
      C                   MOVE      *BLANKS       DDNPXR
      C                   END
      C                   END
- 
+
       * Data request id
       * ---------------
      C                   Eval      DDDTFR = PRDTFR
- 
+
       * Time stamp
       * ----------
      C     PRDFTS        IFEQ      *ZERO
@@ -439,15 +441,15 @@
      C                   MOVE      PRDFTS        DDTSTM
       ** Move first 8 digits CCYYMMDD
      C                   MOVEL     PRDFTS        DateIn
- 
+
      C                   CALLB     'ZA0770'
      C                   PARM                    RetCodeIn
      C                   PARM                    DateIn
      C                   PARM                    BJDFIN
      C                   PARM                    DateOut           6 0
- 
+
      C                   MOVE      DateOut       DDTSDT
- 
+
      C                   ENDIF
                                                                                               CAS006
       ** If Hedge Accounting Phase B is installed:                                            CAS006
@@ -513,9 +515,9 @@
       * INIT - INITIALIZATION
       *****************************************************************
      C     INIT          BEGSR
- 
+
       ** Blank outputs (except for key fields) and EXTEL details and Current price
- 
+
      C                   MOVEL     *BLANK        DDPPRC
      C                   MOVEL     *BLANK        DDPNTV
      C                   MOVEL     *BLANK        DDPVDT
@@ -530,7 +532,7 @@
      C                   EVAL      DDOFPR = *BLANKS                                           CSD010
      C                   EVAL      DDCLPR = *BLANKS                                           CSD010
      C                   ENDIF                                                                CSD010
- 
+
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EVAL      DDCRSK = *BLANKS                                           CAS006
      C                   EVAL      DDLQPR = *BLANKS                                           CAS006
@@ -579,9 +581,9 @@
      C                   PARM                    HOFPR                                        CSD010
      C                   PARM                    HCLPR                                        CSD010
      C                   PARM                    CSD010                                       CSD010
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'SEPRCSCVT'   DBPGM
      C     *LIKE         DEFINE    PPRC          HPPRC
       *
@@ -593,7 +595,7 @@
      C                   KFLD                    KPBOK
      C                   KFLD                    DDPMKT
      C                   KFLD                    BASIS             1
- 
+
      C     CPOSNK        KLIST
      C                   KFLD                    PBRA
      C                   KFLD                    DDPSSN
@@ -621,7 +623,7 @@
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C                   CALL      'AOSTRDR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7

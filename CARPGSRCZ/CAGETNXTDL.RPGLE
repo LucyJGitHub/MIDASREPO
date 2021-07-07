@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -85,10 +87,10 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
      FCADLFALL  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** All deals                                                                            203337
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)                                       203337
      F                                     PREFIX(DL_)                                        203337
@@ -113,50 +115,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
- 
+
       ** Return code from CA0040
      D @TERM           S              1A
- 
+
       ** Input Deal Number
      D DDDLNO          S              6A
- 
+
       ** Redefine external field as a Zoned decimal to prevent errors
      D FKDN38          S              6S 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -164,7 +166,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -172,34 +174,34 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
- 
+
       **  Check for a live record on CADLFALL.
      C     *IN65         DOUEQ     '0'
      C     1             SETLL     CADLFALL
      C                   READ      CADLFALL                               65
- 
+
       **  If a live record is found, delete it.
      C     *IN65         IFEQ      '0'
      C                   DELETE    CADLFAP0
- 
+
       **  Otherwise, call the regeneration program.
      C                   ELSE
      C                   CALL      'CA0040'
      C                   PARM                    @TERM
- 
+
       **  If an error occurs in the called program, pass the error back
      C     @TERM         IFEQ      'E'
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0145'     Msgid1
      C                   EVAL      *IN65 = '0'                                                190336
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  If no error, set up the Alpha deal number
      C     ErrorFound    IFNE      'Y'
      C     *IN65         ANDEQ     *OFF                                                       203337
@@ -222,11 +224,11 @@
      C                   ENDIF                                                                203337
                                                                                               203337
      C                   END
- 
+
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -238,24 +240,24 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
      C                   PARM                    DDDLNO
      C                   PARM                    FKDN38
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

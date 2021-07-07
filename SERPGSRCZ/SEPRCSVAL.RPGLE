@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1092524          Date 12Mar13               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1092524          Date 12Mar13               *
       *                 AR670962           Date 27Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1092524 - Data inserted in Branch, Market & Book were not  *
       *           displayed in the Main list view of Securities       *
@@ -78,89 +80,89 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming Price record
      D TranIn        E DS                  EXTNAME(SEPRCSPD)
- 
+
       * Valid Prices record layout
      D ValidPRCS     E DS                  EXTNAME(SEVPRCSPD)
      D ValidPRXT     E DS                  EXTNAME(SEVPRXTPD)
      D ValidEXTL     E DS                  EXTNAME(SEVEXVLPD)                                 CAP060
- 
+
       * Prices Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(SEPREXPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** EXTERNAL DS FOR SECURITIES TRADING DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)                                  CAP060
       *  PORTFOLIO MANAGEMENT ICD                                                             CAP060
       **                                                                                      CAP060
@@ -169,7 +171,7 @@
                                                                                               CAP060
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAP060
       ** EXTERNAL DS FOR SAR DETAILS                                                          CAP060
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CAP060
      D** Customer Details                                                                     CAP060
       *                                                                                       CSD006
@@ -186,32 +188,32 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(SEEPRCSPD)
- 
+
       ** Rundat
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       ** Midas day number
      D ZDAYNO          S              5P 0
      D ZDYNBR          S                   LIKE(ZDAYNO)
- 
+
       ** Holiday flag
      D ZIND            S              1A
- 
+
       ** Error flag passed back from ZDATE1
      D ErrorFlag       S              1A
- 
+
       ** Time stamp field in file format, defaulted if necessary                              CAP060
      D JDFTS           S             14  0                                                    CAP060
                                                                                               CGL031
@@ -252,15 +254,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SEPRCSV001
- 
+
       * Initial processing to be executed on each call.
- 
+
      C                   EXSR      INIT
- 
+
       * Do Validation
- 
+
      C                   IF        CAP060F= 'N'                                               CAP060
      C                   EXSR      VPRDPRICE
                                                                                             BUG10423
@@ -269,13 +271,13 @@
      C                   IF        CGL031 = 'Y'                                             BUG10423
      C                   EXSR      SrPEXI                                                   BUG10423
      C                   ENDIF                                                              BUG10423
- 
+
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
       /COPY WNCPYSRC,SEPRCSV002
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -1500,7 +1502,7 @@
      C                   PARM      *ZEROS        ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -1589,7 +1591,7 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1598,7 +1600,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1608,7 +1610,7 @@
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIDArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1668,7 +1670,7 @@
      C                   ELSE                                                                 CSC011
      C                   EVAL      WRunday = AGRDNB                                           CSC011
      C                   ENDIF                                                                CSC011
- 
+
       * Access Installation Control Data record fo Securities Trading
       * (Database error handling done in access program).
       *
@@ -1693,9 +1695,9 @@
      C                   IF        CAP060F= 'N'                                               CAP060
      C                   EVAL      PRRECI = 'D'
      C                   EVAL      PRPSSN = DDPSSN
- 
+
      C                   EVAL      PRPPRT = DDPPRT
- 
+
      C                   EVAL      PRPCNM = DDPCNM                                         AR1092524
      C                   EVAL      PRPMKT = DDPMKT                                         AR1092524
      C                   EVAL      PRPBRA = DDPBRA                                         AR1092524
@@ -1718,7 +1720,7 @@
      C                   EVAL      XTVRECI = 'D'
      C                   EVAL      XTVSESN = DDPSSN
      C                   EVAL      XTVPVDT = PRPVDT
- 
+
      C     JLPBD         IFNE      0
      C                   EVAL      XTVUPBD = JUPBD
      C                   EVAL      XTVLPBD = JLPBD
@@ -1734,7 +1736,7 @@
      C                   EVAL      XTVCHTP = DDACTN                                           189506
      C                   EVAL      XTVTNLU = *ZERO                                            CAP060
      C                   ENDIF                                                                CAP060
- 
+
      C                   IF        CAP060F= 'Y'                                               CAP060
       * Record Id                                                                             CAP060
      C                   EVAL      PRRECI = 'D'                                               CAP060
@@ -1781,7 +1783,7 @@
      C                   IF        DDACTN = 'I' OR DDACTN = 'A'                               CAP060
       ** If price type is 'V ' (current price), then validate fields                          CAP060
       **   for update of PF/EXVALD.                                                           CAP060
- 
+
      C                   IF        DDPPRT = 'V' AND BVEXOP = 'Y'                              CAP060
      C                   EVAL      PRPSRC = 'S'                                               CAP060
      C                   EVAL      EXVRECI = 'D'                                              CAP060
@@ -1803,7 +1805,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -1873,7 +1875,7 @@
      C                   SETON                                        U7U8LR                  CAP060
      C                   EXSR      SRERR                                                      CAP060
      C                   END                                                                  CAP060
- 
+
      C     @RTCD         IFEQ      *BLANK                                                     CAP060
      C                   MOVEL     'Y'           CAP060F           1                          CAP060
      C                   ELSE                                                                 CAP060
@@ -1895,7 +1897,7 @@
      C                   SETON                                        U7U8LR                  CSD006
      C                   EXSR      SRERR                                                      CSD006
      C                   END                                                                  CSD006
- 
+
      C     @RTCD         IFEQ      *BLANK                                                     CSD006
      C                   MOVEL     'Y'           CSD006F           1                          CSD006
      C                   ELSE                                                                 CSD006
@@ -1917,7 +1919,7 @@
      C                   EXSR      *PSSR                                                      CSD006
      C                   ENDIF                                                                CSD006
      C                   ENDIF                                                                CSD006
- 
+
      C                   IF        CAP060F='Y'                                                CAP060
      C                   CALL      'AOMMODR0'                                                 CAP060
      C                   PARM      '*DBERR '     @RTCD                                        CAP060
@@ -2020,10 +2022,10 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SEPRCSV004
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

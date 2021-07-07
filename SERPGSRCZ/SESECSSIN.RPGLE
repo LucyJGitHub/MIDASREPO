@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR996842           Date 11Feb13               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphaumeric (Recompile)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -310,7 +312,7 @@
      D KeyLists        DS
      D  WDSESN                 1     10A
      D  WDSRPN                11     30A
- 
+
      D KeySelect       DS
      D  WDISSR                 1      6A
      D  WDNMCY                 7      9A
@@ -343,22 +345,22 @@
      D PParmSESN       S             10A
      D PParOSESN       S             10A
      D PParOther       S            156A
- 
+
      D POpSel          S              1A
      D PErrMS          S              7A
      D PSESNSel        S             10A
- 
+
      D PEDtFld         S              1A
      D PEKyFld         S              1A
      D PResetFld       S              1A
- 
+
      D PRdNb           S              1A
      D PSARd           S              6A
      D PRtcd           S              7A
      D POptn           S              7A
      D PMktN           S             20A
      D PSesn           S             10A                                                     CGL018
- 
+
      D PKey            S              2A   INZ(*BLANKS)                         CSE023
      D PPgm            S             10A   INZ('SESECSSIN')                     CSE023
      D PAction         S              1A                                        CSE023
@@ -368,15 +370,15 @@
      D PRdFwd          S              1A
      D PBdSfl          S              1A
      D PRdSfl          S              1A
- 
+
      D PNCD            S              6A
      D PLCPN           S              6A
      D PNMDP           S              1P 0
      D PVLDP           S              1P 0
- 
+
      D PPrCpn          S              1A
      D PAmendOk        S              1A
- 
+
      D PINKC           S              1A
      D PINKE           S              1A
      D PINKF           S              1A
@@ -386,7 +388,7 @@
      D PINKJ           S              1A
      D PINKL           S              1A
      D PINKP           S              1A
- 
+
      D PEINKE          S              1A
      D PEINKF          S              1A
      D PEINKG          S              1A
@@ -395,7 +397,7 @@
      D PEINKJ          S              1A
      D PEINKL          S              1A
      D PEINKP          S              1A
- 
+
      D CSE005          S              1A
      D CSE007          S              1A
      D CSE011          S              1A
@@ -408,10 +410,10 @@
      D CGL032          S              1A                                                      CGL032
      D CGL031          S              1A                                                      CGL031
      D CSE071          S              1A                                                      237063
- 
+
      D WScrn           S              1A
      D WOScrn          S              1A                                        CSE023
- 
+
      D WRats           S              1A   INZ(*BLANK)
       *
       ** Redisplay screen flag and indicator
@@ -446,7 +448,7 @@
       ** Response mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for synchronous.
      D PRespMode       S              1A   INZ('S')
- 
+
      D* Midas APIs Sec Prices                                                                 CAP060
      D CAP060          S              1A                                                      CAP060
                                                                                               CAP060
@@ -514,7 +516,7 @@
      C                   IF        WScrn = 'R'
      C                   EXSR      SRRdnBrw
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESECS004
       *
       ** DO WHILE screen: level 1 screen initial details only.
@@ -522,7 +524,7 @@
      C                   DOW       WScrn = 'I'
      C                   EXSR      SRScrn_I
      C                   ENDDO
- 
+
       /COPY WNCPYSRC,SESECS005
       *
       ** DO WHILE screen: level 1 screen details.
@@ -530,7 +532,7 @@
      C                   DOW       WScrn = 'P'
      C                   EXSR      SRScrn_P
      C                   ENDDO
- 
+
       /COPY WNCPYSRC,SESECS006
       *
       ** DO WHILE screen: level 2 screen details.
@@ -544,7 +546,7 @@
      C                   DOW       WScrn = 'H'                                                CAS006
      C                   EXSR      SRScrn_H                                                   CAS006
      C                   ENDDO                                                                CAS006
- 
+
       /COPY WNCPYSRC,SESECS007
       *                                                                                       CSE031
       ** DO WHILE screen: level 4 screen details.                                             CSE031
@@ -563,7 +565,7 @@
                                                                                               CSE065
      C                   EXSR      SRScrn_T
      C                   ENDDO
- 
+
       /COPY WNCPYSRC,SESECS013                                                  CSE023
       *                                                                         CSE023
       ** If BOE installed  move required fields into fields to be passed to window.          LLN022A
@@ -585,7 +587,7 @@
      C                   IF        WScrn = 'F'
      C                   EXSR      SRScrn_F
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESECS009
       *
       ** Do file update.
@@ -593,7 +595,7 @@
      C                   IF        WScrn = 'U'
      C                   EXSR      SRUpdate
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESECS010
       *
       ** Terminate program.
@@ -601,7 +603,7 @@
      C                   IF        WScrn = 'E'
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
       *                                                                                       CGL018
       ** Screen: RWA Processing                                                               CGL018
       *                                                                                       CGL018
@@ -614,7 +616,7 @@
       *
       ** Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SESECS011
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -622,7 +624,7 @@
       *  SRScrn_I - Process screen 1 initial details only             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRScrn_I      BEGSR
       *
       ** Securities maintenance has been called by linked
@@ -637,25 +639,25 @@
      C                   EVAL      PEdtFld = 'Y'
      C                   EVAL      PEINKE  = 'Y'
      C                   EVAL      PEINKL  = 'Y'
- 
+
      C                   IF        PParmActn = 'I' OR DDACTN = *BLANK
      C                   EVAL      PEKyFld = 'Y'
      C                   ELSE
      C                   EVAL      PEKyFld = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PEdtFld = 'N'
      C                   EVAL      PEKyFld = 'N'
      C                   EVAL      PEINKE  = 'N'
      C                   EVAL      PEINKL  = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      PEINKG  = 'N'
      C                   EVAL      PEINKH  = 'N'
      C                   EVAL      PEINKP  = 'N'
- 
+
      C                   ELSE
       *
       ** Enable all fields on the initial screen as well as all function
@@ -669,9 +671,9 @@
      C                   EVAL      PEINKJ  = 'N'
      C                   EVAL      PEINKP  = 'Y'
      C                   EVAL      PEINKL  = 'Y'
- 
+
      C                   ENDIF
- 
+
       *
       ** Process 1st screen.
       *
@@ -778,7 +780,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -818,11 +820,11 @@
       *
       ** Validate input to level 1 screen.
      C                   EXSR      SRVal_I
- 
+
      C                   ENDSL
- 
+
      C     ESRScrn_I     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -830,7 +832,7 @@
       *  SRVal_I - Validate input to initial details screen           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVal_I       BEGSR
       *
       ** Validate key fields and retrieve security details.
@@ -864,7 +866,7 @@
       *
      C                   IF        DDACTN <> 'I' OR PParmLink = 'Y'
      C                             AND PPOldSecDtl = 'Y' AND WRats = *BLANK
- 
+
       ** Name Change - Change other values of the old security aside                          214351
       ** from security shortname if other fields in Corporate Action                          214351
       ** Maintenance are not left blank.                                                      214351
@@ -874,7 +876,7 @@
      C                   ENDIF                                                                214351
                                                                                               214351
      C                   EXSR      SRPutSec
- 
+
      C                   ENDIF
       *
       ** If Action is Amend, validate whether non-amendable fields
@@ -882,7 +884,7 @@
       ** on the primary screen validation).
       *
      C                   IF        DDACTN = 'A'
- 
+
      C                   CALLB     'SESECS1MD'
       *                             =========
       *
@@ -950,11 +952,11 @@
       ** Private Banking                                                                      192054
       *                                                                                       192054
      C                   PARM                    BGN4ST                                       192054
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDACTN = 'I'
- 
+
      C                   CALLB     'SESECS1VL'
       *                             =========
       *
@@ -1054,15 +1056,15 @@
       *
       ** Redisplay screen indicator
      C                   PARM      'N'           PReDsp
- 
+
      C                   ENDIF
       *
       ** Process level 1 screen.
       *
      C                   EVAL      WScrn = 'P'
- 
+
      C     ESRVal_I      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1070,7 +1072,7 @@
       *  SRScrn_P - Process screen 1                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRScrn_P      BEGSR
       *
       ** Protect screen fields if necessary and disable function keys
@@ -1080,7 +1082,7 @@
      C                   EVAL      PEINKG  = 'N'
      C                   EVAL      PEINKH  = 'N'
      C                   EVAL      PEINKP  = 'N'
- 
+
      C                   IF        DDACTN = 'I' OR DDACTN = 'A'
      C                   EVAL      PEdtFld = 'Y'
      C                   EVAL      PEINKE  = 'Y'
@@ -1090,14 +1092,14 @@
      C                   EVAL      PEINKE  = 'N'
      C                   EVAL      PEINKL  = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PEINKG  = 'Y'
      C                   EVAL      PEINKH  = 'Y'
      C                   EVAL      PEINKP  = 'Y'
      C                   EVAL      PEINKL  = 'Y'
- 
+
      C                   IF        DDACTN = 'I' OR DDACTN = 'A'
      C                   EVAL      PEdtFld = 'Y'
      C                   EVAL      PEINKE  = 'Y'
@@ -1105,15 +1107,15 @@
      C                   EVAL      PEdtFld = 'N'
      C                   EVAL      PEINKE  = 'N'
      C                   ENDIF
- 
+
      C                   IF        DDACTN = 'D' AND IdX = 0
      C                   EVAL      PEINKJ  = 'Y'
      C                   ELSE
      C                   EVAL      PEINKJ  = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      PEKyFld = 'N'
       *
       ** Process defaulting of 1st screen details before going to 1st screen.
@@ -1229,7 +1231,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -1297,18 +1299,18 @@
       *
       ** Action is Enquire.
      C                   IF        DDACTN = 'E'
- 
+
      C                   EVAL      WScrn = 'S'
       *
       ** Process defaulting of 2nd screen details before going to 2nd screen.
      C                   EXSR      SRDefScn2
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     ESRScrn_P     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1316,9 +1318,9 @@
       *  SRDefScn1 - Default fields in 1st screen                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDefScn1     BEGSR
- 
+
      C                   CALLB     'SESECS1DT'
       *                             =========
       *
@@ -1339,9 +1341,9 @@
       *
       ** Securities screen 1 details retrieved from file - screen format
      C                   PARM                    NwSE1ScnFmt
- 
+
      C     ESRDefScn1    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1349,14 +1351,14 @@
       *  SRVal_P - Validate input to primary details screen           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVal_P       BEGSR
       *
       ** If Action is Amend, validate whether non-amendable fields
       ** have been amended.
       *
      C                   IF        DDACTN = 'A'
- 
+
      C                   CALLB     'SESECS1MD'
       *                             =========
       *
@@ -1424,9 +1426,9 @@
       ** Private Banking                                                                      192054
       *                                                                                       192054
      C                   PARM                    BGN4ST                                       192054
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'SESECS1VL'
       *                             =========
       *
@@ -1526,7 +1528,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      'N'           PReDsp
- 
+
      C                   EVAL      WRedisplay = *BLANK
       *
       ** If no errors occurred during validation of fields on Level 1
@@ -1534,23 +1536,23 @@
       ** displayed yet.
       *
      C                   IF        IdX = 0
- 
+
      C                   Z-ADD     1             WiX
- 
+
      C                   DOW       WiX <= WIdX AND WRedisplay = *BLANK
- 
+
      C                   IF        WMsgIdArr(WiX) <> WPrvWarnAr(WiX)
      C                   EVAL      WRedisplay = 'Y'
      C                   ELSE
      C                   EVAL      WiX = WiX + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Redisplay Level 1 screen if there are errors or if there
@@ -1560,15 +1562,15 @@
      C                             PReDsp = 'Y'
      C                   GOTO      ESRVal_P
      C                   ENDIF
- 
+
      C                   EVAL      WScrn = 'S'
       *
       ** Process defaulting of 2nd screen details before going to 2nd screen.
       *
      C                   EXSR      SRDefScn2
- 
+
      C     ESRVal_P      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1576,7 +1578,7 @@
       *  SRScrn_S - Process screen 2                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRScrn_S      BEGSR
       *
       ** Protect screen fields if necessary and disable function keys
@@ -1606,9 +1608,9 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
      C                   ENDIF
- 
+
      C                   EVAL      PEINKL  = 'Y'
- 
+
      C                   IF        DDACTN = 'I' OR DDACTN = 'A'
      C                   EVAL      PEdtFld = 'Y'
      C                   EVAL      PEINKE  = 'Y'
@@ -1742,7 +1744,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -1805,9 +1807,9 @@
       ***with*blank*details.*******************************************                       CAS006
      C**********         IF        DDACTN = 'E' AND DDNISS = 'Y' OR                           CAS006
      C**********                   DDACTN = 'E' AND BGN4ST = 'Y'                              CAS006
- 
+
      C**********         EVAL      WScrn  = 'T'                                               CAS006
- 
+
      C**********         ELSE                                                                 CAS006
       *                                                                                       CAS006
       *---------------------------------------------------------------*                       CAS006
@@ -1849,11 +1851,11 @@
      C**********         EXSR      SRClearScn                                                 CAS006
      C**********         EVAL      WScrn = 'I'                                                CAS006
      C**********         ENDIF                                                                CAS006
- 
+
      C                   ENDSL
- 
+
      C     ESRScrn_S     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1861,14 +1863,14 @@
       *  SRVal_S - Validate input to level 2 screen                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVal_S       BEGSR
       *
       ** If Action is Amend, validate whether non-amendable fields
       ** have been amended.
       *
      C                   IF        DDACTN = 'A'
- 
+
      C                   CALLB     'SESECS2MD'
       *                             =========
       *
@@ -1941,9 +1943,9 @@
       *
       ** Protect Coupon Rate/Inds Indicator
      C                   PARM                    PPrCpn
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'SESECS2VL'
       *                             =========
       *
@@ -2084,7 +2086,7 @@
       *
       ** Market Name
      C                   PARM                    WMKTN
- 
+
      C                   EVAL      WRedisplay = *BLANK
       *
       ** If no errors occurred during validation of fields on Level 1
@@ -2092,23 +2094,23 @@
       ** displayed yet.
       *
      C                   IF        IdX = 0
- 
+
      C                   Z-ADD     1             WiX
- 
+
      C                   DOW       WiX <= WIdX AND WRedisplay = *BLANK
- 
+
      C                   IF        WMsgIdArr(WiX) <> WPrvWarnAr(WiX)
      C                   EVAL      WRedisplay = 'Y'
      C                   ELSE
      C                   EVAL      WiX = WiX + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Redisplay Level 2 screen if there are errors or if there
@@ -2140,7 +2142,7 @@
      C**********         IF        BGRKMG = 'Y' AND DDERPY ='Y'                               CAS006
      C**********         EVAL      DDISA2 = DDISA1                                            CAS006
      C**********         ENDIF                                                                CAS006
- 
+
      C**********         ELSE                                                                 CAS006
       *                                                                                      CGLL018
       ****If*Risk*Weighted*Assets*is*on********************************               CGLL018 CAS006
@@ -2160,9 +2162,9 @@
      C**********         ENDIF                                                         CSE023 CAS006
       *                                                                         CSE023
      C**********         ENDIF                                                                CAS006
- 
+
      C     ESRVal_S      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2170,9 +2172,9 @@
       *  SRDefScn2 - Default fields in 2nd screen                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDefScn2     BEGSR
- 
+
      C                   CALLB     'SESECS2DT'
       *                             =========
       *
@@ -2214,9 +2216,9 @@
       *
       ** Fields for display only
      C                   PARM                    POutFlds
- 
+
      C     ESRDefScn2    ENDSR
- 
+
       *****************************************************************                       CSE065
       /EJECT                                                                                  CSE065
       *****************************************************************                       CSE065
@@ -2756,28 +2758,28 @@
       *  SRScrn_T - Process screen 3                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRScrn_T      BEGSR
       *
       ** Protect screen fields if necessary and disable function keys
       ** accordingly.
       *
      C                   IF        PParmLink = 'Y'
- 
+
      C                   EVAL      PEINKF  = 'N'
      C                   EVAL      PEINKG  = 'N'
      C                   EVAL      PEINKH  = 'N'
      C                   EVAL      PEINKP  = 'N'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PEINKF  = 'Y'
      C                   EVAL      PEINKG  = 'Y'
      C                   EVAL      PEINKH  = 'Y'
      C                   EVAL      PEINKP  = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDACTN = 'I' OR DDACTN = 'A'
      C                   EVAL      PEdtFld = 'Y'
      C                   EVAL      PEINKE  = 'Y'
@@ -2785,7 +2787,7 @@
      C                   EVAL      PEdtFld = 'N'
      C                   EVAL      PEINKE  = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      PEINKL  = 'Y'
       *
       ** Process 3rd screen.
@@ -2892,7 +2894,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -2984,13 +2986,13 @@
       ** Redisplay Initial screen with blank screen fields.
      C                   EXSR      SRClearScn
      C                   EVAL      WScrn = 'I'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     ESRScrn_T     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2998,14 +3000,14 @@
       *  SRVal_T - Validate input to level 3 screen                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVal_T       BEGSR
       *
       ** If Action is Amend, validate whether non-amendable fields
       ** have been amended.
       *
      C                   IF        DDACTN = 'A'
- 
+
      C                   CALLB     'SESECS3MD'
       *                             =========
       *
@@ -3058,9 +3060,9 @@
       *
       ** OK amendments field
      C                   PARM                    PAmendOK
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'SESECS3VL'
       *                             =========
       *
@@ -3152,7 +3154,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      'N'           PReDsp
- 
+
      C                   EVAL      WRedisplay = *BLANK
       *
       ** If no errors occurred during validation of fields on Level 3
@@ -3160,23 +3162,23 @@
       ** displayed yet.
       *
      C                   IF        IdX = 0
- 
+
      C                   Z-ADD     1             WiX
- 
+
      C                   DOW       WiX <= WIdX AND WRedisplay = *BLANK
- 
+
      C                   IF        WMsgIdArr(WiX) <> WPrvWarnAr(WiX)
      C                   EVAL      WRedisplay = 'Y'
      C                   ELSE
      C                   EVAL      WiX = WiX + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Redisplay Level 3 screen if there are errors or if there
@@ -3200,9 +3202,9 @@
      C                   ELSE                                                   CSE023
      C                   EVAL      WScrn = 'F'
      C                   ENDIF                                                  CSE023
- 
+
      C     ESRVal_T      ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CSE031
       *****************************************************************                       CSE031
@@ -3577,7 +3579,7 @@
       *  SRScrn_F - Process confirmation screen                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRScrn_F      BEGSR
       *
       ** Reset error fields, specifically arrays for warning messages.
@@ -3694,7 +3696,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -3714,13 +3716,13 @@
       *
       ** Enter key was pressed.  Update files.
      C                   OTHER
- 
+
      C                   EVAL      WScrn = 'U'
- 
+
      C                   ENDSL
- 
+
      C     ESRScrn_F     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3728,7 +3730,7 @@
       *  SRUpdate - Update files                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdate      BEGSR
       *
       ** Action is delete.
@@ -3749,7 +3751,7 @@
       *
       ** Record id - update to 'C'.
      C                   EVAL      S1RECI = 'C'
- 
+
      C                   ELSE
       *
       ** Action is insert.
@@ -3811,7 +3813,7 @@
      C                   IF        S1ISSD = *ZEROS
      C                   Z-ADD     S1ITLD        S1ISSD
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Action is amend/insert.
@@ -3820,11 +3822,11 @@
       ** Date made complete.
       *
      C                   IF        ODINCS = 'I'
- 
+
      C                   IF        DDINCS = *BLANK OR DDINCS = 'C'
      C                   Z-ADD     BJRDNB        S1DCOM
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Security Full name -1 defaults to Report name if blanks.
@@ -3876,7 +3878,7 @@
      C                   EVAL      S1OIDI = #1OIDI                              CSE023
      C                   EVAL      S1APIE = #1APIE                              CSE023
      C                   ENDIF                                                  CSE023
- 
+
      C                   ENDIF
       *
       ** Action is insert/amend/delete.
@@ -3887,9 +3889,9 @@
       *
       ** Last change type
      C                   EVAL      S1CHTP = DDACTN
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'SESECSUPD'
       *                             =========
       *
@@ -3951,9 +3953,9 @@
      C                   ROLBK
      C                   EndIf                                                                CSC022
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C                   IF        RetCodeOut = '*RECUPD'
       *                                                                                       CSC022
      C                   If        (CSC022 <> 'Y')                                            CSC022
@@ -3971,15 +3973,15 @@
      C                   COMMIT
      C                   EndIf                                                                CSC022
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If securities maintenance has been called by
       ** linked maintenance/enquiry, terminate program.
      C                   IF        PParmLink = 'Y'
- 
+
      C                   EVAL      WScrn = 'E'
- 
+
      C                   ELSE
       *
       ** If update not done due to record being updated by another
@@ -4003,11 +4005,11 @@
       *
      C                   EXSR      SRClearScn
      C                   EVAL      WScrn = 'I'
- 
+
      C                   ENDIF
- 
+
      C     ESRUpdate     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4015,9 +4017,9 @@
       *  SRRdNBrw - Read next browse subfile record                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRdNBrw      BEGSR
- 
+
      C                   CALLB     'SESECSBRW'
       *                             =========
       *
@@ -4095,7 +4097,7 @@
       ** Retrieve security details.
       *
      C                   EVAL      DDSESN = PSESNSel
- 
+
      C                   EXSR      SRRtvSESN
       *
       ** If errors occurred in the retrieve module, display
@@ -4126,9 +4128,9 @@
       ** Display primary screen maintenance.
       *
      C                   EVAL      WScrn = 'P'
- 
+
      C     ESRRdNBrw     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4136,7 +4138,7 @@
       *  SRBldBrw - Build browse subfile record                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBldBrw      BEGSR
       *
       ** Reset Read Next Browse Subfile Record indicator.
@@ -4195,7 +4197,7 @@
       *
       ** Function key enabled - F12
      C                   PARM                    PINKL
- 
+
      C                   SELECT
       *
       ** F3 - End program.
@@ -4215,14 +4217,14 @@
       *
       ** Enter - read selected subfile records.
      C                   OTHER
- 
+
      C                   EVAL      PRdNb = 'Y'
      C                   EVAL      WScrn = 'R'
- 
+
      C                   ENDSL
- 
+
      C     ESRBldBrw     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4231,7 +4233,7 @@
       *           details file                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRoll        BEGSR
       *
       ** Reset/clear previous errorwarning messages for every new record.
@@ -4248,7 +4250,7 @@
      C                   EVAL      PRdBck = *BLANK
      C                   EVAL      PRdFwd = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'SESECSRED'
       *                             =========
       *
@@ -4302,9 +4304,9 @@
       ** Retrieve security details.
       *
      C                   MOVE      PSeSnSel      DDSESN
- 
+
      C                   EXSR      SRRtvSESN
- 
+
       *
       ** If errors occurred in the retrieval of security
       ** details, display error messages on the primary screen.
@@ -4329,11 +4331,11 @@
       ** Put security details on the screen.
       *
      C                   EXSR      SRPutSec
- 
+
      C                   EVAL      WScrn = 'P'
- 
+
      C     ESRRoll       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4341,9 +4343,9 @@
       *  SRRtvSESN - Retrieve security details                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRtvSESN     BEGSR
- 
+
      C                   CALLB     'SESECSRTV'
       *                             =========
       *
@@ -4407,9 +4409,9 @@
       *
       ** Externally described DS for investment types
      C                   PARM                    PINVTP
- 
+
      C     ESRRtvSESN    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4418,9 +4420,9 @@
       *             format                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPutSec      BEGSR
- 
+
      C                   MOVE      *BLANKS       RetCodeOut                                   216368
                                                                                               216368
      C                   CALLB     'SESECSCVT'
@@ -4535,13 +4537,13 @@
       ** Linked maintenance flag                                                              CSC011
                                                                                               CSC011
      C                   PARM                    PParmLink                                    CSC011
- 
+
      C                   EVAL      NwSe1ScnFmt = CrSe1ScnFmt
      C                   EVAL      NwSe2ScnFmt = CrSe2ScnFmt
      C                   EVAL      NwSe3ScnFmt = CrSe3ScnFmt
      C                   EVAL      NwSe4ScnFmt = CrSe4ScnFmt                    CSE031
      C                   EVAL      NwSe5ScnFmt = CrSe5ScnFmt                                  CAS006
- 
+
      C                   If        RetCodeOut <> *Blanks                                      216368
      C                   EVAL      WiX = 0                                                    216368
      C                   If        RetCodeOut = '*NOISSR   '                                  216368
@@ -4570,7 +4572,7 @@
      C                   ENDIF                                                  CSE023
                                                                                 CSE023
      C     ESRPutSec     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4578,7 +4580,7 @@
       *  SRSndM - Send error message to screen                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSndM        BEGSR
       *
       ** If single branching, user cannot browse file.
@@ -4593,9 +4595,9 @@
      C     *BLANK        LOOKUP    FldNameArr(Ex)                         99
      C                   EVAL      FldNameArr(Ex) = '*ANY'
      C                   EVAL      MsgIdArr(Ex) = PErrMs
- 
+
      C     ESRSndM       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4603,7 +4605,7 @@
       *  SREndP - Set program to end                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SREndP        BEGSR
       *
       ** Issue rollback to clear any possible updates in lower
@@ -4628,9 +4630,9 @@
       ** Set processing to end program.
       *
      C                   EVAL      WScrn = 'E'
- 
+
      C     ESREndP       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4638,16 +4640,16 @@
       *  SRSetupKey - Setup keys for pointer or selection.            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSetupKey    BEGSR
       *
       ** Setup key/selection fields.
       *
      C                   EVAL      WDSESN = DDSESN
      C                   EVAL      WDSRPN = DDSRPN
- 
+
      C                   MOVEL     DDISSR        WDISSR
- 
+
      C                   EVAL      WDNMCY = DDNMCY
      C                   EVAL      WDSITP = DDSITP
      C                   EVAL      WDPRTP = *BLANKS
@@ -4655,9 +4657,9 @@
      C                   EVAL      WDISIN = DDISIN
      C                   EVAL      WDT2RF = DDT2RF
      C                   EVAL      WDSTAT = *BLANKS
- 
+
      C     ESSetupKey    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4665,7 +4667,7 @@
       *  SRClearScn - Clear screen data structures                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRClearScn    BEGSR
       *
       ** Clear screen data structures for new processing.
@@ -4675,15 +4677,15 @@
      C                   CLEAR                   CrSE3ScnFmt
      C                   CLEAR                   CrSE4ScnFmt                                  CSE031
      C                   CLEAR                   CrSE5ScnFmt                                  CAS006
- 
+
      C                   CLEAR                   NwSE1ScnFmt
      C                   CLEAR                   NwSE2ScnFmt
      C                   CLEAR                   NwSE3ScnFmt
      C                   CLEAR                   NwSE4ScnFmt                                  CSE031
      C                   CLEAR                   NwSE5ScnFmt                                  CAS006
- 
+
      C     ESClearScn    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4691,7 +4693,7 @@
       *  SRResetErr - Reset error fields                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRResetErr    BEGSR
       *
       ** Reset error fields.
@@ -4700,7 +4702,7 @@
      C                   CLEAR                   MsgIDArr
      C                   CLEAR                   MsgDtaArr
      C                   CLEAR                   IdX
- 
+
      C                   CLEAR                   WFldNamArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WMsgDtaArr
@@ -4713,9 +4715,9 @@
      C                   EVAL      SEESEC3 = *ALL'Y'
      C                   EVAL      SEESEC4 = *ALL'Y'                                          CSE031
      C                   EVAL      SEESEC5 = *ALL'Y'                                          CAS006
- 
+
      C     ESRResetErr   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************         CSE023
@@ -4825,7 +4827,7 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       ** Receive entry parameters.
@@ -4916,7 +4918,7 @@
      C                   Z-ADD     4             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CSE005 = 'Y'
      C                   ELSE
@@ -4941,7 +4943,7 @@
      C                   Z-ADD     5             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CSE007 = 'Y'
      C                   ELSE
@@ -4966,7 +4968,7 @@
      C                   Z-ADD     6             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CSE011 = 'Y'
      C                   ELSE
@@ -4991,7 +4993,7 @@
      C                   Z-ADD     7             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CEU017 = 'Y'
      C                   ELSE
@@ -5016,7 +5018,7 @@
      C                   Z-ADD     8             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CEU018 = 'Y'
      C                   ELSE
@@ -5041,7 +5043,7 @@
      C                   Z-ADD     9             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      S01401 = 'Y'
      C                   ELSE
@@ -5066,7 +5068,7 @@
      C                   Z-ADD     10            DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      S01511 = 'Y'
      C                   ELSE
@@ -5390,14 +5392,14 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   IF        PParmLink = 'Y'
- 
+
      C                   EVAL      DDACTN = PParmActn
      C                   EVAL      PParmRtcd = *BLANKS
- 
+
      C                   IF        PParmActn = 'I'
- 
+
      C                   IF        CSE007 = 'Y' AND PParOSESN <> *BLANKS
      C                   EVAL      DDSESN = PParmSESN
      C                   EVAL      PPOldSecDtl = 'Y'
@@ -5405,11 +5407,11 @@
      C                   EVAL      DDSESN = *BLANKS
      C                   EVAL      PPOldSecDtl = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      DDSESN = PParmSESN
- 
+
      C                   ENDIF
       *
       ** Validate initial screen details.
@@ -5422,14 +5424,14 @@
      C                   ELSE
      C                   EVAL      WScrn = 'P'
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** If not from linked processing, then start at initial screen.
      C                   EVAL      WScrn = 'I'
- 
+
      C                   ENDIF
- 
+
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================
@@ -5439,7 +5441,7 @@
       *
       ** Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SESECS012
- 
+
       *                                                                                       CSC022
       ** Access Switchable Features File, for CSC022                                          CSC022
       *                                                                                       CSC022
@@ -5479,7 +5481,7 @@
      C                   EndIf                                                                CSC022
       *                                                                                       CSC022
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5488,10 +5490,10 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001

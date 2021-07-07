@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058226           Date 31May21               *
-      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *  Last Amend No. MD058367           Date 28Sep21               *
+      *  Prev Amend No. MD058226           Date 31May21               *
+      *                 MD056612           Date 12Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058367 - Field Data Group is protected                     *
       *  MD058226 - DEDESC must be part of XTD                        *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
@@ -516,7 +518,9 @@
      C+ where DEDTAG = :DEDTAG and DECATC = :DECATC                                         MD056612
      C/END-EXEC                                                                             MD056612
      C******IN60         IFEQ      '1'
+     C                   Setoff                                       60                    MD058367
      C     SQLCODE       IFEQ      100                                                      MD056612
+     C                   Seton                                        60                    MD058367
      C                   CLEAR                   MXDGEC
      C                   ENDIF
 

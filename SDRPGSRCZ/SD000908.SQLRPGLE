@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD056807           Date 20Sep20               *
-      *  Prev Amend No. CFT163             Date 03Jul18               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD056807           Date 20Sep20               *
+      *                 CFT163             Date 03Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039470           Date 28Jun16               *
       *                 CGL165             Date 15Feb17               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD056807 - Deliverable Data Split for Compliance Watch       *
       *  CFT163 - FT Nostro Transfer Authorisation.                   *
       *  MD046248 - Finastra Rebranding                               *

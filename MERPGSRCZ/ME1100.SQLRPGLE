@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056752           Date 20Sep20               *
-      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *  Last Amend No. MD058361           Date 26Jun21               *
+      *  Prev Amend No. MD056752           Date 20Sep20               *
+      *                 MD056560           Date 31Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD046248           Date 27Oct17               *
@@ -60,6 +61,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058361 - Correct SQL request to access MEINFJW0            *
       *  MD056752 - Deliverable Data Split for MEINFMPD               *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
@@ -806,14 +808,18 @@
      C                   MOVEL     SVMSEQ        KFMSQN
      C                   ENDIF
       *
+     C                   MOVEL     'A'           xCursor           1                        MD058361
      C*****KYINFM        SETLL     MEINFML1                                                 MD056752
      C*****KYINFM        READE     MEINFML1                               61                MD056752
      C/EXEC SQL                                                                             MD056752
      C+ declare ACursor insensitive scroll cursor for                                       MD056752
      C+ select * from MEINFJW0                                                              MD056752
-     C+ where FMNWRK >= :FMNWRK and FMMTPY >= :FMMTPY and FMMSEQ >= :FMMSEQ                 MD056752
-     C+   and FMMTAG >= :FMMTAG and FMRECI = 'D'                                            MD056752
-     C+ order by FMNWRK, FMMTPY, FMMSEQ, FMTAG, FMFTFD                                      MD056752
+     C**where*FMNWRK >= :FMNWRK and FMMTPY >= :FMMTPY and FMMSEQ >= :FMMSEQ        MD056752 MD058361
+     C****and*FMMTAG >= :FMMTAG and FMRECI = 'D'                                   MD056752 MD058361
+     C**order*by FMNWRK, FMMTPY, FMMSEQ, FMTAG, FMFTFD                             MD056752 MD058361
+     C+ where FMNWRK  = :KFNWRK and FMMTPY  = :KFMTPY and FMMSEQ  = :KFMSQN                 MD058361
+     C+   and FMMTAG  = :KFMTAG and FMRECI = 'D'                                            MD058361
+     C+ order by FMNWRK, FMMTPY, FMMSEQ, FMMTAG, FMFTFD                                     MD058361
      C/END-EXEC                                                                             MD056752
                                                                                             MD056752
      C/EXEC SQL                                                                             MD056752
@@ -829,14 +835,18 @@
      C     SQLCODE       IFEQ      100                                                      MD056752
      C     KFMSQN        ANDEQ     'A'
      C                   MOVEL     *BLANKS       KFMSQN
+     C                   MOVEL     'B'           xCursor                                    MD058361
      C*****KYINFM        SETLL     MEINFML1                                                 MD056752
      C*****KYINFM        READE     MEINFML1                               61                MD056752
      C/EXEC SQL                                                                             MD056752
      C+ declare BCursor insensitive scroll cursor for                                       MD056752
      C+ select * from MEINFJW0                                                              MD056752
-     C+ where FMNWRK >= :FMNWRK and FMMTPY >= :FMMTPY and FMMSEQ >= :FMMSEQ                 MD056752
-     C+   and FMMTAG >= :FMMTAG and FMRECI = 'D'                                            MD056752
-     C+ order by FMNWRK, FMMTPY, FMMSEQ, FMTAG, FMFTFD                                      MD056752
+     C**where*FMNWRK >= :FMNWRK and FMMTPY >= :FMMTPY and FMMSEQ >= :FMMSEQ        MD056752 MD058361
+     C****and*FMMTAG >= :FMMTAG and FMRECI = 'D'                                   MD056752 MD058361
+     C**order*by FMNWRK, FMMTPY, FMMSEQ, FMTAG, FMFTFD                             MD056752 MD058361
+     C+ where FMNWRK  = :KFNWRK and FMMTPY  = :KFMTPY and FMMSEQ  = :KFMSQN                 MD058361
+     C+   and FMMTAG  = :KFMTAG and FMRECI = 'D'                                            MD058361
+     C+ order by FMNWRK, FMMTPY, FMMSEQ, FMMTAG, FMFTFD                                     MD058361
      C/END-EXEC                                                                             MD056752
                                                                                             MD056752
      C/EXEC SQL                                                                             MD056752
@@ -1545,7 +1555,8 @@
       * Check if another record to be read
       *
      C*****KYINFM        READE     MEINFML1                               61                MD056752
-     C     KFMSQN        IFEQ      *BLANKS                                                  MD056752
+     C*****KFMSQN        IFEQ      *BLANKS                                         MD056752 MD058361
+     C     xCursor       IFEQ      'B'                                                      MD058361
      C/EXEC SQL                                                                             MD056752
      C+ fetch next from BCursor into :MEINFM                                                MD056752
      C/END-EXEC                                                                             MD056752
@@ -1558,6 +1569,15 @@
      C                   ENDDO
      C/COPY WNCPYSRC,ME1100C002
       *
+     C     xCursor       IFEQ      'B'                                                      MD058361
+     C/EXEC SQL                                                                             MD058361
+     C+ close BCursor                                                                       MD058361
+     C/END-EXEC                                                                             MD058361
+     C                   ELSE                                                               MD058361
+     C/EXEC SQL                                                                             MD058361
+     C+ close ACursor                                                                       MD058361
+     C/END-EXEC                                                                             MD058361
+     C                   ENDIF                                                              MD058361
       * Initialise fields
       *
      C                   CLEAR                   DSTRAN

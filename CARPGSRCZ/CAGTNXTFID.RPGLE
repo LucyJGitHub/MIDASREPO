@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -79,10 +81,10 @@
       *****************************************************************
      FSDDLNOL0  UF   E           K DISK    INFSR(*PSSR) COMMIT
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
      D/COPY ZACPYSRC,PSDS
- 
+
      D FKDN38          S              6S 0
       ** Redefine external field as a Zoned decimal to prevent errors
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
@@ -92,20 +94,20 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
       ** First DS for Access Programs, Short Data Structure
- 
+
       *****************************************************************
       *                                                               *
       *    Main Routine                                               *
       *                                                               *
       *****************************************************************
- 
+
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   Z-ADD     001           DBASE                          ************
@@ -114,7 +116,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     DEALTYPE      IFEQ      'FL'
      C     BNDNRP        ANDNE     0
      C     DEALTYPE      OREQ      'DP'
@@ -127,13 +129,13 @@
      C     BNDNRT        ANDNE     0
      C     DEALTYPE      OREQ      'LT'
      C     BNDNRT        ANDNE     0
- 
+
       ** Access file to retrieve next available deal number
- 
+
      C                   MOVE      *BLANKS       WBNDNR            2
      C                   MOVE      BNDNRP        WBNDNRP          16
      C                   MOVE      BNDNRT        WBNDNRT          16
- 
+
      C     DEALTYPE      IFEQ      'FL'
      C     DEALTYPE      OREQ      'DP'
      C     DEALTYPE      OREQ      'LP'
@@ -147,9 +149,9 @@
      C                   PARM      0             ZADEC
      C                   MOVE      ZFIELD        WBNDNR
      C                   ENDIF
- 
+
      C     WBNDNR        CHAIN     SDDLNOL0                           22
- 
+
      C     *IN22         IFEQ      *ON
      C     *LOCK         IN        LDA
      C                   Z-ADD     002           DBASE                          ************
@@ -162,34 +164,34 @@
      C                   ELSE
      C                   MOVEL     BNDNRT        DBKEY
      C                   ENDIF
- 
+
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     ARNADN        CHAIN     DEALSALL                           23
      C     *IN23         DOWEQ     *OFF
      C                   ADD       1             ARNADN
      C     ARNADN        CHAIN     DEALSALL                           23
      C                   ENDDO
- 
+
      C                   MOVE      ARNADN        DEALNO
      C                   ADD       1             ARNADN
      C                   UPDATE    @ARREC2
- 
+
      C                   ELSE
      C                   CALLB     'CAGETNXTDL'
      C                   PARM      *BLANKS       RETCODEIN        10
      C                   PARM      *BLANKS       #MSGID
      C                   PARM      *BLANKS       DDDLNO            6
      C                   PARM      0             FKDN38
- 
+
      C                   MOVE      FKDN38        DEALNO
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -201,15 +203,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    DEALTYPE          2
      C                   PARM                    DEALNO            6 0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -224,22 +226,22 @@
       * Calls: DBERRCTL                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C     @RUN          IFEQ      *BLANK
      C                   MOVE      'Y'           @RUN              1
      C                   DUMP
      C                   CALL      'DBERRCTL'
      C                   END
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2001

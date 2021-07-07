@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -78,12 +80,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(SEC_)
      FINVTP     IF   E           K DISK    INFSR(*PSSR)                         CPB001
      F                                     PREFIX(INV_)                         CPB001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -102,52 +104,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Transaction - File Format
      D DPMVFilFmt    E DS                  EXTNAME(DPTMVD)
- 
+
       * Trade - Screen Formats
      D DPMVScnFmt    E DS                  EXTNAME(SEDMWIPD)
      D DDDepot       E                     EXTFLD(DDDPID)
      D DDDate        E                     EXTFLD(DDDPMD)
- 
- 
+
+
       ** External DS for Bank Details
       ** External DS for Bank Details
       ** External DS for Midas Modules Details
@@ -165,21 +167,21 @@
      D LCD_SAR       E                     EXTFLD(LCD)
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    CPB001
- 
+
      ** Scratch Pad DS
       ** Short Data Structure
       ** Long Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)                       CPB001
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D CGL031          S              1A                                                      CGL031
                                                                                               CGL031
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -240,7 +242,7 @@
       ** Transaction Reference
       *
      C                   MOVE      DPRN          DDDPRN
- 
+
      C     DPMV          IFEQ      'WI'
       *
       ** In Depot
@@ -250,7 +252,7 @@
       ** In Date
       *
      C                   MOVE      *BLANKS       DDDATE
- 
+
       * Compare should be 99999 (5 digits) instead of 999999 (6 digits)                       CAP087
      C*****DPMD          IFNE      999999                                                     CAP087
      C     DPMD          IFNE      99999                                                      CAP087
@@ -260,9 +262,9 @@
      C                   ELSE
      C                   MOVE      '999999'      DDDATE
      C                   END
- 
+
      C                   END
- 
+
      C     DPMV          IFEQ      'WO'
       *
       ** Out Depot
@@ -273,7 +275,7 @@
       ** Out Date
       *
      C                   MOVE      *BLANKS       DDDATE
- 
+
       * Compare should be 99999 (5 digits) instead of 999999 (6 digits)                       CAP087
      C*****DPDO          IFNE      999999                                                     CAP087
      C     DPMD          IFNE      99999                                                      CAP087
@@ -283,7 +285,7 @@
      C                   ELSE
      C                   MOVE      '999999'      DDDATE
      C                   END
- 
+
      C                   END
       *                                                                                       CAP087
       ** Repo and Depot Transfer                                                              CAP087
@@ -381,7 +383,7 @@
       ** Beneficiary Customer
       *
      C                   MOVEL     DPBN          DDDPBN
- 
+
      C                   CALLB     'AOPLCSR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*KEY    '    @OPTN
@@ -551,9 +553,9 @@
       ** Charge Currency
       *
      C                   MOVEL     DCCE          DDDCCE
- 
+
      C                   MOVE      DDDCCE        @AJCD
- 
+
      C     DDDCCE        IFNE      *BLANKS
      C                   EXSR      SRCurrDet
       *
@@ -571,13 +573,13 @@
       ** Settlement Method
       *
      C     DCSE          IFEQ      *ZERO
- 
+
      C     DCHA          IFNE      *ZERO
      C                   MOVE      '00'          DDDCSE
      C                   ELSE
      C                   MOVE      *BLANKS       DDDCSE
      C                   END
- 
+
      C                   ELSE
      C                   MOVE      DCSE          DDDCSE
      C                   END
@@ -679,7 +681,7 @@
                                                                                               207006
      C                   MOVE      MRKT          DDMRKT                                       207006
      C                   ENDIF                                                                207006
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -700,7 +702,7 @@
      C     RECI          OREQ      'R'
      C                   MOVEL     'DELETED'     DDTranSts
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -714,11 +716,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -732,13 +734,13 @@
       *                                                               *
       *****************************************************************
      C     ZSEDIT        BEGSR
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15           15 0
      C                   PARM                    ZDECS             1 0
      C                   PARM                    ZECHAR            1
      C                   PARM                    ZOUT21           21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -752,13 +754,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -778,10 +780,10 @@
      C                   MOVEL     DDACTN        ##ACTN            1
      C                   MOVEL     *BLANK        DPMVScnFmt
      C                   MOVEL     ##ACTN        DDACTN
- 
+
      C                   MOVEL     *BLANK        DDSecSts
      C                   MOVEL     *BLANK        DDTranSts
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -795,9 +797,9 @@
       *                                                               *
       *****************************************************************
      C     SRSecSts      BEGSR
- 
+
       * Access Security details
- 
+
      C     DPSS          CHAIN     SECTYDF                            99
       *
       ** DATABASE ERROR
@@ -808,7 +810,7 @@
      C                   MOVEL     '001'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C     SEC_RECI      IFEQ      'M'
      C                   MOVE      'MATURED'     DDSecSts
      C                   END
@@ -819,9 +821,9 @@
      C                   KFLD                    SEC_NMCY                       CPB001
      C                   KFLD                    SEC_SITP                       CPB001
      C     KLINVT        CHAIN     INVTPDF                            99        CPB001
- 
+
      C
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -835,7 +837,7 @@
       *                                                               *
       *****************************************************************
      C     SrCurrDet     BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -850,7 +852,7 @@
      C                   MOVEL     '002'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -863,7 +865,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       **  PROGRAM PARAMETERS
@@ -880,7 +882,7 @@
       *
       ** Output parameters
       ** -----------------
- 
+
       ** Transaction  screen format
       ** Fx Rate
       ** Mul/Div Indicator
@@ -974,7 +976,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'S01445'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C                   MOVEL     'SCSARDPD'    DBFILE
@@ -982,7 +984,7 @@
      C                   MOVEL     'S01445'      DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           S01445            1
      C                   ELSE

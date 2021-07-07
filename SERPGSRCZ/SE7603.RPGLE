@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CGL029             Date 01Sep03               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -196,12 +198,12 @@
      D WDHead          S              1A   INZ('N')
      D WDTail          S              1A   INZ('N')
      D WTotal          S              1A   INZ('N')
- 
+
      D WTNMP           S             15P 0 INZ(*ZERO)
      D WTAMD           S             15P 0 INZ(*ZERO)
      D WTTAX           S             15P 0 INZ(*ZERO)
      D WTSAT           S             15P 0 INZ(*ZERO)
- 
+
      D WPTAX           S             13P 0 INZ(*ZERO)
      D WNDIV           S             13P 0 INZ(*ZERO)
      D WCpRte          S             11P 7 INZ(*ZERO)
@@ -211,23 +213,23 @@
      D WRqstNPag       S              1A   INZ(' ')
      D WPevt           S              2A
      D WDate           S              5A
- 
+
      D WNBDP           S              1  0
- 
+
      D PSeqs           S              5A
      D PMode           S              1A
      D PSEnty          S              3A
      D PZSErr          S              1A
      D PZSNum          S              6P 0
      D PZSNumU         S              6P 0
- 
+
      D PRtcd           S              7A
      D POptn           S              7A
      D PKeyC           S             10A
      D PKySt           S              7A
      D PBrch           S              3A
      D PCurr           S              3A
- 
+
      D OldTXBS         S              2A
      D OldPBCA         S              3A
      D OldPSSH         S             10A
@@ -243,7 +245,7 @@
      D PrvPNCY         S              3A                                                      194357
      D PrvWCpRte       S             11P 7                                                    194357
      D PrvCRTX         S              2A                                                      194357
- 
+
      D RqdLn1          S              3P 0
      D DifLn1          S              3P 0
       *
@@ -270,7 +272,7 @@
       *
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -281,7 +283,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -409,7 +411,7 @@
       ** Accumulate total lines.
      C                   EXSR      SRTotalL
      C                   ENDIF
- 
+
      C                   READ      POSETW3                              8889
       *
       ** If error reading file, write error message then exit.
@@ -500,7 +502,7 @@
       *****************************************************************
       *
      C     SRRtvBrDt     BEGSR
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM                    PRtCd
@@ -508,7 +510,7 @@
      C                   PARM      PBCA          PBrch
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 006
@@ -520,7 +522,7 @@
      C                   EVAL      RBRCD = A8BRCD
      C                   EVAL      RBRNM = A8BRNM
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -571,11 +573,11 @@
      C                   OUT       LDA
      C                   EXSR      *PsSR
      C                   ELSE
- 
+
      C                   EVAL      WCpRte = *ZEROS
- 
+
       ** Save coupon rate to be used for output
- 
+
      C                   IF        PEVT = 'CP'
      C                   EVAL      WCpRte = SNCR
      C                   ELSE
@@ -648,13 +650,13 @@
       ** Gross dividend.
       *
      C                   EVAL      ZFld15 = *ZEROS
- 
+
      C                   IF        PEVT = 'MT'
      C                   EVAL      ZFLD15 = DAMT
      C                   ELSE
      C                   EVAL      ZFld15 = PAMD
      C                   ENDIF
- 
+
      C                   EVAL      ZDecs = A6NBDP
      C                   EXSR      SRFmtAmtO
      C                   EVAL      RPAMD = ZOut21
@@ -675,7 +677,7 @@
      C                   ELSE
      C                   EVAL      WNDIV = PAMD - WPTAX
      C                   ENDIF
- 
+
      C                   EVAL      ZFld15 = *ZEROS
      C                   EVAL      ZFld15 = WNDIV
      C                   EVAL      ZDecs = A6NBDP
@@ -691,16 +693,16 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmtO     BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    ZFld15
      C                   PARM                    ZDecs
      C                   PARM                    ZECode
      C                   PARM      *Blanks       ZEChar
      C                   PARM      *Blanks       ZOut21
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -906,14 +908,14 @@
       ** Currency.
       *
      C                   EVAL      RPNCY = PNCY
- 
+
      C                   EVAL      ZECode = ' '
      C                   MOVE      WCpRte        ZFld15
      C                   EVAL      ZDecs = 7
      C                   EXSR      SRFmtAmtO
      C                   MOVE      ZOut21        WCpRatA
      C                   MOVEL     WCpRatA       RCPRT
- 
+
      C                   IF        PEVT = 'MT'
      C                   MOVE      *BLANKS       RCPRT
      C                   ENDIF
@@ -927,13 +929,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDat      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *Blanks       PADateOut
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -941,15 +943,15 @@
       *  SRCurr - Get currency details                                *
       *****************************************************************
      C     SRCurr        BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCurr
@@ -958,7 +960,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1032,7 +1034,7 @@
       *****************************************************************
       *
      C     SRRtvTXRT     BEGSR
- 
+
      C                   IF        TXBS <> *BLANKS                              185735
                                                                                 185735
      C                   CALL      'AOTXBSR0'
@@ -1043,7 +1045,7 @@
      C                   PARM      PDUD          PIDATE
      C                   PARM      *BLANKS       PINARR
      C                   PARM      *ZEROS        PIRATE
- 
+
      C                   IF        PIRTCD <> *BLANKS AND
      C                             PIRTCD <> '*NRF   '
      C                   MOVEL     PDUD          WDate
@@ -1056,20 +1058,20 @@
      C                   ELSE                                                   185735
      C                   EVAL      PIRATE = 0                                   185735
      C                   ENDIF                                                  185735
- 
+
      C                   MOVEL     *BLANKS       RTXBS
      C                   MOVE      *BLANKS       ZFld15
- 
+
      C                   IF        PIRTCD = *BLANKS
      C                   MOVEL     TXBS          RTXBS
      C                   MOVE      PIRATE        ZFld15
      C                   ENDIF
- 
+
      C                   EVAL      ZECode = ' '
      C                   EVAL      ZDecs = 4
      C                   EXSR      SRFmtAmtO
      C                   MOVE      ZOut21        RTXRT
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1128,7 +1130,7 @@
      C                   IF        RCount = 0
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** End Program and Return.
@@ -1184,12 +1186,12 @@
       *****************************************************************
       *
      C     *InzSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PSeqs
      C                   PARM                    PMode
      C                   PARM                    PParm
- 
+
      C                   IF        Eventype = 'MA'
      C                   EVAL      Eventype = 'MT'
      C                   ENDIF
@@ -1236,7 +1238,7 @@
      C                   KFLD                    PSSH
      C                   KFLD                    PDUD
      C                   KFLD                    PEVT
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT

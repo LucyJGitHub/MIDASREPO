@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -154,7 +156,7 @@
      D PAmendOk        S              1A
      D CSE031          S              1A
      D PPROT           S              1A
- 
+
      D WAmt1           S             15A
      D WAAmt2          S             15A
       *
@@ -201,7 +203,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -211,7 +213,7 @@
       *                                                               *
       *****************************************************************
      C     SRCompare     BEGSR
- 
+
      C                   EXSR      SRSetInds
       *
       *
@@ -243,12 +245,12 @@
      C                   MOVEL     DDBS01        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS01       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS01'
@@ -294,12 +296,12 @@
      C                   MOVEL     DDBS02        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS02       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS02'
@@ -345,12 +347,12 @@
      C                   MOVEL     DDBS03        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS03       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS03'
@@ -396,12 +398,12 @@
      C                   MOVEL     DDBS04        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS04       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS04'
@@ -447,12 +449,12 @@
      C                   MOVEL     DDBS05        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS05       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS05'
@@ -498,12 +500,12 @@
      C                   MOVEL     DDBS06        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS06       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS06'
@@ -549,12 +551,12 @@
      C                   MOVEL     DDBS07        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS07       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS07'
@@ -600,12 +602,12 @@
      C                   MOVEL     DDBS08        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS08       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS08'
@@ -651,12 +653,12 @@
      C                   MOVEL     DDBS09        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS09       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS09'
@@ -702,12 +704,12 @@
      C                   MOVEL     DDBS10        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBS10       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBS10'
@@ -728,7 +730,7 @@
       *
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -738,18 +740,18 @@
       *  SRZAmt - Align amount                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZAmt        BEGSR
- 
+
      C                   Z-ADD     11            ZADIG
      C                   Z-ADD     7             ZADEC
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1021,7 +1023,7 @@
      C                   EVAL      ADDSI10 = DDSI10
      C                   ENDIF
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1033,7 +1035,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

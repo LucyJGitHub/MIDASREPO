@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR1075401          Date 01Jun20               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. AR1075401          Date 01Jun20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -44,8 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR1075401 - Increase parameter field @PNOPO of SE6710/SE7570.*
-      *              (Child: AR1075402)                               *      
+      *              (Child: AR1075402)                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -61,9 +63,9 @@
       ** ¦ Manually included F-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      FSECTY     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,64 +84,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -147,30 +149,30 @@
       *
       ** Input fields
       ** ------------
- 
+
       ** Screen fields
      D DDDPNA          S             12A
      D DDDPID          S             10A
      D DDDPOD          S             10A
      D DDPTFR          S              4A
- 
+
       ** Transaction Details
      D DPSS            S             10A
      D DPBA            S              3A
      D*DPBN*****       S              6S 0                                                    CSD027
      D DPBN            S              6A                                                      CSD027
      D BFCLASCust      S              1A
- 
+
      ** System Details
- 
+
      D RUND            S              5P 0
      D S01496          S              1A
      D FCR997          S              4A
- 
+
       ** Output Fields
      D DDDPNAOk        S              1A
      D DPNA            S             11P 0
- 
+
       * Working Variables
      D WK11N           S             11P 0
      D FACTOR          S             10P 0
@@ -193,19 +195,19 @@
      D WWNOBL          S             13P 0
      D*WWNOPO***       S             13P 0                                                 AR1075401
      D WWNOPO          S             15P 0                                                 AR1075401
- 
+
       * Parameters for ZALIGN
      D ZFIELD          S             16A
      D ZADEC           S              1P 0
      D ZADIG           S              2P 0
      D ZALIGNok        S              1A
- 
+
       ** Index for arrays of error message ids etc
       ** Index for arrays of warning message ids etc
- 
+
      D Idx             S              3P 0
      D WIx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -213,7 +215,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -221,11 +223,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -234,7 +236,7 @@
      C                   MOVE      *BLANK        WMsgIDXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
- 
+
      C                   Z-ADD     *ZEROS        DPNA
       *
       ** VALIDATION
@@ -268,9 +270,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DPNAVE        BEGSR
- 
+
      C     DDDPNA        IFEQ      *BLANKS
       *
       ** Error 218
@@ -285,17 +287,17 @@
       *
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDDPNA        ZFIELD
- 
+
      C     DPSS          CHAIN     SECTYDF                            33
      C                   Z-ADD     NMDP          ZADEC
      C     11            SUB       NMDP          ZADIG
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C     ZALIGNok      IFEQ      'N'
       *
       ** Error 218
@@ -309,7 +311,7 @@
       ** Update Transaction
       *
      C                   MOVE      ZFIELD        DPNA
- 
+
      C     DPNA          IFEQ      *ZEROS
       *
       ** Error 218
@@ -325,15 +327,15 @@
      C     SDNM          IFNE      *ZEROS
      C                   MOVE      ZFIELD        WK11N
      C                   Z-ADD     1             FACTOR
- 
+
      C                   DO        NMDP
      C     FACTOR        MULT      10            FACTOR
      C                   ENDDO
- 
+
      C     WK11N         DIV       FACTOR        WK158N
      C     WK158N        DIV       SDNM          WK11N2
      C                   MVR                     WK147N
- 
+
      C     WK147N        IFNE      *ZEROS
       *
       ** Error 219
@@ -351,14 +353,14 @@
      C                   MOVEL     'MMA0668'     WMsgidXAr(WIx)
      C                   END
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -370,9 +372,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DPNAVW        BEGSR
- 
+
      C     S01496        IFEQ      'Y'
      C     CSE007        OREQ      'Y'
      C     CEU017        OREQ      'Y'
@@ -392,16 +394,16 @@
      C                   MOVE      DPBA          @PBRCD
      C                   MOVE      DPSS          @PSESN
      C                   MOVE      DPBN          @PCNUM
- 
+
      C     DDPTFR        IFEQ      FCR997
      C     BGN4ST        ANDNE     'Y'                                          CPB001
      C                   MOVE      '9997'        @PPTFR
      C                   ELSE
      C                   MOVE      DDPTFR        @PPTFR
      C                   ENDIF
- 
+
      C                   MOVE      'Y'           @POBPO
- 
+
      C     DDDPOD        IFNE      *BLANKS
      C     DDDPID        ANDEQ     *BLANKS
      C                   MOVE      'P'           @PBLTY
@@ -517,7 +519,7 @@
      C     DDDPID        ANDNE     *BLANKS
       *
      C                   MOVE      'Y'           WarnFound
- 
+
      C     @PPTFR        IFEQ      *BLANKS
       *
       ** Warning WR2
@@ -574,15 +576,15 @@
      C                   END
      C                   GOTO      EDPNAV
      C                   ELSE
- 
+
      C     WWNOBL        IFNE      *ZEROS
- 
+
      C     DDDPID        IFNE      *BLANKS
      C     DDDPOD        ANDEQ     *BLANKS
      C     WWNOPO        ADD       DPNA          WWFONO
- 
+
      C     WWFONO        IFGT      WWNOBL
- 
+
      C                   ADD       1             Idx
      C                   MOVEL     'DDDPNA'      FldNamXAr(Idx)
      C                   MOVE      'N'           DDDPNAOk
@@ -598,12 +600,12 @@
      C                   MOVEL     'MMA0676'     MsgIdXAr(Idx)
      C                   ENDIF
      C                   GOTO      EDPNAV
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
      C     WWNOPO        SUB       DPNA          WWFONO
- 
+
      C     WWFONO        IFLT      WWNOBL
      C                   ADD       1             Idx
      C                   MOVEL     'DDDPNA'      FldNamXAr(Idx)
@@ -620,7 +622,7 @@
      C                   MOVEL     'MMA0676'     MsgIdXAr(Idx)
      C                   ENDIF
      C                   GOTO      EDPNAV
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -630,7 +632,7 @@
       ** ... search if there is Specific Block for Customer and Secty
       *
      C                   MOVE      RUND          @PRDNB
- 
+
      C                   CALL      'SE6710'
      C                   PARM                    @PRDNB
      C                   PARM                    @POBPO
@@ -661,7 +663,7 @@
      C                   EndIf                                                                CGL011
      C     WWNOBL        IFEQ      *HIVAL
      C                   MOVE      'Y'           WarnFound
- 
+
      C     @PPTFR        IFEQ      *BLANKS
       *
       ** Warning WR3
@@ -679,18 +681,18 @@
      C                   MOVEL     'MMA0129'     WMsgIdXAr(WIx)
      C                   MOVE      'W'           DDDPNAOk
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     WWNOBL        IFNE      *ZEROS
- 
+
      C     DDDPID        IFNE      *BLANKS
      C     DDDPOD        ANDEQ     *BLANKS
      C     WWNOPO        ADD       DPNA          WWFONO
- 
+
      C     WWFONO        IFGT      WWNOBL
      C                   MOVE      'Y'           WarnFound
- 
+
      C     @PPTFR        IFEQ      *BLANKS
       *
       ** Warning WR4
@@ -708,15 +710,15 @@
      C                   MOVEL     'MMA0130'     WMsgIdXAr(WIx)
      C                   MOVE      'W'           DDDPNAOk
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
      C     WWNOPO        SUB       DPNA          WWFONO
- 
+
      C     WWFONO        IFLT      WWNOBL
      C                   MOVE      'Y'           WarnFound
- 
+
      C     @PPTFR        IFEQ      *BLANKS
       *
       ** Warning WR4
@@ -734,7 +736,7 @@
      C                   MOVEL     'MMA0130'     WMsgIdXAr(WIx)
      C                   MOVE      'W'           DDDPNAOk
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -743,9 +745,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C     EDPNAV        ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -757,13 +759,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Return Code Error Indicator (1A)
      C                   PARM                    RetCodeIn
- 
+
       ** Received Parameters
       ** -------------------
       * Screen Inputs
@@ -775,7 +777,7 @@
      C                   PARM                    DDDPID
      C                   PARM                    DDDPOD
      C                   PARM                    DDPTFR
- 
+
       * Transaction Details
       * Security Shortname (10A)
       * Branch (3A)
@@ -785,10 +787,10 @@
      C                   PARM                    DPBA
      C                   PARM                    DPBN
      C                   PARM                    BFCLASCust
- 
+
      **ICD
      ** System Details
- 
+
      ** Rundate  (5P 0)
      ** S01496 Indicator (1A)
      ** Reference Attached (4A)
@@ -798,11 +800,11 @@
      C                   PARM                    CSE007            1
      C                   PARM                    CEU017            1
      C                   PARM                    BGN4ST            1            CPB001
- 
- 
+
+
      ** Returned Parameters
      ** -------------------
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
@@ -810,21 +812,21 @@
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
- 
+
       ** Nominal Amount Ok Indicator (1A)
       ** Nominal Amount (11P 0)
      C                   PARM                    DDDPNAOk
      C                   PARM                    DPNA
      C                   PARM                    @PCOLF            1                          CGL011
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

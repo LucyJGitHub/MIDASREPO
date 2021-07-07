@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 01Sep14               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *

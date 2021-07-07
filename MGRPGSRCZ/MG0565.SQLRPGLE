@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD027477A          Date 26Jun14               *
       *                 CSW210             Date 04May10               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016                                  *

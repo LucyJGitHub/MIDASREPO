@@ -14,11 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. CSD079             Date 05Feb07               *
+      *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -75,7 +77,7 @@
       * *PSSR       Error processing                                  *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK
       ** Security Detail
      F                                     PREFIX(SE_)
@@ -87,7 +89,7 @@
       ** Treaty Withholding Tax Detail - WT
      FSDBNFOL2  IF   E           K Disk
       ** Beneficial Owner Detail
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -125,48 +127,48 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** ICD/SD Data Structures
       ** ----------------------
- 
+
       ** Customer file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
                                                                                 CAP004
       ** Data Structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** DS for Access Programs, Short DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @Loc            S                   LIKE(BBCOLC)
      D @NoDoc          S              1
      D @NoTax          S              1
      D @SetExCode      S              1
      D @SITP           S                   LIKE(SE_SITP)
      D @TreatyTax      S              1
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -180,7 +182,7 @@
       *
       ** Get Security Details
       *
- 
+
      C     InSecty       CHAIN     SECTY                              21
      C     *IN21         IFEQ      '1'
      C     *LOCK         IN        LDA
@@ -201,7 +203,7 @@
      C                   EVAL      @TreatyTax = 'N'
      C                   ELSE
      C                   EVAL      @TreatyTax = 'Y'
- 
+
      C                   ENDIF
       *
       ** If Treaty Tax processing is needed
@@ -249,7 +251,7 @@
       ** If Beneficial Owner number is *BLANK then get customer information
       *
      C                   IF        InBen = *BLANK
- 
+
      C                   EXSR      SRCustInfo
       *
       ** ELSE get Beneficial Owner information.
@@ -265,7 +267,7 @@
       *
      C                   SETON                                        LR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -277,7 +279,7 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCustInfo    BEGSR
       *
       ** Get withholding tax information for
@@ -311,9 +313,9 @@
       ** documentation is 'L'or 'Y', then it is exempt from Tax.
       *
      C                   IF        SE_APIE = 'Y'
- 
+
      C                   IF        WHDCRC = 'L' or WHDCRC = 'Y'
- 
+
      C                   IF        PROT = '1' OR PROT = '3' or PROT = '5'
      C                             OR PROT = '6' OR PROT = '8' or PROT = '9'
      C                   EVAL      @NoTax = 'Y'
@@ -333,7 +335,7 @@
      C                   EVAL      OutExcd = WTEXPI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -352,21 +354,21 @@
       ** code from treaty detail.
       *
      C                   EVAL      @SetExCode = 'Y'
- 
+
      C                   IF        WHEXCD <> *BLANKS
      C                   EVAL      OutExcd = WHEXCD
      C                   ELSE
      C                   EVAL      OutExcd = WTEXCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Get Tax rate for Customer with no documentation.
       *
      C                   IF        WHDCRC = 'N' or @NoDoc = 'Y'
- 
+
      C                   EVAL      OutBasket  = WTDBDC
       *
       ** If position settlement is for Maturity and OID indicator is 'S'
@@ -377,7 +379,7 @@
      C                   IF        InEvent = 'MT' and SE_OIDI = 'S'
      C                   EVAL      OutBasket  = WTDRBW
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Get Tax rate for Undeclared Customer - Backup withholding tax rate
@@ -410,11 +412,11 @@
      C                   ENDIF
      C                   EVAL      @SetExCode = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -427,9 +429,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBenInfo     BEGSR
- 
+
      C                   EVAL      @BenNo = *BLANKS
      C                   MOVEL     InCustNo      @BenNo
      C                   MOVE      InBen         @BenNo
@@ -469,10 +471,10 @@
       **         from the Customer.
       *
      C                   ELSE
- 
+
      C                   EVAL      @Loc = BBCOLC
      C                   ENDIF
- 
+
      C                   EXSR      SRTaxDetail
       *
       ** Check if Customer is exempted from Tax.
@@ -482,12 +484,12 @@
       ** documentation is 'L'or 'Y', then it is exempt from Tax.
       *
      C                   IF        SE_APIE = 'Y'
- 
+
      C                   IF        BNDCRC = 'L' or BNDCRC = 'Y'
- 
+
      C                   IF        PROT = '1' OR PROT = '3' or PROT = '5'
      C                             OR PROT = '6' OR PROT = '8' or PROT = '9'
- 
+
      C                   EVAL      @NoTax = 'Y'
       *
       ** Tax basket = Default Portfolio Exemption Tax Basket
@@ -505,7 +507,7 @@
      C                   EVAL      OutExcd = WTEXPI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -524,19 +526,19 @@
       ** code from treaty detail.
       *
      C                   EVAL      @SetExCode = 'Y'
- 
+
      C                   IF        BNEXCD <> *BLANKS
      C                   EVAL      OutExcd = BNEXCD
      C                   ELSE
      C                   EVAL      OutExcd = WTEXCD
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Get Tax rate for Customer with no documentation.
       *
      C                   IF        BNDCRC = 'N' or @NoDoc = 'Y'
- 
+
      C                   EVAL      OutBasket  = WTDBDC
       *
       ** If position settlement is for Maturity and OID indicator is 'S'
@@ -547,7 +549,7 @@
      C                   IF        InEvent = 'MT' and SE_OIDI = 'S'
      C                   EVAL      OutBasket  = WTDRBW
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Get Tax rate for Undeclared Customer - Backup withholding tax rate
@@ -580,12 +582,12 @@
      C                   ENDIF
      C                   EVAL      @SetExCode = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        *IN33 = '1'
       *
       ** 1. No Docoumentation - use the no documentation basket
@@ -596,7 +598,7 @@
      C                   EVAL      OutExcd = '  '
      C                   EVAL      @SetExCode = '  '
      C                   EVAL      OutBasket  = WTDBDC
- 
+
      C                   ELSE
       ** CASE 2
      C                   EVAL      OutBasket  = WTTXBS
@@ -604,10 +606,10 @@
      C                   EVAL      OutExcd = WTEXCD
      C                   EVAL      @SetExCode = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -620,14 +622,14 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTaxdetail   BEGSR
       *
       ** Get withholding tax information for
       ** Country of Treaty, Investment type and location.
       *
      C                   MOVE      SE_SITP       @SITP
- 
+
      C     Wt_TreatKy    CHAIN     SDWHTTL0                           31
       *
       ** If no record found, then check if there is a record for general use
@@ -687,7 +689,7 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSR        BEGSR
       *
       ** Key Lists for Withholding Tax Customer detail
@@ -764,7 +766,7 @@
      C                   EVAL      @NoTax = 'N'
      C                   EVAL      @NoDoc = 'N'
      C                   EVAL      @SetExCode = 'N'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

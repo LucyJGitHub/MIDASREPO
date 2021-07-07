@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSC022             Date 16Mar04               *
       *                 CGL029             Date 01Sep03               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -74,11 +76,11 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEDPMVBDF CF   E             WORKSTN
      F                                     SFILE(SEDPMVS1:@@RRN)
      F                                     SFILE(SEDPMVS3:@@RRN)                CAP004
- 
+
      FDPTMV     IF   E           K DISK    INFSR(*PSSR)
      FDPTMVR    IF   E           K DISK    INFSR(*PSSR)                                       203798
      F                                     RENAME(DPTMVDF:DPTMVRF)                            203798
@@ -86,7 +88,7 @@
      FSEDPMVL0  IF   E           K DISK    INFSR(*PSSR)                         CAP004
      F                                     RENAME(DPTMVDF:DPTMVFO)              CAP004
      F/COPY WNCPYSRC,SEDPMVBF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -105,57 +107,57 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
       ** General ledger details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)                                  CSE016
       **  Data structure for securities trading details                                       CSE016
- 
+
       ** DS for Access programs, short DS
       ** DS for Access Programs, long DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -172,7 +174,7 @@
      D PFNM2           S             50A                                                      CSE016
      D PFNM3           S             50A                                                      CSE016
      D/COPY WNCPYSRC,SEDPMVBD01
- 
+
                                                                                               203798
       * Current Selection Fields                                                              203798
      D                 DS                                                                     203798
@@ -201,13 +203,13 @@
       *
      IDPTMVDF
      I              RECI                        RECI_DPMV
- 
+
      IDPTMVRF                                                                                 203798
      I              RECI                        RECI_DPMV                                     203798
                                                                                               203798
      ISECTYDF
      I              RECI                        RECI_SEC
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -281,7 +283,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBldSfl      BEGSR
       *
       * Set indicator and flag for Midas (back) office trade number key used    CAP004
@@ -332,7 +334,7 @@
      C                   KFLD                    @@DPSS           10
      C                   KFLD                    @@DPRN            6
      C/COPY WNCPYSRC,SEDPMVBC01
- 
+
      C     @@DPSS        IFEQ      *BLANK                                                     203798
      C     @@DPRN        ANDNE     *BLANK                                                     203798
      C     ReferKey      SETLL     DPTMVR                                                     203798
@@ -437,13 +439,13 @@
      C                   MOVEL     '1'           @INKL
      C                   RETURN
      C                   END
- 
+
      C                   END
                                                                                               203798
      C                   ENDDO                                                                203798
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                    CAP004
       *****************************************************************         CAP004
@@ -658,7 +660,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRdSfl       BEGSR
       *
       ** Read the subfile for selected records
@@ -677,7 +679,7 @@
       *
      C     *IN99         IFNE      '1'
      C     DDOPT         ANDNE     *BLANK
- 
+
      C     DDOPT         IFEQ      'A'
      C     DDOPT         OREQ      'D'
      C/COPY WNCPYSRC,SEDPMVBC07
@@ -685,14 +687,14 @@
      C                   ELSE
      C                   MOVE      'E'           @OptSel
      C                   END
- 
+
      C                   MOVE      DDDPRN        @RefSel
      C                   MOVE      DDDPSS        @SecSel
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -705,7 +707,7 @@
       * Calls:  SRCvtDat                                              *
       *                                                               *
       ******************************************************************
- 
+
      C     SRFmtDet      BEGSR
       *
       ** Reference Number
@@ -728,21 +730,21 @@
       ** In Date
       *
      C                   MOVE      DPID          DDDEPOT
- 
+
      C                   MOVE      *BLANKS       DDDATE
- 
+
      C     DPMD          IFNE      999999
      C                   Z-ADD     DPMD          ZDAYNO            5 0
- 
+
      C                   EXSR      SRCvtDat
- 
+
      C                   MOVE      ZDATE         DDDATE
      C                   ELSE
      C                   MOVE      '999999'      DDDATE
      C                   END
- 
+
      C                   END
- 
+
      C     DPMV          IFEQ      'WO'
       *
       ** Out Depot
@@ -752,17 +754,17 @@
      C                   MOVE      DPOD          DDDEPOT
       *
      C                   MOVE      *BLANKS       DDDATE
- 
+
      C     DPDO          IFNE      999999
      C                   Z-ADD     DPDO          ZDAYNO
- 
+
      C                   EXSR      SRCvtDat
- 
+
      C                   MOVE      ZDATE         DDDATE
      C                   ELSE
      C                   MOVE      '999999'      DDDATE
      C                   END
- 
+
      C                   END
       *
       ** Booking Branch
@@ -790,7 +792,7 @@
      C                   MOVEL     'SECTYD'      DBFILE                        * DBERR 01*
      C                   MOVEL     '001'         DBASE                         ***********
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
       *
       ** Format Nominal Amount
@@ -798,11 +800,11 @@
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DPNA          ZFIELD
      C                   MOVE      NMDP          ZADEC
- 
+
      C                   EXSR      SRZEDIT
- 
+
      C                   MOVE      ZFIELD        DDDPNA
- 
+
      C                   END
       *                                                                                       CSE016
       ** Format security report description                                                   CSE016
@@ -836,7 +838,7 @@
      C                   MOVE      '1'           *IN95
      C                   MOVEL     'ZZGBMSGF'    MSGNM
      C                   MOVEL     'ZZM1614'     MSGDNB
- 
+
      C                   CALL      'SDRTVTXT'
      C                   PARM                    MSGDNB            7
      C                   PARM                    MSGNM            10
@@ -847,9 +849,9 @@
      C                   MOVE      *BLANKS       DDTEXT
      C                   END
      C/COPY WNCPYSRC,SEDPMVBC08
- 
+
      C                   ENDSR
- 
+
      C*****************************************************************
       /EJECT
       *****************************************************************
@@ -862,7 +864,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRdTrans     BEGSR
       *
       **  Reset End of File indicator
@@ -905,20 +907,20 @@
       *
      C     CallProg      IfEq      *Blanks                                                    CSE039
      C     @@EOF         IFNE      'Y'
- 
+
      C     BJSBRC        IFEQ      *BLANK
      C                   CALL      'ZVACTBU'
      C                   PARM      'E'           ZACTN
      C                   PARM                    DPBA
      C                   PARM                    @@ERR
- 
+
      C     BKOBUV        IFEQ      'Y'
      C     @@ERR         ANDEQ     *ZERO
      C                   CALL      'ZVOBU'
      C                   PARM                    ORBR
      C                   PARM                    @@ERR
      C                   END
- 
+
      C                   END
      C                   END
      C                   EndIf                                                                CSE039
@@ -976,7 +978,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValRef      BEGSR
       *
       ** Validate that the Reference Number is numeric or blank
@@ -986,7 +988,7 @@
      C*******************MOVE      DDDPRN        @@TEST            1            CAP004
      C                   MOVE      DDPRN         @@TEST            1            CAP004
      C                   TESTZ                   @@TEST                   99
- 
+
      C*****DDDPRN        IFEQ      *BLANKS                                      CAP004
      C     DDPRN         IFEQ      *BLANKS                                      CAP004
      C     *IN98         OREQ      '1'
@@ -1006,7 +1008,7 @@
       *
      C*******************MOVE      DDDPSS        @@DPSS                         CAP004
      C                   MOVE      DDPSS         @@DPSS                         CAP004
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1019,13 +1021,13 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZEDIT       BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM      NMDP          ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1058,7 +1060,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInit        BEGSR
       *
       ** Clear Outputs
@@ -1070,7 +1072,7 @@
      C                   MOVE      '0'           @INKC
      C                   MOVE      '0'           @INKL
      C                   MOVE      '0'           *IN20                          CAP004
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -1093,7 +1095,7 @@
       **  Terminte the program
       *
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1216,9 +1218,9 @@
      C                   KFLD                    @@FOTD                                       203798
      C                   KFLD                    @@DPSS2                                      203798
      C                   KFLD                    @@DPRN2                                      203798
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

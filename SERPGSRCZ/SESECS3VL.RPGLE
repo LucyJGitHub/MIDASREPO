@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -94,7 +96,7 @@
       *
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,SESEC3V001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -340,25 +342,25 @@
       ** Issue date validation.
       *
       /COPY WNCPYSRC,SESEC3V004
- 
+
      C                   EXSR      SRIssDte
- 
+
       /COPY WNCPYSRC,SESEC3V005
       *
       ** Issue price validation.
       *
       /COPY WNCPYSRC,SESEC3V006
- 
+
      C                   EXSR      SRIssPrc
- 
+
       /COPY WNCPYSRC,SESEC3V007
       *
       ** Lead manager validation.
       *
       /COPY WNCPYSRC,SESEC3V008
- 
+
      C                   EXSR      SRLdMgr
- 
+
       /COPY WNCPYSRC,SESEC3V009
       *
       ** Issue amount validation.
@@ -373,36 +375,36 @@
      C                             S1ERPY = 'Y'
      C                   EVAL      DDISA2 = DDISA1
      C                   ENDIF
- 
+
      C                   EXSR      SRIssAmt
- 
+
       /COPY WNCPYSRC,SESEC3V011
       *
       ** Total underwritten validation.
       *
       /COPY WNCPYSRC,SESEC3V012
- 
+
      C                   EXSR      SRTtlUdw
- 
+
       /COPY WNCPYSRC,SESEC3V013
       *
       ** Allocation requested/received validation.
       *
       /COPY WNCPYSRC,SESEC3V014
- 
+
      C                   EXSR      SRAllReqRcv
- 
+
       /COPY WNCPYSRC,SESEC3V015
       *
       ** Fees detail validation.
       *
       /COPY WNCPYSRC,SESEC3V016
- 
+
      C                   IF        DDFECY <> *BLANK                                          BUG4734
      C                             OR DDNISS = 'Y'                                           BUG4734
      C                   EXSR      SRFeeCcy
      C                   ENDIF                                                               BUG4734
- 
+
       /COPY WNCPYSRC,SESEC3V017
       *                                                                                       CSE065
       ** Average Life Date validation                                                         CSE065
@@ -413,23 +415,23 @@
      C                             PProT <> '7'                                               CSE065
      C                   EXSR      SRAveLife                                                  CSE065
      C                   ENDIF                                                                CSE065
- 
+
       *
       ** Management fees due and received validation.
       *
       /COPY WNCPYSRC,SESEC3V018
- 
+
      C                   EXSR      SRMgmtFee
- 
+
       /COPY WNCPYSRC,SESEC3V019
       *
       ** Underwriting fees due and received validation.
       *
       /COPY WNCPYSRC,SESEC3V020
- 
+
      C                   EXSR      SRUndwFee
- 
- 
+
+
       /COPY WNCPYSRC,SESEC3V021
       *
       ** Private banking if active.
@@ -437,41 +439,41 @@
      C                   IF        BGN4ST = 'Y'
      C                             OR  CGL014 = 'Y'                                           CGL014
      C                   IF        BGN4ST = 'Y'                                               CGL014
- 
+
       /COPY WNCPYSRC,SESEC3V022
       *
       ** Principal paying agent validation.
       *
       /COPY WNCPYSRC,SESEC3V023
- 
+
      C                   EXSR      SRPPayAgnt
- 
+
       /COPY WNCPYSRC,SESEC3V024
       *
       ** Guarantor validation.
       *
       /COPY WNCPYSRC,SESEC3V025
- 
+
      C                   EXSR      SRGuarntr
- 
+
       /COPY WNCPYSRC,SESEC3V026
       **************************************                                                  CGL014
       ***Weighting*code*validation.*********                                                  CGL014
       **************************************                                                  CGL014
       /COPY WNCPYSRC,SESEC3V027
- 
+
      C**********         EXSR      SRWeiCode                                                  CGL014
- 
+
       /COPY WNCPYSRC,SESEC3V028
       *
       ** Nature of account validation.
       *
       /COPY WNCPYSRC,SESEC3V029
- 
+
      C                   EXSR      SRNatuAc
                                                                                               CGL014
      C                   ENDIF                                                                CGL014
- 
+
       /COPY WNCPYSRC,SESEC3V030
                                                                                               CGL014
      C                   IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                             CGL014
@@ -479,7 +481,7 @@
       ** PB Instrument Type.
       *
       /COPY WNCPYSRC,SESEC3V031
- 
+
      C                   EXSR      SRPBInTp
                                                                                               CGL014
       ** Weighting code validation.                                                           CGL014
@@ -487,9 +489,9 @@
      C                   EXSR      SRWeiCode                                                  CGL014
                                                                                               CGL014
      C                   ENDIF                                                                CGL014
- 
+
       /COPY WNCPYSRC,SESEC3V032
- 
+
      C                   ELSE
      C                   EVAL      DDPPAG = *BLANKS
      C                   EVAL      DDGUAR = *BLANKS
@@ -503,7 +505,7 @@
      C                   EVAL      DDGUAR = *BLANKS                                           CGL014
      C                   EVAL      DDNATU = *BLANKS                                           CGL014
      C                   ENDIF                                                                CGL014
- 
+
       /COPY WNCPYSRC,SESEC3V033
       *                                                                         CSE023
       ** US Withholding Tax Treaty is active and processing is called           CSE023
@@ -516,7 +518,7 @@
      C                   EXSR      SRCSE023                                     CSE023
                                                                                 CSE023
      C                   ENDIF                                                  CSE023
- 
+
       *                                                                                       CSE075
       ** Validate coupon delay period, Validate Repayment Rate,                               CSE075
       ** Weighted Average coupon and Weighted Average Maturity                                CSE075
@@ -541,7 +543,7 @@
      C                   ENDIF                                                                CSE075
       *                                                                                       CSE075
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -549,13 +551,13 @@
       ** Hook to enable non-core subroutines to be included
       *
       /COPY WNCPYSRC,SESEC3V034
- 
+
       *****************************************************************
       *                                                               *
       *  SRIssDte - Issue Date Validation                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIssDte      BEGSR
       *
       ** Reset fields.
@@ -617,9 +619,9 @@
      C                   IF        RetCodeOut <> *BLANKS
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -627,7 +629,7 @@
       *  SRIssPrc - Issue Price Validation                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIssPrc      BEGSR
       *
       ** Reset fields.
@@ -678,9 +680,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -688,7 +690,7 @@
       *  SRLdMgr - Lead Manager Validation                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRLdMgr       BEGSR
       *
       ** Reset fields.
@@ -738,9 +740,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -748,7 +750,7 @@
       *  SRIssAmt - Issue Amount Validation                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIssAmt      BEGSR
       *
       ** Reset fields.
@@ -789,9 +791,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -799,7 +801,7 @@
       *  SRTtlUdw - Total Underwritten Validation                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTtlUdw      BEGSR
       *
       ** Reset fields.
@@ -842,7 +844,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -850,7 +852,7 @@
       *  SRAllReqRcv - Allocation Requested/Received Validation       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAllReqRcv   BEGSR
       *
       ** Reset fields.
@@ -893,7 +895,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -901,7 +903,7 @@
       *  SRFeeCcy - Fee Currency Validation                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFeeCcy      BEGSR
       *
       ** Reset fields.
@@ -956,7 +958,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************                       CSE065
       /EJECT                                                                                  CSE065
       *****************************************************************                       CSE065
@@ -1139,7 +1141,7 @@
       *  SRMgmtFee - Management Fees Due/Received Validation          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMgmtFee     BEGSR
       *
       ** Reset fields.
@@ -1185,7 +1187,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1193,7 +1195,7 @@
       *  SRUndwFee - Underwriting Fees Due/Received Validation        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUndwFee     BEGSR
       *
       ** Reset fields.
@@ -1239,7 +1241,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1247,7 +1249,7 @@
       *  SRPPayAgnt - Principal Paying Agent Validation               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPPayAgnt    BEGSR
       *
       ** Reset fields.
@@ -1297,9 +1299,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1307,7 +1309,7 @@
       *  SRGuarntr - Guarantor Validation                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGuarntr     BEGSR
       *
       ** Reset fields.
@@ -1357,9 +1359,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1367,7 +1369,7 @@
       *  SRWeiCode - Weighting Code Validation                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWeiCode     BEGSR
       *
       ** Reset fields.
@@ -1421,9 +1423,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1431,7 +1433,7 @@
       *  SRNatuAc - Nature of Account Validation                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNatuAc      BEGSR
       *
       ** Reset variables updated by each module
@@ -1481,9 +1483,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1491,7 +1493,7 @@
       *  SRPBInTp - PB Instrument Type Validation                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPBInTp      BEGSR
       *
       ** Reset variables updated by each module
@@ -1544,9 +1546,9 @@
      C                   IF        RetCodeOut <> *Blanks
      C                   EXSR      SRUpdatErrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************         CSE023
@@ -1732,9 +1734,9 @@
       *                from each validation module.                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRResetErrs   BEGSR
- 
+
      C                   EVAL      RetCodeOut = *BLANKS
       *
       ** Reset error and warning fields/message IDs/message
@@ -1743,13 +1745,13 @@
      C                   EVAL      FldNamXAr = *BLANKS
      C                   EVAL      MsgIDXAr  = *BLANKS
      C                   EVAL      MsgDtaXAr = *BLANKS
- 
+
      C                   EVAL      WFldNmXAr = *BLANKS
      C                   EVAL      WMsgIDXAr = *BLANKS
      C                   EVAL      WMsgDtXAr = *BLANKS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1758,7 +1760,7 @@
       *                received back from each validation module      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdatErrs   BEGSR
       *
       ** Update error fields/message IDs/message data (arrays).
@@ -1808,9 +1810,9 @@
      C                   MOVE      *BLANKS       WMSGDTAARR(Ix)
      C                   Eval      WIDX = ArrayMax - 1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1820,9 +1822,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -1966,9 +1968,9 @@
       ** Hook to enable non-core initial processing to be included
       *
       /COPY WNCPYSRC,SESEC3V035
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

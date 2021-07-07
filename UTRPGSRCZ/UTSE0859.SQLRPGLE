@@ -116,7 +116,10 @@
 
      C/EXEC SQL
      C+ DECLARE C1 CURSOR FOR
-     C+ SELECT * FROM SECTYD A
+     C+ SELECT
+     C+   A.RECI
+     C+ , A.SESN
+     C+ FROM SECTYD A
      C+ WHERE A.SESN NOT IN
      C+ (
      C+ SELECT X.SESESN

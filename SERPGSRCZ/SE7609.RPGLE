@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SE Flag Pos. Setl'mt for MG0565 regeneration')   *
+/*EXI *  TEXT('Midas SE Flag Pos. Setlmt for MG0565 regeneration')    *
       *****************************************************************
       *                                                               *
       *  Midas - Securities Trading Module                            *

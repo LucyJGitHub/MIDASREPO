@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058431           Date 08Jul21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058431 - Compilation issues on RP Program                  *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -81,11 +83,13 @@
       /COPY RPCPYSRC,RPFMTPPF
 
       ** The following /COPY contains various standard declares
-     C/COPY RPCPYSRC,Std_Dcl
+     C*COPY RPCPYSRC,Std_Dcl                                                                MD058431
+     C/COPY RPCPYSRC,STD_DCL                                                                MD058431
 
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
-     C/COPY RPCPYSRC,Mdn_Hd_DS
+     C*/COPY RPCPYSRC,Mdn_Hd_DS                                                             MD058431
+     C/COPY RPCPYSRC,MDN_HD_DS                                                              MD058431
 
       **   Composite Data
      D CompData        S                   LIKE(TransData) INZ(*BLANKS)

@@ -130,6 +130,8 @@
       *---------------------------------------------------------------*
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
+      *           - When Associated Front Office ID is not blanks     *
+      *             update Associated Front Office Transaction ID     *
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*
@@ -5366,7 +5368,8 @@
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_FRNT = APFOTranID
       ** If Associated Front Office Transaction ID is not blank                             MD057753
-      *  update Associated Front Office Transaction ID.                                     MD057753
+      ** update Associated Front Office Transaction ID.                                     MD057753
+      *                                                                                     MD057753
      C                   IF        APFOAsocID <> *BLANKS                                    MD057753
      C                   EVAL      V_AFRT = APFOAsocID
      C                   ENDIF                                                              MD057753

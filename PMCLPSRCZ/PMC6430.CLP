@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 250228             Date 22May20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058220           Date 05Jul21              */
+/*       Prev Amend No. 250228             Date 22May20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058220 - Dumps were generated in PMC6430 even if it       */
+/*                  successfully ran during COB.                     */
+/*                  Add mapping of fields QFTXT2 against GFTXT2 and  */
+/*                  QFLOIC against GFLOIC in the OPNQRY operation.   */
 /*       250228 - Error on OPNQRYF for PMPSTCPD.                     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase 2                            */
@@ -172,6 +177,16 @@
  /**********              GFSPBS) (QFTKDM GFTKDM) (QFMNPF GFMNPF) +
  /**********              (QFTKVL GFTKVL) (QFFPSI GFRESH) (QFVDAT +
  /**********              GFVDAT) (QFMVPC GFMVPC))                                 /*CPM005 250228*/
+ /********** OPNQRYF    FILE((PMPSTCPD)) FORMAT(PMPSTMQ0) MAPFLD((QFCNUM GFCNUM) +
+                          (QFPTFR GFPTFR) (QFINNR GFINNR) (QFVALG GFVALG) (QFCCY1 +
+                          GFCCY1) (QFCDP1 GFCDP1) (QFCNTR GFCNTR) (QFLIND GFLIND) +
+                          (QFTDSS GFTDSS) (QFAMT1 GFAMT1) (QFACIS GFACIS) (QFPLFX +
+                          GFPLFX) (QFMFXR GFMFXR) (QFMFMD GFMFMD) (QFMPRC GFMPRC) +
+                          (QFTRNB GFTRNB) (QFMODI GFMODI) (QFBYSF GFBYSF) (QFFOIS +
+                          GFFOIS) (QQTXT2 GFTXT2) (QFSTMN GFSTMN) (QFPPRC GFPPRC) +
+                          (QFMFXD GFMFXD) (QFNMDP GFNMDP) (QFSPBS GFSPBS) (QFTKDM +
+                          GFTKDM) (QFMNPF GFMNPF) (QFTKVL GFTKVL) (QFFPSI GFRESH) +
+                          (QFVDAT GFVDAT) (QFMVPC GFMVPC))                       /*250228 MD058220*/
              OPNQRYF    FILE((PMPSTCPD)) FORMAT(PMPSTMQ0) MAPFLD((QFCNUM GFCNUM) +
                           (QFPTFR GFPTFR) (QFINNR GFINNR) (QFVALG GFVALG) (QFCCY1 +
                           GFCCY1) (QFCDP1 GFCDP1) (QFCNTR GFCNTR) (QFLIND GFLIND) +
@@ -181,7 +196,8 @@
                           GFFOIS) (QQTXT2 GFTXT2) (QFSTMN GFSTMN) (QFPPRC GFPPRC) +
                           (QFMFXD GFMFXD) (QFNMDP GFNMDP) (QFSPBS GFSPBS) (QFTKDM +
                           GFTKDM) (QFMNPF GFMNPF) (QFTKVL GFTKVL) (QFFPSI GFRESH) +
-                          (QFVDAT GFVDAT) (QFMVPC GFMVPC)) /*250228*/
+                          (QFVDAT GFVDAT) (QFMVPC GFMVPC) (QFTXT2 GFTXT2) (QFLOIC +
+                          GFLOIC))                                                      /*MD058220*/
              CPYFRMQRYF FROMOPNID(PMPSTCPD) TOFILE(PMPSTMQ0) +
                           MBROPT(*ADD)  FMTOPT(*NOCHK)                /*CPM005*/
              CLOF       OPNID(PMPSTCPD)                               /*CPM005*/

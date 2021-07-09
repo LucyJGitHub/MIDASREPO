@@ -125,6 +125,10 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+      *
+      ** Alpha-numeric array                                                                MD058437
+      *                                                                                     MD058437
+     D ArrChk          S             36A   DIM(1) CTDATA PERRCD(1)                          MD058437
 
      DWKRDFRERR        S              1    INZ(' ')                                           CDE002
       ** Warning flag for Default Funding Rate                                                CDE002
@@ -137,6 +141,9 @@
      D ZADEC           S              1P 0                                                    CDE004
      D ZADIG           S              2P 0                                                    CDE004
      D ZALIGNok        S              1A                                                      CDE004
+                                                                                            MD058437
+     D WAlpha          S             36A                                                    MD058437
+     D WTemp           S              2P 0                                                  MD058437
                                                                                               CDE004
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -358,14 +365,13 @@
       * If CDE002 is on                                                                       CDE002
                                                                                               CDE002
      C                   IF        *IN21 = *OFF                                               CDE002
-     C                   MOVEL     DDRDFR        @NUMB20                                      CDE002
-     C                   MOVEL     @NUMB20       TNUMB20           2                        MD058437
+     C**********         MOVEL     DDRDFR        @NUMB20                             CDE002 MD058437
                                                                                               CDE002
       * Proceed if there is no warning or rate on screen has changed                          CDE002
                                                                                               CDE002
      C                   IF        WKRDFRERR <> 'Y'                                           CDE002
      C**********                   or DERDFR <> @NUMB20                              CDE002 MD058437
-     C                             or DERDFR <> TNUMB20                                     MD058437
+     C                             or DERDFR <> DDRDFR                                      MD058437
                                                                                               CDE002
      C                   MOVEL     DDRDFR        DERDFR                                       CDE002
      C                   EVAL      WKRDFRERR = *BLANKS                                        CDE002
@@ -378,14 +384,17 @@
      C                   EVAL      *IN15 = *ON                                                CDE002
      C                   ENDIF                                                                CDE002
                                                                                               CDE002
-      * Rate entered must be valid numeric between 1 and 99                                   CDE002
+      **Rate*entered must be valid numeric between 1 and 99                          CDE002 MD058437
+      * Rate entered must be valid                                                          MD058437
                                                                                               CDE002
      C                   IF        *IN15 = *OFF                                               CDE002
-     C                   TESTN                   DDRDFR               9898                    CDE002
+     C**********         TESTN                   DDRDFR               9898           CDE002 MD058437
                                                                                               CDE002
-     C                   IF        *IN98 = '0' or                                             CDE002
+     C**********         IF        *IN98 = '0' or                                    CDE002 MD058437
      C**********                   DERDFR < 1 or DERDFR > 99                         CDE002 MD058437
-     C                             DERDFR <> *BLANKS                                        MD058437
+     C                   MOVE      ArrChk(1)     WAlpha                                     MD058437
+     C                   EVAL      WTemp = %CHECK(WAlpha:DDRDFR)                            MD058437
+     C                   IF        WTemp  <> *ZEROS                                         MD058437
      C                   EVAL      *IN15 = *ON                                                CDE002
      C                   MOVEL     'DEP0026'     ZAMSID                                       CDE002
      C                   EXSR      ZASNMS                                                     CDE002

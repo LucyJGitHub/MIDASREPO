@@ -19,7 +19,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD058437           Date 09Jul21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 D046248            Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER055             Date 06Dec10               *

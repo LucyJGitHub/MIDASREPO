@@ -886,4 +886,4 @@
 **  CPY@
 (c) Finastra International Limited 2001
 ** Array Check                                                                              MD058437
- 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ                                                       MD058437
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ                                                        MD058437

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058404           Date 06Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -158,6 +159,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058404 - Replace the event codes used by CDL102 with new   *
+      *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -4351,7 +4354,8 @@
      C                   MOVEL     'N'           DDFBRTOK                                     CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   EVAL      FldNameArr(Idx) = 'DDFBRT'                                 CDL102
-     C                   EVAL      MsgIDArr(Idx) = '5049498'                                  CDL102
+     C**********         EVAL      MsgIDArr(Idx) = '5049498'                         CDL102 MD058404
+     C                   EVAL      MsgIDArr(Idx) = '5049506'                                MD058404
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
      C                   IF        Idx = 0

@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058404           Date 06Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031119           Date 18Feb15               *
       *                 MD023416           Date 16Nov13               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058404 - Replace the event codes used by CDL102 with new   *
+      *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -406,7 +409,8 @@
      C                   IF        (wSAVAIR  <> WAIR) AND                                     CDL102
      C                             (wSAVAIR <> 0) AND DDBLRT = 'Y'                            CDL102
      C                   MOVE      'Y'           ErrorFound                                   CDL102
-     C                   MOVEL     '5049499'     Msgid1                                       CDL102
+     C**********         MOVEL     '5049499'     Msgid1                              CDL102 MD058404
+     C                   MOVEL     '5049507'     Msgid1                                     MD058404
      C                   ELSE                                                                 CDL102
      C                   MOVE      PAmtOutU      DDAIR                                      MD031119
      C                   ENDIF                                                                CDL102

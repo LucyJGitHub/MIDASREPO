@@ -385,7 +385,7 @@
                                                                                               CDE002
      C                   IF        *IN98 = '0' or                                             CDE002
      C**********                   DERDFR < 1 or DERDFR > 99                         CDE002 MD058437
-     C                             DERDFR <> ' '                                            MD058437
+     C                             DERDFR <> *BLANKS                                        MD058437
      C                   EVAL      *IN15 = *ON                                                CDE002
      C                   MOVEL     'DEP0026'     ZAMSID                                       CDE002
      C                   EXSR      ZASNMS                                                     CDE002

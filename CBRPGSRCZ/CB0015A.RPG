@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB020B            Date 06Aug12               *
+      *  Last Amend No. MD058284           Date 29Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020B            Date 06Aug12               *
       *                 AR1015594          Date 20Nov12               *
       *                 CCB020             Date 06Aug12               *
       *                 CSC054             Date 23Feb12               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058284 - Re-open Input Cycle fails when taken just before  *
+      *             Secondary COB.                                    *
+      *           - Set off *IN36 if ICIFINISH is already finished.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020B - COB Restructure - Secondary COB Infrastructure     *
       *  AR1015594 - Disable option 2 in COB menu when PEA option 5   *
@@ -213,6 +217,9 @@
      I              'BankPhaseStrReopen'  C         BPSRO                                    CCB020B
      I              'SCC001060'           C         BPPROG                                   CCB020B
       *                                                                                      CCB020B
+      ** Constant value for ICIFINISH                                                       MD058284
+      *                                                                                     MD058284
+     I              'ICIFINISH'           C         CCOMP                                   MD058284
      ISDCOBP    E DSSDCOBPPD
       ** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT SDCOBPPD FORMAT
       *
@@ -240,6 +247,12 @@
      C                     PARM           WWIN51  1
      C                     PARM           WWIN52  1
       *
+     C           *LIKE     DEFN WWCOMP    WCOMP                                             MD058284
+     C           *LIKE     DEFN WWCSEQ    WCSEQ                                             MD058284
+      *                                                                                     MD058284
+     C                     MOVELCCOMP     WCOMP                                             MD058284
+     C                     MOVEL'00001'   WCSEQ                                             MD058284
+      *
      C           WWKEY     KLIST
      C                     KFLD           WWCOMP 10
      C                     KFLD           WWCSEQ  5
@@ -250,7 +263,13 @@
      C                     KFLD           WWJOB
      C                     KFLD           WWUSER
      C                     KFLD           WWNBR
-      *
+      *                                                                 MD058284
+      ** ICIFINISH 00001 key                                            MD058284
+      *                                                                 MD058284
+     C           WWKEY3    KLIST                                        MD058284
+     C                     KFLD           WCOMP                         MD058284
+     C                     KFLD           WCSEQ                         MD058284
+      *                                                                 MD058284
      C                     MOVEA'00'      *IN,51
      C                     MOVE '0'       *IN55
      C                     MOVEL'VERIFY'  WWVRFY  6
@@ -563,6 +582,20 @@
      C********** PHASE     OREQ 'B'                                                           CCB020
      C                     SETON                     36
      C                     END
+      *                                                                                     MD058284
+      ** Check ICIFINISH 00001                                                              MD058284
+      *                                                                                     MD058284
+     C                     OPEN CBCOMSL0                                                    MD058284
+     C           WWKEY3    CHAINCBCOMSL0             77                                     MD058284
+     C           *IN77     IFEQ '0'                                                         MD058284
+     C           DHCSTS    IFEQ ' '                                                         MD058284
+     C           DHCSTS    OREQ 'A'                                                         MD058284
+     C                     SETON                     36                                     MD058284
+     C                     ELSE                                                             MD058284
+     C                     SETOF                     36                                     MD058284
+     C                     ENDIF                                                            MD058284
+     C                     ENDIF                                                            MD058284
+     C                     CLOSECBCOMSL0                                                    MD058284
       *
       ** SET UP SWITCH WORK FIELD DEPENDING ON WHETHER CLOSE
       ** OF BUSINESS RUN HAS HALTED (CBSTAT POS 20 = Y)

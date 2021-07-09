@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058404
+      *  Last Amend No. MD058404           Date 06Jul21               *
       *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -52,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058404 - Replace the event codes used by CDL102 with new   *
+      *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

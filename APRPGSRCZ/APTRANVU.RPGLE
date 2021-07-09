@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD058379           Date 01Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CLE172             Date 01Oct20               *
       *                 260173             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
@@ -233,6 +234,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of refereNce rate field             *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  260173 - Introduce new parameter in DEAM API to be used in   *
@@ -1418,7 +1421,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       1467          Bfp2                                CSF011 MD038485
      C**********         ADD       1681          Bfp2                                MD038485 CER050
      C**********         ADD       1680          Bfp2                                CER050 MD054028
-     C                   ADD       1678          Bfp2                                       MD054028
+     C**********         ADD       1678          Bfp2                              MD054028 MD058379
+     C                   ADD       1728          Bfp2                                       MD058379
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A

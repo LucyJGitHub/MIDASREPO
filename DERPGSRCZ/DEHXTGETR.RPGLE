@@ -41,7 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
+      *  MD058437 - Change DERDFR to alphanumeric                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -233,7 +233,8 @@
      C                   PARM      *BLANKS       @RETURN           7
      C                   PARM      '*KEY   '     @OPTION           7
      C                   PARM      P#CCY         @CURRCY           3
-     C                   PARM      DERDFR        @DEFFNDRT         2 0
+     C**********         PARM      DERDFR        @DEFFNDRT         2 0                      MD058437
+     C                   PARM      DERDFR        @DEFFNDRT         2                        MD058437
      C                   PARM      P#IACD        @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
      C                   IF        @RETURN = *BLANKS
@@ -274,7 +275,8 @@
      C                   PARM      *BLANKS       @RETURN           7
      C                   PARM      '*KEY   '     @OPTION           7
      C                   PARM      P#CCY         @CURRCY           3
-     C                   PARM      DERDFR        @DEFFNDRT         2 0
+     C**********         PARM      DERDFR        @DEFFNDRT         2 0                      MD058437
+     C                   PARM      DERDFR        @DEFFNDRT         2                        MD058437
      C                   PARM      E#PRDT        @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
      C                   IF        @RETURN = *BLANKS

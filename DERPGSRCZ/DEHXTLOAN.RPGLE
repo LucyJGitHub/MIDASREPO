@@ -54,7 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
+      *  MD058437 - Change DERDFR to alphanumeric                     *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -486,7 +486,8 @@
      C                   PARM      *BLANKS       @RETURN           7
      C                   PARM      '*KEY   '     @OPTION           7
      C                   PARM      P#CCY         @POSITIONCUR      3
-     C                   PARM      DERDFR        @DEFFUNRT         2 0
+     C**********         PARM      DERDFR        @DEFFUNRT         2 0                      MD058437
+     C                   PARM      DERDFR        @DEFFUNRT         2                        MD058437
      C                   PARM      P#IACD        @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
 

@@ -34,7 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
+      *  MD058437 - Change DERDFR to alphanumeric                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -359,11 +359,13 @@
                                                                                               CDE002
      C                   IF        *IN21 = *OFF                                               CDE002
      C                   MOVEL     DDRDFR        @NUMB20                                      CDE002
+     C                   MOVEL     @NUMB20       TNUMB20           2                        MD058437
                                                                                               CDE002
       * Proceed if there is no warning or rate on screen has changed                          CDE002
                                                                                               CDE002
      C                   IF        WKRDFRERR <> 'Y'                                           CDE002
-     C                             or DERDFR <> @NUMB20                                       CDE002
+     C**********                   or DERDFR <> @NUMB20                              CDE002 MD058437
+     C                             or DERDFR <> TNUMB20                                     MD058437
                                                                                               CDE002
      C                   MOVEL     DDRDFR        DERDFR                                       CDE002
      C                   EVAL      WKRDFRERR = *BLANKS                                        CDE002
@@ -382,7 +384,8 @@
      C                   TESTN                   DDRDFR               9898                    CDE002
                                                                                               CDE002
      C                   IF        *IN98 = '0' or                                             CDE002
-     C                             DERDFR < 1 or DERDFR > 99                                  CDE002
+     C**********                   DERDFR < 1 or DERDFR > 99                         CDE002 MD058437
+     C                             DERDFR <> ' '                                            MD058437
      C                   EVAL      *IN15 = *ON                                                CDE002
      C                   MOVEL     'DEP0026'     ZAMSID                                       CDE002
      C                   EXSR      ZASNMS                                                     CDE002
@@ -824,7 +827,8 @@
      C                   Z-ADD     0             DEHRDNB
      C                   Z-ADD     0             DEHDNWD
      C                   MOVEL     'Y'           DECHKD
-     C                   Z-ADD     1             DERDFR                                       CDE002
+     C**********         Z-ADD     1             DERDFR                              CDE002 MD058437
+     C                   MOVEL     '01'          DERDFR                                     MD058437
      C                   Z-ADD     0             DETKON                                       CDE002
      C                   ENDIF
      C                   OUT       DEEXTCTL

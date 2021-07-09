@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -66,18 +68,18 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
       *                                                               *
       *****************************************************************
- 
+
      FDEGPOSNL1 IF   E           K DISK
      F                                     RENAME(DEPOSNP0: DEGPOSNP0)
      F                                     INFDS(INFDS)
      FDEGEVNTL1 IF   E           K DISK
      F                                     RENAME(DEEVNTP0: DEGEVNTP0)
- 
+
      FDEHTRANPD O    E           K DISK
      FDEHPOSNPD O    E           K DISK
      FDEHEVNTPD O    E           K DISK
      FDEHCASHPD O    E           K DISK
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -95,18 +97,18 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
- 
+
+
      D GTRAN         E DS                  EXTNAME(DEGTRANPD) PREFIX(G_)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -119,13 +121,13 @@
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** Extract Control Data
- 
+
      D INFDS         E DS                  EXTNAME(Y2I1DSP)
       ** File Information DS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           30            * ERROR MESSAGE
@@ -147,13 +149,13 @@
       ** INITIAL PROCESSING FOR GENERIC TRANSACTION
       *
      C                   EXSR      INIT
- 
+
      C     I#ACTN        IFNE      'D'
       *
       ** MAIN PROCESSING - 'ASSET' POSITION
       *
      C                   MOVE      'A'           W#ASLI            1
- 
+
      C     POSNKEY       SETLL     DEGPOSNP0
      C     POSNKEY       READE     DEGPOSNP0                              99    *
      C     *in99         IFEQ      '0'
@@ -163,13 +165,13 @@
       ** MAIN PROCESSING - 'LIABILITY' POSITION
       *
      C                   MOVE      'L'           W#ASLI
- 
+
      C     POSNKEY       SETLL     DEGPOSNP0
      C     POSNKEY       READE     DEGPOSNP0                              99    *
      C     *in99         IFEQ      '0'
      C                   EXSR      MAIN
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       * COMMITMENT PROCESSING FOR GENERIC TRANSACTION
@@ -221,11 +223,11 @@
       *
       * If extract is Money Market or Negotiable Assets
      C                   IF        @1FMB = 'LDNI' or @1FMB = 'NASP'
- 
+
       * If Position Funding Spread and Sign not set
- 
+
      C                   IF        P#FSRP = 0 and P#FSGN = *BLANK
- 
+
       * Call Base Rate History for default rate
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN           7
@@ -298,12 +300,12 @@
       /SPACE 5
      C********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     POSNKEY       KLIST
      C                   KFLD                    T#MOD
      C                   KFLD                    T#TREF
      C                   KFLD                    W#ASLI
- 
+
       *
       **  Access Bank Details
       *
@@ -320,12 +322,12 @@
      C                   PARM      '*FIRST  '    @OPTN             7
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       * Get extract control data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C                   IN        DEEXTCTL
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5

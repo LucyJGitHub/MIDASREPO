@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -65,12 +67,12 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
       *                                                               *
       *****************************************************************
- 
+
      FDEPTRANPD O    E           K DISK
      FDEPPOSNPD O    E           K DISK
      FDEPEVNTPD O    E           K DISK
      FDEPCASHPD O    E           K DISK
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -88,14 +90,14 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Instrument types
      D TABCDE          S              1S 0 DIM(8) CTDATA PERRCD(1)
@@ -107,12 +109,12 @@
      D INTYP         E DS                  EXTNAME(INTYPD) PREFIX(IN_)
      D PRICS         E DS                  EXTNAME(PRICSD) PREFIX(PC_)
      D MARKT         E DS                  EXTNAME(MARKTD) PREFIX(MA_)
- 
- 
+
+
      D W#TABT          DS
      D  W#TDES                 1     16
- 
- 
+
+
      D W#SETD          DS
      D  W#SETM                 1      2
      D***W#SETA*                3     14                                                      CGL029
@@ -121,23 +123,23 @@
      D  W#SETA                 3     20                                                       CGL029
      D  W#SETB                21     23                                                       CGL029
      D  W#SETC                24     26                                                       CGL029
- 
- 
+
+
       ** Instrument type
      D FFISPT          S              1S 0
       ** Contract type
      D FFCNTT          S              1S 0
- 
+
       ** Transaction number work date
      D WK_TNBRn        S              6S 0
      D WK_TNBRa        S              6A
- 
+
      D BaseCDP         S              1  0
      D W#IO            S              1
      D MktVal          S                   LIKE(FFPREM)
      D W#AMT           S                   LIKE(P#NOML)
      D W#ASLI          S                   LIKE(P#ASLI)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -151,7 +153,7 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221
@@ -289,42 +291,42 @@
       * If the New Price is 0, set Market Value to 0
      C                   IF        PC_NEWP = 0
      C                   EVAL      T#MKVL = *Zero
- 
+
      C                   ELSE
- 
+
       * Otherwise, calculate premium payable based on New Price
      C                   EVAL      FFPRIC = PC_NEWP
      C                   EXSR      FFPMCL
- 
+
      C                   EVAL      MktVal = FFPREM
- 
+
       * calculate premium payable based on Contract Price
      C                   EVAL      FFPRIC = TR_COPR
      C                   EXSR      FFPMCL
- 
+
      C                   SELECT
       * Set Market Value according to Transaction Type
      C                   WHEN      TR_TRTY = 'P'
      C                   EVAL      T#MKVL = MktVal - FFPREM
- 
+
      C                   WHEN      TR_TRTY = 'S'
      C                   EVAL      T#MKVL = FFPREM - MktVal
- 
+
      C                   WHEN      TR_TRTY = 'E'
      C                   EVAL      T#MKVL = *Zero
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
       * Transaction valuation currency
      C                   EVAL      T#VCCY = IN_ISCY
- 
+
       * Instrument currency decimal places
      C                   EVAL      @CYCD = IN_ISCY
      C                   EXSR      ACSCCY
      C                   EVAL      T#VCDP = A6NBDP
- 
+
       * Action code
      C                   EVAL      T#ACTN = I#ACTN
       *                                                                                       CDE005
@@ -333,7 +335,7 @@
      C     CDE005        IFEQ      'Y'                                                        CDE005
      C                   MOVEL     I#RSRV        T#RSRV           10                          CDE005
      C                   ENDIF                                                                CDE005
- 
+
       * Import transaction details
      C     I#ACTN        IFNE      'D'
      C                   MOVEL     '*IMPTRAN'    W#MODE
@@ -369,15 +371,15 @@
      C     W#IO          IFEQ      'I'
      C                   EXSR      IMP_FE
      C                   ENDIF
- 
+
       * IMPORT MATURITY DATE EVENT
- 
+
      C                   EXSR      IMP_MT
- 
+
       * IMPORT PERIOD END DATES
- 
+
      C                   EXSR      IMP_PE
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -385,47 +387,47 @@
       * IMPORT OPENING BALANCE
       *****************************************************************
      C     IMP_OPBL      BEGSR
- 
+
       * Clear Position
- 
+
      C                   CLEAR                   P#POSN
- 
+
       * Module, Transaction Reference
- 
+
      C                   MOVEL     T#TKEY        P#TKEY
- 
+
       * Asset/Liability
      C                   MOVEL     W#ASLI        P#ASLI
- 
+
       * Interest Accrl Ctl Date
      C                   Z-ADD     TR_TRSD       P#IACD                         *
- 
+
       * Nominal/Principal
      C                   Z-ADD     W#AMT         P#NOML                         *
      C     I#PH          IFEQ      'P'
      C     I#EOB         ANDEQ     'N'
      C                   Z-ADD     P#NOML        P#DIFN
      C                   ENDIF
- 
+
       * Currency
      C                   MOVEL     W#CCY         P#CCY
- 
+
       * Nominal Ccy Dec Places
      C                   MOVEL     A6NBDP        P#NCDP
- 
+
       * Nominal Dec Places
      C                   MOVEL     A6NBDP        P#NMDP
- 
+
       * Nominal Ccy Spot Days
      C                   Z-ADD     A6SPDY        P#SPDY
- 
+
       * Stop Accruals
      C                   MOVEL     'Y'           P#STAC
- 
+
       * Import opening balance
      C                   MOVEL     '*IMPOPBL'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C
      C                   ENDSR
       **************************************************************************
@@ -536,20 +538,20 @@
       * SET UP INSTRUMENT CURRENCY DETAILS
       ********************************************************************
      C     INSCCY        BEGSR
- 
+
       * Instrument Currency
      C                   MOVE      IN_ISCY       W#CCY             3
- 
+
       * Instrument Type 2 or 5
      C     IN_ISPT       IFEQ      2
      C     IN_ISPT       OREQ      5
- 
+
       * Instrument Type 2
      C     IN_ISPT       IFEQ      2
- 
+
       * Work Amount = Contingent Amount * Number of Open Contracts
      C     IN_CTAM       MULT      TR_NOCO       W#AMT
- 
+
       * Transaction Type P
      C     TR_TRTY       IFEQ      'P'
       * Liability
@@ -558,17 +560,17 @@
       * Asset
      C                   MOVE      'A'           W#ASLI
      C                   ENDIF
- 
+
       * Instrument Type 5
      C                   ELSE
- 
+
       * Work Amount = Contingent Amount * Strike Price
      C     IN_CTAM       MULT      TR_STRP       W#AMT
- 
+
       * Transaction Type P or S
      C     TR_TRTY       IFEQ      'P'
      C     TR_TRTY       OREQ      'S'
- 
+
       * Put Call C
      C     TR_PCAL       IFEQ      'C'
      C                   MOVE      'L'           W#ASLI
@@ -577,15 +579,15 @@
      C                   ENDIF
       * Transaction Type not P or S
      C                   ELSE
- 
+
      C     TR_PCAL       IFEQ      'P'
      C                   MOVE      'L'           W#ASLI
      C                   ELSE
      C                   MOVE      'A'           W#ASLI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       * Instrument Type not 2 or 5
      C                   ELSE
@@ -620,17 +622,17 @@
      C                   ELSE
      C                   MOVE      'L'           W#ASLI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Get Currency Details
      C                   MOVEL     W#CCY         @CYCD
      C                   EXSR      ACSCCY
- 
+
      C                   ENDSR
       **************************************************************************
       /SPACE 5
@@ -638,53 +640,53 @@
       * SET UP OTHER CURRENCY DETAILS
       ********************************************************************
      C     OTHCCY        BEGSR
- 
+
       * Other Currency
      C                   MOVE      IN_OTHC       W#CCY
      C                   Z-ADD     IN_CTAM       W#AMT
- 
+
       * Instrument Type 2
      C     IN_ISPT       IFEQ      2
- 
+
       * Transaction Type P
      C     TR_TRTY       IFEQ      'P'
      C                   MOVE      'A'           W#ASLI
      C                   ELSE
      C                   MOVE      'L'           W#ASLI
      C                   ENDIF
- 
+
       * Instrument Type not 2
      C                   ELSE
- 
+
       * Transaction Type P or S
      C     TR_TRTY       IFEQ      'P'
      C     TR_TRTY       OREQ      'S'
- 
+
       * Put Call C
      C     TR_PCAL       IFEQ      'C'
      C                   MOVE      'A'           W#ASLI
      C                   ELSE
      C                   MOVE      'L'           W#ASLI
      C                   ENDIF
- 
+
       * Transaction Type P or S
      C                   ELSE
- 
+
       * Put Call P
      C     TR_PCAL       IFEQ      'P'
      C                   MOVE      'A'           W#ASLI
      C                   ELSE
      C                   MOVE      'L'           W#ASLI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Get Currency Details
      C                   MOVEL     W#CCY         @CYCD
      C                   EXSR      ACSCCY
- 
+
      C                   ENDSR
       **************************************************************************
       /SPACE 5
@@ -692,7 +694,7 @@
       * PREMIUM CALCULATION
       ********************************************************************
      C     FFPMCL        BEGSR
- 
+
      C                   CALLB     'FFPMCL'
      C                   PARM      *ZERO         FFPREM           13 0
      C                   PARM      TR_NOCO       FFNOC             5 0
@@ -704,7 +706,7 @@
      C                   PARM      IN_CNTT       FFCNTT
      C                   PARM      IN_CTAM       FFCTAM           13 0
      C                   PARM      TR_STRP       FFSTRP           15 8                        215528
- 
+
      C                   ENDSR
       **************************************************************************
       /SPACE 5
@@ -733,7 +735,7 @@
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks
      C                   Eval      I#RTCD = '*ERROR'
      C                   Eval      I#ERMS = 'AOBANKR0'
@@ -756,13 +758,13 @@
      C                   Eval      *INLR = *ON
      C                   Return
      C                   Endif
- 
+
       **  Access Base Currency Decimal Places
       *
      C                   MOVEL     BJCYCD        @CYCD
- 
+
      C                   EXSR      ACSCCY
- 
+
      C                   If        @RTCD <> *Blanks
      C                   Eval      I#RTCD = '*ERROR'
      C                   Eval      I#ERMS = 'AOCURRR0, Base Currency:' +
@@ -770,7 +772,7 @@
      C                   Eval      *INLR = *ON
      C                   Return
      C                   Endif
- 
+
      C                   MOVEL     A6NBDP        BaseCDP
       *
       **  Access Futures and Options ICD data
@@ -791,7 +793,7 @@
       **  Set up Type for DEWRKEDTA                                                           208221
       *                                                                                       208221
      C                   EVAL      W#TYPE = 'PEXTR'                                           208221
- 
+
       ** Determine if Data Export - Reservation ID is active                                  CDE005
      C                   CALL      'AOSARDR0'                                                 CDE005
      C                   PARM      *BLANKS       @RTCD             7                          CDE005

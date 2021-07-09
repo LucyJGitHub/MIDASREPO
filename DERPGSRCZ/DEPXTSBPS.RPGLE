@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -76,14 +78,14 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FTRDMTHT   IF   E           K DISK    RENAME(TRADSDF:TRADSDF_T)INFSR(*PSSR)
      F                                     RENAME(HSTTRDF:HSTTRDF_T)
      FTRDMTH    IF   E           K DISK    RENAME(TRADSDF:TRADSDF_V)INFSR(*PSSR)
      F                                     RENAME(HSTTRDF:HSTTRDF_V)
      FPRICM     IF   E           K DISK    INFSR(*PSSR)
      FSECET     IF   E           K DISK    INFSR(*PSSR)
- 
+
      F*DEPTRNAPD*O** E           K DISK    USROPN                                             CDE002
      FDEPTRANPD O    E           K DISK    RENAME(DETRANP0:DEPTRANP0) USROPN                  CDE002
      F                                     INFSR(*PSSR)
@@ -96,7 +98,7 @@
      F*DEPCASHPD*O** E           K DISK    USROPN                                             CDE002
      FDEPCASHPD O    E           K DISK    RENAME(DECASHP0:DEPCASHP0) USROPN                  CDE002
      F                                     INFSR(*PSSR)
- 
+
      FDEHTRANPD O    E           K DISK    RENAME(DETRANP0:DEHTRANP0) USROPN                  CDE002
      F                                     INFSR(*PSSR)                                       CDE002
      FDEHPOSNPD O    E           K DISK    RENAME(DEPOSNP0:DEHPOSNP0) USROPN                  CDE002
@@ -105,7 +107,7 @@
      F                                     INFSR(*PSSR)                                       CDE002
      FDEHCASHPD O    E           K DISK    RENAME(DECASHP0:DEHCASHP0) USROPN                  CDE002
      F                                     INFSR(*PSSR)                                       CDE002
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -123,15 +125,15 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
- 
+
+
      D BKPHD         E DS                  EXTNAME(BKPHDD)
      D BKPHD_RECI    E                     EXTFLD(RECI)
      D BKPHD_TNLU    E                     EXTFLD(TNLU)
@@ -146,15 +148,15 @@
      D CRArr                 231    242
      D INVTP         E DS                  EXTNAME(INVTPD)
      D                                     PREFIX(IN_)
- 
- 
+
+
      D                 DS
      D  W#POSID                1     20
      D  W#BHSC                 1     10
      D  W#BHBK                12     13
      D  W#BHBA                15     17
      D  W#BHMK                19     19
- 
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     14
@@ -173,8 +175,8 @@
      D  W#POSA                 3     20                                                       CGL029
      D  W#POSB                21     23                                                       CGL029
      D  W#POSY                24     26                                                       CGL029
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -189,14 +191,14 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
- 
+
      ISEDEVDF
      I              RECI                        SEDEV_RECI
      I              NMCY                        SEDEV_NMCY
- 
+
       *
       * INPUT PARAMETERS
       *
@@ -475,7 +477,7 @@
      C                   ELSE
      C     P#NOML        SUB       APNC          P#DIPR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       * Average Price
@@ -508,7 +510,7 @@
       * Int Calc Method
      C     DYBS          IFNE      ' '
      C     DYBS          ANDNE     '4'
- 
+
      C                   MOVEL     DYBS          W#DYBS
      C                   MOVEL     DVBS          W#DVBS
      C                   CALLB     'DECVTICSE'
@@ -524,7 +526,7 @@
      C                   END
       *
      C                   MOVEL     W#ICMT        P#ICMT
- 
+
      C                   ENDIF
       *
       * Initialization for determination of next interest payment date
@@ -655,9 +657,9 @@
       *
       * Event Type
      C                   MOVEL     'IR'          E#EVTP
- 
+
       * Pick up interest rates from the security diary
- 
+
      C                   MOVE      'IR'          SDET
      C     SEDEVK        SETLL     SEDEVDF
      C     *IN99         DOUEQ     '1'
@@ -665,9 +667,9 @@
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
       * If none present, use current rate on security
- 
+
      C     *IN99         IFEQ      '1'
       *
       * Processing Date = initial date
@@ -680,11 +682,11 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDIF
- 
+
       * Extract all interest rate changes
- 
+
      C     *IN99         DOWEQ     '0'
       *
       * Processing Date
@@ -701,13 +703,13 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C     *IN99         DOUEQ     '1'
      C     SEDEV_RECI    OREQ      'D'
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -727,9 +729,9 @@
       *
       * Event Type
      C                   MOVEL     'PP'          E#EVTP
- 
+
       * Pick up part payments from the security diary
- 
+
      C                   MOVE      'PP'          SDET
      C     SEDEVK        SETLL     SEDEVDF
      C     *IN99         DOUEQ     '1'
@@ -737,9 +739,9 @@
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
       * If none present, use current partly paid price on security
- 
+
      C     *IN99         IFEQ      '1'
       *
       * Processing Date
@@ -757,11 +759,11 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDIF
- 
+
       * Extract all part payments
- 
+
      C     *IN99         DOWEQ     '0'
       *
       * Processing Date
@@ -783,13 +785,13 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C     *IN99         DOUEQ     '1'
      C     SEDEV_RECI    OREQ      'D'
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -809,9 +811,9 @@
       *
       * Event Type
      C                   MOVEL     'MP'          E#EVTP
- 
+
       * Pick up mortage payments from the security diary
- 
+
      C                   MOVE      'MP'          SDET
      C     SEDEVK        SETLL     SEDEVDF
      C     *IN99         DOUEQ     '1'
@@ -819,9 +821,9 @@
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
       * If none present, use current factor on security
- 
+
      C     *IN99         IFEQ      '1'
       *
       * Processing Date = initial date
@@ -834,11 +836,11 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDIF
- 
+
       * Extract all mortgage payments
- 
+
      C     *IN99         DOWEQ     '0'
       *
       * Processing Date
@@ -855,13 +857,13 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C     *IN99         DOUEQ     '1'
      C     SEDEV_RECI    OREQ      'D'
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -901,13 +903,13 @@
       * IMPORT TRADE EVENTS
       *****************************************************************
      C     IMP_TRAD      BEGSR
- 
+
      C     BHTV          IFEQ      'T'
      C     TRADKF        SETGT     TRDMTHT
      C                   ELSE
      C     TRADKF        SETGT     TRDMTH
      C                   ENDIF
- 
+
      C     *IN99         DOUEQ     '1'
      C     RECI          ORNE      '*'
      C     RECI          ANDNE     'C'
@@ -1030,7 +1032,7 @@
       * DETERMINE NEXT DAY
       ********************************************************************
      C     GETSIPD       BEGSR
- 
+
      C                   CALLB     'DEGETSIPD'
       * inputs
      C                   PARM      *BLANK        W#RTCD_SIP        7            * RETURN CODE
@@ -1089,7 +1091,7 @@
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM                    @BOOK             2
      C     SDBOOK        PARM      SDBOOK        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO AOBOOKR0'
      C                   EXSR      *PSSR
@@ -1108,7 +1110,7 @@
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM                    @CYCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO AOCURRR0'
      C                   EXSR      *PSSR
@@ -1218,7 +1220,7 @@
      C                   KFLD                    BHBK
      C                   KFLD                    BHSC
      C                   KFLD                    BHMK
- 
+
      C     SEDEVKF       KLIST
      C                   KFLD                    BHSC
      C                   KFLD                    SDET

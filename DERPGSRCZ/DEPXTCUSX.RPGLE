@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE041             Date 28Sep12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -66,12 +68,12 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis                 *
       *                                                               *
       *****************************************************************
- 
+
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -89,24 +91,24 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Transaction Description
      D TRANDE          S             20    DIM(1) CTDATA PERRCD(1)
- 
- 
+
+
      D CUSEXCH       E DS                  EXTNAME(CUSEXCE)
      D**DBAccnt               14     25                                                       CGL029
      D**CRAccnt               84     95                                                       CGL029
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D**W#PAYA**               3     14                                                       CGL029
@@ -133,8 +135,8 @@
      D  W#ISCY                24     26                                                       CGL029
      D W#TABT          DS
      D  W#TDES                 1     16
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -145,7 +147,7 @@
       ** External DS for Switchable Features details
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221
@@ -178,7 +180,7 @@
       *
      C                   MOVEL     Dataarea      DEEXTCTL                                     208221
      C                   EXSR      INIT
- 
+
      C     I#ACTN        IFNE      'D'
       *
       ** MAIN PROCESSING - 'ASSET' POSITION
@@ -272,27 +274,27 @@
      C     BUY_PLAM      ADD       SELL_PLAM     T#MKVL
      C                   MOVEL     BJCYCD        T#VCCY
      C                   MOVEL     BaseCDP       T#VCDP
- 
+
       * IF REVENUE ANALYSIS IS PRESENT
- 
+
      C     CDE002        IFEQ      'Y'
- 
+
       * If no margin is present on the deal,
       * then the market value (in base currency) is the margin
- 
+
      C     MAMT          IFEQ      *ZERO
      C                   Z-ADD     T#MKVL        FXMargin
      C                   ELSE
- 
+
       * Otherwise convert the margin on the deal to base currency
- 
+
      C     FXIN          IFEQ      'D'
      C                   MOVEL     DRCY          @CYCD
      C                   ELSE
      C                   MOVEL     CRCY          @CYCD
      C                   ENDIF
      C                   EXSR      ACSCCY
- 
+
      C                   CALLB     'ZCONVZ1'
      C                   PARM      MAMT          InputAmnt        15 0
      C                   PARM      A6SPRT        ExchRate         13 8
@@ -536,7 +538,7 @@
       *
       * Charge amount
      C                   Z-ADD     HAMT          E#CHRG
- 
+
       * Currency decimal places
       *
      C                   MOVEL     A6NBDP        E#NCDP
@@ -628,7 +630,7 @@
       * Inputs
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
- 
+
      C                   PARM                    BUYSELL           1
      C                   PARM      W#CCY         ECCY              3
      C                   PARM      W#DAT         EDAT              5 0
@@ -702,7 +704,7 @@
      C***********        PARM      '      '      @SARD             6                          208221
      C                   PARM      'CDE002'      @SARD             6                          208221
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CDE002            1
      C                   ELSE
@@ -712,7 +714,7 @@
       **  Set up Type for DEWRKEDTA                                                           208221
       *                                                                                       208221
      C                   EVAL      W#TYPE = 'PCUSX'                                           208221
- 
+
       ** Determine if Data Export - Reservation ID is active                                  CDE005
      C                   CALL      'AOSARDR0'                                                 CDE005
      C                   PARM      *BLANKS       @RTCD             7                          CDE005

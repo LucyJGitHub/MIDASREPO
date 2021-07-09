@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -36,10 +38,10 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FDEPERDPD  UF A E             DISK
      FCBAICDL1  IF   E           K DISK
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -57,44 +59,44 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
- 
+
+
      D                 DS
      D  W#DATE                 1      6
      D  W#MNTH                 1      2S 0
      D  W#DAY                  3      4S 0
      D  W#YEAR                 5      6S 0
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for GENERAL LEDGER details
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
- 
- 
+
+
       ** MPHAS Data-Area
      D***MPHAS*******DS                              1                                        CCB020
      D*****PHASE*****                  1      1                                               CCB020
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       *
       * INPUT PARAMETERS
       *
      C     *ENTRY        PLIST
      C                   PARM                    Proj_Hist         1
- 
+
       *
       * CALCULATE PERIODS - PROJECTED
       *
@@ -115,19 +117,19 @@
       *
      C                   SETON                                        LR
      C                   RETURN
- 
+
       /SPACE 5
       **********************************************************************
       * CALCULATE PERIODS - PROJECTED
       **********************************************************************
      C     CALPERD_P     BEGSR
- 
+
       * Start date is run date
- 
+
      C                   MOVE      DEPRDNB       PER(1)
- 
+
       * Add projection cut-off date
- 
+
      C                   MOVE      DEPCDT        PER(2)
       *
      C                   ENDSR
@@ -151,7 +153,7 @@
      C                   ELSE                                                                 CDE002
      C                   Z-ADD     DEHDNWD       ZDAYNO                                       CDE002
      C                   ENDIF                                                                CDE002
- 
+
      C                   MOVE      ZDAYNO        PER(1)
      C                   MOVE      ZDAYNO        PERN1             5 0                        CDE002
       *
@@ -238,7 +240,7 @@
      C                   ELSE
      C                   UPDATE    DEPERDP0
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
      C/SPACE 5
@@ -246,33 +248,33 @@
       * SET PROJECTIONS CUT-OFF DATE
       *********************************************************************
      C     SET_PROJCD    BEGSR
- 
+
       * Calculate projections cut-off date
       * Starting from day prior to next working day
       * add projected days, months & years
- 
+
      C     DEPDNWD       SUB       1             DEPCDT
      C                   ADD       DEPCOD        DEPCDT
- 
+
      C     DEPCOM        IFNE      *ZERO
      C     DEPCOY        ORNE      *ZERO
- 
+
       * Convert day number to date
- 
+
      C                   Z-ADD     DEPCDT        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         W#DATE
- 
+
      C                   ADD       DEPCOM        W#MNTH
      C     W#MNTH        IFGT      12
      C                   SUB       12            W#MNTH
      C                   ADD       1             W#YEAR
      C                   ENDIF
- 
+
      C                   ADD       DEPCOY        W#YEAR
- 
+
       * Convert date to day number
- 
+
      C                   MOVE      W#DATE        ZDATEI
      C                   EXSR      ZDATE1
      C     ErrorFlag     DOWEQ     'Y'
@@ -281,11 +283,11 @@
      C                   MOVE      W#DATE        ZDATEI
      C                   EXSR      ZDATE1
      C                   ENDDO
- 
+
      C                   Z-ADD     ZDAYNO        DEPCDT
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
      C/SPACE 5
@@ -293,15 +295,15 @@
       * SET HISTORY CUT-OFF DATE
       *********************************************************************
      C     SET_HISTCD    BEGSR
- 
+
       * Calculate history cut-off date
       * Starting from run date
       * subtract history days
- 
+
      C     DEHRDNB       SUB       DEHCOD        DEHCDT
- 
+
       * Convert day number to date
- 
+
      C                   Z-ADD     DEHCDT        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         W#DATE
@@ -312,15 +314,15 @@
      C                   Z-ADD     1             W#DAY
      C                   MOVE      W#DATE        ZDATEI
      C                   EXSR      ZDATE1
- 
+
       * Set History Cut-Off Date
- 
+
      C     BKALDI        IFEQ      'Y'                                                        CDE002
      C     ZDAYNO        SUB       1             DEHCDT                                       CDE002
      C                   ELSE                                                                 CDE002
      C                   Z-ADD     ZDAYNO        DEHCDT
      C                   ENDIF                                                                CDE002
- 
+
      C                   ENDSR
       **********************************************************************
      C/SPACE 5
@@ -328,15 +330,15 @@
       * UPDATE EXTRACT CONTROL DATES
       *********************************************************************
      C     UPD_CTLDT     BEGSR
- 
+
       * If in input cycle
- 
+
      C*****PHASE         IFEQ      'A'                                                        CCB020
       *                                                                                       CCB020
      C     @RTPHS        IFEQ      '*NO'                                                      CCB020
- 
+
       * Set Projections/History Run Date and Date of Next Working Day
- 
+
      C     Proj_Hist     IFEQ      'P'
      C                   Z-ADD     BJRDNB        DEPRDNB
      C                   Z-ADD     BJDNWD        DEPDNWD
@@ -344,11 +346,11 @@
      C                   Z-ADD     BJRDNB        DEHRDNB
      C                   Z-ADD     BJDNWD        DEHDNWD
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       * Get following run date
- 
+
      C                   MOVEL     'A.COB '      ABACOB
      C     ABACOB        CHAIN     @AICDF1                            99        *
      C     *in99         IFEQ      '1'
@@ -356,16 +358,16 @@
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   END
- 
+
       * Calculate next working day after following run date
- 
+
      C                   CALLB     'ZFWDT'
      C                   PARM      ABDBRN        ZDAYNO            5 0
      C                   PARM      1             ZNRDYS            2 0
      C                   PARM      *ZERO         ZDYNBR            5 0
      C                   PARM      BJLCCY        ZCCY              3
      C                   PARM                    ZLOC              3
- 
+
      C     Proj_Hist     IFEQ      'P'
      C                   Z-ADD     ABDBRN        DEPRDNB
      C                   Z-ADD     ZDYNBR        DEPDNWD
@@ -376,7 +378,7 @@
      C**********         Z-ADD     ZDYNBR        DEHDNWD                                      CDE002
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
      C/SPACE 5
@@ -400,15 +402,15 @@
      C                   PARM      '*FIRST  '    @OPTN             7
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
- 
+
+
       ** Read Extract Control Data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C     *LOCK         IN        DEEXTCTL
- 
+
       ** Read MPHAS data-area
- 
+
      C******DTAARA       DEFINE                  MPHAS                                        CCB020
      C**********         IN        MPHAS                                                      CCB020
       *                                                                                       CCB020
@@ -416,28 +418,28 @@
      C                   MOVE      '1'           @CLPRM                                       CCB020
      C                   CALL      @CLPRM                                                     CCB020
      C                   PARM      *BLANK        @RTPHS            4                          CCB020
- 
+
       * Update Extract Control Dates
       * (Projection or History Run Date and Date of Next Working Day)
- 
+
      C                   EXSR      UPD_CTLDT
- 
+
       * Set Projections or History Cut-Off Date
- 
+
      C     Proj_Hist     IFEQ      'P'
      C                   EXSR      SET_PROJCD
      C                   ELSE
      C                   EXSR      SET_HISTCD
      C                   ENDIF
- 
+
       ** Update Extract Control Data
- 
+
      C                   OUT       DEEXTCTL
- 
+
       * Initialize all periods with the maximum value
- 
+
      C                   MOVE      '99999'       PER
- 
+
      C                   ENDSR
       *********************************************************************
      C/SPACE 5

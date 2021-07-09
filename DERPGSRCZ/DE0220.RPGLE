@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -46,15 +48,15 @@
       *****************************************************************
       ** DE Historic Positions File
      FDEHPOSNPD IF   E           K DISK
- 
+
       ** DE Historic Positions File
      FDEOPOSNL1 IF   E           K DISK    PREFIX(OL_)
      F                                     RENAME(DEPOSNP0:DEPOSNP1)
- 
+
       ** DE New Positions File
      FDENPOSNPD O    E           K DISK    PREFIX(NW_)
      F                                     RENAME(DEPOSNP0:DEPOSNP2)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -72,34 +74,34 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
- 
+
      D DEHPOSN       E DS                  EXTNAME(DEHPOSNPD)
       ** External Data Structure for Historic Positions Details
- 
+
      D DEOPOSN       E DS                  EXTNAME(DEHPOSNPD) PREFIX(OL_)
       ** External Data Structure for Old Historic Positions Details
- 
+
      D DENPOSN       E DS                  EXTNAME(DENPOSNPD) PREFIX(NW_)
       ** External Data Structure for New Positions Details
- 
+
      D**  Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D**  Short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D W#DATE          DS             6
      D Bday                    1      2
      D Aday                    3      4
- 
+
      D K#TREF          S             26A                                                      CGL029
                                                                                               CGL029
      C     K#OLD         KLIST
@@ -108,9 +110,9 @@
      C                   KFLD                    K#TREF                                       CGL029
      C                   KFLD                    K#ASLI            1
      C                   KFLD                    K#IACD            5 0
- 
+
      C                   READ      DEHPOSNPD                              89
- 
+
      C                   DOW       *IN89 = *Off
       *
       ** If Full Historic requested write record straight to DENPOSNPD
@@ -118,11 +120,11 @@
      C**********         IF        P#IACD >= WSOM                                             208221
      C                   CLEAR                   DENPOSN
      C                   MOVEL     DEHPOSN       DENPOSN
- 
+
      C     I#TYPE        IFEQ      'FEES'
      C                   EXSR      FEERECORD
      C                   ENDIF
- 
+
      C                   WRITE     DEPOSNP2
      C**********         ENDIF                                                                208221
       *
@@ -144,43 +146,43 @@
      C                   IF        DEHPOSN <> DEOPOSN                                         208221
      C                   CLEAR                   DENPOSN
      C                   MOVEL     DEHPOSN       DENPOSN
- 
+
      C     I#TYPE        IFEQ      'FEES'
      C                   EXSR      FEERECORD
      C                   ENDIF
- 
+
      C                   WRITE     DEPOSNP2
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** If Date is after Revenue Take-on Start of month write record to DENTRANPD
      C**********         IF        P#IACD >= WSOM                                             208221
      C                   CLEAR                   DENPOSN
      C                   MOVEL     DEHPOSN       DENPOSN
- 
+
      C     I#TYPE        IFEQ      'FEES'
      C                   EXSR      FEERECORD
      C                   ENDIF
- 
+
      C                   WRITE     DEPOSNP2
      C**********         ENDIF                                                                208221
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      DEHPOSNPD                              89
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
      C
- 
+
      C********************************************************************
       /SPACE 5
      C********************************************************************
      C     FEERECORD     BEGSR
- 
+
       * Only change details if a calculated fee transaction                                   208221
                                                                                               208221
      C     P#ACIN        IFEQ      'Y'                                                        208221
@@ -199,21 +201,21 @@
       /SPACE 5
      C********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
      C                   PARM                    I#TYPE            4
- 
+
       **  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Read Extract Control Data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C                   IN        DEEXTCTL
       *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
@@ -40,7 +42,7 @@
      F                                     RENAME(DEPERDP0: DEPPERDP0)
      FDEHPERDPD IF   E             DISK    INFSR(*PSSR)                                       CDE002
      F                                     RENAME(DEPERDP0: DEHPERDP0)                        CDE002
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -58,26 +60,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D PeriodEDT     E DS                  EXTNAME(DEPPERDPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
- 
- 
+
+
       ** MPHAS Data-Area
      D***MPHAS***********DS             1                                                     CCB020
      D***PHASE                  1      1                                                      CCB020
- 
- 
+
+
       *
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
@@ -86,38 +88,38 @@
      C                   PARM                    Proj_Hist         1
       * OUTPUTS
      C                   PARM                    PeriodEDT
- 
- 
+
+
       **  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
- 
+
+
       ** Read Extract Control Data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C     *LOCK         IN        DEEXTCTL
- 
- 
+
+
       ** Read MPHAS data-area
- 
+
      C******DTAARA       DEFINE                  MPHAS                                        CCB020
      C**********         IN        MPHAS                                                      CCB020
      C                   CALL      'CBC001001'                                                CCB020
      C                   PARM                    COBST             4                          CCB020
- 
+
       * If in input cycle and date checking is required,
       * check whether projections run date
       * or history run date                                                                   CDE002
       * is not equal to run date. It is an error if it is.
- 
+
      C*****PHASE         IFEQ      'A'                                                        CCB020
      C     COBST         IFEQ      '*NO'                                                      CCB020
      C     DECHKD        ANDEQ     'Y'
- 
+
      C     Proj_Hist     IFEQ      'P'                                                        CDE002
      C     DEPRDNB       IFNE      BJRDNB
      C                   EVAL      I#ERMS = 'PROJECTED DATES IN ERROR'
@@ -129,9 +131,9 @@
      C                   EXSR      *PSSR                                                      CDE002
      C                   ENDIF                                                                CDE002
      C                   ENDIF                                                                CDE002
- 
+
      C                   ENDIF
- 
+
       *
       * Get period end dates (projected)
       * (or historic)                                                                         CDE002

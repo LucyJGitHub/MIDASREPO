@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric                     *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -484,7 +486,8 @@
      C                   PARM      *BLANKS       @RETURN           7
      C                   PARM      '*KEY   '     @OPTION           7
      C                   PARM      P#CCY         @POSITIONCUR      3
-     C                   PARM      DERDFR        @DEFFUNRT         2 0
+     C**********         PARM      DERDFR        @DEFFUNRT         2 0                      MD058437
+     C                   PARM      DERDFR        @DEFFUNRT         2                        MD058437
      C                   PARM      P#IACD        @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
 

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -47,15 +49,15 @@
       *****************************************************************
       ** DE Historic Transactions File
      FDEHTRANPD IF   E           K DISK
- 
+
       ** DE Historic Transactions File
      FDEOTRANL1 IF   E           K DISK    PREFIX(OL_)
      F                                     RENAME(DETRANP0:DETRANP2)
- 
+
       ** DE New Transactions File
      FDENTRANPD O    E           K DISK    PREFIX(NW_)
      F                                     RENAME(DETRANP0:DETRANP1)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -73,43 +75,43 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
- 
+
      D DEHTRAN       E DS                  EXTNAME(DEHTRANPD)
       ** External Data Structure for Historic Transaction Details
- 
+
      D DEOTRAN       E DS                  EXTNAME(DEHTRANPD) PREFIX(OL_)
       ** External Data Structure for Old Historic Transaction Details
- 
+
      D DENTRAN       E DS                  EXTNAME(DENTRANPD) PREFIX(NW_)
       ** External Data Structure for New Transaction Details
- 
+
      D**  Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D**  Short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D W#DATE          DS             6
      D Bday                    1      2
      D Aday                    3      4
- 
+
      D K#TREF          S             26A                                                      CGL029
                                                                                               CGL029
      C     K#OLD         KLIST
      C                   KFLD                    K#MOD             2
      C**********         KFLD                    K#TREF           20                          CGL029
      C                   KFLD                    K#TREF                                       CGL029
- 
+
      C                   READ      DEHTRANPD                              89
- 
+
      C                   DOW       *IN89 = *Off
       *
       ** Check that transaction has not matured before Revenue Take-on Start of Month
@@ -137,46 +139,46 @@
      C                   IF        DEHTRAN <> DEOTRAN
      C                   CLEAR                   DENTRAN
      C                   MOVEL     DEHTRAN       DENTRAN
- 
+
      C                   WRITE     DETRANP1
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Write record to DENTRANPD
      C                   CLEAR                   DENTRAN
      C                   MOVEL     DEHTRAN       DENTRAN
- 
+
      C                   WRITE     DETRANP1
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      DEHTRANPD                              89
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
      C
- 
+
      C********************************************************************
       /SPACE 5
      C********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
- 
+
       **  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Read Extract Control Data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C                   IN        DEEXTCTL
       *

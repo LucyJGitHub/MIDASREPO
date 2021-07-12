@@ -1595,6 +1595,7 @@
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidREPO
      C                   PARM      'Y'           RepoFlag          1
+     C                   PARM                    Pconf             1                        MD058379
      C/COPY WNCPYSRC,MMREPOC021
 
      C                   ENDSR

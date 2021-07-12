@@ -33,7 +33,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 01Jul21               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
       *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
@@ -85,7 +85,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
-      *             the placement of refereNce rate field (Recompile) *
+      *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *

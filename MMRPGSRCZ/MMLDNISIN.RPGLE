@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 01Jul21               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
       *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -100,7 +100,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
-      *             the placement of refereNce rate field (Recompile) *
+      *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -986,6 +986,7 @@
      C                   PARM                    NwDlFilFmt
      C/COPY WNCPYSRC,MMLDNISC57
      C                   PARM      'N'           RepoFlag          1            CSE006
+     C                   PARM                    Pconf             1                        MD058379
      C/COPY WNCPYSRC,MMLDNISC34
       *
       * If errors returned
@@ -2603,6 +2604,7 @@
      C                   PARM                    NwDlFilFmt
      C/COPY WNCPYSRC,MMLDNISC64
      C                   PARM      'N'           RepoFlag          1            CSE006
+     C                   PARM                    Pconf                                      MD058379
      C/COPY WNCPYSRC,MMLDNISC38
       *                                                                                       CDL016
       * Validate second screen if feature is on and Fixed Deposit Deal                        CDL016

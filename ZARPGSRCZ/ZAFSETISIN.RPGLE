@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 01Jul21               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
       *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -42,7 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
-      *             the placement of refereNce rate field (Recompile) *
+      *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *

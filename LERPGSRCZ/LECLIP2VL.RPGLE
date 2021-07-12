@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. MD042329           Date 04May21               *
+      *  Last Amend No. MD057917           Date 02Jul21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 MD042329           Date 04May21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD055219           Date 27May20               *
@@ -134,6 +135,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057917 - Allow entry of next interest payment date for     *
+      *             non-discount loan with zero interest.             *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD042329 - Reject button is not working in loan.             *
       *           - Initialize CCLNIDT field at start of SRRSFD subr. *
@@ -2071,17 +2074,20 @@
      C     DDBLRT        ANDEQ     'Y'                                                        CLE172
      C                   MOVEL     'Y'           SkipZVAL                                     CLE172
      C                   ENDIF                                                                CLE172
-      *
-      ***  Must be blank for zero interest amounts and discount loans
-      ***  parts purchased and sold
-      *
-     C     WINTT         IFEQ      *ZEROS
+      *****************************************************************                     MD057917
+      *****Must*be*blank*for*zero*interest*amounts*and*discount*loans**                     MD057917
+      *****parts*purchased*and*sold************************************                     MD057917
+      *****************************************************************                     MD057917
+      *                                                                                     MD057917
+      ** Must be blank for discount loans parts purchased and sold                          MD057917
+      *                                                                                     MD057917
+     C*****WINTT         IFEQ      *ZEROS                                                   MD057917
      C**** @@PTFC        ANDEQ     *ZEROS                                           BUG10226 CSD027A
-     C     @@PTFC        ANDEQ     *Blanks                                                   CSD027A
-     C     @@PTFT        ANDEQ     *ZEROS                                                   BUG10226
-     C     @@PTFN        ANDEQ     *ZEROS                                                   BUG10226
-     C     SkipZVAL      ANDNE     'Y'                                                        CLE172
-     C     WLNPT         OREQ      63
+     C*****@@PTFC        ANDEQ     *Blanks                                          CSD027A MD057917
+     C*****@@PTFT        ANDEQ     *ZEROS                                          BUG10226 MD057917
+     C*****@@PTFN        ANDEQ     *ZEROS                                          BUG10226 MD057917
+     C*****WLNPT         OREQ      63                                                       MD057917
+     C     WLNPT         IFEQ      63                                                       MD057917
      C     WLNPT         OREQ      65
      C     WLNPT         OREQ      67
      C     WLNPT         OREQ      72
@@ -2089,7 +2095,20 @@
      C                   MOVE      'N'           DDNIDTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDNIDT'      FldNamXAr(Idx)
-     C                   MOVEL     'LEL0159'     MsgIDXAr(Idx)
+     C**********         MOVEL     'LEL0159'     MsgIDXAr(Idx)                              MD057917
+     C                   MOVEL     '5049509'     MsgIDXAr(Idx)                              MD057917
+     C                   ELSE                                                               MD057917
+      *                                                                                     MD057917
+      ** Issue warning message if zero interest and has an interest                         MD057917
+      ** payment date.                                                                      MD057917
+      *                                                                                     MD057917
+     C     WINTT         IFEQ      *ZEROS                                                   MD057917
+     C     WLNPT         ANDNE     80                                                       MD057917
+     C                   MOVE      'W'           DDNIDTOK                                   MD057917
+     C                   ADD       1             WId                                        MD057917
+     C                   MOVEL     'DDNIDT'      WFldNmXAr(WId)                             MD057917
+     C                   MOVEL     '5049510'     WMsgIDXAr(WId)                             MD057917
+     C                   ENDIF                                                              MD057917
      C                   ENDIF
       *
       ***  Next interest date must be the same as the rollover date

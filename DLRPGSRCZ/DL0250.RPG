@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031713           Date 23Jun15               *
       *                 CGL165             Date 17Feb15               *
       *                 AR814519           Date 13Mar15               *
@@ -91,6 +92,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031713 - MM deal shows incorrect interest accrued/paid     *
@@ -243,6 +245,7 @@
       ** Midas MM Effective Interest Rate by Tran Ref                                         CAS009
       *                                                                                       CAS009
      FMMEIRDL9UF  E           K        DISK         KINFSR *PSSR                              CAS009
+     FDLLIBEL0IF  E           K        DISK                                                   CDL102
      FSDBSHSL1IF  E           K        DISK                                                 MD031283
      F/COPY WNCPYSRC,DL0250F001
      FDEAMS   IF  E           K        DISK                                                MD031123A
@@ -598,6 +601,7 @@
      I                                    P212321287CNSP                                      CRE073
      I                                     21292135 RDMT                                      CRE073
      I                                     21362139 RDFD                                      CRE073
+     I                                     23892389 BLRT                                      CDL102
 0364 I*
 0365 I*****DELETED RECORD                                                 S01093
      I*****                                                               S01093
@@ -1015,6 +1019,20 @@
      C                     MOVE 'N'       CIR018                                              CIR018
      C                     ENDIF                                                              CIR018
       *                                                                                       CIR018
+      ** Access SAR Details File to determine if CDL102 is installed                          CDL102
+      *                                                                                       CDL102
+     C                     CALL 'AOSARDR0'                                                    CDL102
+     C                     PARM *BLANKS   PRTCD                                               CDL102
+     C                     PARM '*VERIFY' POPTN                                               CDL102
+     C                     PARM 'CDL102'  PSARD                                               CDL102
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL102
+      *                                                                                       CDL102
+     C           PRTCD     IFEQ *BLANK                                                        CDL102
+     C                     MOVE 'Y'       CDL102  1                                           CDL102
+     C                     ELSE                                                               CDL102
+     C                     MOVE 'N'       CDL102                                              CDL102
+     C                     ENDIF                                                              CDL102
+      *                                                                                       CDL102
       ** Access SAR Details File to determine if CDL020 is installed                        MD031283
       *                                                                                     MD031283
      C                     MOVE 'N'       CDL020  1                                         MD031283
@@ -1237,6 +1255,15 @@
 0449 C* N10                GOTO END                                 S01093S01119
 0449 C**   BYPASS PROCESSING IF NOT LIVE MM OR FRA/IRS DEAL               S01119
 0449 C  N10N15             GOTO END                                       S01119
+     C           BRTT      IFNE '  '                                                          CDL102
+     C           BLRT      ANDNE'Y'                                                           CDL102
+     C           *IN10     ANDEQ'1'                                                           CDL102
+     C                     SETOF                     1015                                     CDL102
+     C                     GOTO END                                                           CDL102
+     C                     ENDIF                                                              CDL102
+     C           *IN15     IFEQ '1'                                                           CDL102
+     C                     MOVE ' '       BLRT                                                CDL102
+     C                     ENDIF                                                              CDL102
 0450 C*
 0451 C*
 0452 C*    RESET OUTPUT INDICATORS.
@@ -1370,6 +1397,7 @@
 0471 C*********************TESTB'14'      RCIN         2727               S01194
      C           BADLLC    IFEQ 'Y'                                       S01194
      C           BADLRC    OREQ 'Y'                                       S01194
+     C           BLRT      OREQ 'Y'                                                           CDL102
      C                     MOVE '1'       *IN27                           S01194
      C                     END                                            S01194
 0472 C  N27                GOTO END
@@ -1481,11 +1509,17 @@
      C           *IN10     ANDEQ'1'                                                         MD031283
      C           *IN27     ANDEQ'1'                                                         MD031283
      C           *IN28     ANDEQ'1'                                                         MD031283
+     C           BLRT      ANDNE'Y'                                                           CDL102
       *                                                                                     MD031283
      C                     EXSR SRBVAL                                                      MD031283
       *                                                                                     MD031283
      C                     ENDIF                                                            MD031283
       *                                                                                     MD031283
+     C           CDL102    IFEQ 'Y'                                                           CDL102
+     C           BLRT      ANDEQ'Y'                                                           CDL102
+     C                     EXSR SRLIBE                                                        CDL102
+     C                     ENDIF                                                              CDL102
+      *                                                                                       CDL102
 0503 C                     GOTO END
 0504 C*
 0505 C*    SET ERROR INDICATORS.
@@ -2764,6 +2798,44 @@
      C                     MOVE '0'       *IN10                                             MD031283
       *                                                                                     MD031283
      C                     ENDSR                                                            MD031283
+      *****************************************************************                       CDL102
+      *                                                               *                       CDL102
+      *  SRLIBE - Generate base rate change record for backward       *                       CDL102
+      *           looking rate deal                                   *                       CDL102
+      *                                                               *                       CDL102
+      *  Called by : - Main processing                                *                       CDL102
+      *                                                               *                       CDL102
+      *  Calls     : - ZDATE2                                         *                       CDL102
+      *                                                               *                       CDL102
+      *****************************************************************                       CDL102
+      *                                                                                       CDL102
+     C           SRLIBE    BEGSR                                                              CDL102
+      *                                                                                       CDL102
+     C                     MOVE DLNO      KKDLNO  6                                           CDL102
+     C           KKDLNO    SETLLDLLIBEL0                                                      CDL102
+     C                     READ DLLIBEL0                 88                                   CDL102
+      *                                                                                       CDL102
+     C           KKDLNO    DOWEQLDLNRF                                                        CDL102
+     C           *IN88     ANDEQ'0'                                                           CDL102
+      *                                                                                       CDL102
+     C                     Z-ADDLDCART    G0CBSR                                              CDL102
+     C                     Z-ADDLDVDAT    ZDAYNO                                              CDL102
+      *                                                                                       CDL102
+     C                     EXSR ZDATE2                                                        CDL102
+     C                     MOVE ZADATE    VDATA                                               CDL102
+      *                                                                                       CDL102
+      ** Output to DAMBRDI and report.                                                        CDL102
+      *                                                                                       CDL102
+     C                     EXCPTBKVAL                                                         CDL102
+     C                     ADD  1         DLTOT                                               CDL102
+      *                                                                                       CDL102
+     C                     READ DLLIBEL0                 88                                   CDL102
+     C                     ENDDO                                                              CDL102
+      ** Set off deals indicator so records will not duplicate                                CDL102
+     C                     SETOF                     1015                                     CDL102
+      *                                                                                       CDL102
+     C                     ENDSR                                                              CDL102
+      *                                                                                       CDL102
 0638 C**
 0639 C********************************************************************
      C*                                                                   S01194

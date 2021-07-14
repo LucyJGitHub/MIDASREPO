@@ -2086,7 +2086,7 @@
      C*****@@PTFC        ANDEQ     *Blanks                                          CSD027A MD057917
      C*****@@PTFT        ANDEQ     *ZEROS                                          BUG10226 MD057917
      C*****@@PTFN        ANDEQ     *ZEROS                                          BUG10226 MD057917
-     C     SkipZVAL      ANDNE     'Y'                                               CLE172 MD057917
+     C*****SkipZVAL      ANDNE     'Y'                                               CLE172 MD057917
      C*****WLNPT         OREQ      63                                                       MD057917
      C     WLNPT         IFEQ      63                                                       MD057917
      C     WLNPT         OREQ      65

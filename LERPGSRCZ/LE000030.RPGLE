@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055874           Date 22May20               *
-      *  Prev Amend No. MD055685           Date 24Apr20               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD055874           Date 22May20               *
+      *                 MD055685           Date 24Apr20               *
       *                 MD052994           Date 25Nov19               *
       *                 AR674226           Date 04Dec19               *
       *                 MD050457           Date 06Mar19               *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD055874 - Reversal entries generated for retail account     *
       *             which is still attached to the facility. When the *
       *             facility of a retail account is changed, ensure   *

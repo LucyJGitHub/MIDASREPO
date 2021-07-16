@@ -10,14 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058236           Date 07Jul21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 074791             Date 19Jul94              */
+/*                      074791             Date 19Jul94              */
 /*                      S01494             Date 25May94              */
 /*                      051416             DATE  26FEB93             */
 /*                      E25340             DATE  31MAY91             */
@@ -25,7 +26,8 @@
 /*                      S01117             DATE  11SEP90             */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD058236 - Added Monitor Message CPF0000 to turn on U7/U8   */
+/*                to enable abnormal job termination.                */
 /*       074791 - Override spool file name if in regular payments    */
 /*                mode. Fixed during development of S01494.          */
 /*       S01494 - BLI Funds Transfer Enhancements                    */
@@ -42,7 +44,7 @@
 /*********************************************************************/
 /**          PGM        PARM(&TYPE)                                  /*S01117*/
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)               /*S01117*/
- 
+
 /**     DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)                    /*S01194*/
         DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                    /*S01194*/
         DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
@@ -70,7 +72,7 @@
                    VALUE(' ') TEXT('Midas SD LOCAL +
                    DATA AREA EQUIVALENT') AUT(*USE))                 /*S01194*/
 /**/                                                                 /*S01194*/
- 
+
 /*E25340*/
 /* CLEAR EXTRACT FILE OTPAYEX */
              CLRPFM     FILE(OTPAYEX)
@@ -79,7 +81,7 @@
                           AND TRY AGAIN') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(WAIT)
              ENDDO
- 
+
 /**/                                                                 /*S01494*/
 /** If run type is Regular Payment (FTM2507) then override the */    /*S01494*/
 /** database file OTPAYDD to RPPAYBB */                              /*S01494*/
@@ -88,9 +90,9 @@
              IF         COND(&RNTP *EQ 'FTM2507') THEN(DO)           /*S01494*/
                 OVRDBF     FILE(OTPAYDD) TOFILE(RPPAYBB)             /*S01494*/
              ENDDO                                                   /*S01494*/
- 
+
 /*GENERATE OTPAYEX EXTRACT RECORDS*/
- 
+
 /*051416*/
 /*           CALL PGM(FT0239)                    */
 /************CALL PGM(FT0239) PARM(&TYPE)                         */ /*S01494*/
@@ -102,7 +104,7 @@
                           TOMSGQ(MOPERQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(END))
 /*E25340*/
                                                                      /*S01117*/
@@ -110,11 +112,11 @@
 /**     IF (&TYPE = '1') THEN(DO)                                    /*S01117*/
 /**     OVRDBF OTPALL OTPAUT                                         /*S01117*/
 /**     ENDDO                                                        /*S01117*/
- 
+
 /**     IF (&TYPE = '2') THEN(DO)                                    /*S01117*/
 /**     OVRDBF OTPALL OTPUNT                                         /*S01117*/
 /**     ENDDO                                                        /*S01117*/
- 
+
 /**/                                                                 /*S01117*/
 /** SET UP OVER RIDES **/                                            /*S01117*/
 /**/                                                                 /*S01117*/
@@ -148,7 +150,7 @@
              ENDDO                                                   /*S01117*/
              ELSE       CMD(OVRDBF FILE(OTPALLBB) TOFILE(OTPUNTBB))  /*S01117*/
              ENDDO                                                   /*S01117*/
- 
+
 /**/                                                                 /*074791*/
 /** If run type is Regular Payment (FTM2507) then override the */    /*074791*/
 /** printer files */                                                 /*074791*/
@@ -164,7 +166,7 @@
 /**     CALL       PGM(FT0240) PARM(&TYPE)                           /*S01117*/
 /*******CALL       PGM(FT0240) PARM(&TYPE &RSEQ &RLEV &RENT)*/ /*S01117S01494*/
         CALL       PGM(FT0240) PARM(&TYPE &RSEQ &RLEV &RENT &RNTP)   /*S01494*/
- 
+
 /** Delete*Overrides*if*present  */                                  /*S01117*/
 /**          IF         COND(&TYPE = '1' *OR &TYPE = '2') THEN(DO)   /*S01117*/
 /**     DLTOVR OTPALL                                                /*S01117*/
@@ -180,7 +182,7 @@
              MONMSG     MSGID(CPF9841)                               /*074791*/
              DLTOVR     FILE(FT0240AU)                               /*074791*/
              MONMSG     MSGID(CPF9841)                               /*074791*/
- 
+
 /**/
 /** CHECK FOR DATABASE ERRORS TRAPPED BY THE PROGRAM        **/
 /**/
@@ -206,8 +208,9 @@ END:
 /*E25340*/
 /* CLEAR EXTRACT FILE OTPAYEX */
              CLRPFM     FILE(OTPAYEX)
+             MONMSG     MSGID(CPF0000) EXEC(CHGJOB SWS(XXXXXX11))                       /*MD058236*/
 /*E25340*/
- 
+
                                                              /*E25340*/
 WAIT:
                                                              /*E25340*/

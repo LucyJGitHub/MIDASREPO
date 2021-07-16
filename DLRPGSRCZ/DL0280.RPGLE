@@ -10395,7 +10395,6 @@
      C**********         IF        AMTP <> 'BC'                                    AR853123 MD023042
      C**********         EVAL      *IN36 = '0'                                     AR853123 MD023042
      C**********         ENDIF                                                     AR853123 MD023042
-     C                   EVAL      WRTK = RTKN                                                CDL102 
      C                   IF        AMTP = 'BC'                                                CDL102
      C                             AND CDL102 = 'Y'                                           CDL102
      C                             AND BLRTDM <> ' '                                          CDL102
@@ -10409,7 +10408,7 @@
      C                   EVAL      OPSH = OPSHDM                                              CDL102
      C                   EVAL      RRDP = RRDPDM                                              CDL102
      C                   EVAL      DBAV = DBAVDM                                              CDL102
-     C                   MOVE      'N'           WRTK              1                          CDL102
+     C                   MOVE      'N'           RTKN                                         CDL102
      C                   ENDIF                                                                CDL102
 2202 C*
 2203 C*    SKIP PROCESSING FOR CONTROL RECORD
@@ -33014,7 +33013,7 @@
      O                       OPSH              2420                                           CDL102
      O                       RRDP              2422                                           CDL102
      O                       DBAV              2423                                           CDL102
-     O                       WRTK              2424                                           CDL102
+     O                       RTKN              2424                                           CDL102
       *                                                                                       CDL012
      ODLTCSTPD  DADD 03 15 U4
      O                       GDLNO                6

@@ -1045,6 +1045,17 @@
      I                               2382 2383  AMTC                                          CDL096
      I                               2384 2385  TXC1                                          CGL165
      I                               2386 2387  TXC2                                          CGL165
+     I                               2389 2389  BLRT                                          CDL102
+     I                               2390 2399  RFRR                                          CDL102
+     I                               2400 2403  CALM                                          CDL102
+     I                             P 2404 2409 7BADJ                                          CDL102
+     I                             P 2410 2415 7FLOR                                          CDL102
+     I                               2416 2417  LBDY                                          CDL102
+     I                               2418 2419  LODY                                          CDL102
+     I                               2420 2420  OPSH                                          CDL102
+     I                               2421 2422  RRDP                                          CDL102
+     I                               2423 2423  DBAV                                          CDL102
+     I                               2424 2424  RTKN                                          CDL102
 0278 I*
 0280 I*    DEALS FILE - DETAIL RECORD - NEGOTIABLE ASSETS PURCHASED.
 0281 I*
@@ -1675,6 +1686,16 @@
      I              CNSG                        CNSGDM                                        CRE073
      I              RDMT                        RDMTDM                                        CRE073
      I              RDFD                        RDFDDM                                        CRE073
+     I              BLRT                        BLRTDM                                        CDL102
+     I              RFRR                        RFRRDM                                        CDL102
+     I              CALM                        CALMDM                                        CDL102
+     I              BADJ                        BADJDM                                        CDL102
+     I              FLOR                        FLORDM                                        CDL102
+     I              LBDY                        LBDYDM                                        CDL102
+     I              LODY                        LODYDM                                        CDL102
+     I              OPSH                        OPSHDM                                        CDL102
+     I              RRDP                        RRDPDM                                        CDL102
+     I              DBAV                        DBAVDM                                        CDL102
      I/COPY WNCPYSRC,DL0280I004
      IDAMBRDIF      08
      I/COPY WNCPYSRC,DL0280I015
@@ -2577,6 +2598,19 @@
      C                   ELSE
      C                   MOVE      'N'           CDL020
      C                   ENDIF
+      *                                                                                       CDL102
+      ** Check if CDL102 is switched on                                                       CDL102
+      *                                                                                       CDL102
+     C                   CALL      'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRTCD                                        CDL102
+     C                   PARM      '*VERIFY'     POPTN                                        CDL102
+     C                   PARM      'CDL102'      PSARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+     C     PRTCD         IFEQ      *BLANK                                                     CDL102
+     C                   MOVE      'Y'           CDL102            1                          CDL102
+     C                   ELSE                                                                 CDL102
+     C                   MOVE      'N'           CDL102                                       CDL102
+     C                   ENDIF                                                                CDL102
       *                                                                                      BUG3937
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
@@ -10361,6 +10395,22 @@
      C**********         IF        AMTP <> 'BC'                                    AR853123 MD023042
      C**********         EVAL      *IN36 = '0'                                     AR853123 MD023042
      C**********         ENDIF                                                     AR853123 MD023042
+     C                   EVAL      WRTK = RTKN                                                CDL102 
+     C                   IF        AMTP = 'BC'                                                CDL102
+     C                             AND CDL102 = 'Y'                                           CDL102
+     C                             AND BLRTDM <> ' '                                          CDL102
+     C                   EVAL      BLRT = BLRTDM                                              CDL102
+     C                   EVAL      RFRR = RFRRDM                                              CDL102
+     C                   EVAL      CALM = CALMDM                                              CDL102
+     C                   Z-ADD     BADJDM        BADJ                                         CDL102
+     C                   Z-ADD     FLORDM        FLOR                                         CDL102
+     C                   EVAL      LBDY = LBDYDM                                              CDL102
+     C                   EVAL      LODY = LODYDM                                              CDL102
+     C                   EVAL      OPSH = OPSHDM                                              CDL102
+     C                   EVAL      RRDP = RRDPDM                                              CDL102
+     C                   EVAL      DBAV = DBAVDM                                              CDL102
+     C                   MOVE      'N'           WRTK              1                          CDL102
+     C                   ENDIF                                                                CDL102
 2202 C*
 2203 C*    SKIP PROCESSING FOR CONTROL RECORD
 2204 C     AMTP          COMP      'CO'                                   53
@@ -32954,6 +33004,17 @@
      O**********             STXS              2067P                               BUG24989 AR762808
      O**********             STXT              2075P                               BUG24989 AR762808
      O**********             STXB              2083P                               BUG24989 AR762808
+     O                       BLRT              2389                                           CDL102
+     O                       RFRR              2399                                           CDL102
+     O                       CALM              2403                                           CDL102
+     O                       BADJ              2409P                                          CDL102
+     O                       FLOR              2415P                                          CDL102
+     O                       LBDY              2417                                           CDL102
+     O                       LODY              2419                                           CDL102
+     O                       OPSH              2420                                           CDL102
+     O                       RRDP              2422                                           CDL102
+     O                       DBAV              2423                                           CDL102
+     O                       WRTK              2424                                           CDL102
       *                                                                                       CDL012
      ODLTCSTPD  DADD 03 15 U4
      O                       GDLNO                6

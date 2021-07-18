@@ -28,6 +28,7 @@
 /*-------------------------------------------------------------------*/
 /*       MD058236 - Added Monitor Message CPF0000 to turn on U7/U8   */
 /*                to enable abnormal job termination.                */
+/*       MD046248 - Finastra Rebranding                              */
 /*       074791 - Override spool file name if in regular payments    */
 /*                mode. Fixed during development of S01494.          */
 /*       S01494 - BLI Funds Transfer Enhancements                    */

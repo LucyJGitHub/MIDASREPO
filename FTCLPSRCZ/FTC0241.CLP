@@ -82,7 +82,7 @@
              CHGVAR     VAR(&RNTP) VALUE(%SST(&RPARM 4 7))           /*S01494*/
              IF         COND(&RNTP *EQ 'FTM2509') THEN(DO)           /*S01494*/
                 OVRDBF     FILE(OTPAYDD) TOFILE(RPPAYOB)             /*S01494*/
-             ENDDO       /*S01494*/
+             ENDDO                                                   /*S01494*/
 
 /*GENERATE OTPAYEX EXTRACT RECORDS*/
 

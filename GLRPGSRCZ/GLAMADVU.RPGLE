@@ -34,9 +34,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR398205           Date 31Jan13               *
-      *  Prev Amend No. AR979910           Date 07Jun12               *
-      *                 260405             Date 04Apr20               *      
+      *  Last Amend No. MD058391           Date 30Jun21               *
+      *  Prev Amend No. AR398205           Date 31Jan13               *
+      *                 AR979910           Date 07Jun12               *
+      *                 260405             Date 04Apr20               *
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -145,6 +146,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058391 - GLAMAD API's failing due to blank Statement Freq. *
+      *             Rework AR398205 since GLAMADVU now also used by   *
+      *             API processing so DDSTFQ can't be blanks as per   *
+      *             IC. For insert of API transactions statement freq.*
+      *             should be defaulted SGDELRPD.BKDSFC.              *
       *  AR398205 - Opening accounts                                  *
       *             Default the Statement Frequency to blanks.        *
       *           - Applied for AR1068690 (Child: AR1069087)          *
@@ -154,9 +160,9 @@
       *             (Child:AR979911)                                  *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
-      *         - Applied for MD055446.                               *      
+      *         - Applied for MD055446.                               *
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
-      *             add check if account in REDEFD is valid.          *      
+      *             add check if account in REDEFD is valid.          *
       *  MD055212 - Remove the defaulting of values for DDBAC, DDBAD, *
       *             DDRAC, DDRAD to 'N'.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -3149,8 +3155,13 @@
      C**********         MOVE      'N'           DDBAC                                      MD055212
       *
       ** Dft the Statement Freq to the value held on the GL ICD (SdGelr)
+     C                   IF        APFOTRANID <> *BLANKS AND                                MD058391
+     C                             DDACTN = 'I'                                             MD058391
      C**********         MOVE      BKDSFC        DDSTFQ                                     AR398205
+     C                   MOVE      BKDSFC        DDSTFQ                                     MD058391
+     C                   ELSE                                                               MD058391
      C                   MOVE      *BLANKS       DDSTFQ                                     AR398205
+     C                   ENDIF                                                              MD058391
       *                                                                                       240312
       ** Blank the next statement day field if it is an invalid period                        240312
      C                   If        BKDSFC <> 'M' and                                          240312

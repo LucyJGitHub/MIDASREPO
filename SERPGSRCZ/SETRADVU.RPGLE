@@ -36,7 +36,7 @@
       *  Last Amend No. MD057789           Date 19May21               *
       *  Prev Amend No. 258901             Date 22May20               *
       *                 247907             Date 22May20               *
-      *                 247524             Date 22May20               *      
+      *                 247524             Date 22May20               *
       *                 MD056627           Date 02Sep20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
@@ -130,13 +130,13 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057789 - Charges details are not defaulted when Portfolio  *
-      *             reference is inserted                             *
+      *             reference is inserted.                            *
       *           - Exclude Portfolio Reference in DS/TranInChCm      *
       *  258901 - Error in tax amount for charges and commissions.    *
       *  247524 - Securities Trades - charges are not defaulted and   *
       *           not calculated.                                     *
       *  247907 - Wrong settlement amount for trades with the same    *
-      *           nominal and settlement currency.                    *      
+      *           nominal and settlement currency.                    *
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*

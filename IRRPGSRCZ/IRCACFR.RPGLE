@@ -15,8 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. MD056318           Date 23Jul20               *
+      *  Prev Amend No. MD049574           Date 07Feb18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 07Jun13               *      
+      *                 CSD103             Date 10Aug20               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
@@ -54,6 +58,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056318 - Missed out compatibility patch objects in RBRU    *
+      *             SP22 Upgrade Delivery (RZBDK0001)                 *
+      *  MD049574 - Correct buffer positions for Principal Change     *
+      *             schedule fields                                   *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *           - DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054117 - Principal change Increase/Decrease capability     *
@@ -214,6 +226,7 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D DDFOID          S             20                                                     AR933170
 
       * Error indicators
      D IRECACF       E DS                  EXTNAME(IRECACFPD)
@@ -560,6 +573,7 @@
      C                                      + #1STAT                                         BUG5871
      C**********                            + FORMULAOPC + PCSAST                     BUG6377 CSW213
      C                                      + FORMULAOPC                                      CSW213
+     C                                      + DDFOID                                        AR933170
      C                                      + InSwift2013                                     CSW213
      C                                      + PCSAST                                          CSW213
      C**********         EVAL      Buffer2=%SUBST(PCSAST:4857)                  BUG5403      BUG6377
@@ -582,8 +596,12 @@
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5983)                     CSW214 MD031861
      C**********         EVAL      Buffer2=%SUBST(PCSAST:1774)                       MD031861 CSW216
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5773)                     MD031861 CSW216
-     C                   EVAL      Buffer2=%SUBST(PCSAST:1734)                                CSW216
-     C                   EVAL      BufferEx2=%SUBST(PCSAST:5733)                              CSW216
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1734)                       CSW216 MD047859
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5733)                     CSW216 MD047859
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1754)                     MD047859 MD049574
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5753)                   MD047859 MD049574
+     C                   EVAL      Buffer2=%SUBST(PCSAST:1714)                              MD049574
+     C                   EVAL      BufferEx2=%SUBST(PCSAST:5713)                            MD049574
 
      C                   SETON                                        LR
      C                   RETURN
@@ -744,6 +762,7 @@
       ** Update 'New' Deal with Deal in Screen Format
 
      C                   MOVEL     CrIRScnFmt    NwIRScnFmt
+     C                   EVAL      DDFOID = FRNT                                            AR933170
 
      C                   ENDSR
       **********************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD048586           Date 11Jan21               *
       *                 MD023298A          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
@@ -127,6 +128,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add new hook ERZ248_044                             *
+      *           Amended hooks FTH00422, FTOPAYDC08, FTOPAYDC12,     *
+      *           FTOPAYDC31                                          *        
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD048586 - Remove conditions for executing SRCLR             *
@@ -1303,6 +1308,7 @@
      C                             PSJobName <> 'QZDASSINIT' AND                           MD023298A
      C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      OTFRID = OTFRNT                                            257487
+     C/COPY WNCPYSRC,ERZ248_044                                                               ERZ248
      C                   Write     OTPAYQD0                             99                    257487
                                                                                               257487
      C                   If        *IN99 = *ON                                                257487

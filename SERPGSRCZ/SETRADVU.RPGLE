@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056627           Date 02Sep20               *
-      *  Prev Amend No. 258901             Date 22May20               *
+      *  Last Amend No. MD057753           Date 01Jul21               *
+      *  Prev Amend No. MD056627           Date 02Sep20               *
+      *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
       *                 247524             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
@@ -127,6 +128,10 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD057753 - Associated Front Office ID missing after amendment*
+      *             of trade.                                         *
+      *           - When Associated Front Office ID is not blanks     *
+      *             update Associated Front Office Transaction ID     *
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*
@@ -3323,7 +3328,7 @@
      C                   IF        CGL031 = 'Y'                                               237063
      C                   EXSR      CalcTrEUTX                                                 237063
      C                   ENDIF                                                                237063
- 
+
       * CalcTrCVAL - Calculate Trade Countervalue
 
      C                   EXSR      CalcTrCVAL                                                BUG3145
@@ -5362,7 +5367,12 @@
                                                                                               244537
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_FRNT = APFOTranID
+      ** If Associated Front Office Transaction ID is not blank                             MD057753
+      ** update Associated Front Office Transaction ID.                                     MD057753
+      *                                                                                     MD057753
+     C                   IF        APFOAsocID <> *BLANKS                                    MD057753
      C                   EVAL      V_AFRT = APFOAsocID
+     C                   ENDIF                                                              MD057753
      C                   EVAL      V_REPA = APRprLocn
                                                                                               244537
      C                   ENDIF                                                                244537

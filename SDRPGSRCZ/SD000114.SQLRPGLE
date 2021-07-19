@@ -441,23 +441,38 @@
       ** Select deal transactions which uses a backward looking-rate                          CDL102
      C                   IF        CDL102 = 'Y'                                               CDL102
                                                                                               CDL102
+      ** Extract the latest authorised BC Deal amendment                                      CDL102
+     C/exec SQL                                                                               CDL102
+     C+ insert into DLBCAMPD                                                                  CDL102
+     C+ select digits(a.HNDA38), a.HNDVSD,                                                    CDL102
+     C+        a.HNBLRT, a.HNRFRR, a.HNCALM, a.HNBADJ, a.HNFLOR,                              CDL102
+     C+        a.HNLBDY, a.HNLODY, a.HNOPSH, a.HNRRDP, a.HNDBAV                               CDL102
+     C+ from MMDEAMPP a                                                                       CDL102
+     C+ where a.HNDS38 in                                                                     CDL102
+     C+       (select max(b.HNDS38)                                                           CDL102
+     C+          from MMDEAMPP b                                                              CDL102
+     C+         where b.HNMTYP = 'BC' and b.HNDSTS = 'A'                                      CDL102
+     C+           and b.HNCHTP <> 'R' and b.HNDVSD < :BJDNWD                                  CDL102
+     C+           and a.HNDA38 = b.HNDA38)                                                    CDL102
+     C+ with nc                                                                               CDL102
+     C/end-exec                                                                               CDL102
+                                                                                              CDL102
       ** Authorised BC deal amendment using backward looking rate                             CDL102
      C/exec SQL                                                                               CDL102
      C+ insert into SDBJEXPD                                                                  CDL102
      C+ select 'DL', digits(DLNO),                                                            CDL102
      C+        CCY,  VDAT, MDAT,                                                              CDL102
      C+        NIDT, 0, 0, SLID, JFLID,                                                       CDL102
-     C+        HNBLRT, HNRFRR, HNCALM, HNBADJ, HNFLOR,                                        CDL102
-     C+        HNLBDY, HNLODY, HNOPSH, HNRRDP, HNDBAV                                         CDL102
-     C+ from MMDEAMPP                                                                         CDL102
+     C+        DLBLRT, DLRFRR, DLCALM, DLBADJ, DLFLOR,                                        CDL102
+     C+        DLLBDY, DLLODY, DLOPSH, DLRRDP, DLDBAV                                         CDL102
+     C+ from DLBCAMPD                                                                         CDL102
      C+ inner join DEALSDC                                                                    CDL102
-     C+ on HNDA38 = DLNO                                                                      CDL102
-     C+ where HNMTYP = 'BC' and HNBLRT = 'Y' and HNDSTS = 'A'                                 CDL102
-     C+   and HNCHTP <> 'R' and HNDVSD < :BJDNWD and HNCALM <> 'MANL'                         CDL102
+     C+ on DLDLNO = DLNO                                                                      CDL102
+     C+ where DLBLRT = 'Y' and DLCALM <> 'MANL'                                               CDL102
      C+ with nc                                                                               CDL102
      C/end-exec                                                                               CDL102
                                                                                               CDL102
-      ** Deal transactions not yet inserted in the extract file                               CDL102
+      ** Other deal transactions using backward looking rate                                  CDL102
      C/exec SQL                                                                               CDL102
      C+ insert into SDBJEXPD                                                                  CDL102
      C+ select 'DL', digits(DLNO),                                                            CDL102
@@ -470,8 +485,7 @@
      C+   and BLRT = 'Y' and CALM <> 'MANL'                                                   CDL102
      C+   and DTYP in ('CD','CI','CL','DL','IP',                                              CDL102
      C+                'IT','TD','TI','IL','ID')                                              CDL102
-     C+   and digits(DLNO) not in                                                             CDL102
-     C+       (select TRTRAN from SDBJEXPD where TRMODI = 'DL')                               CDL102
+     C+   and digits(DLNO) not in (select DLDLNO from DLBCAMPD)                               CDL102
      C+ with nc                                                                               CDL102
      C/end-exec                                                                               CDL102
      C                   ENDIF                                                                CDL102

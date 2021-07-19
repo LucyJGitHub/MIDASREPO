@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR797731           Date 02Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Mar15               *
       *                 AR814519           Date 10Mar15               *
@@ -80,6 +81,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR797731 - Error in the MM Maintenance Screen. Reverse       *
+      *             BUG5169. Part of CDL020's functionality is to     *
+      *             give the user option to amend the system          *
+      *             defeaulted Actual Interest Rate. (Child: AR955995)*
+      *           - Applied for MD058403                              *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -381,11 +387,11 @@
      D  OKAMC                         1A                                                      CDL096
                                                                                               CDL096
 
-      ** Flags to indicate whether transaction fields are valid                              BUG5169
-     D OKFlagsDS2      DS                                                                    BUG5169
-     D  DDSOFDOK                      1A                                                     BUG5169
-     D  DDFBRTOK                      1A                                                     BUG5169
-     D  DDAIROK                       1A                                                     BUG5169
+      ** Flags to indicate whether transaction fields are valid                     BUG5169 AR797731
+     D*OKFlagsDS2      DS                                                           BUG5169 AR797731
+     D**DDSOFDOK                      1A                                            BUG5169 AR797731
+     D**DDFBRTOK                      1A                                            BUG5169 AR797731
+     D**DDAIROK                       1A                                            BUG5169 AR797731
                                                                                              BUG5169
       ** Define for compilation purpose                                                       CDL016
      D DDNgvIOK        S              1A                                                      CDL016
@@ -1029,18 +1035,18 @@
      C                   ENDIF
      C                   ENDIF                                                                211926
      C*
-     C*-----------------------------------------*                                            BUG5169
-     C* Actual Interest Rate                    *                                            BUG5169
-     C*-----------------------------------------*                                            BUG5169
-     C** This field is NOT AMENDABLE.                                                        BUG5169
-     C*                                                                                      BUG5169
-     C     DDAIR         IFNE      @DDAIR                                                    BUG5169
-     C     CDL020        ANDEQ     'Y'                                                       BUG5169
-     C                   ADD       1             Idx                                         BUG5169
-     C                   EVAL      FldNameArr(Idx) = 'DDAIR'                                 BUG5169
-     C                   EVAL      MsgIDArr(Idx)   = 'MMM0379'                               BUG5169
-     C                   EVAL      ddAIRok         = 'N'                                     BUG5169
-     C                   ENDIF                                                               BUG5169
+     C*-----------------------------------------***********************             BUG5169 AR797731
+     C**Actual*Interest*Rate*******************************************             BUG5169 AR797731
+     C*-----------------------------------------***********************             BUG5169 AR797731
+     C***This*field*is*NOT*AMENDABLE.**********************************             BUG5169 AR797731
+     C*****************************************************************             BUG5169 AR797731
+     C*****DDAIR         IFNE      @DDAIR                                           BUG5169 AR797731
+     C*****CDL020        ANDEQ     'Y'                                              BUG5169 AR797731
+     C**********         ADD       1             Idx                                BUG5169 AR797731
+     C**********         EVAL      FldNameArr(Idx) = 'DDAIR'                        BUG5169 AR797731
+     C**********         EVAL      MsgIDArr(Idx)   = 'MMM0379'                      BUG5169 AR797731
+     C**********         EVAL      ddAIRok         = 'N'                            BUG5169 AR797731
+     C**********         ENDIF                                                      BUG5169 AR797731
      C*-----------------------------------------*
      C* Interest Calculation Method             *
      C*-----------------------------------------*
@@ -1572,11 +1578,11 @@
      C                   MOVEL     @DDSPRT       DDSPRT
      C                   END
       *
-      * Actual Interest Rate                                                                 BUG5169
-     C     ddAIROK       IFEQ      'N'                                                       BUG5169
-     C     CDL020        ANDEQ     'Y'                                                       BUG5169
-     C                   MOVEL     @DDAIR        DDAIR                                       BUG5169
-     C                   END                                                                 BUG5169
+      **Actual*Interest*Rate*******************************************             BUG5169 AR797731
+     C*****ddAIROK       IFEQ      'N'                                              BUG5169 AR797731
+     C*****CDL020        ANDEQ     'Y'                                              BUG5169 AR797731
+     C**********         MOVEL     @DDAIR        DDAIR                              BUG5169 AR797731
+     C**********         END                                                        BUG5169 AR797731
                                                                                              BUG5169
       * Interest Calculation Method
      C     ddICMTOK      IFEQ      'N'

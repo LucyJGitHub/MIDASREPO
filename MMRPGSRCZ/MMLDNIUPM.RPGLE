@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -114,6 +115,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *           (Recompile)                                         *

@@ -17,8 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058448           Date 14Jul21               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -40,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058448 - Total Interest is not zero when backward          *
+      *             looking rate is entered                           *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -272,6 +278,18 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
+     D TranScnBlrt     DS                                                                   MD058448
+     D  DDBLRT                        1A                                                    MD058448
+     D  DDRFRR                       10A                                                    MD058448
+     D  DDCALM                        4A                                                    MD058448
+     D  DDBADJ                       13A                                                    MD058448
+     D  DDFLOR                       13A                                                    MD058448
+     D  DDLBDY                        2A                                                    MD058448
+     D  DDLODY                        2A                                                    MD058448
+     D  DDOPSH                        1A                                                    MD058448
+     D  DDRRDP                        2A                                                    MD058448
+     D  DDDBAV                        1A                                                    MD058448
+     D  DDRTKN                        1A                                                    MD058448
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -300,7 +318,9 @@
      C                   EVAL      POAmount = 0
      C                   EVAL      POErrCde = 0
 
+     C                   IF        DDBLRT <> 'Y'                                            MD058448
      C                   EXSR      SRValTOTI
+     C                   ENDIF                                                              MD058448
 
       ** If an error has been found, set return code appropriately.
       ** Otherwise, update valid file fields.
@@ -316,7 +336,8 @@
       ** For transactions using backward looking rate, the calculation of interest will be    CDL102
       ** zero during input because the base rate code is linked to a sero value.              CDL102
       *                                                                                       CDL102
-     C                   IF        N1BLRT = 'Y'                                               CDL102
+     C**********         IF        N1BLRT = 'Y'                                      CDL102 MD058448
+     C                   IF        DDBLRT = 'Y'                                             MD058448
      C                   EVAL      N1MTTI = *ZEROS                                            CDL102
      C                   EVAL      N2MTTI = *ZEROS                                            CDL102
      C                   ELSE                                                                 CDL102
@@ -461,7 +482,12 @@
 
      C                   IF        DDACTN = 'I'
 
+     C                   IF        DDBLRT = 'Y'                                             MD058448
+     C                   Z-ADD     *ZEROS        WAmountIn                                  MD058448
+     C                   ELSE                                                               MD058448
+
      C                   Z-ADD     WTotIntAmt    WAmountIn
+     C                   ENDIF                                                              MD058448
      C                   Z-ADD     PDecPlace     WDecPlcIn
 
      C                   EXSR      SRZA0921
@@ -869,6 +895,8 @@
 
       ** New Deal in File Format of associated deal
      C                   PARM                    NwDlFilFmt2
+      ** FUND Backward-Looking Rate Screen Fields                                           MD058448
+     C                   PARM                    TranScnBlrt                                MD058448
 
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

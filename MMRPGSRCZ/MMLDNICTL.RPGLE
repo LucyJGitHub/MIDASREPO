@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD031031           Date 23Feb15               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD031031           Date 23Feb15               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -128,6 +129,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *

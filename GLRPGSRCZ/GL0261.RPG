@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 250874             Date 14Nov12               *
+      *  Last Amend No. MD051815           Date 09Oct18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 250874             Date 14Nov12               *
       *                 MD019891           Date 10Apr13               *
       *                 AR1075051          Date 10Feb13               *
       *                 CGL127AM           Date 06Aug12               *
@@ -49,6 +50,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD051815 - GLC0340 failed due to missing interbranch postings*
+      *             from journal entry. Program amended to continue   *
+      *             processing batches even after reading a batch     *
+      *             with status not equal to 'A' or 'S'.              *
       *  MD046248 - Finastra Rebranding                               *
       *  250874 - FOOB due to PSTA>13 digits. Make sure that PSTA     *
       *           will be able to accommodate the total by dividing   *
@@ -394,12 +399,14 @@
      C*
      C*    IF ACCEPTED BATCH
      C*
-     C           STAT      ANDEQ'A'
+     C********** STAT      ANDEQ'A'                                                         MD051815
+     C           STAT      IFEQ 'A'                                                         MD051815
      C*                                                                   S01340
      C**  OR BATCH ALREADY POSTED                                         S01340
      C*                                                                   S01340
-     C           *IN50     OREQ '0'                                       S01340
-     C           STAT      ANDEQ'S'                                       S01340
+     C********** *IN50     OREQ '0'                                                  S01340 MD051815
+     C********** STAT      ANDEQ'S'                                                  S01340 MD051815
+     C           STAT      OREQ 'S'                                                         MD051815
       *                                                                                     CGL127AM
      C                     MOVE NXTKEY    LSTKEY                                            CGL127AM
      C                     ADD  1         #COMIT                                            CGL127AM
@@ -580,6 +587,7 @@
      C           BNUMH     READE@BSREAJ                  64
      C                     END
      C                     END
+     C                     ENDIF                                                            MD051815
      C*
      C*    READ NEXT BATCH HEADER RECORD
      C*

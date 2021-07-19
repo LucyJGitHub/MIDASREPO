@@ -1,0 +1,133 @@
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  Midas - /COPY Member (GL1300)                                *                       ERZ212
+      *                                                               *                       ERZ212
+      *  GL1300CCP6 - Midas GL Generate statement SWIFT msgs in COB   *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Last Amend No. ERZ212   *CREATE   Date 22Feb13               *                       ERZ212
+      *                                                               *                       ERZ212
+      *---------------------------------------------------------------*                       ERZ212
+      *                                                               *                       ERZ212
+      *  ERZ212 - Multicash MT940 Interface                           *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                                                       ERZ212
+      ** Rate/Spread or Exchange Rate for subfield 9 in Field :61:                            ERZ212
+      *                                                                                       ERZ212
+     C           MT94MC    IFEQ 'Y'                                                           ERZ212
+     C           MT94      ANDEQ'MTCASH'                                                      ERZ212
+     C                     MOVE *BLANKS   EINTR  16                                           ERZ212
+     C                     MOVE *BLANKS   ZFIELD                                              ERZ212
+     C                     MOVE *BLANKS   EWSB9  48                                           ERZ212
+     C                     MOVE *BLANKS   ERTN1   1                                           ERZ212
+     C                     CLEARRATE                                                          ERZ212
+     C                     CLEAREXRT                                                          ERZ212
+     C                     CLEARINRT                                                          ERZ212
+     C                     CLEARESB9S                                                         ERZ212
+      *                                                                                       ERZ212
+      ** Rate/Spread                                                                          ERZ212
+      *                                                                                       ERZ212
+     C           DLREF     IFNE *BLANK                                                        ERZ212
+     C                     MOVELDLREF     EDREFI                                              ERZ212
+     C                     SELEC                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Foreign Exchange                                                                     ERZ212
+      *                                                                                       ERZ212
+     C           EDREFI    WHEQ 'D'                                                           ERZ212
+      *                                                                                       ERZ212
+      ** Set flag and process field if exchange rate<>1 or zero                               ERZ212
+      *                                                                                       ERZ212
+     C           EXRT      IFNE 1                                                             ERZ212
+     C           EXRT      ANDNE0                                                             ERZ212
+     C                     MOVE 'Y'       ERTN1                                               ERZ212
+     C                     MOVE EXRT      ZFIELD                                              ERZ212
+     C                     Z-ADD8         ZADEC                                               ERZ212
+     C                     EXSR ZEDIT                                                         ERZ212
+     C                     MOVELZFIELD    EINTR                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Money Market..                                                                       ERZ212
+      *                                                                                       ERZ212
+     C           EDREFI    WHEQ 'L'                                                           ERZ212
+      *                                                                                       ERZ212
+      ** Set flag and process field if interest rate<>1                                       ERZ212
+      *                                                                                       ERZ212
+     C           INRT      IFNE 1                                                             ERZ212
+     C           INRT      ANDNE0                                                             ERZ212
+     C                     MOVE 'Y'       ERTN1                                               ERZ212
+     C                     MOVE INRT      ZFIELD                                              ERZ212
+     C                     Z-ADD7         ZADEC                                               ERZ212
+     C                     EXSR ZEDIT                                                         ERZ212
+     C                     MOVELZFIELD    EINTR                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDSL                                                              ERZ212
+     C                     ELSE                                                               ERZ212
+      *                                                                                       ERZ212
+     C           2         SUBSTPREF:12   EPREF2                                              ERZ212
+      *                                                                                       ERZ212
+      ** Exchange Rate for Incoming/Outgoing Payments                                         ERZ212
+      *                                                                                       ERZ212
+     C                     SELEC                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Incoming Payment..                                                                   ERZ212
+      *                                                                                       ERZ212
+     C           EPREF2    WHEQ 'IN'                                                          ERZ212
+     C                     MOVELPREF      EPRF15                                              ERZ212
+     C           EPRF15    CHAININPAY                90                                       ERZ212
+      *                                                                                       ERZ212
+      ** Set flag and process field if rate<>1                                                ERZ212
+      *                                                                                       ERZ212
+     C           RATE      IFNE 1                                                             ERZ212
+     C           RATE      ANDNE0                                                             ERZ212
+     C                     MOVE 'Y'       ERTN1                                               ERZ212
+     C                     MOVE RATE      ZFIELD                                              ERZ212
+     C                     Z-ADD8         ZADEC                                               ERZ212
+     C                     EXSR ZEDIT                                                         ERZ212
+     C                     MOVELZFIELD    EINTR                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Outgoing Payment..                                                                   ERZ212
+      *                                                                                       ERZ212
+     C           EPREF2    WHEQ 'OP'                                                          ERZ212
+     C                     MOVELPREF      EPRF15                                              ERZ212
+     C           EPRF15    CHAINOTPAY                90                                       ERZ212
+      *                                                                                       ERZ212
+      ** Set flag and process field if rate<>1                                                ERZ212
+      *                                                                                       ERZ212
+     C           RATE      IFNE 1                                                             ERZ212
+     C           RATE      ANDNE0                                                             ERZ212
+     C                     MOVE 'Y'       ERTN1                                               ERZ212
+     C                     MOVE RATE      ZFIELD                                              ERZ212
+     C                     Z-ADD8         ZADEC                                               ERZ212
+     C                     EXSR ZEDIT                                                         ERZ212
+     C                     MOVELZFIELD    EINTR                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSL                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Save subfield 9 to output to Field 61, NS:215: if FT..                               ERZ212
+      *                                                                                       ERZ212
+     C           EPREF2    IFEQ 'OP'                                                          ERZ212
+     C           EPREF2    OREQ 'IN'                                                          ERZ212
+     C                     MOVELSB9       ESB9S  20                                           ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Formatting of resultant field into end of Subfield 9,                                ERZ212
+      ** Process only if rate <> 1.0000000, or not blank or zero                              ERZ212
+      *                                                                                       ERZ212
+     C           ERTN1     IFEQ 'Y'                                                           ERZ212
+     C                     CLEARSB9                                                           ERZ212
+      *                                                                                       ERZ212
+      ** Calculating position in EINTR and moving field to Subfield 9                         ERZ212
+      *                                                                                       ERZ212
+     C           ' '       CHECKEINTR     ECH     20                                          ERZ212
+     C           16        SUB  ECH       ECH2    20                                          ERZ212
+     C                     ADD  1         ECH2                                                ERZ212
+     C           ECH2      SUBSTEINTR:ECH SB9                                                 ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+      * End of /COPY GL1300CCP6                                       *                       ERZ212
+      *****************************************************************                       ERZ212

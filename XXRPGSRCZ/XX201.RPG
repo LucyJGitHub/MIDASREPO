@@ -1,0 +1,1235 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD - Maintain COCUNUT')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  XX201 - Midas SD COCUNUT Maintenance                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. ERZ032   *CREATE   Date 24Jan13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  ERZ032 - Customer Details Additional Information             *
+      *                                                               *
+      *****************************************************************
+      *  Subroutine Index                                             *
+      *                                                               *
+      *  #IINIT - Initial processing                                  *
+      *  #IINZS - Initalise Subfile (selection processing)            *
+      *  #ILDSF - Load subfile (selection processing)                 *
+      *  #ISCRD - Screen display processing                           *
+      *  #IEXIT - Exit program                                        *
+      *  #IADDR - Add new definition                                  *
+      *  #IOPTN - Options processing                                  *
+      *  #IDELR - Delete definition                                   *
+      *  #IVALD - Validate user input                                 *
+      *  #IINDI - Indicator Subroutine                                *
+      *  #IRFSH - Refresh screen                                      *
+      *  #IRLUP - Roll up processing                                  *
+      *  #IEXFM - Display subfile screen                              *
+      *  #IMVFF - Move file fields to screen                          *
+      *  #IMVFS - Move file fields to subfile                         *
+      *  #IMVSC - Move screen fields to file                          *
+      *  #IMSGC - Clear message queue                                 *
+      *  #ICLRS - Clear subfile                                       *
+      *  #ICLR1 - Clear screen subfile fields                         *
+      *  #ICLR2 - Clear selection fields                              *
+      *  ZASNMS - Error messages processing                           *
+      *****************************************************************
+      * Indicator Summary                                             *
+      *                                                               *
+      *   03 - Exit program                                           *
+      *   05 - Refresh screen                                         *
+      *   09 - Insert new record                                      *
+      *   12 - Previous screen indicator                              *
+      *   21 - Protect field in enquiry mode                          *
+      *   23 - F12 text display                                       *
+      *   24 - F10 text display                                       *
+      *   27 - Roll up indicator                                      *
+      *   30 - Protect fields                                         *
+      *   32 - Read to SDCOCUV1-lock file                             *
+      *   33 - Read  to SDCOCUV1-don't lock file                      *
+      *   41 - Error on field S1COCO (COCUNUT)                        *
+      *   44 - Error on field/s S1SEL (Selection option)              *
+      *   50 - Validation Check (ON if error)                         *
+      *   51 - ERRMSGID                                               *
+      *   60 - Display subfile                                        *
+      *   61 - Display subfile control                                *
+      *   62 - End of subfile                                         *
+      *   70 - Enquiry Mode                                           *
+      *   81 - Footer for 2nd Screen in Amend/Enquire Mode            *
+      *   82 - Footer for 2nd Screen in Delete Mode                   *
+      *U7-U8 - General Error Indicators                               *
+      * LR - Last Record Indicator                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** Display file
+     FXX201DF CF  E                    WORKSTN                        UC
+     F                                        UIRRN KSFILE #SFLRCD
+      *
+      ** RTV: Midas SD Coconut file
+      *
+     FSDCOCUV1UF  E           K        DISK         KCOMIT       A    UC
+      *
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement.
+      *
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     ILDA       E DSLDA                         256
+      **  Local data area for data base errors.
+      *
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structure used for access objects
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =============================                      *
+      *            MAIN     - Control Processing.                     *
+      *            =============================                      *
+      *                                                               *
+      * CALLS      #IINIT  -  Initial Processing.                     *
+      *            #IINZS  -  Initialise subfile.                     *
+      *            #ISCRD  -  Screen Display Processing.              *
+      *            #IEXIT  -  Exit program.                           *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           EMODE   1
+      *****************************************************************
+      *****************************************************************
+      *
+      ** Initial processing do first time through only
+     C           DONE      IFEQ *BLANK
+     C                     EXSR #IINIT
+     C                     ENDIF
+      *
+      ** Initialisation of subfile.
+      *
+     C                     EXSR #IINZS
+      *
+      ** Process screen display and user input.
+      *
+     C                     EXSR #ISCRD
+      *
+      ** End program if F3 pressed.
+      *
+     C           *IN03     IFEQ *ON
+     C                     EXSR #IEXIT
+     C                     ENDIF
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =============================                      *
+      *            #IINIT   - Initial Processing                      *
+      *            =============================                      *
+      *                                                               *
+      * CALLED BY         Main Processing                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IINIT    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Set on Initialisation Done flag
+     C                     MOVE 'Y'       DONE    1
+      *
+      * Open files
+      *
+     C                     OPEN XX201DF
+     C                     OPEN SDCOCUV1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     MOVE PGM       ZAPGM  10
+     C                     MOVE PGM       ##PGM
+      *
+      * Initialise Subfile page
+      *
+     C                     Z-ADD11        UISFPG  30
+      *
+      ** Define Local Data Area for error handling, set rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    ##RUN
+      *
+     C                     SELEC
+     C           EMODE     WHEQ 'M'
+     C                     MOVE *OFF      *IN70
+     C           EMODE     WHEQ 'E'
+     C                     MOVE *ON       *IN70
+     C                     ENDSL
+      *
+      ** Initialise work fields
+      *
+      *                    Reload Subfile flag
+     C                     MOVE *BLANKS   W0RSF   1
+      *
+      *                    Relative record number
+     C                     Z-ADD0         UIRRN   50
+      *
+      *                    Store for highest record number processed
+     C                     Z-ADD0         UIRNO   50
+      *
+      *                    Store for target file of first record
+     C                     MOVE *BLANKS   UI1CCT 20
+      *
+      *                    Store for position of cursor
+     C                     Z-ADD0         CURSOR  50
+      *
+      *                    Loop counter
+     C                     Z-ADD0         COUNT   50
+      *
+      *                    Work field for CHECK result
+     C                     Z-ADD0         RESULT  10
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =============================                      *
+      *            #IINZS   - Initialise subfile                      *
+      *            =============================                      *
+      *                                                               *
+      * CALLS      ZASNMS   - Error message handling.                 *
+      *            #ILDSF   - Load subfile.                           *
+      *            #ICLRS   - Clear subfile.                          *
+      *                                                               *
+      * CALLED BY             Main processing.                        *
+      *            #ISCRD   - Screen display processing.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IINZS    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Initialise cursor, relative record number, & record count
+     C                     Z-ADD1         UISFRN
+     C                     Z-ADD0         UIRRN
+     C                     Z-ADD0         UIRNO
+      *
+      ** Clear the subfile before reloading
+      *
+     C                     EXSR #ICLRS
+      *
+      ** Set up DBF file key list
+      *
+     C           KEY       KLIST
+     C                     KFLD           COCUN            COCUNUT
+      *
+      ** If Selection fields are enabled - check if record selected
+      ** and read that record.
+      *
+     C                     MOVELS2COCO    COCUN
+     C           S2COCO    SETLLSDCOCUV1
+     C                     READ SDCOCUV1            N  8733 37=error
+      *
+      ** Save previous selector values - this enables a check to see if
+      ** new selection criteria have been entered
+      *
+     C           *LIKE     DEFN S2COCO    WZCOCO
+     C                     MOVELS2COCO    WZCOCO           COCUNUT
+      *
+      ** load subfile
+      *
+     C           *IN33     IFEQ *OFF
+     C                     EXSR #ILDSF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ===========================                        *
+      *            #ILDSF   - Load the subfile                        *
+      *            ===========================                        *
+      *                                                               *
+      * CALLS      #ICLR1 - Clear subfile fields.                     *
+      *            #IMVFS - Move file fields to subfile.              *
+      *                                                               *
+      * CALLED BY  #IINZS - Initialise subfile.                       *
+      *            #IRFSH - Refresh screen.                           *
+      *            #IRLUP - Next page processing.                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ILDSF    BEGSR
+      *          ייייייייייייייי
+      *
+      *  Start loop counter
+      *
+     C                     Z-ADD1         COUNT
+      *
+      *  Save position for the cursor
+      *
+     C           UIRRN     ADD  1         CURSOR
+      *
+      *  Load subfile until a subfile page is filled or the
+      *  the end of the file is reached.
+      *
+     C           *IN33     DOWEQ*OFF
+     C           COUNT     ANDLEUISFPG
+      *
+      *  Clear the subfile screen fields before reloading.
+      *
+     C                     EXSR #ICLR1
+      *
+      ** Move the fields from the file to the screen.
+     C                     EXSR #IMVFS
+      *
+      ** Increase the loop counter and relative record number by 1
+     C                     ADD  1         COUNT
+     C                     ADD  1         UIRRN
+      *
+      ** Write record
+     C                     WRITE#SFLRCD
+      *
+      ** Read file SDCOCUV1 and continue loading the subfile.
+     C                     READ SDCOCUV1            N    33
+     C                     ENDDO
+      *
+      ** If the relative record number is greater than 0, set ON SFLDSP
+      ** indicator.
+     C                     MOVE *OFF      *IN60
+     C           UIRRN     IFGT 0
+     C                     MOVE *ON       *IN60
+     C                     ENDIF
+      *
+      ** If there are records loaded set the cursor position
+     C           COUNT     IFGT 1
+     C                     Z-ADDCURSOR    UISFRN
+     C                     ENDIF
+      *
+      ** Save the last record that has been loaded in the subfile
+     C                     MOVE UIRRN     UIRNO
+      *
+      ** If all records have been read, switch off More at SFLEND
+     C           *IN33     IFEQ *ON
+     C                     MOVE *ON       *IN62            'bottom'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ======================================             *
+      *            #ISCRD   - Display screen with subfile             *
+      *            ======================================             *
+      *                                                               *
+      * CALLS      #IMSGC   - Clear message queue.                    *
+      *            #IEXFM   - Display subfile screen.                 *
+      *            #IEXIT   - Exit program.                           *
+      *            #IRFSH   - Refresh screen.                         *
+      *            #IADDR   - Add a new definition.                   *
+      *            #IRLUP   - Roll up request.                        *
+      *            #IOPTN   - Options screen.                         *
+      *            #IINZS   - Initialise subfile.                     *
+      *                                                               *
+      * CALLED BY             Main processing.                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ISCRD    BEGSR
+      *          ייייייייייייייי
+      *
+     C                     MOVEL'N'       W0RSF
+      *
+      ** Display screen until F3 is pressed.
+     C           *IN03     DOWEQ*OFF
+     C           W0RSF     ANDEQ'N'
+      *
+      ** If subfile empty (ie if no records fulfill selection criteria)
+      *  ~~~~~~~~~~~~~~~~
+     C           *IN33     IFEQ *ON
+     C           UIRNO     ANDEQ0
+      *
+      ** Send message
+      *                    'No data to display'
+     C                     MOVEL'XXX1011' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '010'     *IN,60
+     C                     ENDIF
+      ** Subfile loaded.
+      *  ~~~~~~~~~~~~~~~
+      *
+      ** Initialise error indicators.
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN44
+     C                     MOVE *OFF      *IN50
+      *
+      ** Display screen
+     C                     EXSR #IEXFM
+      *
+      ** Reset 'No more records in file' indicator.
+     C                     MOVE *OFF      *IN51
+      *
+      ** Clear messages from program message queue
+     C                     EXSR #IMSGC
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN05     ANDEQ*OFF
+     C           S2COCO    IFNE WZCOCO
+     C                     MOVE S2COCO    WZCOCO
+     C                     EXSR #IRFSH
+     C                     MOVE *OFF      *IN09
+     C                     ITER
+     C                     ENDIF
+     C                     ENDIF
+     C                     SELEC
+      *
+      ** If F3 has been pressed exit program
+     C           *IN03     WHEQ *ON
+     C                     EXSR #IEXIT
+      *
+      ** If F5 has been pressed refresh screen
+      *
+     C           *IN05     WHEQ *ON
+     C           EMODE     IFEQ 'M'
+     C                     EXSR #IRFSH
+     C                     ENDIF
+      *
+      ** If F9 has been pressed display screen to add a record.
+     C           *IN09     WHEQ *ON
+     C           EMODE     IFEQ 'M'
+     C                     EXSR #IADDR
+     C                     EXSR #ICLRS
+     C                     ENDIF
+      *
+      ** If Roll-up is pressed, display next subfile page.
+     C           *IN27     WHEQ *ON
+     C                     EXSR #IRLUP
+      *
+      ** Otherwise process option on record.
+     C                     OTHER
+     C           UIRNO     IFGT 0
+     C                     EXSR #ISFLS
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ======================================             *
+      *            #ICLR1   - Screen subfile fields clear             *
+      *            ======================================             *
+      *                                                               *
+      * CALLED BY  #ILDSF   - Load subfile.                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ICLR1    BEGSR
+      *          ייייייייייייייי
+      *
+     C                     MOVE *BLANKS   S1COCO
+     C                     MOVE *BLANKS   S1SEL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *              ============================================     *
+      *              #IMSGC - Clear messages from program message     *
+      *                       queue                                   *
+      *              =============================================    *
+      *                                                               *
+      * Called by    #ISCRD - Screen display.                         *
+      *              #IVALD - Validation processing.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IMSGC    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ===========================                        *
+      *            #IEXIT   - Exit the program                        *
+      *            ===========================                        *
+      *                                                               *
+      * CALLED BY            Main processing.                         *
+      *            #ISCRD -  Screen display processing.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IEXIT    BEGSR
+      *          ייייייייייייייי
+      *
+      *  Close files
+     C                     CLOSEXX201DF
+     C                     CLOSESDCOCUV1
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =========================                          *
+      *            #IRFSH   - Refresh screen                          *
+      *            =========================                          *
+      *                                                               *
+      * CALLS      #ICLRS   - Clear subfile.                          *
+      *            #ILDSF   - Load subfile.                           *
+      *                                                               *
+      * CALLED BY  #ISCRD   - Screen display.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IRFSH    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Clear Option field.
+     C           *IN05     IFEQ *ON
+     C                     MOVE *BLANKS   S1SEL
+     C                     EXSR #ICLR2
+     C                     ENDIF
+      *
+      * Clear message file
+     C                     EXSR #IMSGC
+      *
+      ** Clear subfile.
+     C                     EXSR #ICLRS
+      *
+      * Set file back to the beginning and load the screen from start
+      * IF F5 was pressed, else start as user has requested.
+      *
+     C           S2COCO    IFEQ *BLANKS
+     C           *LOVAL    SETLLSDCOCUV1
+     C                     ELSE
+     C           S2COCO    SETLLSDCOCUV1
+     C                     ENDIF
+     C                     READ SDCOCUV1            N    33
+      *
+      ** Reset Relative Record Number to One.
+      *
+     C                     Z-ADD1         UISFRN
+     C                     Z-ADD0         UIRRN
+     C                     Z-ADD0         UIRNO
+      *
+     C                     EXSR #ILDSF
+      *
+     C                     MOVEL'N'       W0RSF            sfl.req.relo
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ============================                       *
+      *            #ICLRS   - Clear the subfile                       *
+      *            ============================                       *
+      *                                                               *
+      * CALLED BY  #IRFSH   - Refresh screen.                         *
+      *            #IINZS   - Initialise subfile.                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ICLRS    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Clear the subfile.
+     C                     MOVEA'000'     *IN,60
+     C                     WRITE#SFLCTL
+     C                     MOVEA'110'     *IN,60
+      *
+      ** If no more records in the file, end of subfile
+     C           *IN33     IFEQ *ON
+     C                     MOVEA'010'     *IN,60
+     C                     ENDIF
+      *
+      ** Reset Relative Record Number to 0
+     C                     Z-ADD0         UIRRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ====================================               *
+      *            #ICLR2   - Clear the selection field               *
+      *            ====================================               *
+      *                                                               *
+      * CALLED BY  #IRFSH   - Refresh screen.                         *
+      *            #IINZS   - Initialise subfile.                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ICLR2    BEGSR
+      *          ייייייייייייייי
+      *
+     C                     MOVEL*BLANK    S2COCO           COCUNUT FLD
+     C                     MOVEL*BLANK    WZCOCO           COCUNUT FLD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ============================                       *
+      *            #IADDR   - Add/Amend/Enquire                       *
+      *            ============================                       *
+      *                                                               *
+      * CALLS      #IVALD - Validate user input.                      *
+      *            #IMVSC - Move screen fields to file.               *
+      *                                                               *
+      * CALLED BY  #ISCRD - Screen display processing.                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IADDR    BEGSR
+      *          ייייייייייייייי
+      *
+      * Enquiry program
+      *
+     C           EMODE     IFEQ 'E'
+      *
+      * Set screen indicators then display second screen
+      *
+     C                     EXSR #IINDI
+     C                     WRITEFOOTER
+     C                     WRITE#MSGCTL
+     C                     EXFMTXX201F1
+     C                     ENDIF
+      *
+      * Maintenance Program
+      *
+     C           EMODE     IFEQ 'M'
+      *
+      ** Clear fields for ADD screen, protect if Enquire Program
+      *
+     C                     SELEC
+     C           *IN09     WHEQ *ON
+     C                     MOVE *BLANKS   S1COCO
+     C                     ENDSL
+      *
+      ** Display second screen to add the data for the new record
+      ** until F12 or F3 is pressed, or a record is successfully
+      ** added.
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+      *
+     C                     EXSR #IINDI
+      *
+     C                     WRITEFOOTER
+     C                     WRITE#MSGCTL
+     C                     EXFMTXX201F1
+     C                     EXSR #IMSGC
+      *
+     C                     SELEC
+     C           *IN03     WHEQ *ON
+     C           *IN12     OREQ *ON
+     C                     LEAVE
+      *
+      ** Validate user input
+     C           *IN10     WHEQ *ON
+     C                     EXSR #IVALD
+      *
+      ** If the user input is valid, write the record to the file
+      ** and exit the loop.
+     C           *IN50     IFEQ *OFF
+      *
+     C           *IN09     IFEQ *ON
+     C                     EXSR #IMVSC
+     C                     WRITESDCOCUP0
+     C                     COMIT
+     C                     LEAVE
+     C                     ELSE
+     C           S1COCO    CHAINSDCOCUV1             32
+     C           *IN32     IFEQ *OFF
+     C                     MOVE S1COCO    COCUN
+     C                     UPDATSDCOCUP0
+     C                     COMIT
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     OTHER
+      *
+     C                     EXSR #IVALD
+      *
+      ** If the user input is valid, send message "Press F10 to confirm"
+     C           *IN50     IFEQ *OFF
+      *
+      ** ENTER: Press F10 to confirm
+     C                     MOVEL'XXX1024' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      ** Otherwise redisplay the second screen with the appropriate
+      ** error messages.
+     C                     ENDDO
+     C                     ENDIF
+      *
+      *
+     C                     MOVE *OFF      *IN09
+     C                     MOVE 'Y'       W0RSF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ==========================                         *
+      *            #ISFLS   - Validate SFLSEL                         *
+      *            ==========================                         *
+      *                                                               *
+      * CALLS      #IOPTN   - Option Processing                       *
+      *                                                               *
+      * CALLED BY  #ISCRD   - Screen display.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ISFLS    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Initialise general error indicator
+     C                     MOVE *OFF      *IN50
+      *
+      ** Read changed subfile record
+     C                     READC#SFLRCD                  34
+      *
+      ** Validate S1SEL
+     C           *IN34     DOWEQ*OFF
+     C                     MOVE *OFF      *IN44
+     C                     SELEC
+      *
+     C           S1SEL     WHEQ ' '
+      *
+     C           S1SEL     WHEQ 'D'
+     C           EMODE     ANDEQ'M'
+      *
+      ** Check for record lock
+     C           S1COCO    CHAINSDCOCUV1             3231
+     C           *IN31     IFEQ *ON
+     C                     MOVE *ON       *IN44            error SFLSEL
+     C                     MOVE *ON       *IN50            general erro
+     C                     ELSE
+     C           *IN32     IFEQ *ON
+     C                     MOVE *ON       *IN44            error SFLSEL
+     C                     MOVE *ON       *IN50            general erro
+     C                     MOVEL'XXX1018' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C                     OTHER
+     C                     MOVE *ON       *IN44            error SFLSEL
+     C                     MOVE *ON       *IN50            general erro
+      *                    '&1 is not a valid option'
+     C                     MOVEL'XXX1009' ZAMSID
+     C                     MOVELS1SEL     ZAMSDA
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDSL
+     C                     MOVE *ON       *IN74            SFLNXTCHG
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  34
+     C                     ENDDO
+     C                     MOVE *OFF      *IN74
+      *
+     C           *IN50     IFEQ *OFF
+     C                     EXSR #IOPTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =============================                      *
+      *            #IOPTN   - Options processing                      *
+      *            =============================                      *
+      *                                                               *
+      * CALLS      #IDELR   - Delete a record.                        *
+      *            ZASNMS   - Error handling processing.              *
+      *                                                               *
+      * CALLED BY  #ISCRD   - Screen display.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IOPTN    BEGSR
+      *          ייייייייייייייי
+      *
+      *  Read changed subfile record
+      *
+     C                     READC#SFLRCD                  34
+      *
+      ** If Selection fields not used
+      *  ============================
+      *  Save option and target filename of changed record.
+     C           *IN34     DOWEQ*OFF
+     C           *IN03     ANDEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     MOVE S1SEL     UIOPT   1
+     C                     MOVE S1COCO    UICOCO 20
+     C                     MOVE *OFF      *IN12
+      *
+     C                     SELEC
+      *
+      *ENQUIRY PROGRAM:
+      *****************
+      *
+     C           UIOPT     WHEQ 'E'
+     C                     EXSR #IADDR
+      *
+      *MAINTENANCE PROGRAM
+      ********************
+      *
+      * If delete record
+      *
+     C           UIOPT     WHEQ 'D'
+     C           EMODE     ANDEQ'M'
+     C                     EXSR #IDELR
+      *
+     C                     ENDSL
+      *
+      ** Read changed subfile record
+     C                     READC#SFLRCD                  34
+     C                     ENDDO
+      *
+      ** If no error with Option then refresh
+      *
+     C                     EXSR #IRFSH
+      *
+      ** Initialise workfields.
+      *
+     C                     MOVE *BLANKS   UIOPT
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ==========================                         *
+      *            #IDELR   - Delete a record                         *
+      *            ==========================                         *
+      *                                                               *
+      * CALLS      #IMVFF   - Move file field names to screen.        *
+      *            #IINZS   - Initialise subfile.                     *
+      *                                                               *
+      * CALLED BY  #IOPTN   - Options processing.                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IDELR    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Set screen indicators
+     C                     EXSR #IINDI
+      *
+      ** Clear message queue
+     C*                    EXSR #IMSGC
+      ** Get data from file for the specified record.
+     C                     EXSR #IMVFF
+      *
+      ** Display second screen with record details.
+     C           *IN12     DOUEQ*ON
+     C           *IN10     OREQ *ON
+     C           *IN03     OREQ *ON
+      *
+     C                     WRITEFOOTER
+     C                     WRITE#MSGCTL
+     C                     EXFMTXX201F1
+     C                     EXSR #IMSGC
+      *
+      ** If F10 is pressed delete record.
+     C           *IN10     IFEQ *ON
+     C                     DELETSDCOCUP0
+     C                     COMIT
+      *
+      ** If there are no more records in the file reset RRN
+     C           *LOVAL    SETLLSDCOCUV1
+     C                     READ SDCOCUV1            N    33
+     C           *IN33     IFEQ *ON
+     C                     Z-ADD1         UIRNO
+     C                     MOVE 'Y'       W0RSF
+     C                     ENDIF
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** inform user of the valid actions, if <enter> was pressed.
+     C           *IN03     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+      ** ENTER: Press F10 to confirm
+     C                     MOVEL'XXX1024' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** If F3 pressed quit.
+     C           *IN03     IFEQ *ON
+     C                     EXSR #IEXIT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ==================================                 *
+      *            #IVALD   - Validate entries of new                 *
+      *            ==================================                 *
+      *                                                               *
+      * CALLS      ZASNMS   - Error message processing.               *
+      *            #IMSGC   - Clear messages from message queue.      *
+      *                                                               *
+      * CALLED BY  #IADDR   - Add a new definition.                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IVALD    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Initialise error indicators.
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN44
+     C                     MOVE *OFF      *IN50
+      *
+      ** must be in 'ADD' mode
+     C           *IN09     IFEQ *ON
+      *
+      ** cannot be *BLANKS
+     C           S1COCO    IFEQ *BLANKS
+     C                     MOVE *ON       *IN41            COCO INVALID
+     C                     MOVE *ON       *IN50            FORMAT ERROR
+      *                    Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID           message ID
+     C                     MOVEL'Y2USRMSG'ZAMSGF           message file
+     C                     EXSR ZASNMS                     send msg
+     C                     ENDIF
+      *
+      *
+      ** Cannot insert a COCUNUT that already exists
+     C           S1COCO    CHAINSDCOCUV1            N32
+     C           *IN32     IFEQ *OFF
+     C                     MOVE *ON       *IN50
+     C                     MOVE *ON       *IN41
+      *                    'COCUNUT already exists'
+     C                     MOVEL'XXX1013' ZAMSID
+     C                     MOVELS1COCO    ZAMSDA
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =================================                  *
+      *            #IEXFM   - Display subfile screen                  *
+      *            =================================                  *
+      *                                                               *
+      * CALLED BY  #ISCRD   - Screen display.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IEXFM    BEGSR
+      *          ייייייייייייייי
+      *
+     C                     EXSR #IINDI
+     C                     MOVE *ON       *IN86
+     C                     WRITEFOOTER
+     C                     WRITE#MSGCTL
+     C                     EXFMT#SFLCTL
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =====================================              *
+      *            #IMVFF   - Move file fields to screen              *
+      *            =====================================              *
+      *                                                               *
+      * CALLED BY  #IDELR   - Delete processing.                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IMVFF    BEGSR
+      *          ייייייייייייייי
+      *
+      ** Get data for the specified record.
+     C           UICOCO    SETLLSDCOCUV1
+     C           S1COCO    CHAINSDCOCUV1             32
+     C           *IN32     IFEQ *OFF
+     C                     MOVE COCUN     S1COCO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ======================================             *
+      *            #IMVFS   - Move file fields to subfile             *
+      *            ======================================             *
+      *                                                               *
+      * CALLED BY  #ILDSF   - Screen display.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IMVFS    BEGSR
+      *          ייייייייייייייי
+      *
+     C                     MOVE COCUN     S1COCO
+      *
+      ** Get data for the specified record.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =====================================              *
+      *            #IMVSC   - Move screen fields to file              *
+      *            =====================================              *
+      *                                                               *
+      * CALLED BY  #IADDR   - Insert processing.                      *
+      *                                                               *
+      ***********t*****************************************************
+      *
+     C           #IMVSC    BEGSR
+      *          ייייייייייייייי
+      *
+     C                     MOVE S1COCO    COCUN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            =====================================              *
+      *            #IRLUP   - Roll-up request processing              *
+      *            =====================================              *
+      *                                                               *
+      * CALLS      #ILDSF -  Load subfile.                            *
+      *                                                               *
+      * CALLED BY  #ISCRD -  Screen display.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IRLUP    BEGSR
+      *          ייייייייייייייי
+      *
+      ** If relative record number is less than highest saved value
+      ** restore RRN to highest saved value
+     C           UIRRN     IFLT UIRNO
+     C                     MOVE UIRNO     UIRRN
+     C                     ENDIF
+      *
+      ** Only allow roll up if more records available
+     C           *IN33     IFEQ *ON
+     C                     MOVE *ON       *IN51
+     C                     MOVE *ON       *IN62
+     C                     ELSE
+      *
+      ** Build subfile page.
+     C                     EXSR #ILDSF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * =======================================                       *
+      * ZASNMS    - Send program error messages                       *
+      * =======================================                       *
+      *                                                               *
+      * Calls                                                         *
+      *                                                               *
+      * Called by - #IINZS                                            *
+      *             #IOPTN                                            *
+      *             #IVALD                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *          ייייייייייייייי
+      *
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+      *
+      ** If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *             ================================                  *
+      *             #IINDI    - Indicator subroutine                  *
+      *             ================================                  *
+      *                                                               *
+      * Called by - #IADDR                                            *
+      *             #IDELR                                            *
+      *             #IEXFM                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IINDI    BEGSR
+      *          ייייייייייייייי
+      *
+      * Initalise all indicators
+      *
+     C                     MOVE *OFF      *IN30            Protect
+     C                     MOVE *OFF      *IN70            EMODE = E
+     C                     MOVE *OFF      *IN81            Amend/Enquire
+     C                     MOVE *OFF      *IN82            Delete
+      *
+      * If the program is enquiry
+      *
+     C           EMODE     IFEQ 'E'
+      *
+      * or/and if the option is enquiry
+     C           UIOPT     IFEQ 'E'
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C                     MOVE *ON       *IN70
+     C                     MOVE *ON       *IN30
+     C                     ELSE
+      * Maintenance Program
+     C                     SELEC
+     C           UIOPT     WHEQ 'E'
+     C                     MOVE *ON       *IN70            Enquiry Mode
+     C                     MOVE *ON       *IN30            Protect Fields
+     C                     MOVE *ON       *IN81            Footer
+      *
+      *
+     C           UIOPT     WHEQ 'D'
+     C                     MOVE *ON       *IN82            Delete Fter
+     C                     MOVE *ON       *IN30            Protect Flds
+      *
+     C           *IN09     WHEQ *ON
+     C                     MOVE *ON       *IN81            Footer
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2013

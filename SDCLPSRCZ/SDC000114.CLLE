@@ -9,18 +9,21 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CDL102             Date 01Jun21              */
-/*       Prev Amend No. CLE172             Date 01Oct20              */
+/*       Last Amend no. MD058331           Date 05Jul21              */
+/*       Prev Amend No. CDL102             Date 01Jun21              */
+/*                      CLE172             Date 01Oct20              */
 /*                      CSD103  *CREATE    Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058331 - CSD103 LIBOR General Section - Change Control    */
 /*       CDL102 - LIBOR Deregulation - Dealing                       */
 /*       CLE172 - LIBOR Deregulation - Lending                       */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*                                                                   */
 /*********************************************************************/
-             PGM
+/**********  PGM                                                     */                 /*MD058331*/
+             PGM        PARM(&MODE)                                                     /*MD058331*/
 
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
@@ -31,6 +34,8 @@
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CLE172*/
              DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE172*/
              DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL102*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)                                   /*MD058331*/
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(1) VALUE(0)                          /*MD058331*/
 
              DCLF       FILE(SDCSTSTD) OPNID(STAT)
              DCLF       FILE(SDBANKPD) OPNID(BANK)
@@ -56,6 +61,40 @@
 
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
 
+/** If the program is called from the Menu or Scheduler */                              /*MD058331*/
+/** and system is in COB, end the job processing */                                     /*MD058331*/
+                                                                                        /*MD058331*/
+             IF         COND(&MODE *NE '*COB' +
+                          *AND &MPHAS *NE 'A') THEN(DO)                                 /*MD058331*/
+                SNDPGMMSG  MSG('SDC000114 - This job cannot be run +
+                             since Midas is not in Input Cycle.') +
+                             TOMSGQ(MOPERQ MRUNQ)                                       /*MD058331*/
+                GOTO CMDLBL(END)                                                        /*MD058331*/
+             ENDDO                                                                      /*MD058331*/
+                                                                                        /*MD058331*/
+/** If called from COB and the batch job process is still running */                    /*MD058331*/
+/** (i.e. DTAARA/SDARRCLCK is allocated), wait for it complete. */                      /*MD058331*/
+                                                                                        /*MD058331*/
+             IF         COND(&MODE *EQ '*COB') THEN(DO)                                 /*MD058331*/
+WAIT:                                                                                   /*MD058331*/
+                ALCOBJ     OBJ((SDARRCLCK *DTAARA *EXCL)) WAIT(0)                       /*MD058331*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                      /*MD058331*/
+                   IF  COND(&COUNT *LE 5) THEN(DO)                                      /*MD058331*/
+                      DLYJOB     DLY(60)                                                /*MD058331*/
+                      CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                          /*MD058331*/
+                      GOTO       CMDLBL(WAIT)                                           /*MD058331*/
+                   ENDDO                                                                /*MD058331*/
+                   ELSE       CMD(DO)                                                   /*MD058331*/
+                      SNDPGMMSG  MSG('ARR Calculator Batch Job is still +
+                         running. This job has been terminated since it +
+                         has reached the maximum amount of time to +
+                         wait.') TOMSGQ(MOPERQ MRUNQ)                                   /*MD058331*/
+                      GOTO       CMDLBL(ABNOR)                                          /*MD058331*/
+                   ENDDO                                                                /*MD058331*/
+                ENDDO                                                                   /*MD058331*/
+                                                                                        /*MD058331*/
+             ENDDO                                                                      /*MD058331*/
+                                                                                        /*MD058331*/
 /** Read Status File */
 READ:
              RCVF       OPNID(STAT)
@@ -190,7 +229,7 @@ CONTINUE:
                    GOTO       CMDLBL(ERROR)                                               /*CDL102*/
                 ENDDO                                                                     /*CDL102*/
 
-             ENDDO                                                                        /*CDL102*/  
+             ENDDO                                                                        /*CDL102*/
              ENDDO                                                                        /*CDL102*/
                                                                                           /*CDL102*/
 /** If sucessful completion, update status file to Completed */

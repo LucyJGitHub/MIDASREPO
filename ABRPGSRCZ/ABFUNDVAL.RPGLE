@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *  Last Amend No. MD058448           Date 14Jul21               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058448 - Total Interest is not zero when backward          *
+      *             looking rate is entered                           *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
@@ -2557,6 +2560,7 @@
 
       ** New Deal in File Format of associated deal
      C                   PARM                    NwDlFilFmt2
+     C                   PARM                    TranScnBlrt                                MD058448
 
       ** Update error info with that returned from the validation module
 

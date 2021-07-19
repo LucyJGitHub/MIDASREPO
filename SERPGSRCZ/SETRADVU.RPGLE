@@ -130,7 +130,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057789 - Charges details are not defaulted when Portfolio  *
-      *             reference is inserted.                            *
+      *             reference is inserted                             *
       *           - Exclude Portfolio Reference in DS/TranInChCm      *
       *  258901 - Error in tax amount for charges and commissions.    *
       *  247524 - Securities Trades - charges are not defaulted and   *

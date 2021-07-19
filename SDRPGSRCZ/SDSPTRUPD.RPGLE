@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058250           Date 13Jul21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 258531             Date 19Aug14               *
       *                 MD025467           Date 09May14               *
@@ -45,6 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058250 - Midas_DDM_Audit_Report SD0020PM Currencies        *
+      *             Maintenance.                                      *
+      *           - Remove call to SD0028.                            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Witholding Tax                                 *
@@ -690,19 +694,19 @@
 
      C/COPY OFCPYSRCZ,CFT147_038                                                              CFT147
 
-      ** Spot Rates Recalculation for EMU Currencies
+      ***Spot*Rates*Recalculation*for*EMU*Currencies*******************                     MD058250
 
-     C     CEU002        IFEQ      'Y'
-     C     BJCYCD        ANDNE     BKEURO
-     C     A6CYCD        OREQ      BKEURO
-     C                   CALL      'SD0028'
-     C                   PARM      BJCYCD        @PA001
-     C                   PARM      BKEURO        @PA002
-     C                   PARM      BKEUCP        @PA003
-     C                   PARM      BaseCurrIn    @PA004
-     C                   PARM      'N'           @PA005            1
-     C                   PARM      *BLANKS       @PA006            7
-     C                   ENDIF
+     C*****CEU002        IFEQ      'Y'                                                      MD058250
+     C*****BJCYCD        ANDNE     BKEURO                                                   MD058250
+     C*****A6CYCD        OREQ      BKEURO                                                   MD058250
+     C**********         CALL      'SD0028'                                                 MD058250
+     C**********         PARM      BJCYCD        @PA001                                     MD058250
+     C**********         PARM      BKEURO        @PA002                                     MD058250
+     C**********         PARM      BKEUCP        @PA003                                     MD058250
+     C**********         PARM      BaseCurrIn    @PA004                                     MD058250
+     C**********         PARM      'N'           @PA005            1                        MD058250
+     C**********         PARM      *BLANKS       @PA006            7                        MD058250
+     C**********         ENDIF                                                              MD058250
 
 
       ** Update Standing Data Control file
@@ -1052,18 +1056,18 @@
      C                   ENDIF
      C                   ENDIF
       *
-      ** Initialise SPOT Rates For a EURO Base or 'IN' Currency Base.
-      ** or 'OUT' Base.
+      ***Initialise*SPOT*Rates*For*a*EURO*Base*or*'IN'*Currency*Base.**                     MD058250
+      ***or*'OUT'*Base.************************************************                     MD058250
       *
-     C     CEU002        IFEQ      'Y'
-     C                   CALL      'SD0028'
-     C                   PARM      BJCYCD        @PA001
-     C                   PARM      BKEURO        @PA002
-     C                   PARM      BKEUCP        @PA003
-     C                   PARM      BaseCurrIn    @PA004
-     C                   PARM      'Y'           @PA005
-     C                   PARM      *BLANKS       @PA006
-     C                   ENDIF                                              6103
+     C*****CEU002        IFEQ      'Y'                                                      MD058250
+     C**********         CALL      'SD0028'                                                 MD058250
+     C**********         PARM      BJCYCD        @PA001                                     MD058250
+     C**********         PARM      BKEURO        @PA002                                     MD058250
+     C**********         PARM      BKEUCP        @PA003                                     MD058250
+     C**********         PARM      BaseCurrIn    @PA004                                     MD058250
+     C**********         PARM      'Y'           @PA005                                     MD058250
+     C**********         PARM      *BLANKS       @PA006                                     MD058250
+     C**********         ENDIF                                              6103            MD058250
       *
       ** Access switchable features file - Market data feed                                   CSD006
       *                                                                                       CSD006

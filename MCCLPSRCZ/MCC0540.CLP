@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. FVT102CC1          Date 06Jun17              */
+/*       Prev Amend No. FVT102             Date 09May17              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7058            Date 11May05              */
+/*                      BUG7058            Date 11May05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -22,6 +24,14 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       FVT102CC1 - Posting of P/L to  Mult. retained Earnings CC1  */
+/*                   Amendment of hook FVT102_001                    */
+/*                   Amendment of hook FVT102_004                    */
+/*       FVT102 - Posting of P/L to Multiple Retained Earnings       */
+/*                Addition of hook FVT102_001                        */
+/*                Addition of hook FVT102_002                        */
+/*                Addition of hook FVT102_003                        */
+/*                Addition of hook FVT102_004                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG7058 - Spot revals not created when PCA is on            */
 /*       CGL029 - Increase Account Code to 10 digits                 */
@@ -51,6 +61,9 @@
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
              DCL        VAR(&OPNQRYF) TYPE(*CHAR) LEN(2000)
              DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(512)
+
+/*/COPY WNCPYSRC,FVT102_001                                          */  /*FVT102*/
+
 /**/
 /**  Global monitor message */
 /**/
@@ -64,6 +77,7 @@
                           TEXT('Midas SD Local Data Area')
              MONMSG     MSGID(CPF0000)
              CHGJOB     SWS(XXXXXX00)
+/*/COPY WNCPYSRC,FVT102_002                                          */  /*FVT102*/
 /**/
 /**  Access Bank ICD for Base Currency */
 /**/
@@ -98,6 +112,7 @@
              CHGVAR     VAR(&PDCT) VALUE(%SST(&DSFDY 2 2))
              CHGVAR     VAR(&PDYR) VALUE(%SST(&DSFDY 4 2))
              CHGVAR     VAR(&PDNY) VALUE(%SST(&DSFDY 6 2))
+/*/COPY WNCPYSRC,FVT102_003                                          */  /*FVT102*/
 /**/
 /**  Select only records for the current period; only spot trade accounts */
 /**  for the first GLHIBLPD and only base currency accounts for the second */
@@ -171,6 +186,7 @@
                              TOMSGQ(MOPERQ MRUNQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
+/*/COPY WNCPYSRC,FVT102_004                                          */  /*FVT102*/
              GOTO       CMDLBL(END)
 /**/
 /**  Abnormal error processing */

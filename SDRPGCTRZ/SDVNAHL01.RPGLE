@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. CSD100             Date 17Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132             Date 01May13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24038           Date 20May09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD100 - Patronymic and Gender fields for Non-Account Holder *
+      *           (Recompile)                                         *      
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master (Recompile)                 *

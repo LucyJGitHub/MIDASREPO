@@ -12,12 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. FVT106             Date 20Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks FVT106_001 to FVT106_005          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase account code to 10 digits                  *
@@ -34,7 +37,7 @@
      FACCNTLXX  IF   E           K DISK    INFSR(*PSSR)
      FACNUM     IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMTBF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -53,52 +56,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Data Structure for Account Key Number
       *  Account Master Key
      D                 DS
@@ -115,24 +118,24 @@
      D  RETKY                  1     10
      D**ACCKY***              11     18                                                       CGL029
      D  ACCKY                 11     24                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CGL029
      D DDACCN          S             24                                                       CGL029
      D DDRFRA          S             24                                                       CGL029
      D WGLKEY          S             24                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -147,9 +150,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Movel     *Blanks       RetCodeIn
      C                   Movel     *Blanks       FldNamXAr
      C                   Movel     *Blanks       MsgIDXAr
@@ -168,6 +171,7 @@
      C     DDACTN        ANDNE     '4'
      C     DDACTN        ANDNE     '5'
      C     DDACTN        ANDNE     *BLANK
+     C/COPY WNCPYSRC,FVT106_001                                                     FVT106
      C                   Move      'N'           DDACTNOk
      C                   Add       1             Idx
      C                   Movel     'DDACTN'      FldNamXAr(Idx)
@@ -206,6 +210,7 @@
      C                   Movel     'DDACTN'      FldNamXAr(Idx)
      C                   Movel     'RE71004'     MsgIDXAr(Idx)
      C                   ENDIF
+     C/COPY WNCPYSRC,FVT106_002                                                     FVT106
       *
       ** IF ACTION CODE NOT I OR D ENTERED, ACCOUNT NUMBER CANNOT BE BLANK
       *
@@ -341,6 +346,7 @@
      C                   Movel     'RE7104B'     MsgIDXAr(Idx)
      C     @ZACTN        WHENEQ    'E'
      C                   Movel     'RE7105B'     MsgIDXAr(Idx)
+     C/COPY WNCPYSRC,FVT106_003                                                     FVT106
      C                   ENDSL
      C                   Move      'N'           DDACTNOk
      C                   Movel     'DDACTN'      FldNamXAr(Idx)
@@ -376,6 +382,7 @@
      C                   Movel     'RE71013'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
+     C/COPY WNCPYSRC,FVT106_004                                                     FVT106
       *
      C                   ENDIF
       *
@@ -475,7 +482,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       * INPUTS
@@ -560,14 +567,15 @@
      C                   ELSE
      C                   MOVE      '1'           *IN42
      C                   ENDIF
+     C/COPY WNCPYSRC,FVT106_005                                                     FVT106
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. FVT102             Date 10May17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7549            Date 11May05              */
+/*                      BUG7549            Date 11May05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
@@ -24,6 +25,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*      FVT102 - Posting of P/L to Multiple Retained Earnings        */
+/*               Addition of hook FVT102_005                         */
+/*               Addition of hook FVT102_006                         */
+/*               Addition of hook FVT102_007                         */
 /*      MD046248 - Finastra Rebranding                               */
 /*      BUG7549- Spt revals not created when PCA is on               */
 /*      CGL029 - Increase Account Code to 10 digits                  */
@@ -72,6 +77,7 @@
                           Return string */
              DCL        VAR(&BCCY) TYPE(*CHAR) LEN(3) VALUE('   ') +
                           /* Base ccy */
+/*/COPY WNCPYSRC,FVT102_005                                          */  /*FVT102*/
              DCLF       FILE(SDBANKPD) /* Bank ICD */
 /**/
 /* Global monitor message */
@@ -83,6 +89,7 @@
 /**/                                                                  /*ER9201*/
              CHGJOB     SWS(XXXXXX00)
              CLRPFM     FILE(MCBLEXPD)
+/*/COPY WNCPYSRC,FVT102_006                                          */  /*FVT102*/
 /**/
 /* Access Last Diary Event to check for Transfer Date */
 /**/
@@ -276,6 +283,7 @@
                           MBROPT(*ADD) FMTOPT(*MAP *DROP)
              ENDDO
 /**/
+/*/COPY WNCPYSRC,FVT102_007                                          */  /*FVT102*/
              GOTO       CMDLBL(END)
 /**/
 /* Abnormal Termination Processing */

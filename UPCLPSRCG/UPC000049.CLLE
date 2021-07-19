@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055832           Date 16May20              */
-/*       Prev Amend No. MD055783           Date 06May20              */
+/*       Last Amend No. MD056535           Date 18Aug20              */
+/*       Prev Amend No. MD056530           Date 18Aug20              */
+/*                      MD055832           Date 16May20              */
+/*                      MD055783           Date 06May20              */
 /*                      MD055759           Date 04May20              */
 /*                      MD054955           Date 16Dec19              */
 /*                      MD055280           Date 17Feb20              */
@@ -18,6 +20,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056535 - Installation failed as UTCFKDPD is still using   */
+/*                  the old Key Fields                               */
+/*       MD056530 - UPC000049 execution failed during installation   */
 /*       MD055832 - Created data recovery for the old GPSVALPD and   */
 /*                  GPSVRFPD when GDBU fails                         */
 /*       MD055783 - Created data recovery for the old T_WIPCF        */
@@ -169,7 +174,27 @@ START:                                                                          
                 GOTO       CMDLBL(ENDPGM)                                               /*MD055280*/
              ENDDO                                                                      /*MD055280*/
                                                                                         /*MD055280*/
+
+/* Check UTCFKDPD if existing in the delivery package */                                /*MD056535*/
+             CHKOBJ     OBJ(&LIBUPG/UTDDSSRCGP) OBJTYPE(*FILE) +
+                          MBR(UTCFKDPD)                                                 /*MD056535*/
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(DELFILE))                       /*MD056535*/
+
+/* Delete UTCFKDPD */                                                                   /*MD056535*/
+             DLTF       FILE(UTCFKDPD)                                                  /*MD056535*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD056535*/
+
+/* Create UTCFKDPD - core PF */                                                         /*MD056535*/
+             CALL       PGM(UPC000034) PARM('UTCFKDPD' 'UTDDSSRCGP' +
+                          &LIBUPG &PLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD056535*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD056535*/
+
 /* Delete files in case or re-run */
+DELFILE:                                                                                /*MD056535*/
+             DLTF       FILE(V_GPCASHST)                                                /*MD056530*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD056530*/
+             DLTF       FILE(V_SDFTHAW2)                                                /*MD056530*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD056530*/
              DLTF       FILE(UPGSVALJ0)
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(GPSVLJI0)

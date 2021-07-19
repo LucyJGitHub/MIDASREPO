@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD100             Date 10Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD100 - Patronymic and Gender Fields for Non-Account Holder *
+      *           (Recompile)                                         *      
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER054 - German Features - Church Tax (Recompile)            *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD057707             Date 21Jan21             *
-      *  Prev Amend No. MD057599             Date 21Jan21             *
+      *  Last Amend No. MD057382             Date 17Dec20             *      
+      *  Prev Amend No. MD057707             Date 21Jan21             *
+      *                 MD057599             Date 21Jan21             *
       *                 MD056612             Date 12Sep20             *
       *                 MD056557             Date 31Aug20             *
       *                 MD056565             Date 21Jan21             *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057382 - Error encountered when running PRCA during SP24   *
+      *             package installation (CAP702 related issue)       *      
       *  MD057707 - Deliverable Data Split for SDOREFPD               *
       *  MD057599 - Deliverable Data Split for Bridge and Util files  *
       *  MD056612 - Deliverable Data Split for MX group               *
@@ -1095,6 +1098,8 @@
      C                             or ChkFile = 'SMLOAXTD'                                  MD057599
      C                             or ChkFile = 'UTGENXTD'                                  MD057599
      C                             or ChkFile = 'SDOREXTD'                                  MD057707
+     C                             or ChkFile = 'GPSRAXTD'                                  MD057382
+     C                             or ChkFile = 'SCSRAXTD'                                  MD057382
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1223,6 +1228,7 @@
      C                             or Member = 'SMCSICTD'                                   MD057599
      C                             or Member = 'SMLNRCTD'                                   MD057599
      C                             or Member = 'SMLOACTD'                                   MD057599
+     C                             or Member = 'GPSRACTD'                                   MD057382     
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1285,6 +1291,7 @@
      C                             or Member = 'SMCARCTD'                                   MD057599
      C                             or Member = 'UTGENCTD'                                   MD057599
      C                             or Member = 'SDORECTD'                                   MD057707
+     C                             or Member = 'SCSRACTD'                                   MD057382     
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

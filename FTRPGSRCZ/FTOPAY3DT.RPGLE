@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250041             Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055656           Date 20Apr20               *      
+      *  Prev Amend No. 250041             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 AR1080200          Date 24Jan13               *
@@ -63,6 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *      
       *  250041 - Receiver's Charges remitted value is initialised    *
       *           during insert and when @RCRM = zero.                *
       *  MD046248 - Finastra Rebranding                               *

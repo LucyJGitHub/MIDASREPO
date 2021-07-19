@@ -14,8 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Last Amend No. MD058151           Date 19May21               *
+      *  Prev Amend No. MD056364           Date 10Aug20               *
+      *                 ERZ248             Date 18Nov19               *
+      *                 MD021318           Date 26Jul13               *
+      *                 262474             Date 29Jan13               *
+      *                 ERZ123             Date 29Jan13               *      
+      *                 CSD103             Date 10Aug20               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
       *                 MD054130           Date 28Aug19               *
@@ -174,6 +180,26 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058151 - FTOPAY1SN *PGM was removed in the NC Layer        *
+      *             during RBRU FM2021.A + Compatibility Patch        *
+      *             Installation. Redeliver together wih *PGM.        *
+      *  MD056364 - ERZ248: UETR is not wiped out in replicated       *
+      *             FT payments                                       *
+      *           - Amended hook FTH00661                             *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_030->035                           *
+      *           Amended hooks FTOPA1SC03, FTOPA1SC13, FTOPA1SC15,   *
+      *           FTOPA1SC17, FTOPA1SC31, FTOPA1SC60                  *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
+      *  262474 - ERZ123 : Set new fields to blanks for CAR and F12   *
+      *           Replication                                         *
+      *           Added hook: FTH00656                                *
+      *           Amended hook: FTH00661                              *
+      *  ERZ123 - FT Select Payment on Beneficiary Line 1             *
+      *           Added hooks: FTH00657, FTH00659, FTH00660, FTH00661 *
+      *           Amended hooks: FTH00207                             *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
@@ -1294,6 +1320,7 @@
      D svOPORB3        S                   LIKE(OTOPORB3)                                     CFT039
      D svOPORB4        S                   LIKE(OTOPORB4)                                     CFT039
      D svOPORB5        S                   LIKE(OTOPORB5)                                     CFT039
+     D PMode           S              6A   INZ('*SIN  ')                                    MD021318
      D InputUser       S             10A                                                    MD050574
 
       *****************************************************************
@@ -1503,6 +1530,7 @@
       *                                                                                       204152
       * Reset First Time through Flag                                                         204152
      C                   EVAL      FirstTime = 'Y'                                            204152
+     C/COPY WNCPYSRC,ERZ248_030                                                               ERZ248
       *                                                                                       204152
      C                   ENDIF
       *
@@ -1920,6 +1948,7 @@
 
      C                   MOVEL     NewPmtScn1    PrvPmtScn1
      C                   MOVEL     NewPmtSc1b    PrvPmtSc1b                     CFT014
+     C/COPY WNCPYSRC,ERZ248_031                                                               ERZ248
      C                   Z-ADD     WIdx_PVAL     PrvN_Warn         3 0
      C                   MOVEL     @CCI@M        @PCI@M
       *
@@ -2445,6 +2474,8 @@
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                               257361
      C/COPY WNCPYSRC,FTOPA1SC13
 
@@ -2465,6 +2496,7 @@
      C     NewPmtSc1b    ORNE      PrvPmtSc1b                                                 206893
      C     WIdx_PVAL     ANDEQ     PrvN_Warn                                                  206893
      C     WIdx_PVAL     ANDNE     0                                                          206893
+     C/COPY WNCPYSRC,ERZ248_032                                                               ERZ248
      C                   GOTO      EndVAL@P
      C                   END
       *
@@ -2702,6 +2734,8 @@
       ***Saved*default*charges*******************************************              CFT009 222373
      C*****              PARM                    DEFVALID                              CFT009 222373
      C*****              PARM                    DEFVALIDX                             CFT009 222373
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *
       * If errors returned
@@ -3072,6 +3106,8 @@
      C                   PARM                    NwPtFilFmX                     CFT014
      C                   PARM                    Val@Fields                     CFT014
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** If errors returned                                                     CFT014
                                                                                 CFT014
@@ -3490,6 +3526,8 @@
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *
       * If errors returned
@@ -4457,6 +4495,7 @@
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
      C                   PARM                    SSIMode           1            CFT018
+     C/COPY WNCPYSRC,ERZ248_033                                                               ERZ248
       *                                                                         CFT018
      C                   Endif                                                  CFT018
       *                                                                         CFT018
@@ -9208,6 +9247,7 @@
      C                   MOVEL     *BLANK        NewPmtScnA                                   CSW209
      C                   MOVEL     *BLANK        NewPmtScnC                                   CSW209
      C                   EndIf                                                                CSW209
+     C/COPY WNCPYSRC,ERZ248_034                                                               ERZ248
      C                   END
      C                   EXSR      PAYSCM1                                                    256192
       *                                                                         CFT018
@@ -9508,6 +9548,7 @@
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
      C                   PARM                    SSIMode           1            CFT018
+     C/COPY WNCPYSRC,ERZ248_035                                                               ERZ248
       *                                                                         CFT018
      C                   Endif                                                  CFT018
       *

@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056823           Date 29Sep20               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD051821           Date 01Sep18               *      
+      *                 CSD103             Date 10Aug20               *
+      *                 MD056823           Date 29Sep20               *
       *                 MD052870           Date 27Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044395           Date 08Mar17               *
@@ -51,6 +53,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248)                                          *
+      *             Amend Hook FTOPAYZC03                             *
+      *  MD051821 - A Serious Midas Error encountered when Reversing  *
+      *             OPAY transaction (Recompile)                      *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056823 - Unable to Authorise in PAUT afer Reversal of      *

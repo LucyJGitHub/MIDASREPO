@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047693           Date 16Sep19               *
-      *  Prev Amend No. FCM101             Date 08Feb19               *
+      *  Last Amend No. MD058460           Date 21Jul21               *
+      *  Prev Amend No. MD047693           Date 16Sep19               *
+      *                 FCM101             Date 08Feb19               *
       *                 MD055115           Date 23Jan20               *
       *                 MD055067           Date 17Jan20               *
       *                 MD055009           Date 23Dec19               *
@@ -420,6 +421,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058460 - With FCM101, no values for contractual spread and *
+      *             contractual spread indicator of a loan. Populate  *
+      *             CNSPO/CNSGO with value of CNSP/CNSG if WCNSP is   *
+      *             zero.                                             *
       *  MD047693 - Rollover Dates are not 'modified' to be the       *
       *             Previous Working Day, if the Month End falls on a *
       *             holiday                                           *
@@ -20215,6 +20220,8 @@ C    C                   ENDIF                                                  
      C                   Z-ADD     CNSP          WCNSP                                        FCM101
      C                   MOVEL     CNSG          WCNSG                                        FCM101
      C                   MOVEL     LNRF          SWLN                                         FCM101
+     C                   Z-ADD     CNSP          CNSPO                                      MD058460
+     C                   MOVEL     CNSG          CNSGO                                      MD058460
      C                   ELSE                                                                 FCM101
      C                   Z-ADD     CNSPO         CNSP                                         FCM101
      C                   MOVEL     CNSGO         CNSG                                         FCM101

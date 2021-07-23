@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD055694           Date 09Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057682           Date 12Apr21               *
+      *  Prev Amend No. MD055694           Date 09Mar20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD035515           Date 19Aug15               *
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057682 - Populate Seq C tag 34R with buy ccy and buy amt.  *
+      *             Map Seq C tag 57 with correct values (same as in  *
+      *             Seq B1 tag 57 in MT300).                          *
       *  MD055694 - SWIFT Changes 2021                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -163,7 +167,9 @@
      FMGHISTL7  UF A E           K DISK                                                     MD022425
      F                                     COMMIT
       ** MG Transaction history file
-
+                                                                                            MD057682
+     FSDCUSTL7  IF   E           K DISK                                                     MD057682
+                                                                                            MD057682
      F/COPY WNCPYSRC,MG0600F001
 
      FMGOEXTPD  O    E             DISK
@@ -213,7 +219,7 @@
 
      D AR8XJ           S             40    DIM(5)                                           MD055694
      D AN8X            S             40    DIM(5)                                           MD055694
-                                                                                            MD055694 
+                                                                                            MD055694
      D AJFORM          C                   CONST('ReplaceJFormatSlash')                     MD055694
      D SWIFT           C                   CONST('SWIFTACTV')                               MD055694
      D JFRMAT          C                   CONST('MG001003')                                MD055694
@@ -788,6 +794,20 @@
      C                   MOVE      'NETTED'      NETTXT
      C                   ENDIF
 
+      ** Check if Enhanced Receive Settlement Instructions feature                          MD057682
+      ** is installed                                                                       MD057682
+                                                                                            MD057682
+     C                   MOVE      'N'           CDL094            1                        MD057682
+     C                   CALL      'AOSARDR0'                                               MD057682
+     C                   PARM      *BLANKS       @RTCD                                      MD057682
+     C                   PARM      '*VERIFY'     @OPTN                                      MD057682
+     C                   PARM      'CDL094'      @SARD                                      MD057682
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD057682
+                                                                                            MD057682
+     C     @RTCD         IFEQ      *BLANKS                                                  MD057682
+     C                   MOVE      'Y'           CDL094                                     MD057682
+     C                   ENDIF                                                              MD057682
+                                                                                            MD057682
       **  Initialise constant fields
 
      C                   MOVE      *LOVAL        CR                1
@@ -970,6 +990,8 @@
      C                   MOVEL     'Y'           CSW221            1                        MD055694
      C                   MOVEL     '/NOSI/'      NOSTXU           10                        MD055694
      C                   MOVE      'UKWN'        NOSTXU                                     MD055694
+     C                   MOVEL     '/NOSI/'      NOSTXN           10                        MD057682
+     C                   MOVE      'NETS'        NOSTXN                                     MD057682
      C                   ELSE                                                               MD055694
      C                   MOVEL     'N'           CSW221                                     MD055694
      C                   ENDIF                                                              MD055694
@@ -2832,8 +2854,10 @@
      C                   ENDIF
 
      C     X             OCCUR     MULT
-     C                   MOVE      MGSLCY        ZCCY
-     C                   MOVE      MGSAMT        ZAMNT
+     C**********         MOVE      MGSLCY        ZCCY                                       MD057682
+     C**********         MOVE      MGSAMT        ZAMNT                                      MD057682
+     C                   MOVE      MGPUCY        ZCCY                                       MD057682
+     C                   MOVE      MGPAMT        ZAMNT                                      MD057682
 
      C/COPY WNCPYSRC,MG0600C039
 
@@ -2874,33 +2898,146 @@
       ** Field :56a: and :57a: Intermediary and Accnt with Institution                     AR1053647
       ** Nostro field blank
 
-     C     MGPSTM        IFEQ      00
-     C                   ADD       1             X
-     C     X             OCCUR     MULT
-     C                   IF        CSW221 = 'Y'                                             MD055694
-     C                   MOVE      ':57J:'       MTAG                                       MD055694
-     C                   MOVEL     NOSTXU        MFLD                                       MD055694
-     C                   ELSE                                                               MD055694
-     C                   MOVE      ':57D:'       MTAG
-     C                   MOVEL     'UNKNOWN'     MFLD
-     C                   ENDIF                                                              MD055694
-     C                   MOVE      'Y'           FLD57U            1
-     C                   END
+     C                   ADD       1             X                                          MD057682
+     C     X             OCCUR     MULT                                                     MD057682
+     C                   MOVE      MGRSTM        @STM              2                        MD057682
+     C     @STM          LOOKUP    TABNST                                 23                MD057682
+                                                                                            MD057682
+     C                   IF        MGRONS <> *BLANKS AND *IN23 = '1'                        MD057682
+                                                                                            MD057682
+      ** Use receipt settlement currency to access nostro if not blank.                     MD057682
+      ** Otherwise, use purchase currency.                                                  MD057682
+                                                                                            MD057682
+     C                   IF        CEU003 = 'Y' AND MGRCCY <> *BLANKS                       MD057682
+     C                   MOVE      MGRCCY        @NSKYB                                     MD057682
+     C                   ELSE                                                               MD057682
+     C                   MOVE      MGPUCY        @NSKYB                                     MD057682
+     C                   ENDIF                                                              MD057682
+                                                                                            MD057682
+     C                   MOVEL     MGRONS        @NSKYE                                     MD057682
+     C                   CALL      'AONOSTR1'                                               MD057682
+     C                   PARM      '*MSG   '     @RTCD                                      MD057682
+     C                   PARM      '*KEY   '     @OPTN                                      MD057682
+     C                   PARM      *BLANKS       @NSKYA                                     MD057682
+     C                   PARM                    @NSKYB                                     MD057682
+     C                   PARM      *BLANKS       @NSKYC                                     MD057682
+     C                   PARM      *BLANKS       @NSKYD                                     MD057682
+     C                   PARM                    @NSKYE                                     MD057682
+     C                   PARM      *BLANKS       @KEYF                                      MD057682
+     C                   PARM      *BLANKS       @KEYG                                      MD057682
+     C                   PARM      *BLANKS       @KEYH                                      MD057682
+     C     SDNOST        PARM      SDNOST        DSSDY                                      MD057682
+                                                                                            MD057682
+     C                   IF        @RTCD <> *BLANKS                                         MD057682
+     C                   MOVE      'Y'           @ERR                                       MD057682
+     C                   MOVE      MGRONS        MFLD                                       MD057682
+     C                   MOVEL     MSGA(3)       MERR                                       MD057682
+     C                   MOVE      ':57 :'       MTAG                                       MD057682
+     C                   ELSE                                                               MD057682
+                                                                                            MD057682
+      ** If CDL094 is On and Delivery Agent details have been defined for                   MD057682
+      ** the Nostro, use these and not the Customer of the Nostro details                   MD057682
+     C                   IF        CDL094 = 'Y' AND A7RF57 <> *BLANKS                       MD057682
+                                                                                            MD057682
+      ** If SWIFT BIC defined as the Delivery Agent then obtain related                     MD057682
+      ** customer number                                                                    MD057682
+     C                   MOVE      *IN80         IN80              1                        MD057682
+     C                   MOVEL     A7RF57        WSWID            12                        MD057682
+     C     WSWID         CHAIN     SDCUSTL7                           80                    MD057682
+     C                   IF        *IN80 = *OFF                                             MD057682
+     C                   MOVEL     *BLANKS       ZDEST                                      MD057682
+     C                   MOVEL     BBCUST        ZDEST                                      MD057682
+     C                   ELSE                                                               MD057682
+     C                   MOVEL     *BLANKS       ZDEST                                      MD057682
+     C                   MOVEL     A7RF57        ZDEST                                      MD057682
+     C                   ENDIF                                                              MD057682
+     C                   MOVEL     *BLANKS       ACLINE                                     MD057682
+     C                   MOVEL     A7RA57        ACLINE                                     MD057682
+     C                   MOVE      IN80          *IN80                                      MD057682
+                                                                                            MD057682
+     C                   ELSE                                                               MD057682
+     C                   MOVEL     *BLANKS       ZDEST                                      MD057682
+     C                   MOVEL     A7CUST        ZDEST                                      MD057682
+     C                   MOVEL     *BLANKS       ACLINE                                     MD057682
+     C                   MOVE      *BLANKS       @OANN            36                        MD057682
+     C                   IF        A7OACN <> *BLANKS                                        MD057682
+     C                   MOVE      A7OACN        @OANN                                      MD057682
+     C                   MOVEL     '/'           @OANN                                      MD057682
+     C                   ENDIF                                                              MD057682
+     C                   MOVEL     @OANN         ACLINE                                     MD057682
+     C                   ENDIF                                                              MD057682
+     C                   MOVE      ' '           TAG                                        MD057682
+     C                   MOVE      '57'          FLDNO                                      MD057682
+     C                   MOVE      NETBY         CKNETI            1                        MD057682
+     C                   EXSR      FSWAD                                                    MD057682
+     C                   ENDIF                                                              MD057682
+                                                                                            MD057682
+      ** Our receive nostro is blank or settlement internal                                 MD057682
+     C                   ELSE                                                               MD057682
+      ** Test if settlement internal                                                        MD057682
+     C                   MOVE      MGRSTM        @STM                                       MD057682
+     C     @STM          LOOKUP    TABINT                                 23                MD057682
+                                                                                            MD057682
+     C                   IF        *IN23 = '1'                                              MD057682
+     C                   MOVE      *BLANKS       ZDEST                                      MD057682
+     C                   MOVEL     SECN          ZDEST                                      MD057682
+     C                   MOVEL     *BLANKS       ACLINE                                     MD057682
+     C                   MOVE      ' '           TAG                                        MD057682
+     C                   MOVE      '57'          FLDNO                                      MD057682
+     C                   MOVE      NETBY         CKNETI                                     MD057682
+     C                   EXSR      FSWAD                                                    MD057682
+                                                                                            MD057682
+     C                   ELSE                                                               MD057682
+                                                                                            MD057682
+     C                   IF        CSW221 = 'Y'                                             MD057682
+     C                   MOVE      ':57J:'       MTAG                                       MD057682
+                                                                                            MD057682
+     C                   IF        NETBY <> 'Y'                                             MD057682
+     C                   MOVEL     NOSTXU        MFLD                                       MD057682
+     C                   ELSE                                                               MD057682
+     C                   MOVEL     NOSTXN        MFLD                                       MD057682
+     C                   ENDIF                                                              MD057682
+                                                                                            MD057682
+     C                   ELSE                                                               MD057682
+     C                   MOVE      ':57D:'       MTAG                                       MD057682
+                                                                                            MD057682
+      ** If BUY NET deal set MFLD to 'TO BE NETTED'                                         MD057682
+     C                   IF        NETBY <> 'Y'                                             MD057682
+     C                   MOVEL     'UNKNOWN'     MFLD                                       MD057682
+     C                   ELSE                                                               MD057682
+     C                   MOVEL     NETTXT        MFLD                                       MD057682
+     C                   ENDIF                                                              MD057682
+     C                   ENDIF                                                              MD057682
+     C                   ENDIF                                                              MD057682
+     C                   ENDIF                                                              MD057682
+      *                                                                                     MD057682
+     C*****MGPSTM        IFEQ      00                                                       MD057682
+     C**********         ADD       1             X                                          MD057682
+     C*****X****         OCCUR     MULT                                                     MD057682
+     C**********         IF        CSW221 = 'Y'                                    MD055694 MD057682
+     C**********         MOVE      ':57J:'       MTAG                              MD055694 MD057682
+     C**********         MOVEL     NOSTXU        MFLD                              MD055694 MD057682
+     C**********         ELSE                                                      MD055694 MD057682
+     C**********         MOVE      ':57D:'       MTAG                                       MD057682
+     C**********         MOVEL     'UNKNOWN'     MFLD                                       MD057682
+     C**********         ENDIF                                                     MD055694 MD057682
+     C**********         MOVE      'Y'           FLD57U            1                        MD057682
+     C**********         END                                                                MD057682
 
       ** Field 57 Seq C is not UNKNOWN
 
-     C     FLD57U        IFNE      'Y'
+     C*****FLD57U        IFNE      'Y'                                                      MD057682
 
       ***Field*86*and*Field*87**intermediary*and*account*with inst.                        AR1053647
       ** Field 56 and Field 57 intermediary and account with inst.                         AR1053647
 
-     C                   MOVEL     '56'          @TAGI                                     AR1053647
-     C                   MOVEL     '57'          @TAGD                                     AR1053647
-     C                   EXSR      FMTX1
-     C                   END
-     C                   MOVE      'N'           FLD57U
+     C**********         MOVEL     '56'          @TAGI                            AR1053647 MD057682
+     C**********         MOVEL     '57'          @TAGD                            AR1053647 MD057682
+     C**********         EXSR      FMTX1                                                    MD057682
+     C**********         END                                                                MD057682
+     C**********         MOVE      'N'           FLD57U                                     MD057682
 
-     C                   MOVE      *BLANK        ZDBEI
+     C**********         MOVE      *BLANK        ZDBEI                                      MD057682
 
      C/COPY WNCPYSRC,MG0600C033
 

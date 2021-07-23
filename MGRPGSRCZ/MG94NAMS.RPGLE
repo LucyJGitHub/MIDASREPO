@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. EML102C            Date 13Sep20               *
-      *  Prev Amend No. MD050727           Date 28Feb20               *
+      *  Last Amend No. MD058309           Date 02Jul21               *
+      *  Prev Amend No. EML102C            Date 13Sep20               *
+      *                 MD050727           Date 28Feb20               *
       *                 AR826599           Date 28Feb20               *
       *                 CMG008             Date 28Feb20               *
       *                 EML104  *CREATE    Date 27Feb20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058309 - Recompile due to changes in GLPOSTPD              *
       *  EML102C - Replace MGCONVPD with SDCONVPD                     *
       *  MD050727 - Emergency fix to enable alphanumeric batches      *
       *             to be processed. Please see SFDC 01793714         *

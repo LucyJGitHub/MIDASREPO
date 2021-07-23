@@ -2,12 +2,12 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***********BASEMOD                                                   *                       260324
-/*C*T****CRTRPGMOD*****************************************************              260324 MD058402
-/*C*T****MODULE(**********/**********)*********************************              260324 MD058402
-/*C*T****SRCFILE(**********/**********)********************************              260324 MD058402
-/*C*T****SRCMBR(*MODULE)*OUTPUT(*PRINT)********************************              260324 MD058402
-/*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD058402
-/*STD *  RPGBASEMO2                                                   *                     MD058402
+/*C*T****CRTRPGMOD*****************************************************              260324 MD053540
+/*C*T****MODULE(**********/**********)*********************************              260324 MD053540
+/*C*T****SRCFILE(**********/**********)********************************              260324 MD053540
+/*C*T****SRCMBR(*MODULE)*OUTPUT(*PRINT)********************************              260324 MD053540
+/*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD053540
+/*STD *  RPGBASEMO2                                                   *                     MD053540
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
       *****************************************************************
       *                                                               *
@@ -19,7 +19,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058402           Date 15Jul21               *
+      *  Last Amend No. MD053540           Date 15Jul21               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260324             Date 27May09               *
@@ -38,7 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058402 - IBMi 7.4 Source Compilation                       *
+      *  MD053540 - IBMi 7.4 Source Compilation                       *
+      *             Apply for MD-58402                                *
       *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *
       *           joblogs ni MXC0500. Internalised Create Parameters. *

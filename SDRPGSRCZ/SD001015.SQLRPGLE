@@ -127,10 +127,12 @@
                                                                                               CDL102
      C                   EVAL      thisSQL2 = 'Delete from SDHSDRTD where +                   CDL102
      C                              CMODID = ''DL'' AND CTRNID not in +                       CDL102
-     C                              (select DLNO from DEALSDC)'                               CDL102
+     C                              (select DLNO from DEALSDC) AND +                          CDL102
+     C                              CTRNID not in (select DLNO from DLCHISPD)'                CDL102
      C                   EVAL      thisSQL3 = 'Delete from SDARRLOGTD where +                 CDL102
      C                              SJMODI = ''DL'' AND SJTREF not in +                       CDL102
-     C                              (select DLNO from DEALSDC)'                               CDL102
+     C                              (select DLNO from DEALSDC) AND +                          CDL102
+     C                              SJTREF not in (select DLNO from DLCHISPD)'                CDL102
       *                                                                                       CDL102
      C/EXEC SQL                                                                               CDL102
      C+ EXECUTE IMMEDIATE :thisSQL2                                                           CDL102

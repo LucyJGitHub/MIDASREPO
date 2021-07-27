@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *  Last Amend No. CFT162             Date 11Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP212             Date 15Sep14               *
       *                 AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  AR702741 - Include location as parameter in ZFREQB to        *

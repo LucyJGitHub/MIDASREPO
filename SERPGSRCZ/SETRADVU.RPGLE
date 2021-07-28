@@ -33,7 +33,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057753           Date 01Jul21               *      
+      *  Last Amend No. MD057753           Date 01Jul21               *
       *  Prev Amend No. MD057789           Date 19May21               *
       *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
@@ -132,6 +132,8 @@
       *                                                               *
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
+      *           - When Associated Front Office ID is not blanks     *
+      *             update Associated Front Office Transaction ID     *
       *  MD057789 - Charges details are not defaulted when Portfolio  *
       *             reference is inserted.                            *
       *           - Exclude Portfolio Reference in DS/TranInChCm      *

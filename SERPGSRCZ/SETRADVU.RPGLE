@@ -5380,7 +5380,6 @@
       ** update Associated Front Office Transaction ID.                                     MD057753
       *                                                                                     MD057753
      C                   IF        APFOAsocID <> *BLANKS                                    MD057753
-     C                   IF        APFOAsocID <> *BLANKS                                    MD057753
      C                   EVAL      V_AFRT = APFOAsocID
      C                   ENDIF                                                              MD057753
      C                   EVAL      V_REPA = APRprLocn

@@ -5375,8 +5375,11 @@
                                                                                               244537
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_FRNT = APFOTranID
+      *                                                                                     MD057753
       ** If Associated Front Office Transaction ID is not blank                             MD057753
-      *  update Associated Front Office Transaction ID.                                     MD057753
+      ** update Associated Front Office Transaction ID.                                     MD057753
+      *                                                                                     MD057753
+     C                   IF        APFOAsocID <> *BLANKS                                    MD057753
      C                   IF        APFOAsocID <> *BLANKS                                    MD057753
      C                   EVAL      V_AFRT = APFOAsocID
      C                   ENDIF                                                              MD057753

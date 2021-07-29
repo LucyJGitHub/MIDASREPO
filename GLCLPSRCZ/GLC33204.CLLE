@@ -11,19 +11,26 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*       Last Amend No. CDL086             Date 04May21              */
+/*       Prev Amend No. AR1014698          Date 04May21              */
+/*                      MD046248           Date 27Oct17              */
+/*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CDL086 - Portuguese FX Revaluation Extensions               */
+/*                Upgrade to FM 2.1 2021.A  with AR1014698           */
+/*       AR1014698 - Reconciliation issues with Midas R4 system      */
+/*                  (Child: AR1014700). Upgrade LBM001 as part       */
+/*                  of CDL086.                                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL120 - GL COB Components Task Split                       */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&POSTNUM &CNAM &CSEQ)
- 
+
 /* Declare file and variables                                      */
- 
+
              DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
@@ -31,62 +38,68 @@
              DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(257)
              DCL        VAR(&POST) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&ACJND) TYPE(*CHAR) LEN(6)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2012')
- 
+
 /* Global monitor message                                          */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ                                           */
- 
+
              SNDPGMMSG  MSG('GLC33204 - Balance Statements - Spot Reval') +
                           TOMSGQ(MRUNQ)
- 
+
 /* Set Job switches                                                */
- 
+
              CHGJOB     SWS(00000000)
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF8351)
- 
+
 /* Clear work file                                                 */
- 
+
              CLRPFM     FILE(ZACCNTAB)
- 
+
              RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURN)
              IF         COND(&POSTNUM = '3' *AND &CURN = 0) THEN(DO)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              OVRDBF     FILE(ZACCNTAB) OVRSCOPE(*JOB) SEQONLY(*YES 100)
+             IF         COND(&POSTNUM *NE '8') THEN(DO)                               /*AR1014698*/
              CHGVAR     VAR(&ACJND) VALUE('ACJND' *CAT &POSTNUM)
              OVRDBF     FILE(ACJND4) TOFILE(&ACJND) OVRSCOPE(*JOB) +
                           SHARE(*YES) SEQONLY(*YES 500)
+             ENDDO       /*AR1014698*/
+             IF         COND(&POSTNUM = '8') THEN(DO)                                 /*AR1014698*/
+             OVRDBF     FILE(ACJND4) TOFILE(GLGESPV4) OVRSCOPE(*JOB) +
+                          SHARE(*YES) SEQONLY(*YES 500)                               /*AR1014698*/
+             ENDDO       /*AR1014698*/
              CALL       PGM(GL33204)
              DLTOVR     FILE(ACJND4) LVL(*JOB)
              DLTOVR     FILE(ZACCNTAB) LVL(*JOB)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              COMMIT
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              ROLLBACK
              SNDPGMMSG  MSG('Program GLC33204 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
  END:
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)

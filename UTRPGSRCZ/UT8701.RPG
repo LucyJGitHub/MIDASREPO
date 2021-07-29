@@ -1,0 +1,184 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Utility to populate SDCOMPX0')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  UT8701  - Utility pgm to populate SDCOMPX0                   *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2021                      *
+      *                                                               *
+      *  Last Amend No. CDL087  *CREATE    Date 04May21               *
+      *  Prev Amend No. XXXXXX             Date DDMMMYY               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
+      *           Upgrade to FM 2.1 20201.A                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       84      CHAIN TO SDCOMPPD FAILED                        *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDCOMPL0IF  E           K        DISK
+      * COMPANY CODES FILE
+      *
+     FSDCOMPY1UF  E           K        DISK                      A
+      * COMPANY CODES EXTENSION FILE
+      *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      ***  Stored extension file record.
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+      *
+      **   Exit from program
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVELCPY@,1    COPY   80
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      **  Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set up KLIST and move in key from DATA
+      *
+     C           K@KEY     KLIST
+     C                     KFLD           K@CPCD
+      *
+      ** Populate SDCOMPX0 for Company Code
+     C           *LOVAL    SETLLSDCOMPL0
+     C                     READ SDCOMPL0                 84
+      *
+     C           *IN84     DOWEQ*OFF
+      *
+     C                     MOVE APCMCD    K@CPCD  3
+      *
+     C           K@KEY     CHAINSDCOMPY1             85
+     C           *IN85     IFEQ *ON
+      *
+     C                     MOVE K@CPCD    GCMPD
+     C                     MOVE BJCYCD    GLBCY
+     C                     WRITESDCOMPD1
+     C                     ENDIF
+      *
+     C                     READ SDCOMPL0                 84
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+** CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1999

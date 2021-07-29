@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD023170           Date 31Oct13              */
+/*       Last Amend No. CDL087             Date 04May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD023170           Date 31Oct13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 29May08              */
@@ -33,6 +34,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CDL087 - Multi Base CCY Spot and Forward Revaluation       */
+/*                Upgrade to FM 2.1 2021.A                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD023170 - Error on IC request for BSPL report             */
 /*       BG18886 - Amend non-standard codes.                        */
@@ -95,6 +98,9 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC86PINT                                           */
                                                                       /*S01408*/
+             DCL        VAR(&IN70) TYPE(*LGL) LEN(1)                                      /*CDL087*/
+/*GA*/       DCL        VAR(&IN50) TYPE(*LGL) LEN(1)                                      /*CDL087*/
+             DCL        VAR(&CDL087) TYPE(*CHAR) LEN(7) VALUE('N')                        /*CDL087*/
 /**/
 /*********** DCLF       FILE(GLC86DF) RCDFMT(GLC86)                   /*S10736*/
              DCLF       FILE(GLC86DF) RCDFMT(GLC86 GLC86MC)           /*S10736*/
@@ -133,6 +139,20 @@
                GOTO       CMDLBL(ENDLBL)                              /*CEU011*/
              ENDDO                                                    /*CEU011*/
                                                                       /*CEU011*/
+/** Check if CDL087 is installed */                                                       /*CDL087*/
+/**/                                                                                      /*CDL087*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CDL087*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CDL087*/
+             CHGVAR     VAR(&SARD) VALUE('CDL087')                                        /*CDL087*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                      /*CDL087*/
+/**/                                                                                      /*CDL087*/
+/** If CDL087 is installed */                                                             /*CDL087*/
+/**                                                                                       /*CDL087*/
+             IF        COND(&RTCD *EQ '       ') THEN(DO)                                 /*CDL087*/
+               CHGVAR     VAR(&CDL087) VALUE('Y')                                         /*CDL087*/
+/*GA*/         CHGVAR     VAR(&IN50) VALUE('1')                                           /*CDL087*/
+             ENDDO                                                                        /*CDL087*/
+/**/                                                                                      /*CDL087*/
              IF         COND(&RACT *EQ 'A' *OR &RACT *EQ 'E' *OR +
                           &RACT *EQ 'D') THEN(DO)
              CHGVAR     VAR(&CCY) VALUE(%SST(&RPARM 1 1))
@@ -214,7 +234,9 @@ ERROR:
 /** If CEU011 is installed entry of 'E' is valid. */                  /*CEU011*/
 /**/                                                                  /*CEU011*/
                IF         COND((&CEU011 *EQ 'Y' *AND &CCY *NE 'E') +
-                          *OR (&CEU011 *EQ 'N')) THEN(DO)             /*CEU011*/
+                          *OR (&CEU011 *EQ 'N')) THEN(DO)             /*GATEMP*/
+               IF         COND((&CDL087 *EQ 'Y' *AND &CCY *NE 'O') +
+                          *OR (&CDL087 *EQ 'N')) THEN(DO)
 /*/COPY WNCPYSRC,GLC86P007                                           */
              CHGVAR     VAR(&IN10) VALUE('1')
 /*/COPY WNCPYSRC,GLC86P008                                           */
@@ -227,11 +249,22 @@ ERROR:
                  IF         COND(&CEU011 *EQ 'Y') THEN(CHGVAR +
                             VAR(&MSG) VALUE('Entry not ''A'', ''B'', +
                             ''H'', ''L'' or ''E'''))                  /*CEU011*/
+                 IF         COND(&CDL087 *EQ 'Y') THEN(CHGVAR +
+                            VAR(&MSG) VALUE('Entry not ''A'', ''B'', +
+                            ''H'', ''L'', ''E'', or ''O '''))         /*GATEMP*/
 /*/COPY WNCPYSRC,GLC86P009                                           */
              GOTO       CMDLBL(ERROR)
+               ENDDO                                                  /*GATEMP*/
                ENDDO                                                  /*CEU011*/
              ENDDO
 /*/COPY WNCPYSRC,GLC86P004                                           */
+
+             IF        COND(&CCY *EQ 'O' *AND &RLEV *EQ 'S') THEN(DO)                     /*CDL087*/
+             CHGVAR     VAR(&IN10) VALUE('1')                                             /*CDL087*/
+             CHGVAR     VAR(&MSG) VALUE('Local base currency cannot +
+                         be selected for system level reports')                           /*CDL087*/
+             GOTO       CMDLBL(ERROR)                                                     /*CDL087*/
+             ENDDO                                                                        /*CDL087*/
 /* BSPL SET NO. FIELD ENTRY MANDATORY */
              IF         COND(&RSNO *EQ ' ') THEN(DO)
              CHGVAR     VAR(&IN11) VALUE('1')
@@ -439,6 +472,21 @@ SKIP:                                                                 /*S10736*/
                            VAR(&MSG) VALUE('Entry not ''A'', ''B'', +
                            ''H'', ''L'' or ''E'''))                   /*CEU011*/
 /*/COPY WNCPYSRC,GLC86P012                                           */
+/**/                                                                                      /*CDL087*/
+             IF         COND(&CDL087 *EQ 'Y') THEN(DO)                                    /*CDL087*/
+/**/                                                                                      /*CDL087*/
+/** If CDL087 is ON, entry of 'O' is valid. */                                            /*CDL087*/
+/**/                                                                                      /*CDL087*/
+             IF         COND((&CCY *EQ 'O')) THEN(DO)                                     /*CDL087*/
+             CHGVAR     VAR(&IN10) VALUE('0')                                             /*CDL087*/
+             IF         COND(&CEU011 *EQ 'Y') THEN(CHGVAR VAR(&MSG) +
+                          VALUE('Entry not ''A'', ''B'', ''H'', +
+                          ''L'', ''E'' or ''O'''))                                        /*CDL087*/
+             ELSE       CMD(CHGVAR VAR(&MSG) VALUE('Entry not ''A'', +
+                          ''B'', ''H'', ''L'' or ''O'''))                                 /*CDL087*/
+             ENDDO                                                                        /*CDL087*/
+             ENDDO                                                                        /*CDL087*/
+/**/                                                                                      /*CDL087*/
              GOTO       CMDLBL(ERRMC)                                 /*S10736*/
                ENDDO                                                  /*CEU011*/
              ENDDO                                                    /*S10736*/

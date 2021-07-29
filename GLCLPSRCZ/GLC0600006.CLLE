@@ -10,13 +10,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD038448           Date 13Jul16              */
+/*       Last Amend No. CDL086             Date 04May21              */
+/*       Prev Amend No. AR1014698          Date 04May21              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD038448           Date 13Jul16              */
 /*                      AR1097218          Date 05Apr13              */
 /*                      CGL142  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CDL086 - Portuguese FX Revaluation Extensions               */
+/*                Upgrade to FM 2.1 2021.A with AR1014698.           */
+/*       AR1014698 - Reconciliation issues with Midas R4 system      */
+/*                  (Child: AR1014700). Upgrade LBM001 as part       */
+/*                  of CDL086.                                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD038448 - Stamp Tax postings not in CLEARPD.               */
 /*                  Add new component GLC0600006 00010 for correct   */
@@ -27,38 +34,38 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&POSTNUM &CNAM &CSEQ)
- 
+
 /* Declare file and variables */
- 
+
              DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&ACPO) TYPE(*CHAR) LEN(10)                                 /*AR1097218*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2012')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ */
- 
+
              SNDPGMMSG  MSG('GLC0600006 - Postings only in ZACCNTAB') +
                           TOMSGQ(MRUNQ)
- 
+
 /* Set Job switches */
- 
+
              CHGJOB     SWS(00000000)
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF8351)
- 
+
 /* Clear work file */
- 
+
              CLRPFM     FILE(ZACCNTAB)
- 
+
              OVRDBF     FILE(ZACCNTAB) OVRSCOPE(*JOB) SEQONLY(*YES 100)
              IF         COND(&POSTNUM = '1') THEN(DO)                                  /*AR1097218*/
              OVRDBF     FILE(ACPO1) TOFILE(GLACPML0) OVRSCOPE(*JOB) +
@@ -70,25 +77,32 @@
                           SHARE(*YES) SEQONLY(*YES 500)                                 /*MD038448*/
              ENDDO                                                                      /*MD038448*/
              ELSE       CMD(DO)                                                         /*MD038448*/
+             IF         COND(&POSTNUM = '8') THEN(DO)                                  /*AR1014698*/
+
+             OVRDBF     FILE(ACPO1) TOFILE(GLGESPV4) OVRSCOPE(*JOB) +
+                          SHARE(*YES) SEQONLY(*YES 500)                                /*AR1014698*/
+             ENDDO       /*AR1014698*/
+             ELSE       CMD(DO)                                                        /*AR1014698*/
              CHGVAR     VAR(&ACPO) VALUE('ACPO' *CAT &POSTNUM)                         /*AR1097218*/
              OVRDBF     FILE(ACPO1) TOFILE(&ACPO) OVRSCOPE(*JOB) +
                           SHARE(*YES) SEQONLY(*YES 500)                                /*AR1097218*/
              ENDDO                                                                     /*AR1097218*/
              ENDDO                                                                      /*MD038448*/
+             ENDDO       /*AR1014698*/
              CALL       PGM(GL0600006)
              DLTOVR     FILE(ACPO1) LVL(*JOB)
              DLTOVR     FILE(ZACCNTAB) LVL(*JOB)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              COMMIT
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
              SNDPGMMSG  MSG('Program GLC0600006 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
@@ -96,7 +110,7 @@ ABNOR:
              ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)

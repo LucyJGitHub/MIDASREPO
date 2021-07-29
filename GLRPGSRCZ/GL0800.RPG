@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037086           Date 21Jan16               *
+      *  Last Amend No. CDL087             Date 04May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037086           Date 21Jan16               *
       *                 MD036521           Date 02Dec15               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
@@ -90,6 +91,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
+      *           Upgrade to FM 2.1 20201.A                           *
+      *           Upgrade with AR971549                               *
+      *    AR971549 - CGL087 Data reconciliation issue                *
+      *               (Child: AR971550)                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037086 -  GLC39 00001 in MSGW during COB run               *
       *  MD036521 -  Error encountered in Branches maintenance        *
@@ -501,6 +507,14 @@
      I                                        1  153BASAM3
      I***/COPY*WNCPYSRC,GL0800I001                                                            CFC006
      I/COPY WNCPYSRC,GL0800I001                                                             MD020563
+      *                                                                                       CDL087
+     I            DS                                                                          CDL087
+     I                                        1  150#GLBC0                                    CDL087
+     I                                        1  151#GLBC1                                    CDL087
+     I                                        1  152#GLBC2                                    CDL087
+     I                                        1  153#GLBC3                                    CDL087
+     I** Data Structure for Local Base Ccy Equivalent Amounts                                 CDL087
+      *                                                                                       CDL087
      I            DS
      I* Record/entries count
      I                                        1   60RECCNT
@@ -583,6 +597,10 @@
      I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01522
      I*****************************************************************
      I***/COPY*WNCPYSRC,GL0800I002                                                            CFC006
+      *                                                                                       CDL087
+     ISDBRCX    E DSSDBRCHX0                                                                  CDL087
+     I** External DS for Branch Extension Details                                             CDL087
+      *                                                                                       CDL087
      I/COPY WNCPYSRC,GL0800I002                                                             MD020563
      I              9999999999900         C         WLMTPA                                    250521
      I              'GL0800001'           C         SECTN                                     CFC006
@@ -667,6 +685,12 @@
      C*                                                                   S01117
      C/COPY WNCPYSRC,GL0800C001
       /SPACE
+      *                                                                                       CDL087
+      ** If enhancement indicator flag is on, access branch extension                         CDL087
+      ** file for transfer flag and branch local base currency.                               CDL087
+     C           CDL087    IFEQ 'Y'                                                           CDL087
+     C                     EXSR #GLBDT                                                        CDL087
+     C                     END                                                                CDL087
      C*                                                                   E25969
      C** PERFORM TRANSFER IF BASE CURRENCY TRANSFER REQUIRED (*IN30 ON)   E25969
      C** OR IF THIS IS A FOREIGN CURRENCY INCOME/EXPENSE                  E25969
@@ -764,7 +788,17 @@
      C  N62                SETON                         62               S01117
      C* Postings/details print routine
      C/COPY WNCPYSRC,GL0800C002
+      *                                                                                       CDL087
+      *  If transfer flag is off, ie transfer to system base ccy                              CDL087
+     C           GTFRI     IFEQ 'N'                                                           CDL087
      C                     EXSR BPSPRT
+      *                                                                                       CDL087
+     C                     ELSE                                                               CDL087
+      *                                                                                       CDL087
+      ** Otherwise, transfer to local base ccy                                                CDL087
+     C                     EXSR #GLBTR                                                        CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
       ** End of CGL052 enhancement                                                            CGL052
      C                     ENDIF                                                              CGL052
      C/COPY WNCPYSRC,GL0800C003
@@ -1241,6 +1275,9 @@
      C                     Z-ADD1         ASQ01
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0800CCP4                                           S01408
+      *                                                                                       CDL087
+      ** Test for enhancement flag                                                            CDL087
+     C                     EXSR #GNS37                                                        CDL087
      C*                                                                   S01408
       /SPACE
      C           AEND      ENDSR
@@ -2098,6 +2135,598 @@
      C**                                                                  S01194
      C*****************************************************************   S01194
      C/COPY WNCPYSRC,GL0800C004
+      /SPACE                                                                                  CDL087
+      *****************************************************************                       CDL087
+      * #GNS037   - Access Enhancement details file to determine if   *                       CDL087
+      *             CDL087 is installed.                              *                       CDL087
+      *                                                               *                       CDL087
+      * CALLS                                                         *                       CDL087
+      *                                                               *                       CDL087
+      * CALLED BY   AINIT                                             *                       CDL087
+      *                                                               *                       CDL087
+      * FLDS USED -                                                   *                       CDL087
+      *                                                               *                       CDL087
+      *****************************************************************                       CDL087
+     C           #GNS37    BEGSR                                                              CDL087
+     C**                                                                                      CDL087
+     C** ACCESS SAR DETAILS FILE TO DETERMINE IF GNS025 IS INSTALLED                          CDL087
+     C**                                                                                      CDL087
+     C                     CALL 'AOSARDR0'                                                    CDL087
+     C                     PARM '       ' @RTCD   7                                           CDL087
+     C                     PARM '*VERIFY' @OPTN   7                                           CDL087
+     C                     PARM 'CDL087'  @SARD   6                                           CDL087
+     C           @RTCD     IFNE *BLANK                                                        CDL087
+     C           @RTCD     ANDNE'*NRF   '                                                     CDL087
+     C                     MOVEL'SCSARDPD'DBFILE                       **                     CDL087
+     C                     MOVEL'009'     DBASE            * DBERR #9                         CDL087
+     C                     MOVEL@OPTN     DBKEY                        **                     CDL087
+     C                     MOVEL@OPTN     DBOPTN  7                                           CDL087
+     C                     SETON                     U7U8                                     CDL087
+     C                     END                                                                CDL087
+     C           @RTCD     IFEQ *BLANK                                                        CDL087
+     C                     MOVEL'Y'       CDL087  1                                           CDL087
+     C                     SETON                     33                                       CDL087
+     C                     ELSE                                                               CDL087
+     C*                                                                                       CDL087
+     C** If enhancement flag is off, set enhancement flag to 'N' and                          CDL087
+     C** initialise transfer flag to 'N'.                                                     CDL087
+     C                     MOVEL'N'       CDL087                                              CDL087
+     C                     MOVE 'N'       GTFRI                                               CDL087
+     C                     SETOF                     33                                       CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      ** Move 'Y' to test flag if testing if done                                             CDL087
+     C                     MOVE 'N'       TEST    1                                           CDL087
+     C                     ENDSR                                                              CDL087
+      *****************************************************************                       CDL087
+      /SPACE                                                                                  CDL087
+      *****************************************************************                       CDL087
+      *                                                               *                       CDL087
+      * #GLBDT    - Access branch extension file to retrieve local    *                       CDL087
+      *             base currency, transfer flag, trade a/c code,     *                       CDL087
+      *             a/c type, a/c section and ccy decimal position.   *                       CDL087
+      *                                                               *                       CDL087
+      * CALLS       *PSSR      - Dump prgram                          *                       CDL087
+      *             AOBRCXR0   - Access program for branch extension  *                       CDL087
+      *                          file                                 *                       CDL087
+      * CALLED BY   Main                                              *                       CDL087
+      *                                                               *                       CDL087
+      * FLDS USED -                                                   *                       CDL087
+      *                                                               *                       CDL087
+      *****************************************************************                       CDL087
+     C           #GLBDT    BEGSR                                                              CDL087
+      *                                                                                       CDL087
+     C** Access branch extension file                                                         CDL087
+     C                     CALL 'AOBRCXR0'                                                    CDL087
+     C                     PARM '*MSG   ' @RTCD   7                                           CDL087
+     C                     PARM '*KEY   ' @OPTN   7                                           CDL087
+     C                     PARM BRCA      @DSNB   3                                           CDL087
+     C           SDBRCX    PARM SDBRCX    DSSDY                                               CDL087
+      *                                                                                       CDL087
+      ** Database error if extension file record not found.                                   CDL087
+     C           @RTCD     IFNE *BLANKS                                                       CDL087
+     C                     SETON                     U7U872                                   CDL087
+     C                     MOVEL'008'     DBASE            * DBERR #8  *                      CDL087
+     C                     MOVEL'SDBRCHX0'DBFILE                                              CDL087
+     C                     MOVELBRCA      DBKEY                                               CDL087
+     C                     MOVEL@OPTN     DBOPTN                                              CDL087
+     C                     EXSR *PSSR                                                         CDL087
+     C                     ELSE                                                               CDL087
+      *                                                                                       CDL087
+      ** If extension file record is found, get local base currency's                         CDL087
+      ** trade account code, decimal positions, a/c type and section                          CDL087
+     C           GTFRI     IFEQ 'Y'                                                           CDL087
+      *                                                                <S>                    CDL087
+      ** Array index initialized to 1 else it starts LOKUP into array   .                     CDL087
+      ** from the value in 'X' which has a previous LOKUP value <> 1    .                     CDL087
+     C                     Z-ADD1         X                             .                     CDL087
+      *                                                                <E>                    CDL087
+     C           GLBCY     LOKUPCUR,X                    75                                   CDL087
+      *                                                                                       CDL087
+      ** If currency code not found, Database error (010).                                    CDL087
+     C           *IN75     IFNE '1'                        B001                               CDL087
+     C                     SETON                     U7U8     1                               CDL087
+     C                     MOVEL'010'     DBASE             DBERR #1                          CDL087
+     C                     MOVEL'SDCURRPD'DBFILE              1                               CDL087
+     C                     MOVELGLBCY     DBKEY               1                               CDL087
+     C                     MOVEL@OPTN     DBOPTN  7           1                               CDL087
+     C                     EXSR *PSSR                         1                               CDL087
+      *                                                       1                               CDL087
+     C                     ELSE                            X001                               CDL087
+     C                     MOVELCYD,X     CCYDET              details                         CDL087
+     C******************** Z-ADDTACC      #GLBTA  40                                 CDL087 AR971549
+     C                     Z-ADDTACC      #GLBTA 100                                        AR971549
+     C                     Z-ADDCDP       #GLBDP  10                                          CDL087
+     C                     Z-ADDSPOT      #GLBSP 138                                          CDL087
+     C                     MOVE MDIN      #GLBMD  1                                           CDL087
+     C                     MOVE ATY,X     #GLBAT  1                                           CDL087
+     C                     MOVE ASC,X     #GLBAS  2                                           CDL087
+     C           CDP       COMP 1                    754041                                   CDL087
+     C   75      CDP       COMP 2                    43  42                                   CDL087
+     C                     ENDIF                           E001                               CDL087
+     C                     ELSE                                                               CDL087
+     C                     MOVE BJCYCD    GLBCY                                               CDL087
+     C                     END                                                                CDL087
+     C                     END                                                                CDL087
+      **                                                                                      CDL087
+     C                     ENDSR                                                              CDL087
+      *****************************************************************                       CDL087
+      /SPACE                                                                                  CDL087
+      *****************************************************************                       CDL087
+      *                                                               *                       CDL087
+      * #GLBTR    - Performs any necessary output of postings/report  *                       CDL087
+      *             details for local base currency processing.       *                       CDL087
+      *           - Updates year to date balance on account master    *                       CDL087
+      *             record for non-local-base currency accounts       *                       CDL087
+      *             with non-zero ledger balances.                    *                       CDL087
+      *           - This subroutine is duplicated from SUBR/BPSPRT    *                       CDL087
+      *                                                               *                       CDL087
+      * CALLS       SB1CON     - Conversion of amount to base ccy     *                       CDL087
+      *             #GLBCV     - Conversion of base ccy to local base *                       CDL087
+      *                          ccy.                                 *                       CDL087
+      * CALLED BY   Main                                              *                       CDL087
+      *                                                               *                       CDL087
+      * FLDS USED -                                                   *                       CDL087
+      *                                                               *                       CDL087
+      *****************************************************************                       CDL087
+     C           #GLBTR    BEGSR                                                              CDL087
+      *                                                                                       CDL087
+     C                     MOVE 'P'       RECI                                                CDL087
+      *                                                                                       CDL087
+     C           #CCY      IFNE GLBCY                       B001                              CDL087
+      *                                                                                       CDL087
+      ** Account in foreign currency                                                          CDL087
+     C                     SETON                     63                                       CDL087
+     C                     Z-ADD1         X                                                   CDL087
+     C           #CCY      LOKUPCUR,X                    75  Get ccy                          CDL087
+     C                     MOVELCYD,X     CCYDET              details                         CDL087
+     C                     MOVEA'0000'    *IN,20                                              CDL087
+     C           CDP       COMP 1                    752021                                   CDL087
+     C           *IN75     IFEQ '1'                         B002                              CDL087
+     C           CDP       COMP 2                    23  22                                   CDL087
+     C                     END                              E002                              CDL087
+     C           YTDB      ADD  LDBL      NEWYTD                                              CDL087
+     C           YTDB      COMP 0                      25                                     CDL087
+     C           LDBL      COMP 0                      26                                     CDL087
+     C           NEWYTD    COMP 0                      27                                     CDL087
+     C           CURLIN    IFGE OVFLW                       B002                              CDL087
+     C           *IN60     OREQ '0'                                                           CDL087
+      *                                                                                       CDL087
+      ** New page required                                                                    CDL087
+     C           FORB      IFEQ 'F'                                                           CDL087
+     C                     EXCPTTITLE                                                         CDL087
+     C                     MOVE '1'       *IN60                                               CDL087
+     C                     END                                                                CDL087
+     C                     END                              E002                              CDL087
+      *                                                                                       CDL087
+      ** Write detail line to Foreign Currency Income/Expense Report                          CDL087
+     C           FORB      IFEQ 'F'                                                           CDL087
+     C                     EXCPTDETL                                                          CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      ** If ledger balance is non-zero, write postings and update year                        CDL087
+      ** to date balance on account record.                                                   CDL087
+     C           LDBL      IFNE 0                           B002                              CDL087
+      *                                                                                       CDL087
+     C           FORB      IFEQ 'F'                                                           CDL087
+      *                                                                                       CDL087
+     C                     Z-ADDNEWYTD    YTDB                                                CDL087
+     C                     EXCPTUPDAC                                                         CDL087
+     C                     Z-ADDLDBL      AMT0                                                CDL087
+      *                                                                                       CDL087
+      ** Convert to base currency                                                             CDL087
+     C                     EXSR SB1CON                                                        CDL087
+      *                                                                                       CDL087
+      ** Convert to local base currency                                                       CDL087
+     C                     EXSR #GLBCV                                                        CDL087
+      *                                                                                       CDL087
+      ** PRINT TEST LINE                                                                      CDL087
+     C           TEST      IFEQ 'Y'                                                           CDL087
+     C                     EXCPTCHECK                                                         CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      ** Generate Postings                                                                    CDL087
+      ** Generate Posting #1 - account ccy I/E account posting.                               CDL087
+     C***********          Z-ADDRUND      VALD                                                CDL087
+     C                     Z-ADDBKAPDT    VALD                                                CDL087
+     C                     Z-ADDRUND      PSTD                                                CDL087
+     C                     MOVEL#ATYP     ATYP                                                CDL087
+     C                     MOVE ACS,Y     ACSC                                                CDL087
+     C           ATYP      IFEQ 'R'                         B003                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X003                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E003                              CDL087
+     C                     MOVE 'X'       GETP                                                CDL087
+     C                     Z-ADDLDBL      PSTA         75                                     CDL087
+     C           *IN75     IFEQ '1'                         B003                              CDL087
+     C                     Z-SUBLDBL      PSTA                                                CDL087
+     C                     END                              E003                              CDL087
+     C                     MOVELNAR,1     PNAR                                                CDL087
+     C           LDBL      IFGT 0                           B003                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     ELSE                             X003                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     END                              E003                              CDL087
+     C                     MOVE #CNUM     CNUM                                                CDL087
+     C                     MOVEL#CCY      CCY                                                 CDL087
+     C                     Z-ADD#ACOD     ACOD                                                CDL087
+     C                     Z-ADD#ACSQ     ACSQ                                                CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C                     MOVE ACNO      ##ACNO                                              CDL087
+     C                     MOVE 'GB00060' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #2 - account ccy trade account posting.                             CDL087
+     C                     MOVE A8BICN    CNUM                                                CDL087
+     C                     MOVE BLSPTA    ACOD                                                CDL087
+     C                     MOVE TRDTY     ATYP                                                CDL087
+     C                     MOVE TRDSC     ACSC                                                CDL087
+     C                     Z-ADD1         ACSQ                                                CDL087
+     C           LDBL      IFGT 0                           B003                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     ELSE                                                               CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     END                              E003                              CDL087
+      *                                                                                       CDL087
+      ** If account currency does not have a spot trade account code;                         CDL087
+      ** ie. system base currency only, do not post #2.                                       CDL087
+      ** Note : All currencies other than the system base currency                            CDL087
+      **        must have the spot trade account code entered.                                CDL087
+     C           TACC      IFNE *ZEROS                                                        CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C                     MOVE ACNO      ##ACNO                                              CDL087
+     C                     MOVE 'GB00060' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      ** If base currency amount is zero , no more postings                                   CDL087
+     C           BASAM0    CABEQ0         #GHAS1                                              CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #3 - System base ccy with account ccy's trade                       CDL087
+      **                       eqv account posting.                                           CDL087
+     C                     MOVELBJCYCD    CCY                                                 CDL087
+     C                     Z-ADDTACC      ACOD                                                CDL087
+     C           LDBL      IFGT 0                           B003                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     ELSE                             X003                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     END                              E003                              CDL087
+     C                     Z-ADDBASAM0    PSTA         75                                     CDL087
+     C           *IN75     IFEQ '1'                         B003                              CDL087
+     C                     Z-SUBBASAM0    PSTA                                                CDL087
+     C                     END                              E003                              CDL087
+     C                     Z-ADD1         X                                                   CDL087
+     C           #CCY      LOKUPCUR,X                    75                                   CDL087
+     C                     MOVE ATY,X     ATYP                                                CDL087
+     C                     MOVE ASC,X     ACSC                                                CDL087
+     C           ATYP      IFEQ 'R'                         B003                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X003                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E003                              CDL087
+      *                                                                                       CDL087
+      ** If account currency does not have a spot trade account code;                         CDL087
+      ** ie. system base currency only, do not post #2.                                       CDL087
+      ** Note : All currencies other than the system base currency                            CDL087
+      **        must have the spot trade account code entered.                                CDL087
+     C           TACC      IFNE *ZEROS                                                        CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C                     MOVE ACNO      ##ACNO                                              CDL087
+     C                     MOVE 'GB00060' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #4 - local base ccy income account posting.                         CDL087
+     C                     MOVE GLBCY     CCY                                                 CDL087
+     C                     Z-ADD#ACOD     ACOD                                                CDL087
+     C*                                                                                       CDL087
+     C***********          Z-ADD#ACSQ     ACSQ                                                CDL087
+     C*                                                                                       CDL087
+     C** Set cust no & a/c seq of this posting to the original cust no                        CDL087
+     C** and a/c seq.                                                                         CDL087
+     C*                                                                                       CDL087
+     C           BKFCRC    IFEQ 'B'                                                           CDL087
+     C           BKFCRC    OREQ 'C'                                                           CDL087
+     C                     MOVE #CNUM     CNUM                                                CDL087
+     C                     END                                                                CDL087
+     C           BKFCRC    IFEQ 'B'                                                           CDL087
+     C           BKFCRC    OREQ 'S'                                                           CDL087
+     C                     Z-ADD#ACSQ     ACSQ                                                CDL087
+     C                     END                                                                CDL087
+     C*                                                                                       CDL087
+     C                     Z-ADD#GLBC0    PSTA         75                                     CDL087
+     C   75                Z-SUB#GLBC0    PSTA                                                CDL087
+     C                     MOVELPNAR2     PNAR                                                CDL087
+     C           LDBL      IFGT 0                           B003                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     ELSE                             X003                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     END                              E003                              CDL087
+     C                     MOVE #ATYP     ATYP                                                CDL087
+     C                     MOVE ACS,Y     ACSC                                                CDL087
+     C           ATYP      IFEQ 'R'                         B003                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X003                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E003                              CDL087
+      *                                                                                       CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C*                                                                                       CDL087
+     C                     MOVE *BLANKS   ##ACNO                                              CDL087
+     C                     MOVE 'GB00070' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+      *                                                                                       CDL087
+      ** Maintain hash totals                                                                 CDL087
+     C           #GHAS1    TAG                                                                CDL087
+      *                                                                                       CDL087
+      ** If posting #2 not generated, skip hashing for that posting.                          CDL087
+     C           TACC      IFNE *ZEROS                                                        CDL087
+     C                     ADD  2         RECCNT                                              CDL087
+     C           LDBL      MULT 2         SUBTOT                                              CDL087
+     C                     ELSE                                                               CDL087
+     C                     ADD  1         RECCNT                                              CDL087
+     C                     Z-ADDLDBL      SUBTOT                                              CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      ** Do not main hash totals if postings #3 and #4 are not generated.                     CDL087
+     C           BASAM0    IFNE 0                                                             CDL087
+      *                                                                                       CDL087
+      ** Do not count posting #3 if not generated.                                            CDL087
+     C           TACC      IFNE *ZEROS                                                        CDL087
+     C                     ADD  BASAM0    SUBTOT                                              CDL087
+     C                     ADD  1         RECCNT                                              CDL087
+     C                     END                                                                CDL087
+     C                     ADD  #GLBC0    SUBTOT                                              CDL087
+     C                     ADD  1         RECCNT                                              CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+     C           SUBTOT    DIV  1000      ZZAMT                                               CDL087
+     C           ZZAMT     IFLT 0                           B003                              CDL087
+     C                     Z-SUBZZAMT     ZZAMT                                               CDL087
+     C                     END                              E003                              CDL087
+     C                     Z-ADDZZAMT     ZZAMTI                                              CDL087
+     C                     MOVE ZZAMT     ZZAMTD                                              CDL087
+     C                     ADD  ZZAMTD    ZZTOTD                                              CDL087
+     C           ZZTOTD    IFLT ZZAMTD                      B003                              CDL087
+     C                     ADD  1         ZZAMTI                                              CDL087
+     C                     END                              E003                              CDL087
+     C                     ADD  ZZAMTI    ZZTOTI                                              CDL087
+      *                                                                                       CDL087
+      ** Skip further processing if converted amount if zero.                                 CDL087
+     C           BASAM0    CABEQ0         #GBEND                                              CDL087
+      *                                                                                       CDL087
+     C           #GLBTA    IFNE 0                           B003                              CDL087
+      *                                                                                       CDL087
+      ** Additional pair of postings generated if local base currency                         CDL087
+      ** trade and trade equivalent accounts used by installation                             CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #5 - local base ccy with spot trade a/c posting.                    CDL087
+     C*                                                                                       CDL087
+     C** Set cust no back to branch internal customer & a/c seq to 1.                         CDL087
+     C*                                                                                       CDL087
+     C                     MOVE A8BICN    CNUM                                                CDL087
+     C                     Z-ADD1         ACSQ                                                CDL087
+     C*                                                                                       CDL087
+     C                     MOVE BLSPTA    ACOD                                                CDL087
+     C                     MOVELNAR,1     PNAR                                                CDL087
+     C           LDBL      IFGT 0                           B004                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     ELSE                             X004                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     END                              E004                              CDL087
+     C                     MOVE TRDTY     ATYP                                                CDL087
+     C                     MOVE TRDSC     ACSC                                                CDL087
+     C           ATYP      IFEQ 'R'                         B004                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X004                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E004                              CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C                     MOVE *BLANKS   ##ACNO                                              CDL087
+     C                     MOVE 'GB00060' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #6 - system base ccy with local base ccy's                          CDL087
+      **                       trade eqv a/c posting.                                         CDL087
+     C                     MOVELBJCYCD    CCY                                                 CDL087
+     C                     Z-ADD#GLBTA    ACOD                                                CDL087
+     C                     MOVE #GLBAT    ATYP                                                CDL087
+     C                     MOVE #GLBAS    ACSC                                                CDL087
+     C                     Z-ADDBASAM0    PSTA         75                                     CDL087
+     C   75                Z-SUBBASAM0    PSTA                                                CDL087
+     C           ATYP      IFEQ 'R'                         B004                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X004                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E004                              CDL087
+     C           LDBL      IFGT 0                           B004                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     ELSE                             X004                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     END                              E004                              CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C                     MOVE *BLANKS   ##ACNO                                              CDL087
+     C                     MOVE 'GB00060' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+      *                                                                                       CDL087
+      ** Hash totalling                                                                       CDL087
+     C                     ADD  2         RECCNT                                              CDL087
+     C                     Z-ADDBASAM0    SUBTOT                                              CDL087
+     C                     ADD  #GLBC0    SUBTOT                                              CDL087
+      *                                                                                       CDL087
+     C           SUBTOT    DIV  1000      ZZAMT                                               CDL087
+     C           ZZAMT     IFLT 0                           B004                              CDL087
+     C                     Z-SUBZZAMT     ZZAMT                                               CDL087
+     C                     END                              E004                              CDL087
+     C                     Z-ADDZZAMT     ZZAMTI                                              CDL087
+     C                     MOVE ZZAMT     ZZAMTD                                              CDL087
+     C                     ADD  ZZAMTD    ZZTOTD                                              CDL087
+     C           ZZTOTD    IFLT ZZAMTD                      B004                              CDL087
+     C                     ADD  1         ZZAMTI                                              CDL087
+     C                     END                              E004                              CDL087
+     C                     ADD  ZZAMTI    ZZTOTI                                              CDL087
+      *                                                                                       CDL087
+     C                     END                              E003                              CDL087
+      *                                                                                       CDL087
+     C                     END                                                                CDL087
+     C                     END                              E002                              CDL087
+     C                     END                              E001                              CDL087
+      *                                                                                       CDL087
+      ** End of postings for foreign currency accounts                                        CDL087
+      *                                                                                       CDL087
+      ** For base currency accounts, postings required only if transfer                       CDL087
+      ** to profit and loss required (*IN30 = 1).                                             CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #9 - local base ccy I/E account posting.                            CDL087
+     C           #CCY      IFEQ GLBCY                       B001                              CDL087
+     C           *IN30     ANDEQ'1'                                                           CDL087
+     C           LDBL      ANDNE0                                                             CDL087
+     C           FORB      ANDEQ'B'                                                           CDL087
+     C                     MOVE #CNUM     CNUM                                                CDL087
+     C                     Z-ADD#ACOD     ACOD                                                CDL087
+     C                     MOVEL#CCY      CCY                                                 CDL087
+     C                     Z-ADD#ACSQ     ACSQ                                                CDL087
+     C                     Z-ADDRUND      PSTD                                                CDL087
+     C                     Z-ADDRUND      VALD                                                CDL087
+     C                     MOVELNAR,3     PNAR                                                CDL087
+     C                     Z-ADDLDBL      PSTA         75                                     CDL087
+     C           *IN75     IFEQ '1'                         B002                              CDL087
+     C                     Z-SUBLDBL      PSTA                                                CDL087
+     C                     END                              E002                              CDL087
+     C                     MOVE #ATYP     ATYP                                                CDL087
+     C                     MOVE ACS,Y     ACSC                                                CDL087
+     C           ATYP      IFEQ 'R'                         B002                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X002                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E002                              CDL087
+     C                     MOVE 'Y'       GETP                                                CDL087
+     C           LDBL      IFGT 0                           B002                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     ELSE                             X002                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     END                              E002                              CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C*                                                                                       CDL087
+     C                     MOVE ACNO      ##ACNO                                              CDL087
+     C                     MOVE 'GB00080' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+      *                                                                                       CDL087
+      ** Generate Posting #10 - local base ccy P/L account posting.                           CDL087
+     C                     MOVE A8BICN    CNUM                                                CDL087
+     C                     MOVE BKPLAC    ACOD                                                CDL087
+     C                     Z-ADD1         ACSQ                                                CDL087
+     C                     MOVELPNAR2     PNAR                                                CDL087
+     C                     MOVE PLTY      ATYP                                                CDL087
+     C                     MOVE PLSC      ACSC                                                CDL087
+     C           ATYP      IFEQ 'R'                         B002                              CDL087
+     C                     Z-ADD1         RIND                                                CDL087
+     C                     ELSE                             X002                              CDL087
+     C                     Z-ADD0         RIND                                                CDL087
+     C                     END                              E002                              CDL087
+     C           LDBL      IFGT 0                           B002                              CDL087
+     C                     Z-ADD0         DRCR                                                CDL087
+     C                     ELSE                             X002                              CDL087
+     C                     Z-ADD1         DRCR                                                CDL087
+     C                     END                              E002                              CDL087
+     C*                                                                                       CDL087
+     C* Determine the posting narrative:                                                      CDL087
+     C*                                                                                       CDL087
+     C                     MOVE ACNO      ##ACNO                                              CDL087
+     C                     MOVE 'GB00070' ##MGID                                              CDL087
+     C                     EXSR SRPNAR                                                        CDL087
+     C*                                                                                       CDL087
+     C                     WRITEAPOSTPDF                                                      CDL087
+      *                                                                                       CDL087
+      ** Hash totalling                                                                       CDL087
+     C                     ADD  2         RECCNT                                              CDL087
+     C           LDBL      MULT 2         SUBTOT                                              CDL087
+     C           SUBTOT    DIV  1000      ZZAMT                                               CDL087
+     C           ZZAMT     IFLT 0                           B002                              CDL087
+     C                     Z-SUBZZAMT     ZZAMT                                               CDL087
+     C                     END                              E002                              CDL087
+     C                     Z-ADDZZAMT     ZZAMTI                                              CDL087
+     C                     MOVE ZZAMT     ZZAMTD                                              CDL087
+     C                     ADD  ZZAMTD    ZZTOTD                                              CDL087
+     C           ZZTOTD    IFLT ZZAMTD                      B002                              CDL087
+     C                     ADD  1         ZZAMTI                                              CDL087
+     C                     END                              E002                              CDL087
+     C                     ADD  ZZAMTI    ZZTOTI                                              CDL087
+     C                     END                              E001                              CDL087
+      **                                                                                      CDL087
+     C           #GBEND    ENDSR                                                              CDL087
+      *****************************************************************                       CDL087
+      /SPACE                                                                                  CDL087
+      *****************************************************************                       CDL087
+      *       Conversion of amount to base currency                   *                       CDL087
+      *                                                               *                       CDL087
+      * #GLBCV    - Conversion of amount to base currency.            *                       CDL087
+      *           - Includes using a 24,9 numberic work field for a   *                       CDL087
+      *             accurate calculation.                             *                       CDL087
+      * CALLS                                                         *                       CDL087
+      *                                                               *                       CDL087
+      * CALLED BY   #GLBTR     - Generate Postings for local base ccy *                       CDL087
+      *                                                               *                       CDL087
+      * FLDS USED -                                                   *                       CDL087
+      *                                                               *                       CDL087
+      *****************************************************************                       CDL087
+      *                                                                                       CDL087
+     C           #GLBCV    BEGSR                                                              CDL087
+      *                                                                                       CDL087
+      **  Recalculates base currency equivalent using a more accurate                         CDL087
+      **  24,9 numeric work field.                                                            CDL087
+     C           MDIN      IFEQ 'M'                         B001                              CDL087
+     C   20      AMT0      MULT SPOT      #GBAS9 249H                                         CDL087
+     C   21      AMT1      MULT SPOT      #GBAS9    H                                         CDL087
+     C   22      AMT2      MULT SPOT      #GBAS9    H                                         CDL087
+     C   23      AMT3      MULT SPOT      #GBAS9    H                                         CDL087
+     C                     ELSE                             X002                              CDL087
+     C   20      AMT0      DIV  SPOT      #GBAS9    H                                         CDL087
+     C   21      AMT1      DIV  SPOT      #GBAS9    H                                         CDL087
+     C   22      AMT2      DIV  SPOT      #GBAS9    H                                         CDL087
+     C   23      AMT3      DIV  SPOT      #GBAS9    H                                         CDL087
+     C                     END                              E002                              CDL087
+      *                                                                                       CDL087
+      **  Calculates the local base currency eqvivalent using the                             CDL087
+      **  24,9 numeric work field.                                                            CDL087
+     C           #GLBMD    IFEQ 'D'                         B001                              CDL087
+     C   40      #GBAS9    MULT #GLBSP    #GLBC0    H                                         CDL087
+     C   41      #GBAS9    MULT #GLBSP    #GLBC1    H                                         CDL087
+     C   42      #GBAS9    MULT #GLBSP    #GLBC2    H                                         CDL087
+     C   43      #GBAS9    MULT #GLBSP    #GLBC3    H                                         CDL087
+     C/SPACE                                                                                  CDL087
+     C                     ELSE                             X001                              CDL087
+     C   40      #GBAS9    DIV  #GLBSP    #GLBC0    H                                         CDL087
+     C   41      #GBAS9    DIV  #GLBSP    #GLBC1    H                                         CDL087
+     C   42      #GBAS9    DIV  #GLBSP    #GLBC2    H                                         CDL087
+     C   43      #GBAS9    DIV  #GLBSP    #GLBC3    H                                         CDL087
+     C                     END                              E001                              CDL087
+      *                                                                                       CDL087
+     C                     ENDSR                                                              CDL087
+      *****************************************************************                       CDL087
+      *                                                                                       CDL087
      C/EJECT
      OACCNTABFE                UPDAC
      O                         YTDB
@@ -2123,6 +2752,9 @@
      O                    32             76 '-'                           S01117
      O                    32   A8BRNM   106                               S01117
      O/COPY WNCPYSRC,GL0800O001
+     O                    33            128 '(BASE CURRENCY -    )'                           CDL087
+     O                    33   GLBCY    127                                                   CDL087
+      *                                                                                       CDL087
      O***********                        92 'BRANCH '                     S01117
      O***********              BRNM     124                               S01117
 0726 OGL0800P1E     09         TITLE
@@ -2179,6 +2811,23 @@
 0768 O                       23NEWYTD   127 '   ,   ,   , 0 .   '
 0769 O                       27         129 'CR'
      O/COPY WNCPYSRC,GL0800O002
+      *                                                                                       CDL087
+     OGL0800P1E  1             CHECK                                                          CDL087
+     O                         GTFRI     25                                                   CDL087
+     O                         GLBCY     29                                                   CDL087
+     O                       20LDBL      73 '   ,   ,   ,   , 0 '                             CDL087
+     O                       21LDBL      75 '  ,   ,   ,   , 0 . '                            CDL087
+     O                       22LDBL      76 ' ,   ,   ,   , 0 .  '                            CDL087
+     O                       23LDBL      77 '   ,   ,   , 0 .   '                             CDL087
+     O                       26          79 'CR'                                              CDL087
+     O                         BASAM0    98 '   ,   ,   ,   , 0 '                             CDL087
+     O                                  104 'SYS'                                             CDL087
+     O                       40#GLBC0   123 '   ,   ,   ,   , 0 '                             CDL087
+     O                       41#GLBC1   125 '  ,   ,   ,   , 0 . '                            CDL087
+     O                       42#GLBC2   126 ' ,   ,   ,   , 0 .  '                            CDL087
+     O                       43#GLBC3   127 '   ,   ,   , 0 .   '                             CDL087
+     O                                  130 'LCL'                                             CDL087
+      *                                                                                       CDL087
      O*L0800P1E***0305         NODET                                      LN0889
 0716 O***********                        22 'REFERENCE GL0800'      E15781S01117
 0716 O**********                         24 'REFERENCE GL0800P1'    S01117LN0889

@@ -11,14 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL087             Date 04May21               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL052             Date 02Dec15               *
       *                 CGP017             Date 06Aug12               *
       *                 BUG10215 *REBUILD  Date 27Sep06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
+      *           Upgrade to FM 2.1 2021.A (Recompile)                *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *

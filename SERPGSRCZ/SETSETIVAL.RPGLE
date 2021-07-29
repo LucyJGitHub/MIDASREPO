@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056770           Date 19Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA1008             Date 03Jun21               *
+      *  Prev Amend No. MD056770           Date 19Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA1008 - Replication of Trades to consolidated branches      *
+      *            Trades Input API processing error, incorrect Pay   *
+      *            To/From branch is defaulted. Apply UBS AR706553.   *
       *  MD056770 - GLC0340 03035 - GL0340 DBASE Error 4 due to blank *
       *             currency in posting.                              *
       *           - Settlement method '1 ' being received in Midas    *
@@ -131,18 +135,18 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FACCNT     IF   E           K DISK
      FACNUM     IF   E           K DISK
      F                                     RENAME(ACCNTABF:ACNUMF)
      FSEPCBD    IF   E           K DISK                                         S01117
      FSEPCCD    IF   E           K DISK                                         S01117
- 
+
      F/COPY WNCPYSRC,SETSETIVF1
       *****************************************************************
       ** +--------------------------------------+
@@ -155,104 +159,104 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Trade Settlement Instructions in screen format
      D TrSett        E DS                  EXTNAME(SETRSTPD)
- 
+
       ** Trade Settlement Instructions OK indicators
      D OKTrSett      E DS                  EXTNAME(SEETRSTPD)
- 
- 
+
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
- 
+
+
       ** Special Instruction line
      D SIL             S              1    DIM(35)
- 
+
       ** Valid codeword characters
      D UPA             S              1    DIM(27) CTDATA PERRCD(27)
- 
+
       ** Valid codeword characters for Swift 2001                                             CSW201
      D UPB             S              1    DIM(37) CTDATA PERRCD(37)                          CSW201
                                                                                               CSW201
       ** Valid SWIFT ISO characters
      D SWCH            S              1    DIM(47) CTDATA PERRCD(47)
- 
+
      D APF             S              1    DIM(16)
- 
- 
+
+
       ** Branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFC1        E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** Security Customer details
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
      D QQACC1        E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** Counterparty nostros
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** Currencies
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Profit Centres
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
- 
+
       ** Account Officers                                                                     188320
      D SDACOF        E DS                  EXTNAME(SDACOFPD)                                  188320
- 
+
       ** DS for customer/book standard settlement instruction                                 CSE039
       **  to be passed to SESSIR0                                                             CSE039
      D PCBSTD        E DS                  EXTNAME(STDSED) OCCURS(2)                          CSE039
@@ -265,15 +269,15 @@
                                                                                               188320
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Switchable features details                                          162270
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  162270
                                                                                               162270
      D/COPY WNCPYSRC,SETSETIVD1
- 
+
      D DSACCT          DS
      D**CNUM****               1      6  0                                                    CSD027
      D  CNUM                   1      6                                                       CSD027
@@ -284,15 +288,15 @@
      D  ACOD                  10     19  0                                                    CGL029
      D  ACSQ                  20     21  0                                                    CGL029
      D  BRCA                  22     24                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Output field(s)
       ** ---------------
- 
+
      D*TCNR*****       S              6S 0                                                    CSD027
      D*SDC1*****       S              6S 0                                                    CSD027
      D*SDC2*****       S              6S 0                                                    CSD027
@@ -301,25 +305,25 @@
      D SDC1            S              6A                                                      CSD027
      D SDC2            S              6A                                                      CSD027
      D SDC3            S              6A                                                      CSD027
- 
+
       ** Output field(s)
       ** ---------------
- 
+
      D SMTH            S              2S 0
      D ASNM            S              2S 0
      D*DELF*****       S              6S 0                                                    CSD027
      D*DELT*****       S              6S 0                                                    CSD027
      D DELF            S              6A                                                      CSD027
      D DELT            S              6A                                                      CSD027
- 
+
       ** Working Variables
       ** -----------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of Warning message ids etc
      D WIx             S              3P 0
- 
+
      D @ERR            S              1P 0
      D @DSNB           S              3A
      D @SCKY           S              6A
@@ -382,7 +386,7 @@
      D BMACCD          S             10A                                                      CGL029
      D PAYT            S             18A                                                      CGL029
      D PYFM            S             18A                                                      CGL029
- 
+
      D POTYP           S              1A   INZ('D')                                           CSE039
      D PBRCH           S              3A                                                      CSE039
      D PCUST           S              6A                                                      CSE039
@@ -408,17 +412,17 @@
      D IdX1            S              2P 0
      D IdY1            S              2P 0
      D IdL             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
- 
+
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -436,9 +440,9 @@
      C                   MOVE      *BLANK        WMsgIDXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
- 
+
       ** Clear output trade fields
- 
+
      C                   Z-ADD     0             SMTH
      C                   MOVE      *BLANK        PYFM
      C                   MOVE      *BLANK        PYFA
@@ -465,7 +469,7 @@
       ** Perform validation
       *
      C                   EXSR      SRValidate
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -476,36 +480,36 @@
       *                                                               *
       *****************************************************************
      C     SRProcQRY     BEGSR
- 
+
       *
       ** Originating Branch
       ** ------------------
       *
      C                   MOVEL     DDORBR        @QRY
- 
+
      C     @QRY          IFEQ      '?'
- 
+
      C                   MOVE      DDORBR        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDORBR
      C                   ELSE
      C                   MOVE      A8BRCD        DDORBR
      C                   END
- 
+
      C                   END
       *
       ** Pay From (a/c)
       ** --------------
       *
      C                   MOVEL     DDPYFM        @QRY
- 
+
      C     @QRY          IFEQ      '?'
       *
      C     DDTDTP        IFEQ      'TP'
- 
+
      C     DDSMTH        IFEQ      '01'
      C     DDSMTH        OREQ      '02'
      C     DDSMTH        OREQ      '07'
@@ -513,49 +517,49 @@
      C     DDSMTH        OREQ      '12'
      C                   MOVEL     DDPYFM        P@NONB
      C                   MOVEL     DDSETC        P@CYCD
- 
+
      C                   EXSR      AONOST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      *BLANKS       DDPYFM
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       DDPYFM
      C                   MOVEL     A7NONB        DDPYFM
      C                   END
- 
+
      C                   END
- 
+
      C     DDSMTH        IFEQ      '15'
      C                   MOVEL     DDPYFM        WCSNM
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDPYFM
      C                   ELSE
      C                   MOVE      *BLANKS       DDPYFM
      C                   MOVEL     BBCUST        DDPYFM
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     DDSMTH        IFEQ      '01'
      C     DDSMTH        OREQ      '07'
      C     DDSMTH        OREQ      '08'
      C                   MOVEL     DDPYFM        WCSNM
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDPYFM
      C                   ELSE
      C                   MOVE      *BLANKS       DDPYFM
      C                   MOVEL     BBCUST        DDPYFM
      C                   END
- 
+
      C                   END
      C                   END
      C                   END
@@ -566,15 +570,15 @@
      C                   MOVEL     DDPYFB        @QRY
      C     @QRY          IFEQ      '?'
      C                   MOVE      DDPYFB        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDPYFB
      C                   ELSE
      C                   MOVE      A8BRCD        DDPYFB
      C                   END
- 
+
      C                   END
       *
       ** Pay To (a/c)
@@ -582,7 +586,7 @@
       *
      C                   MOVEL     DDPAYT        @QRY
      C     @QRY          IFEQ      '?'
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     DDSMTH        IFEQ      '01'
      C     DDSMTH        OREQ      '02'
@@ -591,23 +595,23 @@
      C     DDSMTH        OREQ      '12'
      C                   MOVEL     DDPAYT        P@NONB
      C                   MOVEL     DDSETC        P@CYCD
- 
+
      C                   EXSR      AONOST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      *BLANKS       DDPAYT
      C                   ELSE
      C                   MOVE      *BLANKS       DDPAYT
      C                   MOVEL     A7NONB        DDPAYT
      C                   END
- 
+
      C                   END
- 
+
      C     DDSMTH        IFEQ      '15'
      C                   MOVEL     DDPAYT        WCSNM
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDPAYT
      C                   ELSE
@@ -622,9 +626,9 @@
      C     DDSMTH        OREQ      '07'
      C     DDSMTH        OREQ      '08'
      C                   MOVEL     DDPAYT        WCSNM
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDPAYT
      C                   ELSE
@@ -639,131 +643,131 @@
       ** -------------
       *
      C                   MOVEL     DDPYTB        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVE      DDPYTB        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDPYTB
      C                   ELSE
      C                   MOVE      A8BRCD        DDPYTB
      C                   END
- 
+
      C                   END
       *
       ** Pay For A/C Of
       ** --------------
       *
      C                   MOVEL     DDTDFA        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVEL     DDTDFA        WCSNM
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDTDFA
      C                   ELSE
      C                   MOVE      *BLANKS       DDTDFA
      C                   MOVEL     BBCUST        DDTDFA
      C                   END
- 
+
      C                   END
       *
       ** Deliver From
       ** ------------
       *
      C                   MOVEL     DDDELF        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVEL     DDDELF        WCUST
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDDELF
      C                   ELSE
      C                   MOVE      *BLANKS       DDDELF
      C                   MOVEL     BFCUST        DDDELF
      C                   END
- 
+
      C                   END
       *
       ** Deliver To
       ** ----------
       *
      C                   MOVEL     DDDELT        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVEL     DDDELT        WCUST
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDDELT
      C                   ELSE
      C                   MOVE      *BLANKS       DDDELT
      C                   MOVEL     BFCUST        DDDELT
      C                   END
- 
+
      C                   END
       *
       ** Deliver From - For A/C Of
       ** -------------------------
       *
      C                   MOVEL     DDDFFA        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVEL     DDDFFA        WCUST
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDDFFA
      C                   ELSE
      C                   MOVE      *BLANKS       DDDFFA
      C                   MOVEL     BFCUST        DDDFFA
      C                   END
- 
+
      C                   END
       *
       ** Deliver To - For A/C Of
       ** -----------------------
       *
      C                   MOVEL     DDDTFA        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVEL     DDDTFA        WCUST
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDTDFA
      C                   ELSE
      C                   MOVE      *BLANKS       DDTDFA
      C                   MOVEL     BFCUST        DDTDFA
      C                   END
- 
+
      C                   END
       *
       ** 'In' Currency in Field 72
       ** -------------------------
       *
      C                   MOVEL     DDICCY        @QRY
- 
+
      C     @QRY          IFEQ      '?'
      C                   MOVE      DDICCY        @AJCD
      C                   EXSR      AOCURR
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
      C                   MOVE      *BLANKS       DDICCY
      C                   ELSE
      C                   MOVE      A6CYCD        DDICCY
      C                   END
- 
+
      C                   END
- 
+
       *
       ** 'Profit centre
       ** ---------------
@@ -836,10 +840,25 @@
       ** ----------------------
       *
      C                   EXSR      ValPyToBrh
- 
+
+      *                                                                         BA1008
+      ** Default  Pay To/From branch                                            BA1008
+      ** ---------------------------                                            BA1008
+      *                                                                         BA1008
+     C     DDSMTH        IFNE      '00'                                         BA1008
+     C     DDPYFB        IFEQ      *BLANKS                                      BA1008
+     C                   EXSR      DEFPYFRBR                                    BA1008
+     C                   MOVE      DDPYFB        PYFA                           BA1008
+     C                   ENDIF                                                  BA1008
+     C     DDPYTB        IFEQ      *BLANKS                                      BA1008
+     C                   EXSR      DEFPYTOBR                                    BA1008
+     C                   MOVE      DDPYTB        PYTA                           BA1008
+     C                   ENDIF                                                  BA1008
+     C                   ENDIF                                                  BA1008
+      *                                                                         BA1008
       ** Defaulting Procedure for Pay To, Pay From
       ** For Settlement type 04 (Prime Retail Account)
- 
+
      C     DDSMTH        IFEQ      '04'
      C     DDSMTHok      ANDNE     'N'
      C                   EXSR      SetPrimRet
@@ -946,7 +965,7 @@
       ** ------------------------
       *
      C                   EXSR      ValAutoSet
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -964,7 +983,7 @@
       **   .. if Market Ind. is 'G', must be blank or '00'
       *
      C     DDTDMI        IFEQ      'G'
- 
+
      C     DDSMTH        IFNE      *BLANKS
      C     DDSMTH        ANDNE     '00'
      C                   ADD       1             Idx
@@ -977,7 +996,7 @@
       ** If Market Ind. not 'G', must be a valid MIDAS settlement method
       *
      C                   ELSE
- 
+
      C     DDSMTH        IFLT      '00'
      C     DDSMTH        OREQ      '1 '                                                     MD056770
      C     DDSMTH        OREQ      '09'
@@ -993,9 +1012,9 @@
      C                   GOTO      EValSetMet
      C                   END
      C/COPY WNCPYSRC,SETSETIVK7
- 
+
      C                   END
- 
+
      C     S01496        IFEQ      'Y'
      C     CustClass     ANDNE     'I'                                                       BUG2582
       *
@@ -1018,12 +1037,12 @@
       ** of bank only settl. method 04,05,14,15 allowed
       *
    1 C                   MOVE      'N'           WCHECK
- 
+
      C     DDSMTH        IFNE      '00'
- 
+
      C     CustClass     IFEQ      'S'
      C     CustClass     OREQ      'D'
- 
+
      C     DDSMTH        IFEQ      '04'
      C     DDSMTH        OREQ      '05'
      C     DDSMTH        OREQ      '14'
@@ -1040,17 +1059,17 @@
      C                   EVAL      WFldNmXAr(WIx) = 'DDSMTH'
      C                   EVAL      DDSMTHok = 'W'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If '04' or '14' the Retail Module must be present
       *
      C     DDSMTH        IFEQ      '04'
      C     DDSMTH        OREQ      '14'
- 
+
      C     BGRTBN        IFNE      'Y'
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'ESM0903'
@@ -1058,13 +1077,13 @@
      C                   EVAL      DDSMTHok = 'N'
      C                   GOTO      EValSetMet
      C                   END
- 
+
      C                   END
       *
       ** If '07' settlement currency must equal US dollar currency code
       *
      C     DDSMTH        IFEQ      '07'
- 
+
      C     DDSETC        IFNE      BLUSCY
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'ESM0905'
@@ -1072,7 +1091,7 @@
      C                   EVAL      DDSMTHok = 'N'
      C                   GOTO      EValSetMet
      C                   END
- 
+
      C                   END
       *
       ** .. if '06' Clearance Type must be '5'
@@ -1095,17 +1114,17 @@
      C                   MOVE      BMACCD        ACOD
      C                   Z-ADD     1             ACSQ
      C                   MOVE      DDBRCD        BRCA
- 
+
      C     KLACCT        KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    BRCA
- 
+
      C     KLACCT        CHAIN     ACCNTABF                           44
      C                   END
- 
+
      C     CustNum       IFEQ      *BLANKS
      C     *IN44         OREQ      '1'
      C     RECI          OREQ      '*'
@@ -1116,11 +1135,11 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDSMTH'
      C                   EVAL      DDSMTHok = 'N'
      C                   GOTO      EValSetMet
- 
+
      C                   ELSE
- 
+
      C                   TESTB     '2'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -1129,9 +1148,9 @@
      C                   EVAL      DDSMTHok = 'N'
      C                   GOTO      EValSetMet
      C                   END
- 
+
      C                   TESTB     '3'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -1140,13 +1159,13 @@
      C                   EVAL      DDSMTHok = 'N'
      C                   GOTO      EValSetMet
      C                   END
- 
+
      C                   END
      C                   END
- 
+
       *   if not a nostro settlement, must not be a holiday in local
       *     currency/system location
- 
+
      C     DDSMTH        IFNE      '01'
      C     DDSMTH        ANDNE     '02'
      C     DDSMTH        ANDNE     '07'
@@ -1156,30 +1175,30 @@
      C                   MOVE      BJSLCD        ZLOC
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      BJLCCY        ZCCY
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0256'
      C                   EVAL      WFldNmXAr(WIx) = 'DDSMTH'
      C                   EVAL      DDSMTHok = 'W'
      C                   END
- 
+
      C                   END
- 
+
       * If valid, update trade field
- 
+
      C     DDSMTHok      IFNE      'N'
      C/COPY WNCPYSRC,SETSETIVC9
      C                   MOVEL (P) DDSMTH        SMTH
      C/COPY WNCPYSRC,SETSETIVK1
      C                   END
- 
+
      C     EValSetMet    ENDSR
       *****************************************************************
       /EJECT
@@ -1190,30 +1209,30 @@
       *                                                               *
       *****************************************************************
      C     ValOrgBrh     BEGSR
- 
+
      C     BKOBRU        IFEQ      'Y'
       *
      C     DDORBR        IFEQ      *BLANKS
      C                   MOVE      DDBRCD        DDORBR
      C                   ELSE
      C                   MOVE      DDORBR        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMM0013'
      C                   EVAL      FldNamXAr (Idx) = 'DDORBR'
      C                   EVAL      DDORBRok = 'N'
      C                   END
- 
+
      C                   END
      C*
      C     BKOBUV        IFEQ      'Y'
      C     RespMode      ANDEQ     'S'
- 
+
      C                   Z-ADD     *ZERO         @ERR
- 
+
      C                   CALL      'ZVOBU'
      C                   PARM      DDORBR        @ZOBRX
      C                   PARM                    @ERR
@@ -1223,9 +1242,9 @@
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0198'
      C                   EVAL      FldNamXAr (Idx) = 'DDORBR'
      C                   EVAL      DDORBRok = 'N'
- 
+
      C                   ELSE
- 
+
      C     @ERR          IFEQ      2
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0199'
@@ -1238,13 +1257,13 @@
      C                   ELSE
      C                   MOVE      DDBRCD        DDORBR
      C                   END
- 
+
       * If valid, update trade field
- 
+
      C     DDORBRok      IFNE      'N'
      C                   MOVE      DDORBR        ORBR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1274,7 +1293,7 @@
      C     DDSMTH        ANDNE     '04'                                                      BUG1603
       *                                                                                      BUG1603
      C/COPY WNCPYSRC,SETSETIVC5
- 
+
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0257'
      C                   EVAL      FldNamXAr (Idx) = 'DDPYFM'
@@ -1294,16 +1313,16 @@
      C     DDSMTH        OREQ      '08'
      C     DDSMTH        OREQ      '12'
      C/COPY WNCPYSRC,SETSETIVC6
- 
+
      C                   MOVE      DDPYFM        WFL10
      C                   MOVE      *BLANKS       @RTCD
      C                   MOVE      DDSETC        P@CYCD
      C                   MOVEL     DDPYFM        P@NONB
- 
+
      C                   EXSR      AONOST
- 
+
      C                   MOVEL     DDPYFM        PYFM
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     WFL10         ORNE      *BLANKS
      C                   ADD       1             Idx
@@ -1317,9 +1336,9 @@
      C                   ELSE
      C                   MOVE      '*DBERR '     @RTCD
      C                   MOVE      A7BRCD        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C                   MOVE      A8LCCD        ZLOC
       *
       ** If Clearance Type '1' or '2', must not be holiday in
@@ -1329,20 +1348,20 @@
      C     DDCLTY        OREQ      '2'
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      BVEUCY        ZCCY
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0259'
      C                   EVAL      WFldNmXAr(WIx) = 'DDPYFM'
      C                   EVAL      DDPYFMok = 'W'
      C                   END
- 
+
      C                   END
       *
       ** If Clearance Type '3' or '4', must not be holiday in
@@ -1352,13 +1371,13 @@
      C     DDCLTY        OREQ      '4'
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      BVCCCY        ZCCY
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0260'
@@ -1373,44 +1392,44 @@
      C     DDCLTY        IFEQ      '2'
      C     DDCLTY        OREQ      '4'
      C     DDCLTY        OREQ      '5'
- 
+
      C     DDSETC        IFNE      *BLANKS
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      DDSETC        ZCCY
      C                   ELSE
- 
+
      C     CustCurr      IFNE      *BLANKS
      C                   MOVE      CustCurr      ZCCY
      C                   ELSE
      C                   MOVE      NMCY          ZCCY
      C                   END
- 
+
      C                   END
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0261'
      C                   EVAL      WFldNmXAr(WIx) = 'DDPYFM'
      C                   EVAL      DDPYFMok = 'W'
      C                   END
- 
+
      C                   END
- 
+
      C                   END
      C                   MOVE      A7CUST        WPYFM
- 
+
      C                   END
       *
       ** If Settlement Method is '03' may contain a Trade Ref. number.
       *
      C     DDSMTH        IFEQ      '03'
- 
+
      C     DDPYFM        IFNE      *BLANKS
       *
      C                   MOVEA     *BLANKS       APF
@@ -1450,7 +1469,7 @@
      C                   EVAL      DDPYFMok = 'N'
      C                   GOTO      EValPayFrP
      C                   END
- 
+
      C     DDPYFMok      IFNE      'N'
      C                   MOVEL     DDPYFM        PYFM
      C                   END
@@ -1458,14 +1477,14 @@
       **   Pay from must not be blank.
       *
      C                   ELSE
- 
+
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0264'
      C                   EVAL      FldNamXAr (Idx) = 'DDPYFM'
      C                   EVAL      DDPYFMok = 'N'
      C                   GOTO      EValPayFrP
      C                   END
- 
+
      C                   END
       *
       ** If Settlement Method '05' must reference an active ACCNT record
@@ -1481,7 +1500,7 @@
      C                   MOVEL     BJSBRC        DDPYFB
      C                   END
      C                   END
- 
+
      C******IN35         IFEQ      '1'                                                        CSD027
       *
      C                   MOVE      DDPYFM        WFLD6
@@ -1490,10 +1509,10 @@
      C                   MOVEL     WFLD6         ACOD
      C                   MOVE      WFLD6         ACSQ
      C                   MOVE      DDPYFB        BRCA
- 
+
      C     KLACCT        CHAIN     ACCNTABF                           44
      C**********         END                                                                  CSD027
- 
+
      C******IN35         IFEQ      '0'                                                        CSD027
      C******IN44         OREQ      '1'                                                        CSD027
      C     *IN44         IFEQ      '1'                                                        CSD027
@@ -1510,7 +1529,7 @@
       *
      C                   ELSE
      C                   TESTB     '2'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -1519,7 +1538,7 @@
      C                   EVAL      DDPYFMok = 'N'
      C                   GOTO      EValPayFrP
      C                   END
- 
+
      C                   END
      C**********         Z-ADD     CNUM          WPYFM                                        CSD027
      C                   EVAL      WPYFM = CNUM                                               CSD027
@@ -1538,15 +1557,15 @@
      C                   MOVEL     BJSBRC        DDPYFB
      C                   END
      C                   END
- 
+
      C                   MOVE      DDPYFB        WPYFB
      C                   MOVEL     DDPYFM        WPF10
      C**********         TESTN                   WPF10                35                      CSD027
- 
+
      C******IN35         IFEQ      '1'                                                        CSD027
      C                   MOVEL     DDPYFM        KEY10
      C     KEY10         CHAIN     ACNUMF                             44
- 
+
      C     *IN44         IFEQ      '0'
      C     RECI          ANDNE     '*'
      C     KLACCT        CHAIN     ACCNTABF                           44
@@ -1571,9 +1590,9 @@
       ** Else check account is not blocked
       *
      C                   ELSE
- 
+
      C                   TESTB     '2'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -1615,14 +1634,14 @@
      C     DDPYFM        ANDNE     *BLANKS
      C                   MOVEL     DDPYFM        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C                   MOVEL     DDPYFM        WCUST
      C**********         TESTN                   WCUST                35                      CSD027
- 
+
      C******IN35         IFEQ      '0'                                                        CSD027
      C**********         MOVE      *BLANKS       WCUST                                        CSD027
      C**********         END                                                                  CSD027
@@ -1634,10 +1653,10 @@
      C                   MOVEL     BBCUST        DDPYFM
      C                   MOVEL     BBCUST        WCUST
      C                   END
- 
+
      C                   MOVE      *BLANKS       @RTCD
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0265'
@@ -1649,13 +1668,13 @@
      C                   MOVE      BFCUST        CNUM
      C                   MOVEL     BFACCD        ACOD
      C                   Z-ADD     BFACSN        ACSQ
- 
+
      C     DDPYFB        IFNE      *BLANKS
      C                   MOVE      DDPYFB        BRCA
      C                   ELSE
      C                   MOVE      DDBRCD        BRCA
      C                   END
- 
+
      C     KLACCT        CHAIN     ACCNTABF                           44
       *
      C     *IN44         IFEQ      '1'
@@ -1672,7 +1691,7 @@
       *
      C                   ELSE
      C                   TESTB     '2'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -1681,11 +1700,11 @@
      C                   EVAL      DDPYFMok = 'N'
      C                   GOTO      EValPayFrP
      C                   END
- 
+
      C                   END
      C**********         Z-ADD     CNUM          WPYFM                                        CSD027
      C                   EVAL      WPYFM = CNUM                                               CSD027
- 
+
      C     BFACCD        IFNE      *BLANKS
      C                   MOVEL     BFACCD        WOUT06
      C                   ELSE
@@ -1693,7 +1712,7 @@
      C                   MOVEL     '0000000000'  WOUT06                                       CGL029
      C                   END
      C                   MOVE      BFACSN        WOUT06
- 
+
      C                   MOVE      WOUT06        DDPYFM
      C                   MOVEL     DDPYFM        PYFM
      C                   END
@@ -1717,7 +1736,7 @@
       *
      C     WCHECK        IFEQ      'Y'
      C                   MOVE      CustNum       WWCNUM
- 
+
      C     WPYFM         IFNE      WWCNUM
      C*****WPYFM         ANDNE     *ZERO                                                      CSD027
      C     WPYFM         ANDNE     *BLANKS                                                    CSD027
@@ -1726,11 +1745,11 @@
      C                   EVAL      WFldNmXAr(WIx) = 'DDPYFM'
      C                   EVAL      DDPYFMok = 'W'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C/COPY WNCPYSRC,SETSETIVK8
- 
+
      C     EValPayFrP    ENDSR
       *****************************************************************
       /EJECT
@@ -1745,7 +1764,7 @@
       ** Entry only allowed for Settlement Methods '01' '07' '08'
       *
      C     DDPYFM        IFNE      *BLANKS
- 
+
      C     DDSMTH        IFNE      '01'
      C     DDSMTH        ANDNE     '07'
      C     DDSMTH        ANDNE     '08'
@@ -1761,14 +1780,14 @@
       *
      C                   MOVEL     DDPYFM        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     DDPYFM        @CPNC
- 
+
      C                   EXSR      AOCNST
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     DDPYFM        PYFM
      C                   ELSE
@@ -1787,9 +1806,9 @@
      C                   MOVEL     BBCUST        DDPYFM
      C                   MOVE      BBCUST        WPYFM
      C                   END
- 
+
      C                   END
- 
+
      C     EValPayFrS    ENDSR
       *****************************************************************
       /EJECT
@@ -1810,7 +1829,7 @@
      C     DDSMTH        OREQ      '08'
      C     DDSMTH        OREQ      '12'
      C/COPY WNCPYSRC,SETSETIVK2
- 
+
      C     DDPYFB        IFNE      A7BRCD
      C     DDPYFB        ANDNE     *BLANK
      C     DDTDTP        ANDEQ     'TP'
@@ -1819,7 +1838,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDPYFB'
      C                   EVAL      DDPYFBok = 'N'
      C                   END
- 
+
      C                   END
       *
       ** For Settlement Method 14
@@ -1827,7 +1846,7 @@
       *
      C     DDSMTH        IFEQ      '14'
      C     DDSMTH        OREQ      '15'
- 
+
      C     DDPYFB        IFNE      BRCA
      C     DDPYFB        ANDNE     *BLANK
      C     DDTDTP        ANDEQ     'TP'
@@ -1836,7 +1855,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDPYFB'
      C                   EVAL      DDPYFBok = 'N'
      C                   END
- 
+
      C                   END
       *
       ** For Settlement Method other than 01, 02, 05, 07, 08, 12 & 14, & 15
@@ -1864,18 +1883,18 @@
       *
      C     DDPYFB        IFNE      *BLANKS
      C                   MOVE      DDPYFB        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0272'
      C                   EVAL      FldNamXAr (Idx) = 'DDPYFB'
      C                   EVAL      DDPYFBok = 'N'
      C                   END
- 
+
      C                   END
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     @MBIN         ANDEQ     'Y'
      C     DDSMTH        ANDEQ     '05'
@@ -1888,16 +1907,16 @@
       *
       ** Determine default
       *
-     C     DDSMTH        IFNE      '00'                                                       CAP084
-     C     DDPYFB        IFEQ      *BLANKS
-     C                   EXSR      DefPyFrBr
-     C                   END
-     C                   ENDIF                                                                CAP084
- 
+     C*****DDSMTH        IFNE      '00'                                         CAP084 BA1008
+     C*****DDPYFB        IFEQ      *BLANKS                                             BA1008
+     C*****              EXSR      DefPyFrBr                                           BA1008
+     C*****              END                                                           BA1008
+     C*****              ENDIF                                                  CAP084 BA1008
+
       * Update trade field
- 
+
      C                   MOVE      DDPYFB        PYFA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1929,14 +1948,14 @@
       *
      C                   MOVEL     DDPAYT        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     DDPAYT        @CPNC
- 
+
      C                   EXSR      AOCNST
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     DDPAYT        PAYT
      C                   ELSE
@@ -1955,9 +1974,9 @@
      C                   MOVEL     BBCUST        DDPAYT
      C                   MOVE      BBCUST        WPAYT
      C                   END
- 
+
      C                   END
- 
+
      C     EValPayToP    ENDSR
       *****************************************************************
       /EJECT
@@ -1981,7 +2000,7 @@
      C     DDSMTH        ANDNE     '12'
      C     DDSMTH        ANDNE     '14'
      C     DDSMTH        ANDNE     '15'
- 
+
      C     BGRTBN        IFNE      'Y'                                                       BUG1603
      C     DDPYFM        ANDNE     *BLANKS                                                   BUG1603
      C     DDSMTH        ANDNE     '04'                                                      BUG1603
@@ -2004,16 +2023,16 @@
      C     DDSMTH        OREQ      '07'
      C     DDSMTH        OREQ      '08'
      C     DDSMTH        OREQ      '12'
- 
+
      C                   MOVE      DDPAYT        WFL10
      C                   MOVE      *BLANKS       @RTCD
      C                   MOVEL     DDSETC        P@CYCD
      C                   MOVEL     DDPAYT        P@NONB
- 
+
      C                   EXSR      AONOST
- 
+
      C                   MOVEL     DDPAYT        PAYT
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     WFL10         ORNE      *BLANKS
      C                   ADD       1             Idx
@@ -2027,9 +2046,9 @@
      C                   ELSE
      C                   MOVE      '*DBERR '     @RTCD
      C                   MOVE      A7BRCD        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C                   MOVE      A8LCCD        ZLOC
       *
       ** If Clearance Type '1' or '2', must not be holiday in
@@ -2039,20 +2058,20 @@
      C     DDCLTY        OREQ      '2'
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      BVEUCY        ZCCY
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0277'
      C                   EVAL      WFldNmXAr(WIx) = 'DDPAYT'
      C                   EVAL      DDPAYTok = 'W'
      C                   END
- 
+
      C                   END
       *
       ** If Clearance Type '3' or '4', must not be holiday in
@@ -2062,13 +2081,13 @@
      C     DDCLTY        OREQ      '4'
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      BVCCCY        ZCCY
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0278'
@@ -2083,7 +2102,7 @@
      C     DDCLTY        IFEQ      '2'
      C     DDCLTY        OREQ      '4'
      C     DDCLTY        OREQ      '5'
- 
+
      C     DDSETC        IFNE      *BLANKS
      C                   Z-ADD     TDVD          ZDAYNO
      C                   MOVE      DDSETC        ZCCY
@@ -2096,31 +2115,31 @@
      C                   END
       *
      C                   END
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZIND
- 
+
      C     ZIND          IFEQ      'H'
      C                   ADD       1             WIx
      C                   EVAL      WMsgIDXAr(WIx) = 'MMA0279'
      C                   EVAL      WFldNmXAr(WIx) = 'DDPAYT'
      C                   EVAL      DDPAYTok = 'W'
      C                   END
- 
+
      C                   END
- 
+
      C                   END
      C                   MOVE      A7CUST        WPAYT
- 
+
      C                   END
       *
       ** If Settlement Method is '03' may contain a Trade Ref. Number
       *
      C     DDSMTH        IFEQ      '03'
- 
+
      C     DDPAYT        IFNE      *BLANKS
       *
      C                   MOVEA     *BLANKS       APF
@@ -2160,7 +2179,7 @@
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValPayToS
      C                   END
- 
+
      C     DDPAYTok      IFNE      'N'
      C                   MOVEL     DDPAYT        PAYT
      C                   END
@@ -2168,14 +2187,14 @@
       **  Pay to must not be blank.
       *
      C                   ELSE
- 
+
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0280'
      C                   EVAL      FldNamXAr (Idx) = 'DDPAYT'
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValPayToS
      C                   END
- 
+
      C                   END
       *
       ** If Settlement Method '05' must reference an active ACCNT record
@@ -2191,19 +2210,19 @@
      C                   MOVEL     BJSBRC        DDPYTB
      C                   END
      C                   END
- 
+
      C******IN35         IFEQ      '1'                                                        CSD027
- 
+
      C                   MOVE      DDPAYT        WFLD6
      C                   MOVEL     DDPAYT        CNUM
      C                   MOVEL     DDSETC        CCY
      C                   MOVEL     WFLD6         ACOD
      C                   MOVE      WFLD6         ACSQ
      C                   MOVE      DDPYTB        BRCA
- 
+
      C     KLACCT        CHAIN     ACCNTABF                           44
      C**********         END                                                                  CSD027
- 
+
      C******IN35         IFEQ      '0'                                                        CSD027
      C******IN44         OREQ      '1'                                                        CSD027
      C     *IN44         IFEQ      '1'                                                        CSD027
@@ -2220,7 +2239,7 @@
       *
      C                   ELSE
      C                   TESTB     '3'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -2229,7 +2248,7 @@
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValPayToS
      C                   END
- 
+
      C                   END
      C**********         Z-ADD     CNUM          WPAYT                                        CSD027
      C                   EVAL      WPAYT = CNUM                                               CSD027
@@ -2248,21 +2267,21 @@
      C                   MOVEL     BJSBRC        DDPYTB
      C                   END
      C                   END
- 
+
      C                   MOVE      DDPYTB        WPYTB
      C                   MOVEL     DDPAYT        WPT10
      C**********         TESTN                   WPT10                35                      CSD027
- 
+
      C******IN35         IFEQ      '1'                                                        CSD027
      C                   MOVEL     DDPAYT        KEY10
      C     KEY10         CHAIN     ACNUMF                             44
- 
+
      C     *IN44         IFEQ      '0'
      C     RECI          ANDNE     '*'
      C     KLACCT        CHAIN     ACCNTABF                           44
      C                   END
      C**********         END                                                                  CSD027
- 
+
      C******IN35         IFEQ      '0'                                                        CSD027
      C******IN44         OREQ      '1'                                                        CSD027
      C     *IN44         IFEQ      '1'                                                        CSD027
@@ -2281,9 +2300,9 @@
       ** Else check account is not blocked
       *
      C                   ELSE
- 
+
      C                   TESTB     '3'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -2368,14 +2387,14 @@
      C     DDPAYT        ANDNE     *BLANKS
      C                   MOVEL     DDPAYT        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
       *
      C                   MOVEL     DDPAYT        WCUST
      C**********         TESTN                   WCUST                35                      CSD027
- 
+
      C******IN35         IFEQ      '0'                                                        CSD027
      C**********         MOVE      *BLANKS       WCUST                                        CSD027
      C**********         END                                                                  CSD027
@@ -2387,10 +2406,10 @@
      C                   MOVEL     BBCUST        DDPAYT
      C                   MOVEL     BBCUST        WCUST
      C                   END
- 
+
      C                   MOVE      *BLANKS       @RTCD
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0286'
@@ -2402,15 +2421,15 @@
      C                   MOVE      BFCUST        CNUM
      C                   MOVEL     BFACCD        ACOD
      C                   Z-ADD     BFACSN        ACSQ
- 
+
      C     DDPYTB        IFNE      *BLANKS
      C                   MOVE      DDPYTB        BRCA
      C                   ELSE
      C                   MOVE      DDBRCD        BRCA
      C                   END
- 
+
      C     KLACCT        CHAIN     ACCNTABF                           44
- 
+
      C     *IN44         IFEQ      '1'
      C     RECI          OREQ      '*'
      C     DACO          ORGT      TDVD
@@ -2425,7 +2444,7 @@
       *
      C                   ELSE
      C                   TESTB     '3'           RETB                     99
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     *IN99         ANDEQ     '1'
      C                   ADD       1             Idx
@@ -2434,11 +2453,11 @@
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValPayToS
      C                   END
- 
+
      C                   END
      C**********         Z-ADD     CNUM          WPAYT                                        CSD027
      C                   EVAL      WPAYT = CNUM                                               CSD027
- 
+
      C     BFACCD        IFNE      *BLANKS
      C                   MOVEL     BFACCD        WOUT06
      C                   ELSE
@@ -2446,7 +2465,7 @@
      C                   MOVEL     '0000000000'  WOUT06                                       CGL029
      C                   END
      C                   MOVE      BFACSN        WOUT06
- 
+
      C                   MOVE      WOUT06        DDPAYT
      C                   MOVEL     DDPAYT        PAYT
      C                   END
@@ -2462,7 +2481,7 @@
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValPayToS
      C                   END
- 
+
      C     S01496        IFEQ      'Y'
       *
       ** If settlement method is 04/05/14/15 and counterparty was
@@ -2470,7 +2489,7 @@
       *
      C     WCHECK        IFEQ      'Y'
      C                   MOVE      CustNum       WWCNUM
- 
+
      C     WPAYT         IFNE      WWCNUM
      C*****WPAYT         ANDNE     *ZERO                                                      CSD027
      C     WPAYT         ANDNE     *BLANKS                                                    CSD027
@@ -2479,10 +2498,10 @@
      C                   EVAL      WFldNmXAr(WIx) = 'DDPAYT'
      C                   EVAL      DDPAYTok = 'W'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     EValPayToS    ENDSR
       *****************************************************************
       /EJECT
@@ -2502,7 +2521,7 @@
      C     DDSMTH        OREQ      '07'
      C     DDSMTH        OREQ      '08'
      C     DDSMTH        OREQ      '12'
- 
+
      C     DDPYTB        IFNE      A7BRCD
      C     DDPYTB        ANDNE     *BLANK
      C     DDTDTP        ANDEQ     'TS'
@@ -2511,7 +2530,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDPYTB'
      C                   EVAL      DDPYTBok = 'N'
      C                   END
- 
+
      C                   END
       *
       ** For Settlement Method 14
@@ -2519,7 +2538,7 @@
       *
      C     DDSMTH        IFEQ      '14'
      C     DDSMTH        OREQ      '15'
- 
+
      C     DDPYTB        IFNE      BRCA
      C     DDPYTB        ANDNE     *BLANK
      C     DDTDTP        ANDEQ     'TS'
@@ -2528,7 +2547,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDPYTB'
      C                   EVAL      DDPYTBok = 'N'
      C                   END
- 
+
      C                   END
       *
       ** For Settlement Method other than 01, 02, 05, 07, 08, 12 & 14, & 15
@@ -2556,18 +2575,18 @@
       *
      C     DDPYTB        IFNE      *BLANKS
      C                   MOVE      DDPYTB        @DSNB
- 
+
      C                   EXSR      AOBRCH
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0290'
      C                   EVAL      FldNamXAr (Idx) = 'DDPYTB'
      C                   EVAL      DDPYTBok = 'N'
      C                   END
- 
+
      C                   END
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     @MBIN         ANDEQ     'Y'
      C     DDSMTH        ANDEQ     '05'
@@ -2580,16 +2599,16 @@
       *
       ** Determine default
       *
-     C     DDSMTH        IFNE      '00'                                                       CAP084
-     C     DDPYTB        IFEQ      *BLANKS
-     C                   EXSR      DefPyToBr
-     C                   END
-     C                   ENDIF                                                                CAP084
- 
+     C*****DDSMTH        IFNE      '00'                                         CAP084 BA1008
+     C*****DDPYTB        IFEQ      *BLANKS                                             BA1008
+     C*****              EXSR      DefPyToBr                                           BA1008
+     C*****              END                                                           BA1008
+     C*****              ENDIF                                                  CAP084 BA1008
+
       * Update trade field
- 
+
      C                   MOVE      DDPYTB        PYTA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2600,9 +2619,9 @@
       *                                                               *
       *****************************************************************
      C     ValFrAcPyT    BEGSR
- 
+
      C     DDTDFA        IFNE      *BLANKS
- 
+
      C/COPY WNCPYSRC,SETSETIVK9
      C     DDTDTP        IFNE      'TP'
      C     DDTDTP        OREQ      'TP'
@@ -2622,18 +2641,18 @@
      C                   MOVEL     *BLANKS       WCSNM
      C                   MOVEL     DDTDFA        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     BBCUST        TDFA
      C                   MOVEL     *BLANK        DDTDFA
      C                   MOVEL     BBCUST        DDTDFA
      C                   ELSE
      C                   MOVEL     DDTDFA        @CPNC
- 
+
      C                   EXSR      AOCNST
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     DDTDFA        TDFA
      C                   ELSE
@@ -2642,10 +2661,10 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDTDFA'
      C                   EVAL      DDTDFAok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2656,13 +2675,13 @@
       *                                                               *
       *****************************************************************
      C     ValAcSeq      BEGSR
- 
+
       *
       ** If entered, must be numeric
       *
      C     DDASNM        IFNE      *BLANKS
      C                   TESTN                   DDASNM               35
- 
+
      C     *IN35         IFEQ      '0'
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0293'
@@ -2671,9 +2690,9 @@
      C                   ELSE
      C                   MOVEL     DDASNM        ASNM
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2690,12 +2709,12 @@
       *
      C     DDINCS        IFEQ      'C'
      C     DDTDMI        ANDNE     'G'
- 
+
      C     CustClass     IFEQ      'S'
      C     CustClass     OREQ      'D'
      C     CustClass     OREQ      'M'
      C     DDTDTP        ANDEQ     'TS'
- 
+
      C     DDDELF        IFEQ      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0294'
@@ -2711,9 +2730,9 @@
      C     DDDELF        IFNE      *BLANKS
      C                   MOVEL     DDDELF        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0294'
@@ -2723,9 +2742,9 @@
      C                   ELSE
      C                   MOVE      BBCUST        WCUST
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0294'
@@ -2736,7 +2755,7 @@
       ** Portfolio customers are not valid for Deliver From entry.
       *
      C                   ELSE
- 
+
      C     BFCLAS        IFEQ      'S'
      C     BFCLAS        OREQ      'D'
      C                   ADD       1             Idx
@@ -2745,7 +2764,7 @@
      C                   EVAL      DDDELFok = 'N'
      C                   GOTO      EValDelFm
      C                   END
- 
+
      C                   END
      C                   END
      C                   MOVE      BFCLAS        FC1DI
@@ -2779,7 +2798,7 @@
      C                   END
       *
      C     DDCLTY        IFEQ      '2'
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     FC1DI         ANDNE     'E'
      C                   ADD       1             Idx
@@ -2791,7 +2810,7 @@
      C                   END
       *
      C     DDCLTY        IFEQ      '2'
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     FC1DI         ANDEQ     'E'
      C                   ADD       1             Idx
@@ -2800,7 +2819,7 @@
      C                   EVAL      DDDELFok = 'N'
      C                   GOTO      EValDelFm
      C                   END
- 
+
      C                   END
       *
      C     DDCLTY        IFEQ      '3'
@@ -2813,7 +2832,7 @@
      C                   END
       *
      C     DDCLTY        IFEQ      '4'
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     FC1DI         ANDNE     'C'
      C                   ADD       1             Idx
@@ -2822,11 +2841,11 @@
      C                   EVAL      DDDELFok = 'N'
      C                   GOTO      EValDelFm
      C                   END
- 
+
      C                   END
       *
      C     DDCLTY        IFEQ      '4'
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     FC1DI         ANDEQ     'C'
      C                   ADD       1             Idx
@@ -2835,12 +2854,12 @@
      C                   EVAL      DDDELFok = 'N'
      C                   GOTO      EValDelFm
      C                   END
- 
+
      C                   END
       *
      C     DDCLTY        IFEQ      '5'
      C     DDTDTP        ANDEQ     'TS'
- 
+
      C     FC1DI         IFEQ      'E'
      C     FC1DI         OREQ      'C'
      C                   ADD       1             Idx
@@ -2849,7 +2868,7 @@
      C                   EVAL      DDDELFok = 'N'
      C                   GOTO      EValDelFm
      C                   END
- 
+
      C                   END
       *
       **  Warning error if depot is not on investment type for security
@@ -2866,7 +2885,7 @@
       ** no security reference code for the depot.
       *
      C     DDCLTY        IFNE      '5'
- 
+
      C     WDELF         IFEQ      SDC1
      C     DASR          ANDNE     *BLANKS
      C     WDELF         OREQ      SDC2
@@ -2879,7 +2898,7 @@
      C                   EVAL      WFldNmXAr(WIx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'W'
      C                   END
- 
+
      C                   END
       *
      C                   END
@@ -2892,10 +2911,10 @@
       ** - not if settkement method is '04'
       *
      C     DDTDTP        IFEQ      'TS'
- 
+
      C     DDPCOD        IFEQ      '1'
      C     DDPCOD        OREQ      '5'
- 
+
      C     DDCLTY        IFGE      '1'
      C     DDCLTY        ANDLE     '4'
      C     WPAYT         ANDNE     WDELF
@@ -2911,11 +2930,11 @@
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValDelFm
      C                   END
- 
+
      C                   END
      C                   END
      C/COPY WNCPYSRC,SETSETIVM3
- 
+
       *                                                                         CSE013
       ** If CSE013 present, call Short Position Warning module                  CSE013
      C     CSE013        IFEQ      'Y'                                          CSE013
@@ -2978,12 +2997,12 @@
       *
      C     DDINCS        IFEQ      'C'
      C     DDTDMI        ANDNE     'G'
- 
+
      C     CustClass     IFEQ      'S'
      C     CustClass     OREQ      'D'
      C     CustClass     OREQ      'M'
      C     DDTDTP        ANDEQ     'TP'
- 
+
      C     DDDELT        IFEQ      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0299'
@@ -2999,22 +3018,22 @@
      C     DDDELT        IFNE      *BLANKS
      C                   MOVEL     DDDELT        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0299'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELT'
      C                   EVAL      DDDELTok = 'N'
      C                   GOTO      EValDelTo
- 
+
      C                   ELSE
      C                   MOVE      BBCUST        WCUST
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0299'
@@ -3025,7 +3044,7 @@
       ** Portfolio Customers are not valid for DELIVER TO.
       *
      C                   ELSE
- 
+
      C     BFCLAS        IFEQ      'S'
      C     BFCLAS        OREQ      'D'
      C                   ADD       1             Idx
@@ -3034,10 +3053,10 @@
      C                   EVAL      DDDELTok = 'N'
      C                   GOTO      EValDelTo
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   MOVE      BFCLAS        TC1DI
      C                   MOVE      BFCUST        WDELT
      C                   MOVEL     WDELT         DELT
@@ -3081,7 +3100,7 @@
       *
      C     DDCLTY        IFEQ      '2'
      C     DDTDTP        ANDEQ     'TS'
- 
+
      C     TC1DI         IFEQ      'E'
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0301'
@@ -3101,7 +3120,7 @@
      C                   END
       *
      C     DDCLTY        IFEQ      '4'
- 
+
      C     DDTDTP        IFEQ      'TP'
      C     TC1DI         ANDNE     'C'
      C                   ADD       1             Idx
@@ -3110,11 +3129,11 @@
      C                   EVAL      DDDELTok = 'N'
      C                   GOTO      EValDelTo
      C                   END
- 
+
      C                   END
       *
      C     DDCLTY        IFEQ      '4'
- 
+
      C     DDTDTP        IFEQ      'TS'
      C     TC1DI         ANDEQ     'C'
      C                   ADD       1             Idx
@@ -3123,12 +3142,12 @@
      C                   EVAL      DDDELTok = 'N'
      C                   GOTO      EValDelTo
      C                   END
- 
+
      C                   END
       *
      C     DDCLTY        IFEQ      '5'
      C     DDTDTP        ANDEQ     'TP'
- 
+
      C     TC1DI         IFEQ      'E'
      C     TC1DI         OREQ      'C'
      C                   ADD       1             Idx
@@ -3137,7 +3156,7 @@
      C                   EVAL      DDDELTok = 'N'
      C                   GOTO      EValDelTo
      C                   END
- 
+
      C                   END
       *
       ** Warning error if depot is not on investment type for security
@@ -3154,7 +3173,7 @@
       ** no security reference code for the depot.
       *
      C     DDCLTY        IFNE      '5'
- 
+
      C     WDELT         IFEQ      SDC1
      C     DASR          ANDNE     *BLANKS
      C     WDELT         OREQ      SDC2
@@ -3167,7 +3186,7 @@
      C                   EVAL      WFldNmXAr(WIx) = 'DDDELT'
      C                   EVAL      DDDELTok = 'W'
      C                   END
- 
+
      C                   END
       *
      C                   END
@@ -3192,7 +3211,7 @@
      C                   EVAL      DDPAYTok = 'N'
      C                   GOTO      EValDelTo
      C                   END
- 
+
      C                   END
       *
       ** If Pay Code is '1' & Clearance Type 1 - 4, Pay From (Purch)
@@ -3201,7 +3220,7 @@
       **  - not if settlement method is 04
       *
      C     DDTDTP        IFEQ      'TP'
- 
+
      C/COPY WNCPYSRC,SETSETIVK3
      ** If CSE099 is switched on, ...                                                         162270
      ** For TP trades with a pay code of 1, clearance type of 3 or 4,                         162270
@@ -3219,7 +3238,7 @@
       *                                                                                       162270
      C     DDPCOD        IFEQ      '1'
      C     DDPCOD        OREQ      '5'
- 
+
      C     DDCLTY        IFGE      '1'
      C     DDCLTY        ANDLE     '4'
      C     WPYFM         ANDNE     WDELT
@@ -3231,13 +3250,13 @@
      C                   EVAL      DDPYFMok = 'N'
      C                   GOTO      EValDelTo
      C                   END
- 
+
      C                   END
      C/COPY WNCPYSRC,SETSETIVK5
      C                   END                                                                  162270
      C                   END
      C/COPY WNCPYSRC,SETSETIVK4
- 
+
      C     EValDelTo     ENDSR
       *****************************************************************
       /EJECT
@@ -3255,9 +3274,9 @@
       *
      C     TC1DI         IFEQ      'E'
      C     FC1DI         ANDEQ     'E'
- 
+
      C     CustPNp1      IFNE      'P '
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver To
@@ -3271,43 +3290,43 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     CustPNp1      IFNE      'P '
      C     CustPNp1      ANDNE     'NP'
- 
+
      C     TC1DI         IFEQ      'E'
      C     FC1DI         ANDNE     'C'
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
- 
+
       ** Deliver To
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0306'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELT'
      C                   EVAL      DDDELTok = 'N'
- 
+
       ** Deliver From
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0306'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
- 
+
      C                   END
       *
      C     DDCLTY        IFEQ      '5'
- 
+
      C     FC1DI         IFEQ      'C'
      C     CustPNp2      ANDNE     'P '
      C     FC1DI         OREQ      'E'
      C     CustPNp1      ANDNE     'P '
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver From
@@ -3316,14 +3335,14 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     CustPNp2      IFNE      'P '
- 
+
      C     FC1DI         IFEQ      'C'
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver To
@@ -3331,41 +3350,41 @@
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0308'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELT'
      C                   EVAL      DDDELTok = 'N'
- 
+
       ** Deliver From
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0308'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     CustPNp1      IFNE      'P '
- 
+
      C     FC1DI         IFEQ      'E'
      C     TC1DI         ANDEQ     'C'
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
- 
+
       ** Deliver To
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0309'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELT'
      C                   EVAL      DDDELTok = 'N'
- 
+
       ** Deliver From
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0309'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3383,12 +3402,12 @@
       *
      C     TC1DI         IFEQ      'E'
      C     FC1DI         ANDEQ     'E'
- 
+
      C     CustPNp1      IFNE      'P '
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
- 
+
       ** Deliver To
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0305'
@@ -3399,18 +3418,18 @@
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0305'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
- 
+
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     CustPNp1      IFNE      'P '
      C     CustPNp1      ANDNE     'NP'
- 
+
      C     FC1DI         IFEQ      'E'
      C     TC1DI         ANDNE     'C'
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver To
@@ -3423,16 +3442,16 @@
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0310'
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
- 
+
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     CustPNp2      IFNE      'P '
- 
+
      C     TC1DI         IFEQ      'C'
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver To
@@ -3446,15 +3465,15 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     CustPNp1      IFNE      'P '
- 
+
      C     TC1DI         IFEQ      'E'
      C     FC1DI         ANDEQ     'C'
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver To
@@ -3468,17 +3487,17 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDELF'
      C                   EVAL      DDDELFok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
      C     DDCLTY        IFEQ      '5'
- 
+
      C     TC1DI         IFEQ      'C'
      C     CustPNp2      ANDNE     'P '
      C     TC1DI         OREQ      'E'
      C     CustPNp1      ANDNE     'P '
- 
+
      C     ErrInd        IFNE      '1'
      C                   MOVE      '1'           ErrInd
       ** Deliver To
@@ -3487,7 +3506,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDELT'
      C                   EVAL      DDDELTok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
@@ -3540,27 +3559,27 @@
       ** If entered, must be a valid Customer or Shortname
       *
      C     DDDTFA        IFNE      *BLANKS
- 
+
      C                   MOVEL     *BLANKS       WCSNM
      C                   MOVEL     DDDTFA        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0316'
      C                   EVAL      FldNamXAr (Idx) = 'DDDTFA'
      C                   EVAL      DDDTFAok = 'N'
- 
+
      C                   ELSE
- 
+
      C                   MOVE      BBCUST        WCUST
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     BFCUST        DTFA
      C                   MOVE      *BLANKS       DDDTFA
@@ -3571,7 +3590,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDTFA'
      C                   EVAL      DDDTFAok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
@@ -3652,7 +3671,7 @@
      C**********         END                                                                  225161
       **********                                                                              225161
      C**********         END                                                                  225161
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3670,9 +3689,9 @@
      C                   MOVEL     *BLANKS       WCSNM
      C                   MOVEL     DDDFFA        WCSNM
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOCUST
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0319'
@@ -3681,9 +3700,9 @@
      C                   ELSE
      C                   MOVE      BBCUST        WCUST
      C                   MOVE      *BLANKS       @RTCD
- 
+
      C                   EXSR      AOSECS
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     BFCUST        DFFA
      C                   MOVEL     *BLANK        DDDFFA
@@ -3694,7 +3713,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDDFFA'
      C                   EVAL      DDDFFAok = 'N'
      C                   END
- 
+
      C                   END
      C                   END
       *
@@ -3775,7 +3794,7 @@
      C**********         END                                                                  225161
      C**********                                                                              225161
      C**********         END                                                                  225161
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3791,35 +3810,35 @@
       ** for an electronic pay settlement method
       *
      C     DDTDSI        IFNE      *BLANKS
- 
+
      C     DDSMTH        IFEQ      '01'
      C     DDSMTH        OREQ      '08'
      C                   MOVEA     *BLANKS       SIL
      C                   MOVEA     DDTDSI        SIL
- 
+
      C                   EXSR      SEPTVS
- 
+
      C     CUL           IFEQ      'E'
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0652'
      C                   EVAL      FldNamXAr (Idx) = 'DDTDSI'
      C                   EVAL      DDTDSIok = 'N'
      C                   END
- 
+
      C     CUL           IFEQ      'X'
      C                   ADD       1             Idx
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0653'
      C                   EVAL      FldNamXAr (Idx) = 'DDTDSI'
      C                   EVAL      DDTDSIok = 'N'
      C                   ENDIF
- 
+
      C                   END
      C                   END
- 
+
       * Update trade field
- 
+
      C                   MOVEL     DDTDSI        TDSI
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3830,12 +3849,12 @@
       *                                                               *
       *****************************************************************
      C     SEPTVS        BEGSR
- 
+
       *
      C                   Z-ADD     1             IdL
      C                   MOVE      *BLANK        CUL
      C                   MOVE      'F'           SSF
- 
+
      C                   SETOFF                                       88
       *
       ** First position must be a '/'
@@ -3906,11 +3925,11 @@
       *
      C                   MOVEL     *BLANKS       USRCB
      C                   MOVEA     SIL(1)        USRCB
- 
+
      C     USRCB         IFEQ      '/RCB/'
      C                   MOVE      'X'           CUL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4021,7 +4040,7 @@
       * Update trade field
       *
      C                   MOVE      DDICCY        ICCY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4142,7 +4161,7 @@
       *  If book position/profit centres are to be reconciled
       *
      C     BVTBRC        IFEQ      'Y'
- 
+
      C     KLSPCB        CHAIN     SEPCBD                             99
       *
       ** Error if the trade profit centre does not match
@@ -4223,7 +4242,7 @@
       **  .. if settle method is '03', pay code must be '2', '3' or '4'.
       *
      C     DDSMTH        IFEQ      '03'
- 
+
      C     DDPCOD        IFNE      '2'
      C     DDPCOD        ANDNE     '3'
      C     DDPCOD        ANDNE     '4'
@@ -4232,7 +4251,7 @@
      C                   EVAL      FldNamXAr (Idx) = 'DDPCOD'
      C                   EVAL      DDPCODok = 'N'
      C                   END
- 
+
      C                   END
       *
       * Update trade field
@@ -4363,7 +4382,7 @@
      C                   ELSE
      C                   MOVEL     WPRAC         PAYT
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4374,7 +4393,7 @@
       *                                                               *
       *****************************************************************
      C     DefPyFrBr     BEGSR
- 
+
      C     DDSMTH        IFEQ      '01'
      C     DDSMTH        OREQ      '02'
      C     DDSMTH        OREQ      '07'
@@ -4382,19 +4401,19 @@
      C     DDSMTH        OREQ      '12'
      C                   MOVEL     A7BRCD        DDPYFB
      C                   ELSE
- 
+
      C     DDSMTH        IFEQ      '14'
      C     DDSMTH        OREQ      '15'
      C                   MOVEL     BRCA          DDPYFB
      C                   ELSE
- 
+
      C     DDSMTH        IFNE      '05'
      C                   MOVEL     DDBRCD        DDPYFB
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4405,7 +4424,7 @@
       *                                                               *
       *****************************************************************
      C     DefPyToBr     BEGSR
- 
+
      C     DDSMTH        IFEQ      '01'
      C     DDSMTH        OREQ      '02'
      C     DDSMTH        OREQ      '07'
@@ -4413,19 +4432,19 @@
      C     DDSMTH        OREQ      '12'
      C                   MOVEL     A7BRCD        DDPYTB
      C                   ELSE
- 
+
      C     DDSMTH        IFEQ      '14'
      C     DDSMTH        OREQ      '15'
      C                   MOVEL     BRCA          DDPYTB
      C                   ELSE
- 
+
      C     DDSMTH        IFNE      '05'
      C                   MOVEL     DDBRCD        DDPYTB
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4453,14 +4472,14 @@
       *                                                               *
       *****************************************************************
      C     AOCUST        BEGSR
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      WCSNM         @KEY1
      C                   PARM                    @KYST
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4470,13 +4489,13 @@
       *                                                               *
       *****************************************************************
      C     AOSECS        BEGSR
- 
+
      C                   CALLB     'AOSECSR0'
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      WCUST         @SCKY
      C     SDSECS        PARM      SDSECS        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4486,13 +4505,13 @@
       *                                                               *
       *****************************************************************
      C     AOCNST        BEGSR
- 
+
      C                   CALL      'AOCNSTR0'
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @CPNC
      C     SDCNST        PARM      SDCNST        DSFDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4519,10 +4538,10 @@
      C                   MOVEL     AZDPCD        @DPCD                                        188320
      C                   ENDIF                                                                188320
      C                   ENDIF                                                                167953
- 
+
      C                   MOVEL     DDTDTP        @TRTY
      C                   MOVEL     TCNR          @CUST
- 
+
      C                   CALL      'AOPRFMR0'
      C                   PARM      *BLANK        #RTCD             1
      C                   PARM      DDBPBK        @BKCD             2
@@ -4536,7 +4555,7 @@
      C                   PARM                    @ACOC             2                          167953
      C                   PARM                    @CUST             6
      C                   PARM                    @PRFC             4
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4546,14 +4565,14 @@
       *                                                               *
       *****************************************************************
      C     AOPRFC        BEGSR
- 
+
      C                   CALL      'AOPRFCR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C**********         PARM      DDPRFC        @PCCD             4                          165014
      C     DDPRFC        PARM      DDPRFC        @PCCD             4                          165014
      C     SDPRFC        PARM      SDPRFC        DSFDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4579,7 +4598,7 @@
       *                                                               *
       *****************************************************************
      C     AONOST        BEGSR
- 
+
      C                   CALLB     'AONOSTR0'
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -4592,7 +4611,7 @@
      C                   PARM      *BLANKS       P@CSSN
      C                   PARM      *BLANKS       P@PNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4602,13 +4621,13 @@
       *                                                               *
       *****************************************************************
      C     AOCURR        BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANK        @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4618,17 +4637,17 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Trade Settlement Instructions
      C                   PARM                    TrSett
- 
+
       ** OTHER SCREEN FIELDS
       ** Security
       ** Incomplete Ind
@@ -4650,7 +4669,7 @@
      C                   PARM                    DDSETC            3
      C                   PARM                    DDMRKT            2                          CSE039
      C                   PARM                    DDPTFR            4                          CSE039
- 
+
       ** TRADE FIELDS
       ** Counterparty
       ** Value Date
@@ -4660,23 +4679,23 @@
      C                   PARM                    TDVD              5 0
      C                   PARM                    NOML             11 0          CSE013
      C**********         PARM                    TCTR                                 CGL014 BUG3145
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    SetCcyDts
- 
+
       ** Security Info (from SECTYD)
       ** Nominal Currency
       ** Depot 1 Security Reference
       ** Depot 2 Security Reference
       ** Depot 3 Security Reference
- 
+
      C                   PARM                    NMCY              3
      C                   PARM                    DASR             12
      C                   PARM                    DCSR             12
      C                   PARM                    DDSR             12
- 
+
       ** Investment Type Info (from INVTPD)
       ** Settlement depots 1,2,3
       ** Investment Type                                                                      CSE039
@@ -4687,7 +4706,7 @@
       *
       ** Customer (Counterparty) Details
      C                   PARM                    CustDts                                       S0111
- 
+
       ** ICD
       ** Multi-branching Ind
       ** Local currency
@@ -4709,7 +4728,7 @@
       ** CSE013 - Short position warning
       ** S01496 - Private Banking SE enhancements
       ** CEU005 - EMU SE Settlement Currency Conversion
- 
+
      C                   PARM                    @MBIN             1
      C                   PARM                    BJLCCY            3
      C                   PARM                    BJSBRC            3
@@ -4779,12 +4798,12 @@
       *
       ** Trade Settlement Instructions OK
      C                   PARM                    OKTrSett
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
@@ -4826,7 +4845,7 @@
      C                   ELSE                                                                 CSE039
      C                   MOVE      'N'           CSE039                                       CSE039
      C                   ENDIF                                                                CSE039
- 
+
       ** Access SAR details file to determine if CSE099 installed.                            162270
       *                                                                                       162270
      C                   CALLB     'AOSARDR0'                                                 162270
@@ -4847,7 +4866,7 @@
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
      C/COPY WNCPYSRC,SETSETIVC1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

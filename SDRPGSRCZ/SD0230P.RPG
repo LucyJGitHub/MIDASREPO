@@ -11,7 +11,8 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL087             Date 04May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -20,11 +21,13 @@
       * Midas DBA 3.04 -----------------------------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. S01117             Date 03May90               *
+      *                 S01117             Date 03May90               *
       *                 S01117             Date 20Apr90               *
      F*                                                                  *
      F********************************************************************
      F*                                                                  *S01117
+      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
+      *           Upgrade to FM 2.1 20201.A                           *
       *  MD046248 - Finastra Rebranding                               *
      F*     S01117 - Include Dummy Parameter                             *S01117
      F*     S01117 - Rel 10 Multi-branching changes                      *S01117
@@ -65,6 +68,8 @@
       *
      F*SD0230P$O   E             97     PRINTER                           S01117
      F/COPY WNCPYSRC,SD0230PF02
+      *                                                                                       CDL087
+     FSDCOMPY1IF  E           K        DISK                                                   CDL087
      FSD0230PMO   E             97     PRINTER                            S01117
      F                                              KINFDS INFDS$
       * PRT: Company Codes Audit/Req   Print file
@@ -157,6 +162,8 @@
       * Print headings.
      C                     EXSR BAPRHD
      C/COPY WNCPYSRC,SD0230PC01
+      * Get Local Base Currency                                                               CDL087
+     C                     EXSR GALBCY                                                        CDL087
       * Print report detail line.
      C                     EXSR CAPRDT
       * Hold current values.
@@ -171,6 +178,11 @@
       * Process necessary heading requests
      C                     EXSR FASGHD
      C/COPY WNCPYSRC,SD0230PC02
+      *                                                                                       CDL087
+      * Database Error Handling                                                               CDL087
+     C   U7 U8             WRITEZZERROR                                                       CDL087
+     C   U7 U8             MOVE '1'       W0EOF                                               CDL087
+      *                                                                                       CDL087
      C                     END
      C                     WRITEZZENDRPT
      C                     END
@@ -405,6 +417,22 @@
       *================================================================
      CSR         FAEXIT    ENDSR
      C/COPY WNCPYSRC,SD0230PC07
+      /EJECT                                                                                  CDL087
+     CSR         GALBCY    BEGSR                                                              CDL087
+      *================================================================                       CDL087
+      * Get Local Base Currency                                                               CDL087
+      *================================================================                       CDL087
+     C           APCMCD    CHAINSDCOMPY1             92                                       CDL087
+     C           *IN92     IFEQ '0'                                                           CDL087
+     C                     MOVE GLBCY     XRLBCY                                              CDL087
+     C                     ELSE                                                               CDL087
+     C                     SETON                     U7U8  ** Database Err                    CDL087
+     C                     MOVE '001'     DBERR            ** 001 **                          CDL087
+     C                     MOVE APCMCD    DBKEY                                               CDL087
+     C                     MOVE *BLANKS   XRLBCY                                              CDL087
+     C                     END                                                                CDL087
+      *================================================================                       CDL087
+     CSR         GAEXIT    ENDSR                                                              CDL087
       /EJECT
      CSR         SARVGN    BEGSR
       *================================================================

@@ -1,0 +1,1165 @@
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  Midas - /COPY Member (GL1300)                                *                       ERZ212
+      *                                                               *                       ERZ212
+      *  GL1300CP11 - Midas GL Generate statement SWIFT msgs in COB   *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Last Amend No. ERZ212   *CREATE   Date 22Feb13               *                       ERZ212
+      *                                                               *                       ERZ212
+      *---------------------------------------------------------------*                       ERZ212
+      *                                                               *                       ERZ212
+      *  ERZ212 - Multicash MT940 Interface                           *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  SR/#E28MC                                                    *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Called by: Main Processing      Calls: *PSSR                 *                       ERZ212
+      *                                                               *                       ERZ212
+      ** Processing for Tag :28: (Only do if Multicash Present):      *                       ERZ212
+      ** (Non-Swift Messages)                                         *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                                                       ERZ212
+     C           #E28MC    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     MOVE *BLANKS   EWCAT  50                                           ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Get Customer Details                                                                 ERZ212
+      *                                                                                       ERZ212
+     C                     MOVELCNUM      @CSNM                                               ERZ212
+     C                     CALL 'AOCUSTR0'             9090                                   ERZ212
+     C                     PARM *BLANKS   @RTCD                                               ERZ212
+     C                     PARM '*KEY   ' @OPTN                                               ERZ212
+     C                     PARM           @CSNM                                               ERZ212
+     C                     PARM *BLANKS   @KYST                                               ERZ212
+     C           SDCUST    PARM *BLANKS   DSSDY                                               ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Get Account Details                                                                  ERZ212
+      *                                                                                       ERZ212
+     C                     MOVE CNUM      UUCUST                                              ERZ212
+     C                     MOVE ACOD      UUACNO                                              ERZ212
+     C                     MOVE ACSQ      UUACSN                                              ERZ212
+     C                     MOVE CCY       UUCYCD                                              ERZ212
+     C                     MOVE BRCD      UUBRCD                                              ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AOACCTR0'                                                    ERZ212
+     C                     PARM *BLANK    @RTCD            B:Return Cd                        ERZ212
+     C                     PARM '*KEY'    @OPTN            B:Option                           ERZ212
+     C                     PARM *BLANK    UUACID 10        I:Account Ident                    ERZ212
+     C                     PARM           UUCUST  6        I:Customer Numb                    ERZ212
+     C                     PARM           UUCYCD  3        I:Currency Code                    ERZ212
+     C                     PARM           UUACNO 10        I:Account Code                     ERZ212
+     C                     PARM           UUACSN  2        I:Account Seque                    ERZ212
+     C                     PARM           UUBRCD  3        I:Branch code                      ERZ212
+     C                     PARM *BLANKS   DSSDY            O:Details                          ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS122 - Account Holder(Customer Report Name)                                         ERZ212
+      *                                                                                       ERZ212
+     C           'NS122'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVEL'22'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  BBCRNM:0  @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS123 - Account Specification(Account Name)                                          ERZ212
+     C           'NS123'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVE *BLANK    @MTAG                                               ERZ212
+     C           20        SUBSTDSSDY:36  EXFLD  27                                           ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'23'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS125 - Duration From/To (Last Stament Date/This Stament Date)                       ERZ212
+     C           'NS125'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVE *BLANK    @MTAG                                               ERZ212
+      *                                                                                       ERZ212
+      ** Convert next statemnt date to DDMMYY if not blank                                    ERZ212
+     C                     MOVE *BLANKS   ENSDT   6                                           ERZ212
+     C           NSDAT     IFNE *ZERO                                                         ERZ212
+     C                     MOVE NSDAT     ZDAYNO                                              ERZ212
+     C                     EXSR ZDATES                                                        ERZ212
+     C                     MOVE ZDATE     ENSDT                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C           LSDATE    IFNE *BLANK                                                        ERZ212
+     C           ENSDT     ORNE *BLANK                                                        ERZ212
+     C                     MOVELLSDATE    EDATS  12                                           ERZ212
+     C                     MOVE ENSDT     EDATS                                               ERZ212
+     C                     MOVEL'25'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EDATS:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS131 - Participation Number (Participant input on SWIFT                             ERZ212
+      **         accounts maintenance                                                         ERZ212
+     C                     CLEAREMCPA                                                         ERZ212
+      *                                                                                       ERZ212
+     C           'NS131'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+      *                                                                                       ERZ212
+      ** Get field from SWIFT Accounts Maintenance Extension File                             ERZ212
+      ** Key list for CHAIN to X10shun file                                                   ERZ212
+     C                     MOVE CNUM      WECNUA  6                                           ERZ212
+     C           SWAKEY    KLIST                                                              ERZ212
+     C                     KFLD           BRCA                                                ERZ212
+     C                     KFLD           WECNUA                                              ERZ212
+     C                     KFLD           CCY                                                 ERZ212
+     C                     KFLD           ACOD                                                ERZ212
+     C                     KFLD           ACSQ                                                ERZ212
+      *                                                                                       ERZ212
+     C           SWAKEY    CHAINXXACSW1              90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVE *BLANK    @MTAG                                               ERZ212
+     C                     MOVE EMCPN     EMCPA   7                                           ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C           EMCPA     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'31'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EMCPA:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS132 - Account Type for Retail Accounts:                                            ERZ212
+      **         Extract subtype from DSSDY (still contains info from                         ERZ212
+      **         last access using AOACCNTR0)                                                 ERZ212
+     C           'NS132'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVE *BLANK    @MTAG                                               ERZ212
+     C                     MOVEL'32'      EWCAT                                               ERZ212
+     C           1         SUBSTDSSDY:27  WE1     1                                           ERZ212
+      *                                                                                       ERZ212
+     C                     SELEC                                                              ERZ212
+     C           WE1       WHEQ 'C'                                                           ERZ212
+     C           EWCAT     CAT  '010':0   @MFLD                                               ERZ212
+     C           WE1       WHEQ 'L'                                                           ERZ212
+     C           EWCAT     CAT  '040':0   @MFLD                                               ERZ212
+     C           WE1       WHEQ 'S'                                                           ERZ212
+     C           EWCAT     CAT  '090':0   @MFLD                                               ERZ212
+     C                     OTHER                                                              ERZ212
+     C           EWCAT     CAT  '000':0   @MFLD                                               ERZ212
+     C                     ENDSL                                                              ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSR                                                              ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  SR/#E61MC                                                    *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Called by: Main Processing      Calls: #ETRND                *                       ERZ212
+      *                                         *PSSR                 *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Processing for Tag :61: Non-SWIFT Messages                   *                       ERZ212
+      *            (Only do if Multi-Cash present)                    *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                                                       ERZ212
+      ** Processing for Tag :61: (Only do if Multicash Present):                              ERZ212
+      **                   Non-Swift Messages                                                 ERZ212
+      *                                                                                       ERZ212
+     C           #E61MC    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Determine what type of transaction and access correct file for                       ERZ212
+      ** Details of Payment                                                                   ERZ212
+     C                     EXSR #ETRND                                                        ERZ212
+      *                                                                                       ERZ212
+      ** Reset MTAG write indicator                                                           ERZ212
+     C                     MOVE *BLANK    EWMT    1                                           ERZ212
+      *                                                                                       ERZ212
+      ** Extract Details of Payment if available:                                             ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      *                                                                                       ERZ212
+      ** Details of Payment for everything except CC transactions..                           ERZ212
+      *                                                                                       ERZ212
+     C           ETTY      IFEQ 'DE'                                                          ERZ212
+     C           ETTY      OREQ 'LO'                                                          ERZ212
+     C           ETTY      OREQ 'IN'                                                          ERZ212
+     C           ETTY      OREQ 'OP'                                                          ERZ212
+      *                                                                                       ERZ212
+      ** NS201 - Details of Payment                                                           ERZ212
+     C           'NS201'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVELDTP1      EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'01'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS202 - Details of Payment                                                           ERZ212
+     C           'NS202'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C           8         SUBSTDTP1:28   EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'02'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS203 - Details of Payment                                                           ERZ212
+     C           'NS203'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVELDTP2      EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'03'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS204 - Details of Payment                                                           ERZ212
+     C           'NS204'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C           8         SUBSTDTP2:28   EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'04'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS205 - Details of Payment                                                           ERZ212
+     C           'NS205'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVELDTP3      EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'05'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS206 - Details of Payment                                                           ERZ212
+     C           'NS205'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C           8         SUBSTDTP3:28   EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'06'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS207 - Details of Payment                                                           ERZ212
+     C           'NS207'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVELDTP4      EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'07'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS208 - Details of Payment                                                           ERZ212
+     C           'NS208'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C           8         SUBSTDTP4:28   EXFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C           EXFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'08'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  EXFLD:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREXFLD                                                         ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS215 Ordering Party (Customer Report Name for Ordering Bank)                        ERZ212
+     C           'NS215'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+      *                                                                                       ERZ212
+      ** If not FT                                                                            ERZ212
+     C           ETTY      IFNE 'IN'                                                          ERZ212
+     C           ETTY      ANDNE'OP'                                                          ERZ212
+     C           BBCRNM    IFNE *BLANK                                                        ERZ212
+     C                     MOVEL'15'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  BBCRNM:0  @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** If FT use saved subfield 9                                                           ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVEL'15'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  ESB9S:0   @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS217 Booking Text (Posting Narrative)                                               ERZ212
+     C           'NS217'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C           PNAR      ANDNE*BLANK                                                        ERZ212
+     C                     MOVEL'17'      EWCAT                                               ERZ212
+     C           EWCAT     CAT  PNAR:0    @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+      *                                                                                       ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** NS218 Batch Number (Journal Entry Batch Number)                                      ERZ212
+     C           'NS218'   CHAINSDMTAGL1             90                                       ERZ212
+      *                                                                                       ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVEL'18'      EWCAT                                               ERZ212
+      *                                                                                       ERZ212
+      ** Output correct transaction number                                                    ERZ212
+     C                     SELEC                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Deals, Loans , FX, MM                                                                ERZ212
+     C           ETTY      WHEQ 'DE'                                                          ERZ212
+     C           ETTY      OREQ 'LO'                                                          ERZ212
+     C           EWCAT     CAT  ETRAN6:0  @MFLD                                               ERZ212
+      *                                                                                       ERZ212
+      ** Czech Clearing                                                                       ERZ212
+     C           ETTY      WHEQ 'CC'                                                          ERZ212
+     C           EWCAT     CAT  ETRAN6:0  @MFLD                                               ERZ212
+      *                                                                                       ERZ212
+      ** Incoming/Outgoing Payments                                                           ERZ212
+     C           ETTY      WHEQ 'IN'                                                          ERZ212
+     C           ETTY      OREQ 'OP'                                                          ERZ212
+     C           EWCAT     CAT  EPRF10:0  @MFLD                                               ERZ212
+      *                                                                                       ERZ212
+      ** Other cases                                                                          ERZ212
+     C                     OTHER                                                              ERZ212
+     C           SPOS      IFNE *BLANK                                                        ERZ212
+      *                                                                                       ERZ212
+      ** Check indicator from ZALIGN                                                          ERZ212
+     C           *IN99     ANDEQ*OFF                                                          ERZ212
+     C           EWCAT     CAT  ESPOS6:0  @MFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSL                                                              ERZ212
+      *                                                                                       ERZ212
+     C           @MFLD     IFNE *BLANK                                                        ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C           EWMT      IFEQ *BLANK                                                        ERZ212
+     C                     MOVEL':NS:'    @MTAG                                               ERZ212
+     C                     MOVE 'Y'       EWMT                                                ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     CLEAREWCAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Write to MGOMSGPD and clear data structure                                           ERZ212
+     C                     EXSR OUTSR                                                         ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSR                                                              ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  SR/#E86MC                                                    *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Called by: Main Processing      Calls: #ECAT                 *                       ERZ212
+      *                                         #EFNOS                *                       ERZ212
+      *                                         #ENOSN                *                       ERZ212
+      *                                         #EPTAC                *                       ERZ212
+      *                                         #ERETL                *                       ERZ212
+      *                                         #ECUST                *                       ERZ212
+      *                                         #EADDR                *                       ERZ212
+      *                                         *PSSR                 *                       ERZ212
+      *                                         ZALIGN                *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Processing for Field :86: (Only do if Multicash Present)     *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     C           #E86MC    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     MOVE *BLANKS   EPFLD                                               ERZ212
+     C                     MOVE *BLANKS   EBCIO                                               ERZ212
+     C                     MOVE *BLANKS   @RETL                                               ERZ212
+     C                     MOVE *BLANKS   ECSID                                               ERZ212
+     C                     MOVE *BLANKS   ECRNM                                               ERZ212
+     C                     MOVE *BLANKS   ECRTN                                               ERZ212
+      *                                                                                       ERZ212
+      ** Transaction Business/Code                                                            ERZ212
+     C                     MOVEL'999'     EPFLD                                               ERZ212
+      *                                                                                       ERZ212
+      ** Transaction/Booking Description (Posting Narrative)                                  ERZ212
+     C           '00'      CAT  PNAR:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+      ** Check type of transaction and do initial processing for each *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                                                       ERZ212
+      ** Determine what type of transaction and access correct file for                       ERZ212
+      ** Details of Payment                                                                   ERZ212
+     C                     EXSR #ETRND                                                        ERZ212
+      *                                                                                       ERZ212
+      ** Fill in the Blanks|                                                                  ERZ212
+     C                     SELEC                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Extract Transaction Number                                                           ERZ212
+     C           ETTY      WHEQ 'CC'                                                          ERZ212
+     C           6         SUBSTDLREF:3   EW6     6                                           ERZ212
+     C           '10'      CAT  EW6       ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+      *                                                                                       ERZ212
+      ** Foreign Exchange Deal, or Money Market Loan:                                         ERZ212
+      *                                                                                       ERZ212
+     C           ETTY      WHEQ 'DE'                                                          ERZ212
+     C           ETTY      OREQ 'LO'                                                          ERZ212
+     C           '10'      CAT  ETRAN6:0  ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+      *                                                                                       ERZ212
+      ** Incoming or Outgoing Payment                                                         ERZ212
+     C           ETTY      WHEQ 'OP'                                                          ERZ212
+     C           ETTY      OREQ 'IN'                                                          ERZ212
+     C           '10'      CAT  EPRF10:0  ESFLD                                               ERZ212
+     C                     CLEAREW10                                                          ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** All other instances, use SPOS (Source of Posting), if numeric                        ERZ212
+      ** and first 6 digits only                                                              ERZ212
+     C           ETTY      WHEQ *BLANK                                                        ERZ212
+     C           SPOS      ANDNE*BLANKS                                                       ERZ212
+      *                                                                                       ERZ212
+      ** Check indicator from ZALIGN                                                          ERZ212
+     C           *IN99     IFEQ *OFF                                                          ERZ212
+     C           '10'      CAT  ESPOS6:0  ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSL                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Details of Payment for everything except CC transactions..                           ERZ212
+      *                                                                                       ERZ212
+     C           ETTY      IFEQ 'DE'                                                          ERZ212
+     C           ETTY      OREQ 'LO'                                                          ERZ212
+     C           ETTY      OREQ 'IN'                                                          ERZ212
+     C           ETTY      OREQ 'OP'                                                          ERZ212
+      *                                                                                       ERZ212
+     C           25        SUBSTDTP1:1    EW25   25                                           ERZ212
+     C           EW25      IFNE *BLANK                                                        ERZ212
+     C           '20'      CAT  EW25:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW25                                                          ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDTP1:26   EW10   10                                           ERZ212
+     C           EW10      IFNE *BLANK                                                        ERZ212
+     C           '21'      CAT  EW10:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW10                                                          ERZ212
+      *                                                                                       ERZ212
+     C           25        SUBSTDTP2:1    EW25                                                ERZ212
+     C           EW25      IFNE *BLANK                                                        ERZ212
+     C           '22'      CAT  EW25:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW25                                                          ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDTP2:26   EW10                                                ERZ212
+     C           EW10      IFNE *BLANK                                                        ERZ212
+     C           '23'      CAT  EW10:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW10                                                          ERZ212
+      *                                                                                       ERZ212
+     C           25        SUBSTDTP3:1    EW25                                                ERZ212
+     C           EW25      IFNE *BLANK                                                        ERZ212
+     C           '24'      CAT  EW25:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW25                                                          ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDTP3:26   EW10                                                ERZ212
+     C           EW10      IFNE *BLANK                                                        ERZ212
+     C           '25'      CAT  EW10:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW10                                                          ERZ212
+      *                                                                                       ERZ212
+     C           25        SUBSTDTP4:1    EW25                                                ERZ212
+     C           EW25      IFNE *BLANK                                                        ERZ212
+     C           '26'      CAT  EW25:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW25                                                          ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDTP4:26   EWFLD                                               ERZ212
+     C           EW10      IFNE *BLANK                                                        ERZ212
+     C           '27'      CAT  EW10:0    ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     CLEAREW10                                                          ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Incoming/Outgoing Payment: check if Bank Ordering Type not                           ERZ212
+      ** blank else check Customer Type and set Bank/Customer flag                            ERZ212
+      *                                                                                       ERZ212
+     C           ETTY      IFEQ 'IN'                                                          ERZ212
+     C           ETTY      OREQ 'OP'                                                          ERZ212
+      *                                                                                       ERZ212
+      ** Workfield EBCIO to get details from acces objects                                    ERZ212
+     C           ORBT      IFNE *BLANK                                                        ERZ212
+     C                     MOVE ORBT      EORTY   1                                           ERZ212
+      *                                                                                       ERZ212
+     C           ETTY      IFEQ 'IN'                                                          ERZ212
+     C                     MOVELORB1      EBCIO  35                                           ERZ212
+      * Else if ETTY equals 'OP'                                                              ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVELORBK      EBCIO                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVE ORCT      EORTY                                               ERZ212
+     C                     MOVELORC1      EBCIO                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Ordering Customer/Bank Details                                                       ERZ212
+     C           EORTY     CASEQ'F'       #EFNOS           Full Nostro                        ERZ212
+     C           EORTY     CASEQ'N'       #ENOSN           Nostro Nbr                         ERZ212
+     C           EORTY     CASEQ'P'       #EPTAC           Partial A/c                        ERZ212
+     C           EORTY     CASEQ'R'       #ERETL           Retail A/c                         ERZ212
+     C           EORTY     CASEQ'C'       #ECUST           Customer nbr                       ERZ212
+     C           EORTY     CASEQ'A'       #EADDR           Address                            ERZ212
+     C                     ENDCS                                                              ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Ordering Party ID (SWIFT ID)                                                         ERZ212
+     C           ECSID     IFNE *BLANK                                                        ERZ212
+     C           '30'      CAT  ECSID:0   ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Ordering Party Account (Customer Account - FT only)                                  ERZ212
+     C           ETTY      IFNE *BLANKS                                                       ERZ212
+     C           @RETL     ANDNE*BLANKS                                                       ERZ212
+     C                     MOVEL@RETL     EW25                                                ERZ212
+     C           '31'      CAT  EW25      ESFLD                                               ERZ212
+     C                     CLEAREW25                                                          ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Ordering Party Name (Customer Report Name)                                           ERZ212
+     C           ECRNM     IFNE *BLANK                                                        ERZ212
+     C           '32'      CAT  ECRNM:0   ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Ordering Party Address (Customer Town)                                               ERZ212
+     C           ECRTN     IFNE *BLANK                                                        ERZ212
+     C           '33'      CAT  ECRTN:0   ESFLD                                               ERZ212
+     C                     EXSR #ECAT                                                         ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+     C                     ENDIF                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Setup Multi-Occurence DS from DS/EPFLD & output to PF/MGOMSGPD                       ERZ212
+      *                                                                                       ERZ212
+     C           1         OCUR MULT                                                          ERZ212
+     C                     MOVEL':86:'    @MTAG                                               ERZ212
+     C                     Z-ADD1         ECNT    30                                          ERZ212
+     C           50        SUBSTEPFLD:ECNTEBLCT  50                                           ERZ212
+      *                                                                                       ERZ212
+      ** Move blocks of 50 characters until blank..                                           ERZ212
+     C           EBLCT     DOWNE*BLANKS                                                       ERZ212
+     C                     MOVELEBLCT     @MFLD                                               ERZ212
+     C                     MOVE CRLF      @CTRC                                               ERZ212
+     C                     ADD  1         M                                                   ERZ212
+     C           M         MULT 50        ECNT                                                ERZ212
+     C                     SUB  49        ECNT                                                ERZ212
+     C           50        SUBSTEPFLD:ECNTEBLCT                                               ERZ212
+     C           M         OCUR MULT                                                          ERZ212
+     C                     ENDDO                                                              ERZ212
+     C                     CLEAREPFLD                                                         ERZ212
+      *                                                                                       ERZ212
+      ** Write to MGOMSGPD and clear data structure                                           ERZ212
+      *                                                                                       ERZ212
+     C                     EXSR OUTSR                                                         ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSR                                                              ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  SR/#ETRND                                                    *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Called by: #E61MC               Calls: *PSSR                 *                       ERZ212
+      *             #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Processing Transaction type and access details from          *                       ERZ212
+      *  correct file                                                 *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     C           #ETRND    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Clear fields accessed by CHAINS (AO DS's already blanked)                            ERZ212
+      ** (In case of CHAIN fail, processing will still be performed,                          ERZ212
+      ** but blank fields are not output)                                                     ERZ212
+     C                     CLEARDTP1                                                          ERZ212
+     C                     CLEARDTP2                                                          ERZ212
+     C                     CLEARDTP3                                                          ERZ212
+     C                     CLEARDTP4                                                          ERZ212
+      *                                                                                       ERZ212
+      ** Check for Czech Clearing, Foreign Exchange, Money Market,                            ERZ212
+      ** Customer Loan                                                                        ERZ212
+     C           DLREF     IFNE *BLANK                                                        ERZ212
+     C                     MOVELDLREF     EDREFI  1                                           ERZ212
+     C                     SELEC                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Clearing Centre:                                                                     ERZ212
+     C           EDREFI    WHEQ 'I'                                                           ERZ212
+     C           EDREFI    OREQ 'O'                                                           ERZ212
+     C                     MOVE 'CC'      ETTY    2                                           ERZ212
+      ** Extract Transaction Number                                                           ERZ212
+     C           6         SUBSTDLREF:3   ETRAN6                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Foreign Exchange Deal, or Money Market Loan:                                         ERZ212
+     C           EDREFI    WHEQ 'D'                                                           ERZ212
+     C                     MOVE 'DE'      ETTY                                                ERZ212
+      *                                                                                       ERZ212
+      ** Extract Transaction Number                                                           ERZ212
+     C           6         SUBSTDLREF:2   ETRAN6  6                                           ERZ212
+     C                     MOVE ETRAN6    ETRNN6  60                                          ERZ212
+      *                                                                                       ERZ212
+      ** Get Transaction Details                                                              ERZ212
+     C           ETRNN6    CHAINDEALALL              90                                       ERZ212
+      *                                                                                       ERZ212
+      ** Setup to obtain Customer details                                                     ERZ212
+     C           *IN90     IFEQ *OFF                                                          ERZ212
+     C                     MOVELCNUM      @CSNM                                               ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVE *BLANKS   @CSNM                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Customer Loan                                                                        ERZ212
+      *                                                                                       ERZ212
+     C           EDREFI    WHEQ 'L'                                                           ERZ212
+     C                     MOVE 'LO'      ETTY                                                ERZ212
+     C           6         SUBSTDLREF:2   ETRAN6                                              ERZ212
+     C                     MOVE ETRAN6    ETRNN6  60                                          ERZ212
+      *                                                                                       ERZ212
+     C                     MOVELLNNO      CLNNO                                               ERZ212
+     C                     MOVEL'A'       CLNCD                                               ERZ212
+      *                                                                                       ERZ212
+      ** Get Loan Details                                                                     ERZ212
+     C           CLNKEY    CHAINCLOANCLF             90                                       ERZ212
+      *                                                                                       ERZ212
+      ** Setup to obtain Customer details                                                     ERZ212
+     C                     MOVELCNUM      @CSNM                                               ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+     C                     ENDSL                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Else if DLREF blank look at PREF for Incoming/Outgoing Payment                       ERZ212
+     C                     ELSE                                                               ERZ212
+     C           2         SUBSTPREF:12   EPREF2  2                                           ERZ212
+     C           10        SUBSTPREF:2    EPRF10 10                                           ERZ212
+     C                     SELEC                                                              ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Incoming Payment                                                                     ERZ212
+      *                                                                                       ERZ212
+     C           EPREF2    WHEQ 'IN'                                                          ERZ212
+     C                     MOVE 'IN'      ETTY                                                ERZ212
+     C                     MOVELPREF      EPRF15 15                                           ERZ212
+      *                                                                                       ERZ212
+      ** Get Incoming Payment Details                                                         ERZ212
+     C           EPRF15    CHAININPAY                90                                       ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** Outgoing Payment                                                                     ERZ212
+      *                                                                                       ERZ212
+     C           EPREF2    WHEQ 'OP'                                                          ERZ212
+     C                     MOVE 'OP'      ETTY                                                ERZ212
+     C                     MOVELPREF      EPRF15                                              ERZ212
+      *                                                                                       ERZ212
+      ** Get Outgoing Payment Details                                                         ERZ212
+     C           EPRF15    CHAINOTPAY                90                                       ERZ212
+      *                                                                                       ERZ212
+      *================================================================                       ERZ212
+      *                                                                                       ERZ212
+      ** All other cases                                                                      ERZ212
+     C                     OTHER                                                              ERZ212
+     C                     MOVE *BLANKS   ETTY                                                ERZ212
+     C           1         SUBSTSPOS:7    ESPOS1  1                                           ERZ212
+      *                                                                                       ERZ212
+      ** Extract SPOS only if first six characters of field & numeric                         ERZ212
+     C           ESPOS1    IFEQ *BLANK                                                        ERZ212
+     C                     MOVELSPOS      ESPOS6  6                                           ERZ212
+     C                     MOVE *BLANKS   ZFIELD                                              ERZ212
+     C                     MOVE ESPOS6    ZFIELD                                              ERZ212
+     C                     Z-ADD6         ZADIG                                               ERZ212
+     C                     Z-ADD0         ZADEC                                               ERZ212
+     C                     EXSR ZALIGN                                                        ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSL                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSR                                                              ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  SR/#ECAT                                                     *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Called by: E86MC                Calls: -----                 *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Place '+' sign and Secondary Field after last alphameric     *                       ERZ212
+      *  character in Primary Field.                                  *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Input:                                                       *                       ERZ212
+      *  EPFLD(400A) Primary Field to be changed (Setup as DS)        *                       ERZ212
+      *  ESFLD(50A)  Secondary Field to be added to Primary Field     *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Output:                                                      *                       ERZ212
+      *  EPFLD(400A) Primary field (DS)                               *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                                                       ERZ212
+     C           #ECAT     BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     MOVELEPFLD     EWFLD                                               ERZ212
+     C           EWFLD     CAT  '+':0     EPFLD                                               ERZ212
+     C                     MOVELEPFLD     EWFLD                                               ERZ212
+     C           EWFLD     CAT  ESFLD:0   EPFLD                                               ERZ212
+     C                     MOVE *BLANKS   ESFLD  35                                           ERZ212
+     C                     MOVE *BLANKS   EWFLD                                               ERZ212
+      *                                                                                       ERZ212
+     C                     ENDSR                                                              ERZ212
+      *                                                                                       ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  #EFNOS   : Format Full Nostro                                *                       ERZ212
+      *                                                               *                       ERZ212
+      *  CALLED BY: #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     CSR         #EFNOS    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Get Nostro details                                                                   ERZ212
+     C                     MOVELCCY       @CYCD                                               ERZ212
+     C                     MOVELACOD      @ACCN                                               ERZ212
+     C                     MOVELACSQ      @ACSN                                               ERZ212
+     C                     MOVELCNUM      @CUST                                               ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AONOSTR0'                                                    ERZ212
+     C                     PARM *BLANKS   @RTCD   7                                           ERZ212
+     C                     PARM '*KEY   ' @OPTN   7                                           ERZ212
+     C                     PARM *BLANKS   @CUST   6                                           ERZ212
+     C                     PARM           @CYCD   3                                           ERZ212
+     C                     PARM           @ACCN   4                                           ERZ212
+     C                     PARM           @ACSN   2                                           ERZ212
+     C                     PARM *BLANKS   @NONB   2                                           ERZ212
+     C                     PARM BRCA      @BRCD   3                                           ERZ212
+     C                     PARM *BLANKS   @CSSN  10                                           ERZ212
+     C                     PARM *BLANKS   @PNOI   1                                           ERZ212
+     C           SDNOST    PARM *BLANKS   DSFDY                                               ERZ212
+      *                                                                                       ERZ212
+      ** Get Account Details                                                                  ERZ212
+     C                     MOVELA7ACSN    @ACSQ                                               ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AOACCTR0'             9090                                   ERZ212
+     C                     PARM *BLANKS   @RTCD   7        B:Return code                      ERZ212
+     C                     PARM '*KEY   ' @OPTN   7        I:Option                           ERZ212
+     C                     PARM *BLANKS   @RETL  10        I:Retail key                       ERZ212
+     C                     PARM A7CUST    @CNUM   6        I:Key field 1                      ERZ212
+     C                     PARM A7CYCD    @CUCD   3        I:Key field 2                      ERZ212
+     C                     PARM A7ACCD    @ACCD  10        I:Key field 3                      ERZ212
+     C                     PARM           @ACSQ   2        I:Key field 4                      ERZ212
+     C                     PARM A7BRCD    @BRCA   3        I:Key field 5                      ERZ212
+     C                     PARM *BLANKS   DSSDY            O:OUTPUT                           ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDSSDY:190 ERACN  10                                           ERZ212
+      *                                                                                       ERZ212
+      ** Get Customer Details                                                                 ERZ212
+     C                     MOVELA7CUST    @CSNM                                               ERZ212
+     C                     EXSR #ECUST                                                        ERZ212
+      *                                                                                       ERZ212
+     CSR                   ENDSR                                                              ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  #ENOSN   : Format Nostro Number                              *                       ERZ212
+      *                                                               *                       ERZ212
+      *  CALLED BY: #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     CSR         #ENOSN    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Get Nostro details                                                                   ERZ212
+     C                     MOVELCCY       @CYCD                                               ERZ212
+     C                     MOVELEBCIO     @NONB                                               ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AONOSTR0'                                                    ERZ212
+     C                     PARM *BLANKS   @RTCD   7                                           ERZ212
+     C                     PARM '*KEY   ' @OPTN   7                                           ERZ212
+     C                     PARM *BLANKS   @CUST   6                                           ERZ212
+     C                     PARM           @CYCD   3                                           ERZ212
+     C                     PARM *BLANKS   @ACCN   4                                           ERZ212
+     C                     PARM *BLANKS   @ACSN   2                                           ERZ212
+     C                     PARM           @NONB   2                                           ERZ212
+     C                     PARM *BLANKS   @BRCD   3                                           ERZ212
+     C                     PARM *BLANKS   @CSSN  10                                           ERZ212
+     C                     PARM *BLANKS   @PNOI   1                                           ERZ212
+     C           SDNOST    PARM *BLANKS   DSFDY                                               ERZ212
+      *                                                                                       ERZ212
+      ** Get Account Details                                                                  ERZ212
+     C                     MOVELA7ACSN    @ACSQ                                               ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AOACCTR0'             9090                                   ERZ212
+     C                     PARM *BLANKS   @RTCD            B:Return code                      ERZ212
+     C                     PARM '*KEY   ' @OPTN            I:Option                           ERZ212
+     C                     PARM *BLANKS   @RETL  10        I:Retail key                       ERZ212
+     C                     PARM A7CUST    @CNUM   6        I:Key field 1                      ERZ212
+     C                     PARM A7CYCD    @CUCD   3        I:Key field 2                      ERZ212
+     C                     PARM A7ACCD    @ACCD  10        I:Key field 3                      ERZ212
+     C                     PARM           @ACSQ   2        I:Key field 4                      ERZ212
+     C                     PARM A7BRCD    @BRCA   3        I:Key field 5                      ERZ212
+     C                     PARM *BLANKS   DSSDY            O:OUTPUT                           ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDSSDY:190 ERACN  10                                           ERZ212
+      *                                                                                       ERZ212
+      ** Get Customer Details                                                                 ERZ212
+     C                     MOVELA7CUST    @CSNM                                               ERZ212
+     C                     EXSR #ECUST                                                        ERZ212
+      *                                                                                       ERZ212
+     CSR                   ENDSR                                                              ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  #EPTAC   : Format Partial Account                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *  CALLED BY: #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     CSR         #EPTAC    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Get Account Details                                                                  ERZ212
+     C           6         SUBSTEBCIO:1   @CNUM                                               ERZ212
+     C           4         SUBSTEBCIO:7   @ACCD                                               ERZ212
+     C           2         SUBSTEBCIO:11  @ACSQ                                               ERZ212
+     C                     MOVE SMCY      @CUCD                                               ERZ212
+      *                                                                                       ERZ212
+     C           ORBT      IFNE *BLANK                                                        ERZ212
+     C                     MOVE BRCA      @BRCA                                               ERZ212
+      *                                                                                       ERZ212
+     C                     ELSE                                                               ERZ212
+     C           3         SUBSTEBCIO:13  @BRCA                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AOACCTR0'             9090                                   ERZ212
+     C                     PARM *BLANKS   @RTCD   7        B:Return code                      ERZ212
+     C                     PARM '*KEY   ' @OPTN   7        I:Option                           ERZ212
+     C                     PARM *BLANKS   @RETL  10        I:Retail key                       ERZ212
+     C                     PARM           @CNUM   6        I:Key field 1                      ERZ212
+     C                     PARM           @CUCD   3        I:Key field 2                      ERZ212
+     C                     PARM           @ACCD  10        I:Key field 3                      ERZ212
+     C                     PARM           @ACSQ   2        I:Key field 4                      ERZ212
+     C                     PARM           @BRCA   3        I:Key field 5                      ERZ212
+     C                     PARM           DSSDY            O:OUTPUT                           ERZ212
+      *                                                                                       ERZ212
+     C           10        SUBSTDSSDY:190 ERACN                                               ERZ212
+      *                                                                                       ERZ212
+      ** Get Customer Details                                                                 ERZ212
+     C                     MOVEL@CNUM     @CSNM                                               ERZ212
+     C                     EXSR #ECUST                                                        ERZ212
+      *                                                                                       ERZ212
+     CSR                   ENDSR                                                              ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  #ERETL   : Format Retail Account Number                      *                       ERZ212
+      *                                                               *                       ERZ212
+      *  CALLED BY: #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     CSR         #ERETL    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Get Account Details                                                                  ERZ212
+     C                     MOVELEBCIO     @RETL                                               ERZ212
+     C                     CALL 'AOACCTR0'             9090                                   ERZ212
+     C                     PARM *BLANKS   @RTCD   7        B:Return code                      ERZ212
+     C                     PARM '*KEY   ' @OPTN   7        I:Option                           ERZ212
+     C                     PARM           @RETL  10        I:Retail key                       ERZ212
+     C                     PARM *BLANKS   @CNUM   6        I:Key field 1                      ERZ212
+     C                     PARM *BLANKS   @CUCD   3        I:Key field 2                      ERZ212
+     C                     PARM *BLANKS   @ACCD  10        I:Key field 3                      ERZ212
+     C                     PARM *BLANKS   @ACSQ   2        I:Key field 4                      ERZ212
+     C                     PARM *BLANKS   @BRCA   3        I:Key field 5                      ERZ212
+     C                     PARM           DSSDY            O:OUTPUT                           ERZ212
+      *                                                                                       ERZ212
+     C                     MOVE EBCIO     ERACN                                               ERZ212
+      *                                                                                       ERZ212
+      ** Get Customer Details using CNUM from ACCNT                                           ERZ212
+     C           6         SUBSTDSSDY:2   @CSNM                                               ERZ212
+     C                     EXSR #ECUST                                                        ERZ212
+      *                                                                                       ERZ212
+     CSR                   ENDSR                                                              ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  #ECUST   : Format Customer                                   *                       ERZ212
+      *                                                               *                       ERZ212
+      *  CALLED BY: #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     CSR         #ECUST    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Get Customer Details                                                                 ERZ212
+      *                                                                                       ERZ212
+      *  First 10 characters should be key for SDCUST                                         ERZ212
+      *                                                                                       ERZ212
+     C           EORTY     IFEQ 'C'                                                           ERZ212
+     C                     MOVELEBCIO     @CSNM                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     CALL 'AOCUSTR0'             9090                                   ERZ212
+     C                     PARM *BLANKS   @RTCD   7                                           ERZ212
+     C                     PARM '*KEY   ' @OPTN   7                                           ERZ212
+     C                     PARM           @CSNM  10                                           ERZ212
+     C                     PARM *BLANKS   @KYST   7                                           ERZ212
+     C           SDCUST    PARM *BLANKS   DSSDY                                               ERZ212
+      *                                                                                       ERZ212
+     C                     MOVE BBCSID    ECSID  12                                           ERZ212
+     C                     MOVE BBCRNM    ECRNM  20                                           ERZ212
+     C                     MOVE BBCRTN    ECRTN  10                                           ERZ212
+      *                                                                                       ERZ212
+     CSR                   ENDSR                                                              ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  #EADDR   : Format Address                                    *                       ERZ212
+      *                                                               *                       ERZ212
+      *  CALLED BY: #E86MC                                            *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+     CSR         #EADDR    BEGSR                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Workfield EBCIO to get details from acces objects                                    ERZ212
+     C           ORBT      IFNE *BLANK                                                        ERZ212
+     C           ETTY      IFEQ 'IN'                                                          ERZ212
+      *                                                                                       ERZ212
+     C                     MOVELORB1      ECRNM                                               ERZ212
+     C                     MOVELORB2      ECRTN                                               ERZ212
+      *                                                                                       ERZ212
+      ** Else if ETTY equals 'OP'                                                             ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVELORBK      ECRNM                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVELORC1      ECRNM                                               ERZ212
+     C                     MOVELORC2      ECRTN                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+     CSR                   ENDSR                                                              ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+     C/COPY ZSRSRC,ZALIGNZ2                                                                   ERZ212
+      *****************************************************************                       ERZ212
+     C/EJECT                                                                                  ERZ212
+      *****************************************************************                       ERZ212
+     C/COPY ZSRSRC,ZEDITZ2                                                                    ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+      * End of /COPY GL1300CP11                                       *                       ERZ212
+      *****************************************************************                       ERZ212

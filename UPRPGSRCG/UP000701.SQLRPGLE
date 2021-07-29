@@ -28,6 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058491 - Do allow update of WC_BOACAU for BITH only        *
+      *           - Applied for MD-57428                              *
       *  MD057288 - During migration, some XTD files are on top of    *
       *             LIBL causing incorrect update. Fix is to add      *
       *             correct library while updating XTD.               *

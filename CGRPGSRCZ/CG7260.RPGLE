@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD028899           Date 09Dec16               *
+      *  Last Amend No. MD035795           Date 12Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD028899           Date 09Dec16               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035795 - Account Closure does not generate a turnover stmt *
+      *             charge when indicated. Ensure that extra daily chg*
+      *             will be posted if account has non-charge posting  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD028899 - Skip closed accounts.                             *
       *           - Applied for MD043097.
@@ -44,21 +48,21 @@
       *  89  General chain fail error
       *
       *****************************************************************
- 
+
       ** Historic retail interest capitalisation records
      FREHISPS   IP   E           K DISK
- 
+
       ** Account master file
      FACCNT     IF   E           K DISK
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
- 
+
       ** Account master file interest scale extension file
      FGLACNTL3  IF   E           K DISK
- 
+
       ** Interest Scale daily report work file
      FCGISDRL0  UF A E           K DISK
- 
+
       ** Working variables
      D @RTCD           S              7A
      D RTCD            S              7A
@@ -84,31 +88,31 @@
       ** Data structure to allow the dr interest to be passed as alpha
      D @DDINA          DS
      D  @DDINN                 1      9P 0
- 
+
       ** Data structure to allow the cr interest to be passed as alpha
      D @DCINA          DS
      D  @DCINN                 1      9P 0
- 
+
       ** Data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Program status data structure
      D PSDS           SDS
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
       ** Data structure for definition of customer master file fields
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Data structure for definition of bank specific details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Data structure
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** Redefine the fields in the historic file
      IREHISPSF
      I              BRCA                        H1BRCA
@@ -137,13 +141,13 @@
      C     @FIRST        IFNE      'YES'
      C                   EXSR      FIRST
      C                   ENDIF
- 
+
       ** Detail processing
      C                   EXSR      DETAIL
- 
+
       ** Perform the final housekeeping
      CLR                 EXSR      LAST
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -158,7 +162,7 @@
      C                   KFLD                    H1ACOD
      C                   KFLD                    H1ACSQ
      C                   KFLD                    H1BRCA
- 
+
       ** Key list for the account master interest scale extension file
      C     GLACKY        KLIST
      C                   KFLD                    H1CNUM
@@ -166,7 +170,7 @@
      C                   KFLD                    H1ACOD
      C                   KFLD                    H1ACSQ
      C                   KFLD                    H1BRCA
- 
+
       ** Key list for extracted interest scale details file
      C     @DRKEY        KLIST
      C                   KFLD                    Z5BRCA
@@ -177,7 +181,7 @@
      C                   KFLD                    Z5REFN
      C                   KFLD                    Z5REFT
      C                   KFLD                    Z5INCD
- 
+
      C     *DTAARA       DEFINE                  LDA
       *****************************************************************
       /EJECT
@@ -190,13 +194,13 @@
       *
       *****************************************************************
      C     FIRST         BEGSR
- 
+
       ** Access bank details via an access program
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Error, record not found
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -207,7 +211,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call the interest from date program to open the files
      C                   CALL      'CGC7270'
      C                   PARM                    H1BRCA
@@ -220,7 +224,7 @@
      C                   PARM                    @PINFD
      C                   PARM      'FIRST'       @PFRLS
      C                   PARM                    @PRTCD
- 
+
       ** Call the interest extract program to open the files
      C                   CALL      'CGC7280'
      C                   PARM                    @PBRCA
@@ -236,12 +240,12 @@
      C                   PARM                    @PCINA
      C                   PARM      'FIRST'       @PFRLS
      C                   PARM                    @PRTCD
- 
+
       ** Set the flag to say the routine has been run
      C                   MOVE      'YES'         @FIRST
       *
      C                   ENDSR
- 
+
       ** End of initial housekeeping routine
       *****************************************************************
       /EJECT
@@ -254,27 +258,27 @@
       *
       *****************************************************************
      C     DETAIL        BEGSR
- 
+
       ** Chain to the account master file for the retail account number
      C     ACCTKY        CHAIN     ACCNTABF                           89
- 
+
       ** If the account is not found ignore
      C     *IN89         IFEQ      *OFF
      C     RECI          ANDNE     'C'                                                      MD028899
-     C     ACST          ANDNE     'C'                                                      MD028899
- 
+     C*****ACST          ANDNE     'C'                                             MD028899 MD035795
+
       ** Ignore if interest frequency between debit and credit
      C     DRIF          ANDEQ     CRIF
      C     DRDY          ANDEQ     CRDY
      C     LDID          ANDEQ     LCID
- 
+
       ** Find the customer details
      C                   MOVE      *BLANKS       RTCD
      C                   MOVEL     '*KEY   '     OPTN
      C                   MOVE      *BLANKS       @CUST
      C                   MOVEL     H1CNUM        @CUST
      C                   MOVE      *BLANKS       KYST
- 
+
       ** Check for customer number or shortname
      C                   CALL      'AOCUSTR1'                           90
      C                   PARM                    RTCD
@@ -282,7 +286,7 @@
      C                   PARM                    @CUST
      C                   PARM                    KYST
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
       ** If problem calling the program or not found
      C     *IN90         IFEQ      *ON
      C     RTCD          ORNE      *BLANKS
@@ -294,7 +298,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Load the file fields
      C                   MOVE      H1BRCA        Z5BRCA
      C                   MOVEL     H1CNUM        Z5CNUM
@@ -303,19 +307,19 @@
      C                   Z-ADD     H1ACSQ        Z5ACSQ
      C**********         Z-ADD     ACNO          Z5REFN                                       CLE148
      C                   MOVE      ACNO          Z5REFN                                       CLE148
- 
+
       ** Set reference type flag to R for a retail record
      C                   MOVE      'R'           Z5REFT
- 
+
       ** Set the capitalisation date as the event date
      C                   Z-ADD     H1HISD        Z5INCD
- 
+
       ** Check if the record is already on the extract file
      C     @DRKEY        CHAIN     CGISDRD0                           89
- 
+
       ** If the record does not exist add it otherwise ignore
      C     *IN89         IFEQ      *ON
- 
+
       ** Find the interest from date
      C                   CALL      'CGC7270'
      C                   PARM                    H1BRCA
@@ -328,7 +332,7 @@
      C                   PARM                    @PINFD
      C                   PARM      *BLANKS       @PFRLS
      C                   PARM                    @PRTCD
- 
+
      C                   Z-ADD     @PINFD        Z5INFD
      C                   MOVE      BBCNA1        Z5CNA1
      C                   MOVE      BBCNA2        Z5CNA2
@@ -340,10 +344,10 @@
      C                   Z-ADD     H1CRIP        Z5TOCI
      C                   Z-SUB     H1DRIP        Z5TODI
      C     H1CRIP        SUB       H1DRIP        Z5NETI
- 
+
       ** Chain to the account master interest scale extension file
      C     GLACKY        CHAIN     GLACNTL3                           89
- 
+
       ** If the record is not found or the interest scale flag is not set
       ** to Y do not extract the record
      C     *IN89         IFEQ      *OFF
@@ -379,7 +383,7 @@
      C                   PARM                    @PRTCD
      C                   MOVE      @PDINA        @DDINA
      C                   MOVE      @PCINA        @DCINA
- 
+
       ** If the calculated net interest is not within the tolerence
       ** of the posted net interest mark as error
      C     @DDINN        IFNE      Z5TODI
@@ -390,13 +394,13 @@
      C                   MOVE      *BLANKS       Z5ERRI
      C                   Z-ADD     0             Z5ERRC
      C                   ENDIF
- 
+
       ** Write a record to the interest scale daily report work file
      C                   WRITE     CGISDRD0
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -409,7 +413,7 @@
       *
       *****************************************************************
      C     LAST          BEGSR
- 
+
       ** Call the interest from date program to open the files
      C                   CALL      'CGC7270'
      C                   PARM                    H1BRCA
@@ -422,7 +426,7 @@
      C                   PARM                    @PINFD
      C                   PARM      'LAST '       @PFRLS
      C                   PARM                    @PRTCD
- 
+
       ** Call the interest extract program to close the files
      C                   CALL      'CGC7280'
      C                   PARM                    @PBRCA
@@ -438,10 +442,10 @@
      C                   PARM                    @PCINA
      C                   PARM      'LAST '       @PFRLS
      C                   PARM                    @PRTCD
- 
+
       ** Set the flag to say the routine has been run
      C                   MOVE      'YES'         @FIRST
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -456,15 +460,15 @@
       *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** If a database error set on u8
      C     DBFILE        IFNE      *BLANK
      C                   MOVE      *ON           *INU8
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INLR
      C                   DUMP
      C                   RETURN
- 
+
      C                   ENDSR

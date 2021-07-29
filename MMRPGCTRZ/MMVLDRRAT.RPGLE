@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD057558           Date 18Feb21               *
-      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *  Last Amend No. EML112             Date 23Feb21               *
+      *  Prev Amend No. MD057558           Date 18Feb21               *
+      *                 MD057049           Date 03Nov20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
@@ -31,6 +32,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML112   -Reference Rate field subject to tolerance          *
+      *            validation based on system value                   *
+      *            ReferenceRateTolChk                                *
+      *            Add /COPY EML112_005 EML112_006 EML112_007         *
+      *            EML112_008, EML112_013                             *
       *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  MD057049 - Amended ZA0840 result checking                    *
       *           - Moved @@AMT to ZFIELD for formatting              *
@@ -160,6 +166,9 @@
      D @@ERCD          S              1  0                                                  MD023981
                                                                                             MD023981
      D DSSDY         E DS                  EXTNAME(DSSDY)
+      *                                                                                       EML112
+     D/COPY WNCPYSRC,EML112_005                                                               EML112
+      *                                                                                       EML112
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -187,6 +196,9 @@
 
      C                   Eval      MM#REF = 0
       *
+      ** Reset variable @Rtcde used in ZA0840                                                 EML112
+     C/COPY WNCPYSRC,EML112_013                                                               EML112
+      *                                                                                       EML112
       **  Check it is a valid figure with 8 decimal places max.
 
      C                   Z-ADD     0             @@AMT                                      MD023981
@@ -247,6 +259,9 @@
      C                   Z-ADD     *ZERO         UERRAT           13 8
       *
       **  Set Interest Tolerance
+      ** Only check FX Tolerance if ReferenceRateTolChk = 'Y'                                 EML112
+     C/COPY WNCPYSRC,EML112_007                                                               EML112
+      *                                                                                       EML112
       *
      C                   Eval      UERRAT = (IINRRT/100)
       *
@@ -263,6 +278,8 @@
      C                   EndIf
      C                   EndIf
       *
+     C/COPY WNCPYSRC,EML112_008                                                               EML112
+      *                                                                                       EML112
      C                   EndIf                                                  End Valid
      C                   EndIf                                                  End Blank
 
@@ -309,6 +326,9 @@
      C**********         EXSR      *PSSR                                                    MD057558
      C                   ENDIF
 
+      ** Retrieve system value ReferenceRateTolChk                                            EML112
+     C/COPY WNCPYSRC,EML112_006                                                               EML112
+      *                                                                                       EML112
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

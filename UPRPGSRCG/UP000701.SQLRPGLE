@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD057288             Date 01Dec20             *
-      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *  Last Amend No. MD058491             Date 28Jul21             *
+      *  Prev Amend No. MD057288             Date 01Dec20             *
+      *                 MD057231             Date 18Nov20             *
       *                 MD054733             Date 02Dec19             *
       *                 MD056020             Date 18Jun20             *
       *                 MD054955             Date 16Dec19             *
@@ -26,9 +27,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058491 - Do allow update of WC_BOACAU for BITH only        *
+      *           - Applied for MD-57428                              *
       *  MD057288 - During migration, some XTD files are on top of    *
       *             LIBL causing incorrect update. Fix is to add      *
-      *             correct library while updating XTD.               *      
+      *             correct library while updating XTD.               *
       *  MD057231 - Add dump in case of error                         *
       *             ACOF, BRCH and MLMTRAN are twice in GPWIPCTD and  *
       *             this causes missing record in XTD for the zones.  *
@@ -455,6 +458,22 @@
      C                   Dump                                                               MD057231
      C                   ENDIF
 
+     C/exec SQL                                                                             MD058491
+     C+ update GPWIPBTD b                                                                   MD058491
+     C+ set (b.WC_BOACAU) =                                                                 MD058491
+     C+ (select c.WC_BOACAU                                                                 MD058491
+     C+ from GPWIPCTD c where c.WC_API = b.WC_API                                           MD058491
+     C+ and c.WC_ZONE = '*REFZONE'and c.WC_API = 'BITH')                                    MD058491
+     C+ where exists (select * from GPWIPCTD c where c.WC_API = b.WC_API                    MD058491
+     C+ and c.WC_ZONE = '*REFZONE' and c.WC_API = 'BITH')                                   MD058491
+     C/end-exec                                                                             MD058491
+                                                                                            MD058491
+     C                   IF        SQLCODE <> 0                                             MD058491
+     C                             and SQLCode <> 100                                       MD058491
+     C                   EVAL      ERROR = '*Error'                                         MD058491
+     C                   Dump                                                               MD058491
+     C                   ENDIF                                                              MD058491
+                                                                                            MD058491
       * if CFT157 fields are left blank, then initialize them with values from CTD          MD054733
      C/exec SQL                                                                             MD054733
      C+ select WCBSTP into :xxBSTP from GPWIPBTD                                            MD054733

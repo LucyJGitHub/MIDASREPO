@@ -11,16 +11,14 @@
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. MD058479           Date 30Jul21               *
-      *  Prev Amend No. 2283286            Date 30Jul21               *
-      *                 CER050  *Create    Date 16Jun19               *
+      *  Prev Amend No. CER0506 *Create    Date 16Jun19               *
       *                                                               *
       *****************************************************************
       *                                                               *
       *  MD058479 - Annualized Percentage Rate (APR)                  *
       *           - Amend so that for 0.00 resulting balances from    *
       *             I/O rcds, a 0.00 rate is given instead of 9999.99.*
-      *  2283286  - Amend to prevent Array Index Error.               *
-      *             Applied for MD058479                              *
+      *           - Amend to prevent Array Index Error.               *
       *  CER050 - Annualized Percentage Rate (APR)                    *
       *         - This program will only be called if system value    *
       *           APRFormula = 'SPAIN' and corresponding APR api      *
@@ -45,14 +43,14 @@
       *
       ** Flows
       *
-     D*IAMT*****        S             26  3 DIM(999)                                         2283286
-     D*IDAY*****        S              5  0 DIM(999)                                         2283286
-     D*OAMT*****        S             26  3 DIM(999)                                         2283286
-     D*ODAY*****        S              5  0 DIM(999)                                         2283286
-     DIAMT             S             26  3 DIM(9999)                                         2283286
-     DIDAY             S              5  0 DIM(9999)                                         2283286
-     DOAMT             S             26  3 DIM(9999)                                         2283286
-     DODAY             S              5  0 DIM(9999)                                         2283286
+     D*IAMT*****        S             26  3 DIM(999)                                        MD058479
+     D*IDAY*****        S              5  0 DIM(999)                                        MD058479
+     D*OAMT*****        S             26  3 DIM(999)                                        MD058479
+     D*ODAY*****        S              5  0 DIM(999)                                        MD058479
+     DIAMT             S             26  3 DIM(9999)                                        MD058479
+     DIDAY             S              5  0 DIM(9999)                                        MD058479
+     DOAMT             S             26  3 DIM(9999)                                        MD058479
+     DODAY             S              5  0 DIM(9999)                                        MD058479
       *
       /EJECT
       *****************************************************************
@@ -83,10 +81,10 @@
      C                   MOVE      PBASE         BASEN             3 0
       *
       ** Load table
-     C**********         Z-ADD     0             WI                3 0                       2283286
-     C**********         Z-ADD     0             WO                3 0                       2283286
-     C                   Z-ADD     0             WI                4 0                       2283286
-     C                   Z-ADD     0             WO                4 0                       2283286
+     C**********         Z-ADD     0             WI                3 0                      MD058479
+     C**********         Z-ADD     0             WO                3 0                      MD058479
+     C                   Z-ADD     0             WI                4 0                      MD058479
+     C                   Z-ADD     0             WO                4 0                      MD058479
       *
      C/Exec SQL
      C+ Declare GLAPR cursor for
@@ -168,8 +166,8 @@
      C                   ADD       1             LOOPCOUNT
       *
       ** Calculate all the INS
-     C**********         Z-ADD     0             NI                3 0                       2283286
-     C                   Z-ADD     0             NI                4 0                       2283286
+     C**********         Z-ADD     0             NI                3 0                      MD058479
+     C                   Z-ADD     0             NI                4 0                      MD058479
      C                   Z-ADD     0             IN               26 5
       *
       ** Proceed only if an IN has been processed (i.e. WI is not zero)
@@ -184,8 +182,8 @@
      C                   Endif
       *
       ** Calculate all the OUTS
-     C**********         Z-ADD     0             NO                3 0                       2283286
-     C                   Z-ADD     0             NO                4 0                       2283286
+     C**********         Z-ADD     0             NO                3 0                      MD058479
+     C                   Z-ADD     0             NO                4 0                      MD058479
      C                   Z-ADD     0             OUT              26 5
       *
       ** Proceed only if an OUT has been processed (i.e. WO is not zero)

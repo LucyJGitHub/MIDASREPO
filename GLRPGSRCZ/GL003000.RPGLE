@@ -131,7 +131,6 @@
      D  RPDTD                  1      2  0                                                  MD058286
      D  RPDTM                  3      4  0                                                  MD058286
      D  RPDTYR                 5      6  0                                                  MD058286
-                                                                                            MD058286
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External data structures for Bank Details
@@ -321,7 +320,6 @@
      C                   PARM                    BJDFIN                                     MD058286
      C                   PARM      *ZEROS        ZDAYNO                                     MD058286
      C                   EVAL      WTranRetPrd = ZDAYNO                                     MD058286
-                                                                                            MD058286
      C                   ENDIF
 
       ** Report Work fields

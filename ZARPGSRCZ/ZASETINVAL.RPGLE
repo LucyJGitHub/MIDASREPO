@@ -370,7 +370,6 @@
       *  136939 - Remove back-valuation check for EMU                 *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
-      *                                                               *
       *****************************************************************
      FDLDLDGLE  IF   E           K DISK    INFSR(SRERR)                                       CGL014
      F                                     PREFIX(P_)                                         CGL014
@@ -9774,7 +9773,6 @@
      C                   ELSE                                                                 CSW214
      C                   EVAL      CSW214 = 'N'                                               CSW214
      C                   ENDIF                                                                CSW214
-      *                                                                                       CSW214
       *                                                                                       CSW214
       *                                                                                       CSW221
       ** Check if SWIFT2021 is enabled                                                        CSW221

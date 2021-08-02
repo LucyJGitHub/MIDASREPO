@@ -167,7 +167,6 @@
       *  184013 - Swift 2000 get correct date format from 30V         *
       *  CSW017 - Midas/Swift Meridian interface                      *
       *                                                               *
-      *                                                               *
       *****************************************************************
       *                                                               *
       *  Notes:                                                       *

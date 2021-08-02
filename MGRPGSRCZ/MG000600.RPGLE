@@ -74,7 +74,6 @@
       *  AR1094963 - MT600 clashes to BF2.1                           *
       *  AR1053647 - Wrong sequence for Commodity Sold                *
       *  CMG003 - SWIFT MT600 Message Generation                      *
-      *                                                               *
       *****************************************************************
       *                                                               *
       * ID C  F  H  L    FUNCTION OF INDICATORS                       *

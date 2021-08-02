@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. 229599             Date 29Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  229599 - Fallover in REC100820 caused by reversed hierarchy. *
+      *         - Applied for MD-58201.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -47,7 +50,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FGECXL1    UP   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APOSTPDF:GECXF)
      FGLAPSZSL0 UF   E           K DISK    INFSR(*PSSR)
@@ -66,23 +69,23 @@
      F                                     RENAME(APOSTPDF:GLPSTTF)
      FGLPSTZSPD O    E             DISK    INFSR(*PSSR)
      F                                     RENAME(GLAPZSD0:GLPSTZSF)
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
       * Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
- 
- 
+
+
       * Cash Management Hierarchy Details
      D O_CMHD        E DS                  EXTNAME(RECMHDPD)
       * Zero Balancing/Sweeping Hierarchy Details
      D O_ZSHD        E DS                  EXTNAME(REZSHDPD)
       * Group Account Hierarchy Details
      D O_GAHD        E DS                  EXTNAME(REGAHDPD)
- 
- 
+
+
       * Cash Management Hierarchy Links
      D O_CMHL        E DS                  EXTNAME(RECMHLPD)
      D A_HIER                  1      9
@@ -91,8 +94,8 @@
      D O_ZSHL        E DS                  EXTNAME(REZSHLPD)
       * Group Account Hierarchy Links
      D O_GAHL        E DS                  EXTNAME(REGAHLPD)
- 
- 
+
+
       * Cash Management Generated Entries
      D GECX          E DS                  EXTNAME(GECXPD)
      D  XZZ019       E                     EXTFLD(ZZ019)
@@ -101,22 +104,22 @@
       * Temporary Cash Management Generated Entries
      D GLTCME        E DS                  EXTNAME(GLTCMEPD)
      D                                     PREFIX(E_)
- 
- 
+
+
       ** Posting Extension References Numbers
      D I_XRFN          S             10    DIM(1000)
      D #_XRFN_R        S             10    DIM(1000)
      D #_XRFN_S        S             10    DIM(1000)
- 
- 
+
+
       ** Branch, Currency & Profit Centre Totals for Contra Entries
      D #_BCPC          S             16    DIM(1000)
      D #_BCPCTOT       S             17S 0 DIM(1000)
       ** Branch, Currency & Profit Centre Totals for Cross Branch Entries
      D #_BCPX          S             16    DIM(1000)
      D #_BCPXTOT       S             17S 0 DIM(1000)
- 
- 
+
+
       ** Branch, Currency & Profit Centre
      D                 DS
      D BRCYPC                  1     16
@@ -124,13 +127,13 @@
      D #BICN                   4      9
      D #CCY                   10     12
      D #PRFC                  13     16
- 
- 
+
+
       ** Informational messages
      D #_INF           S             70    DIM(3)  CTDATA PERRCD(1)
      D X_RAN           S             10    DIM(99)                              212367
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDCMAN        E DS                  EXTNAME(SDCMANPD)
@@ -145,22 +148,22 @@
       ** First DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs
- 
- 
+
+
       ** File Information Data Structure for RE100714P1
      D SPOOL1          DS
      D  PSFile1               83     92
      D  PSFNum1              123    124B 0
- 
- 
+
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PLevel          S              1
      D PEnty           S              3
      D ZSnum           S              6  0
      D ZSerr           S              1
- 
- 
+
+
      IGECXF         01
      I                                          OTTP          L5
      I                                          OTST          L4
@@ -170,24 +173,24 @@
      I                                          CNUM          L1
      I                                          ACOD          L1
      I                                          ACSQ          L1
- 
+
       * On change of original transaction type
       * (it contains a hierarchy ID)
       *     Access Hierarchy Detail
- 
+
      C   L5              MOVEL     OTTP          CLHIER
      C   L5              EXSR      ACS_HIER
- 
+
       * On change of original transaction sub type
       * (it contains a link ID)
       *     Access Hierarchy Link
- 
+
      C   L4              MOVEL     OTST          CLLINK
      C   L4              EXSR      ACS_LINK
- 
+
       * Use the reverse sweep indicator from REZSHLPD
       * (if the link is not a top a/c)
- 
+
      C   L4              DO
      C     No_Link       IFEQ      'Y'                                          213761
      C                   MOVEL     'N'           ReverSwp                       213761
@@ -199,11 +202,11 @@
      C                   ENDIF
      C                   ENDIF                                                  213761
      C                   ENDDO
- 
+
       * If today's debit totals are exceeded
       * all entries for the link ID must be written to the stops files
       * (if the link is not a top a/c)
- 
+
      C   L4              DO
      C     No_Link       IFEQ      'Y'                                          213761
      C                   MOVEL     'N'           StopLink                       213761
@@ -220,42 +223,42 @@
      C                   ENDIF
      C                   ENDIF                                                  213761
      C                   ENDDO
- 
+
       * On change of link ID
       *   Report source a/c
- 
+
      C   L4              EXSR      REP_SACCNT
- 
+
       * On change of branch
       *   Access branch
- 
+
      C   L3              MOVEL     BRCA          BRCH
      C   L3              EXSR      ACS_BRCH
      C   L3              MOVEL     A8BICN        EntryBICN         6
- 
+
       * On change of currency
       *   Access currency
- 
+
      C   L2              EXSR      ACS_CURR
- 
+
       * Access extension record
- 
+
      C     GLAPSZSK      CHAIN     GLAPZSD0                           60        *
      C     *IN60         IFEQ      '1'
      C                   EVAL      X_ERMS = 'NO EXTENSION FOR ENTRY:'
      C                                       + A_XRFI + A_XRFN
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Reset GECXPD fields
- 
+
      C                   MOVE      'P'           RECI
      C                   BITOFF    '01234567'    PRIN
      C                   MOVEL     *BLANK        OTRF
- 
+
       * Report entry
       * ------------
- 
+
      C     No_Link       IFEQ      'Y'                                          213761
      C                   MOVEL     *BLANK        INFTXT                         213761
      C                   ELSE                                                   213761
@@ -285,9 +288,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                  213761
- 
+
      C                   EXSR      REP_ENTRY
- 
+
      C                   SELECT
                                                                                 213761
       * If there is no longer a link                                            213761
@@ -306,27 +309,27 @@
      C                   ELSE                                                   213761
      C                   SUB       PSTA          #_BCPXTOT(#B)                  213761
      C                   ENDIF                                                  213761
- 
+
       * If this item is a target balance generated in this COB
       *   Write to postings in transit and postings in transit ZB/SW extensn
       *   DELETE records from GECXPD and GLAPSTZS
- 
+
      C     AZTBAL        WHENEQ    'Y'
      C     AZDATG        ANDEQ     BJRDNB
- 
+
      C*******************MOVE      'TAR'         PNAR                           214360
      C                   WRITE     GLPSTTF
      C                   WRITE     GLPSTZSF
      C                   ADD       1             RCnt              5 0
      C                   MOVEL     XRFN          #_XRFN_R(RCnt)
- 
+
      C                   DELETE    GECXF
      C                   DELETE    GLAPZSD0                                     *
- 
+
       * If posting to this link is to be stopped
       *   Write to postings in transit and postings in transit ZB/SW extensn
       *   DELETE records from GECXPD and GLAPSTZS
- 
+
      C     StopLink      WHENEQ    'Y'
      C     AZMODO        ANDEQ     '1  '
      C     AZDATG        ANDEQ     BJRDNB
@@ -335,21 +338,21 @@
      C     AZMODO        ANDEQ     '5  '
      C     AZDATG        ANDEQ     BJRDNB
      C     AZSHAD        ANDNE     'Y'                                          212349
- 
+
      C                   WRITE     GLPSTTF
      C                   WRITE     GLPSTZSF
      C                   ADD       1             SCnt              5 0
      C                   MOVEL     XRFN          #_XRFN_S(SCnt)
- 
+
      C                   DELETE    GECXF
      C                   DELETE    GLAPZSD0                                     *
- 
+
      C                   OTHER
- 
+
       * Update record ID and original transaction reference on entry
- 
+
      C                   EXCEPT    UGECXF
- 
+
       * If this is a shadow a/c entry
       *    If 'level for shadow contra entries' on ICD is 'N' (NO SUMMARY)
       *     Write shadow contra entry
@@ -357,10 +360,10 @@
       *     Accumulate posting total (by branch, currency and profit centre)
       * Else
       *    Accumulate posting total (by branch, currency and profit centre)
- 
- 
+
+
      C     AZSHAD        IFEQ      'Y'
- 
+
      C     CMLVSC        IFEQ      'N'
      C                   EXSR      WRT_SHDCON
      C                   ELSE
@@ -371,25 +374,25 @@
      C                   SUB       PSTA          #_BCPCTOT(#B)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      LOOKUP_BCPX
      C     DRCR          IFEQ      0
      C                   ADD       PSTA          #_BCPXTOT(#B)
      C                   ELSE
      C                   SUB       PSTA          #_BCPXTOT(#B)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
- 
+
+
       * If reverse sweeping is required for this link
       * Write to postings in transit and postings in transit ZB/SW extensn
       *   (Set its value date to the next working day
       *    toggle its debit/credit indicator,
       *    and get - and report - new reference number)
- 
+
      C     ReverSwp      IFEQ      'Y'
      C     AZMODO        ANDNE     'PUR'
      C     AZMODO        ANDNE     'ASC'
@@ -411,12 +414,12 @@
      C                   ADD       1             RCnt              5 0
      C                   MOVEL     XRFN          #_XRFN_R(RCnt)
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
       * Write to Reverse Sweeeping/Target Balancing files
       * and update last sequence number on RECMHLPD
- 
+
      CL4   RCnt          IFNE      0
      CL4                 ADD       1             CLNASN
      CL4                 EXSR      WRT_RST
@@ -426,10 +429,10 @@
      CL4                 ENDIF
      CL4                 Z-ADD     *ZERO         RCNT
      CL4                 MOVEL     *BLANK        #_XRFN_R
- 
+
       * Write to Zero-Balancing Stops files
       * and update last stop number on REZSHLPD
- 
+
      CL4   SCnt          IFNE      0
      CL4                 ADD       1             ZLNASN
      CL4                 EXSR      WRT_ZST
@@ -439,10 +442,10 @@
      CL4                 ENDIF
      CL4                 Z-ADD     *ZERO         SCNT
      CL4                 MOVEL     *BLANK        #_XRFN_S
- 
+
       * If 'level for shadow contra entries' on ICD is 'H' (HIERARCHY)
       *    Write summarised shadow contra entries
- 
+
      CL5   CMLVSC        IFEQ      'H'
      CL5                 Z-ADD     1             #B
      CL5   #_BCPC(#B)    DOWNE     *BLANK
@@ -452,9 +455,9 @@
      CL5                 MOVEL     *BLANK        #_BCPC
      CL5                 Z-ADD     *ZERO         #_BCPCTOT
      CL5                 ENDIF
- 
+
       * Write interbranch entries
- 
+
      CL5                 Z-ADD     1             #B
      CL5   #_BCPX(#B)    DOWNE     *BLANK
      CL5                 EXSR      WRT_INTERB
@@ -462,12 +465,12 @@
      CL5                 ENDDO
      CL5                 MOVEL     *BLANK        #_BCPX
      CL5                 Z-ADD     *ZERO         #_BCPXTOT
- 
+
       * If 'level for shadow contra entries' on ICD is NOT 'N' or 'H'
       * i.e. is 'S' (SYSTEM)
       *    Get a/c code details
       *    Write summarised shadow contra entries
- 
+
      CLR   CMLVSC        IFNE      'N'
      CLR   CMLVSC        ANDNE     'H'
      CLR                 Z-ADD     1             #B
@@ -476,9 +479,9 @@
      CLR                 ADD       1             #B
      CLR                 ENDDO
      CLR                 ENDIF
- 
+
       * End of Report
- 
+
      CLR                 EXSR      END_OF_REP
       /SPACE 5
       ********************************************************************
@@ -491,11 +494,11 @@
      C     *BLANK        LOOKUP    X_RAN(X)                               99    212367
      C                   SUB       1             X                    35        212367
      C   35              MOVEL     X_RAN(X)      CLCRNO               35        212367
- 
+
      C                   Z-ADD     3             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     SOURCE
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -503,45 +506,45 @@
       * Report entry
       ********************************************************************
      C     REP_ENTRY     BEGSR
- 
+
       * Space
      C     *INL1         IFEQ      '1'
      C                   Z-ADD     1             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     SPACE
      C                   ENDIF
- 
+
      C     ACNO          COMP      0                                  3636      *
- 
+
       * Edit value date of entry
- 
+
      C                   Z-ADD     VALD          ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZADATE        R_VALD
- 
+
       * Edit posting amount of entry
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      PSTA          ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_PSTA
- 
+
       * Edit posting dr/cr indicator
- 
+
      C     DRCR          IFEQ      0
      C                   MOVEL     'DR'          R_DRCR
      C                   ELSE
      C                   MOVEL     'CR'          R_DRCR
      C                   ENDIF
- 
+
       * Edit Reference Number
- 
+
      C                   MOVE      XRFN          R_XRFN
- 
+
      C                   Z-ADD     1             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     ENTRY
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -549,15 +552,15 @@
       * Report new reference number
       ********************************************************************
      C     REP_NEWREF    BEGSR
- 
+
       * Edit Reference Number
- 
+
      C                   MOVE      XRFN          R_XRFN
- 
+
      C                   Z-ADD     1             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     NEWREF
- 
+
      C                   ENDSR
       *******************************************************************
      C/SPACE 5
@@ -565,13 +568,13 @@
       * End of Report
       ********************************************************************
      C     END_OF_REP    BEGSR
- 
+
       * Output count of errors and 'end of report'
- 
+
      C                   Z-ADD     3             CHLINE
      C                   EXSR      PAG
      C                   WRITE     ENDOFREP
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -579,14 +582,14 @@
       * Throw page headings (if required)
       ********************************************************************
      C     PAG           BEGSR
- 
+
      C                   ADD       CHLINE        LINENO
      C     LINENO        IFGT      59
      C                   ADD       1             PAGNUM
      C                   WRITE     PAGEHEAD
      C     6             ADD       CHLINE        LINENO            3 0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -595,11 +598,11 @@
       * (a/c code cannot be retail)
       ********************************************************************
      C     WRT_SHDCON    BEGSR
- 
+
      C                   CLEAR                   GLTCME
       * Record ID
      C                   MOVEL     'P'           E_RECI
- 
+
       * Customer, currency, a/c code and a/c seq.
      C                   MOVEL     EntryBICN     E_CNUM
      C                   MOVEL     CCY           E_CCY
@@ -627,7 +630,7 @@
      C                   MOVE      'GE-CX'       E_SPOS
       * Branch
      C                   MOVEL     BRCA          E_BRCA
- 
+
       * Access a/c code details
      C                   MOVEL     E_ACOD        ACCD
      C                   EXSR      ACS_ACOD
@@ -645,9 +648,9 @@
      C                   MOVEL     *BLANK        E_XRFI
       * Ext.Fil Ref.No.
      C                   Z-ADD     *ZERO         E_XRFN
- 
+
      C                   WRITE     GLTCMEF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -656,16 +659,16 @@
       * (a/c code cannot be retail)
       ********************************************************************
      C     WRT_SSHDCON   BEGSR
- 
+
       * Branch, currency and profit centre
- 
+
      C                   MOVEL     #_BCPC(#B)    BRCYPC
- 
+
      C                   CLEAR                   GLTCME
- 
+
       * Record ID
      C                   MOVEL     'P'           E_RECI
- 
+
       * Customer, currency, a/c code and a/c seq.
      C                   MOVEL     #BICN         E_CNUM
      C                   MOVEL     #CCY          E_CCY
@@ -698,7 +701,7 @@
      C                   MOVE      'GE-CX'       E_SPOS
       * Branch
      C                   MOVEL     #BRCA         E_BRCA
- 
+
       * Access a/c code details
      C                   MOVEL     E_ACOD        ACCD
      C                   EXSR      ACS_ACOD
@@ -716,11 +719,11 @@
      C                   MOVEL     *BLANK        E_XRFI
       * Ext.Fil Ref.No.
      C                   Z-ADD     *ZERO         E_XRFN
- 
+
      C     E_PSTA        IFNE      *ZERO
      C                   WRITE     GLTCMEF
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -728,13 +731,13 @@
       * Write interbranch entry
       ********************************************************************
      C     WRT_INTERB    BEGSR
- 
+
       * Branch, currency and profit centre
- 
+
      C                   MOVEL     #_BCPX(#B)    BRCYPC
- 
+
       * Access details of booking branch
- 
+
      C                   MOVEL     #BRCA         BRCH
      C                   EXSR      ACS_BRCH
      C                   MOVEL     A8BICN        BookBICN          6
@@ -742,25 +745,29 @@
      C**********         MOVEL     A8DTAC        BookDTAC          4                          CGL029
      C                   MOVEL     A8DFAC        BookDFAC         10                          CGL029
      C                   MOVEL     A8DTAC        BookDTAC         10                          CGL029
- 
+
       * Access details of cash management header branch
- 
+
+     C     CDBRCA        IFNE      *BLANK                                                     229599
      C                   MOVEL     CDBRCA        BRCH
+     C                   ELSE                                                                 229599
+     C                   MOVEL     #BRCA         BRCH                                         229599
+     C                   ENDIF                                                                229599
      C                   EXSR      ACS_BRCH
      C                   MOVEL     A8BICN        HeadBICN          6
      C**********         MOVEL     A8DFAC        HeadDFAC          4                          CGL029
      C**********         MOVEL     A8DTAC        HeadDTAC          4                          CGL029
      C                   MOVEL     A8DFAC        HeadDFAC         10                          CGL029
      C                   MOVEL     A8DTAC        HeadDTAC         10                          CGL029
- 
+
       * 1st entry (contra of booking entry in booking branch)
       * ====================================================
- 
+
      C                   CLEAR                   GLTCME
- 
+
       * Record ID
      C                   MOVEL     'P'           E_RECI
- 
+
       * Customer, currency, a/c code and a/c seq.
      C                   MOVEL     HeadBICN      E_CNUM
      C                   MOVEL     #CCY          E_CCY
@@ -793,11 +800,11 @@
      C                   MOVE      'GE-CX'       E_SPOS
       * Branch
      C                   MOVEL     #BRCA         E_BRCA
- 
+
       * Access a/c code details
      C                   MOVEL     E_ACOD        ACCD
      C                   EXSR      ACS_ACOD
- 
+
       * Retail indicator
      C     A5ACTY        IFEQ      'R'
      C                   Z-ADD     1             E_RIND
@@ -816,28 +823,28 @@
      C                   MOVEL     *BLANK        E_XRFI
       * Ext.Fil Ref.No.
      C                   Z-ADD     *ZERO         E_XRFN
- 
+
      C     E_PSTA        IFNE      *ZERO
- 
+
       * If a/c type is retail check a/c exists
       * Use retail a/c number off a/c
- 
+
      C     E_ATYP        IFEQ      'R'
      C                   EXSR      ACS_ACCNT
      C                   Z-ADD     AC_ACNO       E_ACNO
      C                   ENDIF
- 
+
      C                   WRITE     GLTCMEF
      C                   ENDIF
- 
+
       * 2nd entry (contra of booking entry in header branch)
       * ====================================================
- 
+
      C                   CLEAR                   GLTCME
- 
+
       * Record ID
      C                   MOVEL     'P'           E_RECI
- 
+
       * Customer, currency, a/c code and a/c seq.
      C                   MOVEL     BookBICN      E_CNUM
      C                   MOVEL     #CCY          E_CCY
@@ -870,11 +877,11 @@
      C                   MOVE      'GE-CX'       E_SPOS
       * Branch
      C                   MOVEL     CDBRCA        E_BRCA
- 
+
       * Access a/c code details
      C                   MOVEL     E_ACOD        ACCD
      C                   EXSR      ACS_ACOD
- 
+
       * Retail indicator
      C     A5ACTY        IFEQ      'R'
      C                   Z-ADD     1             E_RIND
@@ -893,20 +900,20 @@
      C                   MOVEL     *BLANK        E_XRFI
       * Ext.Fil Ref.No.
      C                   Z-ADD     *ZERO         E_XRFN
- 
+
      C     E_PSTA        IFNE      *ZERO
- 
+
       * If a/c type is retail check a/c exists
       * Use retail a/c number off a/c
- 
+
      C     E_ATYP        IFEQ      'R'
      C                   EXSR      ACS_ACCNT
      C                   Z-ADD     AC_ACNO       E_ACNO
      C                   ENDIF
- 
+
      C                   WRITE     GLTCMEF
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -914,14 +921,14 @@
       * Write to Reverse Sweeeping/Target Balancing files
       ********************************************************************
      C     WRT_RST       BEGSR
- 
+
      C                   CALLB     'REWRTRST'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * Hierarchy ID
       * Hierarchy Shortname
@@ -957,15 +964,15 @@
      C                   PARM      CLPASN        I_PASN            2 0
       * Next Available Seq No.
      C                   PARM      CLNASN        I_NASN            2 0
- 
+
       * Extension Reference Numbers
      C                   PARM      #_XRFN_R      I_XRFN
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'ERROR IN WRITE TO RERSTDPD'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -973,14 +980,14 @@
       * Write to Zero-Balancing Stops files
       ********************************************************************
      C     WRT_ZST       BEGSR
- 
+
      C                   CALLB     'REWRTZST'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * Hierarchy ID
       * Hierarchy Shortname
@@ -1024,15 +1031,15 @@
      C                   PARM      ZLTVDR        I_TVDR           15 0
      C                   PARM      ZLMDCD        I_MDCD            3 0
      C                   PARM      ZLTCDR        I_TCDR            3 0
- 
+
       * Extension Reference Numbers
      C                   PARM      #_XRFN_S      I_XRFN
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'ERROR IN WRITE TO REZSTDPD'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -1040,27 +1047,27 @@
       * Get Next Available Ref. No.
       ********************************************************************
      C     GET_APNA      BEGSR
- 
+
       * Get next number
      C                   CALLB     'ZAGETAPNA'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * Ext.File Ref.ID
      C                   PARM      'ZS '         I_XRFI            3
       * OUTPUTS
       * Ext.File Ref.No.
      C                   PARM      *ZERO         O_XRFN           10 0
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'NO NEXT NUMBER (APNA)'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1068,7 +1075,7 @@
       * Access Hierarchy Detail
       ********************************************************************
      C     ACS_HIER      BEGSR
- 
+
      C                   CALLB     'RE100601'
       * Return code
       * Error Message
@@ -1080,20 +1087,20 @@
      C                   PARM      CLHIER        I_HIER            9 0
       * Hierarchy Type
      C                   PARM      *BLANK        I_HTYP            2
- 
+
      C                   PARM                    O_CMHD
      C                   PARM                    O_ZSHD
      C                   PARM                    O_GAHD
- 
+
       * End if error occurred in module
       **or*if*no*record*found**********                                         213761
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C*****X_RTCD********OREQ******'*NOREC'                                     213761
      C                   EVAL      X_ERMS = 'BAD HIERARCHY DETAIL:' + A_HIER
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1101,7 +1108,7 @@
       * Access Hierarchy Link
       ********************************************************************
      C     ACS_LINK      BEGSR
- 
+
      C                   CALLB     'RE100602'
       * Return code
       * Error Message
@@ -1127,14 +1134,14 @@
      C**********         PARM                    I_CACD            4 0                        CGL029
      C                   PARM                    I_CACD           10 0                        CGL029
      C                   PARM                    I_CASN            2 0
- 
+
      C                   PARM                    O_CMHL
      C                   PARM                    O_ZSHL
      C                   PARM                    O_GAHL
- 
+
       * End if error occurred in module
       **or*if*no*record*found**********                                         213761
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C*****X_RTCD********OREQ******'*NOREC'                                     213761
      C                   EVAL      X_ERMS = 'BAD HIERARCHY LINK:' +
@@ -1149,7 +1156,7 @@
      C                   ELSE                                                   213761
      C                   EVAL      No_Link = 'N'                                213761
      C                   ENDIF                                                  213761
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1157,18 +1164,18 @@
       * Access a branch
       ********************************************************************
      C     ACS_BRCH      BEGSR
- 
+
      C                   CALLB     'ZAACSBRCH'
      C                   PARM                    BRCH              3
      C                   PARM                    SDBRCH
- 
+
       * Database error if branch not found
- 
+
      C     A8BRCD        IFEQ      *BLANK
      C                   EVAL      X_ERMS = 'BAD BRANCH CODE:' + BRCH
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1176,18 +1183,18 @@
       * Access a currency
       ********************************************************************
      C     ACS_CURR      BEGSR
- 
+
      C                   CALLB     'ZAACSCURR'
      C                   PARM                    CCY
      C                   PARM                    SDCURR
- 
+
       * Database error if currency not found
- 
+
      C     A6CYCD        IFEQ      *BLANK
      C                   EVAL      X_ERMS = 'BAD CCY CODE:' + CCY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1195,19 +1202,19 @@
       * Access A/c code
       ********************************************************************
      C     ACS_ACOD      BEGSR
- 
+
      C                   CALLB     'ZAACSACOD'
      C**********         PARM                    ACCD              4                          CGL029
      C                   PARM                    ACCD             10                          CGL029
      C                   PARM                    SDACOD
- 
+
       * Database error if a/c code not found
- 
+
      C     A5ACCD        IFEQ      *BLANK
      C                   EVAL      X_ERMS = 'BAD A/C CODE:' + ACCD
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1215,14 +1222,14 @@
       * Access a/c details
       ********************************************************************
      C     ACS_ACCNT     BEGSR
- 
+
      C     ACCNTK        CHAIN     ACCNTABF                           60        *
      C     *IN60         IFEQ      '1'
      C     AC_RECI       ORNE      'D'
      C                   EVAL      X_ERMS = 'BAD INTER-BRANCH A/C'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1230,7 +1237,7 @@
       * Lookup branch, currency and profit centre
       ********************************************************************
      C     LOOKUP_BCPC   BEGSR
- 
+
      C                   MOVEL     BRCA          #BRCA
      C                   MOVEL     EntryBICN     #BICN
      C                   MOVEL     CCY           #CCY
@@ -1241,7 +1248,7 @@
      C     *BLANK        LOOKUP    #_BCPC(#B)                             99    *
      C                   MOVEL     BRCYPC        #_BCPC(#B)                     *
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1249,7 +1256,7 @@
       * Lookup branch, currency and profit centre
       ********************************************************************
      C     LOOKUP_BCPX   BEGSR
- 
+
      C                   MOVEL     BRCA          #BRCA
      C                   MOVEL     EntryBICN     #BICN
      C                   MOVEL     CCY           #CCY
@@ -1260,7 +1267,7 @@
      C     *BLANK        LOOKUP    #_BCPX(#B)                             99    *
      C                   MOVEL     BRCYPC        #_BCPX(#B)                     *
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1290,23 +1297,23 @@
       * Register P1 printer file with RCF
       ********************************************************************
      C     RCFP1         BEGSR
- 
+
      C                   EVAL      ZSnum = PSFNum1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM                    PEnty
      C                   PARM                    PSFile1
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then end abnormally
- 
+
      C                   IF        ZSErr = 'Y'
      C                   EVAL      X_ERMS = 'Call to ZSFILE in error'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1314,41 +1321,41 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Cash Management Details
- 
+
      C                   CALLB     'AOCMANR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDCMAN        PARM      SDCMAN        DSSDY
- 
+
       * Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      X_ERMS = 'Call to AOCMANR0 in error'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Throw a page
- 
+
      C                   Z-ADD     99            LINENO
- 
+
       * Register P1 printer file with RCF
      C                   EXSR      RCFP1
                                                                                 213761
       * Define                                                                  213761
                                                                                 213761
      C                   MOVE      No_Link       No_Link           1            213761
- 
+
       * key lists
- 
+
      C     GLAPSZSK      KLIST
      C                   KFLD                    XRFI
      C                   KFLD                    XRFN
@@ -1361,7 +1368,7 @@
      C                   KFLD                    E_ACOD
      C                   KFLD                    E_ACSQ
      C                   KFLD                    E_BRCA
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5

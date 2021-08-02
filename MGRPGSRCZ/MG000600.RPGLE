@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD057682           Date 30Jul21               *
+      *  Last Amend No. MD057682           Date 31Jul21               *
       *  Prev Amend No. MD055694           Date 09Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -34,7 +34,6 @@
       *                 AR1094963          Date 12Mar13               *
       *                 AR1053647          Date 06Nov12               *
       *                 CMG003  *CREATE    Date 04Oct12               *
-      *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

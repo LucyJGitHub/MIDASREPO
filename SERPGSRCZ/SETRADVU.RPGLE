@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057789           Date 19May21               *
-      *  Prev Amend No. 258901             Date 22May20               *
+      *  Last Amend No. MD057753           Date 07Jul21               *
+      *  Prev Amend No. MD057789           Date 19May21               *
+      *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
       *                 247524             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
@@ -129,6 +130,10 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD057753 - Associated Front Office ID missing after amendment*
+      *             of trade.                                         *
+      *           - When Associated Front Office ID is not blanks     *
+      *             update Associated Front Office Transaction ID     *
       *  MD057789 - Charges details are not defaulted when Portfolio  *
       *             reference is inserted                             *
       *           - Exclude Portfolio Reference in DS/TranInChCm      *
@@ -5374,7 +5379,12 @@
                                                                                               244537
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_FRNT = APFOTranID
+      ** If Associated Front Office Transaction ID is not blank                             MD057753
+      ** update Associated Front Office Transaction ID.                                     MD057753
+      *                                                                                     MD057753
+     C                   IF        APFOAsocID <> *BLANKS                                    MD057753
      C                   EVAL      V_AFRT = APFOAsocID
+     C                   ENDIF                                                              MD057753
      C                   EVAL      V_REPA = APRprLocn
                                                                                               244537
      C                   ENDIF                                                                244537

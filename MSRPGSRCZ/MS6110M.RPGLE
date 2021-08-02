@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 04May20               *      
-      *  Prev Amend No. MD051624           Date 23Sep20               *
+      *  Last Amend No. MD058137           Date 31Jul21               *
+      *  Prev Amend No. MD041126           Date 04May20               *
+      *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
       *                 MD048231           Date 17Jan18               *
@@ -83,8 +84,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058137 - Midas is not generating unique MQ MessageID if    *
+      *             via MGOREF message generation.                    *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
-      *           - Applied for MD055614.                             *      
+      *           - Applied for MD055614.                             *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
       *             Details Enquiry Screen are dated incorrectly.     *
       *           - Introduced system value 'MachineDateforTRAN' to   *
@@ -468,7 +471,7 @@
      D PDateIn         S              8                                                     MD051624
      D PMDNO           S              5P 0                                                  MD051624
      D PDATE6          S              6  0                                                  MD051624
-     D PDATE7          S              7                                                     MD051624     
+     D PDATE7          S              7                                                     MD051624
                                                                                             MD041126
       ** MQ Parameters                                                                      MD041126
      D HCONN           S             10I 0                                                  MD041126
@@ -737,6 +740,7 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
      C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
      C                                    CCODE : REASON )                                  MD041126

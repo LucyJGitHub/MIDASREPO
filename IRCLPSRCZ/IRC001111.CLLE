@@ -1,0 +1,59 @@
+000100210803/*********************************************************************/
+000101210803/*STD    CLPBASEBND                                                  */
+000102210803/*EXI    TEXT('Midas IR Initialise BckwrdLookng Rate Fld in Deals')  */
+000103210803/*********************************************************************/
+000104210803/*                                                                   */
+000105210803/*       Midas - FRA/IRS Module                                      */
+000106210803/*                                                                   */
+000107210803/*       IRC001111 - Initialise Backward-Looking Rate Field in       */
+000108210803/*                   Deals File (CIR020 Take-On Program)             */
+000109210803/*                                                                   */
+000110210803/*       (c) Finastra International Limited 2021                     */
+000111210803/*                                                                   */
+000112210803/*       Last Amend No. CIR020  *CREATE    Date 02Aug21              */
+000113210803/*                                                                   */
+000114210803/*-------------------------------------------------------------------*/
+000115210803/*                                                                   */
+000116210803/*       CIR020 - LIBOR Deregulation - IRS                           */
+000117210803/*                                                                   */
+000118210803/*********************************************************************/
+000119210803             PGM        PARM(&RTCDE &PMODE)
+000120210803
+000121210803             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+000122210803             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+000123210803
+000124210803             COPYRIGHT  TEXT('(c) Finastra International Limited 2021')
+000125210803
+000126210803/* Global monitor message */
+000127210803
+000128210803             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+000129210803
+000130210803             CHGJOB     SWS(XXXXXX00)
+000131210803
+000132210803/* Mode 1 - First call */
+000133210803
+000134210803             IF         COND(&PMODE *EQ '1') THEN(DO)
+000135210803                CALL       PGM(IR001111)
+000136210803             ENDDO
+000137210803
+000138210803/* Mode 2 - Second call */
+000139210803
+000140210803             IF         COND(&PMODE *EQ '2') THEN(DO)
+000141210803                CALL       PGM(IR001111)
+000142210803             ENDDO
+000143210803
+000144210803/* Check if program call is successful */
+000145210803
+000146210803             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+000147210803                GOTO       CMDLBL(ABNOR)
+000148210803             ENDDO
+000149210803
+000150210803             GOTO       CMDLBL(END)
+000151210803
+000152210803/* Program abnormal processing */
+000153210803 ABNOR:
+000154210803             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+000155210803             SNDPGMMSG  MSG('Program IRC001111 ended abnormally') TOMSGQ(MOPERQ)
+000156210803
+000157210803 END:
+000158210803             ENDPGM

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD057707             Date 21Jan21             *
-      *  Prev Amend No. MD057599             Date 21Jan21             *
+      *  Last Amend No. MD055891             Date 01Sep20             *
+      *  Prev Amend No. MD057707             Date 21Jan21             *
+      *                 MD057599             Date 21Jan21             *
       *                 MD056612             Date 12Sep20             *
       *                 MD056557             Date 31Aug20             *
       *                 MD056565             Date 21Jan21             *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD057707 - Deliverable Data Split for SDOREFPD               *
       *  MD057599 - Deliverable Data Split for Bridge and Util files  *
       *  MD056612 - Deliverable Data Split for MX group               *
@@ -1095,6 +1097,12 @@
      C                             or ChkFile = 'SMLOAXTD'                                  MD057599
      C                             or ChkFile = 'UTGENXTD'                                  MD057599
      C                             or ChkFile = 'SDOREXTD'                                  MD057707
+     C                             or ChkFile = 'CBCMPXTD'                                  MD055891
+     C                             or ChkFile = 'CBDPRXTD'                                  MD055891
+     C                             or ChkFile = 'CBMEXXTD'                                  MD055891
+     C                             or ChkFile = 'CBMDCXTD'                                  MD055891
+     C                             or ChkFile = 'CBRUNXTD'                                  MD055891
+     C                             or ChkFile = 'CBTPGXTD'                                  MD055891
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1285,6 +1293,12 @@
      C                             or Member = 'SMCARCTD'                                   MD057599
      C                             or Member = 'UTGENCTD'                                   MD057599
      C                             or Member = 'SDORECTD'                                   MD057707
+     C                             or Member = 'CBCMPCTD'                                   MD055891
+     C                             or Member = 'CBDPRCTD'                                   MD055891
+     C                             or Member = 'CBMEXCTD'                                   MD055891
+     C                             or Member = 'CBMDCCTD'                                   MD055891
+     C                             or Member = 'CBRUNCTD'                                   MD055891
+     C                             or Member = 'CBTPGCTD'                                   MD055891
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

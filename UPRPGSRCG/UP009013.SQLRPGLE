@@ -12,11 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. A1084804 *CREATE   Date 01Feb13               *
-      *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. A1084804 *CREATE   Date 01Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  A1084804 - Add *MRG option.                                  *
       *                                                               *
       *****************************************************************
@@ -57,9 +58,15 @@
      C+ from UPAFCPPD
      C+ where
      C+ (
-     C+    ATFILE = 'CBDPRLPD'
-     C+ or ATFILE = 'CBMEXCPD'
-     C+ or ATFILE = 'CBMDCNPD'
+     C*****ATFILE*=*'CBDPRLPD'                                                              MD055891
+     C+    ATFILE = 'CBDPRCTD'                                                              MD055891
+     C+ or ATFILE = 'CBDPRBTD'                                                              MD055891
+     C**or*ATFILE*=*'CBMEXCPD'                                                              MD055891
+     C+ or ATFILE = 'CBMEXCTD'                                                              MD055891
+     C+ or ATFILE = 'CBMEXBTD'                                                              MD055891
+     C**or*ATFILE*=*'CBMDCNPD'                                                              MD055891
+     C+ or ATFILE = 'CBMDCCTD'                                                              MD055891
+     C+ or ATFILE = 'CBMDCBTD'                                                              MD055891
      C+ )
      C+ and ATACT = 'I'
      C+ order by
@@ -104,13 +111,19 @@
      C                   ENDIF
       *
      C                   SELECT
-     C                   WHEN      ATFILE = 'CBDPRLPD'
+     C**********         WHEN      ATFILE = 'CBDPRLPD'                                      MD055891
+     C                   WHEN      ATFILE = 'CBDPRCTD' or                                   MD055891
+     C                             ATFILE = 'CBDPRBTD'                                      MD055891
      C                   EVAL      Len = 3
      C                   EVAL      DSStart = 1
-     C                   WHEN      ATFILE = 'CBMEXCPD'
+     C**********         WHEN      ATFILE = 'CBMEXCPD'                                      MD055891
+     C                   WHEN      ATFILE = 'CBMEXCTD'                                      MD055891
+     C                   WHEN      ATFILE = 'CBMEXBTD'                                      MD055891
      C                   EVAL      Len = 2
      C                   EVAL      DSStart = 2
-     C                   WHEN      ATFILE = 'CBMDCNPD'
+     C*********          WHEN      ATFILE = 'CBMDCNPD'                                      MD055891
+     C                   WHEN      ATFILE = 'CBMDCTDD'                                      MD055891
+     C                             or ATFILE = 'CBMDCBTD'                                   MD055891
      C                   EVAL      Len = 2
      C                   EVAL      DSStart = 2
      C                   ENDSL
@@ -146,9 +159,15 @@
      C+ delete from UPAFCPPD
      C+ where
      C+ (
-     C+    ATFILE = 'CBDPRLPD'
-     C+ or ATFILE = 'CBMEXCPD'
-     C+ or ATFILE = 'CBMDCNPD'
+     C*****ATFILE*=*'CBDPRLPD'                                                              MD055891
+     C+    ATFILE = 'CBDPRCTD'                                                              MD055891
+     C+ or ATFILE = 'CBDPRBTD'                                                              MD055891
+     C**or*ATFILE*=*'CBMEXCPD'                                                              MD055891
+     C+ or ATFILE = 'CBMEXCTD'                                                              MD055891
+     C+ or ATFILE = 'CBMEXBTD'                                                              MD055891
+     C**or*ATFILE*=*'CBMDCNPD'                                                              MD055891
+     C+ or ATFILE = 'CBMDCCTD'                                                              MD055891
+     C+ or ATFILE = 'CBMDCBTD'                                                              MD055891
      C+ )
      C+ and ATACT = 'I'
      C/end-exec

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. CUP040             Date 06Mar14               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 CUP040             Date 06Mar14               *
       *                 MD024412           Date 20Jan14               *
       *                 AR1090366          Date 21Feb13               *
       *                 CCB022A *REWRITE   Date 06Aug12               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - Restructure of deliverable data files.              *
       *  MD024412 - Additional changes for COM processing             *
@@ -116,7 +118,7 @@
      F*SCSARSL0* IF   E           K DISK                                                    MD055681
 
       ** Midas Components
-     FCBCMPNL0  IF   E           K DISK
+     F*CBCMPNL0* IF   E           K DISK                                                    MD055891
 
       ** Program data structure
      D MyPSDS         SDS
@@ -193,6 +195,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D***ComDS**     E DS                  EXTNAME(SCCOMJK0)                                  CUP040
      D ComDS         E DS                  EXTNAME(SCCOMJW0)                                  CUP040
+     D CBCMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
 
       ** Main Process
 
@@ -1521,8 +1524,15 @@
 
       ** Check Component and sequence if existing on CBCMPNL0
 
-     C     FNMSQK        CHAIN     CBCMPNL0
-     C                   IF        %FOUND(CBCMPNL0)
+     C*****FNMSQK        CHAIN     CBCMPNL0                                                 MD055891
+     C*********          IF        %FOUND(CBCMPNL0)                                         MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ SELECT *                                                                            MD055891
+     C+ into :CBCMPN                                                                        MD055891
+     C+ from CBCMPJW0                                                                       MD055891
+     C+ where DHCOTT = :PCott and DHCSEQ = :PCseq                                           MD055891
+     C/END-EXEC                                                                             MD055891
+     C                   If        SQLCODE = 0                                              MD055891
      C                   EVAL      DFCSEQ = %TRIM(DFSQMR)
      C                   ELSE
      C                   EVAL      ErrInd = 'Y'
@@ -1597,9 +1607,28 @@
       ** If Component sequence is *ALL check if the component
       ** has a record
 
-     C     DFNAME        SETLL     CBCMPNL0
+     C*****DFNAME        SETLL     CBCMPNL0                                                 MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ declare PHCursor insensitive scroll cursor for                                      MD055891
+     C+ select * from CBCMPJW0 where                                                        MD055891
+     C+ DHCOTT = :PCott                                                                     MD055891
+     C/END-EXEC                                                                             MD055891
+                                                                                            MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ open PHCursor                                                                       MD055891
+     C/END-EXEC                                                                             MD055891
+                                                                                            MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ get diagnostics :TotRow  = db2_number_rows                                          MD055891
+     C/END-EXEC                                                                             MD055891
+                                                                                            MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ close PHCursor                                                                      MD055891
+     C/END-EXEC                                                                             MD055891
+                                                                                            MD055891
+     C                   IF        TotRow  = 0                                              MD055891
 
-     C                   IF        NOT %EQUAL(CBCMPNL0)
+     C**********         IF        NOT %EQUAL(CBCMPNL0)                                     MD055891
      C                   EVAL      ErrInd = 'Y'
      C                   EVAL      ZAMSID = 'CBM0284'
      C                   EXSR      ZASNMS
@@ -1614,8 +1643,15 @@
 
       ** Check Component and sequence if existing on CBCMPNL0
 
-     C     FNMSQK        CHAIN     CBCMPNL0
-     C                   IF        %FOUND(CBCMPNL0)
+     C*****FNMSQK        CHAIN     CBCMPNL0                                                 MD055891
+     C**********         IF        %FOUND(CBCMPNL0)                                         MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ SELECT *                                                                            MD055891
+     C+ into :CBCMPN                                                                        MD055891
+     C+ from CBCMPJW0                                                                       MD055891
+     C+ where DHCOTT = :PCott and DHCSEQ = :PCseq                                           MD055891
+     C/END-EXEC                                                                             MD055891
+     C                   If        SQLCODE = 0                                              MD055891
      C                   EVAL      DFCSEQ = %TRIM(DFSQMR)
      C                   ELSE
      C                   EVAL      ErrInd = 'Y'

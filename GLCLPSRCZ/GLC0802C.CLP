@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036589           Date 14Feb16              */
+/*       Last Amend No. LUC137             Date 28Aug20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036589           Date 14Feb16              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
@@ -45,6 +46,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC137 - Include Non-Auto Settle Loans Events on GL0580     */
+/*                Amend hook GLC0802C07, GLC0802C02                  */
+/*                Add hook LUC137_001                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036589 - FX neeting projection during COB.                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -202,6 +206,7 @@
              OVRDBF     FILE(NOSEXCC) SEQONLY(*YES 100)               /*E193  */
 /*           OVRDBF     FILE(NOSEXES) SEQONLY(*YES 100)  *  /*E193 */ /*E36449*/
              OVRDBF     FILE(NOSEXSE) SEQONLY(*YES 100)               /*E193  */
+/*/COPY WNCPYSRC,LUC137_001                                           /*LUC137*/
 /**/                                                                  /*E193  */
 /************CALL       PGM(DL0554)                     */ /*E193  */ /*E22608*/
              CALL       PGM(GL0554)                                   /*E22608*/

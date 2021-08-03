@@ -1,0 +1,268 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *   PNL012
+      *  Prev Amend No. AR856737           Date 13Sep11               *   PNL012
+      *                  PNL012                 Date 16Sep05          *   PNL012
+      *                  ESL038                 Date 04Oct2004        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *           - Insufficient Fund check flag incorrectly reset    *
+      *  PNL012 - Account Payments Authorisation Processing           *   PNL012
+      *  ESL038 - ING STP Development                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C******               MOVEL'N'       @RCD                                      ESL038  AR856737
+      *                                                                                       ESL038
+      *  Test to see if ESL038 processing active                                              ESL038
+      *                                                                                       ESL038
+     C           ESL038    IFEQ *BLANKS                                                       ESL038
+     C                     CALL 'AOSARDR0'                                                    ESL038
+     C                     PARM *BLANKS   P@RTCD                                              ESL038
+     C                     PARM '*VERIFY' P@OPTN                                              ESL038
+     C                     PARM 'ESL038'  @SARD                                               ESL038
+     C           SCSARD    PARM *BLANKS   DSFDY                                               ESL038
+      *                                                                                       ESL038
+     C           P@RTCD    IFEQ *BLANKS                                                       ESL038
+     C                     MOVEL'ESL038'  ESL038  6                                           ESL038
+     C                     ENDIF                                                              ESL038
+     C                     ENDIF                                                              ESL038
+      *                                                                                       ESL038
+      ** If ESL038 call validator                                                             ESL038
+      *                                                                                       ESL038
+     C           ESL038    IFEQ 'ESL038'                                                ESL038MAR013
+      *                                                                                 ESL038MAR013
+     C                     MOVEL'N'       @RCD                                              AR856737
+      * Clear parameters                                                                ESL038MAR013
+     C                     CLEARP@IDTA                                                  ESL038MAR013
+     C                     CLEARP@ODTA                                                  ESL038MAR013
+     C                     CLEARSOODTA                                                  ESL038MAR013
+      * Debit side                                                                      ESL038MAR013
+      * Incoming Payments                                                               ESL038MAR013
+      * Account currency, amount, date                                                  ESL038MAR013
+     C                     MOVELS1SMCY    PICCY                                         ESL038MAR013
+     C                     Z-ADDF1SMAM    PIAMNT                                        ESL038MAR013
+     C                     Z-ADDF1SLDT    PIPDTE                                        ESL038MAR013
+      * Payment Reference and type                                                      ESL038MAR013
+     C                     MOVELS1PREF    PIPREF                                        ESL038MAR013
+     C                     MOVELS1PYTP    PIPTYP                                        ESL038MAR013
+     C                     MOVELS1BRCA    PIBRCB                                        ESL038MAR013
+      * Party one                                                                       ESL038MAR013
+     C                     MOVELF1SNTP    PITP1                                         ESL038MAR013
+     C                     MOVELS1SND1    PIPRY1                                        ESL038MAR013
+     C                     MOVEL*BLANKS   PIBRC1                                        ESL038MAR013
+      * Party two                                                                       ESL038MAR013
+     C                     MOVELF1RCRT    PITP2                                         ESL038MAR013
+     C                     MOVELS1RCO1    PIPRY2                                        ESL038MAR013
+     C                     MOVEL*BLANKS   PIBRC2                                        ESL038MAR013
+      * Party three                                                                     ESL038MAR013
+     C                     MOVELF1TRIT    PITP3                                         ESL038MAR013
+     C                     MOVELS1TRIB    PIPRY3                                        ESL038MAR013
+     C                     MOVEL*BLANKS   PIBRC3                                        ESL038MAR013
+      *
+      * Include Charges
+     C           S1ADDC    IFEQ 'A'
+     C           S0CDRO    ANDEQ*BLANKS
+     C                     ADD  INTRCM    PIAMNT                                        PNL012MAR013
+     C                     ADD  INTXCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INCQCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INADCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INTLCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INMSCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC1    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC2    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC3    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC4    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC5    PIAMNT                                        PNL012MAR013
+     C                     ENDIF
+      *                                                                                 ESL038MAR013
+      * Call validator                                                                  ESL038MAR013
+     C                     CALL 'FTP780'                                                ESL038MAR013
+     C                     PARM           P@RTCE  7                                     ESL038MAR013
+     C                     PARM 'NO'      P@DSP   3                                     ESL038MAR013
+     C                     PARM           P@IDTA                                        ESL038MAR013
+     C                     PARM           P@ODTA                                        ESL038MAR013
+     C                     PARM 'N'       P@AUTH  1                                     ESL038MAR013
+      *
+     C                     MOVELP@ODTA    SOODTA256
+      *                                                                                 ESL038MAR013
+     C           P@RTCE    IFNE '*NOCHK '                                               ESL038MAR013
+     C           P@RTCE    ANDNE*BLANKS                                                 ESL038MAR013
+     C           P@RTCE    ANDNE'*OVER  '                                               ESL038MAR013
+     C                     MOVE 'Y'       ERAUTH                                        ESL038MAR013
+     C                     MOVEL'Y'       @RCD                                          ESL038MAR013
+     C                     MOVEL'Y'       @REC1                                         ESL038MAR013
+     C           P@RTCE    CAT  P@ODTA    W0MSDT                                        ESL038MAR013
+     C                     MOVEL'STP0036' W0LMSG                                        ESL038MAR013
+     C                     MOVEL'XXUSRMSG'W0MSGF                                        ESL038MAR013
+     C                     EXSR SRLOG                                                   ESL038MAR013
+      * Save Principal data.                                                                  MAR015
+     C                     MOVEL'D'       V1RECI  1                                     MAR012MAR015
+     C                     MOVELS1PREF    V1PREF 15                                           MAR015
+     C                     MOVELPOBRCA    V1BRCA  3                                     MAR012MAR015
+     C                     MOVELPOCNUM    V1CNUM  6                                     MAR012MAR015
+     C                     MOVELPOCCY     V1CCY   3                                     MAR012MAR015
+     C                     MOVELPOACOD    V1ACOD  4                                     MAR012MAR015
+     C                     MOVELPOACSQ    V1ACSQ  2                                     MAR012MAR015
+      * Balances on Authorisation                                                       MAR012MAR015
+     C                     Z-ADDPIAMNT    V1SMAM 150                                    MAR012MAR015
+     C                     Z-ADDPOCLBL    V1CLBL 150                                    MAR012MAR015
+     C                     Z-ADDPOODLN    V1ODLN 150                                    MAR012MAR015
+     C                     Z-ADDPOAVBL    V1AVBL 150                                    MAR012MAR015
+     C                     ENDIF
+      *                                                                                 PNL012MAR013
+     C           PNL012    IFEQ 'Y'                                                     PNL012MAR013
+     C           F0CDRT    IFNE *BLANKS                                                 PNL012MAR013
+     C           S0CDRO    ORNE *BLANKS                                                 PNL012MAR013
+     C           S0CDBR    ORNE *BLANKS                                                 PNL012MAR013
+      * Account currency, amount, date                                                  PNL012MAR013
+      *                                                                                 PNL012MAR013
+     C                     MOVELV#CCCY    PICCY                                         PNL012MAR013
+      *                                                                                 PNL012MAR013
+     C                     Z-ADDINTRCM    PIAMNT                                        PNL012MAR013
+     C                     ADD  INTXCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INCQCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INADCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INTLCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  INMSCH    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC1    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC2    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC3    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC4    PIAMNT                                        PNL012MAR013
+     C                     ADD  ILMSC5    PIAMNT                                        PNL012MAR013
+      *                                                                                 PNL012MAR013
+     C                     Z-ADDF1SLDT    PIPDTE                                        PNL012MAR013
+      * Payment Reference and type                                                      PNL012MAR013
+     C                     MOVELS1PREF    PIPREF                                        PNL012MAR013
+     C                     MOVELS1PYTP    PIPTYP                                        PNL012MAR013
+     C                     MOVELS1BRCA    PIBRCB                                        PNL012MAR013
+      * Party one                                                                       PNL012MAR013
+     C                     MOVEL*BLANKS   PITP1                                         PNL012MAR013
+     C                     MOVEL*BLANKS   PIPRY1                                        PNL012MAR013
+     C                     MOVEL*BLANKS   PIBRC1                                        PNL012MAR013
+      * Party two                                                                       PNL012MAR013
+     C                     MOVEL*BLANKS   PITP2                                         PNL012MAR013
+     C                     MOVEL*BLANKS   PIPRY2                                        PNL012MAR013
+     C                     MOVEL*BLANKS   PIBRC2                                        PNL012MAR013
+      * Party three                                                                     PNL012MAR013
+     C                     MOVELF0CDRT    PITP3                                         PNL012MAR013
+     C                     MOVELS0CDRO    PIPRY3                                        PNL012MAR013
+     C                     MOVELS0CDBR    PIBRC3                                        PNL012MAR013
+      *                                                                                 PNL012MAR013
+      * Call validator                                                                  PNL012MAR013
+     C                     CALL 'FTP780'                                                MAR012MAR013
+     C                     PARM           P@RTCE  7                                     MAR012MAR013
+     C                     PARM 'NO'      P@DSP   3                                     MAR012MAR013
+     C                     PARM           P@IDTA                                        MAR012MAR013
+     C                     PARM           P@ODTA                                        MAR012MAR013
+     C                     PARM 'N'       P@AUTH  1                                     MAR012MAR013
+      *                                                                                 MAR012MAR013
+     C                     MOVELP@ODTA    SOODTA256
+      *                                                                                 ESL038MAR013
+     C           P@RTCE    IFNE '*NOCHK '                                               MAR012MAR013
+     C           P@RTCE    ANDNE*BLANKS                                                 MAR012MAR013
+     C           P@RTCE    ANDNE'*OVER  '                                               MAR012MAR013
+     C                     MOVE 'Y'       ERAUTH                                        MAR012MAR013
+     C                     MOVEL'Y'       @RCD                                          MAR012MAR013
+     C                     MOVEL'Y'       @REC2                                         ESL038MAR013
+     C           P@RTCE    CAT  P@ODTA    W0MSDT                                        MAR012MAR013
+     C                     MOVEL'STP0036' W0LMSG                                        MAR012MAR013
+     C                     MOVEL'XXUSRMSG'W0MSGF                                        MAR012MAR013
+     C                     EXSR SRLOG                                                   MAR012MAR013
+      *
+     C                     MOVEL'D'       V2RECI                                        MAR012MAR015
+     C                     MOVELS1PREF    V2PREF                                              MAR015
+     C                     MOVELPOBRCA    V2BRCA                                        MAR012MAR015
+     C                     MOVELPOCNUM    V2CNUM                                        MAR012MAR015
+     C                     MOVELPOCCY     V2CCY                                         MAR012MAR015
+     C                     MOVELPOACOD    V2ACOD                                        MAR012MAR015
+     C                     MOVELPOACSQ    V2ACSQ                                        MAR012MAR015
+      * Balances on Authorisation                                                       MAR012MAR013
+     C                     Z-ADDPIAMNT    V2SMAM                                        MAR012MAR015
+     C                     Z-ADDPOCLBL    V2CLBL                                        MAR012MAR015
+     C                     Z-ADDPOODLN    V2ODLN                                        MAR012MAR015
+     C                     Z-ADDPOAVBL    V2AVBL                                        MAR012MAR015
+     C                     ENDIF                                                        PNL012MAR013
+     C                     MOVELP@RTCE    U0RTCE  7
+      *                                                                                 PNL012MAR013
+     C                     ENDIF                                                        PNL012MAR013
+     C                     ENDIF                                                        PNL012MAR013
+      *                                                                                 PNL012MAR013
+      *                                                                                 PNL012MAR013
+      * Credit side                                                                     ESL038MAR013
+      * Account currency, amount, date                                                        ESL038
+     C                     MOVELS1PCCY    PICCY                                               ESL038
+     C                     Z-SUBF1PYAM    PIAMNT                                        ESL038MAR013
+     C                     Z-ADDF1PYAM    PIAMNT                                              MAR013
+     C                     Z-ADDF1PVDT    PIPDTE                                              ESL038
+      * Payment Reference and type                                                            ESL038
+     C                     MOVELS1PREF    PIPREF                                              ESL038
+     C                     MOVELS1PYTP    PIPTYP                                              ESL038
+     C                     MOVELS1BRCA    PIBRCB                                              ESL038
+      ** Set up FX data                                                                       ESL038
+     C                     MOVELS1SMCY    PISMCY                                              ESL038
+     C                     Z-ADDF1SMAM    PISMAM                                              ESL038
+     C                     Z-ADDF1RATE    PIRATE                                              ESL038
+     C                     MOVELS1PCCY    PIPCCY                                              ESL038
+     C                     Z-ADDF1PYAM    PIPYAM                                              ESL038
+      * Party one                                                                             ESL038
+     C                     MOVELF1BNCT    PITP1                                         ESL038MAR013
+     C                     MOVELS1BNC1    PIPRY1                                        ESL038MAR013
+     C                     MOVEL*BLANKS   PIBRC1                                              ESL038
+      * Party two                                                                             ESL038
+     C                     MOVELF1ACBT    PITP2                                         ESL038MAR013
+     C                     MOVELS1ACBK    PIPRY2                                        ESL038MAR013
+     C                     MOVELS1ACBB    PIBRC2                                        ESL038MAR013
+      * Party three                                                                           ESL038
+     C                     MOVEL*BLANKS   PITP3                                         ESL038MAR013
+     C                     MOVEL*BLANKS   PIPRY3                                        ESL038MAR013
+     C                     MOVEL*BLANKS   PIBRC3                                        ESL038MAR013
+      *                                                                                       MAR013
+      * Call validator                                                                        ESL038
+     C                     CALL 'FTP780'                                                      ESL038
+     C                     PARM           P@RTCE  7                                           ESL038
+     C                     PARM 'NO'      P@DSP   3                                           ESL038
+     C                     PARM           P@IDTA                                              ESL038
+     C                     PARM           P@ODTA                                              ESL038
+     C                     PARM 'N'       P@AUTH  1                                           PNL012
+      *                                                                                       ESL038
+     C*****      P@RTCE    IFNE '*NOCHK '                                               ESL038MAR015
+     C*****      P@RTCE    ANDNE*BLANKS                                                 ESL038MAR015
+     C*****      P@RTCE    ANDNE'*OVER  '                                               ESL038MAR015
+     C*****                MOVE 'Y'       ERAUTH                                        ESL038MAR015
+     C*****                MOVEL'Y'       @RCD                                          ESL038MAR015
+     C*****      P@RTCE    CAT  P@ODTA    W0MSDT                                        ESL038MAR015
+     C*****                MOVEL'STP0036' W0LMSG                                        ESL038MAR015
+     C*****                MOVEL'XXUSRMSG'W0MSGF                                        ESL038MAR015
+     C*****                EXSR SRLOG                                                   ESL038MAR015
+      *****                                                                             ESL038MAR015
+     C*****                ENDIF                                                        ESL038MAR015
+      * Credit Check                                                                    MAR012MAR013
+     C                     MOVELPODRCK    CRDRCK                                        MAR012MAR013
+     C                     MOVEL*BLANKS   CRCPRF                                        MAR012MAR013
+     C                     MOVELU0RTCE    CROVRT                                        MAR012MAR013
+     C                     MOVELPOBRCA    CRCBRC                                        MAR012MAR013
+     C                     MOVELPOCNUM    CRCCUS                                        MAR012MAR013
+     C                     MOVELPOCCY     CRCCCY                                        MAR012MAR013
+     C                     MOVELPOACOD    CRCACD                                        MAR012MAR013
+     C                     MOVELPOACSQ    CRCASQ                                        MAR012MAR013
+      *                                                                                 MAR012MAR013
+      *                                                                                 ESL038MAR013
+     C                     ENDIF                                                        ESL038MAR013
+      **Outgoing Payments                                                               ESL038MAR013
+     C*****                SELEC                                                        ESL038MAR013
+     C*****      S4PYTP    WHEQ 'OP'                                                    ESL038MAR013
+     C*****      S4STMT    ANDEQ'08'                                                    ESL038MAR013
+     C*****      F4PVDT    ANDLTBJRDNB                                                  ESL038MAR013
+     C*****                MOVE 'Y'       ERAUTH                                        ESL038MAR013
+     C*****                MOVEL'ST10003' W0LMSG                                        ESL038MAR013
+     C*****                MOVEL'XXUSRMSG'W0MSGF                                        ESL038MAR013
+     C*****                EXSR SRLOG                                                   ESL038MAR013
+     C*****                ENDSL                                                        ESL038MAR013
+      *                                                                                 ESL038MAR013
+      *****************************************************************
+      * End of FT0300RK01                                             *
+      *****************************************************************

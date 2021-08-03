@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD036311           Date 01Nov15               *
+      *  Last Amend No. MD057554           Date 08Jun21               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036311           Date 01Nov15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027671A          Date 15Sep14               *
@@ -37,6 +38,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057554 - Unable to Release customer on SP23 that has been  *
+      *             closed on earlier SP version.                     *
+      *             Prevent the deletion of a Non-account Holder      *
+      *             if it still attached to a Customer.               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036311 - Database error on existing Customer and Non-Acct  *
       *             Holder                                            *
@@ -64,12 +69,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDNAHOL1  IF   E           K Disk    Infsr(*PSSR)
- 
+
      FSDNAHOL2  IF   E           K Disk    Infsr(*PSSR)
      F                                     Rename(SDNAHOD0:SDNAHFOI)
- 
+
      FSDJACCL7  IF   E           K Disk    Infsr(*PSSR)
                                                                                               CGL132
       ** FATCA Customer details file                                                          CGL132
@@ -84,7 +89,10 @@
                                                                                               CGL157
       * Midas SD CRS Details File                                                             CGL157
      FSDCRSNL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
- 
+                                                                                            MD057554
+      ** Midas SD Customer-Authority Holder by Auth Hldr                                    MD057554
+     FSDCUAHL3  IF   E           K DISK    INFSR(*PSSR)                                     MD057554
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -96,60 +104,60 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
                                                                                               CGL132
      D SysVal1         C                   'FATCADftCLsNewCustNH'                             CGL132
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for bank detials ICD retrieval
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
       ** Non-A/C Holder in File Format
      D NahoFilFmt    E DS                  Extname(SDNAHOPD)
                                                                                               CGL157
@@ -181,17 +189,17 @@
      D  WWTINO               149    173                                                       CGL132
                                                                                               CGL132
      D PCrsdF          S            222A   DIM(30)                                            CGL177
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D ZMUSER          DS
      D  DBRN                  11     13
      D  BANK                  17     17
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -219,11 +227,11 @@
      D SVal9           S            200                                                       CGL132
      D SValK0          S             20                                                       CGL132
      D SVal10          S            200                                                       CGL132
- 
+
       ** Parameter fields for ZVACTBU
      D ZACTN           S              1
      D ZBR             S              3
- 
+
       ** Entry Parameter fields
      D ModeofOp        S              6
      D RespMode        S              1
@@ -242,9 +250,9 @@
      D PCustNo         S              6A                                                      CGL132
      D DDCRTT          S              2A                                                      CGL132
      D X               S              2S 0                                                    CGL157
- 
+
      D Err             S              1  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -252,84 +260,84 @@
       *****************************************************************
       /EJECT
       **************************************************************
- 
+
       ** Initialisation
- 
+
      C                   EXSR      SRInit
- 
+
       ** If the mode is 'Front Office Transaction Interface'
       ** Do (extra) validation for front office Transaction Interface
- 
+
      C     ModeofOp      IFEQ      '*FRONT'
      C                   EXSR      SRVfrnt
- 
+
       **  Carry out no further validation if errors have occurred.
- 
+
      C     OKACTN        IFEQ      'N'
      C     OKNAHO        OREQ      'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate Action Code
- 
+
      C                   EXSR      SRValcde
- 
+
       **  Carry out no further validation if errors have occurred.
- 
+
      C     OKACTN        IFEQ      'N'
      C     OKNAHO        OREQ      'N'
      C                   RETURN
      C                   ENDIF
- 
+
       ** Access Security Checking
- 
+
      C     RespMode      IFEQ      'S'
      C                   EVAL      ZACTN = DDACTN
- 
+
       ** If single branching
       ** Access Security Checking - Single Branching
- 
+
      C     BJSBRC        IFNE      *BLANK
      C     RESPMODE      ANDEQ     'S'
      C                   EXSR      SRAcsses
      C                   ENDIF
- 
+
       ** If multibranching
       ** Access Security Checking - Multi-Branching
- 
+
      C     BJSBRC        IFEQ      *BLANK
      C     DDACTN        ANDNE     'I'
      C     RESPMODE      ANDEQ     'S'
      C                   EXSR      SRAcsseM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Carry out no further validation if errors have occurred.
- 
+
      C     OKACTN        IFEQ      'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
       ** Validation for Action Code 'I'
- 
+
      C                   WHEN      DDACTN = 'I'
      C                   EXSR      SRValaci
- 
+
       ** Validation for Action Code 'E', 'A' or 'D'
- 
+
      C                   WHEN      DDACTN = 'E' or
      C                             DDACTN = 'A' or
      C                             DDACTN = 'D'
      C                   EXSR      SRRtvNah
      C                   ENDSL
- 
+
       **  Carry out no further validation if errors occurred.
- 
+
      C     OKACTN        IFEQ      'N'
      C     OKNAHO        OREQ      'N'
      C                   RETURN
@@ -338,9 +346,9 @@
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   EXSR      RTVFTC                                                     CGL132
      C                   ENDIF                                                                CGL132
- 
+
       ** Return
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -348,20 +356,20 @@
       ** SRAcsseS - Access Security Checking - Single Branching
       *****************************************************************
      C     SRAcsseS      BEGSR
- 
+
       **  Check user's authority for the action.
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM                    ZACTN
      C                   PARM                    Err
- 
+
       **  If action invalid for user
- 
+
      C     Err           IFEQ      1
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
- 
+
      C                   SELECT
      C                   WHEN      DDACTN = 'E'
      C                   MOVEL     'RE7105B'     MsgIdArr(Ix)
@@ -372,9 +380,9 @@
      C                   WHEN      DDACTN = 'D'
      C                   MOVEL     'RE7104B'     MsgIdArr(Ix)
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -382,29 +390,29 @@
       ** SSAcsseM - Access Security Checking - Multi-Branching
       *****************************************************************
      C     SRAcsseM      BEGSR
- 
+
       **  Check user's authority for the action & Booking Branch.
- 
+
      C                   CALL      'ZVACTBU'
      C                   PARM                    ZACTN
      C                   PARM      DBRN          ZBR
      C                   PARM                    ERR
- 
+
       **   If action invalid for user
- 
+
      C     ERR           IFEQ      1
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'RE71070'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
      C     ERR           IFEQ      2
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
- 
+
      C                   SELECT
      C                   WHEN      DDACTN = 'E'
      C                   MOVEL     'RE7105B'     MsgIdArr(Ix)
@@ -415,10 +423,10 @@
      C                   WHEN      DDACTN = 'D'
      C                   MOVEL     'RE7104B'     MsgIdArr(Ix)
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -426,20 +434,20 @@
       ** SRRtvNah - Retrieve Non-A/C Holder if action code 'A', 'E' OR 'D'
       *****************************************************************
      C     SRRtvNah      BEGSR
- 
+
       ** Access Non-A/C Holder from the Non-A/C Holders file
- 
+
      C     DDNAHO        CHAIN     SDNAHOL1                           44
- 
+
       ** Non-A/C Holder details not found
- 
+
      C     *In44         IFEQ      *On
      C                   MOVEL     'N'           OKNAHO
      C                   ADD       1             Ix
      C                   MOVEL     'DDNAHO'      FldNameArr(Ix)
      C                   MOVEL     'USR0081'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** Retrieve CRS Customer Details if CGL157 is ON                                        CGL157
      C                   IF        CGL157 = 'Y'                                               CGL157
      C     DDNAHO        CHAIN     SDCRNHL1                           96                    MD036311
@@ -491,9 +499,9 @@
       ** SRVfrnt - Validation for Front Office Transaction Interface
       *****************************************************************
      C     SRVfrnt       BEGSR
- 
+
       ** Error if action code is not 'I','A','E' OR 'D'
- 
+
      C     DDACTN        IFNE      'I'
      C     DDACTN        ANDNE     'A'
      C     DDACTN        ANDNE     'E'
@@ -503,9 +511,9 @@
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'APM0200'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** Error if Front Office Transaction ID is Blank
- 
+
      C     FOTRID        IFEQ      *BLANK
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix
@@ -513,17 +521,17 @@
      C                   MOVEL     'APM0201'     MsgIdArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
       ** Access Non-A/C Holder with Front Office Transaction ID
- 
+
      C     FOTRID        CHAIN     SDNAHFOI                           99
- 
+
       ** If Insert
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
       ** Front Office Transaction ID can't be present already
- 
+
      C     *In99         IFEQ      *Off
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix
@@ -532,11 +540,11 @@
      C                   MOVEL     FOTRID        MsgDtaArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** If not Insert, Front Office Transaction ID must be present
- 
+
      C     *In99         IFEQ      *On
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix
@@ -545,11 +553,11 @@
      C                   MOVEL     FOTRID        MsgDtaArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
       ** If not Insert, Update Midas Non-A/C Holder Reference
- 
+
      C                   MOVEL     NHNAHO        DDNAHO
- 
+
      C                   ENDIF
                                                                                               CGL132
       ** Access FATCA customer with Front office transaction ID                               CGL132
@@ -589,7 +597,7 @@
      C                   MOVEL     NHNAHO        DDNAHO                                       CGL132
                                                                                               CGL132
      C                   ENDIF                                                                CGL132
- 
+
      C     EVFRNT        ENDSR
       *****************************************************************
       /EJECT
@@ -597,11 +605,11 @@
       ** SRValcde - Validation of Action code
       *****************************************************************
      C     SRValcde      BEGSR
- 
+
       ** Validate Action Code
- 
+
       ** must be 'I','A','D' or 'E'
- 
+
      C     DDACTN        IFNE      'I'
      C     DDACTN        ANDNE     'A'
      C     DDACTN        ANDNE     'D'
@@ -611,9 +619,9 @@
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'SDA0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** If enquiry, action code must be 'E' only.
- 
+
      C                   IF        *In36 = *On
      C                   IF        DDACTN = 'A'  or
      C                             DDACTN = 'I'  or
@@ -624,9 +632,9 @@
      C                   MOVEL     'CSF9854'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Do not allow deletion if non-a/c holder is member of a joint account
- 
+
      C     DDNAHO        CHAIN     SDJACCL7                           20
      C                   IF        DDACTN = 'D' and
      C                             *In20 = *Off
@@ -635,7 +643,20 @@
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'USR4788'     MsgIdArr(Ix)
      C                   ENDIF
- 
+      *                                                                                     MD057554
+      ** Do not allow deletion if the non-a/c holder is still attached to a Customer        MD057554
+      *                                                                                     MD057554
+     C                   EVAL      KEYACC = DDNAHO                                          MD057554
+     C     KEYACC        CHAIN     SDCUAHL3                                                 MD057554
+     C                   IF        %FOUND(SDCUAHL3) AND                                     MD057554
+     C                             CATYLC <> 'D'                                            MD057554
+     C                   MOVEL     'N'           OKACTN                                     MD057554
+     C                   ADD       1             Ix                                         MD057554
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             MD057554
+     C                   MOVEL     'USS2000'     MsgIdArr(Ix)                               MD057554
+     C                   ENDIF                                                              MD057554
+      *                                                                                     MD057554
+
      C     EVAL          ENDSR
       *****************************************************************
       /EJECT
@@ -643,29 +664,29 @@
       ** SRValaci - Validation of Action Code 'I'
       *****************************************************************
      C     SRValaci      BEGSR
- 
+
       ** Validate Non-A/C Holder Reference
- 
+
      C                   CALLB     'SDVNAHL01'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
       ** Return Code
       ** Non-A/C Holder Reference
       ** Error Field Name
- 
+
      C                   PARM                    RetCodeOut
      C     NHNAHO        PARM                    DDNAHO
- 
+
       ** OUTPUTS :
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Non-A/C Holder Reference - OK
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Ix
      C                   PARM                    OKNAHO
- 
+
      C     EVALAI        ENDSR
       *****************************************************************                       CGL132
       /EJECT                                                                                  CGL132
@@ -788,15 +809,15 @@
       ** SRInit - Initialisation
       *****************************************************************
      C     SRInit        BEGSR
- 
+
       ** Clear Outputs
- 
+
      C                   CLEAR                   NahoFilFmt
      C                   CLEAR                   PCrsdF                                       CGL157
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKNAHO
      C                   EVAL      *In36 = @IN36
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -804,11 +825,11 @@
       ** *INZSR - Initial Processing
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUTS :
       ** Return code
       ** Mode = '*FRONT' (Front Office Transaction Interface)
@@ -817,7 +838,7 @@
       ** Action Code
       ** Front Office Transaction ID
       ** (Midas) Non-A/C Holder reference
- 
+
      C                   PARM                    RetCodeIn
      C                   PARM                    ModeofOp
      C                   PARM                    RespMode
@@ -825,13 +846,13 @@
      C                   PARM                    FOTRID
      C                   PARM                    DDNAHO
      C                   PARM                    @IN36
- 
+
       ** OUTPUTS :
       ** (Current) Non-A/C Holder in file format
       ** OK - Action code
       ** OK - Non-A/C Holder reference
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    NahoFilFmt
      C                   PARM                    CuFaFilFmt                                   CGL132
      C                   PARM                    CuFoFilFmt                                   CGL132
@@ -843,13 +864,13 @@
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Ix
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'SDNAHLRTV'   DBPGM
- 
+
       **  Get RUNDAT to access Multi-branching flag.
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
      C     *DTAARA       DEFINE                  ZMUSER
@@ -863,20 +884,22 @@
      C     KEY2          KLIST                                                                CGL132
      C                   KFLD                    DDNAHO                                       CGL132
      C                   KFLD                    DDCRTT                                       CGL132
+                                                                                            MD057554
+     C                   MOVE      *BLANKS       KEYACC           10                        MD057554
                                                                                               CGL132
      C                   CLEAR                   CuFaFilFmt                                   CGL132
      C                   MOVEL     *BLANK        CuFoFilFmt                                   CGL132
      C                   CLEAR                   CuCrhFlFmt                                   CGL157
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '901'         DBASE
@@ -962,7 +985,7 @@
      C                   EXSR      *PSSR                                                      CGL132
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

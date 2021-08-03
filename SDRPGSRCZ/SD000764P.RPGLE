@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER076             Date 02Jul19               *
+      *  Prev Amend No. CSD100             Date 07Aug17               *
+      *                 CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL132             Date 01May13               *
       *                 AR745942           Date 13Apr11               *
       *                 CER059             Date 19Jul10               *
@@ -37,6 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076   - Update to KWG § 24c interface specification       *
+      *             (BaFin version 3.3)                               *
+      *  CSD100 - Patronymic and Gender Fields for Non-Account Holder *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -89,7 +94,10 @@
       ** SD Non-A/c Holders Audit List - Detail
      FSD000764P1O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
- 
+                                                                                              CER076
+      ** Midas SD Non-account Holders extension                                               CER076
+     FSDNAHOY0  IF   E           K DISK    INFSR(*PSSR) USROPN                                CER076
+
       ** SD Non-A/c Holders Audit List - Audit
      FSD000764AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
@@ -335,7 +343,20 @@
      C                   OTHER
      C                   EVAL      RLCTYP = *Blanks
      C                   ENDSL
- 
+                                                                                              CER076
+      * Economic Identification No.                                                           CER076
+                                                                                              CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C     SDNAHOK       KLIST                                                                CER076
+     C                   KFLD                    NHNAHO                                       CER076
+     C     SDNAHOK       CHAIN     SDNAHOY0                           99                      CER076
+     C                   IF        %FOUND()                                                   CER076
+     C                   EVAL      REINO  = NHEINO                                            CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      REINO  = *BLANK                                            CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+
       **   Date of Birth
  
      C                   EVAL      WDateDD = %SubSt(NHDBTH:7:2)
@@ -683,6 +704,10 @@
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C                   EVAL      RLUSR = NHLUSR                                             CGL132
+      *                                                                                       CSD100
+      * Patronymic and Gender                                                                 CSD100
+     C                   EVAL      RGENR = NHGENR                                             CSD100
+     C                   EVAL      RPNYC = NHPNYC                                             CSD100
                                                                                               CGL132
      C                   WRITE     HEADER2
  
@@ -1038,6 +1063,29 @@
      C                   EVAL      CER054 = 'N'                                               CER054
      C                   EVAL      *IN39 = *OFF                                               CER054
      C                   ENDIF                                                                CER054
+                                                                                              CER076
+      ** Call AOSARDR0 to check for CER076                                                    CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *BLANKS       PRtCd                                        CER076
+     C                   PARM      '*VERIFY'     POptn                                        CER076
+     C                   PARM      'CER076'      PSARD                                        CER076
+     C                   PARM                    DSFDY                                        CER076
+                                                                                              CER076
+     C                   IF        PRtCd <> *BLANKS AND PRtCd <> '*NRF'                       CER076
+     C     *LOCK         IN        LDA                                                        CER076
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CER076
+     C                   EVAL      DBKey = 'CER076'                                           CER076
+     C                   EVAL      DBase = 020                                                CER076
+     C                   OUT       LDA                                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+                                                                                              CER076
+     C                   IF        PRtCd = *BLANKS                                            CER076
+     C                   MOVE      'Y'           CER076            1                          CER076
+     C                   EVAL      *IN34 = *ON                                                CER076
+     C                   OPEN      SDNAHOY0                             99                    CER076
+     C                   ENDIF                                                                CER076
       *                                                                                       CER048
       ** Check if Private Banking Module is available                                         CSW207
      C                   Call      'AOMMODR0'                                                 CSW207

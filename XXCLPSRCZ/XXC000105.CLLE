@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('Midas SD Income & Expense Account Mapping Print')     */
+/********************************************************************/
+/*                                                                  */
+/*       Midas     Standing Data Module                             */
+/*                                                                  */
+/*       XXC000105 - Income and Expense Account Mapping Report      */
+/*                                                                  */
+/*      (c) Finastra International Limited 2017                     */
+/*                                                                  */
+/*     Last Amend No. FVT102  *CREATE     Date 08May17              */
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*     FVT102 - Posting of Profit and Loss to Multiple Retained     */
+/*              Earnings Accounts.                                  */
+/*                                                                  */
+/********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT)
+
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2017')
+
+/* Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDMSG     MSG('XXC000105 - Income and Expense Account +
+                          Mapping List') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(XX000105) PARM(&RSEQ)
+
+/* Monitor for database error and send appropriate message to MOPERQ */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+
+                GOTO       ENDCLPGM
+
+ERROR:
+             SNDMSG     MSG('Income and Expense Account Mapping List +
+                          has terminated abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+
+ENDCLPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited.')
+
+             ENDPGM

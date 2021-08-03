@@ -11,14 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR798548           Date 04Jul11               *
+      *  Last Amend No. CER074             Date 14Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR798548           Date 04Jul11               *
       *                 AR797240           Date 30Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22521 *CREATE   Date 25Mar09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER074 - New Authority Holder Link Types but Exclude from KWG*
+      *           24c Reporting                                       *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR798548 - Title consistency with menu option (Recompile)    *
       *  AR797240 - New standing data tables available in the         *
@@ -194,6 +197,14 @@
       ** Run Date
       *
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
+      *                                                                                       CER074
+      ** DS for switchable features                                                           CER074
+      *                                                                                       CER074
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER074
+      *                                                                                       CER074
+      ** First DS for Access programs - short data structure                                  CER074
+      *                                                                                       CER074
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER074
       *
       ** Work Fields
       *
@@ -208,6 +219,7 @@
      D WDFlag          S              6A
      D WDesc           S             30A
      D WLntyp          S              2A
+     D WLKGE           S              1A                                                      CER074
      D WAlpha          S             36A
      D WTemp           S              2P 0
       *
@@ -313,6 +325,23 @@
       *
      C     KLPrvKey      KLIST
      C                   KFLD                    D1LTYP
+      *                                                                                       CER074
+      ** Access SAR details file to determine if CER074 is ON                                 CER074
+      *                                                                                       CER074
+     C                   MOVE      'N'           CER074            1                          CER074
+     C                   MOVE      '0'           *IN36             1                          CER074
+     C                   CALLB     'AOSARDR0'                                                 CER074
+     C                   PARM      *BLANKS       PRTCD             7                          CER074
+     C                   PARM      '*VERIFY'     POPTN             7                          CER074
+     C                   PARM      'CER074'      PSARD             6                          CER074
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER074
+      *                                                                                       CER074
+      ** Switchable Feature CER074 is *ON                                                     CER074
+      *                                                                                       CER074
+     C                   IF        PRTCD = *Blanks                                            CER074
+     C                   EVAL      CER074 = 'Y'                                               CER074
+     C                   MOVE      '1'           *IN36                                        CER074
+     C                   ENDIF                                                                CER074
       *                                                                                     AR797240
       ** Display the screen according to Mode ('M' Maintenance 'E' Enquiry)                 AR797240
       *                                                                                     AR797240
@@ -365,6 +394,9 @@
      C                   EVAL(R)   D1LTYP = LKLTYP
      C                   EVAL(R)   D1LTYD = LKLTYP
      C                   EVAL(R)   D1DESC = LKDESC
+     C                   If        CER074 ='Y'                                                CER074
+     C                   EVAL(R)   D1KWGE = LKKWGE                                            CER074
+     C                   Endif                                                                CER074
       *
       ** Populate hidden fields in subfile record
       *
@@ -457,6 +489,9 @@
      C                   EVAL(R)   *IN42 = *OFF
      C                   EVAL(R)   *IN33 = *OFF
      C                   EVAL(R)   *IN32 = *OFF
+     C                   If        CER074 = 'Y'                                               CER074
+     C                   EVAL(R)   *IN35 = *OFF                                               CER074
+     C                   Endif                                                                CER074
      C                   EXSR      SRRmvMs
       *
       ** Reset subfile record number and subfile position fields.
@@ -597,6 +632,9 @@
       *
      C                   EVAL      *IN32 = *OFF
      C                   EVAL      *IN33 = *OFF
+     C                   If        CER074 = 'Y'                                               CER074
+     C                   Eval      *IN35 = *OFF                                               CER074
+     C                   Endif                                                                CER074
       *
       ** Reposition subfile
       *
@@ -684,6 +722,10 @@
      C**********         MOVE      AGMRDT        LKLCHD                                       CER059
      C                   MOVE      AGRDNB        LKLCHD                                       CER059
      C                   EVAL(R)   LKCHTP = 'C'
+      *                                                                                       CER074
+     C                   IF        CER074 = 'Y'                                               CER074
+     C                   EVAL(R)   LKKWGE = D1KWGE                                            CER074
+     C                   Endif                                                                CER074
       *
       ** Reset hidden fields
       *
@@ -711,6 +753,10 @@
      C                   MOVE      AGRDNB        LKLCHD                                       CER059
      C                   EVAL(R)   LKCHTP = 'I'
       *
+     C                   IF        CER074 = 'Y'                                               CER074
+     C                   EVAL(R)   LKKWGE = D1KWGE                                            CER074
+     C                   Endif                                                                CER074
+      *                                                                                       CER074
       ** Check for duplicate Link Type
       *
      C                   EXSR      SRChkd
@@ -838,6 +884,9 @@
       *
      C                   EVAL(R)   *IN33 = *OFF
      C                   EVAL(R)   *IN32 = *OFF
+     C                   If        CER074 = 'Y'                                               CER074
+     C                   EVAL(R)   *IN35 = *OFF                                               CER074
+     C                   Endif                                                                CER074
       *
       ** Only action codes 'D' allowed
       *
@@ -850,13 +899,24 @@
      C                   EVAL      *IN32 = *ON
      C                   ENDIF
       *
-     C                   IF        D1LTYP = *BLANKS AND
-     C                             D1DESC = *BLANKS
+     C**********         IF        D1LTYP = *BLANKS AND                                       CER074
+     C**********                   D1DESC = *BLANKS                                           CER074
+     C                   IF        (D1LTYP = *BLANKS AND                                      CER074
+     C                             D1DESC = *BLANKS) OR                                       CER074
+     C                             (D1LTYP = *BLANKS AND                                      CER074
+     C                             D1DESC = *BLANKS AND                                       CER074
+     C                             D1KWGE = *BLANKS AND                                       CER074
+     C                             CER074 = 'Y')                                              CER074
      C                   EVAL      *IN33 = *OFF
      C                   LEAVESR
       *
-     C                   ELSEIF    D1LTYP = *BLANKS AND
-     C                             D1DESC <> *BLANKS
+     C**********         ELSEIF    D1LTYP = *BLANKS AND                                       CER074
+     C**********                   D1DESC <> *BLANKS                                          CER074
+     C                   ELSEIF    (D1LTYP = *BLANKS AND                                      CER074
+     C                             D1DESC <> *BLANKS)                                         CER074
+     C                             OR (D1LTYP = *BLANKS AND                                   CER074
+     C                             D1KWGE <> *BLANKS and                                      CER074
+     C                             CER074 = 'Y')                                              CER074
       *
      C                   EVAL      WDFlag = '*ERROR'
      C                   EVAL      PMsgId = 'USR8326'
@@ -886,6 +946,21 @@
       *
      C                   ENDIF
       *
+     C                   IF        CER074 = 'Y'                                               CER074
+     C                   IF        D1KWGE <> 'Y' and                                          CER074
+     C                             D1KWGE <> 'N'                                              CER074
+      *                                                                                       CER074
+     C                   EVAL      WDFlag = '*ERROR'                                          CER074
+     C                   EVAL      PMsgId = 'USR8444'                                         CER074
+     C                   EVAL      PMsgF = 'SDUSRMSG'                                         CER074
+      *                                                                                       CER074
+     C                   EXSR      SRSndMs                                                    CER074
+      *                                                                                       CER074
+     C                   EVAL(R)   WErr = *ON                                                 CER074
+     C                   EVAL      *IN35 = *ON                                                CER074
+     C                   ENDIF                                                                CER074
+     C                   ENDIF                                                                CER074
+      *                                                                                       CER074
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -936,6 +1011,9 @@
       *
      C                   EVAL(R)   WDesc = LKDESC
      C                   EVAL(R)   WLntyp = LKLTYP
+     C                   If        CER074 = 'Y'                                               CER074
+     C                   Eval(R)   WLKGE  = LKKWGE                                            CER074
+     C                   Endif                                                                CER074
       *
       ** Retrieve relevant record to be deleted
       *
@@ -957,6 +1035,9 @@
       *
      C                   EVAL(R)   LKDESC = WDesc
      C                   EVAL(R)   LKLTYP = WLntyp
+     C                   If        CER074 = 'Y'                                               CER074
+     C                   Eval(R)   LKKWGE = WLKGE                                             CER074
+     C                   Endif                                                                CER074
       *
      C                   ENDIF
       *
@@ -980,6 +1061,9 @@
       *
      C                   EVAL(R)   LKDESC = WDesc
      C                   EVAL(R)   LKLTYP = WLntyp
+     C                   If        CER074 = 'Y'                                               CER074
+     C                   Eval(R)   LKKWGE = WLKGE                                             CER074
+     C                   Endif                                                                CER074
       *
      C                   ENDIF
       *

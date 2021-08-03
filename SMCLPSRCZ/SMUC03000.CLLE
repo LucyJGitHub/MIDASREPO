@@ -1,0 +1,52 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Utility Program for SDCUAHPD')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC03000 - Midas SM Utility Program for SDCUAHPD           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD057554  *CREATE  Date 08Jun21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD057554 - Unable to Release customer on SP23 that has been */
+/*                  closed on earlier SP version.                    */
+/*                  Prevent the deletion of a Non-account Holder     */
+/*                  if it still attached to a Customer.              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2021')
+             DCL        VAR(&TOTREC) TYPE(*DEC) LEN(10 0)
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Update SDCUAHPD file and generate the update report **/
+
+             CALL       PGM(SMU03000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                        CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program SMUC03000 ended abnormally - see joblog') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra +
+                          International Limited')
+
+             ENDPGM

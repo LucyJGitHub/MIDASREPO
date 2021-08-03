@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Journal Entry Interface - Finance')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       XXC001601 - Midas GL Journal Entry Interface Finance        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. FVT104  *CREATE    Date 13Dec18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       FVT104 - 4-Eyes Principle for Journal Upload Tool           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+/** Declare PGM Variables                                            */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2018')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/** Global monitor message                                           */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Set-off Database Error Switches                                   */
+             CHGJOB     SWS(XXXXXX00)
+
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas Local Data Area'))
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(*LIBL/SDFCTLPA (*FILE))
+             MONMSG     MSGID(CPF8351)
+
+/* Call XX001601 Program                                             */
+             CALL       PGM(XX001601)
+
+             MONMSG     MSGID(CPF0001) EXEC(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* If U7/U8 on process data base error                               */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
+             CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             COMMIT
+
+             GOTO       CMDLBL(END)
+
+ABNOR:       ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(END))
+ END:
+             CHGVAR   VAR(&CPYFLD) VALUE('(c) +
+                       Finastra International Limited')
+
+             ENDPGM

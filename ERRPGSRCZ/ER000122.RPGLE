@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041464           Date 23Sep16               *
+      *  Last Amend No. CER076             Date 02Jul19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041464           Date 23Sep16               *
       *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24101           Date 27May09               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)  (Recompile)                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041464 - Non-account holder numbers truncated.  Increase   *
       *             D1CUS to 10. (Recompile)                          *

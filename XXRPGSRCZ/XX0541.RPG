@@ -1,0 +1,864 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Spot Reval by F/Ccy Spot Trade A/c report')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas Accounting Module                              *
+      *                                                               *
+      *  XX0541 - Spot Revaluation Report by                          *
+      *           Foreign Currency Spot Trade Account                 *
+      *                                                               *
+      *  Function:  This program produces the Management account's    *
+      *   (COB)     version of the Spot trade revaluation report.     *
+      *                                                               *
+      *  The XX0541 report will be a copy of the existing MC0540      *
+      *  to show the Spot Revaluation of the Alternate Spot Trade     *
+      *  Accounts as defined in the mapping table                     *
+      *                                                               *
+      *  Called By: MCC0540 - Spot Revaluation Report Component       *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. FVT102  *CREATE    Date 09May17               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  FVT102 - Posting of P/L to Multiple Retained Earnings        *
+      *           Print a separate XX0541P1/AU report for each        *
+      *           Spot Trade a/c code and Foreign Currency.           *
+      *                                                               *
+      *****************************************************************
+     FMCSRRPOQIF  E           K        DISK         KINFSR *PSSR
+      **  Management A/c Spot Trade Accounts
+      *
+     FXX0541AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      **  Spot Revaluation Audit Report
+      *
+     FXX0541P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      **  Spot Revaluation Report by Alternate Spot Trade Account
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   25  - No change in currency                                 *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *   38  - System level requested                                *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *                                                               *
+      *  SRNWBR - Process New Branch                                  *
+      *  SRLINE - Check Remaining Lines on Page                       *
+      *  SRCHBR - Process a Change in Branch                          *
+      *  SRCHCY - Process a Change in Currency                        *
+      *  SRTOTL - Write a Subtotal Line                               *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report                                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRRCFP - RCF Processing for P1 Report                        *
+      *  SRRCFA - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZEDIT  - Edit an Amount                                      *
+      *  ZFRPED - Edit an Amount based on edit code passed            *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      **  Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+      /SPACE 3
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+     ILDA       E DSLDA                         256
+     I                                      204 206 $FCCY                                     FVT102
+     I                                      207 216 $SPTA                                     FVT102
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      **  Data Area giving Installation Control Details
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for XX0541P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for XX0541AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      **  External data structure for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External data structure for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  External data structure for Currency Details
+      *                                                                                       FVT102
+     ISCSARD    E DSSCSARDPD                                                                  FVT102
+      * SAR File Details Accessed via Access Program AOSARDR0                                 FVT102
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      **  Read first record
+      *
+     C                     READ MCSRRPOQ                 89
+      *
+      **  If End of Records, (*IN89), Perform: Audit Reporting (No
+      **  Records); Otherwise, process spot revaluations
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ELSE
+     C                     EXSR SRPROC
+     C                     ENDIF
+      *
+      **  Seton LR and End Program.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  *PSSR  - Error Control Subroutine                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      **  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+     C                     PARM           PLEVL   1
+     C                     PARM           PENTY   3
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'XX0541'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      **  Call Access Program for Bank Details - Title, Run Date,
+      **  Run Day Number and Base Currency
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Call Access Program for Currency Details - Base Currency
+      **  decimal places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BJCYCD    PCCY    3
+     C********** SDCURR    PARM SDCURR    DSFDY                                 CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                 CSD006
+      *
+      **  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVELPCCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    BCNBDP  10
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     ELSE
+     C                     MOVE *OFF      *IN37
+     C                     ENDIF
+      *
+      **  System level requested.
+      *
+     C           PLEVL     IFEQ 'S'
+     C                     MOVE *ON       *IN38
+     C                     ENDIF
+      *
+      **  Check if feature FVT102 is present.                                                 FVT102
+      *                                                                                       FVT102
+     C                     MOVE 'N'       FVT102  1                                           FVT102
+     C                     CALL 'AOSARDR0'                                                    FVT102
+     C                     PARM '       ' @RTCD   7                                           FVT102
+     C                     PARM '*VERIFY' @OPTN   7                                           FVT102
+     C                     PARM 'FVT102'  @SARD   6                                           FVT102
+     C           SCSARD    PARM SCSARD    DSFDY                                               FVT102
+     C*                                                                                       FVT102
+     C           @RTCD     IFEQ *BLANKS                                                       FVT102
+     C                     MOVE 'Y'       FVT102                                              FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Initialise Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         WRCNT   50
+      *
+     C                     Z-ADD0         WSPEQ  150
+     C                     Z-ADD0         WTSPT  150
+     C                     Z-ADD0         WTBCE  150
+     C                     Z-ADD0         WTSPV  150
+     C                     Z-ADD0         WTPLO  150
+     C                     MOVE 'N'       WOPEN   1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to Process Spot Revaluations             *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRNWBR - Process New Branch                      *
+      *              SRLINE - Check Remaining Lines on Page           *
+      *              SRCHBR - Process a Change in Branch              *
+      *              SRTOTL - Print a Subtotal Line                   *
+      *              *PSSR  - Error Control Subroutine                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      **  Process New Branch
+      *
+     C                     EXSR SRNWBR
+      *
+      **  Do While Not End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  Save current branch and current currency details
+      *
+     C                     MOVE SRBRCD    WSVBR   3
+     C                     MOVE SRCYCD    WSVCY   3
+     C                     MOVE SRCYNM    WSVNM  14
+     C                     Z-ADDSRNBDP    WNBDP   10
+     C                     Z-ADDSRSPRT    WSVRT  138
+      *
+      **  Call GL0765 to convert the Period End Balance into Base Ccy
+      *
+     C                     CALL 'GL0765'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM SRCYCD    PCYCD   3
+     C                     PARM BJCYCD    PBCCY   3
+     C                     PARM 99999     PDYNB   50
+     C           WSPEQ     PARM SREPCB    PAMNT  190
+      *
+      **  Handle database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'See Dump'DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     MOVEL'GL0765'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Compute for 'Revaluation P&L'
+      *
+     C           SRBCEQ    SUB  WSPEQ     WRVPL  150
+      *
+      **  Accumulate closing balance, base ccy equivalent, spot trade
+      **  equivalent, and revaluation P&L.
+      *
+     C                     ADD  SREPCB    WTSPT
+     C                     ADD  SRBCEQ    WTBCE
+     C                     ADD  WSPEQ     WTSPV
+     C                     ADD  WRVPL     WTPLO
+      *
+      **  Setup report details
+      *
+     C                     MOVE SRPCCD    RPRFC
+     C                     MOVE SRBKCD    RBKCD
+     C                     MOVE SROTTP    ROTTP
+     C                     MOVE SRTSTY    RTSTY
+     C           SRASNB    IFEQ *ZERO
+     C                     MOVE *BLANKS   RASNB
+     C                     ELSE
+     C                     MOVE SRASNB    RASNB
+     C                     ENDIF
+      *
+      **  Format Spot Position/Closing Balance
+      *
+     C                     Z-ADDSREPCB    ZFLD15
+     C                     Z-ADDSRNBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RSPOT
+      *
+      **  Format Base Currency Equivalent
+      *
+     C                     Z-ADDSRBCEQ    ZFLD15
+     C                     Z-ADDBCNBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RBCEQ
+      *
+      **  Format Spot Value/Spot Trade Equivalent
+      *
+     C                     Z-ADDWSPEQ     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RSPVL
+      *
+      **  Format Revaluation Profit/Loss
+      *
+     C                     Z-ADDWRVPL     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RPRLO
+      *
+      **  Check that sufficient lines remain for the Format
+      *
+     C                     Z-ADD6         RQDLN1
+     C                     EXSR SRLINE
+      *
+      **  Write out Detail Record and add 1 to currency record count.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         WRCNT   50
+      *
+      **  Read next record.
+      *
+     C                     READ MCSRRPOQ                 89
+      *
+      **  If End of File or Change of Branch
+      *
+     C           *IN89     IFEQ *ON
+     C           SRBRCD    ORNE RBRCH
+     C                     EXSR SRCHBR
+     C                     ENDIF
+      *
+      **  If Not End of File and Change of Currency
+      *
+     C           *IN89     IFEQ *OFF
+     C           SRCYCD    ANDNERCYCD
+     C                     EXSR SRCHCY
+     C                     ENDIF
+      *
+      **  End of Do While Not End of Valid Records.
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRNWBR
+      *****************************************************************
+      *                                                               *
+      *  SRNWBR - Subroutine to Process New Branch                    *
+      *                                                               *
+      *  Called By:  SRPROC - Process Detail Line                     *
+      *              SRCHBR - Process a Change in Branch              *
+      *  Calls    :  SRRCFP - RCF Processing for P1                   *
+      *              SRLINE - Check Remaining Lines on Page           *
+      *              *PSSR - Database Error Handling Subroutine       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNWBR    BEGSR                           *** SRNWBR ***
+      *
+      **  Get branch details using access object
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY    'POPTN   7
+     C                     PARM SRBRCD    PBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Handle database error
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVELPBRCA     DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA8BRCD    RBRCH
+     C                     MOVELA8BRNM    RBRNM
+      *
+      **  Open printer file XX0541P1 if entity not blank
+      **  or the printer file is not yet open
+      *
+     C           PENTY     IFNE *BLANK
+     C           WOPEN     ORNE 'Y'
+     C                     OPEN XX0541P1
+     C                     MOVE 'Y'       WOPEN
+      *
+      **  Ensure Report Spool File recorded by RCF
+      *
+     C           PENTY     IFNE *BLANK
+     C                     MOVE SRBRCD    SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+      *
+     C                     EXSR SRRCFP
+     C                     ENDIF
+      *
+      **  Check remaining lines on page
+      *
+     C                     MOVE 'Y'       WCHCY   1
+     C                     Z-ADD99        RQDLN1
+     C                     EXSR SRLINE
+     C                     MOVE 'N'       WCHCY
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRHEAD                                                                        FVT102
+      *****************************************************************                       FVT102
+      *                                                               *                       FVT102
+      *  SRHEAD - Subroutine to output account code to report header  *                       FVT102
+      *                                                               *                       FVT102
+      *  Called By:  SRLINE - Check Remaining Lines on Page           *                       FVT102
+      *              SRAUDT - Audit report and End Program.           *                       FVT102
+      *  Calls    :  none                                             *                       FVT102
+      *                                                               *                       FVT102
+      *****************************************************************                       FVT102
+      *                                                                                       FVT102
+     C           SRHEAD    BEGSR                           *** SRHEAD ***                     FVT102
+      *                                                                                       FVT102
+     C**                   MOVEL$FCCY     RFCCY                                               FVT102
+     C                     MOVEL$FCCY     RCYCD                                               FVT102
+     C                     MOVEL$SPTA     RACCD                                               FVT102
+      *                                                                                       FVT102
+     C                     ENDSR                                                              FVT102
+      *****************************************************************                       FVT102
+      /TITLE SR/SRLINE
+      *****************************************************************
+      *                                                               *
+      *  SRLINE - Subroutine to Check Remaining Lines on Page         *
+      *                                                               *
+      *  Called By:  SRPROC - Detail Processing                       *
+      *              SRNWBR - Process New Branch                      *
+      *  Calls    :  ZEDIT  - Format an Amount                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLINE    BEGSR                           *** SRLINE ***
+      *
+      **  Subtract Current Line Number from Lines per Page
+      *
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+      *
+      **  If remaining lines are less than the lines to print, write
+      **  report headings
+      *
+     C           DIFLN1    IFLT RQDLN1
+      *                                                                                       FVT102
+      **  If FVT102 (multiple retained earnings account) is present,                          FVT102
+      **  output account code to report headings.                                             FVT102
+      *                                                                                       FVT102
+     C           FVT102    IFEQ 'Y'                                                           FVT102
+     C                     EXSR SRHEAD                                                        FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     WRITEHEADP1
+      *
+      **  If no change in currency, add '(CONTINUED)' after ccy name
+      **  and use saved values; otherwise, use new values
+      *
+     C                     MOVE *OFF      *IN25
+     C                     MOVE *BLANKS   ZFIELD
+     C           WCHCY     IFNE 'Y'
+     C                     MOVE *ON       *IN25
+     C                     MOVE WSVCY     RCYCD
+     C                     MOVE WSVNM     RCYNM
+     C                     MOVE WSVRT     ZFIELD
+     C                     ELSE
+     C                     MOVE SRCYCD    RCYCD
+     C                     MOVE SRCYNM    RCYNM
+     C                     MOVE SRSPRT    ZFIELD
+     C                     ENDIF
+      *
+      **  Format Spot Rate
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSPRT
+      *
+     C                     WRITESUBHDG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRCHBR
+      *****************************************************************
+      *                                                               *
+      *  SRCHBR - Subroutine to Process a Change in Branch            *
+      *                                                               *
+      *  Called By:  SRPROC - Detail Processing                       *
+      *  Calls    :  SRTOTL - Print a Subtotal Line                   *
+      *              SRLINE - Check Remaining Lines on Page           *
+      *              SRNWBR - Process New Branch                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHBR    BEGSR                           *** SRCHBR ***
+      *
+      **  Print Currency Totals
+     C                     EXSR SRTOTL
+      *
+      **  If printer file is open, print report footer for previous
+      **  branch or if end of file
+      *
+     C           WOPEN     IFEQ 'Y'
+      *
+     C           PENTY     IFNE *BLANK
+     C           *IN89     OREQ *ON
+      *
+      **  Check that sufficient lines remain for the Format
+     C                     Z-ADD4         RQDLN1
+     C                     EXSR SRLINE
+      *
+      **  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+     C                     CLOSEXX0541P1
+     C                     MOVE 'N'       WOPEN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  If not yet end of file, process new branch
+      *
+     C           *IN89     IFNE *ON
+     C                     EXSR SRNWBR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHCY
+      *****************************************************************
+      *                                                               *
+      *  SRCHBR - Subroutine to Process a Change in Currency          *
+      *                                                               *
+      *  Called By:  SRPROC - Detail Processing                       *
+      *  Calls    :  SRTOTL - Print a Subtotal Line                   *
+      *              SRLINE - Check Remaining Lines on Page           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHCY    BEGSR                           *** SRCHCY ***
+      *
+      **  Print currency totals
+      *
+     C                     EXSR SRTOTL
+      *
+      **  Check remaining lines on page
+      *
+     C                     MOVE 'Y'       WCHCY
+     C                     Z-ADD10        RQDLN1
+     C                     EXSR SRLINE
+     C                     MOVE 'N'       WCHCY
+      *
+      **  If currency not equal, print currency headings
+      *
+     C           SRCYCD    IFNE RCYCD
+     C                     MOVE SRCYCD    RCYCD
+     C                     MOVE SRCYNM    RCYNM
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SRSPRT    ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSPRT
+     C                     WRITESUBHDG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRTOTL
+      *****************************************************************
+      *                                                               *
+      *  SRTOTL - Subroutine to Write a Subtotal record to the Report *
+      *                                                               *
+      *  Called By:  SRPROC - Process Detail Line                     *
+      *              SRCHBR - Process a Change in Branch              *
+      *  Calls    :  none                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTOTL    BEGSR                           *** SRTOTL ***
+      *
+      **  If currency record count is greater than 1, print
+      **  currency totals
+      *
+     C           WRCNT     IFGT 1
+      *
+      **  Format Total Spot Position/Closing Balance
+      *
+     C                     Z-ADDWTSPT     ZFLD15
+     C                     Z-ADDWNBDP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTSPT
+      *
+      **  Format Total Base Currency Equivalent
+      *
+     C                     Z-ADDWTBCE     ZFLD15
+     C                     Z-ADDBCNBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTBCE
+      *
+      **  Format Total Spot Value/Spot Trade Equivalent
+      *
+     C                     Z-ADDWTSPV     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTSPV
+      *
+      **  Format Total Revaluation Profit/Loss
+      *
+     C                     Z-ADDWTPLO     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTPLO
+      *
+     C                     WRITESUBTTL
+     C                     ENDIF
+      *
+      **  Initialise subtotal fields
+      *
+     C                     Z-ADD*ZEROS    WTSPT
+     C                     Z-ADD*ZEROS    WTBCE
+     C                     Z-ADD*ZEROS    WTSPV
+     C                     Z-ADD*ZEROS    WTPLO
+     C                     Z-ADD*ZEROS    WRCNT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              *PSSR  - Error control subroutine                *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+      **  Ensure audit spooled file is recorded by RCF
+      *
+     C                     OPEN XX0541AU
+     C                     EXSR SRRCFA
+      *                                                                                       FVT102
+      **  If FVT102 (multiple retained earnings account) is present,                          FVT102
+      **  output account code to report headings.                                             FVT102
+      *                                                                                       FVT102
+     C           FVT102    IFEQ 'Y'                                                           FVT102
+     C                     EXSR SRHEAD                                                        FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     WRITEHEADAU
+      *
+      **  If there is a DB Error, output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+      *
+      **  If P1 report is open, output the DB Error reference.
+     C           WOPEN     IFEQ 'Y'
+     C                     Z-ADD3         RQDLN1
+     C                     EXSR SRLINE
+     C                     WRITEDBERRF
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  No records read, so output "No Details" message.
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error Control Subroutine                            *
+      *                                                               *
+      *  Called By:  SRINIT - Perform Initialisation Processing       *
+      *              SRPROC - Process Detail Line                     *
+      *              SRNWBR - Process New Branch                      *
+      *  Calls    :  SRAUDT - Produce Audit Report and End Program    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRCFP
+      *****************************************************************
+      *                                                               *
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called By:  SRNWBR - Process New Branch                      *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR                            *** SRRCFP ***
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRCFA
+      *****************************************************************
+      *                                                               *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *  Called By:  SRAUDT - Perform Audit Processing                *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR                            *** SRRCFA ***
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+**  CPY@
+(c) Finastra International Limited. 2017

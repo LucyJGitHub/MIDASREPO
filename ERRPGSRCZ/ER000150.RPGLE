@@ -15,14 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER068             Date 25Feb14               *
+      *  Last Amend No. CER076             Date 02Jul19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24101           Date 27May09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *             (Recompile)                                       *
@@ -43,6 +46,7 @@
       *               birth or address                                *
       *    34         (WAccNotSubj) Account not subject to @24c       *
       *               anymore                                         *
+      *    35         BaFin version 3.3                               *                       CER076
       *                                                               *
       *    60         EOF of ERTINFL0                                 *
       *    61         EOF of ERACEXL2                                 *
@@ -154,7 +158,10 @@
       ** External data structures for Bank Details
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-      *
+      *                                                                                       CER076
+      ** External data structures for Switchable Feature details                              CER076
+      *                                                                                       CER076
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER076
       ** Definition of indicators
       *
      D IndicatorPtr    S               *   INZ(%ADDR(*IN))
@@ -175,6 +182,10 @@
       ** 34 = Account not subject to @24c anymore
       *
      D  WAccNotSubj           34     34
+      *                                                                                       CER076
+      ** 35 = BaFin version 3.3                                                               CER076
+      *                                                                                       CER076
+     D  WCER076               35     35                                                       CER076
       *
       ** 71 = New page
       *
@@ -448,6 +459,11 @@
      C                   EVAL      R13ZIP = F13ZIP
      C                   EVAL      R13TWN = F13TWN
      C                   EVAL      R13CTY = F13CTY
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      R13TINO = F13TINO                                          CER076
+     C                   EVAL      R13EINO = F13EINO                                          CER076
+     C                   EVAL      WCER076 = *ON                                              CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set indicator for writing address
       *
@@ -455,6 +471,9 @@
      C                   EVAL      WPrtAddress = *ON
      C                   ELSE
      C                   EVAL      WPrtAddress = *OFF
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      WPrtAddress = *ON                                          CER076
+     C                   ENDIF                                                                CER076
      C                   ENDIF
       *
       ** Print account person record
@@ -610,6 +629,26 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
+      ** Check if CER076 is on                                                                CER076
+      *                                                                                       CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *Blanks       PRtCd                                        CER076
+     C                   PARM      '*VERIFY'     POptn                                        CER076
+     C                   PARM      'CER076'      PSard             6                          CER076
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER076
+                                                                                              CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   IF        PRtCd <> *Blanks                                           CER076
+     C                   IF        PRtCd <> '*NRF'                                            CER076
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER076
+     C                   EVAL      DBASE =  901                                               CER076
+     C                   EVAL      DBKEY =  PSard                                             CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      CER076 = 'Y'                                               CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
       ** Ensure Report Spool File recorded by RCF.
       *
      C                   CALL      'ZSFILE'

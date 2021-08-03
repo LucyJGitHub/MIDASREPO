@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052566           Date 24Jan19               *
-      *  Prev Amend No. MD052465           Date 10Jan19               *
+      *  Last Amend No. CER076             Date 02Jul19               *
+      *  Prev Amend No. CSD100             Date 03Aug17               *
+      *                 MD052566           Date 24Jan19               *
+      *                 MD052465           Date 10Jan19               *
       *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036509           Date 12Nov15               *
@@ -63,6 +65,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076   - Update to KWG § 24c interface specification       *
+      *             (BaFin version 3.3)                               *
+      *  CSD100 - Patronymic and Gender Fields for Non-Account Holder *
+      *           (Recompile)                                         *
       *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
       *             the country of tax code table (Recompile)         *
       *  MD052465 - Not possible to capture mandatory US TIN for      *
@@ -321,6 +327,8 @@
      D @opsel          S              1A   Dim(ArrayMax)
      D @nasel          S             10A   Dim(ArrayMax)
  
+     D/COPY QWINDSRC,SDNAHLDTA                                                                CER076
+                                                                                              CER076
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -581,6 +589,11 @@
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
                                                                                               CGL132
+      ** Do window processing                                                                 CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'E'                                                        CER076
+     C                   EXSR      Scrn@E                                                     CER076
+     C                   ENDDO                                                                CER076
  
       ** Do File updates
  
@@ -1443,6 +1456,12 @@
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
                                                                                               CGL132
+      ** Do window processing                                                                 CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'E'                                                        CER076
+     C                   EXSR      Scrn@E                                                     CER076
+     C                   ENDDO                                                                CER076
+
       ** Build browse subfile record                                                          CGL177
       *                                                                                       CGL177
      C     @SCRN         IFEQ      '8'                                                        CGL177
@@ -1996,6 +2015,12 @@
      C     @SCRN         DOWEQ     'N'                                                        CGL177
      C                   EXSR      SCRN@O                                                     CGL177
      C                   ENDDO                                                                CGL177
+                                                                                              CER076
+      ** Do window processing                                                                 CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'E'                                                        CER076
+     C                   EXSR      Scrn@E                                                     CER076
+     C                   ENDDO                                                                CER076
                                                                                               CGL177
       ** Build browse subfile record                                                          CGL177
                                                                                               CGL177
@@ -3032,7 +3057,11 @@
       *                                                                                       CGL132
      C     DDACTN        IFEQ      'I'                                                        CGL132
      C     DDACTN        OREQ      'A'                                                        CGL132
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   MOVEL     'E'           @SCRN                                        CER076
+     C                   ELSE                                                                 CER076
      C                   MOVEL     'U'           @SCRN                                        CGL132
+     C                   ENDIF                                                                CER076
      C                   ELSE                                                                 CGL132
      C                   IF        WFATCABRW <> ' ' AND                                     MD027324
      C                             CGL132 = 'Y'                                             MD027324
@@ -4442,6 +4471,83 @@
      C                   ENDIF                                                                CGL157
      C                   ENDSR                                                                CGL157
       *****************************************************************
+      /EJECT                                                                                  CER076
+      *****************************************************************                       CER076
+      * SCRN@E - Window Processing                                                            CER076
+      *****************************************************************                       CER076
+     C     Scrn@E        BEGSR                                                                CER076
+      *                                                                                       CER076
+      ** Write/Read Display Screen - Primary Details                                          CER076
+      *                                                                                       CER076
+     C                   IF        DDACTN = 'I'                                               CER076
+     C                   CALLB     'SDNAHL2DP'                                                CER076
+      ** Input parameters                                                                     CER076
+     C                   PARM      *BLANK        RetCodeOut                                   CER076
+     C                   PARM                    NewNaPrim                                    CER076
+     C                   PARM                    OkNaPrim                                     CER076
+     C                   PARM                    FldNameArr                                   CER076
+     C                   PARM                    MsgIdArr                                     CER076
+     C                   PARM                    MsgDtaArr                                    CER076
+     C                   PARM                    WFldNamArr                                   CER076
+     C                   PARM                    WMsgIdArr                                    CER076
+     C                   PARM                    WMsgDtaArr                                   CER076
+     C                   PARM                    @EKYFD                                       CER076
+     C                   PARM                    @EDTFD                                       CER076
+     C                   PARM                    @EINKG                                       CER076
+     C                   PARM                    @EINKJ                                       CER076
+     C                   PARM                    @EINKX                                       CER076
+      ** OutPut parameters                                                                    CER076
+     C                   PARM                    @INKC                                        CER076
+     C                   PARM                    @INKG                                        CER076
+     C                   PARM                    @INKH                                        CER076
+     C                   PARM                    @INKJ                                        CER076
+     C                   PARM                    @INKL                                        CER076
+     C                   PARM                    @INKX                                        CER076
+     C                   PARM      'Y'           WriteOnly                                    CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C/COPY WNCPYSRC,SDNAHLSMV1                                                               CER076
+      *                                                                                       CER076
+     C                   CALL      'WN0010'                                                   CER076
+     C                   PARM      'SDNAHLSIN'   PWPgm            10                          CER076
+     C                   PARM                    PWKey             2                          CER076
+     C                   PARM      DDACTN        PWAction          1                          CER076
+     C                   PARM                    Data                                         CER076
+     C                   PARM      *Blanks       PWRtn             7                          CER076
+     C                   PARM                    PWSpare         256                          CER076
+      *                                                                                       CER076
+      ** If F3 pressed, end program                                                           CER076
+      *                                                                                       CER076
+     C     PWRtn         IFEQ      'Y2U9999'                                                  CER076
+     C                   EXSR      SREndP                                                     CER076
+     C                   ELSE                                                                 CER076
+      *                                                                                       CER076
+      ** Else if F12 pressed, return to Primary Details Screen                                CER076
+      *                                                                                       CER076
+     C     PWRtn         IFEQ      'USR0790'                                                  CER076
+     C                   EVAL      @SCRN = 'P'                                                CER076
+     C                   EVAL      WriteOnly = 'N'                                            CER076
+     C                   ROLBK                                                                CER076
+     C                   ELSE                                                                 CER076
+      *                                                                                       CER076
+      ** Else if ENTER key was pressed,                                                       CER076
+      **      if action is Enquire, move onto Non-Account Holder details by Country of Tax    CER076
+      **      if Insert or Delete, do update processing                                       CER076
+      *                                                                                       CER076
+     C     DDACTN        IFEQ      'E'                                                        CER076
+     C                   EVAL      @SCRN = 'A'                                                CER076
+     C                   ELSE                                                                 CER076
+     C     DDACTN        IFEQ      'I'                                                        CER076
+     C     DDACTN        OREQ      'A'                                                        CER076
+     C                   EVAL      @SCRN = 'U'                                                CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDSR                                                                CER076
+      *****************************************************************                       CER076
       /EJECT
       *****************************************************************
       ** SRInitial - Go To Initial Screen
@@ -4616,6 +4722,26 @@
      C                   EVAL      CGL157 = 'Y'                                               CGL157
      C                   ENDIF                                                                CGL157
      C                   EVAL      WFATCABRW = ' '                                          MD027324
+                                                                                              CER076
+      ** Check if CER076 is on                                                                CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *Blanks       Retcd                                        CER076
+     C                   PARM      '*VERIFY'     Option                                       CER076
+     C                   PARM      'CER076'      PSard                                        CER076
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER076
+                                                                                              CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   IF        Retcd <> *Blanks                                           CER076
+     C                   IF        Retcd <> '*NRF'                                            CER076
+     C                   MOVEL     'SCSARDPD'    Dbfile                                       CER076
+     C                   MOVEL     '912'         Dbase                                        CER076
+     C                   MOVEL     PSard         Dbkey                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      CER076 = 'Y'                                               CER076
+     C                   ENDIF                                                                CER076
       ** Go to initial screen
  
      C                   EXSR      SRInitial

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD055330           Date 14Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER076             Date 02Jul19               *
+      *  Prev Amend No. MD055330           Date 14Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26298           Date 06Oct09               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)                                 *
       *  MD055330 - ERC0100 continuously running during COB           *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
@@ -278,6 +281,12 @@
      C                   EVAL      F1CZIP = %TRIM(F13ZIP)                                   BUG26298
      C                   EVAL      F1CTWN = %TRIM(F13TWN)                                   BUG26298
      C                   EVAL      F1CCTY = %TRIM(F13CTY)                                   BUG26298
+     C                   EVAL      BF1TINO = %TRIM(%SUBST(F13TINO:1:11))                      CER076
+     C                   EVAL      TF1TINO = %TRIM(%SUBST(F13TINO:1:11))                      CER076
+     C                   EVAL      F1TINO  = %TRIM(%SUBST(F13TINO:1:11))                      CER076
+     C                   EVAL      BF1EINO = %TRIM(F13EINO)                                   CER076
+     C                   EVAL      TF1EINO = %TRIM(F13EINO)                                   CER076
+     C                   EVAL      F1EINO  = %TRIM(F13EINO)                                   CER076
       *
      C                   IF        F13BDT <> 0
       *

@@ -1441,6 +1441,7 @@
       *
       ***  Update shadow files
       *
+     C                   MOVEL     L_CLFRNT      W2FRNT            8                        MD058476
      C     L_CLCHTP      IFEQ      'I'
      C     L_CLCHTP      OREQ      'A'
      C     L_CLCHTP      OREQ      'R'
@@ -1459,6 +1460,7 @@
      C     MPHAS         OREQ      'C'                                                      MD058476
      C     CAP774        ANDEQ     'Y'                                                      MD058476
      C     SNMODE        ANDEQ     'NIGHT'                                                  MD058476
+     C     W2FRNT        ANDNE     'LE000473'                                               MD058476
      C/COPY WNCPYSRC,LEH01179
      C                   EXSR      SRSHDW
      C                   ENDIF                                                                CLE134
@@ -7734,6 +7736,7 @@
      C                   Endif                                                                CLE055
      C                   Endif                                                                CLE055
       *
+     C                   MOVEL     L_CLFRNT      W2FRNT            8                        MD058476
      C                   IF        CLE134      = 'N'           OR                          AR317473A
      C                             CLE134      = 'Y'           AND                         AR317473A
      C**********                   *IN99       = '0'                              AR317473A MD026167
@@ -7747,7 +7750,8 @@
      C                             *IN99       = '0'           AND                          MD058476
      C                             CAP774      = 'Y'           AND                          MD058476
      C                             SNMODE      = 'NIGHT'       AND                          MD058476
-     C                             MPHAS       = 'C'                                        MD058476
+     C                             MPHAS       = 'C'           AND                          MD058476
+     C                             W2FRNT      <>'LE000473'                                 MD058476
      C                   CALL      'AOOULEU0'
      C                   PARM                    @RTCD
      C                   PARM                    Z#BSTS

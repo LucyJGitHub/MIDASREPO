@@ -10,18 +10,21 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058236           Date 07Jul21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E32919             Date 26/06/91             */
+/*                      E32919             Date 26/06/91             */
 /*                      S01117             Date 20Sep90              */
 /*                      S01194            DATE   20SEP90            */
 /*                                                                  */
 /********************************************************************/
+/*       MD058236 - Added Monitor Message CPF0000 to turn on U7/U8   */
+/*                to enable abnormal job termination.                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       E32919 - EXTRACT FILE INPAYEX NOW GENERATED WITH  FULL     */
 /*                ADDRESS OF SENDER AND BENEFICIARY TO PROVIDE      */
@@ -31,7 +34,7 @@
 /********************************************************************/
 /**          PGM        PARM(&TYPE)                                  /*S01117*/
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)               /*S01117*/
- 
+
 /**     DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)                    /*S01194*/
         DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                    /*S01194*/
         DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
@@ -68,10 +71,10 @@
                           AND TRY AGAIN') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(WAIT)
              ENDDO
- 
- 
+
+
 /*GENERATE INPAYEX EXTRACT RECORDS*/
- 
+
              CALL PGM(FT0249) PARM(&TYPE)
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)
              SNDPGMMSG  MSG('CALL TO EXTRACT PROGRAM FT0249 FROM +
@@ -79,20 +82,20 @@
                           TOMSGQ(MOPERQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(END))
 /*E32919*/
- 
+
 /***Override*if*required***/                                         /*S01117*/
 /**     IF (&TYPE = '1') THEN(DO)                                    /*S01117*/
 /**     OVRDBF INPASA INPAUT                                         /*S01117*/
 /**     ENDDO                                                        /*S01117*/
- 
+
 /**     IF (&TYPE = '2') THEN(DO)                                    /*S01117*/
 /**     OVRDBF INPASA INPNAS                                         /*S01117*/
 /**     ENDDO                                                        /*S01117*/
- 
- 
+
+
 /**/                                                                 /*S01117*/
 /** SET UP OVER RIDES **/                                            /*S01117*/
 /**/                                                                 /*S01117*/
@@ -133,7 +136,7 @@
 /**          CALL       PGM(FT0250) PARM(&TYPE)                      /*S01117*/
              CALL       PGM(FT0250) PARM(&RSEQ &RLEV &RENT &TYPE +
                           &BORO)                                     /*S01117*/
- 
+
 /** Delete*Overrides*if*present **/                                  /*S01117*/
 /**          IF         COND(&TYPE = '1' *OR &TYPE = '2') THEN(DO)   /*S01117*/
 /**     DLTOVR INPASA                                                /*S01117*/
@@ -145,7 +148,7 @@
 /**/                                                                 /*S01117*/
              DLTOVR     FILE(INPASABB)                               /*S01117*/
              MONMSG     MSGID(CPF9841)                               /*S01117*/
- 
+
 /**/
 /** CHECK FOR DATABASE ERRORS TRAPPED BY THE PROGRAM        **/
 /**/
@@ -164,6 +167,7 @@ END:
 /*E32919*/
 /* CLEAR EXTRACT FILE INPAYEX */
              CLRPFM     FILE(INPAYEX)
+             MONMSG     MSGID(CPF0000) EXEC(CHGJOB SWS(XXXXXX11))                       /*MD058236*/
 /*E32919*/
                                                                       /*E32919*/
 WAIT:

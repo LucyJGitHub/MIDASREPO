@@ -28,8 +28,9 @@
      F*****************************************************************
      F********************************************************************
      F*                                                                  *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF002 - Global Processing SPF changes                       *
@@ -121,7 +123,8 @@
      D INFDS$        E DS                  EXTNAME(Y2I$DSP)
       * Printer file information data structure
       *
-     D P@CMPN        E DS                  EXTNAME(CBCMPNPD)
+     D*P@CMPN***     E DS                  EXTNAME(CBCMPNPD)                                MD055891
+     D P@CMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
       *
       /EJECT
       * Parameter declarations

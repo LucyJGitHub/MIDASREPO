@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD051541           Date 24Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD051541           Date 24Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR967496           Date 10May12               *
       *                 CUP021  *CREATE    Date 02Feb11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD051541 - Avoid duplicate key error for CBMEXCPD.           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR967496 - CBMEXCPD Sequencing error                         *
@@ -64,14 +66,20 @@
       *
      C                   EVAL      Index = 1                                                MD051541
       * Setup initial values.
-     C                   IF        PFile = 'CBDPRLPD'
+     C**********         IF        PFile = 'CBDPRLPD'                                       MD055891
+     C                   IF        PFile = 'CBDPRCTD' or                                    MD055891
+     C                             PFile = 'CBDPRBTD'                                       MD055891
      C**********         EVAL      Unique3n = 999                                           AR967496
      C                   EVAL      StartPos = 16
      C                   EVAL      Length = 3
      C                   ENDIF
       *
-     C                   IF        PFile = 'CBMEXCPD' or
-     C                             PFile = 'CBMDCNPD'
+     C**********         IF        PFile = 'CBMEXCPD' or                                    MD055891
+     C                   IF        PFile = 'CBMEXCTD' or                                    MD055891
+     C                             PFile = 'CBMEXBTD' or                                    MD055891
+     C**********                   PFile = 'CBMDCNPD'                                       MD055891
+     C                             PFile = 'CBMDCCTD' or                                    MD055891
+     C                             PFile = 'CBMDCBTD'                                       MD055891
      C**********         EVAL      Unique2n = 99                                            AR967496
      C                   EVAL      StartPos = 16
      C                   EVAL      Length = 2
@@ -85,7 +93,9 @@
       *
      C                   IF        ATFILE = PFile
       *
-     C                   IF        ATFILE = 'CBDPRLPD'
+     C**********         IF        ATFILE = 'CBDPRLPD'                                      MD055891
+     C                   IF        ATFILE = 'CBDPRCTD' or                                   MD055891
+     C                             ATFILE = 'CBDPRBTD'                                      MD055891
      C                   IF        ATACT = 'I'
      C                   IF        %SUBST(ATDATA:1:10) <> SaveCmp                           AR967496
      C                             or %SUBST(ATDATA:11:5) <> SaveSeq                        AR967496
@@ -103,7 +113,9 @@
       *
      C**********         IF        ATFILE = 'CBMEXCPD' or                                   MD051541
      C**********                   ATFILE = 'CBMDCNPD'                                      MD051541
-     C                   IF        ATFILE = 'CBMDCNPD'                                      MD051541
+     C***********        IF        ATFILE = 'CBMDCNPD'                             MD051541 MD055891
+     C                   IF        ATFILE = 'CBMDCCTD' or                                   MD055891
+     C                             ATFILE = 'CBMDCBTD'                                      MD055891
      C                   IF        ATACT = 'I'
      C                   IF        %SUBST(ATDATA:1:10) <> SaveCmp                           AR967496
      C                             or %SUBST(ATDATA:11:5) <> SaveSeq                        AR967496
@@ -119,7 +131,9 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ATFILE = 'CBMEXCPD'                                      MD051541
+     C**********         IF        ATFILE = 'CBMEXCPD'                             MD051541 MD055891
+     C                   IF        ATFILE = 'CBMEXCTD' or                                   MD055891
+     C                             ATFILE = 'CBMEXBTD'                                      MD055891
      C                   IF        ATACT = 'I'                                              MD051541
      C                   EVAL      Unique2n = 99                                            MD051541
      C                   EVAL      Idx = 1                                                  MD051541

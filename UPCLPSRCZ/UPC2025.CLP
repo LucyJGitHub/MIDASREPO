@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055891           Date 01Sep20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27240           Date 12Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG27240- Applied CPK029 file locking fix                   */
@@ -112,7 +114,8 @@ VALIDATE:                                                                       
 /* Set up library list */
              CALL       PGM(UPC0014) PARM(&SBSID)
 
-             CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')
+/**********  CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB') */                       /*MD055891*/
+             CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DVLIB')                           /*MD055891*/
 
              CALL       PGM(UPC0020) PARM(&LIB)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)

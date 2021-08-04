@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058443             Date 12Jul21             *
-      *  Prev Amend No. MD058177             Date 27May21             *
+      *  Last Amend No. MD055891             Date 01Sep20             *
+      *  Prev Amend No. MD058443             Date 12Jul21             *
+      *                 MD058177             Date 27May21             *
       *                 MD056565             Date 21Jan21             *
       *                 MD056751             Date 20Sep20             *
       *                 MD056613             Date 20Sep20             *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD058443 - Remove record from SDSCOBTD as it was made        *
       *             redundant                                         *
       *  MD058177 - Error for RPTRAQPD take-on. Use DISTINCT          *
@@ -106,10 +108,13 @@
      C                   exsr      SR_SDIPVCTD                                              MD056613
                                                                                             MD056613
      C                   Other                                                              MD055681
+     C                   If        XINDEX <> 'CBDPRCTD'                                     MD055891
+     C                             and XINDEX <> 'CBMEXCTD'                                 MD055891
       * Update Extension file with content of 'old file'
      C                   If        %SUBST(XINDEX:2:4) <> 'PDFL'                             MD056565
      C                   exsr      SR_UpdExt
      C                   Endif                                                              MD056565
+     C                   endif                                                              MD055891
 
       * Add Bespoke record if not found in core file
      C                   exsr      SR_AddBsp
@@ -237,8 +242,11 @@
      C                   endif                                                              MD058177
      C                   eval      First = 'N'
      C                   ELSE
+     C                   If        WHFLDI = 'DHCPCA'                                        MD055891
+     C                   else                                                               MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                              MD055891
      C                   ENDIF
      C                   ENDIF
       *
@@ -345,6 +353,7 @@
      C                   eval      First = 'N'
      C                   ELSE
      C                   IF        WHFLDI = 'AXPROT'                                        MD055681
+     C                             or WHFLDI = 'DHCPCA'                                     MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD055681
      C                   eval      PSELECT = %trimr(PSELECT) + ', ' + '''Y'''               MD055681
      C                   else                                                               MD055681
@@ -395,6 +404,16 @@
 
       ** If records were added in Bespoke, records must be added in Extension file too
      C                   If        TotRow > 0
+                                                                                            MD055891
+      * if COB file, set unique number to the highest                                       MD055891
+     C                   if        XINDEX = 'CBDPRCTD'                                      MD055891
+     C                             or XINDEX = 'CBMEXCTD'                                   MD055891
+     C                             or XINDEX = 'CBMDCCTD'                                   MD055891
+     C                   CALL      'UP0888'                                                 MD055891
+     C                   PARM                    XINDEX                                     MD055891
+     C                   PARM                    ERROR                                      MD055891
+     C                   Endif                                                              MD055891
+                                                                                            MD055891
      C                   exsr      SR_AddExt
      C                   ENDIF
      C

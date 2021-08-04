@@ -9,18 +9,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055891           Date 01Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK018             Date 21Feb04              */
+/*                      CPK018             Date 21Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01417             Date 19Jul93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                    /*S01417*/
+/*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Tidy up message.              /*S01417*/
 /*       S01417 - Add Parameter to signify 'Files Not Validated'.     /*S01417*/
@@ -34,12 +36,14 @@
              PGM        PARM(&NOTVAL &LIB)                            /*S01417*/
 /**/
              DCL        VAR(&NOTVAL) TYPE(*CHAR) LEN(1)               /*S01417*/
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7)                                  /*MD055891*/
+             DCL        VAR(&LIBGRP) TYPE(*CHAR) LEN(2)                                 /*MD055891*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
 /**/
              DCLF       FILE(CHKCOBDF)
- 
+
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
@@ -55,22 +59,31 @@
              CHGVAR     VAR(&IN51) VALUE('1')
              SNDRCVF
              ENDDO                                                    /*S01417*/
- 
+
 /* Before copying run program to set statuses to blank. */                                /*CPK018*/
              CALL       PGM(CB000028)                                                     /*CPK018*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CPK018*/
                 GOTO       CMDLBL(ABNOR)                                                  /*CPK018*/
              ENDDO                                                                        /*CPK018*/
- 
+                                                                                        /*MD055891*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIBGRP)                            /*MD055891*/
+             CHGVAR     VAR(&DVLIB) VALUE(&LIBGRP *TCAT 'DVLIB')                        /*MD055891*/
+
 /**/
 /* COPY FROM THE COB FILES OF THE REQUESTED */
 /* LIBRARY INTO THE CHECKING FILES */
 /**/
-             CPYF       FROMFILE(&LIB/CBCMPNPD) TOFILE(CHKCMPPD) +
-                          MBROPT(*REPLACE)
-             CPYF       FROMFILE(&LIB/CBDPRLPD) TOFILE(CHKDPRPD) +
-                          MBROPT(*REPLACE) FMTOPT(*MAP)               /*S01417*/
+/**********  CPYF       FROMFILE(&LIB/CBCMPNPD) TOFILE(CHKCMPPD) +
+                          MBROPT(*REPLACE) */                                           /*MD055891*/
+             CPYF       FROMFILE(&DVLIB/CBCMPJW0) TOFILE(CHKCMPPD) +
+                          MBROPT(*REPLACE) PRINT(*NONE) FMTOPT(*MAP +
+                          *DROP)                                                        /*MD055891*/
+/**********  CPYF       FROMFILE(&LIB/CBDPRLPD) TOFILE(CHKDPRPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP) */            /*S01417*/        /*MD055891*/
 /*                        MBROPT(*REPLACE)                            /*S01417*/
+             CPYF       FROMFILE(&DVLIB/CBDPRJW0) TOFILE(CHKDPRPD) +
+                          MBROPT(*REPLACE) PRINT(*NONE) FMTOPT(*MAP +
+                          *DROP)                                                        /*MD055891*/
 /**/
 /**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +                                 */ /*CPK018*/
 /**********               MSGDTA('Validation of COB Component and +                    */ /*CPK018*/
@@ -126,5 +139,5 @@
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

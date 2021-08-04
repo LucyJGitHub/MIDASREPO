@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -39,7 +41,7 @@
      F*                                                               *
      F*                                                               *
      F*****************************************************************
-     FCBCMPNL0  IF   E           K DISK
+     F*CBCMPNL0* IF   E           K DISK                                                    MD055891
      F***FCRCOML3IF  E           K        DISK                            064115
      F*FCRCOMJ3* IF   E           K DISK                                             064115 MD055265
      F*
@@ -85,6 +87,7 @@
      D FCRCOM        E DS                  EXTNAME(FCRCOJW1)                                MD055265
      D*NullInds*       s              5i 0 dim(12)                                 MD055265 MD055681
      D NullInds        s              5i 0 dim(13)                                          MD055681
+     D CBCMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
      I*****************************************************************
      I/EJECT
      C*
@@ -93,7 +96,8 @@
      C     *ENTRY        PLIST
      C                   PARM                    COMPNM           10
      C                   PARM                    COMPSQ            5
-     C                   PARM                    DHCPRM
+     C**********         PARM                    DHCPRM                                     MD055891
+     C                   PARM                    XXCPRM          100                        MD055891
      C*
      C** KEY LIST FOR CHAIN TO CBCOMSL0
      C*
@@ -109,7 +113,18 @@
      C*
      C** CHAIN TO CBCMPNL0 FOR COMPONENT DETAILS
      C*
-     C     CKEY          CHAIN     @DHREGG                            50
+     C*****CKEY*         CHAIN     @DHREGG                            50                    MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ SELECT *                                                                            MD055891
+     C+ into :CBCMPN                                                                        MD055891
+     C+ from CBCMPJW0                                                                       MD055891
+     C+ where DHCOTT = :COMPNM and DHCSEQ = :COMPSQ                                         MD055891
+     C/END-EXEC                                                                             MD055891
+     C                   If        SQLCODE = 100                                            MD055891
+     C                   SETON                                        50                    MD055891
+     C                   Else                                                               MD055891
+     C                   Setoff                                       50                    MD055891
+     C                   ENDIF                                                              MD055891
      C*
      C** IF COMPONENT NOT FOUND CHECK THE RCF FILE
      C** IN CASE ONLY DEFINED AS AN INPUT CYCLE REPORT
@@ -123,7 +138,8 @@
      C+ from FCRCOJW1                                                                       MD055265
      C+ where D3COTT = :COMPNM and D3CSEQ = :COMPSQ                                         MD055265
      C/END-EXEC                                                                             MD055265
-     C                   MOVE      D3CLPM        DHCPRM
+     C**********         MOVE      D3CLPM        DHCPRM                                     MD055891
+     C                   MOVE      D3CLPM        XXCPRM                                     MD055891
      C                   END
      C*
      C** RETURN TO CALLING PROGRAM

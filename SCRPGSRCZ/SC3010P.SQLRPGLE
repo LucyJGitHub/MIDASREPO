@@ -28,8 +28,9 @@
      F*****************************************************************
      F********************************************************************
      F*                                                                  *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF002 - Global Processing SPF changes                       *
@@ -121,7 +123,8 @@
      D INFDS$        E DS                  EXTNAME(Y2I$DSP)
       * Printer file information data structure
       *
-     D P@CMPN        E DS                  EXTNAME(CBCMPNPD)
+     D*P@CMPN***     E DS                  EXTNAME(CBCMPNPD)                                MD055891
+     D P@CMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
      I*
@@ -573,7 +576,7 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFC        OREQ      '1'
-     C     KRSC          READE     @SAROL3                                90    *
+     C*****KRSC*         READE     @SAROL3                                90    *
       * Transfer error indicator to EOF flag
      C                   MOVEL     *IN90         W0EOFC            1
       * Quit if no record read
@@ -824,7 +827,7 @@
       * Move fields to key list
      C                   MOVEL     $BSARN        WQKE01                         Switchable Feat
       * Establish starting position
-     C     KRSE          SETLL     @SARRL1                                      *
+     C*****KRSE*         SETLL     @SARRL1                                      *
       * Read first record with user selection
      C                   EXSR      E3READ
      C     W0EOFE        IFNE      '0'                                          IF
@@ -1172,7 +1175,7 @@
       * Move fields to key list
      C                   MOVEL     $BSARN        WQKG01                         Switchable Feat
       * Establish starting position
-     C     KRSG          SETLL     @SAROL4                                      *
+     C*****KRSG*         SETLL     @SAROL4                                      *
       * Read first record with user selection
      C                   EXSR      G3READ
      C     W0EOFG        IFNE      '0'                                          IF

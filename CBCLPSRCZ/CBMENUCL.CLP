@@ -9,13 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055891           Date 01Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 207764             Date 23Jul02              */
+/*                      207764             Date 23Jul02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      192731             Date 11Jul01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       207764 - Change all SAV* and RST* commands to print a       */
 /*                report of objects saved or restored.               */
@@ -49,6 +51,7 @@
                                                                       /*S01417*/
              DCL        VAR(&LIBGRP) TYPE(*CHAR) LEN(2)               /*S01417*/
              DCL        VAR(&DILIB) TYPE(*CHAR) LEN(7)                /*S01417*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)                                  /*MD055891*/
              DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(8)               /*S01417*/
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                 /*S01417*/
                                                                       /*S01417*/
@@ -77,7 +80,7 @@
                           2001')
                                                                       /*S01417*/
              DCLF       FILE(*LIBL/CBMENU)                            /*S01417*/
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
 /**/                                                                  /*S01417*/
@@ -133,6 +136,7 @@
                                                                       /*S01417*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIBGRP)          /*S01417*/
              CHGVAR     VAR(&DILIB) VALUE(&LIBGRP *TCAT 'DILIB')      /*S01417*/
+             CHGVAR     VAR(&DMLIB) VALUE(&LIBGRP *TCAT 'DMLIB')                        /*MD055891*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,CBMENUCMP1                                          */
                                                                       /*S01408*/
@@ -147,6 +151,9 @@
              CRTSAVF    FILE(&DILIB/COBFILES)                         /*S01417*/
              MONMSG     MSGID(CPF7302)                                /*S01417*/
                                                                       /*S01417*/
+             CRTSAVF    FILE(&DILIB/COBFILES_M)                                         /*MD055891*/
+             MONMSG     MSGID(CPF7302)                                                  /*MD055891*/
+                                                                                        /*MD055891*/
 /* Clear old Save Files                                               /*S01417*/
 /* If an old save file exists and not authorised to it, end program   /*S01417*/
                                                                       /*S01417*/
@@ -160,6 +167,16 @@
                         GOTO       CMDLBL(END)                        /*S01417*/
              ENDDO                                                    /*S01417*/
                                                                       /*S01417*/
+             CLRSAVF    FILE(&DILIB/COBFILES_M)                                         /*MD055891*/
+             MONMSG     MSGID(CPF9822) EXEC(DO)                                         /*MD055891*/
+                        SNDPGMMSG  MSG('This user is not authorised +
+                                   to the save file COBFILES_M.  To use +
+                                   the COB file utilities, authority +
+                                   to this file is required.') +
+                                   TOPGMQ(*EXT)                                         /*MD055891*/
+                        GOTO       CMDLBL(END)                                          /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
 /* Save Physical Files                                                /*S01417*/
                                                                       /*S01417*/
 /************SAVOBJ     OBJ(CBCMPNPD CBDPRLPD CBMEXCPD CBMDCNPD) +
@@ -170,12 +187,23 @@
 /**********  SAVOBJ     OBJ(CBCMPNPD CBDPRLPD CBMEXCPD CBMDCNPD) + */          /*192731*/ /*207764*/
 /**********               LIB(&DTALIB) DEV(*SAVF) +                */          /*192731*/ /*207764*/
 /**********               SAVF(&DILIB/COBFILES) USEOPTBLK(*NO)     */          /*192731*/ /*207764*/
-             SAVOBJ     OBJ(CBCMPNPD CBDPRLPD CBMEXCPD CBMDCNPD) +
+/**********  SAVOBJ     OBJ(CBCMPNPD CBDPRLPD CBMEXCPD CBMDCNPD) +
                           LIB(&DTALIB) DEV(*SAVF) +
                           SAVF(&DILIB/COBFILES) USEOPTBLK(*NO) +
-                          OUTPUT(*PRINT)                                                  /*207764*/
+                          OUTPUT(*PRINT) */                                  /*207764*/ /*MD055891*/
+             SAVOBJ     OBJ(CBCMPCTD CBDPRCTD CBMEXCTD CBMDCCTD) +
+                          LIB(&DTALIB) DEV(*SAVF) +
+                          SAVF(&DILIB/COBFILES) USEOPTBLK(*NO) +
+                          OUTPUT(*PRINT)                                                /*MD055891*/
              MONMSG     MSGID(CPF0000)                                /*S01417*/
                                                                       /*S01417*/
+             SAVOBJ     OBJ(CBCMPBTD CBDPRBTD CBMEXBTD CBMDCBTD +
+                          CBCMPXTD CBDPRXTD CBMEXXTD CBMDCXTD) +
+                          LIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/COBFILES_M) USEOPTBLK(*NO) +
+                          OUTPUT(*PRINT)                                                /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+                                                                                        /*MD055891*/
 /* DISPLAY CBMENU  */
                                                                       /*S01417*/
 /**TAG:******GO*********MENU(CBMENU)                                  /*S01417*/
@@ -273,31 +301,92 @@
 /**********                    CBMDCNPD) SAVLIB(&DTALIB) +      */             /*S01417*/ /*207764*/
 /**********                    DEV(*SAVF) SAVF(&DILIB/COBFILES) */             /*S01417*/ /*207764*/
                                                                       /*S01417*/
-                    RSTOBJ     OBJ(CBCMPNPD CBDPRLPD CBMEXCPD CBMDCNPD) +
+/**********         RSTOBJ     OBJ(CBCMPNPD CBDPRLPD CBMEXCPD CBMDCNPD) +
                                  SAVLIB(&DTALIB) DEV(*SAVF) +
-                                 SAVF(&DILIB/COBFILES) OUTPUT(*PRINT)                     /*207764*/
+                                 SAVF(&DILIB/COBFILES) OUTPUT(*PRINT) */     /*207764*/ /*MD055891*/
                                                                                           /*207764*/
-                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBCMPNPD')   /*S01417*/
+                    RSTOBJ     OBJ(CBCMPCTD CBDPRCTD CBMEXCTD CBMDCCTD) +
+                                 SAVLIB(&DTALIB) DEV(*SAVF) +
+                                 SAVF(&DILIB/COBFILES) OUTPUT(*PRINT)                   /*MD055891*/
+                                                                                        /*MD055891*/
+             RSTOBJ     OBJ(CBCMPBTD CBDPRBTD CBMEXBTD CBMDCBTD +
+                          CBCMPXTD CBDPRXTD CBMEXXTD CBMDCXTD) +
+                          SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/COBFILES_M) OUTPUT(*PRINT)                        /*MD055891*/
+                                                                                        /*MD055891*/
+/**********         CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBCMPNPD')   /*S01417*/        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBCMPCTD')                     /*MD055891*/
                     CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DTALIB)     /*S01417*/
                     CALL SDC1763 PARM(&PARM3)                         /*S01417*/
                     IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                            CMDLBL(ABNOR))                             /*S01417*/
                                                                       /*S01417*/
-                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBDPRLPD')   /*S01417*/
+/**********         CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBDPRLPD')*/ /*S01417*/        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBDPRCTD')                     /*MD055891*/
                     CALL SDC1763 PARM(&PARM3)                         /*S01417*/
                     IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                            CMDLBL(ABNOR))                             /*S01417*/
                                                                       /*S01417*/
-                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMEXCPD')   /*S01417*/
+/**********         CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMEXCPD')*/ /*S01417*/        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMEXCTD')                     /*MD055891*/
                     CALL SDC1763 PARM(&PARM3)                         /*S01417*/
                     IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                            CMDLBL(ABNOR))                             /*S01417*/
                                                                       /*S01417*/
-                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMDCNPD')   /*S01417*/
+/**********         CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMDCNPD')*/ /*S01417*/        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMDCCTD')                     /*MD055891*/
                     CALL SDC1763 PARM(&PARM3)                         /*S01417*/
                     IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                            CMDLBL(ABNOR))                             /*S01417*/
                                                                       /*S01417*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBCMPBTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBCMPXTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBDPRBTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBDPRXTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMEXBTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMEXXTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMDCBTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 1 10)) VALUE('CBMDCXTD')                     /*MD055891*/
+                    CHGVAR VAR(%SST(&PARM3 11 20)) VALUE(&DMLIB)                        /*MD055891*/
+                    CALL SDC1763 PARM(&PARM3)                                           /*MD055891*/
+                    IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*MD055891*/
+                                                                                        /*MD055891*/
                     CHGVAR     VAR(&VALFLG) VALUE('N')                /*S01417*/
              ENDDO                                                    /*S01417*/
 /* Validate COB files                                                 /*S01417*/

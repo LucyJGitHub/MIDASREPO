@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB020C            Date 16May13               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020C            Date 16May13               *
       *                 CCB024             Date 06Aug12               *
       *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
       *   CCB020C - COB Restructure - Secondary COB Infrastructure    *
       *   CCB024 - COB Restructure - COB Tuning                       *
@@ -57,8 +59,8 @@
      F/EJECT
       /SPACE 2
      FCHKCOBP1O   E                    PRINTER      KINFDS PIDS
-     FCBMEXCL2IF  E           K        DISK
-     FCBMDCNL1IF  E           K        DISK
+     F*CBMEXCL2IF  E           K        DISK                                                MD055891
+     F*CBMDCNL1IF  E           K        DISK                                                MD055891
      FCHKDPRL1IF  E           K        DISK
      FCHKCMPL2UF  E           K        DISK
      FCHKDPRL2UF  E           K        DISK
@@ -97,6 +99,7 @@
      E** COPYRIGHT ARRAY
      E*
      E                    CMD    80  80  1                                S01417
+     E                    CMDX    1   5 80                                                  MD055891
      E** COMMAND ARRAY                                                    S01417
      E*                                                                   S01417
      E                    LIBX       10  1                                S01417
@@ -184,6 +187,7 @@
      ISDBANK    E DSSDBANKPD
      I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
      I*
+     ICBMDCN    E DSCBMDCJW0                                                                MD055891
      IDSFDY     E DSDSFDY
      I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
      I*
@@ -196,6 +200,10 @@
      I                                       11  15 D3CSEQ                                    CCB024
      I                                       16  65 D3CDSC                                    CCB024
      I                                       66  68 D3DPCT                                    CCB024
+     IXCMD        DS                                                                        MD055891
+     I                                        1  80 @CMDA                                   MD055891
+     I                                       81 118 @CMDB                                   MD055891
+     I                                       32  41 @LIB                                    MD055891
      I*
      I/EJECT
       /SPACE 2
@@ -231,7 +239,7 @@
      C*                                                                   S01417
      C**  USE QCMDEXC TO COPY THE CORRECTED COMPONENTS FILE               S01417
      C*                                                                   S01417
-     C                     MOVE *BLANKS   WCMD                            S01417
+     C                     MOVE *BLANKS   WCMD   80                       S01417
      C                     MOVEALIBR      LIBX                            S01417
      C                     MOVEA*BLANKS   LIBY,1                          S01417
      C                     Z-ADD10        X       20                      S01417
@@ -246,10 +254,24 @@
      C*                                                                   S01417
      C                     MOVEALIBY      CMD,32                          S01417
      C                     MOVEACMD       WCMD                            S01417
-     C                     CALL 'QCMDEXC'                                 S01417
-     C                     PARM           WCMD   80                       S01417
-     C                     PARM 80        WLEN   155                      S01417
+     C**********           MOVELWCMD      @CMDA                                             MD055891
+     C**********           MOVEACMD,3     @CMDB                                             MD055891
+     C                     MOVELCMDX,1    @CMDA                                             MD055891
+     C                     MOVELCMDX,2    @CMDB                                             MD055891
+     C                     MOVEALIBY      @LIB                                              MD055891
+      *
+      * Only CBCMPXTD should be updated                                                     MD055891
+     C**********           CALL 'QCMDEXC'                                 S01417            MD055891
+     C**********           PARM           WCMD   80                       S01417            MD055891
+     C**********           PARM 80        WLEN   155                      S01417            MD055891
      C*
+     C                     MOVELCMDX,5    @CMDA                                             MD055891
+     C                     MOVEL*BLANKS   @CMDB                                             MD055891
+      *                                                                                     MD055891
+     C                     CALL 'QCMDEXC'                                                   MD055891
+     C                     PARM           XCMD                                              MD055891
+     C                     PARM 118       WLEN   155                                        MD055891
+      *                                                                                     MD055891
      C                     MOVE *BLANKS   NOTVAL                          S01417
      C*                                                                   S01417
      C                     CALL 'CB9010'                                  S01417
@@ -475,6 +497,7 @@
       *****************************************************************                       CCB024
      C           *INZSR    BEGSR                                                              CCB024
      C                     Z-ADD0         ROWCTR 100                                          CCB024
+     C                     Z-ADD0         TOTROW 100                                        MD055891
      C                     Z-ADD5000      ARRSZ   50                                          CCB024
      C           *LIKE     DEFN ARRSZ     IX                                                  CCB024
      C                     Z-ADD40        CMPLMT  20                                          CCB024
@@ -854,7 +877,26 @@
      C*
      C           MEXCHK    BEGSR
      C*
-     C           DEPKEY    CHAIN@MEXCG8              35
+     C********** DEPKEY    CHAIN@MEXCG8              35                                     MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ declare IDCursor insensitive scroll cursor for                                      MD055891
+     C+ select * from CBMEXJW0                                                              MD055891
+     C+ where DKCOTT = :D2DSON and DKCSEQ = :D2DSOS                                         MD055891
+     C/END-EXEC                                                                             MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ open IDCursor                                                                       MD055891
+     C/END-EXEC                                                                             MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ get diagnostics :TOTROW  = db2_number_rows                                          MD055891
+     C/END-EXEC                                                                             MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ close IDCursor                                                                      MD055891
+     C/END-EXEC                                                                             MD055891
+     C           TOTROW    IFEQ 0                                                           MD055891
+     C                     SETON                     35                                     MD055891
+     C                     ELSE                                                             MD055891
+     C                     SETOF                     35                                     MD055891
+     C                     ENDIF                                                            MD055891
      C*
      C** IF NO RECORD IS FOUND THEN WRITE ERROR
      C** REPORT LINE AND CONTINUE PROCESSING
@@ -883,12 +925,18 @@
      C*
      C           MDCCHK    BEGSR
      C*
-     C           DEPKEY    CHAIN@DJREGN              36
+     C********** DEPKEY    CHAIN@DJREGN              36                                     MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ SELECT * into :CBMDCN                                                               MD055891
+     C+ from CBMDCJW0                                                                       MD055891
+     C+ where DJCOTT = :D2DSON and DJCSEQ = :D2DSOS                                         MD055891
+     C/END-EXEC                                                                             MD055891
      C*
      C** IF NO RECORD IS FOUND THEN WRITE ERROR
      C** REPORT LINE AND CONTINUE PROCESSING
      C*
-     C           *IN36     IFEQ '1'
+     C********** *IN36     IFEQ '1'                                                         MD055891
+     C           SQLCOD    IFEQ 100                                                         MD055891
      C                     SETON                     U7U8
      C                     EXSR RPTLIN
      C                     SETOF                     36
@@ -1110,3 +1158,9 @@
 (c) Finastra International Limited 2001
 **  CMD
 CPYF FROMFILE(CHKCMPPD) TOFILE(          /CBCMPNPD) MBROPT(*REPLACE)
+**  CMDX
+CPYF FROMFILE(CHKCMPPD) TOFILE(          /CBCMPCTD) MBROPT(*REPLACE) INCREL((*IF
+ DHMODE *EQ 'C')) FMTOPT(*MAP *DROP)
+CPYF FROMFILE(CHKCMPPD) TOFILE(CBCMPBTD) MBROPT(*REPLACE) INCREL((*IF DHMODE *EQ
+ 'B')) FMTOPT(*MAP *DROP)
+CPYF FROMFILE(CHKCMPPD) TOFILE(CBCMPXTD) MBROPT(*REPLACE) FMTOPT(*MAP *DROP)

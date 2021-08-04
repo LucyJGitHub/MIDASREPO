@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055891           Date 01Sep20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUP038             Date 27Jul07              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP038 - MITEM will not be found if migrating from Midas +  */
@@ -110,24 +112,24 @@ VALIDATE:                                                                       
              CHGVAR     VAR(&DTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                      /*CSM003*/
 
 CBDPRLPD:
-             OVRDBF     FILE(CBDPRLPD) TOFILE(&DTALIB/CBDPRLPD) +
-                          SHARE(*YES)
-             OPNQRYF    FILE((CBDPRLPD)) KEYFLD((DIDSON) (DIDSOS) +
-                          (DIDDON) (DIDDOS))
+/**********  OVRDBF     FILE(CBDPRLPD) TOFILE(&DTALIB/CBDPRLPD) +
+                          SHARE(*YES) */                                                /*MD055891*/
+/**********  OPNQRYF    FILE((CBDPRLPD)) KEYFLD((DIDSON) (DIDSOS) +
+                          (DIDDON) (DIDDOS)) */                                         /*MD055891*/
              CALL       PGM(SM8020)
-             CLOF       OPNID(CBDPRLPD)
-             DLTOVR     FILE(CBDPRLPD)
+/**********  CLOF       OPNID(CBDPRLPD) */                                              /*MD055891*/
+/**********  DLTOVR     FILE(CBDPRLPD)  */                                              /*MD055891*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
 CBMEXCPD:
-             OVRDBF     FILE(CBMEXCPD) TOFILE(&DTALIB/CBMEXCPD) +
-                          SHARE(*YES)
-             OPNQRYF    FILE((CBMEXCPD)) KEYFLD((DKCOTT) (DKCSEQ) +
-                          (DKMECN) (DKMECS))
+/**********  OVRDBF     FILE(CBMEXCPD) TOFILE(&DTALIB/CBMEXCPD) +
+                          SHARE(*YES) */                                               /*MD055891*/
+/**********  OPNQRYF    FILE((CBMEXCPD)) KEYFLD((DKCOTT) (DKCSEQ) +
+                          (DKMECN) (DKMECS)) */                                        /*MD055891*/
              CALL       PGM(SM8022)
-             CLOF       OPNID(CBMEXCPD)
-             DLTOVR     FILE(CBMEXCPD)
+/**********  CLOF       OPNID(CBMEXCPD) */                                             /*MD055891*/
+/**********  DLTOVR     FILE(CBMEXCPD) */                                              /*MD055891*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO

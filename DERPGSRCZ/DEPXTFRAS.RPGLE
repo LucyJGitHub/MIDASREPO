@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas DE Projected extract of FRAs')
+/*EXI *  TEXT('Midas DE Projected extract of FRAs')                   *
       *****************************************************************
       *                                                               *
       *  Midas - Data Export module                                   *
@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -71,12 +73,12 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -94,23 +96,23 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Deal types
      D TABCDE          S              3    DIM(2) CTDATA PERRCD(1)
      D TABTYP          S             16    DIM(2) ALT(TABCDE)
- 
- 
+
+
      D FRAS          E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D***W#PAYA*                3     14                                                      CGL029
@@ -129,8 +131,8 @@
      D  W#RSCY                24     26                                                       CGL029
      D W#TABT          DS
      D  W#TDES                 1     16
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -143,7 +145,7 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221
@@ -173,7 +175,7 @@
       *
      C                   MOVEL     Dataarea      DEEXTCTL                                     208221
      C                   EXSR      INIT
- 
+
      C     I#ACTN        IFNE      'D'
       *
       ** MAIN PROCESSING - 'ASSET' POSITION
@@ -519,11 +521,11 @@
       * Base Rate Code
      C**********         Z-ADD     W#BRTT        E#BRTT                                       CSD103
      C                   MOVE      W#BRTT        E#BRTT                                       CSD103
- 
+
       * If the floating rate has been fixed, use the appropriate rate
- 
+
      C     FltRateSet    IFEQ      'Y'
- 
+
      C     FltRateTyp    IFEQ      'A'
      C                   Z-ADD     FltRate       E#IRAT
      C                   MOVEL     'A'           E#IRTP                         * ACTUAL RATE
@@ -531,9 +533,9 @@
      C                   Z-ADD     FltRate       E#BRTE
      C                   MOVEL     'C'           E#IRTP                         * ACTUAL RATE
      C                   ENDIF
- 
+
       * else the rate will be a forward rate
- 
+
      C                   ELSE
      C                   MOVEL     'F'           E#IRTP                         * FORWARD RATE
      C                   END
@@ -575,19 +577,19 @@
       *
       * Event Type
      C                   MOVEL     'VD'          E#EVTP
- 
+
       * If the floating rate has been fixed
       * the settlement amount is payable on value date
- 
+
      C     FltRateSet    IFEQ      'Y'
      C     SettleAmt     ANDLT     *ZERO
      C     W#ASLI        ANDEQ     'L'
      C     FltRateSet    OREQ      'Y'
      C     SettleAmt     ANDGE     *ZERO
      C     W#ASLI        ANDEQ     'A'
- 
+
       ** Set settlement amount, in/out indicator and settlement details
- 
+
      C     SettleAmt     IFLT      *ZERO
      C                   Z-SUB     SettleAmt     E#INTA
      C                   MOVE      'O'           E#IO
@@ -597,7 +599,7 @@
      C                   MOVE      'I'           E#IO
      C                   MOVEL     W#RECD        E#SETD                         * Rec details
      C                   ENDIF
- 
+
      C                   ELSE
       *
       * Suppress Settlement Y
@@ -611,7 +613,7 @@
      C                   ELSE
      C                   MOVEL     W#RECD        E#SETD                         * Rec details
      C                   END
- 
+
      C                   END
       *
       * Processed?
@@ -743,9 +745,9 @@
       * CHECK WHETHER FRA RATE HAS BEEN FIXED
       ********************************************************************
      C     CHKRATFIX     BEGSR
- 
+
       * Get floating side fields
- 
+
      C*****UBRTT         IFNE      *ZERO                                                      CSD103
      C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      OUR
@@ -754,9 +756,9 @@
      C                   EXSR      THEIR
      C                   Z-ADD     UEINR         FixRate
      C                   ENDIF
- 
+
       ** IF INITIAL RATE SET USE EFFECTIVE INTEREST RATE
- 
+
      C                   TESTB     '0'           W#DNSI                   99    *INITIAL RATE SET IN
       *
      C     *IN99         IFEQ      '1'
@@ -783,16 +785,16 @@
      C                   GOTO      ECHKRATFIX
      C                   END
      C                   END
- 
+
       * Calculate FRA settlement amount
- 
+
      C     UIPRD         IFNE      *ZERO
      C                   Z-SUB     UIPRD         SettleAmt
      C                   ELSE
      C     TIPRD         IFNE      *ZERO
      C                   Z-ADD     TIPRD         SettleAmt
      C                   ELSE
- 
+
      C                   CALLB     'DECALFRST'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
@@ -807,15 +809,15 @@
      C                   PARM      *ZERO         W#IANP           13 0
      C                   PARM      *ZERO         W#RDS            13 0
      C                   PARM      *ZERO         SettleAmt        15 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DECALFRST'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ECHKRATFIX    ENDSR
       *****************************************************************
       /SPACE 5

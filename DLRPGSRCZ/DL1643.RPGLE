@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD051713           Date 08Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051713 - Incorrect rates are displayed on OIS Compounding  *

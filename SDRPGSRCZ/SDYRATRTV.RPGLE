@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. AR871336           Date 15Dec11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR871336 - Add additional validation to insert. Applied fix  *
+      *             261049. (Child: AR871337)                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -92,7 +95,11 @@
      F*SDYLDRL1**IF   E           K DISK    INFSR(*PSSR)                                     BUG9329
      FSDYLDRL2  IF   E           K DISK    INFSR(*PSSR)                                      BUG9329
       ** Yield Rates file by yield curve, currency and int. calc. meth.
- 
+
+     FSDYLDRL4  IF   E           K DISK    INFSR(*PSSR)                                     AR871336
+     F                                     RENAME(SDYLDRD0:SDYLDRD4)                        AR871336
+      ** Yield Rates file by yield curve and currency                                       AR871336
+                                                                                            AR871336
      FSDYLDRL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDYLDRD0:SDYLDRD1)
       ** Yield Rates file by front office id
@@ -490,13 +497,16 @@
      C                   WHEN      PIACTN  = 'I'
  
       ** Error when record is already existing for action 'I'
- 
+
+     C     KYRAT1        SETLL     SDYLDRL4                                                 AR871336
+     C     KYRAT1        READE     SDYLDRL4                               99                AR871336
      C                   IF        *IN99 = *OFF
      C                   IF        FSRECI = 'D'
      C                   EVAL      OKACTN = 'N'
      C                   ADD       1             Ix
      C                   EVAL      FldNameAr2(Ix) = '#0ACTN'
-     C                   EVAL      MsgIdAr2(Ix) = 'USR9197'
+     C**********         EVAL      MsgIdAr2(Ix) = 'USR9197'                                 AR871336
+     C                   EVAL      MsgIdAr2(Ix) = 'USR9992'                                 AR871336
      C                   GOTO      EACCS
      C                   ENDIF
      C                   ENDIF
@@ -1426,7 +1436,11 @@
      C                   KFLD                    PIYLDC
      C                   KFLD                    PIYCCY
      C                   KFLD                    PIYICM
- 
+
+     C     KYRAT1        KLIST                                                              AR871336
+     C                   KFLD                    PIYLDC                                     AR871336
+     C                   KFLD                    PIYCCY                                     AR871336
+      *                                                                                     AR871336
       ** Clear/Initialise outputs
  
      C                   CLEAR                   YRATFilFmt

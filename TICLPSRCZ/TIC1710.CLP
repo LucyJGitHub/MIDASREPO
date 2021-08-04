@@ -9,13 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 250697             Date 10Oct14              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*       Prev Amend No. 235616  *CREATE    Date 12Feb07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       250697 - Remove reference to TIXXX                          */
+/*              - Applied for MD027294.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       235616 - The program does not save the latest               */
 /*                version of TI database and not the TI database     */
@@ -50,8 +53,8 @@
              DCL        VAR(&KBSAVF) TYPE(*CHAR) LEN(10) VALUE('KAP       ')
              DCL        VAR(&TISAVF) TYPE(*CHAR) LEN(10) VALUE('          ')
              DCL        VAR(&FILE3) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&OLDF3) TYPE(*CHAR) LEN(10)                                   /*235616*/
- 
+/**********  DCL        VAR(&OLDF3) TYPE(*CHAR) LEN(10)              */          /*235616* *250697*/
+
              DCL        VAR(&SAVFTEXT) TYPE(*CHAR) LEN(50)
              DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(13)
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
@@ -207,40 +210,40 @@ ENDREAD:
  
              CHGVAR     VAR(&FILE3) VALUE('TI' *CAT &DEPSRV *CAT +
                           &UNITMN *CAT &DAY)
-             CHGVAR     VAR(&OLDF3) VALUE('TI' *CAT &DEPSRV *CAT +
-                          &UNITMN *CAT 'XXX')                                             /*235616*/
+/**********  CHGVAR     VAR(&OLDF3) VALUE('TI' *CAT &DEPSRV *CAT +
+                          &UNITMN *CAT 'XXX')                        */            /*235616 250697*/
 /**/                                                                                      /*235616*/
 /* Perform file checks and rename.                                     */                 /*235616*/
 /**/                                                                                      /*235616*/
-RETRNM:      CHKOBJ     OBJ(&TIBKLIB/&OLDF3) OBJTYPE(*FILE)
-             MONMSG     MSGID(CPF9801) EXEC(DO)
- PRMPT1:     SNDPGMMSG  MSG('The TI backup save file ' *CAT &OLDF3 +
+/* RETRNM:      CHKOBJ     OBJ(&TIBKLIB/&OLDF3) OBJTYPE(*FILE)       */                   /*250697*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                      */                   /*250697*/
+/* PRMPT1:     SNDPGMMSG  MSG('The TI backup save file ' *CAT &OLDF3 +
                           *CAT ' is not found in library ' *CAT +
                           &TIBKLIB *CAT '.  Would you like to +
-                          retry? Y/N') TOMSGQ(QSYSOPR)                                    /*235616*/
-             SNDPGMMSG  MSG('The TI backup save file ' *CAT &OLDF3 +
+                          retry? Y/N') TOMSGQ(QSYSOPR)               */            /*235616 250697*/
+/**********  SNDPGMMSG  MSG('The TI backup save file ' *CAT &OLDF3 +
                           *CAT ' is not found in library ' *CAT +
                           &TIBKLIB *CAT '.  Would you like to +
                           retry? Y/N') TOMSGQ(MOPERQ) MSGTYPE(*INQ) +
-                          KEYVAR(&KEYVAR)                                                 /*235616*/
-             RCVMSG     MSGTYPE(*RPY) MSGKEY(&KEYVAR) WAIT(*MAX) +
-                              RMV(*NO) KEYVAR(&KEYVAR) MSG(&RMSG)                         /*235616*/
-             IF         COND((&RMSG *EQ 'Y') *OR (&RMSG *EQ 'y')) +
-                          THEN(GOTO CMDLBL(RETRNM))                                       /*235616*/
-             ELSE (IF         COND((&RMSG *EQ 'N') *OR (&MSG *EQ 'n')) +
-                          THEN(DO))                                                       /*235616*/
-             SNDPGMMSG  MSG('The TI backup save file ' *CAT &OLDF3 +
+                          KEYVAR(&KEYVAR)                            */            /*235616 250697*/
+/**********  RCVMSG     MSGTYPE(*RPY) MSGKEY(&KEYVAR) WAIT(*MAX) +
+                              RMV(*NO) KEYVAR(&KEYVAR) MSG(&RMSG)    */            /*235616 250697*/
+/**********  IF         COND((&RMSG *EQ 'Y') *OR (&RMSG *EQ 'y')) +
+                          THEN(GOTO CMDLBL(RETRNM))                  */            /*235616 250697*/
+/**********  ELSE (IF         COND((&RMSG *EQ 'N') *OR (&MSG *EQ 'n')) +
+                          THEN(DO))                                  */            /*235616 250697*/
+/**********  SNDPGMMSG  MSG('The TI backup save file ' *CAT &OLDF3 +
                           *CAT ' is not found in library ' *CAT +
                           &TIBKLIB *CAT '.  Would you like to +
-                          retry? Y/N') TOMSGQ(QSYSOPR)                                    /*235616*/
-             CHGVAR     VAR(&FILE3) VALUE(*BLANKS)                                        /*235616*/
-             ENDDO                                                                        /*235616*/
-             ELSE       CMD(GOTO CMDLBL(PRMPT1))                                          /*235616*/
-             ENDDO                                                                        /*235616*/
-             IF         COND(&FILE3 *NE *BLANKS) THEN(RNMOBJ +
+                          retry? Y/N') TOMSGQ(QSYSOPR)               */            /*235616 250697*/
+/**********  CHGVAR     VAR(&FILE3) VALUE(*BLANKS)                   */            /*235616 250697*/
+/**********  ENDDO                                                   */            /*235616 250697*/
+/**********  ELSE       CMD(GOTO CMDLBL(PRMPT1))                     */            /*235616 250697*/
+/**********  ENDDO                                                   */            /*235616 250697*/
+/**********  IF         COND(&FILE3 *NE *BLANKS) THEN(RNMOBJ +
                           OBJ(&TIBKLIB/&OLDF3) OBJTYPE(*FILE) +
-                          NEWOBJ(&FILE3))                                                 /*235616*/
- 
+                          NEWOBJ(&FILE3))                            */            /*235616 250697*/
+
              ENDDO                                                                        /*235616*/
              IF         COND(&OPTN *EQ '*TAPSAV') THEN(DO)                                /*235616*/
 /**/
@@ -261,9 +264,9 @@ RETRNM:      CHKOBJ     OBJ(&TIBKLIB/&OLDF3) OBJTYPE(*FILE)
 /* Determine volume ID of BOB day save    */
 /**/
              CHGVAR     VAR(&VOLID) VALUE('DB' *TCAT &DAY)
- 
+
 /* Check if volume ID should be changed to a different value.  */
- 
+
 CHECKTAP:    RTVDTAARA  DTAARA(TAPOPT) RTNVAR(&TAPOPT)
              IF         COND((&TAPOPT *EQ 'SYSID') *AND (%SST(&VOLID +
                           1 2) *EQ 'DB')) THEN(CHGVAR VAR(&VOLID) +

@@ -15,11 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL141  *CREATE    Date 12Dec12               *
+      *  Last Amend No. DAI101D             Date 13Oct19              *
+      *  Prev Amend No. DAI101C             Date 11Oct19              *
+      *                 DAI101A            Date 29May19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL141  *CREATE    Date 12Dec12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  DAI101D - Access shadow files for REJECT option              *
+      *  DAI101C - Allow Amend of Unauthorised Amount Accruals        *
+      *  DAI101A - Amount Accrual Authorisation with CGL141           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL141 - Amount Accruals Extended Narrative                  *
       *                                                               *
@@ -30,6 +36,7 @@
       *       03      F3 Pressed EXIT PROGRAM                         *
       *       05      F5 Refresh Input Screen                         *
       *       12      F12 Pressed GOTO PREVIOUS SCREEN                *
+      *       15      F15 Accrual Extended Narrative Window           *                      DAI101A
       *                                                               *
       *****************************************************************
       *
@@ -115,6 +122,8 @@
      D  #1BRCA                 1      3
      D  #1AREF                 4      9  0
      D  #1ATYP                10     10
+     D  #1PROG                11     20                                                      DAI101A
+     D  #1CHTP                21     21                                                      DAI101A
       *
      D                 DS
      D  FULNAM                 1     46
@@ -137,6 +146,9 @@
      D AmtAcc        E DS                  EXTNAME(GLAMAC1D)
      D** Midas GL Amount Accruals extension file
 
+     D XXAmtAcc      E DS                  EXTNAME(XXGLAMAC1D)                               DAI101A
+      ** Midas XX Amount Accruals extension file - for authorisation                         DAI101A
+                                                                                             DAI101A
      D APOSTY0       E DS                  EXTNAME(APOSTPD)
      D** Midas GL GE-AA APOSTPD Records
 
@@ -275,6 +287,17 @@
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CGL141
      C                   ENDIF
+      *                                                                                      DAI101A
+     C                   MOVE      'N'           DAI101            1                         DAI101A
+     C                   CALL      'AOSARDR0'                                                DAI101A
+     C                   PARM      *BLANKS       @RTCD                                       DAI101A
+     C                   PARM      '*KEY'        @OPTN                                       DAI101A
+     C                   PARM      'DAI101'      @KEY6                                       DAI101A
+     C     SCSARD        PARM      SCSARD        DSFDY                                       DAI101A
+      *                                                                                      DAI101A
+     C     @RTCD         IFEQ      *BLANKS                                                   DAI101A
+     C                   MOVE      'Y'           DAI101                                      DAI101A
+     C                   ENDIF                                                               DAI101A
       *
       ** Call Access Program for Bank Details
       *
@@ -328,13 +351,40 @@
       ** Protect input fields if enquiry and enable command keys
      C     ACTN          IFEQ      'E'
      C     ACTN          OREQ      'D'
+     C     ACTN          OREQ      'X'                                                       DAI101A
+     C     DAI101        ANDEQ     'Y'                                                       DAI101A
+     C     ACTN          OREQ      'R'                                                       DAI101D
+     C     DAI101        ANDEQ     'Y'                                                       DAI101D
      C                   SETON                                        20
+     C     DAI101        IFEQ      'Y'                                                       DAI101A
+     C     ACTN          ANDEQ     'X'                                                       DAI101A
+     C                   SETON                                        25                     DAI101A
+     C                   ENDIF                                                               DAI101A
      C                   ENDIF
       *
      C     ACTN          IFEQ      'E'
      C     ACTN          OREQ      'D'
      C     ACTN          OREQ      'A'
+     C     ACTN          OREQ      'X'                                                       DAI101A
+     C     DAI101        ANDEQ     'Y'                                                       DAI101A
+     C     ACTN          OREQ      'R'                                                       DAI101D
+     C     DAI101        ANDEQ     'Y'                                                       DAI101D
       *
+     C     ACTN          Ifne      'X'                                          SActnNEX     DAI101A
+     C     #1PROG        AndNE     'XX000091'                                                DAI101B
+     C     ACTN          Oreq      'D'                                                       DAI101B
+     C     #1PROG        AndEq     'XX000091'                                                DAI101B
+     C     #1CHTP        AndEq     'D'                                                       DAI101B
+     C     ACTN          Oreq      'E'                                                       DAI101B
+     C     #1PROG        AndEq     'XX000091'                                                DAI101B
+     C     #1CHTP        AndEq     'D'                                                       DAI101B
+     C     ACTN          Oreq      'X'                                                       DAI101B
+     C     #1CHTP        AndEq     'D'                                                       DAI101B
+     C     ACTN          Oreq      'R'                                                       DAI101D
+     C     #1PROG        AndEq     'XX000091'                                                DAI101D
+                                                                                             DAI101A
+     C     DAI101        Ifeq      'N'                                                       DAI101A
+      *                                                                                      DAI101A
      C/exec SQL
      C+ select *
      C+ into :AmtAcc
@@ -342,8 +392,38 @@
      C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
 
+     C                   Else                                                                DAI101A
+      *                                                                                      DAI101A
+      ** DAI101 ON, load records from GLAMAC1D to XXAmtAcc                                   DAI101A
+      *                                                                                      DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ select *                                                                             DAI101A
+     C+ into :XXAmtAcc                                                                       DAI101A
+     C+ from GLAMAC1D                                                                        DAI101A
+     C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP                     DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C                   Endif                                                               DAI101A
+                                                                                             DAI101A
+      * If no records found and in Amend mode, try the shadow file as an                     DAI101C
+      * unauthorised Amount Accrual may be getting amended                                   DAI101C
+     C                   If        %Subst(SQLState:1:2) = '02'                               DAI101C
+     C**********                   and ACTN = 'A'                                    DAI101C DAI101D
+     C                             and (ACTN= 'A' OR ACTN = 'R')                             DAI101D
+     C                             and DAI101 = 'Y'                                          DAI101C
+     C
+     C/exec SQL                                                                              DAI101C
+     C+ select *                                                                             DAI101C
+     C+ into :XXAmtAcc                                                                       DAI101C
+     C+ from XXGLAMAC1D                                                                      DAI101C
+     C+ where XGBRCA = :#1BRCA and XGAREF = :#1AREF                                          DAI101C
+     C/end-exec                                                                              DAI101C
+     C                   Endif
+      *
      C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
+                                                                                             DAI101A
+     C     DAI101        Ifeq      'N'                                                       DAI101A
 
       ** Get decimal value using purchase currency
      C                   MOVE(P)   SGPCCY        @AJCD
@@ -410,7 +490,160 @@
      C                   MOVE(P)   @@AMTD        #RTDP
      C                   ENDIF
       *
+      * Amount Accrual Authorisation is ON, format XXGLAMC1D                                 DAI101A
+      *                                                                                      DAI101A
+     C                   Else                                                                DAI101A
+      *                                                                                      DAI101A
+      ** Get decimal value using purchase currency                                           DAI101A
+     C                   MOVE(P)   XGPCCY        @AJCD                                       DAI101A
+     C                   EXSR      GETCCY                                                    DAI101A
+     C                   MOVEL     *BLANKS       XGPCCY                                      DAI101A
+     C     @RTCD         IFEQ      *BLANKS                                                   DAI101A
+     C                   MOVE      A6CYCD        XGPCCY                                      DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   MOVEL(P)  XGPCCY        #PCCY                                       DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  XGASTP        #ASTP                                       DAI101A
+     C                   MOVEL(P)  XGASTD        #ASTD                                       DAI101A
+     C                   MOVEL(P)  XGACAT        #ACAT                                       DAI101A
+     C                   MOVEL(P)  XGACAD        #ACAD                                       DAI101A
+     C                   MOVEL(P)  XGADES        #ADES                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGPDAT        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGPDAT        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #PDAT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPVFC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPVFC        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PVFC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCNRT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCNRT        @@AMTW                                      DAI101A
+     C                   Z-ADD     7             @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CNRT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPVLC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPVLC        @@AMTW                                      DAI101A
+     C                   Z-ADD     WLCDP         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PVLC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGQNTY        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGQNTY        @@AMTW                                      DAI101A
+     C                   Z-ADD     *ZERO         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #QNTY                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  XGSPNM        #SPNM                                       DAI101A
+     C                   MOVEL(P)  XGLOCN        #LOCN                                       DAI101A
+     C                   MOVEL(P)  XGLODE        #LODE                                       DAI101A
+     C                   MOVEL(P)  XGLOC1        #LOC1                                       DAI101A
+     C                   MOVEL(P)  XGREM1        #REM1                                       DAI101A
+     C                   MOVEL(P)  XGREM2        #REM2                                       DAI101A
+     C                   MOVEL(P)  XGPMOD        #PMOD                                       DAI101A
+     C                   MOVEL(P)  XGPYNO        #PYNO                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGRTDP        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGRTDP        @@AMTW                                      DAI101A
+     C                   Z-ADD     7             @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #RTDP                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   Endif                                                               DAI101A
+      *                                                                                      DAI101A
      C                   ENDIF
+      *                                                                                      DAI101A
+     C                   Else                                                   XActnNEX     DAI101A
+      *                                                                                      DAI101A
+      ** ACTN is X, DAI101 is ON                                                             DAI101A
+      *                                                                                      DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ select *                                                                             DAI101A
+     C+ into :XXAmtAcc                                                                       DAI101A
+     C+ from XXGLAMAC1D                                                                      DAI101A
+     C+ where XGBRCA = :#1BRCA and XGAREF = :#1AREF and XGATYP = :#1ATYP                     DAI101A
+     C/end-exec                                                                              DAI101A
+     C                   If        %Subst(SQLState:1:2) = '00' or               SSqlState    DAI101A
+     C                             %Subst(SQLState:1:2) = '01'                               DAI101A
+      *                                                                                      DAI101A
+      ** Get decimal value using purchase currency                                           DAI101A
+     C                   MOVE(P)   XGPCCY        @AJCD                                       DAI101A
+     C                   EXSR      GETCCY                                                    DAI101A
+     C                   MOVEL     *BLANKS       XGPCCY                                      DAI101A
+     C     @RTCD         IFEQ      *BLANKS                                                   DAI101A
+     C                   MOVE      A6CYCD        XGPCCY                                      DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   MOVEL(P)  XGPCCY        #PCCY                                       DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  XGASTP        #ASTP                                       DAI101A
+     C                   MOVEL(P)  XGASTD        #ASTD                                       DAI101A
+     C                   MOVEL(P)  XGACAT        #ACAT                                       DAI101A
+     C                   MOVEL(P)  XGACAD        #ACAD                                       DAI101A
+     C                   MOVEL(P)  XGADES        #ADES                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGPDAT        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGPDAT        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #PDAT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPVFC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPVFC        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PVFC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCNRT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCNRT        @@AMTW                                      DAI101A
+     C                   Z-ADD     7             @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CNRT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPVLC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPVLC        @@AMTW                                      DAI101A
+     C                   Z-ADD     WLCDP         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PVLC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGQNTY        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGQNTY        @@AMTW                                      DAI101A
+     C                   Z-ADD     *ZERO         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #QNTY                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  XGSPNM        #SPNM                                       DAI101A
+     C                   MOVEL(P)  XGLOCN        #LOCN                                       DAI101A
+     C                   MOVEL(P)  XGLODE        #LODE                                       DAI101A
+     C                   MOVEL(P)  XGLOC1        #LOC1                                       DAI101A
+     C                   MOVEL(P)  XGREM1        #REM1                                       DAI101A
+     C                   MOVEL(P)  XGREM2        #REM2                                       DAI101A
+     C                   MOVEL(P)  XGPMOD        #PMOD                                       DAI101A
+     C                   MOVEL(P)  XGPYNO        #PYNO                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGRTDP        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGRTDP        @@AMTW                                      DAI101A
+     C                   Z-ADD     7             @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #RTDP                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   Endif                                                  ESqlState    DAI101A
+     C                   Endif                                                  EActnNEX     DAI101A
+      *                                                                                      DAI101A
      C                   ENDIF
       *
       * If Insert or Amend and no record on AmtAcc
@@ -459,12 +692,39 @@
       ** Protect input fields if enquiry and enable command keys
      C     ACTN          IFEQ      'E'
      C     ACTN          OREQ      'D'
+     C     ACTN          OREQ      'X'                                                       DAI101A
+     C     DAI101        ANDEQ     'Y'                                                       DAI101A
+     C     ACTN          OREQ      'R'                                                       DAI101D
+     C     DAI101        ANDEQ     'Y'                                                       DAI101D
      C                   SETON                                        20
+     C     DAI101        IFEQ      'Y'                                                       DAI101A
+     C     ACTN          ANDEQ     'X'                                                       DAI101A
+     C                   SETON                                        25                     DAI101A
+     C                   ENDIF                                                               DAI101A
      C                   ENDIF
       *
      C     ACTN          IFEQ      'E'
      C     ACTN          OREQ      'D'
      C     ACTN          OREQ      'A'
+     C     ACTN          OREQ      'X'                                                       DAI101A
+     C     DAI101        ANDEQ     'Y'                                                       DAI101A
+     C     ACTN          OREQ      'R'                                                       DAI101D
+     C     DAI101        ANDEQ     'Y'                                                       DAI101D
+      *                                                                                      DAI101A
+     C     ACTN          Ifne      'X'                                          SActnNEX     DAI101A
+     C     #1PROG        AndNE     'XX000091'                                                DAI101B
+     C     ACTN          Oreq      'D'                                                       DAI101B
+     C     #1PROG        AndEq     'XX000091'                                                DAI101B
+     C     #1CHTP        AndEq     'D'                                                       DAI101B
+     C     ACTN          Oreq      'E'                                                       DAI101B
+     C     #1PROG        AndEq     'XX000091'                                                DAI101B
+     C     #1CHTP        AndEq     'D'                                                       DAI101B
+     C     ACTN          Oreq      'X'                                                       DAI101B
+     C     #1CHTP        AndEq     'D'                                                       DAI101B
+     C     ACTN          Oreq      'R'                                                       DAI101D
+     C     #1PROG        AndEq     'XX000091'                                                DAI101D
+      *                                                                                      DAI101A
+     C     DAI101        Ifeq      'N'                                                       DAI101A
       *
      C/exec SQL
      C+ select *
@@ -472,10 +732,37 @@
      C+ from GLAMAC1D
      C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
+     C                   Else                                                                DAI101A
+      *                                                                                      DAI101A
+      ** ACTN NE X, DAI101 is ON                                                             DAI101A
+      *                                                                                      DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ select *                                                                             DAI101A
+     C+ into :XXAmtAcc                                                                       DAI101A
+     C+ from GLAMAC1D                                                                        DAI101A
+     C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP                     DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C                   Endif                                                               DAI101A
 
+     C                   If        %Subst(SQLState:1:2) = '02'                               DAI101C
+     C**********                   and ACTN = 'A'                                    DAI101C DAI101D
+     C                             and (ACTN= 'A' OR ACTN = 'R')                             DAI101D
+     C                             and DAI101 = 'Y'                                          DAI101C
+     C/exec SQL                                                                              DAI101C
+     C+ select *                                                                             DAI101C
+     C+ into :XXAmtAcc                                                                       DAI101C
+     C+ from XXGLAMAC1D                                                                      DAI101C
+     C+ where XGBRCA = :#1BRCA and XGAREF = :#1AREF                                          DAI101C
+     C/end-exec                                                                              DAI101C
+     C                   Endif
      C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
 
+     C     DAI101        Ifeq      'N'                                          SDAI101      DAI101A
+                                                                                             DAI101A
+      ** ACTN NE 'X', Format fields from GLAMAC1D, DAI101 is OFF                             DAI101A
+                                                                                             DAI101A
       ** Get decimal value using purchase currency
      C     #PCCY         IFEQ      *BLANKS
      C                   ELSE
@@ -610,7 +897,296 @@
      C                   MOVE(P)   @@AMTD        #ARCV
      C                   ENDIF
       *
+     C                   Else                                                   XDAI101      DAI101A
+      *                                                                                      DAI101A
+      ** ACTN NE 'X', Format fields from XXGLAMAC1D, DAI101 is ON                            DAI101A
+      *                                                                                      DAI101A
+      ** Get decimal value using purchase currency                                           DAI101A
+     C     #PCCY         IFEQ      *BLANKS                                                   DAI101A
+     C                   ELSE                                                                DAI101A
+     C                   MOVE(P)   XGPCCY        @AJCD                                       DAI101A
+     C                   EXSR      GETCCY                                                    DAI101A
+     C                   MOVEL     *BLANKS       XGPCCY                                      DAI101A
+     C     @RTCD         IFEQ      *BLANKS                                                   DAI101A
+     C                   MOVE      A6CYCD        XGPCCY                                      DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+      ** Partial Write Off                                                                   DAI101A
+      *                                                                                      DAI101A
+     C     XGPWDT        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGPWDT        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #PWDT                                       DAI101A
+     C                   MOVEL     #PWDT         WPWDT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPWQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPWQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     *ZERO         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PWQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   Z-ADD     XGPWQT        WPWQT                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGPLDD        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGPLDD        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #PLDD                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPPVQ        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPPVQ        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PPVQ                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPPLC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPPLC        @@AMTW                                      DAI101A
+     C                   Z-ADD     WLCDP         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PPLC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPDQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPDQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PDQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPBQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPBQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PBQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+      ** Complete Write Off                                                                  DAI101A
+      *                                                                                      DAI101A
+     C     XGCWDT        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGCWDT        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #CWDT                                       DAI101A
+     C                   MOVEL     #CWDT         WCWDT             6                         DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCLDD        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGCLDD        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #CLDD                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCPVQ        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCPVQ        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CPVQ                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   Z-ADD     XGCPVQ        WCPVEQ                                      DAI101A
+      *                                                                                      DAI101A
+     C     XGCPLC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCPLC        @@AMTW                                      DAI101A
+     C                   Z-ADD     WLCDP         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CPLC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCDQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCDQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CDQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCBQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCBQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CBQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+      ** Complete Sale                                                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGDTSL        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGDTSL        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #DTSL                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGSLDD        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGSLDD        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #SLDD                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  XGBNAM        #BNAM                                       DAI101A
+     C                   MOVEL(P)  #BNAM         WBNAM            30                         DAI101A
+     C                   MOVEL(P)  XGBAD1        #BAD1                                       DAI101A
+     C                   MOVEL(P)  XGBAD2        #BAD2                                       DAI101A
+     C                   MOVEL(P)  XGPRMO        #PRMO                                       DAI101A
+     C                   MOVEL(P)  XGPRNO        #PRNO                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGARCV        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGARCV        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #ARCV                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   Endif                                                  EDAI101      DAI101A
      C                   ENDIF
+     C                   Else                                                   XActnNEX     DAI101A
+      *                                                                                      DAI101A
+      ** ACTN is 'X', DAI101 is ON                                                           DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ select *                                                                             DAI101A
+     C+ into :XXAmtAcc                                                                       DAI101A
+     C+ from XXGLAMAC1D                                                                      DAI101A
+     C+ where XGBRCA = :#1BRCA and XGAREF = :#1AREF and XGATYP = :#1ATYP                     DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C                   If        %Subst(SQLState:1:2) = '00' or               SSqlState    DAI101A
+     C                             %Subst(SQLState:1:2) = '01'                               DAI101A
+                                                                                             DAI101A
+      ** Get decimal value using purchase currency                                           DAI101A
+     C     #PCCY         IFEQ      *BLANKS                                                   DAI101A
+     C                   ELSE                                                                DAI101A
+     C                   MOVE(P)   XGPCCY        @AJCD                                       DAI101A
+     C                   EXSR      GETCCY                                                    DAI101A
+     C                   MOVEL     *BLANKS       XGPCCY                                      DAI101A
+     C     @RTCD         IFEQ      *BLANKS                                                   DAI101A
+     C                   MOVE      A6CYCD        XGPCCY                                      DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   ENDIF                                                               DAI101A
+                                                                                             DAI101A
+      ** Partial Write Off                                                                   DAI101A
+      *                                                                                      DAI101A
+     C     XGPWDT        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGPWDT        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #PWDT                                       DAI101A
+     C                   MOVEL     #PWDT         WPWDT             6                         DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPWQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPWQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     *ZERO         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PWQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   Z-ADD     XGPWQT        WPWQT             5 0                       DAI101A
+      *                                                                                      DAI101A
+     C     XGPLDD        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGPLDD        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #PLDD                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPPVQ        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPPVQ        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PPVQ                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPPLC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPPLC        @@AMTW                                      DAI101A
+     C                   Z-ADD     WLCDP         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PPLC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPDQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPDQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PDQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGPBQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGPBQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #PBQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+      ** Complete Write Off                                                                  DAI101A
+      *                                                                                      DAI101A
+     C     XGCWDT        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGCWDT        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #CWDT                                       DAI101A
+     C                   MOVEL     #CWDT         WCWDT             6                         DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCLDD        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGCLDD        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #CLDD                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCPVQ        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCPVQ        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CPVQ                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   Z-ADD     XGCPVQ        WCPVEQ            5 0                       DAI101A
+      *                                                                                      DAI101A
+     C     XGCPLC        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCPLC        @@AMTW                                      DAI101A
+     C                   Z-ADD     WLCDP         @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CPLC                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCDQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCDQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CDQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGCBQT        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGCBQT        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #CBQT                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+      ** Complete Sale                                                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGDTSL        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGDTSL        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #DTSL                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C     XGSLDD        IFNE      *ZERO                                                     DAI101A
+     C                   Z-ADD     XGSLDD        ZDAYNO                                      DAI101A
+     C                   EXSR      FORDAT                                                    DAI101A
+     C                   MOVEL(P)  ZDATFM        #SLDD                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  XGBNAM        #BNAM                                       DAI101A
+     C                   MOVEL(P)  #BNAM         WBNAM            30                         DAI101A
+     C                   MOVEL(P)  XGBAD1        #BAD1                                       DAI101A
+     C                   MOVEL(P)  XGBAD2        #BAD2                                       DAI101A
+     C                   MOVEL(P)  XGPRMO        #PRMO                                       DAI101A
+     C                   MOVEL(P)  XGPRNO        #PRNO                                       DAI101A
+      *                                                                                      DAI101A
+     C     XGARCV        IFNE      *ZERO                                                     DAI101A
+     C                   MOVE(P)   XGARCV        @@AMTW                                      DAI101A
+     C                   Z-ADD     A6NBDP        @@QECN                                      DAI101A
+     C                   EXSR      ZA0920                                                    DAI101A
+     C                   MOVE(P)   @@AMTD        #ARCV                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   Endif                                                  ESqlState    DAI101A
+      *                                                                                      DAI101A
+     C                   Endif                                                  EActnNEX     DAI101A
      C                   ENDIF
       *
       * If Insert or Amend and no record on AmtAcc
@@ -702,6 +1278,7 @@
      C                   OTHER
      C                   MOVEL     'N'           WDFT1             1
      C     ACTN          IFNE      'D'
+     C     ACTN          ANDNE     'X'                                                       DAI101A
      C                   EXSR      VAL1
      C                   ENDIF
       *
@@ -773,6 +1350,9 @@
      C                   MOVE(P)   'USR0790'     W0RTN
      C                   OTHER
      C     ACTN          IFNE      'D'
+     C     ACTN          OREQ      'D'                                                       DAI101A
+     C     DAI101        ANDEQ     'Y'                                                       DAI101A
+     C     #1PROG        ANDNE     'XX000091'                                                DAI101B
      C                   MOVE      'N'           WDFTP             1
      C                   MOVE      'N'           WDFTC             1
      C                   MOVE      'N'           WDFTS             1
@@ -1705,10 +2285,17 @@
       *
      C     ACTN          IFEQ      'I'
       *
+     C     DAI101        IFEQ      'N'                                                       DAI101A
      C                   CLEAR                   AmtAcc
      C                   EXSR      MOVRT1
      C                   EXSR      MOVRT2
+     C                   Else                                                                DAI101A
+     C                   Clear                   XXAmtAcc                                    DAI101A
+     C                   EXSR      XOVRT1                                                    DAI101A
+     C                   EXSR      XOVRT2                                                    DAI101A
+     C                   Endif                                                               DAI101A
       *
+     C     DAI101        IFeq      'N'                                                       DAI101A
      C/exec SQL
      C+ insert into GLAMAC1D
      C+    ( SGBRCA
@@ -1801,10 +2388,107 @@
      C+     ,:SGDTSL
      C+     ,:SGSLDD )
      C/end-exec
+     C                   Else                                                                DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ insert into XXGLAMAC1D                                                               DAI101A
+     C+    ( XGBRCA                                                                          DAI101A
+     C+     ,XGAREF                                                                          DAI101A
+     C+     ,XGATYP                                                                          DAI101A
+     C+     ,XGASTP                                                                          DAI101A
+     C+     ,XGASTD                                                                          DAI101A
+     C+     ,XGRTDP                                                                          DAI101A
+     C+     ,XGACAT                                                                          DAI101A
+     C+     ,XGACAD                                                                          DAI101A
+     C+     ,XGADES                                                                          DAI101A
+     C+     ,XGPDAT                                                                          DAI101A
+     C+     ,XGPVFC                                                                          DAI101A
+     C+     ,XGPCCY                                                                          DAI101A
+     C+     ,XGCNRT                                                                          DAI101A
+     C+     ,XGPVLC                                                                          DAI101A
+     C+     ,XGQNTY                                                                          DAI101A
+     C+     ,XGSPNM                                                                          DAI101A
+     C+     ,XGLOCN                                                                          DAI101A
+     C+     ,XGLODE                                                                          DAI101A
+     C+     ,XGLOC1                                                                          DAI101A
+     C+     ,XGREM1                                                                          DAI101A
+     C+     ,XGREM2                                                                          DAI101A
+     C+     ,XGPMOD                                                                          DAI101A
+     C+     ,XGPYNO                                                                          DAI101A
+     C+     ,XGPWDT                                                                          DAI101A
+     C+     ,XGPWQT                                                                          DAI101A
+     C+     ,XGPPVQ                                                                          DAI101A
+     C+     ,XGPPLC                                                                          DAI101A
+     C+     ,XGPDQT                                                                          DAI101A
+     C+     ,XGPLDD                                                                          DAI101A
+     C+     ,XGPBQT                                                                          DAI101A
+     C+     ,XGCWDT                                                                          DAI101A
+     C+     ,XGCPVQ                                                                          DAI101A
+     C+     ,XGCPLC                                                                          DAI101A
+     C+     ,XGCDQT                                                                          DAI101A
+     C+     ,XGCLDD                                                                          DAI101A
+     C+     ,XGCBQT                                                                          DAI101A
+     C+     ,XGBNAM                                                                          DAI101A
+     C+     ,XGBAD1                                                                          DAI101A
+     C+     ,XGBAD2                                                                          DAI101A
+     C+     ,XGPRNO                                                                          DAI101A
+     C+     ,XGPRMO                                                                          DAI101A
+     C+     ,XGARCV                                                                          DAI101A
+     C+     ,XGDTSL                                                                          DAI101A
+     C+     ,XGSLDD )                                                                        DAI101A
+     C+ values                                                                               DAI101A
+     C+ (:XGBRCA                                                                             DAI101A
+     C+     ,:XGAREF                                                                         DAI101A
+     C+     ,:XGATYP                                                                         DAI101A
+     C+     ,:XGASTP                                                                         DAI101A
+     C+     ,:XGASTD                                                                         DAI101A
+     C+     ,:XGRTDP                                                                         DAI101A
+     C+     ,:XGACAT                                                                         DAI101A
+     C+     ,:XGACAD                                                                         DAI101A
+     C+     ,:XGADES                                                                         DAI101A
+     C+     ,:XGPDAT                                                                         DAI101A
+     C+     ,:XGPVFC                                                                         DAI101A
+     C+     ,:XGPCCY                                                                         DAI101A
+     C+     ,:XGCNRT                                                                         DAI101A
+     C+     ,:XGPVLC                                                                         DAI101A
+     C+     ,:XGQNTY                                                                         DAI101A
+     C+     ,:XGSPNM                                                                         DAI101A
+     C+     ,:XGLOCN                                                                         DAI101A
+     C+     ,:XGLODE                                                                         DAI101A
+     C+     ,:XGLOC1                                                                         DAI101A
+     C+     ,:XGREM1                                                                         DAI101A
+     C+     ,:XGREM2                                                                         DAI101A
+     C+     ,:XGPMOD                                                                         DAI101A
+     C+     ,:XGPYNO                                                                         DAI101A
+     C+     ,:XGPWDT                                                                         DAI101A
+     C+     ,:XGPWQT                                                                         DAI101A
+     C+     ,:XGPPVQ                                                                         DAI101A
+     C+     ,:XGPPLC                                                                         DAI101A
+     C+     ,:XGPDQT                                                                         DAI101A
+     C+     ,:XGPLDD                                                                         DAI101A
+     C+     ,:XGPBQT                                                                         DAI101A
+     C+     ,:XGCWDT                                                                         DAI101A
+     C+     ,:XGCPVQ                                                                         DAI101A
+     C+     ,:XGCPLC                                                                         DAI101A
+     C+     ,:XGCDQT                                                                         DAI101A
+     C+     ,:XGCLDD                                                                         DAI101A
+     C+     ,:XGCBQT                                                                         DAI101A
+     C+     ,:XGBNAM                                                                         DAI101A
+     C+     ,:XGBAD1                                                                         DAI101A
+     C+     ,:XGBAD2                                                                         DAI101A
+     C+     ,:XGPRNO                                                                         DAI101A
+     C+     ,:XGPRMO                                                                         DAI101A
+     C+     ,:XGARCV                                                                         DAI101A
+     C+     ,:XGDTSL                                                                         DAI101A
+     C+     ,:XGSLDD )                                                                       DAI101A
+     C/end-exec                                                                              DAI101A
+     C                   Endif                                                               DAI101A
 
      C                   ENDIF
       *
-     C     ACTN          IFEQ      'A'
+ B1  C     ACTN          IFEQ      'A'
+     C*****ACTN          Oreq      'D'                                               DAI101A DAI101B
+      *                                                                                      DAI101A
+ B2  C     DAI101        IFeq      'N'                                                       DAI101A
       *
      C/exec SQL
      C+ select *
@@ -1812,13 +2496,30 @@
      C+ from GLAMAC1D
      C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
+     C                                                                                       DAI101A
+ X2  C                   Else                                                                DAI101A
+     C                                                                                       DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ select *                                                                             DAI101A
+     C+ into :XXAmtAcc                                                                       DAI101A
+     C+ from XXGLAMAC1D                                                                      DAI101A
+     C+ where XGBRCA = :#1BRCA and XGAREF = :#1AREF and XGATYP = :#1ATYP                     DAI101A
+     C/end-exec                                                                              DAI101A
+     C                                                                                       DAI101A
+ E2  C                   Endif                                                               DAI101A
 
-     C                   If        %Subst(SQLState:1:2) = '00' or
+ B2  C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
       *
+ B3  C     DAI101        Ifeq      'N'                                                       DAI101A
      C                   EXSR      MOVRT1
      C                   EXSR      MOVRT2
+ X3  C                   Else                                                                DAI101A
+     C                   EXSR      XOVRT1                                                    DAI101A
+     C                   EXSR      XOVRT2                                                    DAI101A
+ E3  C                   Endif                                                               DAI101A
 
+ B3  C     DAI101        IFeq      'N'                                                       DAI101A
      C/exec SQL
      C+ update GLAMAC1D
      C+ set  SGBRCA =  :SGBRCA
@@ -1868,16 +2569,191 @@
      C+ where SGBRCA =  :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
 
-     C                   ELSE
+     C                   Else                                                                DAI101C
+     C/exec SQL                                                                              DAI101C
+     C+ update XXGLAMAC1D                                                                    DAI101C
+     C+ set  XGBRCA =  :XGBRCA                                                               DAI101C
+     C+     ,XGAREF =  :XGAREF                                                               DAI101C
+     C+     ,XGATYP =  :XGATYP                                                               DAI101C
+     C+     ,XGASTP =  :XGASTP                                                               DAI101C
+     C+     ,XGASTD =  :XGASTD                                                               DAI101C
+     C+     ,XGRTDP =  :XGRTDP                                                               DAI101C
+     C+     ,XGACAT =  :XGACAT                                                               DAI101C
+     C+     ,XGACAD =  :XGACAD                                                               DAI101C
+     C+     ,XGADES =  :XGADES                                                               DAI101C
+     C+     ,XGPDAT =  :XGPDAT                                                               DAI101C
+     C+     ,XGPVFC =  :XGPVFC                                                               DAI101C
+     C+     ,XGPCCY =  :XGPCCY                                                               DAI101C
+     C+     ,XGCNRT =  :XGCNRT                                                               DAI101C
+     C+     ,XGPVLC =  :XGPVLC                                                               DAI101C
+     C+     ,XGQNTY =  :XGQNTY                                                               DAI101C
+     C+     ,XGSPNM =  :XGSPNM                                                               DAI101C
+     C+     ,XGLOCN =  :XGLOCN                                                               DAI101C
+     C+     ,XGLODE =  :XGLODE                                                               DAI101C
+     C+     ,XGLOC1 =  :XGLOC1                                                               DAI101C
+     C+     ,XGREM1 =  :XGREM1                                                               DAI101C
+     C+     ,XGREM2 =  :XGREM2                                                               DAI101C
+     C+     ,XGPMOD =  :XGPMOD                                                               DAI101C
+     C+     ,XGPYNO =  :XGPYNO                                                               DAI101C
+     C+     ,XGPWDT =  :XGPWDT                                                               DAI101C
+     C+     ,XGPWQT =  :XGPWQT                                                               DAI101C
+     C+     ,XGPPVQ =  :XGPPVQ                                                               DAI101C
+     C+     ,XGPPLC =  :XGPPLC                                                               DAI101C
+     C+     ,XGPDQT =  :XGPDQT                                                               DAI101C
+     C+     ,XGPLDD =  :XGPLDD                                                               DAI101C
+     C+     ,XGPBQT =  :XGPBQT                                                               DAI101C
+     C+     ,XGCWDT =  :XGCWDT                                                               DAI101C
+     C+     ,XGCPVQ =  :XGCPVQ                                                               DAI101C
+     C+     ,XGCPLC =  :XGCPLC                                                               DAI101C
+     C+     ,XGCDQT =  :XGCDQT                                                               DAI101C
+     C+     ,XGCLDD =  :XGCLDD                                                               DAI101C
+     C+     ,XGCBQT =  :XGCBQT                                                               DAI101C
+     C+     ,XGBNAM =  :XGBNAM                                                               DAI101C
+     C+     ,XGBAD1 =  :XGBAD1                                                               DAI101C
+     C+     ,XGBAD2 =  :XGBAD2                                                               DAI101C
+     C+     ,XGPRNO =  :XGPRNO                                                               DAI101C
+     C+     ,XGPRMO =  :XGPRMO                                                               DAI101C
+     C+     ,XGARCV =  :XGARCV                                                               DAI101C
+     C+     ,XGDTSL =  :XGDTSL                                                               DAI101C
+     C+     ,XGSLDD =  :XGSLDD                                                               DAI101C
+     C+ where XGBRCA =  :#1BRCA and XGAREF = :#1AREF and XGATYP = :#1ATYP                    DAI101C
+     C/end-exec                                                                              DAI101C
+ E3  C                   Endif                                                               DAI101A
+
+ X2  C                   ELSE
+      *                                                                                      DAI101A
+      ** not found on GLAMAC1D or XXGLAMAC1D                                                 DAI101A
+      *                                                                                      DAI101A
+ B3  C     DAI101        Ifeq      'N'                                                       DAI101A
      C                   CLEAR                   AmtAcc
      C                   EXSR      MOVRT1
      C                   EXSR      MOVRT2
+ X3  C                   Else                                                                DAI101A
+     C                   Clear                   XXAmtAcc                                    DAI101A
+     C                   EXSR      XOVRT1                                                    DAI101A
+     C                   EXSR      XOVRT2                                                    DAI101A
+ E3  C                   Endif                                                               DAI101A
+                                                                                             DAI101A
+     C     DAI101        Ifeq      'N'                                                       DAI101A
+                                                                                             DAI101A
      C/exec SQL
      C+ insert into GLAMAC1D
      C+ values(:AmtAcc)
      C/end-exec
 
+     C                   Else                                                                DAI101A
+                                                                                             DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ insert into XXGLAMAC1D                                                               DAI101A
+     C+ values(:XXAmtAcc)                                                                    DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C                   Endif                                                               DAI101A
+                                                                                             DAI101A
      C                   ENDIF
+     C                   ENDIF
+      *
+     C     ACTN          IFEQ      'X'                                                       DAI101A
+     C     DAI101        Andeq     'Y'                                                       DAI101A
+      *                                                                                      DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ select *                                                                             DAI101A
+     C+ into :AmtAcc                                                                         DAI101A
+     C+ from XXGLAMAC1D                                                                      DAI101A
+     C+ where XGBRCA = :#1BRCA and XGAREF = :#1AREF and XGATYP = :#1ATYP                     DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C                   If        %Subst(SQLState:1:2) = '00' or                            DAI101A
+     C                             %Subst(SQLState:1:2) = '01'                               DAI101A
+      *                                                                                      DAI101A
+     C                   EXSR      MOVRT1                                                    DAI101A
+     C                   EXSR      MOVRT2                                                    DAI101A
+      *                                                                                      DAI101A
+     C                   Select                                                              DAI101A
+                                                                                             DAI101A
+      ** Change Type on XXAMACPD is Insert                                                   DAI101A
+                                                                                             DAI101A
+     C     #1CHTP        WhenEq    'I'                                                       DAI101A
+                                                                                             DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ insert into GLAMAC1D                                                                 DAI101A
+     C+ values(:AmtAcc)                                                                      DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C     #1CHTP        WhenEq    'A'                                                       DAI101A
+     C     #1CHTP        OREq      'D'                                                       DAI101A
+                                                                                             DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ update GLAMAC1D                                                                      DAI101A
+     C+ set  SGBRCA =  :SGBRCA                                                               DAI101A
+     C+     ,SGAREF =  :SGAREF                                                               DAI101A
+     C+     ,SGATYP =  :SGATYP                                                               DAI101A
+     C+     ,SGASTP =  :SGASTP                                                               DAI101A
+     C+     ,SGASTD =  :SGASTD                                                               DAI101A
+     C+     ,SGRTDP =  :SGRTDP                                                               DAI101A
+     C+     ,SGACAT =  :SGACAT                                                               DAI101A
+     C+     ,SGACAD =  :SGACAD                                                               DAI101A
+     C+     ,SGADES =  :SGADES                                                               DAI101A
+     C+     ,SGPDAT =  :SGPDAT                                                               DAI101A
+     C+     ,SGPVFC =  :SGPVFC                                                               DAI101A
+     C+     ,SGPCCY =  :SGPCCY                                                               DAI101A
+     C+     ,SGCNRT =  :SGCNRT                                                               DAI101A
+     C+     ,SGPVLC =  :SGPVLC                                                               DAI101A
+     C+     ,SGQNTY =  :SGQNTY                                                               DAI101A
+     C+     ,SGSPNM =  :SGSPNM                                                               DAI101A
+     C+     ,SGLOCN =  :SGLOCN                                                               DAI101A
+     C+     ,SGLODE =  :SGLODE                                                               DAI101A
+     C+     ,SGLOC1 =  :SGLOC1                                                               DAI101A
+     C+     ,SGREM1 =  :SGREM1                                                               DAI101A
+     C+     ,SGREM2 =  :SGREM2                                                               DAI101A
+     C+     ,SGPMOD =  :SGPMOD                                                               DAI101A
+     C+     ,SGPYNO =  :SGPYNO                                                               DAI101A
+     C+     ,SGPWDT =  :SGPWDT                                                               DAI101A
+     C+     ,SGPWQT =  :SGPWQT                                                               DAI101A
+     C+     ,SGPPVQ =  :SGPPVQ                                                               DAI101A
+     C+     ,SGPPLC =  :SGPPLC                                                               DAI101A
+     C+     ,SGPDQT =  :SGPDQT                                                               DAI101A
+     C+     ,SGPLDD =  :SGPLDD                                                               DAI101A
+     C+     ,SGPBQT =  :SGPBQT                                                               DAI101A
+     C+     ,SGCWDT =  :SGCWDT                                                               DAI101A
+     C+     ,SGCPVQ =  :SGCPVQ                                                               DAI101A
+     C+     ,SGCPLC =  :SGCPLC                                                               DAI101A
+     C+     ,SGCDQT =  :SGCDQT                                                               DAI101A
+     C+     ,SGCLDD =  :SGCLDD                                                               DAI101A
+     C+     ,SGCBQT =  :SGCBQT                                                               DAI101A
+     C+     ,SGBNAM =  :SGBNAM                                                               DAI101A
+     C+     ,SGBAD1 =  :SGBAD1                                                               DAI101A
+     C+     ,SGBAD2 =  :SGBAD2                                                               DAI101A
+     C+     ,SGPRNO =  :SGPRNO                                                               DAI101A
+     C+     ,SGPRMO =  :SGPRMO                                                               DAI101A
+     C+     ,SGARCV =  :SGARCV                                                               DAI101A
+     C+     ,SGDTSL =  :SGDTSL                                                               DAI101A
+     C+     ,SGSLDD =  :SGSLDD                                                               DAI101A
+     C+ where SGBRCA =  :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP                    DAI101A
+     C/end-exec                                                                              DAI101A
+      *
+      ** no record selected for update
+      *
+     C                   If        %Subst(SQLState:1:2) = '02'                               DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ insert into GLAMAC1D                                                                 DAI101A
+     C+ values(:AmtAcc)                                                                      DAI101A
+     C/end-exec                                                                              DAI101A
+     C                   Endif                                                               DAI101A
+                                                                                             DAI101A
+     C                   EndSl                                                               DAI101A
+                                                                                             DAI101A
+                                                                                             DAI101A
+     C                   If        %Subst(SQLState:1:2) = '00' or                            DAI101A
+     C                             %Subst(SQLState:1:2) = '01'                               DAI101A
+     C/exec SQL                                                                              DAI101A
+     C+ delete from XXGLAMAC1D                                                               DAI101A
+     C+ where XGBRCA =  :#1BRCA and XGAREF = :#1AREF and XGATYP = :#1ATYP                    DAI101A
+     C/end-exec                                                                              DAI101A
+                                                                                             DAI101A
+     C                   Endif                                                               DAI101A
+     C                   Endif                                                               DAI101A
+                                                                                             DAI101A
      C                   ENDIF
       *
      C                   ENDSR
@@ -2075,7 +2951,199 @@
      C                   ENDSR
       *
       /EJECT
-      *****************************************************************
+      *****************************************************************                      DAI101A
+      * Move 1 subroutine (1st Screen) - XXGLAMAC1D                                          DAI101A
+      *****************************************************************                      DAI101A
+     C     XOVRT1        BEGSR                                                               DAI101A
+      *                                                                                      DAI101A
+     C     #PCCY         IFNE      *BLANKS                                                   DAI101A
+     C                   MOVE      #PCCY         @AJCD                                       DAI101A
+     C                   EXSR      GETCCY                                                    DAI101A
+     C     @RTCD         IFEQ      *BLANKS                                                   DAI101A
+     C                   MOVE      A6CYCD        #PCCY                                       DAI101A
+     C                   ELSE                                                                DAI101A
+     C                   MOVE      *BLANKS       #PCCY                                       DAI101A
+     C                   ENDIF                                                               DAI101A
+     C                   ENDIF                                                               DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  #1BRCA        XGBRCA                                      DAI101A
+     C                   MOVEL(P)  #1AREF        XGAREF                                      DAI101A
+     C                   MOVEL(P)  #1ATYP        XGATYP                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  #ASTP         XGASTP                                      DAI101A
+     C                   MOVEL(P)  #ASTD         XGASTD                                      DAI101A
+     C                   MOVEL(P)  #ACAT         XGACAT                                      DAI101A
+     C                   MOVEL(P)  #ACAD         XGACAD                                      DAI101A
+     C                   MOVEL(P)  #ADES         XGADES                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #PDAT         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGPDAT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  #PCCY         XGPCCY                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PVFC         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPVFC                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #CNRT         ZFIELD                                      DAI101A
+     C                   Z-ADD     4             ZADIG                                       DAI101A
+     C                   Z-ADD     7             ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGCNRT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PVLC         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     WLCDP         ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPVLC                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #QNTY         ZFIELD                                      DAI101A
+     C                   Z-ADD     5             ZADIG                                       DAI101A
+     C                   Z-ADD     0             ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGQNTY                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  #SPNM         XGSPNM                                      DAI101A
+     C                   MOVEL(P)  #LOCN         XGLOCN                                      DAI101A
+     C                   MOVEL(P)  #LODE         XGLODE                                      DAI101A
+     C                   MOVEL(P)  #LOC1         XGLOC1                                      DAI101A
+     C                   MOVEL(P)  #REM1         XGREM1                                      DAI101A
+     C                   MOVEL(P)  #REM2         XGREM2                                      DAI101A
+     C                   MOVEL(P)  #PMOD         XGPMOD                                      DAI101A
+     C                   MOVEL(P)  #PYNO         XGPYNO                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #RTDP         ZFIELD                                      DAI101A
+     C                   Z-ADD     4             ZADIG                                       DAI101A
+     C                   Z-ADD     7             ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGRTDP                                      DAI101A
+      *                                                                                      DAI101A
+     C                   ENDSR                                                               DAI101A
+      *                                                                                      DAI101A
+      /EJECT                                                                                 DAI101A
+      *****************************************************************                      DAI101A
+      * Move 2 subroutine (2nd Screen) with DAI101 - XXGLAMAC1D                              DAI101A
+      *****************************************************************                      DAI101A
+     C     XOVRT2        BEGSR                                                               DAI101A
+      *                                                                                      DAI101A
+      ** Partial Write Off                                                                   DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #PWDT         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGPWDT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PWQT         ZFIELD                                      DAI101A
+     C                   Z-ADD     5             ZADIG                                       DAI101A
+     C                   Z-ADD     0             ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPWQT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #PLDD         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGPLDD                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PPVQ         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPPVQ                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PPLC         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     WLCDP         ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPPLC                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PDQT         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPDQT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #PBQT         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGPBQT                                      DAI101A
+      *                                                                                      DAI101A
+      ** Complete Write Off                                                                  DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #CWDT         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGCWDT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #CLDD         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGCLDD                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #CPVQ         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGCPVQ                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #CPLC         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     WLCDP         ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGCPLC                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #CDQT         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGCDQT                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #CBQT         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGCBQT                                      DAI101A
+      *                                                                                      DAI101A
+      ** Complete Sale                                                                       DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #DTSL         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGDTSL                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE(P)   #SLDD         WDATE                                       DAI101A
+     C                   EXSR      VALDAT                                                    DAI101A
+     C                   Z-ADD     WDYNO         XGSLDD                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVEL(P)  #BNAM         XGBNAM                                      DAI101A
+     C                   MOVEL(P)  #BAD1         XGBAD1                                      DAI101A
+     C                   MOVEL(P)  #BAD2         XGBAD2                                      DAI101A
+     C                   MOVEL(P)  #PRMO         XGPRMO                                      DAI101A
+     C                   MOVEL(P)  #PRNO         XGPRNO                                      DAI101A
+      *                                                                                      DAI101A
+     C                   MOVE      *BLANKS       ZFIELD                                      DAI101A
+     C                   MOVE(P)   #ARCV         ZFIELD                                      DAI101A
+     C                   Z-ADD     12            ZADIG                                       DAI101A
+     C                   Z-ADD     A6NBDP        ZADEC                                       DAI101A
+     C                   EXSR      ZALIGN                                                    DAI101A
+     C                   MOVE(P)   ZFIELD        XGARCV                                      DAI101A
+      *                                                                                      DAI101A
+     C                   ENDSR                                                               DAI101A
+      *                                                                                      DAI101A
+      /EJECT                                                                                 DAI101A
+      *****************************************************************                      DAI101A
       * ZA0920 routine
       *****************************************************************
      C     ZA0920        BEGSR

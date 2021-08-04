@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051247           Date 17Jul18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR629716           Date 01Jul19               *
+      *  Prev Amend No. MD051247           Date 17Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034725           Date 27Jul16               *
       *                 230445             Date 03Nov14               *
       *                 MD030198           Date 30Aug14               *
@@ -37,7 +38,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD051247 - SP15_CUSD API issue                               *      
+      *  AR629716 - Duplicate TI sequence generated id accnt is not   *
+      *             yet authorised. Defaulting will be done during    *
+      *             authorisation. (Child: AR629717)                  *
+      *           - Applied for AR629716 (Child: AR954074)            *
+      *  MD051247 - SP15_CUSD API issue                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  230445 - Do not accept 'Y' as TI account flag if the customer*
@@ -261,9 +266,12 @@
      C     DDTIAN        IFNE      *BLANKS                                      B02          BUG4062
      C     DDTIAS        ANDNE     *BLANKS                                                   BUG4062
      C     WACCNT        CHAIN     ACCNTTI                            84                     BUG4062
-     C                   MOVE      CNUM          CNUMA                                       BUG4062
-     C                   MOVE      ACOD          ACODA                                       BUG4062
-     C                   MOVE      ACSQ          ACSQA                                       BUG4062
+     C**********         MOVE      CNUM          CNUMA                              BUG4062 AR629716
+     C**********         MOVE      ACOD          ACODA                              BUG4062 AR629716
+     C**********         MOVE      ACSQ          ACSQA                              BUG4062 AR629716
+     C                   MOVE      CNUM          CNUMA             6                        AR629716
+     C                   MOVE      ACOD          ACODA            10                        AR629716
+     C                   MOVE      ACSQ          ACSQA             2                        AR629716
       *                                                                                      BUG4062
       ***However*ignore*'this'*account*if*find*it*on*ACCNTTI*view*during*an*amend.   BUG40622 249278
       ** However ignore 'this' account if find it on ACCNTTI view                             249278
@@ -320,6 +328,8 @@
       ** Only default if sequence is not already keyed on screen                             BUG3365
       *                                                                                      BUG3365
      C     DDTIAS        IFEQ      *BLANKS                                      B03          BUG3365
+     C     DDTIAS        ORNE      *BLANKS                                                  AR629716
+     C     DDTIAN        ANDEQ     *BLANKS                                                  AR629716
       *                                                                                      BUG3365
       **************************************************************************             BUG3365
       ** First of three cases. Deafauts for SP101 internal account.                          BUG3365
@@ -350,15 +360,21 @@
       ** currency account, must be set manually.                                             BUG3365
       *                                                                                      BUG3365
      C                   ELSE                                                   X04          BUG3365
+     C                   Add       1             WIdx                                       AR629716
+     C                   EVAL      WFldNmXAr(WIdx) = 'DDTIAN'                               AR629716
+     C                   EVAL      WMsgIdXar(WIdx) = 'RE71080'                              AR629716
+     C                   EVAL      WFldNmXAr(WIdx) = 'DDTIAS'                               AR629716
+     C                   ENDIF                                                              AR629716
+     C                   ENDIF                                                              AR629716
       *                                                                                      BUG3365
       **************************************************************************             BUG3365
-      ** Second of three cases. Deafauts for BICN customer account.                          BUG3365
-      ** If BICN customer then default the basic number into the TI customer                 BUG3365
-     C     A8BICN        IFEQ      DDCUSN                                       B05          BUG3365
-     C     DDTIAN        IFEQ      *BLANKS                                      B06          BUG3365
-     C     A5TIAT        CHAIN     SDTIACL1                           82                     BUG3365
-     C     *IN82         IFEQ      *OFF                                         B07          BUG3365
-     C                   MOVE      GDBCNO        DDTIAN                                      BUG3365
+      ***Second*of*three*cases.*Deafauts*for*BICN*customer*account.****             BUG3365 AR629716
+      ***If*BICN*customer*then*default*the*basic*number*into*the*TI*customer        BUG3365 AR629716
+     C*****A8BICN        IFEQ      DDCUSN                                       B05 BUG3365 AR629716
+     C*****DDTIAN        IFEQ      *BLANKS                                      B06 BUG3365 AR629716
+     C*****A5TIAT        CHAIN     SDTIACL1                           82            BUG3365 AR629716
+     C******IN82         IFEQ      *OFF                                         B07 BUG3365 AR629716
+     C**********         MOVE      GDBCNO        DDTIAN                             BUG3365 AR629716
       * Output default warning message                                                       BUG3365
      C**********         Move      'N'           DDTIANOk                             BUG3365 CSD091
      C**********         Add       1             WIdx                                BUG3365 BUG4062
@@ -367,17 +383,17 @@
      C**********         Add       1             Idx                                  BUG4062 CSD091
      C**********         MoveL     'DDTIAN'      FldNamXAr(Idx)                       BUG4062 CSD091
      C**********         MoveL     'RE71065'     MsgIDXAr(Idx)                        BUG4062 CSD091
-     C                   EVAL      DDTIANOk = 'W'                                             CSD091
-     C                   ADD       1             WIdx                                         CSD091
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDTIAN'                                 CSD091
-     C                   EVAL      WMsgIdXar(WIdx) = 'RE71065'                                CSD091
+     C**********         EVAL      DDTIANOk = 'W'                                    CSD091 AR629716
+     C**********         ADD       1             WIdx                                CSD091 AR629716
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDTIAN'                        CSD091 AR629716
+     C**********         EVAL      WMsgIdXar(WIdx) = 'RE71065'                       CSD091 AR629716
       *                                                                                      BUG4062
-     C                   ENDIF                                                  E07          BUG3365
-     C                   ENDIF                                                  E06          BUG3365
-     C     DDTIAS        IFEQ      *BLANKS                                      B06          BUG3365
-     C     DDCCY         CHAIN     SDISOCL0                           83                     BUG3365
-     C     *IN83         IFEQ      *OFF                                         B07          BUG3365
-     C                   MOVE      GIISO3        DDTIAS                                      BUG3365
+     C**********         ENDIF                                                  E07 BUG3365 AR629716
+     C**********         ENDIF                                                  E06 BUG3365 AR629716
+     C*****DDTIAS        IFEQ      *BLANKS                                      B06 BUG3365 AR629716
+     C*****DDCCY         CHAIN     SDISOCL0                           83            BUG3365 AR629716
+     C******IN83         IFEQ      *OFF                                         B07 BUG3365 AR629716
+     C**********         MOVE      GIISO3        DDTIAS                             BUG3365 AR629716
       * Output default warning message                                                       BUG3365
      C**********         Move      'N'           DDTIASOk                             BUG3365 CSD091
      C**********         Add       1             WIdx                                BUG3365 BUG4062
@@ -386,13 +402,13 @@
      C**********         Add       1             Idx                                  BUG4062 CSD091
      C**********         MoveL     'DDTIAS'      FldNamXAr(Idx)                       BUG4062 CSD091
      C**********         MoveL     'RE71066'     MsgIDXAr(Idx)                        BUG4062 CSD091
-     C                   EVAL      DDTIASOk = 'W'                                             CSD091
-     C                   ADD       1             WIdx                                         CSD091
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDTIAS'                                 CSD091
-     C                   EVAL      WMsgIdXar(WIdx) = 'RE71066'                                CSD091
+     C**********         EVAL      DDTIASOk = 'W'                                    CSD091 AR629716
+     C**********         ADD       1             WIdx                                CSD091 AR629716
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDTIAS'                        CSD091 AR629716
+     C**********         EVAL      WMsgIdXar(WIdx) = 'RE71066'                       CSD091 AR629716
       *                                                                                      BUG3365
-     C                   ENDIF                                                  E07          BUG3365
-     C                   ENDIF                                                  E06          BUG3365
+     C**********         ENDIF                                                  E07 BUG3365 AR629716
+     C**********         ENDIF                                                  E06 BUG3365 AR629716
       *                                                                                      BUG3365
       ***TI*account*should*be*unique*as*there*is*only*one*BICN*per*CCY*per*branch    BUG3365 BUG4062
       ***but*if*there*was*a*duplication*it*would*be*picked*up*here.                  BUG3365 BUG4062
@@ -410,8 +426,8 @@
       ** Third of three cases. Deafauts for non BICN customer account.                       BUG3365
       ** If non BICN customer then default that into a blank TI customer                     BUG3365
       *                                                                                      BUG3365
-     C                   ELSE                                                   X05          BUG3365
-     C                   MOVE      DDCUSN        DDTIAN                                      BUG3365
+     C**********         ELSE                                                   X05 BUG3365 AR629716
+     C**********         MOVE      DDCUSN        DDTIAN                             BUG3365 AR629716
       * Output default warning message                                                       BUG3365
      C**********         Move      'N'           DDTIANOk                             BUG3365 CSD091
      C**********         Add       1             WIdx                                BUG3365 BUG4062
@@ -420,37 +436,37 @@
      C**********         Add       1             Idx                                  BUG4062 CSD091
      C**********         MoveL     'DDTIAN'      FldNamXAr(Idx)                       BUG4062 CSD091
      C**********         MoveL     'RE71065'     MsgIDXAr(Idx)                        BUG4062 CSD091
-     C                   EVAL      DDTIANOk = 'W'                                             CSD091
-     C                   ADD       1             WIdx                                         CSD091
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDTIAN'                                 CSD091
-     C                   EVAL      WMsgIdXar(WIdx) = 'RE71065'                                CSD091
+     C**********         EVAL      DDTIANOk = 'W'                                    CSD091 AR629716
+     C**********         ADD       1             WIdx                                CSD091 AR629716
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDTIAN'                        CSD091 AR629716
+     C**********         EVAL      WMsgIdXar(WIdx) = 'RE71065'                       CSD091 AR629716
       *                                                                                      BUG3365
-     C                   MOVE      '001'         DDTIAS                                      BUG3365
+     C**********         MOVE      '001'         DDTIAS                             BUG3365 AR629716
      C                   MOVE      *BLANKS       WrkWARN           1                        MD030198
       *                                                                                      BUG3365
-      ** Check if TI account is already already in use, must be unique key.                  BUG3365
-     C     RcdNotFnd     DOUEQ     True                                         B06          BUG3365
+      ***Check*if*TI*account*is*already*already*in*use,*must*be*unique*key.         BUG3365 AR629716
+     C*****RcdNotFnd     DOUEQ     True                                         B06 BUG3365 AR629716
       *                                                                                      BUG3365
-     C     WACCNT        CHAIN     ACCNTTI                            85                     BUG3365
-     C                   MOVE      CNUM          CNUMA             6                         BUG3365
-     C                   MOVE      ACOD          ACODA            10                         BUG3365
+     C*****WACCNT        CHAIN     ACCNTTI                            85            BUG3365 AR629716
+     C**********         MOVE      CNUM          CNUMA             6                BUG3365 AR629716
+     C**********         MOVE      ACOD          ACODA            10                BUG3365 AR629716
      C**********         MOVE      ACSQ          ACSQA             4                 BUG3365 BUG4062
-     C                   MOVE      ACSQ          ACSQA             2                         BUG4062
+     C**********         MOVE      ACSQ          ACSQA             2                BUG4062 AR629716
       *                                                                                      BUG3365
-      ** However ignore 'this' account if find it on ACCNTTI view during an amend.           BUG3365
-     C     DDACTN        IFEQ      'A'                                          B07          BUG3365
-     C     DDBRCA        ANDEQ     BRCA                                                      BUG3365
-     C     DDCUSN        ANDEQ     CNUMA                                                     BUG3365
-     C     DDCCY         ANDEQ     CCY                                                       BUG3365
-     C     DDACOD        ANDEQ     ACODA                                                     BUG3365
-     C     DDACSQ        ANDEQ     ACSQA                                                     BUG3365
-     C                   MOVE      '1'           *IN85                                       BUG3365
-     C                   ENDIF                                                  E07          BUG3365
+      ***However*ignore*'this'*account*if*find*it*on*ACCNTTI*view*during an amend.  BUG3365 AR629716
+     C*****DDACTN        IFEQ      'A'                                          B07 BUG3365 AR629716
+     C*****DDBRCA        ANDEQ     BRCA                                             BUG3365 AR629716
+     C*****DDCUSN        ANDEQ     CNUMA                                            BUG3365 AR629716
+     C*****DDCCY         ANDEQ     CCY                                              BUG3365 AR629716
+     C*****DDACOD        ANDEQ     ACODA                                            BUG3365 AR629716
+     C*****DDACSQ        ANDEQ     ACSQA                                            BUG3365 AR629716
+     C**********         MOVE      '1'           *IN85                              BUG3365 AR629716
+     C**********         ENDIF                                                  E07 BUG3365 AR629716
       *                                                                                      BUG3365
-     C     RcdNotFnd     IFEQ      False                                        B07          BUG3365
-     C                   MOVE      DDTIAS        DDTIASN           3 0                       BUG3365
-     C                   ADD       1             DDTIASN                                     BUG3365
-     C                   MOVE      DDTIASN       DDTIAS                                      BUG3365
+     C*****RcdNotFnd     IFEQ      False                                        B07 BUG3365 AR629716
+     C**********         MOVE      DDTIAS        DDTIASN           3 0              BUG3365 AR629716
+     C**********         ADD       1             DDTIASN                            BUG3365 AR629716
+     C**********         MOVE      DDTIASN       DDTIAS                             BUG3365 AR629716
       *                                                                                     MD030198
       ** Output default warning message                                                     MD030198
      C                   IF        WrkWARN  <> 'Y'                                          MD030198
@@ -462,11 +478,11 @@
      C                   ENDIF                                                              MD030198
       *                                                                                      BUG3365
       ** Error if sequence counts above 999.                                                 BUG3365
-     C     DDTIASN       IFEQ      0                                            B08          BUG3365
-     C                   Move      'N'           DDTIASOk                                    BUG3365
-     C                   RETURN                                                              BUG3365
-     C                   ENDIF                                                  E08          BUG3365
-     C                   ENDIF                                                  E07          BUG3365
+     C*****DDTIASN       IFEQ      0                                            B08 BUG3365 AR629716
+     C**********         Move      'N'           DDTIASOk                           BUG3365 AR629716
+     C**********         RETURN                                                     BUG3365 AR629716
+     C**********         ENDIF                                                  E08 BUG3365 AR629716
+     C**********         ENDIF                                                  E07 BUG3365 AR629716
       **Output*default*warning*message***************************                   BUG3365 MD030198
      C**********         Move      'N'           DDTIASOk                             BUG3365 CSD091
      C**********         Add       1             WIdx                                BUG3365 BUG4062
@@ -480,10 +496,10 @@
      C**********         EVAL      WFldNmXAr(WIdx) = 'DDTIAS'                        CSD091 MD030198
      C**********         EVAL      WMsgIdXar(WIdx) = 'RE71066'                       CSD091 MD030198
       *                                                                                      BUG3365
-     C                   ENDDO                                                  E06          BUG3365
-     C                   ENDIF                                                  E05          BUG3365
-     C                   ENDIF                                                  E04          BUG3365
-     C                   ENDIF                                                  E03          BUG3365
+     C**********         ENDDO                                                  E06 BUG3365 AR629716
+     C**********         ENDIF                                                  E05 BUG3365 AR629716
+     C**********         ENDIF                                                  E04 BUG3365 AR629716
+     C**********         ENDIF                                                  E03 BUG3365 AR629716
       *                                                                                      BUG3365
      C**********         CALL      'AOBRCHR0'                                                 CGL029
      C**********         CALL      'AOBRCHR1'                                         CGL029 BUG3365
@@ -495,6 +511,7 @@
      C*
      C*****@RTCD         IFNE      *BLANKS                                                   BUG3365
      C*****A8BICN        ORNE      DDCUSN                                                    BUG3365
+     C     DDTIAN        IFNE      *BLANK                                                   AR629716
      C     A8BICN        IFNE      DDCUSN                                       B03          BUG3365
      C     DDTIAN        ANDNE     DDCUSN
      C                   Move      'N'           DDTIANOk
@@ -538,7 +555,10 @@
      C                   MoveL     'DDTIAN'      FldNamXAr(Idx)
      C                   MoveL     'RE71061'     MsgIDXAr(Idx)
      C                   ENDIF                                                  E03
+      *                                                                                     AR629716
+     C                   ENDIF                                                              AR629716
       *
+     C     DDTIAS        IFNE      *BLANKS                                                  AR629716
      C                   TESTN                   DDTIAS               87                     BUG3365
      C     DDTIAS        IFEQ      *ZERO                                        B03          BUG3365
      C     DDTIAS        OREQ      *BLANKS                                                   BUG3365
@@ -548,6 +568,8 @@
      C                   MoveL     'DDTIAS'      FldNamXAr(Idx)                              BUG3365
      C                   MoveL     'RE71071'     MsgIDXAr(Idx)                               BUG3365
      C                   ENDIF                                                  E03          BUG3365
+      *                                                                                     AR629716
+     C                   ENDIF                                                              AR629716
       *                                                                                      BUG3365
       ** validate unique details: if TI Account is 'Y' then
       **   if user has changed TI Account field from 'N' to 'Y' then
@@ -558,6 +580,9 @@
       **     Midas Account Branch combined with TI Account Number, Ccy
       **     and TI Account Type must be unique across all accounts.
       *
+     C     DDTIAN        IFNE      *BLANKS                                                  AR629716
+     C     DDTIAS        ANDNE     *BLANKS                                                  AR629716
+      *                                                                                     AR629716
      C     DDACTN        IFNE      'D'                                                        249278
       *                                                                                       249278
      C     DDTIAC        IFNE      AMTIAC                                       B03
@@ -643,6 +668,8 @@
      C                   ENDIF                                                  E03
       *                                                                                       249278
      C                   ENDIF                                                                249278
+      *                                                                                     AR629716
+     C                   ENDIF                                                              AR629716
       **
       ** set on WIN89 if user allowed to amend TI Account N0. & Suffix:
       **   cannot amend these fields unless:
@@ -663,6 +690,11 @@
      C                             AND DDBRCA <> *BLANKS                                     BUG5340
      C                             AND DDTIAN <> *BLANKS                                     BUG5340
      C                             AND DDTIAS <> *BLANKS                                     BUG5340
+     C                             OR DDACTN = 'A' AND CSD012 = 'Y'                         AR629716
+     C                             AND DDTIAC = 'Y'                                         AR629716
+     C                             AND DDBRCA <> *BLANKS                                    AR629716
+     C                             AND DDTIAN <> *BLANKS                                    AR629716
+     C                             AND DDTIAS <> *BLANKS                                    AR629716
      C     WACCNT        CHAIN     GLACSHL3                                                  BUG5340
      C                   IF        %FOUND                                                    BUG5340
      C                   EVAL      DDTIANOk = 'W'                                             CSD091
@@ -730,7 +762,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -819,9 +851,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

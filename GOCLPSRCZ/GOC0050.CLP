@@ -9,15 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR318278           Date 12Oct10              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGP003  *CREATE    Date 09Mar04              */
+/*                      CGP003  *CREATE    Date 09Mar04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR318278 - TI Purging process.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGP003 - Management Limits                                  */
 /*                Required to move details of manual transactions    */
@@ -48,6 +50,9 @@
              CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
  
  
+/* TI - Flag for purging program */                                                     /*AR318278*/
+             CALL       PGM(GOTIMTRAN)                                                  /*AR318278*/
+                                                                                        /*AR318278*/
              CALL       PGM(GOMLMTRAN)
  
  

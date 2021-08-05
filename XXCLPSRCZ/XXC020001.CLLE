@@ -1,0 +1,100 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MS Alliance automated transmission')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas/SWIFT Direct Link Module                              */
+/*                                                                   */
+/********MSCL0001*-*Automated*Transmission****************************/                  /*LCI020*/
+/*       XXC020001 - Automated Transmission                          */                  /*LCI020*/
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. LCI020             Date 27Jul20              */
+/*       Prev Amend No. LCI020  *CREATE    Date 17Nov06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LCI020 - Upgrade to FBM 2.1                                 */
+/*       LCI020 - Enable Inter.Pel transmission of SWIFT outgoing    */
+/*                messages from Midas                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ENLPHO &PFX)
+
+             DCLF       FILE(MSLISTPD)
+
+             DCL        VAR(&ENLPHO) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PFX)    TYPE(*CHAR) LEN(2)
+             DCL        VAR(&AFTCMD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RECDEC) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&RECTXT) TYPE(*CHAR) LEN(7) +
+                          VALUE('MXNNNNN')
+             DCL        VAR(&DIR) TYPE(*CHAR) LEN(50) VALUE('/usr/bin/')
+
+             COPYRIGHT TEXT('(c) Finastra International Limited 2018')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Set off all switches */
+             CHGJOB     SWS(XXXXXX00)
+
+/* Access list of collected SWIFTOut*.dat messages and prepare the tmp file */
+ LOOP:       RCVF       RCDFMT(MSLISTPD)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDLOOP))
+
+             CHGVAR     VAR(&RECDEC) VALUE(&RECDEC + 1)
+             CHGVAR     VAR(%SST(&RECTXT 3 5)) VALUE(&RECDEC)
+
+/*           ADDPFM     FILE(MSLPCCPP) MBR(&RECTXT)                      */               /*LCI020*/
+             ADDPFM     FILE(XXLPCCPP) MBR(&RECTXT)                                       /*LCI020*/
+
+             CHGVAR     VAR(&AFTCMD) VALUE(&DIR *TCAT 'cat ' *CAT +
+                          &ENLPHO *TCAT '/' *CAT &MSLISTPD *TCAT ' +
+                          > ' *CAT &ENLPHO *TCAT '/' *CAT &RECTXT +
+                          *CAT '.tmp')
+             QSH        CMD(&AFTCMD)
+
+/*           CHGVAR     VAR(&AFTCMD) VALUE(&DIR *TCAT 'cp ' *CAT +
+                          &ENLPHO *TCAT '/' *CAT &RECTXT *CAT '.tmp +
+                          /qsys.lib/' *CAT &PFX *CAT +
+                          'dplib.lib/MSLPCCPP.file/' *CAT &RECTXT +
+                          *CAT '.mbr')                                   */               /*LCI020*/
+             CHGVAR     VAR(&AFTCMD) VALUE(&DIR *TCAT 'cp ' *CAT +
+                          &ENLPHO *TCAT '/' *CAT &RECTXT *CAT '.tmp +
+                          /qsys.lib/' *CAT &PFX *CAT +
+                          'dplib.lib/XXLPCCPP.file/' *CAT &RECTXT +
+                          *CAT '.mbr')                                                    /*LCI020*/
+             QSH        CMD(&AFTCMD)
+
+             CHGVAR     VAR(&AFTCMD) VALUE(&DIR *TCAT 'rm -f ' *CAT +
+                          &ENLPHO *TCAT '/' *CAT &RECTXT *CAT '.tmp')
+             QSH        CMD(&AFTCMD)
+
+             GOTO       CMDLBL(LOOP)
+
+/* End loop */
+/* ENDLOOP:    CPYF       FROMFILE(MSLPCCPP) TOFILE(MSLPCCPP) +
+                          FROMMBR(MX*) TOMBR(XXLPCCPP) +
+                          MBROPT(*REPLACE) RCDFMT(*ALL) FMTOPT(*NOCHK)             */     /*LCI020*/
+ ENDLOOP:    CPYF       FROMFILE(XXLPCCPP) TOFILE(XXLPCCPP) +
+                          FROMMBR(MX*) TOMBR(XXLPCCPP) +
+                          MBROPT(*REPLACE) RCDFMT(*ALL) FMTOPT(*NOCHK)                    /*LCI020*/
+             MONMSG     MSGID(CPF2868 CPF2817)
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+/*           SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MSCL0001 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)                                        */       /*LCI020*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          XXC020001 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)                                                 /*LCI020*/
+               MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+             ENDPGM

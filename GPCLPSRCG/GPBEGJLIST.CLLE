@@ -1,0 +1,214 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(GBEGINJRNF) TOFILE(UPOBJDTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GP List obj to journal')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GPBEGJLIST - List objects to be journaled              .    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD058520 *CREATE   Date 01Aug21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058520 - Journaling improvement                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEMID &ACTION)
+
+             DCL        VAR(&SYSTEMID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GSYSTEMID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIBFIX) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(6)
+
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CBSLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CBALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CSC018) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JRNDA) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JRNDQ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&USERSPACE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&OBJECTS) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&STARTLIST) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&STARTLISTN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&NOOFENT) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&ENTRYLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ENTRYLENN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&GENHDR) TYPE(*CHAR) LEN(140)
+             DCL        VAR(&OBJENT) TYPE(*CHAR) LEN(508)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJATT ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2021')
+
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+
+/*  Get the global journaling system values. */
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'GlobalJrnDtaaras' &SVAL1 +
+                          'GlobalJrnDtaqueues' &SVAL2 ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ')
+/** If there is an error finding any system value then end abnormally  */
+                IF         COND(&RSVALRTNC *NE '       ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+/* Check whether data area or data queue journaling is required. */
+                CHGVAR     VAR(&JRNDA) VALUE(%SST(&SVAL1 1 1))
+                CHGVAR     VAR(&JRNDQ) VALUE(%SST(&SVAL2 1 1))
+
+/*  Set up library names. */
+             CHGVAR     VAR(&GMLIB) VALUE(&SYSTEMID *CAT 'GMLIB')
+             CHGVAR     VAR(&GPLIB) VALUE(&SYSTEMID *CAT 'GPLIB')
+             CHGVAR     VAR(&GTLIB) VALUE(&SYSTEMID *CAT 'GTALIB')
+             CHGVAR     VAR(&BFLIB) VALUE(&SYSTEMID *CAT 'BFLIB')
+             CHGVAR     VAR(&CBSLIB) VALUE(&SYSTEMID *CAT 'CBSLIB')
+             CHGVAR     VAR(&CBALIB) VALUE(&SYSTEMID *CAT 'CBALIB')
+
+/* Create file to be used to drive journaling process. */
+             DLTF       FILE(QTEMP/GBEGINJRNF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GJRNOBJ)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GBEGINJRNF)
+
+/* At first, list *FILE in GMLIB */
+             CHGVAR     VAR(&LIB) VALUE(&GMLIB)
+             CHGVAR     VAR(&OBJTYPE) VALUE('*FILE     ')
+
+ JRN_LIB:
+/* Create user space for list of objects. */
+             CRTUSRSPC  USRSPC(QTEMP/&LIB) DELETE(*YES) +
+                          TEXT('Temporary user space for Global +
+                          layer journaling')
+
+/* Create list of objects in library. */
+             CHGVAR     VAR(&USERSPACE) VALUE(&LIB *CAT 'QTEMP     ')
+             CHGVAR     VAR(&FORMAT) VALUE('OBJL0500')
+             CHGVAR     VAR(&OBJECTS) VALUE('*ALL      ' *CAT &LIB)
+             CALL       PGM(QUSLOBJ) PARM(&USERSPACE &FORMAT +
+                          &OBJECTS &OBJTYPE)
+
+/* Get generic header from user space using standard retrieval API. */
+             CALL       PGM(QUSRTVUS) PARM(&USERSPACE X'00000001' +
+                          X'0000008C' &GENHDR)
+             MONMSG     MSGID(CPF0000)
+
+/* Get the data from the header.  The start position of the actual data, */
+/* the number of entries and the length of each entry.                   */
+             RTVUSRSPCI USRSPC(QTEMP/&LIB) STRPOS(&STARTLIST) +
+                          NBRENT(&NOOFENT) ENTLEN(&ENTRYLEN)
+             CHGVAR     VAR(&STARTLISTN) VALUE(%BIN(&STARTLIST))
+             CHGVAR     VAR(&ENTRYLENN) VALUE(%BIN(&ENTRYLEN))
+
+/* Loop until all objects have been processed. */
+ JRN_OBJ:
+             IF         COND(&NOOFENT *EQ 0) THEN(DO)
+                GOTO       CMDLBL(END_OF_JRN)
+             ENDDO
+             CALL       PGM(QUSRTVUS) PARM(&USERSPACE &STARTLIST +
+                          &ENTRYLEN &OBJENT)
+
+/* Get name of object and attribute and jorunal it. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJENT 1 10))
+             CHGVAR     VAR(&JRN) VALUE(%SST(&OBJENT 489 1))
+             CHGVAR     VAR(&OBJATT) VALUE(%SST(&OBJENT 32 10))
+
+             IF         COND(&JRN *EQ '0') THEN(DO)
+             CALL       PGM(GPRJRN) PARM(&LIB &OBJ &OBJTYPE &OBJATT)
+             ENDDO
+
+/* Increase the start position of the list by the length of a list */
+/* entry, and convert the new value to binary.                     */
+             CHGVAR     VAR(&STARTLISTN) VALUE(&STARTLISTN + &ENTRYLENN)
+             CHGVAR     VAR(%BIN(&STARTLIST)) VALUE(&STARTLISTN)
+/* Decrease the number of list entries. */
+             CHGVAR     VAR(&NOOFENT) VALUE(&NOOFENT - 1)
+
+             GOTO       CMDLBL(JRN_OBJ)
+
+END_OF_JRN:
+             IF         COND(&LIB *EQ &GMLIB) THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&GPLIB)
+                GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+             IF         COND(&LIB *EQ &GPLIB) THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&GTLIB)
+                GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+             IF         COND(&LIB *EQ &GTLIB) THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&BFLIB)
+                GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+             IF         COND(&LIB *EQ &BFLIB) THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&CBSLIB)
+                GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+             IF         COND(&LIB *EQ &CBSLIB) THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&CBALIB)
+                GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+
+/* For *DTAARA */
+             IF         COND(&JRNDA *EQ 'Y') THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&GMLIB)
+             CHGVAR     VAR(&OBJTYPE) VALUE('*DTAARA   ')
+             CHGVAR     VAR(&JRNDA) VALUE('N')
+             GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+
+/* For *DTAQ */
+             IF         COND(&JRNDQ *EQ 'Y') THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&GMLIB)
+             CHGVAR     VAR(&OBJTYPE) VALUE('*DTAQ     ')
+             CHGVAR     VAR(&JRNDQ) VALUE('N')
+             GOTO       CMDLBL(JRN_LIB)
+             ENDDO
+
+/* When all done, end program */
+             GOTO       CMDLBL(ENDPGM)
+
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+
+ENDPGM:
+             ENDPGM

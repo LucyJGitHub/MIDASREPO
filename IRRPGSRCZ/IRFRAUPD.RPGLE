@@ -1230,6 +1230,13 @@
       * Class                                                                                 CDL038
       *                                                                                       CDL038
      C                   MOVEL     FRCLAS        CLAS                                         CDL038
+      *                                                                                       CIR020
+      ** Defaulting of LIBOR fields                                                           CIR020
+      *                                                                                       CIR020
+     C     CSD103        IFEQ      'Y'                                                        CIR020
+     C                   EXSR      SRLIBOR                                                    CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
       *
       * UPDATE DEAL
       *
@@ -2508,11 +2515,30 @@
      C     SRLIBOR       BEGSR                                                                CIR020
                                                                                               CIR020
      C                   MOVEL     'N'           UBLRT                                        CIR020
+     C                   MOVEL     *BLANKS       URFRR                                        CIR020
+     C                   MOVEL     *BLANKS       UCALM                                        CIR020
+     C                   Z-ADD     0             UBADJ                                        CIR020
+     C                   Z-ADD     0             UFLOR                                        CIR020
+     C                   Z-ADD     0             ULBDY                                        CIR020
+     C                   Z-ADD     0             ULODY                                        CIR020
      C                   MOVEL     'N'           UOPSH                                        CIR020
+     C                   Z-ADD     0             URRDP                                        CIR020
+     C                   Z-ADD     0             UDBAV                                        CIR020
      C                   MOVEL     'N'           URTKN                                        CIR020
+     C                   Z-ADD     0             TBADJ                                        CIR020
+                                                                                              CIR020
      C                   MOVEL     'N'           TBLRT                                        CIR020
+     C                   MOVEL     *BLANKS       TRFRR                                        CIR020
+     C                   MOVEL     *BLANKS       TCALM                                        CIR020
+     C                   Z-ADD     0             TBADJ                                        CIR020
+     C                   Z-ADD     0             TFLOR                                        CIR020
+     C                   Z-ADD     0             TLBDY                                        CIR020
+     C                   Z-ADD     0             TLODY                                        CIR020
      C                   MOVEL     'N'           TOPSH                                        CIR020
+     C                   Z-ADD     0             TRRDP                                        CIR020
+     C                   Z-ADD     0             TDBAV                                        CIR020
      C                   MOVEL     'N'           TRTKN                                        CIR020
+     C                   Z-ADD     0             TBADJ                                        CIR020
                                                                                               CIR020
      C                   ENDSR                                                                CIR020
      C****************************************************************                        CIR020

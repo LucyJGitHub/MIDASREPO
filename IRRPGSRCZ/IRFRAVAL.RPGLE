@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR569568           Date 22Nov12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22478           Date 27Jan09               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR569568 - CDL006 is not being passed causing zero amount to *

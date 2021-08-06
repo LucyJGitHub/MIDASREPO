@@ -22,9 +22,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD058404           Date 06Jul21               *
-      *                 CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058404           Date 06Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
       *                 MD057930           Date 26Apr21               *
       *                 MD057934           Date 23Apr21               *
@@ -37,7 +36,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *

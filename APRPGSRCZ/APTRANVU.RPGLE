@@ -3194,10 +3194,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRFRLn        SUBST     BUFFER:Bfp    InfData                                    BUG18701
      C                   ADD       IRFRLn        Bfp                                          CSW213
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
-     C                   ADD       RPIFLn        Bfp                                          CIR020
-      *** Backward-Looking Rate Fields (CIR020)                                               CIR020
-     C     IRBSRTLn      SUBST     BUFFER:Bfp    IRBSRDta         50                          CIR020
-     C                   EVAL      ExtData = %SUBST(ExtData:1:RPIFLn) + IRBSRDta              CIR020
 
      C                   CALL      'IRFRAVU'
 
@@ -6426,8 +6422,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'IRFRIFPD'    FileName                                   BUG18701
      C                   EXSR      GETRCDLN                                                 BUG18701
      C                   Z-ADD     RecordLen     IRFRLn            4 0                      BUG18701
-      *                                                                                       CIR020
-     C                   Z-ADD     50            IRBSRTLn          4 0                        CIR020
                                                                                             BUG18701
      C                   ENDSR
       ****************************************************************

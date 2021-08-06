@@ -609,7 +609,7 @@
      C                             (PPROT = '1' OR PPROT = '3' OR PPROT = '5' OR              CSE071
      C                             PPROT = '6' OR PPROT = '8' OR PPROT = '9')                 CSE071
      C                   IF        DDBCNV <> 'N'                                              CSE031
-     C                   Z-ADD     0             WCount
+     C                   Z-ADD     0             WCount                                             
  
      C     1             DO        12            WPos
      C                   IF        WSCR(WPos) = 'P' OR

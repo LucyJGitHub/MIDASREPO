@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041126           Date 06Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 BUG17937           Date 24Apr08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 244430             Date 07Jan05               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD055270.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  BUG17937 - SEC3300 is Failing with an error.  Applied fix    *
@@ -69,28 +72,44 @@
  
       **  Declare MQI structures needed
       * MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
  
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
  
       ** Message Descriptor
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
  
       ** Get message options
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
  
       ** Put message options
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
  
  
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
      D/COPY QSYSINC/QRPGLESRC,QUSEC
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D P@MsgLen        S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+                                                                                            MD041126
       * API Error code parameter
  
  
@@ -154,18 +173,22 @@
      C                   movel     p@key         MDCID                                        CSW039
  
       ** Send message
-     C                   Z-ADD     MQPUT         CID
+     C**********         Z-ADD     MQPUT         CID                                        MD041126
      C                   Z-ADD     PMNMID        PMOPT
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    p@msglen          9 0
-     C                   PARM                    p@msgbuf
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQPMO                                      MD041126
+     C**********         PARM                    p@msglen          9 0                      MD041126
+     C**********         PARM                    p@msgbuf                                   MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
+     C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
+     C                                    CCODE : REASON )                                  MD041126
  
       ** If send message failed, indicate abnormal end
  
@@ -208,18 +231,23 @@
      C                   clear                   p@msgbuf
  
       ** Get message
-     C                   Z-ADD     MQGET         CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQGMO
-     C                   PARM      32000         p@msglen          9 0
-     C                   PARM                    p@msgbuf
-     C                   PARM                    MESLEN            9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQGET         CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQGMO                                      MD041126
+     C**********         PARM      32000         p@msglen          9 0                      MD041126
+     C**********         PARM                    p@msgbuf                                   MD041126
+     C**********         PARM                    MESLEN            9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   Z-ADD     32000         P@MsgLen                                   MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
       *
       ** If receive message failed, indicate abnormal end
       *
@@ -248,14 +276,17 @@
      C                   Eval      ODMN = p@qmnager                                         BUG17937
       *                                                                                     BUG17937
       ** Connect to Queue Manager                                                           BUG17937
-     C                   Eval      CID = MQCONN                                             BUG17937
-      *                                                                                     BUG17937
-     C                   Call      'QMQM'                                                   BUG17937
-     C                   Parm                    CID               9 0                      BUG17937
-     C                   Parm                    ODMN                                       BUG17937
-     C                   Parm                    HCONN             9 0                      BUG17937
-     C                   Parm                    OCODE             9 0                      BUG17937
-     C                   Parm                    REASON            9 0                      BUG17937
+     C**********         Eval      CID = MQCONN                                    BUG17937 MD041126
+      **********                                                                   BUG17937 MD041126
+     C**********         Call      'QMQM'                                          BUG17937 MD041126
+     C**********         Parm                    CID               9 0             BUG17937 MD041126
+     C**********         Parm                    ODMN                              BUG17937 MD041126
+     C**********         Parm                    HCONN             9 0             BUG17937 MD041126
+     C**********         Parm                    OCODE             9 0             BUG17937 MD041126
+     C**********         Parm                    REASON            9 0             BUG17937 MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCONN( ODMN : HCONN :                                   MD041126
+     C                                     OCODE : REASON )                                 MD041126
       *                                                                                     BUG17937
       ** Report reason and stop if it failed                                                BUG17937
      C                   If        (REASON<>RCNONE)                                         BUG17937
@@ -279,15 +310,18 @@
      C                   endif
  
       ** Open queue
-     C                   Z-ADD     MQOPEN        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQOPEN        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE: REASON )                            MD041126
  
       ** If open queue failed, indicate abnormal end
  
@@ -309,14 +343,17 @@
      C                   Z-ADD     CONONE        OPTS
  
       ** Close queue
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQCLOS        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
  
       ** If close queue failed, indicate abnormal end
  
@@ -326,13 +363,15 @@
      C                   ENDIF
  
       ** Disconnect
-     C                   Eval      CID = MQDISC                                             BUG17937
-      *                                                                                     BUG17937
-     C                   Call      'QMQM'                                                   BUG17937
-     C                   Parm                    CID               9 0                      BUG17937
-     C                   Parm                    HCONN             9 0                      BUG17937
-     C                   Parm                    OCODE             9 0                      BUG17937
-     C                   Parm                    REASON            9 0                      BUG17937
+     C**********         Eval      CID = MQDISC                                    BUG17937 MD041126
+      **********                                                                   BUG17937 MD041126
+     C**********         Call      'QMQM'                                          BUG17937 MD041126
+     C**********         Parm                    CID               9 0             BUG17937 MD041126
+     C**********         Parm                    HCONN             9 0             BUG17937 MD041126
+     C**********         Parm                    OCODE             9 0             BUG17937 MD041126
+     C**********         Parm                    REASON            9 0             BUG17937 MD041126
+                                                                                            MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
       *                                                                                     BUG17937
       ** Report reason and stop if it failed                                                BUG17937
      C                   If        (REASON<>RCNONE)                                         BUG17937

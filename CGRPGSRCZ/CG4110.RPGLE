@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD057942           Date 26Apr21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD051554           Date 28Sep18               *     
+      *  Prev Amend No. MD057942           Date 26Apr21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057008           Date 27Oct20               *
       *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
@@ -192,6 +193,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *     
       *  MD057942 - Field TRBTT is not defined. Used TBRTT instead as *
       *             the corresponding field for Their Base Rate Type. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -13148,6 +13152,22 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C     DTYP          IFEQ      'FR'                                                     MD051554
+     C     DTYP          OREQ      'RS'                                                     MD051554
+     C     DTYP          OREQ      'RX'                                                     MD051554
+     C     DTYP          OREQ      'RR'                                                     MD051554
+     C     DTYP          OREQ      'RP'                                                     MD051554
+     C     DTYP          OREQ      'RF'                                                     MD051554
+     C                   MOVE      'N'           WCALC6                                     MD051554
+     C                   ELSE                                                               MD051554
+     C                   MOVE      SCALC6        WCALC6                                     MD051554
+     C                   ENDIF                                                              MD051554
       *
      C/COPY WNCPYSRC,CG4110C058
       *---------------------------------------------------------------*
@@ -15149,6 +15169,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                   ENDIF                                                              MD035545
+     C                   MOVE      WCALC6        SCALC6            1                        MD051554
       *
       *................................................................
       *

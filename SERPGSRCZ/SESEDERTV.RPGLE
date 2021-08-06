@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260191A            Date 22May20               *
-      *  Prev Amend No. 260191             Date 22May20               *
+      *  Last Amend No. AR660635           Date 16Jul21               *
+      *  Prev Amend No. 260191A            Date 22May20               *
+      *                 260191             Date 22May20               *
       *                 259978             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR660635 - Deletion of Diary Event of a matured security     *
+      *             causes SEC0602 to fail. Prevent deletion.         *
+      *             (Child Artifact: AR660636)                        *
+      *           - Applied for MD-58397                              *
       *  260191A- System should not allow deletion of LIVE/MATURED    *
       *           security diary event if ALL generated position      *
       *           settlements are still unsettled/live records.       *
@@ -759,6 +764,7 @@
      C     DDSDSN        CHAIN     SECTY                              70
      C                   IF        RecNotFnd = True OR
      C                             (DDACTN = 'I' AND F1RECI <> 'D')
+     C                             OR (DDACTN = 'D' AND F1RECI <> 'D')                      AR660635
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'

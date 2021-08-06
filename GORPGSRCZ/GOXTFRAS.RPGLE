@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GO Extract of FRAs')
+/*EXI *  TEXT('Midas GO Extract of FRAs')                             *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -38,11 +40,11 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -51,11 +53,11 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD***************179    198                                                       TDA102
      D  E_SETD               185    210                                                       TDA102
- 
- 
+
+
      D FRAS          E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     20                                                       TDA102
@@ -72,12 +74,12 @@
      D**W#RECA**************** 3     14                                                       TDA102
      D**W#RECB****************15     17                                                       TDA102
      D**W#RSCY****************18     20                                                       TDA102
- 
- 
+
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       * ENTRY PARAMETERS
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
@@ -85,66 +87,66 @@
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0
      C                   PARM                    I#DNWD            5 0
      C                   PARM                    I#PCOD            5 0
      C                   PARM                    I#TVDI            1
      C                   PARM                    FRAS
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
- 
+
+
       * 'ASSET' POSITION
       * ----------------
- 
+
      C                   MOVE      'A'           W#ASLI            1
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * 'LIABILITY' POSITION
       * --------------------
- 
+
      C                   MOVE      'L'           W#ASLI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C     I#TVDI        IFEQ      'T'
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -159,13 +161,13 @@
      C                   PARM                    FRAS
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    FltRateSet        1
      C                   PARM                    FltRateTyp        1
      C                   PARM                    FltRate          11 7
      C                   PARM                    FixRate          11 7
      C                   PARM                    SettleAmt        15 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETFRAS'
      C                   EXSR      *PSSR
@@ -178,11 +180,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -190,9 +192,9 @@
       * SETUP SETTLEMENT INSTRUCTIONS
       *****************************************************************
      C     SETUP_SETI    BEGSR
- 
+
       **  Pay and receive settlement methods, accounts & branches
- 
+
      C                   MOVEL     PSETM         W#PAYM                         * pay method
      C                   MOVEL     UPACC         W#PAYA                         * pay account
      C                   MOVEL     POBR          W#PAYB                         * pay branch
@@ -386,11 +388,11 @@
       * Base Rate Code
      C**********         Z-ADD     W#BRTT        E_BRTT                                       CSD103
      C                   MOVE      W#BRTT        E_BRTT                                       CSD103
- 
+
       * If the floating rate has been fixed, use the appropriate rate
- 
+
      C     FltRateSet    IFEQ      'Y'
- 
+
      C     FltRateTyp    IFEQ      'A'
      C                   Z-ADD     FltRate       E_IRAT
      C                   MOVEL     'A'           E_IRTP
@@ -398,9 +400,9 @@
      C                   Z-ADD     FltRate       E_BRTE
      C                   MOVEL     'C'           E_IRTP
      C                   ENDIF
- 
+
       * else the rate will be a forward rate
- 
+
      C                   ELSE
      C                   MOVEL     'F'           E_IRTP
      C                   END
@@ -434,19 +436,19 @@
       *
       * Event Type
      C                   MOVEL     'VD'          E_EVTP
- 
+
       * If the floating rate has been fixed
       * the settlement amount is payable on value date
- 
+
      C     FltRateSet    IFEQ      'Y'
      C     SettleAmt     ANDLT     *ZERO
      C     W#ASLI        ANDEQ     'L'
      C     FltRateSet    OREQ      'Y'
      C     SettleAmt     ANDGE     *ZERO
      C     W#ASLI        ANDEQ     'A'
- 
+
       ** Set settlement amount, in/out indicator and settlement details
- 
+
      C     SettleAmt     IFLT      *ZERO
      C                   Z-SUB     SettleAmt     E_INTA
      C                   MOVE      'O'           E_IO
@@ -456,7 +458,7 @@
      C                   MOVE      'I'           E_IO
      C                   MOVEL     W#RECD        E_SETD
      C                   ENDIF
- 
+
      C                   ELSE
       *
       * Suppress Settlement Y
@@ -470,7 +472,7 @@
      C                   ELSE
      C                   MOVEL     W#RECD        E_SETD
      C                   END
- 
+
      C                   END
       *
       * Processed?
@@ -608,7 +610,7 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

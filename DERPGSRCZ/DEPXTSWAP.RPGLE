@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas DE Projected extract of int. rate swaps')
+/*EXI *  TEXT('Midas DE Projected extract of int. rate swaps')        *
       *****************************************************************
       *                                                               *
       *  Midas - Data Export module                                   *
@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -75,16 +77,16 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FDLDTSCPD  IF   E           K DISK    INFSR(*PSSR)
      FDLPCSCPD  IF   E           K DISK    INFSR(*PSSR)
      FDLCFSCPD  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -102,23 +104,23 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Deal types
      D TABCDE          S              2    DIM(2) CTDATA PERRCD(1)
      D TABTYP          S             16    DIM(2) ALT(TABCDE)
- 
- 
+
+
      D SWAPS         E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D***W#PAYA*                3     14                                                      CGL029
@@ -145,8 +147,8 @@
      D  W#ISCY                24     26                                                       CGL029
      D W#TABT          DS
      D  W#TDES                 1     16
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -159,7 +161,7 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221
@@ -189,7 +191,7 @@
       *
      C                   MOVEL     Dataarea      DEEXTCTL                                     208221
      C                   EXSR      INIT
- 
+
      C     I#ACTN        IFNE      'D'
       *
       ** MAIN PROCESSING - 'ASSET' POSITION
@@ -337,12 +339,12 @@
       * IMPORT FEE PAYMENT DATE EVENT
       *
      C     UPVD          IFNE      *ZERO
- 
+
      C     W#ASLI        IFEQ      'A'
      C     UPPR          ANDEQ     'R'
      C     W#ASLI        OREQ      'L'
      C     UPPR          ANDEQ     'P'
- 
+
      C                   EXSR      IMP_FE
      C                   ENDIF
      C                   ENDIF

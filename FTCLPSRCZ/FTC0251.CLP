@@ -11,26 +11,29 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058236           Date 07Jul21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO.                   DATE  DDMMMYY1            */
+/*                                        DATE  DDMMMYY1            */
 /*                                                                  */
 /*********************************************************************/
 /*           NEW SOURCE BASED ON FTC0250 FOR REL10                   */
+/*       MD058236 - Added Monitor Message CPF0000 to turn on U7/U8   */
+/*                to enable abnormal job termination.                */
 /*       MD046248 - Finastra Rebranding                              */
 /*********************************************************************/
 /*                                                                   */
 /*       C R E A T I O N     P A R A M E T E R S                     */
 /*                                                                   */
 /*********************************************************************/
- 
+
         PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
- 
+
         DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
         DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
         DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -41,11 +44,11 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /**/
         CHGJOB     SWS(XXXXXX00)
         CHGVAR     VAR(&TYPE) VALUE(%SST(&RPARM 3 1))
- 
+
         IF (&TYPE = '3') THEN(DO)
         CHGVAR     VAR(&TYPE) VALUE(' ')
         ENDDO
@@ -57,8 +60,8 @@
                    DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                    VALUE(' ') TEXT('Midas SD LOCAL +
                    DATA AREA EQUIVALENT') AUT(*USE))
- 
- 
+
+
 /* CLEAR EXTRACT FILE INPAYEX */
              CLRPFM     FILE(INPAYEX)
              MONMSG     MSGID(CPF0000) EXEC(DO)
@@ -66,10 +69,10 @@
                           AND TRY AGAIN') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(WAIT)
              ENDDO
- 
- 
+
+
 /*GENERATE INPAYEX EXTRACT RECORDS*/
- 
+
              CALL PGM(FT0249) PARM(&TYPE)
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)
              SNDPGMMSG  MSG('CALL TO EXTRACT PROGRAM FT0249 FROM +
@@ -77,10 +80,10 @@
                           TOMSGQ(MOPERQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(END))
- 
- 
+
+
 /**/
 /**  SET UP OVER RIDES **/
 /**/
@@ -94,7 +97,7 @@
          ENDDO
          ELSE       CMD(OVRDBF FILE(INPASABB) TOFILE(INPASAOB))
          ENDDO
- 
+
          IF         COND(&TYPE *EQ '1') THEN(DO)
          IF COND((&RENT *NE 'ALL') *AND (&RENT *NE '   ')) THEN(DO)
            OVRDBF     FILE(INPASABB) TOFILE(INPAUTOB) POSITION(*KEY +
@@ -105,7 +108,7 @@
          ENDDO
          ELSE       CMD(OVRDBF FILE(INPASABB) TOFILE(INPAUTOB))
          ENDDO
- 
+
          IF         COND(&TYPE *EQ '2') THEN(DO)
          IF COND((&RENT *NE 'ALL') *AND (&RENT *NE '   ')) THEN(DO)
            OVRDBF     FILE(INPASABB) TOFILE(INPNASOB) +
@@ -116,12 +119,12 @@
          ENDDO
          ELSE       CMD(OVRDBF FILE(INPASABB) TOFILE(INPNASOB))
          ENDDO
- 
+
 /**/
 /** CALL PROGRAM **/
 /**/
              CALL  PGM(FT0250) PARM(&RSEQ &RLEV &RENT &TYPE &BORO)
- 
+
 /**/
 /** DELETE OVERIDES IF PRESENT **/
 /**/
@@ -129,27 +132,28 @@
         MONMSG     MSGID(CPF4520)
         DLTOVR     FILE(INPASABB)
         MONMSG     MSGID(CPF9841)
- 
+
 /**/
 /** CHECK FOR DATABASE ERRORS TRAPPED BY THE PROGRAM **/
 /**/
- 
+
 END:
- 
+
         IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
              RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                     TOPGMQ(*EXT) TOMSGQ(MOPERQ)
         ENDDO
- 
+
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /* CLEAR EXTRACT FILE INPAYEX */
              CLRPFM     FILE(INPAYEX)
- 
- 
+             MONMSG     MSGID(CPF0000) EXEC(CHGJOB SWS(XXXXXX11))                       /*MD058236*/
+
+
 WAIT:
- 
- 
+
+
              ENDPGM

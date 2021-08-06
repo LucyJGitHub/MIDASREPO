@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD023005           Date 23Oct13              */
+/*       Last Amend No. MD055891           Date 01Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD023005           Date 23Oct13              */
 /*                      MD022112           Date 05Sep13              */
 /*                      CCB021             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -54,6 +55,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD023005 - Change of LF access path during reopen IC proc   */
 /*       MD022112 - SCC1711 performance improvement                  */
@@ -507,13 +509,13 @@ TYPE:                                                                 /*S01420*/
 /************             restart data queue') AUT(*LIBCRTAUT)                 /*196122*/ /*CPK014*/
 /************CRTDTAQ    DTAQ(&DTAQLIB/CBDTQD) MAXLEN(86) TEXT('COB +                      /*CPK014*/
 /************            passing messages data queue') AUT(*LIBCRTAUT)         /*196122*/ /*CPK014*/
- 
+
 /* Clear data queues. */                                                                  /*CPK014*/
              CALL       PGM(QCLRDTAQ) PARM('CBDTQA' '*LIBL ')                             /*CPK014*/
              CALL       PGM(QCLRDTAQ) PARM('CBDTQB' '*LIBL ')                             /*CPK014*/
              CALL       PGM(QCLRDTAQ) PARM('CBDTQC' '*LIBL ')                             /*CPK014*/
              CALL       PGM(QCLRDTAQ) PARM('CBDTQD' '*LIBL ')                             /*CPK014*/
- 
+
 /*/COPY WNCPYSRC,CBRUN017                                            */
 /**/                                                                  /*S01420*/
 /* SAR S01420 - COB ENHANCEMENTS INSTALLED */                         /*S01420*/
@@ -583,19 +585,25 @@ TAGUSC1:                                                                        
 /* INITIALISE COMPONENTS WORK FILE AND */
 /* DEPENDENCIES WORK FILE FROM MASTER FILES */
 /**/
-             CPYF       FROMFILE(CBCMPNPD) TOFILE(CBCOMSPD) +
-                          MBROPT(*REPLACE)
+/**********  CPYF       FROMFILE(CBCMPNPD) TOFILE(CBCOMSPD) +
+                          MBROPT(*REPLACE) */                                           /*MD055891*/
+             CPYF       FROMFILE(CBCMPJW0) TOFILE(CBCOMSPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD055891*/
                                                                                         /*MD022112*/
              CPYF       FROMFILE(SFAPIMDD) TOFILE(SFAPIMTD) +
                           MBROPT(*REPLACE)                                              /*MD022112*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                           EXEC(CLRPFM FILE(SFAPIMTD))                                   /*MD022112*/
 /**/
-             CPYF       FROMFILE(CBDPRLPD) TOFILE(CBDEPSPD) +
-                          MBROPT(*REPLACE)
+/**********  CPYF       FROMFILE(CBDPRLPD) TOFILE(CBDEPSPD) +
+                          MBROPT(*REPLACE) */                                           /*MD055891*/
+             CPYF       FROMFILE(CBDPRJW0) TOFILE(CBDEPSPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD055891*/
 /**/                                                                  /*CCB003*/
-             CPYF       FROMFILE(CBMEXCPD) TOFILE(CBMUTXPD) +
-                          MBROPT(*REPLACE)                            /*CCB003*/
+/**********  CPYF       FROMFILE(CBMEXCPD) TOFILE(CBMUTXPD) +
+                          MBROPT(*REPLACE) */                         /*CCB003*/        /*MD055891*/
+             CPYF       FROMFILE(CBMEXJW0) TOFILE(CBMUTXPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD055891*/
 /**/
 /* CALL CB0105 TO SELECT ON-REQUEST REPORTS TO RUN TODAY */
 /**/

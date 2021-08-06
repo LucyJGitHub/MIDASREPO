@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       *                 AR585504           Date 30Jul10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -223,7 +225,7 @@
       *
      C     CSE028        IFEQ      'Y'
      C     DFTFLG        ANDEQ     'Y'
- 
+
      C     PSESN         CHAIN     SECTYDF                            99
      C                   MOVEL     SITP          PINVT
       *                                                                                      BUG2274
@@ -232,7 +234,7 @@
      C                   EVAL      MarktCentr = SMCC                                         BUG2274
      C                   END                                                                 BUG2274
      C                   EVAL      PSMCC = MarktCentr                                        BUG2274
- 
+
      C                   CALL      'SESSIR0'
      C                   PARM      'D'           POTYP             1
      C                   PARM                    PTDBR
@@ -255,9 +257,9 @@
      C                   MOVE      SKAC          WSKAC            20
      C                   MOVE      SFAT          WSFAT             8
      C                   MOVE      SFAF          WSFAF             8
- 
+
      C                   SELECT
- 
+
      C     PTDTP         WHENEQ    'TP'
      C                   DO
       *
@@ -286,16 +288,16 @@
       *
      C                   ELSE
      C                   MOVE      PTDSI         ESSRL1
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C**********         DUMP                                                               240618
       *
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -304,7 +306,7 @@
       *                                                               *
       *****************************************************************
      C     SRFtos        BEGSR
- 
+
      C                   MOVE      T2AP1N        ESAP1N
      C                   MOVE      T2AP1L        ESAP1L
      C                   MOVE      T2AFPN        ESAP2N
@@ -403,7 +405,7 @@
      C                   MOVEL     T2QFIN        ESQFIN                                       CSW210
      C                   MOVEL     T2PCLR        ESPCLR                                       CSW210
      C                   ENDIF                                                                CSW210
- 
+
      C     T2CTYN        IFNE      *BLANKS
      C                   CALL      'AOCUSTR0'
      C                   PARM      '*DBERR '     PRtcd
@@ -574,9 +576,9 @@
       *
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -619,13 +621,13 @@
      C                   MOVE      W4NAS1        ESNAL1
      C                   MOVE      W4NAS2        ESNAL2
      C                   MOVE      W4CCTN        ESCCTN
- 
+
      C                   MOVE      W4DRSN        ESDSSN
      C                   MOVE      W4DRS1        ESDSS1
      C                   MOVE      W4DRS2        ESDSS2
      C                   MOVE      W4DRS3        ESDSS3
      C                   MOVE      W4DRS4        ESDSS4
- 
+
      C                   MOVE      W4BSSN        ESBSSN
      C                   MOVE      W4BSS1        ESBSS1
      C                   MOVE      W4BSS2        ESBSS2
@@ -715,9 +717,9 @@
      C                   ENDIF                                                                238825
       *                                                                                       238825
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVE      W5AFPN        ESAP2N
      C                   MOVE      W5AFPL        ESAP2L
      C                   MOVE      W5AWIN        ESAWIN
@@ -737,13 +739,13 @@
      C                   MOVE      W5NAS1        ESNAL1
      C                   MOVE      W5NAS2        ESNAL2
      C                   MOVE      W5CCTN        ESCCTN
- 
+
      C                   MOVE      W5DRSN        ESRSSN
      C                   MOVE      W5DRS1        ESRSS1
      C                   MOVE      W5DRS2        ESRSS2
      C                   MOVE      W5DRS3        ESRSS3
      C                   MOVE      W5DRS4        ESRSS4
- 
+
      C                   MOVE      W5BSSN        ESBSSN
      C                   MOVE      W5BSS1        ESBSS1
      C                   MOVE      W5BSS2        ESBSS2
@@ -833,7 +835,7 @@
      C                   ENDIF                                                                238825
       *                                                                                       238825
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If CSE022 is installed then setup Safekeeping A/C Line by using module SEDORFRTV
@@ -845,16 +847,16 @@
      C                   PARM                    PDEPO
      C                   PARM                    PCUST
      C                   PARM      *BLANKS       PSKAL
- 
+
      C                   MOVEL     PDEPO         ESSKAN
      C                   MOVEL     PSKAL         ESSKAL
- 
+
      C                   CALL      PGMNAM
      C                   PARM      *BLANKS       PRETC
      C                   PARM                    PDEPO2
      C                   PARM                    PTCNR
      C                   PARM      *BLANKS       PSKAL
- 
+
      C     PTDTP         IFEQ      'TP'
      C     WSFAF         ANDNE     *BLANKS
      C                   MOVEL     WSFAF         ESSA1N
@@ -872,11 +874,11 @@
      C                   ELSE
      C                   MOVEL     WSKAC         ESSA1L
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -887,7 +889,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -895,19 +897,19 @@
       *
       ** Securities retrieved from file - file format
      C                   PARM                    CrSEFilFmt
- 
+
      C                   PARM                    PDATA
- 
+
      C                   PARM                    CSE022
- 
+
      C                   PARM                    CSE028
- 
+
      C                   PARM                    SWRTN
- 
+
      C                   PARM                    DFTFLG
- 
+
      C                   PARM                    WWBICN
- 
+
      C                   PARM                    PGMNAM
      C                   PARM                    MarktCentr        2                         BUG2274
      C                   PARM                    CSW206            1                         CSW206E

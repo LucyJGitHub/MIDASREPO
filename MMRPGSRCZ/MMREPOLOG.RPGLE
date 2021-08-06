@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -57,10 +59,10 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK
      F                                     INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -70,62 +72,62 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Depot Movement record for Repos
      D TranFilFmt    E DS                  EXTNAME(DPTMVD)
- 
+
       ** Midas MM API LDNI Format Definiton File
      D RepoDScnFmt   E DS                  EXTNAME(MMRPDDPD)
- 
+
       **  Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       **  Customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TRANSDTL        S           5800A
      D PAction         S              1A
      D PSTS            S             24A
      D PCSTS           S             10A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -140,15 +142,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SRPROC
      C
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -160,39 +162,39 @@
       * Calls: MMLDNICVT, ZASETINCVT                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPROC        BEGSR
- 
+
      C                   CLEAR                   RepoDScnFmt
- 
+
       ** Set REPO deal no to Blanks
      C                   EVAL      DDDLNO = DPRN
- 
+
       ** Depot Reference Number
      C                   EVAL      DDDPMV = DPRN
- 
+
       ** Set Action to Blanks
      C                   EVAL      DDACTN = *BLANKS
- 
+
       ** Set up Security Shortname
      C                   EVAL      DDSECT = DPSS
- 
+
       ** Set up Nominal
       *
       ** Access Security Details
      C     DDSECT        CHAIN     SECTY                              99
- 
+
       ** Access no of decimal places of Nominal currency
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd             7
      C                   PARM      '*KEY   '     POptn             7
      C                   PARM      NMCY          PAjcd             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      DPNA          ZFLD15           15 0
      C                   MOVE      NMDP          ZADEC             1 0
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -239,7 +241,7 @@
      C                   MOVEL     *BLANK        ZFLD15
      C                   MOVEL     *BLANK        ZOUT21
      C                   MOVE      MKTP          ZFLD15
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -247,7 +249,7 @@
      C                   PARM                    ZOUT21
      C
      C                   MOVE      ZOUT21        DDVALP
- 
+
       ** Set up Our Depot
      C                   MOVE      DPID          W#DEPIN           6
       ** Access Customer data via access program
@@ -261,7 +263,7 @@
       *
      C                   MOVE      BBCSSN        DDORDP
      C                   MOVE      *BLANKS       W#DEPIN
- 
+
       ** Set up Counterparty Depot
      C                   MOVE      DPOD          W#DEPOT           6
       *
@@ -276,7 +278,7 @@
       *
      C                   MOVE      BBCSSN        DDCPDP
      C                   MOVE      *BLANKS       W#DEPOT
- 
+
       ** Set Up Exchange Rate
      C                   MOVEL     *BLANK        ZFLD15
      C                   MOVE      DEXRT         ZFLD15
@@ -289,11 +291,11 @@
      C                   PARM                    ZOUT21
      C
      C                   MOVE      ZOUT21        DDEXCR
- 
+
      C                   EVAL      TRANSDTL = RepoDScnFmt
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -305,23 +307,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    PAction
      C                   PARM                    TranFilFmt
      C                   PARM                    TRANSDTL
      C                   PARM                    W#NOML
- 
+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

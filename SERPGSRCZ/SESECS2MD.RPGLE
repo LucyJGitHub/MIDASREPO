@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056949           Date 13Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 16May13               *
       *                 CRE073             Date 06Dec10               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
@@ -188,7 +190,7 @@
      D CSE071          S              1A                                                      CSE071
      D PPROT           S              1A
      D PPrCpn          S              1A
- 
+
      D WAmt1           S             15A
      D WAAmt2          S             15A
       *
@@ -241,7 +243,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -251,23 +253,23 @@
       *                                                               *
       *****************************************************************
      C     SRCompare     BEGSR
- 
+
      C                   EXSR      SRSetInds
       *
       ** Coupon Rate is not amendable.
       *
      C                   IF        *IN66 = *OFF OR *IN69
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDCPNR        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDCPNR       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCPNR'
@@ -298,17 +300,17 @@
       ** Base Rate/Spread is not amendable.
       *
      C                   IF        *IN66 = *OFF OR *IN84 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDBASS        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDBASS       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDBASS'
@@ -339,17 +341,17 @@
       ** Minimum Coupon is not amendable.
       *
      C                   IF        *IN66 = *OFF OR *IN84 = *OFF OR *IN94
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDMCPN        ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAMT1
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     ADDMCPN       ZFIELD
      C                   EXSR      SRZAmt
      C                   MOVE      ZFIELD        WAAMT2
- 
+
      C                   IF        WAMT1 <> WAAMT2
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDMCPN'
@@ -494,7 +496,7 @@
       ** Coupon/Rate Ind. is not amendable.
       *
      C                   IF        *IN66 = *OFF OR *IN91 = *OFF
- 
+
      C                   IF        ADDCR01 <> DDCR01
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR01'
@@ -505,7 +507,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR01 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR02 <> DDCR02
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR02'
@@ -516,7 +518,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR02 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR03 <> DDCR03
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR03'
@@ -527,7 +529,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR03 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR04 <> DDCR04
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR04'
@@ -538,7 +540,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR04 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR05 <> DDCR05
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR05'
@@ -549,7 +551,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR05 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR06 <> DDCR06
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR06'
@@ -560,7 +562,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR06 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR07 <> DDCR07
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR07'
@@ -571,7 +573,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR07 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR08 <> DDCR08
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR08'
@@ -582,7 +584,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR08 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR09 <> DDCR09
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR09'
@@ -593,7 +595,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR09 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR10 <> DDCR10
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR10'
@@ -604,7 +606,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR10 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR11 <> DDCR11
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR11'
@@ -615,7 +617,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR11 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCR12 <> DDCR12
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCR12'
@@ -626,7 +628,7 @@
      C                   EVAL      MsgDtaArr(IDx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
      C                   EVAL      OKCR12 = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Rate Change Frequency is not amendable.
@@ -709,7 +711,7 @@
       *
      C                   IF        (*IN66 = *OFF AND *IN67 = *OFF) OR
      C                             *IN91 = *OFF
- 
+
      C                   IF        ADDCD01 <> DDCD01
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD01'
@@ -727,7 +729,7 @@
      C                   ENDIF
      C                   EVAL      OKCD01 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD02 <> DDCD02
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD02'
@@ -745,7 +747,7 @@
      C                   ENDIF
      C                   EVAL      OKCD02 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD03 <> DDCD03
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD03'
@@ -763,7 +765,7 @@
      C                   ENDIF
      C                   EVAL      OKCD03 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD04 <> DDCD04
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD04'
@@ -781,7 +783,7 @@
      C                   ENDIF
      C                   EVAL      OKCD04 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD05 <> DDCD05
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD05'
@@ -799,7 +801,7 @@
      C                   ENDIF
      C                   EVAL      OKCD05 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD06 <> DDCD06
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD06'
@@ -817,7 +819,7 @@
      C                   ENDIF
      C                   EVAL      OKCD06 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD07 <> DDCD07
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD07'
@@ -835,7 +837,7 @@
      C                   ENDIF
      C                   EVAL      OKCD07 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD08 <> DDCD08
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD08'
@@ -853,7 +855,7 @@
      C                   ENDIF
      C                   EVAL      OKCD08 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD09 <> DDCD09
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD09'
@@ -871,7 +873,7 @@
      C                   ENDIF
      C                   EVAL      OKCD09 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD10 <> DDCD10
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD10'
@@ -889,7 +891,7 @@
      C                   ENDIF
      C                   EVAL      OKCD10 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD11 <> DDCD11
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD11'
@@ -907,7 +909,7 @@
      C                   ENDIF
      C                   EVAL      OKCD11 = 'N'
      C                   ENDIF
- 
+
      C                   IF        ADDCD12 <> DDCD12
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDCD12'
@@ -925,7 +927,7 @@
      C                   ENDIF
      C                   EVAL      OKCD12 = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                       CSE031
      C                   ELSE                                                                 CSE031
@@ -1454,7 +1456,7 @@
       *                                                                                       CSE031
      C                   ENDIF                                                                CSE031
      C                   ENDIF                                                                CSE031
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1464,18 +1466,18 @@
       *  SRZAmt - Align amount                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZAmt        BEGSR
- 
+
      C                   Z-ADD     11            ZADIG
      C                   Z-ADD     7             ZADEC
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1492,7 +1494,7 @@
      C                   MOVEA     '0000000000'  *IN(80)
      C                   MOVEA     '01000'       *IN(90)
      C                   MOVEL     'N'           PPrCpn
- 
+
      C                   IF        (S1STBS = 'P' AND PPROT <> '2' AND
      C                             PPROT <> '4' AND PPROT <> '7') OR
      C                             (S1STBS = 'Y' AND PPROT <> '2' AND
@@ -1500,44 +1502,44 @@
      C                             PPROT <> '9')
      C                   EVAL      *IN66 = *ON
      C                   ENDIF
- 
+
      C                   IF        PPROT = '4' OR PPROT = '7'
      C                   EVAL      *IN67 = *ON
      C                   ENDIF
- 
+
      C                   IF        S1STBS = 'D' OR
      C                             (S1STBS = 'Y' AND PPROT = '9')
      C                   EVAL      *IN68 = *ON
      C                   ENDIF
- 
+
      C                   IF        INCS = 'C'
      C                   EVAL      *IN69 = *ON
      C                   ENDIF
- 
+
      C                   IF        PPROT = '9'
      C                   EVAL      *IN80 = *ON
      C                   ENDIF
- 
+
      C                   IF        BGRKMG = 'Y'
      C                   EVAL      *IN81 = *ON
      C                   IF        S1ERPY = 'Y'
      C                   EVAL      *IN83 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PPROT = '3' OR PPROT = '5' OR
      C                             PPROT = '8'
      C                   EVAL      *IN84 = *ON
      C                   ENDIF
- 
+
      C                   IF        CSE007 = 'Y' OR CEU017 = 'Y'
      C                   EVAL      *IN85 = *ON
      C                   ENDIF
- 
+
      C                   IF        S1INCS = 'C' AND MDTI = 'F'
      C                   EVAL      *IN86 = *ON
      C                   ENDIF
- 
+
      C                   IF        *IN85 = *OFF
      C                   IF        INCS = 'C' AND MATY <> 99999 AND
      C                             PPROT <> '9'
@@ -1548,12 +1550,12 @@
      C                   EVAL      *IN87 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PPROT = '2' OR PPROT = '4' OR
      C                             PPROT = '7'
      C                   EVAL      *IN89 = *ON
      C                   ENDIF
- 
+
      C**********         IF        PPROT = '3' AND CSE005 = 'Y'                               CSE031
      C                   IF        PPROT = '3' AND CSE005 = 'Y' OR                            CSE031
      C                             PPROT = '8' AND CSE005 = 'Y' AND                           CSE031
@@ -1564,19 +1566,19 @@
      C                   EVAL      *IN82 = *ON
      C     SECKEY        CHAIN     SNDEVDF                            91
      C                   ENDIF
- 
+
      C                   IF        DDSYBS = 'AU'
      C                   EVAL      *IN92 = *ON
      C                   ENDIF
- 
+
      C                   IF        S1PPDI = 'Y'
      C                   EVAL      *IN93 = *ON
      C                   ENDIF
- 
+
      C                   IF        *IN68 AND *IN69
      C                   EVAL      *IN94 = *ON
      C                   ENDIF
- 
+
      C                   IF        CSE031 = 'Y'                                               CSE031
      C                   IF        PPROT = '3' OR PPROT = '8'                                 CSE031
      C                   EVAL      *IN20 = *ON                                                CSE031
@@ -1595,7 +1597,7 @@
      C                   IF        *IN91 = *OFF
      C                   MOVEL     'Y'           PPrCpn
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1912,7 +1914,7 @@
      C                   IF        OKNCD = 'N'                                                CSE031
      C                   EVAL      ADDNCD = DDNCD                                             CSE031
      C                   ENDIF                                                                CSE031
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1924,7 +1926,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

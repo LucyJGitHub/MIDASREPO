@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054998           Date 22Apr20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD054998           Date 22Apr20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043345           Date 05Jan17               *
       *                 AR1092524          Date 12Mar13               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD054998 - Security Prices sent to repair queue.             *
       *           - Specify 'N' (not locked) operation extender when  *
       *             reading file PRICEA and introduced new LF of      *

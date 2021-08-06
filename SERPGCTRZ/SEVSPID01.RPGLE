@@ -23,12 +23,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSC011             Date 18Sep01               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -45,9 +47,9 @@
       *  CAP060 - Midas APIs, Security Prices Full API                *
       *                                                               *
       *****************************************************************
- 
+
      FSECTYL5   IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -59,61 +61,61 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Switchable features description                                                      CSC011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
                                                                                               CSC011
       ** Dummy data structure                                                                 CSC011
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSC011
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CSC011
@@ -123,7 +125,7 @@
      D PRetCode        S              7A                                                      CSC011
      D POption         S              7A                                                      CSC011
      D PKey            S              6A                                                      CSC011
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -138,9 +140,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
@@ -148,12 +150,12 @@
      C                   Z-ADD     0             Idx
       *
       * Initialise output fields
- 
+
      C                   MOVEL     *BLANK        SPID
- 
+
       * Validate Sec Price Id
       * =====================
- 
+
       * Validate only if entered (not mandatory)
       ** This field will be mandatory if CSC011 is installed                                  CSC011
                                                                                               CSC011
@@ -190,7 +192,7 @@
      C                   MOVEL     'SEA0445'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       * If action code is amend the ID must not already exist in file SECTYD for another security
       *
@@ -203,11 +205,11 @@
      C                   MOVEL     'SEA0445'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDSPIDOK = 'Y'
      C                   EVAL      SPID = DDSPID
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CSC011
@@ -236,7 +238,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -280,15 +282,15 @@
      C                   EXSR      *PSSR                                                      CSC011
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
- 
+
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

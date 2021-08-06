@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CSD027A            Date 05May06               *
       *                 CER001             Date 25Apr05               *
       *                 ULX046  *CREATE    Date 17Oct02               *
       *                 207361             Date 10Jul02               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
       *  CER001 - LUX Upgrade to MidasPlus                            *
@@ -66,11 +68,11 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSECTYD    IF   E             DISK    INFSR(*PSSR)
      F***SECTYDY6  UF A E           K DISK    INFSR(*PSSR)                                    CER001
      FSESDX3L0  UF A E           K DISK    INFSR(*PSSR)                                       CER001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -81,7 +83,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -90,63 +92,63 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D @ReturnIn       S              7
      D @ModeIn         S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   IF        @ModeIn = '1'                                First run
      C                             OR @ModeIn = '2'                             Next run
- 
+
      C                   READ      SECTYD
- 
+
      C                   DOW       Not %EOF(SECTYD)
- 
+
      C*****SESN*         CHAIN     SECTYDY6                                                   CER001
      C     SESN          CHAIN     SESDX3L0                                                   CER001
- 
+
       ** If the record exists, check if fields have been coorrectly defaulted.
- 
+
      C**********         IF        %Found(SECTYDY6)                                           CER001
      C                   IF        %Found(SESDX3L0)                                           CER001
- 
+
      C                   IF        VVSUBR = *BLANKS
      C                   EVAL      VVSUBR = 'N'
      C                   ENDIF
- 
+
      C                   IF        VVQUOT = *BLANKS
      C                   EVAL      VVQUOT = 'Y'
      C                   ENDIF
- 
+
      C                   UPDATE    SECTYDF6
- 
+
      C                   ELSE
- 
+
       ** If the record does not exist, add details.
- 
+
      C                   EVAL      VVSESN = SESN
      C                   EVAL      VVSECT = 0
      C                   EVAL      VVLUSU = 0                                    ERL371
@@ -162,19 +164,19 @@
      C                   EVAL      VVEEEM = 'N'                                  207361
      C                   EVAL      VVVOTR = 0                                    169521
      C                   EVAL      VVQUOT = 'Y'
- 
+
      C                   WRITE     SECTYDF6
- 
+
      C                   ENDIF
- 
+
      C                   READ      SECTYD
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -186,15 +188,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    @ReturnIn
      C                   PARM                    @ModeIn
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

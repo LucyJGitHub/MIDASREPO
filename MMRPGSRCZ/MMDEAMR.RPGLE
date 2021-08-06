@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,9 +42,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  260173 - Introduce new parameter in DEAM API to be used in   *
-      *           the validation of action code during reversal       *
-      *           authorization. Apply fix 258724.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -315,7 +311,6 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
-     C                   PARM                    @ACTRV            1                          260173
 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
@@ -445,8 +440,6 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP
-      * Action Code (Reversal transaction)                                                    260173
-     C                   PARM                    @ACTRV                                       260173
 
       * OUTPUTS
 

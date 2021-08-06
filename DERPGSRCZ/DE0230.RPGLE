@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -45,15 +47,15 @@
       *****************************************************************
       ** DE Historic Events File
      FDEHEVNTPD IF   E           K DISK
- 
+
       ** DE Historic Events File
      FDEOEVNTL1 IF   E           K DISK    PREFIX(OL_)
      F                                     RENAME(DEEVNTP0:DEEVNTP2)
- 
+
       ** DE New Events File
      FDENEVNTPD O    E           K DISK    PREFIX(NW_)
      F                                     RENAME(DEEVNTP0:DEEVNTP1)
- 
+
       ** DE Old Events File                                                                   208221
      FDEOEVNTL2 IF   E           K DISK    PREFIX(OLI_)                                       208221
      F                                     RENAME(DEEVNTP0:DEEVNTOI)                          208221
@@ -91,24 +93,24 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
- 
+
      D DEHEVNT       E DS                  EXTNAME(DEHEVNTPD)
       ** External Data Structure for Historic Events Details
- 
+
      D DEOEVNT       E DS                  EXTNAME(DEHEVNTPD) PREFIX(OL_)
       ** External Data Structure for Old Historic Events Details
- 
+
      D DENEVNT       E DS                  EXTNAME(DENEVNTPD) PREFIX(NW_)
       ** External Data Structure for New Events Details
- 
+
      D DEHEVTX       E DS                  EXTNAME(DEHEVNTPD) PREFIX(HSO_)                    208221
       ** External Data Structure for Historic Events Details                                  208221
                                                                                               208221
@@ -120,14 +122,14 @@
                                                                                               208221
      D**  Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D**  Short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D W#DATE          DS             6
      D Bday                    1      2
      D Aday                    3      4
- 
+
      C     K#OLD         KLIST
      C                   KFLD                    K#MOD             2
      C**********         KFLD                    K#TREF           20                          CGL029
@@ -137,9 +139,9 @@
      C                   KFLD                    K#PRSQ            2 0
      C                   KFLD                    K#EVTP            2
      C                   KFLD                    K#EVRF            6
- 
+
      C                   READ      DEHEVNTPD                              89
- 
+
      C                   DOW       *IN89 = *Off
       *
       ** If Full Historic requested write record straight to DENPOSNPD
@@ -155,7 +157,7 @@
      C                   ENDIF                                                                208221
       *                                                                                       208221
      C                   WRITE     DEEVNTP1
- 
+
      C     I#TYPE        IFEQ      'FEES'
      C     E#EVTP        ANDEQ     'IP'
      C                   EXSR      FEERECORD
@@ -180,7 +182,7 @@
      C                   IF        DEHEVNT <> DEOEVNT
      C                   CLEAR                   DENEVNT
      C                   MOVEL     DEHEVNT       DENEVNT
- 
+
       ** Reset accrueing fee events to event type 'FN'                                        208221
      C     I#TYPE        IFEQ      'FEES'                                                     208221
      C     E#EVTP        ANDEQ     'FE'                                                       208221
@@ -189,20 +191,20 @@
      C                   ENDIF                                                                208221
       *                                                                                       208221
      C                   WRITE     DEEVNTP1
- 
+
      C     I#TYPE        IFEQ      'FEES'
      C     E#EVTP        ANDEQ     'IP'
      C                   EXSR      FEERECORD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Write record to DENEVNTPD
      C                   CLEAR                   DENEVNT
      C                   MOVEL     DEHEVNT       DENEVNT
- 
+
       ** Reset accrueing fee events to event type 'FN'                                        208221
      C     I#TYPE        IFEQ      'FEES'                                                     208221
      C     E#EVTP        ANDEQ     'FE'                                                       208221
@@ -211,18 +213,18 @@
      C                   ENDIF                                                                208221
       *                                                                                       208221
      C                   WRITE     DEEVNTP1
- 
+
      C     I#TYPE        IFEQ      'FEES'
      C     E#EVTP        ANDEQ     'IP'
      C                   EXSR      FEERECORD
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      DEHEVNTPD                              89
      C                   ENDDO
- 
+
       *                                                                                       208221
       ** For Lending fees have to generate fee events from the position                       208221
      C     I#TYPE        IFEQ      'FEES'                                                     208221
@@ -364,12 +366,12 @@
      C                   EVAL      *INLR = *On
      C                   RETURN
      C
- 
+
      C********************************************************************
       /SPACE 5
      C********************************************************************
      C     FEERECORD     BEGSR
- 
+
      C*******************MOVEL     'FE'          NW_E#EVTP                                    208221
      C                   MOVEL     'FN'          NW_E#EVTP                                    208221
      C                   Z-ADD     3             NW_E#PRSQ
@@ -409,21 +411,21 @@
       /SPACE 5
      C********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
      C                   PARM                    I#TYPE            4
- 
+
       **  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Read Extract Control Data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C                   IN        DEEXTCTL
       *

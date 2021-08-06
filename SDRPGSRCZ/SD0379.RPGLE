@@ -14,11 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. CSD079             Date 05Feb07               *
+      *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG12405           Date 03Nov06               *
       *                 BG12368A           Date 30Oct06               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
       *  BUG12405 - Error occured when adding details for             *
@@ -185,7 +187,7 @@
       *
       ** Clients holdings
      FCDEPP     IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -208,11 +210,11 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -221,7 +223,7 @@
       ** True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -330,7 +332,7 @@
      D Indicators      DS                  BASED(IndicatorP)
      D  EndOfFile             85     85
      D  RollupKey             88     88
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -421,7 +423,7 @@
       *
       ** Main file key for standing data control file
      D MainFilNam      S             10A   INZ(*BLANKS)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -432,7 +434,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -461,7 +463,7 @@
      C                   EVAL      *INLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -501,7 +503,7 @@
       ** Initialise fileds for refresh
       *
      C                   CLEAR                   WPrevDet1
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -570,17 +572,17 @@
       ** Generate beneficiaries record to intermediary detail file if
       ** currently no intermediary record exist.
      C     KCust_SecS    CHAIN     SDINTCLL1                          05
- 
+
      C                   IF        *IN05 = *ON
- 
+
      C                   EVAL      WCountIns = *ZERO
      C                   EXSR      SRGenerate
       *
       ** If a record was inserted update standing data control file
      C                   IF        WCountIns <> *ZERO
- 
+
      C     MainFilNam    CHAIN     SDFCTLL0                           09
- 
+
      C                   IF        *IN09 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY  = MainFilNam
@@ -594,11 +596,11 @@
      C                   UPDATE    @AHREAU
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WKeyinF9  = 'N'
      C                   EVAL      WPrevScrn = WScrn
      C                   EVAL      WAction   = *BLANK
@@ -606,9 +608,9 @@
      C                   EVAL      WReadNext = 'N'
      C                   EVAL      WScrn     = 'R'
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -679,7 +681,7 @@
       ***Unprotect*indicator*for*beneficiary*details.******************         185996
       ***********                                                               185996
      C***********        EVAL      *IN81 = *OFF                                 185996
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -715,7 +717,7 @@
      C                   EVAL      WScrn   = 'S'
      C                   GOTO      ESRSecond
      C                   ENDIF
- 
+
      C                   EVAL      WScrn = WPrevScrn
       *
       ** If previous screen was review screen, read subfile next change
@@ -734,7 +736,7 @@
      C                   IF        WAction = 'A' OR WAction = 'I'
      C                   EXSR      SRVScn2Det
      C                   ENDIF
- 
+
      C                   IF        WAction = 'A' OR WAction = 'I' OR
      C                             WAction = 'D'
       *
@@ -763,9 +765,9 @@
      C                   EVAL      WReadNext = 'Y'
      C                   EVAL      WScrn     = 'R'
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     ESRSecond     ENDSR
       *
       *****************************************************************
@@ -852,7 +854,7 @@
       *
       ** Read next intermediary client.
      C                   EXSR      SRRdIntCl
- 
+
      C                   ENDDO
       *
       ** Write screen footer for this screen.
@@ -872,7 +874,7 @@
       *
       ** Write and read the subfile control.
      C                   EXFMT     SD0379C0
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -889,7 +891,7 @@
      C                   IF        PMode = 'E'
      C                   CALL      'ZA0250'
      C                   ENDIF
- 
+
      C                   EVAL      WBuildSfl = 'Y'
      C                   EVAL      WReadNext = 'N'
      C                   EVAL      WScrn     = 'R'
@@ -920,9 +922,9 @@
      C                   EVAL      WReadNext = 'N'
      C                   EVAL      WScrn     = 'R'
      C                   GOTO      ESRReview
- 
+
      C                   OTHER
- 
+
      C                   IF        RollupKey = False
       *
       ** Enter key - read subfile for option.
@@ -940,14 +942,14 @@
      C                   EVAL      *IN84 = '0'
      C                   WRITE     SD0379C0
      C                   EVAL      OptSelected = 'Y'
- 
+
      C                   ELSE
       *
       ** No option has been entered.
      C                   EVAL      OptSelected = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   IF        OptSelected <> 'Y'
       *
       ** Clear message subfile.
@@ -961,7 +963,7 @@
       *
       ** Read through intermediary clients details.
      C                   EXSR      SRRdIntCl
- 
+
      C                   IF        EndOfFile = False
       *
       ** Re-initialise subfile relative record number.
@@ -973,43 +975,43 @@
      C                   WRITE     SD0379C0
      C                   EVAL      *IN87 = *OFF
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** An option was entered against a subfile record.
      C                   EVAL      WKeyinF9  = 'N'
      C                   EVAL      WPrevScrn = WScrn
      C                   EVAL      WReadNext = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Rollup key - putback current relative record number.
      C                   Z-ADD     WT_Rrn        W_Rrn
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** Read next subfile record was requested.
       *
      C                   IF        WReadNext = 'Y'
- 
+
      C                   IF        PMode = 'E'
      C                   EXSR      SRRdNextE
      C                   ENDIF
- 
+
      C                   IF        PMode = 'M'
      C                   EXSR      SRRdNextM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESRReview     ENDSR
       *
       *****************************************************************
@@ -1026,15 +1028,15 @@
      C                   EVAL      WChgRecFnd = 'N'
      C                   DOU       *IN86 = *ON OR SOPTN <> *BLANK OR
      C                             WChgRecFnd = 'Y'
- 
+
      C                   READC     SD0379S0                               86
- 
+
      C                   IF        *IN86 = *OFF
      C                   EVAL      WChgRecFnd = 'Y'
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        *IN86 <> *ON
       *
       ** If (A)mend or (D)elete was requested on enquiry mode,
@@ -1079,7 +1081,7 @@
      C                   EVAL      WBuildSfl = 'N'
      C                   GOTO      ESRRdNextE
      C                   ENDIF
- 
+
      C                   IF        SOPTN = 'E'
      C                   EVAL      WErrFnd = 'N'
      C                   EVAL      WAction = SOPTN
@@ -1106,7 +1108,7 @@
      C                   EVAL      SOPTN = *BLANK
      C                   UPDATE    SD0379S0
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Re-build subfile if no pending option/error was found.
@@ -1117,9 +1119,9 @@
      C                   ELSE
      C                   EXSR      SRInvEntry
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESRRdNextE    ENDSR
       *
       *****************************************************************
@@ -1142,13 +1144,13 @@
       ** Position subfile to first record in error.
       *
      C                   Z-ADD     WE_Rrn        SSFRN
- 
+
      C                   EXFMT     SD0379C0
       *
       ** Clear message subfile.
       *
      C                   CALL      'ZA0250'
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -1165,16 +1167,16 @@
      C                   EVAL      WBuildSfl = 'Y'
      C                   EVAL      WReadNext = 'N'
      C                   EVAL      WScrn     = 'R'
- 
+
      C                   OTHER
       *
       ** Re-read invalid record corrected or read next changed
       ** record on the subfile.
      C                   EVAL      WBuildSfl = 'N'
      C                   EVAL      WReadNext = 'Y'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1191,7 +1193,7 @@
      C                   DOU       *IN86 = *ON OR SOPTN <> *BLANK
      C                   READC     SD0379S0                               86
      C                   ENDDO
- 
+
      C                   IF        *IN86 <> *ON AND SOPTN <> *BLANK
      C                   EVAL      WAction = SOPTN
       *
@@ -1216,16 +1218,16 @@
       ** Update processed record.
      C                   EVAL      SOPTN = *BLANK
      C                   UPDATE    SD0379S0
- 
+
      C                   ELSE
       *
       ** Re-build subfile if no pending option was found.
      C                   EVAL      WBuildSfl = 'Y'
      C                   EVAL      WReadNext = 'N'
      C                   EVAL      WScrn     = 'R'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1245,15 +1247,15 @@
       *
       ** Read intermediary client detail file.
      C     KClient       READE     SDINTCLL1                              85
- 
+
      C                   IF        SCNUM = INCNUM AND SSECS = INSECS
      C                   EVAL      WError = '0'
      C                   ELSE
      C                   EVAL      WError = '1'
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1331,7 +1333,7 @@
      C                   MOVEL     INHLDN        ZFld15
      C                   EXSR      SRFmtAmtO
      C                   MOVE      ZOut21        SHLDN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1402,7 +1404,7 @@
       ** Holding
       *
      C                   Z-ADD     WHolding      INHLDN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1478,19 +1480,19 @@
       ** If percentage allocation for holding does not exist zeroise holding.
       ** Otherwise, compute for its holding.
      C                   IF        BNPAHD = *ZERO
- 
+
      C                   Z-ADD     *ZERO         INHLDN
- 
+
      C                   ELSE
- 
+
      C                   IF        WShortPos = 'Y'
- 
+
      C                   Z-SUB     WTOTH         W_TOTH
      C                   Z-ADD     *ZEROS        WPctAlloc
      C     BNPAHD        DIV       100           WPctAlloc
- 
+
      C                   EVAL      WHolding = W_TOTH * WPctAlloc
- 
+
      C                   MOVEL     *BLANKS       ZAField
      C                   MOVEL     WHolding      ZAField
      C                   Z-ADD     0             ZADec
@@ -1500,21 +1502,21 @@
      C                   PARM                    ZAField
      C                   PARM                    ZADec
      C                   PARM                    ZADig
- 
+
      C                   IF        ZAlignOk = 'Y'
      C                   MOVE      ZAField       WHolding
      C                   ENDIF
- 
+
      C                   Z-SUB     WHolding      INHLDN
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     WTOTH         W_TOTH
      C                   Z-ADD     *ZEROS        WPctAlloc
      C     BNPAHD        DIV       100           WPctAlloc
- 
+
      C                   EVAL      WHolding = W_TOTH * WPctAlloc
- 
+
      C                   MOVEL     *BLANKS       ZAField
      C                   MOVEL     WHolding      ZAField
      C                   Z-ADD     0             ZADec
@@ -1524,17 +1526,17 @@
      C                   PARM                    ZAField
      C                   PARM                    ZADec
      C                   PARM                    ZADig
- 
+
      C                   IF        ZAlignOk = 'Y'
      C                   MOVE      ZAField       WHolding
      C                   ENDIF
- 
+
      C                   Z-ADD     WHolding      INHLDN
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1549,13 +1551,13 @@
       ** If record was amended or deleted, validate record.
       *
      C                   IF        WAction = 'A' OR WAction = 'D'
- 
+
      C                   IF        SBONI <> *BLANKS
      C                   EVAL      WBenefNo = SCNUM + SBONI
      C                   ELSE
      C                   EVAL      WBenefNo = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        WHINTS = 'QI'
      C     KIntermed     SETLL     SDINTCLL0
      C     KIntermed     READE     SDINTCLL0                              08
@@ -1576,41 +1578,41 @@
       ** retrieved record, send "Record has been updated by another
       ** workstation.".
      C                   IF        *IN08 = *OFF
- 
+
      C                   IF        W_OldDet <> W_NewDet
- 
+
      C                   EVAL      ErrIdx  = ErrIdx + 1
      C                   EVAL      P_MsgID = 'USR7734'
      C                   EXSR      SRSndM
      C                   GOTO      ESRUpdate
- 
+
      C                   ELSE
       *
       ** If action is amend, update record.  Otherwise delete record.
      C                   IF        WAction = 'A'
- 
+
      C                   EXSR      SRFmtDetO
- 
+
      C                   IF        WHINTS = 'QI'
      C                   UPDATE    @INTCL0
      C                   ELSE
      C                   UPDATE    @INTCL5
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        WHINTS = 'QI'
      C                   DELETE    @INTCL0
      C                   ELSE
      C                   DELETE    @INTCL5
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If record was inserted write a new record.
@@ -1623,20 +1625,20 @@
       ** Update standing data control file if no more error encountered.
       *
      C                   IF        ErrIdx = *ZEROS
- 
+
      C     MainFilNam    CHAIN     SDFCTLL0                           09
- 
+
      C                   IF        *IN09 = *ON
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY  = MainFilNam
      C                   EVAL      DBFILE = 'SDFCTLPA'
      C                   EVAL      DBASE  = 003
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      WAction  = 'I'
      C                   EVAL        AHNOIN = AHNOIN + 1
@@ -1647,11 +1649,11 @@
      C                   EVAL        AHNORC = AHNORC - 1
      C                   EVAL        AHNODL = AHNODL + 1
      C                   ENDSL
- 
+
      C                   UPDATE    @AHREAU
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If no pending error exist, commit changes. Otherwise,
@@ -1662,7 +1664,7 @@
      C                   ELSE
      C                   ROLBK
      C                   ENDIF
- 
+
      C     ESRUpdate     ENDSR
       *
       *****************************************************************
@@ -1689,13 +1691,13 @@
      C                   EVAL      WDepotA = *BLANKS
      C     KCustCntry    CHAIN     SDBNFOL1                           06
      C                   ENDIF
- 
+
      C                   IF        *IN06 = *OFF
       *
       ** Delete processing
      C     KCust_SecS    SETLL     SDINTCLL0
      C     KCust_SecS    READE     SDINTCLL0                              08
- 
+
      C                   EVAL      WCountDel = *ZERO
      C                   DOW       *IN08 = *OFF
      C                   EVAL      WCountDel = WCountDel + 1
@@ -1710,9 +1712,9 @@
       ** Update standing data control file if there are records deleted and
       ** inserted.
      C                   IF        WCountDel <> *ZERO AND WCountIns <> *ZERO
- 
+
      C     MainFilNam    CHAIN     SDFCTLL0                           09
- 
+
      C                   IF        *IN09 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY  = MainFilNam
@@ -1727,11 +1729,11 @@
      C                   UPDATE    @AHREAU
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1763,18 +1765,18 @@
       ** file exist for the customer.
       *
      C                   DOW       *IN06 = *OFF
- 
+
      C                   EVAL      WCountIns = WCountIns + 1
       *
       ** Format fields for output
      C                   EXSR      SRBnfToInt
- 
+
      C                   WRITE     @INTCL0
- 
+
      C     KCustCntry    READE     SDBNFOL1                               06
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1834,9 +1836,9 @@
      C                   MOVE      ZOut21        STALL                          185998
       *                                                                         185998
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1847,7 +1849,7 @@
       *                                                               *
       *****************************************************************
      C     SRVSECS       BEGSR
- 
+
      C     SSECS         CHAIN     SECTY                              03
       *
       ** If there is no valid record in securities file, it is an error.
@@ -1876,7 +1878,7 @@
       ** Save country of treaty for customer and tax basket validation.
      C                   EVAL      WCountry = CRTT
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1917,7 +1919,7 @@
       ***tax*customer*details.*****************************************                     BG12368A
      C                   IF        CSE023 = 'Y'                                             BG12368A
      C     KTaxCust      CHAIN     SDWTCSL1                           02
- 
+
      C                   IF        *IN02 = *ON
      C                   EVAL      *IN20 = *ON
      C                   EVAL      P_MsgID = 'USR7723'
@@ -1932,9 +1934,9 @@
      C                   ENDIF                                                              BG12368A
       *                                                                                     BG12368A
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1965,7 +1967,7 @@
       ** Classification for depot customer must be: X - Depot, E - Euroclear
       ***C*-*Cedel*or*K*-*Kassenverein.********************************                       CSE022
       ** or C - Cedel.                                                                        CSE022
- 
+
      C                   IF        BFCLAS <> 'X' AND BFCLAS <> 'E' AND
      C***********                  BFCLAS <> 'C' AND BFCLAS <> 'K'              185728
      C**********                   BFCLAS <> 'C' AND BFCLAS <> 'K' AND          185728        CSE022
@@ -1978,7 +1980,7 @@
      C                   EVAL      WDepotA = SDEPT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2012,7 +2014,7 @@
      C                   EVAL      WBranch = BBBRCD
      C                   EVAL      WCOLC   = BBCOLC
      C                   ENDIF
- 
+
      C                   EVAL      WSShortN = SSECS
      C                   MOVEL     SCNUM         WCustNo
      C*****              MOVEL     SDEPT         WDepot                                       CSD027
@@ -2065,9 +2067,9 @@
      C                   MOVEL     WTOTH         ZFld15
      C                   EXSR      SRFmtAmtO
      C                   MOVE      ZOut21        STOTH
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2100,7 +2102,7 @@
       ** Validate holding
       *
      C                   EXSR      SRVHLDN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2146,7 +2148,7 @@
      C                   EXSR      SRFmtAmtO
      C                   MOVE      ZOut21        SUAHL
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2161,28 +2163,28 @@
       ** Tax basket is mandatory if customer is a qualified intermediary.
       *
      C                   IF        STXBS = *BLANKS
- 
+
      C                   IF        WHINTS = 'QI' AND WAction = 'I'
      C                   EVAL      *IN22 = *ON
      C                   EVAL      ErrIdx  = ErrIdx + 1
      C                   EVAL      P_MsgID = 'USR7737'
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Tax basket must be in tax basket table.
      C     KTaxBasket    CHAIN     SDTXBSL1                           07
- 
+
      C                   IF        *IN07 = *ON
      C                   EVAL      *IN22 = *ON
      C                   EVAL      ErrIdx  = ErrIdx + 1
      C                   EVAL      P_MsgID = 'USR7728'
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2198,14 +2200,14 @@
       ** customer.
       *
      C                   IF        WAction = 'I' AND SBONI = *BLANKS
- 
+
      C                   IF        WHINTS = 'NQI' OR WHINTS = 'FTE'
      C                   EVAL      *IN23 = *ON
      C                   EVAL      ErrIdx  = ErrIdx + 1
      C                   EVAL      P_MsgID = 'USR7738'
      C                   EXSR      SRSndM
      C                   ELSE
- 
+
      C                   If        *IN81 = *On                                              BUG12405
      C                   EVAL      WBenefNo = *BLANKS
      C     KClientChk1   CHAIN     SDINTCLL3                          10
@@ -2218,19 +2220,19 @@
      C                   ENDIF
      C                   EndIf                                                              BUG12405
      C                   ENDIF
- 
+
      C                   GOTO      EBenefDet
- 
+
      C                   ENDIF
       *
       ** Validate beneficiary details if beneficiary number was entered.
       *
      C                   IF        SBONI <> *BLANKS
- 
+
      C                   EVAL      WBenefNo = SCNUM + SBONI
      C                   EVAL      WDepotA = SDEPT
      C     KBenef        CHAIN     SDBNFOL1                           06
- 
+
      C                   IF        *IN06 = *ON
      C                   EVAL      WDepotA = *BLANKS
      C     KBenef        CHAIN     SDBNFOL1                           06
@@ -2249,13 +2251,13 @@
       ** beneficiary already exist in intermediary table, error if
       ** it does.
      C                   IF        *IN06 = *OFF
- 
+
      C                   IF        WHINTS = 'QI'
      C     KClientChk1   CHAIN     SDINTCLL3                          10
      C                   ELSE
      C     KClientChk2   CHAIN     SDINTCLL4                          10
      C                   ENDIF
- 
+
      C                   IF        WAction = 'I'
      C                   IF        *IN10 = *OFF
      C                   EVAL      *IN23 = *ON
@@ -2291,11 +2293,11 @@
      C***********        IF        SBOA3 = *BLANKS                              185996
      C                   EVAL      SBOA3 = BNBOA3
      C***********        ENDIF                                                  185996
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EBenefDet     ENDSR
       *
       *****************************************************************
@@ -2310,13 +2312,13 @@
       ** Default country of residence if no entry has been made.
       *
      C                   IF        SCTRS = *BLANKS
- 
+
      C                   IF        BNCTRS = *BLANKS
      C                   EVAL      SCTRS = WCOLC
      C                   ELSE
      C                   EVAL      SCTRS = BNCTRS
      C                   ENDIF
- 
+
      C**********         ELSE
       **********
       ** Country of residence must be a live country code
@@ -2326,16 +2328,16 @@
      C**********         PARM      '*KEY   '     POptn
      C*****SCTRS         PARM      SCTRS         PCrtt
      C*****SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C***********        IF        PRtcd <> *BLANKS
      C***********        EVAL      *IN28 = *ON
      C***********        EVAL      ErrIdx  = ErrIdx + 1
      C***********        EVAL      P_MsgID = 'USR7727'
      C***********        EXSR      SRSndM
      C***********        ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2360,12 +2362,12 @@
       *
       ** Overwrite computed holding if holding was entered.
      C                   IF        SHLDN <> *BLANKS
- 
+
      C                   MOVEL     *BLANKS       ZFLD17
      C                   MOVEL     SHLDN         ZFLD17
- 
+
      C                   EXSR      ZASIGN
- 
+
      C                   IF        ZASIGNOk = 'Y'
      C                   MOVE      ZOUT15        WHolding
      C                   IF        ZFSIGN = '-'
@@ -2377,25 +2379,25 @@
      C                   EVAL      P_MsgID = 'USR7732'
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     *ZEROS        WPctAlloc
      C     BNPAHD        DIV       100           WPctAlloc
- 
+
      C                   EVAL      WHolding = WTOTH * WPctAlloc
      C                   MOVEL     *BLANKS       ZFLD17
      C                   MOVEL     WHolding      ZFLD17
- 
+
      C                   EXSR      ZASIGN
- 
+
      C                   IF        ZASIGNOk = 'Y'
      C                   MOVE      ZOUT15        WHolding
      C                   IF        ZFSIGN = '-'
      C                   Z-SUB     WHolding      WHolding
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WAction = 'I' AND WHolding <> *ZEROS
      C                   MOVEL     *BLANKS       ZFld15
      C                   MOVEL     WHolding      ZFld15
@@ -2411,27 +2413,27 @@
      C                   ENDIF
      C                   GOTO      ESRVHLDN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** If percentage allocation holding does not exist, require entry for
       ** holding.
      C                   IF        SHLDN = *BLANKS
- 
+
      C                   EVAL      *IN30 = *ON
      C                   EVAL      ErrIdx  = ErrIdx + 1
      C                   EVAL      P_MsgID = 'USR7729'
      C                   EXSR      SRSndM
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     *BLANKS       ZFLD17
      C                   MOVEL     SHLDN         ZFLD17
- 
+
      C                   EXSR      ZASIGN
- 
+
      C                   IF        ZASIGNOk = 'Y'
      C                   MOVE      ZOUT15        WHolding
      C                   IF        ZFSIGN = '-'
@@ -2443,28 +2445,28 @@
      C                   EVAL      P_MsgID = 'USR7732'
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Beneficiary number was not entered.
      C                   IF        SHLDN = *BLANKS
- 
+
      C                   EVAL      *IN30 = *ON
      C                   EVAL      ErrIdx  = ErrIdx + 1
      C                   EVAL      P_MsgID = 'USR7729'
      C                   EXSR      SRSndM
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     *BLANKS       ZFLD17
      C                   MOVEL     SHLDN         ZFLD17
- 
+
      C                   EXSR      ZASIGN
- 
+
      C                   IF        ZASIGNOk = 'Y'
      C                   MOVE      ZOUT15        WHolding
      C                   IF        ZFSIGN = '-'
@@ -2476,15 +2478,15 @@
      C                   EVAL      P_MsgID = 'USR7732'
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Reformat holding for display
       *
      C                   IF        WAction = 'I' AND WHolding <> *ZEROS
- 
+
      C                   MOVEL     *BLANKS       ZFld15
      C                   MOVEL     WHolding      ZFld15
      C                   EXSR      SRFmtAmtO
@@ -2497,9 +2499,9 @@
      C                   EVAL      P_MsgID = 'USR7735'
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESRVHLDN      ENDSR
       *
       *****************************************************************
@@ -2510,10 +2512,10 @@
       *                                                               *
       *****************************************************************
      C     ZASIGN        BEGSR
- 
+
      C                   Z-ADD     0             ZSDEC
      C                   Z-ADD     14            ZSDIG
- 
+
      C                   CALLB     'ZASIGN'
      C                   PARM                    ZASIGNok
      C                   PARM                    ZFLD17
@@ -2522,7 +2524,7 @@
      C                   PARM                    ZSDCSP
      C                   PARM                    ZOUT15
      C                   PARM                    ZFSIGN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2533,14 +2535,14 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmtO     BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    ZFld15
      C                   PARM      *ZERO         ZDecs
      C                   PARM      'L'           ZECode
      C                   PARM      *BLANKS       ZEChar
      C                   PARM      *BLANKS       ZOut21
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2551,11 +2553,11 @@
       *                                                               *
       *****************************************************************
      C     SRSndM        BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM      'GBSDUSRMSG'  P_MsgFile
      C                   PARM                    P_MsgID
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2566,12 +2568,12 @@
       *                                                               *
       *****************************************************************
      C     SRSndMDta     BEGSR
- 
+
      C                   CALL      'ZA0350'
      C                   PARM      'GBSDUSRMSG'  P_MsgFile
      C                   PARM                    P_MsgID
      C                   PARM                    P_MsgDta
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2633,7 +2635,7 @@
      C                   EVAL      DBASE  = 002
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   EVAL      S01510 = 'Y'
      C                   ELSE
@@ -2688,26 +2690,26 @@
      C                   KFLD                    SCNUM
      C                   KFLD                    SSECS
      C                   KFLD                    SDEPT
- 
+
      C     KCust_SecS    KLIST
      C                   KFLD                    SCNUM
      C                   KFLD                    SSECS
      C                   KFLD                    SDEPT
- 
+
      C     KIntermed     KLIST
      C                   KFLD                    SCNUM
      C                   KFLD                    SSECS
      C                   KFLD                    SDEPT
      C                   KFLD                    WPrevTXBS
      C                   KFLD                    WBenefNo
- 
+
      C     KClientChk1   KLIST
      C                   KFLD                    SCNUM
      C                   KFLD                    SSECS
      C                   KFLD                    SDEPT
      C                   KFLD                    WBenefNo
      C                   KFLD                    STXBS
- 
+
      C     KClientChk2   KLIST
      C                   KFLD                    SCNUM
      C                   KFLD                    SSECS
@@ -2721,7 +2723,7 @@
      C                   KFLD                    WCountry
      C                   KFLD                    WDepotA
      C                   KFLD                    WBenefNo
- 
+
      C     KCustCntry    KLIST
      C                   KFLD                    SCNUM
      C                   KFLD                    WCountry
@@ -2743,7 +2745,7 @@
       *
      C                   EVAL      *IN89 = *ON
      C                   EVAL      SPGMQ = '*'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2760,25 +2762,25 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2001

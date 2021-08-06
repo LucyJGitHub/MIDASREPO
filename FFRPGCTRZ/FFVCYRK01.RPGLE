@@ -13,10 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -50,14 +52,14 @@
       * *INZSR - Initialise                                           *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSECTY     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -69,13 +71,13 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -83,44 +85,44 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
       ** Midas Country Codes File Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** First DS for Access Programs, Long Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D SCRIK           S              2A
      D SUNSE           S             10A
      D BGSECS          S              1A
- 
+
      D PRtCd           S              7A
      D POptn           S              7A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -135,47 +137,47 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error fields
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
       ** MsgDtaXArr, XIdx.  It therefore requires FVAL_ARRAY and STD_D_SPEC.
      C/COPY ZACPYSRC,FVAL_RESET
- 
+
      C                   IF        BGSECS = 'Y'
      C                             AND  SCRIK = *Blanks
      C     SUNSE         CHAIN     SECTY                              01
- 
+
       ** Default value from SECTY file
- 
+
      C                   IF        *IN01 = '0'
      C                   EVAL      SCRIK = SCOR
      C                   ELSE
- 
+
       ** A valid country code must be entered
- 
+
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SCRIK'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0837'
      C                   EVAL      ReturnCode = 'Error'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        ReturnCode = *Blanks
- 
+
       ** Access Country Codes File
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*KEY  '      POptn
      C                   PARM                    SCRIK
      C     SDCTRY        PARM      SDCTRY        DSSDY
- 
+
       ** A valid country code must be entered
- 
+
      C                   IF        PRtCd <> *Blanks
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SCRIK'
@@ -184,11 +186,11 @@
      C                   ELSE
      C                   EVAL      SCRIK = A4CNCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -200,9 +202,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    SCRIK
@@ -210,15 +212,15 @@
      C                   PARM                    BGSECS
      C                   PARM                    MsgIDXArr
      C                   PARM                    FldNamXArr
- 
+
       **---------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **---------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       **--------------------------------------------------------------+

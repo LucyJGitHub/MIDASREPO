@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248             Date 05Feb18             *
-/*    *  Last Amend No. AR1097122 *CREATE    Date 25Mar13             *
+      *  Last Amend No. MD055891             Date 01Sep20             *
+      *  Prev Amend No. MD046248             Date 05Feb18             *
+/*    *                 AR1097122 *CREATE    Date 25Mar13             *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
 /*    *  AR1097122 - SFC0521 seq 21001 failed                         *
       *                                                               *
@@ -33,7 +35,7 @@
       *                                                               *
       *****************************************************************
 
-     FCBCMPNL0  IF   E           K DISK    INFSR(*PSSR)
+     F*CBCMPNL0* IF   E           K DISK    INFSR(*PSSR)                                    MD055891
      FCBCOBRL0  IF   E           K DISK    INFSR(*PSSR)
      FFCPREQL0  IF   E           K DISK    INFSR(*PSSR)
      FFCRREQL0  IF   E           K DISK    INFSR(*PSSR)
@@ -54,6 +56,7 @@
      D RUNBFOR         S              1A
      D SEQUENS         S              5A
      D COMPONT         S             10A
+     D CBCMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
 
       ** Key fields.
 
@@ -157,12 +160,25 @@
      C                   EVAL      *IN98 = *OFF
      C                   EVAL      *IN97 = *ON
 
-     C     BCMPNK        CHAIN     CBCMPNL0                           98
+     C*****BCMPNK        CHAIN     CBCMPNL0                           98                    MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ SELECT *                                                                            MD055891
+     C+ into :CBCMPN                                                                        MD055891
+     C+ from CBCMPJW0                                                                       MD055891
+     C+ where DHCOTT = :OTTKEY and DHCSEQ = :SEQKEY                                         MD055891
+     C/END-EXEC                                                                             MD055891
 
-     C                   IF        *IN98 = '1'
+     C**********         IF        *IN98 = '1'                                              MD055891
+     C                   IF        SQLCODE = 100                                            MD055891
 
      C                   EXSR      CHGSEQ
-     C     BCMPNK        CHAIN     CBCMPNL0                           97
+     C*****BCMPNK        CHAIN     CBCMPNL0                           97                    MD055891
+     C/EXEC SQL                                                                             MD055891
+     C+ SELECT *                                                                            MD055891
+     C+ into :CBCMPN                                                                        MD055891
+     C+ from CBCMPJW0                                                                       MD055891
+     C+ where DHCOTT = :OTTKEY and DHCSEQ = :SEQKEY                                         MD055891
+     C/END-EXEC                                                                             MD055891
 
      C                   ENDIF
 

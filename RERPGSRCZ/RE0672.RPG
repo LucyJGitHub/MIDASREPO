@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD048795           Date 30Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260318             Date 07Jun21               *     
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD048795           Date 30Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035554           Date 25May16               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -77,6 +79,10 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  260318 - Event type for position settlements not shown       *
+      *           correctly in the projected account movements.       *
+      *           Applied for MD-57791.                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD048795  - Check if FX netting by chaining to FXNETML3. If  *
       *            successful, DTYP, TNMR, NRTC and ORT1 are set to   *
       *            their correct FX netting projection values.        *
@@ -463,6 +469,7 @@
      I                                        7  11 FCLTYA                E29976
      I                                       12  12 FCLTYB                E29976
      I                                       15  16 ADDNAR                                    241166
+     I                                       05  14 EVTYPE                                    260318
       *
       * Definition of key to RESPGE
       *
@@ -506,6 +513,17 @@
       ** DS for AOSVALR0                                                                      241166
       *                                                                                       241166
      I              'SdwPstIncTransRef   'C         SVALKK                                    241166
+      *                                                                                       260318
+     I              'C-PART PAY'          C         CPART                                     260318
+     I              'C-COUPON  '          C         CCOUP                                     260318
+     I              'C-DIVIDEND'          C         CDIVI                                     260318
+     I              'C-MORT PAY'          C         CMORT                                     260318
+     I              'C-MATURITY'          C         CMATU                                     260318
+     I              'D-PART PAY'          C         DPART                                     260318
+     I              'D-COUPON  '          C         DCOUP                                     260318
+     I              'D-DIVIDEND'          C         DDIVI                                     260318
+     I              'D-MORT PAY'          C         DMORT                                     260318
+     I              'D-MATURITY'          C         DMATU                                     260318
      I/COPY WNCPYSRC,REH00131
      IDSACNT      DS                                                                          CSC056
      I                                    B 397 4000DSRRN                                     CSC056
@@ -1173,7 +1191,29 @@
      C           *IN90     IFEQ '0'
      C                     MOVE TDTP      TRYP
      C                     ELSE
-     C                     MOVEL'TR'      TRYP
+     C**********           MOVEL'TR'      TRYP                                                260318
+     C                     SELEC                                                              260318
+     C           EVTYPE    WHEQ CPART                                                         260318
+     C           EVTYPE    OREQ DPART                                                         260318
+     C                     MOVEL'PP'      TRYP                                                260318
+     C           EVTYPE    WHEQ CCOUP                                                         260318
+     C           EVTYPE    OREQ DCOUP                                                         260318
+     C                     MOVEL'CP'      TRYP                                                260318
+     C           EVTYPE    WHEQ CDIVI                                                         260318
+     C           EVTYPE    OREQ DDIVI                                                         260318
+     C                     MOVEL'DV'      TRYP                                                260318
+     C           EVTYPE    WHEQ CMORT                                                         260318
+     C           EVTYPE    OREQ DMORT                                                         260318
+     C                     MOVEL'MP'      TRYP                                                260318
+     C           EVTYPE    WHEQ CMATU                                                         260318
+     C           EVTYPE    OREQ DMATU                                                         260318
+     C                     MOVEL'MA'      TRYP                                                260318
+     C                     OTHER                                                              260318
+     C                     MOVEL'SE'      TRYP                                                260318
+     C                     ENDSL                                                              260318
+     C           TNMR      IFEQ *BLANKS                                                       260318
+     C                     MOVEL'000000'  TNMR                                                260318
+     C                     ENDIF                                                              260318
      C                     END
      C                     END
       *

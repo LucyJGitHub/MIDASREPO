@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254657             Date 01Jun20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057429           Date 17Jun21               *
+      *  Prev Amend No. 254657             Date 01Jun20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057237           Date 04Dec20               *
       *                 MD054702           Date 07Sep20               *
       *                 MD053119           Date 02Dec19               *
@@ -88,6 +89,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057429 - Check for and delete any items in repair if the   *
+      *             batch header is being deleted                     *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
       *           user tries to amend/accept JE inserted via APIs     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -248,6 +251,9 @@
       ** Midas GL Multicash Narratives File - by batch no                                  BUG26246A
      FGLMNARL7  UF A E           K DISK    INFSR(*PSSR)                                    BUG26246A
      F                                     COMMIT                                           BUG26246
+      ** Midas Repair Queue - by Front Office id                                            MD057429
+     FMSRPRQL4  UF A E           K DISK    INFSR(*PSSR)                                     MD057429
+     F                                     COMMIT                                           MD057429
      F/COPY WNCPYSRC,GLBITHDF01
       ** IBLC Journal Entry Details                                                           CER001
      FGLJPX1L0  UF A E           K DISK    INFSR(*PSSR)                                       CER001
@@ -477,6 +483,8 @@
      D PSysVal         S            200A   INZ(' ')                                         AR992022
      D PSValOptB       S             20A   INZ(' ')                                         AR992022
      D PSysValB        S            200A   INZ(' ')                                         AR992022
+     D PSValOpt2       S             20A   INZ('ZoneSystemName')                            MD057429
+     D PSysVal2        S            200A   INZ(' ')                                         MD057429
       ** CRE020 Parameters for QCMDEXC                                                     AR992022A
      D SBMAdvice       S            150A   INZ('SBMJOB JOB(REC000881) +                    AR992022A
      D                                       JOBD(MBATCH) USER(*JOBD) +                    AR992022A
@@ -829,6 +837,17 @@
      C                   ENDIF                                                              BUG26246
      C                   SETOFF                                       9899                  BUG26246
       *                                                                                       CAP084
+      * Check for any items in repair and delete these                                      MD057429
+     C                   MOVEL     PSysVal2      W#ZONE                                     MD057429
+     C     KRPRQ         SETLL     MSRPRQL4                           99                    MD057429
+     C     *IN99         IFEQ      *OFF                                                     MD057429
+     C     KRPRQ         READE     MSRPRQL4                               98                MD057429
+     C     *IN98         DOWEQ     *OFF                                                     MD057429
+     C                   DELETE    T_MSRPRQ                                                 MD057429
+     C     KRPRQ         READE     MSRPRQL4                               98                MD057429
+     C                   ENDDO                                                              MD057429
+     C                   ENDIF                                                              MD057429
+     C                   SETOFF                                       9899                  MD057429
      C/COPY WNCPYSRC,GLH00765
      C     BRBTNB        CHAIN     GLBTNOL0                           21                     BUG7426
      C                   IF        *IN21 = *OFF                                              BUG7426
@@ -1315,6 +1334,12 @@
      C     KJEN1P        KLIST                                                              MD042261
      C                   KFLD                    BTPTDT                                     MD042261
      C                   KFLD                    BTBTNB                                     MD042261
+      *                                                                                     MD057429
+      ** Define key list for GLJENHL3.                                                      MD057429
+      *                                                                                     MD057429
+     C     KRPRQ         KLIST                                                              MD057429
+     C                   KFLD                    W#ZONE           10                        MD057429
+     C                   KFLD                    BRFRNT                                     MD057429
                                                                                               CSC011
       ** Check if Midas 24x7 Availability is installed.                                       CSC011
      C                   CALLB     'AOSARDR0'                                                 CSC011
@@ -1421,6 +1446,40 @@
      C                   ENDIF                                                              AR992022
                                                                                             AR992022
      C                   ENDIF                                                              AR992022
+      *                                                                                     MD057429
+      ** Check if system value for the maintenance is on                                    MD057429
+      *                                                                                     MD057429
+     C                   CALL      'AOSVALR0'                                               MD057429
+     C                   PARM                    PRtnCode                                   MD057429
+     C                   PARM                    PSValOpt2                                  MD057429
+     C                   PARM                    PSysVal2                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+     C                   PARM                    PSValOptB                                  MD057429
+     C                   PARM                    PSysValB                                   MD057429
+                                                                                            MD057429
+      ** Database Error for System Values File                                              MD057429
+                                                                                            MD057429
+     C                   IF        PRtnCode <> *Blanks                                      MD057429
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD057429
+     C                   EVAL      DBASE = 038                                              MD057429
+     C                   EVAL      DBKEY = PsValOpt2                                        MD057429
+     C                   EXSR      *PSSR                                                    MD057429
+     C                   ENDIF                                                              MD057429
                                                                                             AR992022
      C/COPY WNCPYSRC,GLBITHDC02                                                               GOC001
       ** Check if enhancement CSC024 (Open Month End) is on                                   CAP086

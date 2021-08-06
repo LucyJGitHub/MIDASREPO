@@ -11,6 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
       *  Last Amend No. MD055681           Date 31Jul20               *
       *  Prev Amend No. MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -18,6 +19,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
@@ -75,7 +77,8 @@
 
      D CBMDCNDS      E DS                  Occurs(DCL1Rows) Inz
      D                                     Qualified
-     D                                     EXTNAME(CBMDCNL1)
+     D**********                           EXTNAME(CBMDCNL1)                                MD055891
+     D                                     EXTNAME(CBMDCJW0)                                MD055891
 
      D CBCOMSDS      E DS                  EXTNAME(CBCOMSL0) Inz
      D                                     Qualified
@@ -262,7 +265,8 @@
      C/EXEC SQL
      C+ Declare DCL1Cur scroll cursor for
      C+ select *
-     C+  from CBMDCNL1
+     C***from*CBMDCNL1                                                                      MD055891
+     C+  from CBMDCJW0                                                                      MD055891
      C+  where DJCOTT = :COMSJ0DS.DHCOTT
      C+        and DJCSEQ = :COMSJ0DS.DHCSEQ
      C/END-EXEC

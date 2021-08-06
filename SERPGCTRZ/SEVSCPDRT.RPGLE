@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056949           Date 13Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1077982          Date 28Jan13               *
       *                 AR826623           Date 17Sep12               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
@@ -203,7 +205,7 @@
      D CSE031          S              1A                                                      CSE031
      D CSE071          S              1A                                                      CSE071
      D PCpnRt          S             15P 0
- 
+
      D TABMTH          S              2    DIM(12) CTDATA PERRCD(12)
      D TABDAY          S              2  0 DIM(12) ALT(TABMTH)
       *
@@ -241,7 +243,7 @@
      C                   MOVE      DDCD10        WSCD(10)
      C                   MOVE      DDCD11        WSCD(11)
      C                   MOVE      DDCD12        WSCD(12)
- 
+
      C                   MOVE      DDCR01        WSCR(1)
      C                   MOVE      DDCR02        WSCR(2)
      C                   MOVE      DDCR03        WSCR(3)
@@ -302,7 +304,7 @@
      C                             OKCD07 <> 'Y' OR OKCD08 <> 'Y' OR
      C                             OKCD09 <> 'Y' OR OKCD10 <> 'Y' OR
      C                             OKCD11 <> 'Y' OR OKCD12 <> 'Y' OR
- 
+
      C                             OKCR01 = 'N' OR OKCR02 = 'N' OR
      C                             OKCR03 = 'N' OR OKCR04 = 'N' OR
      C                             OKCR05 = 'N' OR OKCR06 = 'N' OR
@@ -311,14 +313,14 @@
      C                             OKCR11 = 'N' OR OKCR12 = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKCD01 <> 'N' AND  OKCD02 <> 'N' AND
      C                             OKCD03 <> 'N' AND  OKCD04 <> 'N' AND
      C                             OKCD05 <> 'N' AND  OKCD06 <> 'N' AND
      C                             OKCD07 <> 'N' AND  OKCD08 <> 'N' AND
      C                             OKCD09 <> 'N' AND  OKCD10 <> 'N' AND
      C                             OKCD11 <> 'N' AND  OKCD12 <> 'N' AND
- 
+
      C                             OKCR01 <> 'N' AND  OKCR02 <> 'N' AND
      C                             OKCR03 <> 'N' AND  OKCR04 <> 'N' AND
      C                             OKCR05 <> 'N' AND  OKCR06 <> 'N' AND
@@ -350,7 +352,7 @@
      C                   MOVE      WSCD(10)      S1CD10                                       197876
      C                   MOVE      WSCD(11)      S1CD11                                       197876
      C                   MOVE      WSCD(12)      S1CD12                                       197876
- 
+
      C                   MOVE      DDCR01        S1CR01
      C                   MOVE      DDCR02        S1CR02
      C                   MOVE      DDCR03        S1CR03
@@ -364,7 +366,7 @@
      C                   MOVE      DDCR11        S1CR11
      C                   MOVE      DDCR12        S1CR12
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -380,8 +382,8 @@
       *
      C                   MOVEA     '000'         *IN(01)
      C                   MOVEA     WSCD          Work48
- 
-     C                   IF        Work48 = *BLANKS                                         
+
+     C                   IF        Work48 = *BLANKS
      C                   IF        CSE005 = 'Y'                                             MD056949
      C                   IF        DDBCNV <> 'N'                                            MD056949
      C                   MOVE      'N'           OKCD01                                     MD056949
@@ -407,9 +409,9 @@
      C                   MOVEL     'SEA0184'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     *ZEROS        WLDAT
      C                   Z-ADD     *ZEROS        WNDAT
      C                   Z-ADD     1             Wx
@@ -440,11 +442,11 @@
      C                   PARM                    ZADATE            7                        AR750169
       *                                                                                     AR750169
      C                   MOVEL     ZDATE         EDLCPN            4                        AR750169
- 
+
      C                   DO        12            Wx
- 
+
      C                   IF        WSCD(Wx) <> *BLANKS
- 
+
      C                   IF        Wx > 1
      C                   SUB       1             Wx
      C                   IF        WSCD(Wx) = *BLANKS
@@ -474,7 +476,7 @@
       *
       ** Check entry is valid
      C     WMonth        LOOKUP    TABMTH        TABDAY                   01
- 
+
      C                   IF        *IN01 = *On
      C     WDay          COMP      TABDAY                               0101
      C                   ENDIF
@@ -526,13 +528,13 @@
      C                   IF        PPROT <> '3' AND
      C                             PPROT <> '5' AND
      C                             PPROT <> '8'
- 
+
      C                   IF        WSCR(Wx) <> 'P'
      C                   ADD       1             IDx
      C                   EXSR      SRCpnRtErr
      C                   MOVE      'SEA0189'     MsgIDXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Processing type '3','5' and '8'
@@ -550,9 +552,9 @@
      C                   ELSE
      C                   MOVE      *ON           *IN03
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                             AR750169
      C                   ELSE                                                               AR750169
@@ -570,7 +572,7 @@
      C                   MOVE      '5045555'     WMsgIDXAr(WIx)                            AR1077982
      C                   ENDIF                                                              AR750169
      C                   ENDIF                                                              AR750169
- 
+
      C                   ENDIF
       *
       ** If WSCR,Wx not blank and WSCD,Wx equal 0 it is an error
@@ -582,9 +584,9 @@
      C                   MOVE      'SEA0190'     MsgIDXAr(IDx)
      C                   ENDIF
      C                   MOVE      WSCD(Wx)      WCD(Wx)
- 
+
      C                   ENDDO
- 
+
      C
      C                   IF        *IN02 = *ON AND
      C                             *IN03 = *OFF
@@ -613,7 +615,7 @@
      C                             PPROT = '6' OR PPROT = '8' OR PPROT = '9')                 CSE071
      C                   IF        DDBCNV <> 'N'                                              CSE031
      C                   Z-ADD     0             WCount
- 
+
      C     1             DO        12            WPos
      C                   IF        WSCR(WPos) = 'P' OR
      C                             WSCR(WPos) = 'C'
@@ -632,12 +634,12 @@
      C                   MOVEL     'DDCD01'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0197'     MsgIDXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF                                                                CSE031
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -652,24 +654,24 @@
       ** Cannot be blank if initial date is not blank
       *
      C                   MOVEA     WSCD          Work48
- 
+
      C                   IF        Work48 = *BLANKS
- 
+
      C                   IF        DDIDIV <> *BLANKS
      C                   MOVE      'N'           OKCD01
      C                   ADD       1             IDx
      C                   MOVEL     'DDCD01'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0199'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     *ZEROS        WLDAT
      C                   Z-ADD     *ZEROS        WNDAT
      C                   Z-ADD     1             Wx
- 
+
      C                   DO        12            Wx
- 
+
      C                   IF        WSCD(Wx) <> *BLANKS
      C                   IF        Wx > 1
      C                   SUB       1             Wx
@@ -710,13 +712,13 @@
      C                   ENDIF
      C                   Z-ADD     WNDAT         WLDAT
      C                   ENDIF
- 
+
      C                   MOVE      WSCD(Wx)      WCD(Wx)
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -727,59 +729,59 @@
       *                                                               *
       *****************************************************************
      C     SRCpnDyErr    BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Wx = 1
      C                   MOVE      'N'           OKCD01
      C                   MOVEL     'DDCD01'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 2
      C                   MOVE      'N'           OKCD02
      C                   MOVEL     'DDCD02'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 3
      C                   MOVE      'N'           OKCD03
      C                   MOVEL     'DDCD03'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 4
      C                   MOVE      'N'           OKCD04
      C                   MOVEL     'DDCD04'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 5
      C                   MOVE      'N'           OKCD05
      C                   MOVEL     'DDCD05'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 6
      C                   MOVE      'N'           OKCD06
      C                   MOVEL     'DDCD06'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 7
      C                   MOVE      'N'           OKCD07
      C                   MOVEL     'DDCD07'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 8
      C                   MOVE      'N'           OKCD08
      C                   MOVEL     'DDCD08'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 9
      C                   MOVE      'N'           OKCD09
      C                   MOVEL     'DDCD09'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 10
      C                   MOVE      'N'           OKCD10
      C                   MOVEL     'DDCD10'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 11
      C                   MOVE      'N'           OKCD11
      C                   MOVEL     'DDCD11'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 12
      C                   MOVE      'N'           OKCD12
      C                   MOVEL     'DDCD12'      FldNamXAr(IDx)
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -790,60 +792,60 @@
       *                                                               *
       *****************************************************************
      C     SRCpnDyWrn    BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Wx = 1
      C                   MOVE      'W'           OKCD01
      C                   MOVEL     'DDCD01'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 2
      C                   MOVE      'W'           OKCD02
      C                   MOVEL     'DDCD02'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 3
      C                   MOVE      'W'           OKCD03
      C                   MOVEL     'DDCD03'      WFldNmXAr(Wix)
- 
+
      C                   WHEN      Wx = 4
      C                   MOVE      'W'           OKCD04
      C                   MOVEL     'DDCD04'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 5
      C                   MOVE      'W'           OKCD05
      C                   MOVEL     'DDCD05'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 6
      C                   MOVE      'W'           OKCD06
      C                   MOVEL     'DDCD06'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 7
      C                   MOVE      'W'           OKCD07
      C**********         MOVE      'DDCD07'      WFldNmXAr(WIx)                             AR826623
      C                   MOVEL     'DDCD07'      WFldNmXAr(WIx)                             AR826623
- 
+
      C                   WHEN      Wx = 8
      C                   MOVE      'W'           OKCD08
      C                   MOVEL     'DDCD08'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 9
      C                   MOVE      'W'           OKCD09
      C                   MOVEL     'DDCD09'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 10
      C                   MOVE      'W'           OKCD10
      C                   MOVEL     'DDCD10'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 11
      C                   MOVE      'W'           OKCD11
      C                   MOVEL     'DDCD11'      WFldNmXAr(WIx)
- 
+
      C                   WHEN      Wx = 12
      C                   MOVE      'W'           OKCD12
      C                   MOVEL     'DDCD12'      WFldNmXAr(WIx)
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -853,59 +855,59 @@
       *                                                               *
       *****************************************************************
      C     SRCpnRtErr    BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Wx = 1
      C                   MOVE      'N'           OKCR01
      C                   MOVEL     'DDCR01'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 2
      C                   MOVE      'N'           OKCR02
      C                   MOVEL     'DDCR02'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 3
      C                   MOVE      'N'           OKCR03
      C                   MOVEL     'DDCR03'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 4
      C                   MOVE      'N'           OKCR04
      C                   MOVEL     'DDCR04'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 5
      C                   MOVE      'N'           OKCR05
      C                   MOVEL     'DDCR05'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 6
      C                   MOVE      'N'           OKCR06
      C                   MOVEL     'DDCR06'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 7
      C                   MOVE      'N'           OKCR07
      C                   MOVEL     'DDCR07'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 8
      C                   MOVE      'N'           OKCR08
      C                   MOVEL     'DDCR08'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 9
      C                   MOVE      'N'           OKCR09
      C                   MOVEL     'DDCR09'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 10
      C                   MOVE      'N'           OKCR10
      C                   MOVEL     'DDCR10'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 11
      C                   MOVE      'N'           OKCR11
      C                   MOVEL     'DDCR11'      FldNamXAr(IDx)
- 
+
      C                   WHEN      Wx = 12
      C                   MOVE      'N'           OKCR12
      C                   MOVEL     'DDCR12'      FldNamXAr(IDx)
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************                     AR750169
       /EJECT                                                                                AR750169

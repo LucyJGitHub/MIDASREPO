@@ -16,12 +16,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD022132D          Date 09Mar18               *
+      *  Last Amend No. MD034841B          Date 10Jun21               *
+      *  Prev Amend No. MD034841A          Date 10Jun21               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD022132D          Date 09Mar18               *
       *                 MD022132 *CREATE   Date 09Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034841B - Unlock record if GLACNTQD will not be updated.   *
+      *            - Applied for MD058163.                            *
+      *  MD034841A - Do not update GLACNTQD file for accounts that are*
+      *              not ABC or retail to prevent record lock.        *
+      *            - Applied for MD058163.                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD022132D- Process all retail accounts.                      *
@@ -271,6 +278,7 @@
      D WNWD            S              3  0
      D PCmd            S             13A   Inz('DLYJOB DLY(1)')
      D PCmd_Len        S             15  5
+     D CollProc        S              1A                                                   MD034841B
 
       *****************************************************************
       /EJECT
@@ -381,8 +389,10 @@
 
      C                   EXSR      SrUpdate
 
-     C                   ELSE
-     C                   UPDATE    GLACNTD0                             99
+     C**********         ELSE                                                              MD034841A
+     C**********         UPDATE    GLACNTD0                             99                 MD034841A
+     C                   ELSE                                                              MD034841B
+     C                   UNLOCK    GLACNTL4                             99                 MD034841B
      C                   ENDIF
 
      C                   ENDSR
@@ -524,8 +534,10 @@
 
      C                   EXSR      SrUpdate
 
-     C                   ELSE
-     C                   UPDATE    GLACNTD0                             99
+     C**********         ELSE                                                              MD034841A
+     C**********         UPDATE    GLACNTD0                             99                 MD034841A
+     C                   ELSE                                                              MD034841B
+     C                   UNLOCK    GLACNTL4                             99                 MD034841B
      C                   ENDIF
 
      C                   ENDSR
@@ -612,6 +624,9 @@
 
      C                   EXSR      SrUpdate
 
+     C                   ELSE                                                              MD034841B
+     C                   UNLOCK    GLACNTL4                             99                 MD034841B
+
      C                   ENDIF
 
      C                   ENDIF
@@ -645,11 +660,15 @@
      C                   EVAL      KAseq = GCDCSEQ
 
      C                   EXSR      SrCollProcess
+     C                   IF        CollProc = 'Y'                                          MD034841B
      C                   EXSR      SrLoadCurr
      C                   EXSR      SrRecompute
      C                   EVAL      AvailBalArr    = AvailBalance
      C                   UPDATE    GLACNTD0
      C                   EVAL      WTrigEvent = '9'
+     C                   ELSE                                                              MD034841B
+     C                   UNLOCK    GLACNTL4                             99                 MD034841B
+     C                   ENDIF                                                             MD034841B
      C                   ENDIF
 
      C                   ENDSR
@@ -673,6 +692,7 @@
      C                   EVAL      PACod  =  %EDITC(KAcod:'X')
      C                   EVAL      PASeq  =  %EDITC(KAseq:'X')
      C                   EVAL      PBrch  =  KBrch
+     C                   EVAL      CollProc = 'N'                                          MD034841B
 
       ** Access account details
 
@@ -706,6 +726,7 @@
      C**********         IF        F1IABC = 'Y'                                            MD022132D
      C                   IF        F1IABC = 'Y' OR                                         MD022132D
      C                             AAATYP = 'R'                                            MD022132D
+     C                   EVAL      CollProc = 'Y'                                          MD034841B
      C                   EXSR      SRGetCurrD
 
       ** Load balances and dates from GLACNTQD to work arrays

@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -89,22 +91,22 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Position Settlement by Depot and Tax Basket Details
      FPOSETW7   IF   E           K DISK    INFSR(*PSSR)
      FSECED     IF   E           K DISK    INFSR(*PSSR)
      FSECORFLC  IF   E           K DISK    INFSR(*PsSR)
      FSECODVL2  IF   E           K DISK    INFSR(*PsSR)
      FSECTY     IF   E           K DISK    INFSR(*PSSR)                         186107
- 
+
       ** Allocation per Dividend Payment Summary - Detail
      FSE7602P1  O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
- 
+
       ** Allocation per Dividend Payment Summary - Audit
      FSE7602AU  O    E             PRINTER INFDS(SPOOLU)
      F                                     USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -131,16 +133,16 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SPOOL1          DS
       *
       ***  File Information Data Structure for SE7602P1.
@@ -148,45 +150,45 @@
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
      D SPOOLU          DS
       *
       ***  File Information Data Structure for SE7602AU.
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** DS for access programs - short data structure
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  #DFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** Externally described DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** DS for access objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for access objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D PData           DS           100
      D   PSect                 1     10
      D   PVlDt                11     15  0
      D   PEvTp                16     17
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PPSeq           S              5
      D PMode           S              1
- 
+
       ** Parameter list for Access Objects
      D PRtcd           S              7
      D POptn           S              7
@@ -194,12 +196,12 @@
      D PKySt           S              7
      D PCurr           S              3
      D PBrch           S              3A
- 
+
       ** Parameter list for ZDATE2
      D PVDat           S              5  0
      D PFDat           S              6  0
      D PZDat           S              7
- 
+
       ** Parameter list for ZSEDITF
      D ZFld15          S             15  0
      D ZDecs           S              1  0
@@ -232,7 +234,7 @@
      D ZSNUM           S              6  0
      D ZSNUMU          S              6  0
      D OldPBCA         S              3A
- 
+
      D WNDIV           S             13  0
      D WTNOML          S             15  0                                      186107
      D WTGRDV          S             15  0
@@ -248,7 +250,7 @@
      D PIDATE          S              5P 0
      D PINARR          S             15A
      D PIRATE          S              6P 4
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -259,11 +261,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EVAL      WBrca = *BLANKS
      C                   EVAL      WSect = *BLANKS
      C                   EVAL      WVdat = 0
@@ -272,10 +274,10 @@
      C                   EVAL      WDepot = *BLANKS                                           CSD027
      C                   EVAL      WCtr = 'N'
      C                   EVAL      WPrtFlg = 'N'
- 
+
      C                   EXSR      SRProc
      C                   EXSR      SREnd
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -284,12 +286,12 @@
       *                                                               *
       *****************************************************************
      C     SRProc        BEGSR
- 
+
      C     *LOVAL        SETLL     POSETW7
      C                   READ      POSETW7                              0102
- 
+
      C                   DOW       *IN02 = '0'
- 
+
      C                   IF        *IN01
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = '*FIRST'
@@ -300,14 +302,14 @@
      C                   EVAL      *INU8 = '1'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        (*IN02 = *OFF AND RECI <> '*' AND
      C***********                  Pmode = '2') OR                                            189201
      C                             Pmode = '2' AND PDUD = AGRDNB) OR                          189201
      C                             (*IN02 = *OFF AND RECI <> '*' AND
      C                             Pmode = '1' AND PSSH = PSect AND
      C                             PDUD = PVlDt AND PEVT = PEvTp)
- 
+
      C                   EVAL      WCtr = 'Y'
      C                   EVAL      WPrtFlg = 'Y'
      C                   EXSR      SRChkPrc
@@ -318,25 +320,25 @@
      C                   EXSR      SRRtvBrDt
      C                   ENDIF
      C                   EXSR      SRRtvTXRT
- 
+
       ** Process Report Lines.
- 
+
      C                   IF        WPrtRec = 'Y'
      C                   EXSR      SRPrnt
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      POSETW7                              0102
- 
+
      C                   ENDDO
- 
+
       ** No record in POSETW7
- 
+
      C                   IF        WPrtFlg = 'N'
      C                   EXSR      SRAudt
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -346,13 +348,13 @@
       *                                                               *
       *****************************************************************
      C     SRPrnt        BEGSR
- 
+
      C                   IF        WOpen <> 'Y'
      C                   EVAL      WOpen = 'Y'
      C                   OPEN      SE7602P1
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSNUM = SFNUM1
       *
      C                   CALL      'ZSFILE'
@@ -361,32 +363,32 @@
      C                   PARM                    SFILE1
      C                   PARM                    ZSNUM
      C                   PARM      *BLANK        ZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
      C
      C                   ENDIF
- 
+
      C                   EVAL      RQDLN1 = 2
      C                   EVAL      DIFLN1 = OFLLN1 - PRTLN1
- 
+
       ** Overflow, change in security, change in payment date or change in event type
       *
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     HEAD1
      C                   ENDIF
- 
+
      C                   EVAL      WPrnt = 'N'
      C                   IF        WBrca <> PBCA  AND  *IN37 = '1'  OR
      C                             WSect <> PSSH  OR
      C                             WVDat <> PDUD  OR
      C                             WEvnt <> PEVT
- 
+
      C                   IF        WSect <> *BLANKS  AND
      C                             WVDat <> 0  AND
      C                             WEvnt <> *BLANKS
@@ -394,14 +396,14 @@
      C                   WRITE     TRAIL1
      C                   EVAL      WPrnt = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      WBrca = PBCA
      C                   EVAL      WSect = PSSH
      C                   EVAL      WVDat = PDUD
      C                   EVAL      WEvnt = PEVT
- 
+
      C                   EXSR      SRFmtH
- 
+
       ** Write Header
      C                   WRITE     HEAD1
      C                   WRITE     HEAD2
@@ -409,13 +411,13 @@
      C                   WRITE     HEAD3
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Change in Depot
      C                   IF        WDepot <> PCPY  AND
      C                             WSect = PSSH  AND
      C                             WVDat = PDUD  AND
      C                             WEvnt = PEVT
- 
+
       ** Write Total
      C**********         IF        WDepot <> 0  AND                                           CSD027
      C                   IF        WDepot <> *BLANKS  AND                                     CSD027
@@ -423,17 +425,17 @@
      C                   EXSR      SRFmtT
      C                   WRITE     TRAIL1
      C                   ENDIF
- 
+
      C                   EVAL      WDepot = PCPY
      C                   EXSR      SRDepot
      C                   WRITE     HEAD3
      C                   ENDIF
- 
+
      C                   EXSR      SRFmtD
- 
+
       ** Write Detail
      C                   WRITE     DETAIL1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -443,7 +445,7 @@
       *                                                               *
       *****************************************************************
      C     SRChkPrc      BEGSR
- 
+
      C                   EVAL      WPrtRec = 'Y'
      C                   IF        PEVT = 'CP' OR
      C                             PEVT = 'DV'
@@ -459,7 +461,7 @@
      C                   ELSE                                                                 193312
       *                                                                                       193312
      C     WKey2         CHAIN     SECED                              03
- 
+
      C                   IF        *IN03 AND
      C                             PEVT = 'CP'
      C                   EVAL      WPevt = PEVT
@@ -467,7 +469,7 @@
      C     WKey2         CHAIN     SECED                              03
      C                   EVAL      PEVT = WPevt
      C                   ENDIF
- 
+
      C                   IF        *IN03
      C                   MOVEL     PDUD          WVDte
      C     *LOCK         IN        LDA
@@ -479,7 +481,7 @@
      C                   EVAL      *INU8 = '1'
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   IF        PEVT = 'CP'
      C                   EVAL      WCpRte = SNCR
      C                   ELSE
@@ -514,7 +516,7 @@
       *****************************************************************
       *
      C     SRRtvBrDt     BEGSR
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM                    PRtCd
@@ -522,7 +524,7 @@
      C                   PARM      PBCA          PBrch
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 006
@@ -534,7 +536,7 @@
      C                   EVAL      RBRCD = A8BRCD
      C                   EVAL      RBRNM = A8BRNM
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -546,7 +548,7 @@
       *****************************************************************
       *
      C     SRRtvTXRT     BEGSR
- 
+
      C                   IF        TXBS <> *BLANKS                              185735
                                                                                 185735
      C                   CALL      'AOTXBSR0'
@@ -557,7 +559,7 @@
      C                   PARM      PDUD          PIDATE
      C                   PARM      *BLANKS       PINARR
      C                   PARM      *ZEROS        PIRATE
- 
+
      C                   IF        PIRTCD <> *BLANKS AND
      C                             PIRTCD <> '*NRF   '
      C                   MOVEL     PDUD          WDate
@@ -570,7 +572,7 @@
      C                   ELSE                                                   185735
      C                   EVAL      PIRATE = 0                                   185735
      C                   ENDIF                                                  185735
- 
+
      C                   IF        PIRTCD = *BLANKS
      C                   EVAL      ZECode = ' '
      C                   MOVE      *BLANKS       ZFld15
@@ -579,7 +581,7 @@
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTXRT
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -606,36 +608,36 @@
      C                   ENDIF                                                  186107
       *                                                                         186107
      C                   Z-ADD     NMDP          WNMDP                          186107
- 
+
      C                   EVAL      RSECT = PSSH
      C                   EVAL      RCCY = PNCY
      C                   EXSR      SRCurr
      C                   EVAL      REVNT = PEVT
- 
+
      C                   EVAL      PVDat = PDUD
- 
+
       ** Format date of payment
      C                   CALLB     'ZDATE2'
      C                   PARM                    PVDat
      C                   PARM                    BJDFIN
      C                   PARM                    PFDat
      C                   PARM                    PZDat
- 
+
      C                   EVAL      RDATE = PFDat
- 
+
       ** Format coupon rate
      C                   EVAL      ZDecs = 7
      C                   EVAL      ZECode = ' '
      C                   MOVE      WCpRte        Zfld15
- 
+
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        WRRate
      C                   MOVEL     WRRate        RRATE
- 
+
      C                   IF        PEVT = 'MT'
      C                   MOVE      *BLANKS       RRATE
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -645,7 +647,7 @@
       *                                                               *
       *****************************************************************
      C     SRFmtD        BEGSR
- 
+
      C                   EVAL      RNOML = *BLANKS                              186107
      C                   EVAL      RGSCP = *BLANKS
      C                   EVAL      RTXSR = *BLANKS
@@ -664,11 +666,11 @@
      C                   MOVE      ZOut21        RNOML                          186107
       *                                                                         186107
      C                   EVAL      ZDecs = A6NBDP
- 
+
       ** Gross Dividend
      C                   EVAL      ZECode = 'J'
      C                   EVAL      ZFLD15 = 0
- 
+
      C                   IF        PEVT = 'MT'
      C                   EVAL      WTGRDV = WTGRDV + DAMT
      C                   EVAL      ZFLD15 = DAMT
@@ -676,38 +678,38 @@
      C                   EVAL      WTGRDV = WTGRDV + PAMD
      C                   EVAL      ZFLD15 = PAMD
      C                   ENDIF
- 
+
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RGSCP
- 
+
       ** Withholding Tax by Source
      C                   EVAL      WTTXSR = WTTXSR + TASO
      C                   EVAL      ZFLD15 = 0
      C                   EVAL      ZFLD15 = TASO
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTXSR
- 
+
       ** Withholding Tax by Source
      C                   EVAL      WTTXUR = WTTXUR + TAUS
      C                   EVAL      ZFLD15 = 0
      C                   EVAL      ZFLD15 = TAUS
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTXUR
- 
+
       ** Net Dividend
- 
+
      C                   IF        PEVT = 'MT'
      C                   EVAL      WNDIV = DAMT - (TASO + TAUS)
      C                   ELSE
      C                   EVAL      WNDIV = PAMD - (TASO + TAUS)
      C                   ENDIF
- 
+
      C                   EVAL      WTNTDV = WTNTDV + WNDIV
      C                   EVAL      ZFLD15 = 0
      C                   EVAL      ZFLD15 = WNDIV
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RNTCP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -717,7 +719,7 @@
       *                                                               *
       *****************************************************************
      C     SRFmtT        BEGSR
- 
+
      C                   EVAL      RTNOM = *BLANKS                              186107
      C                   EVAL      RTGCP = *BLANKS
      C                   EVAL      RTTSR = *BLANKS
@@ -733,38 +735,38 @@
      C                   MOVE      ZOut21        RTNOM                          186107
                                                                                 186107
      C                   EVAL      ZDecs = A6NBDP
- 
+
       ** Total Gross Dividend
      C                   EVAL      ZECode = 'J'
      C                   EVAL      ZFLD15 = 0
      C                   EVAL      ZFLD15 = WTGRDV
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTGCP
- 
+
       ** Total Withholding Tax by Source
      C                   EVAL      ZFLD15 = 0
      C                   EVAL      ZFLD15 = WTTXSR
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTTSR
- 
+
       ** Total Withholding Tax by Source
      C                   EVAL      ZFLD15 = 0
      C                   EVAL      ZFLD15 = WTTXUR
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTTUR
- 
+
       ** Total Net Dividend
      C                   EVAL      ZFLD15 = 0
      c                   EVAL      ZFLD15 = WTNTDV
      C                   EXSR      SRFmtA
      C                   MOVE      ZOut21        RTNCP
- 
+
      C                   EVAL      WTNOML = 0                                   186107
      C                   EVAL      WTGRDV = 0
      C                   EVAL      WTTXSR = 0
      C                   EVAL      WTTXUR = 0
      c                   EVAL      WTNTDV = 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -774,22 +776,22 @@
       *                                                               *
       *****************************************************************
      C     SRDepot       BEGSR
- 
+
      C                   EVAL      PCust = *BLANKS
      C                   MOVE      PCPY          PCust
      C                   EVAL      RDPNM = *BLANKS
- 
+
       ** Access customer details file
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCust
      C                   PARM                    PKySt
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCust
@@ -800,9 +802,9 @@
      C                   EVAL      *INU8 = '1'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RDPNM = BBCSSN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -812,14 +814,14 @@
       *                                                               *
       *****************************************************************
      C     SRFmtA        BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    ZFld15
      C                   PARM                    ZDecs
      C                   PARM                    ZECode
      C                   PARM      *BLANKS       ZEChar
      C                   PARM      *BLANKS       ZOut21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -829,15 +831,15 @@
       *                                                               *
       *****************************************************************
      C     SRCurr        BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      PNCY          PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCurr
@@ -848,7 +850,7 @@
      C                   EVAL      *INU8 = '1'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -865,20 +867,20 @@
      C                   EXSR      SRFmtT
      C                   WRITE     TRAIL1
      C                   ENDIF
- 
+
      C                   EVAL      RQDLN1 = 4
      C                   EVAL      DIFLN1 = OFLLN1 - PRTLN1
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     HEAD1
      C                   WRITE     HEAD2
      C                   ENDIF
- 
+
       ** Write out report trailer.
- 
+
      C                   WRITE     TRAIL2
      C                   EVAL      *INLR = '1'
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -888,11 +890,11 @@
       *                                                               *
       *****************************************************************
      C     SRAudt        BEGSR
- 
+
      C                   OPEN      SE7602AU
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSNUMU = SFNUMU
       *
      C                   CALL      'ZSFILE'
@@ -901,33 +903,33 @@
      C                   PARM                    SFILEU
      C                   PARM                    ZSNUMU
      C                   PARM      *BLANK        ZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   IF        WCtr ='N'
      C                   WRITE     NODTLS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      *INLR ='1'
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -941,22 +943,22 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PPSEQ
      C                   PARM                    PMode
      C                   PARM                    PDATA
- 
+
      C                   IF        PEvTp = 'MA'
      C                   EVAL      PEvTp = 'MT'
      C                   ENDIF
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
@@ -966,14 +968,14 @@
      C                   ELSE
      C                   EVAL      *IN37 = '0'
      C                   ENDIF
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POptn
@@ -984,20 +986,20 @@
      C                   EVAL      *INU8 = '1'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Report Work fields.
- 
+
      C                   EVAL      RQDLN1 = 0
      C                   EVAL      DIFLN1 = 0
      C                   EVAL      OFLLN1 = 0
      C                   EVAL      PRTLN1 = 0
- 
+
       ** Key fields for SECED
      C     WKEY2         KLIST
      C                   KFLD                    PSSH
      C                   KFLD                    PDUD
      C                   KFLD                    PEVT
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -1014,18 +1016,18 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   EXSR      SRAudt
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *********************************************************************                   193312
       /EJECT                                                                                  193312

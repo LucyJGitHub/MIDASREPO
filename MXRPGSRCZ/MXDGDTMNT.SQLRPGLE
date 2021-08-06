@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058367           Date 28Sep21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058367 - Field Data Group is protected                     *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAAA03 - Webfacing Changes                                   *
@@ -872,7 +874,9 @@
      C+ where DGDTAG = :DGDTAG                                                              MD056612
      C/END-EXEC                                                                             MD056612
      C******IN60         IFEQ      '1'                                                      MD056612
+     C                   Setoff                                       60                    MD058367
      C     SQLCODE       IFEQ      100                                                      MD056612
+     C                   Seton                                        60                    MD058367
      C                   CLEAR                   MXDGDT
      C                   ENDIF
 

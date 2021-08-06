@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. MD020693 *CREATE   Date 18Jun13               *
+      *  Last Amend No. MD055891           Date 01Sep20               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 MD020693 *CREATE   Date 18Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020693 - CBC022001 failed due to MUSER file locking        *
       *                                                               *
@@ -53,7 +55,8 @@
 
      C/EXEC SQL
      C+ select DHCSEQ into :SFCSEQ
-     C+ from CBCMPNPD
+     C**from*CBCMPNPD                                                                       MD055891
+     C+ from CBCMPJW0                                                                       MD055891
      C+ where DHCOTT = 'SFC0521'
      C/END-EXEC
 

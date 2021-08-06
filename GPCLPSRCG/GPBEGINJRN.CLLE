@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CBF012             Date 04Jul11              */
+/*       Last Amend No. MD058520           Date 01Aug21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CBF012             Date 04Jul11              */
 /*                      BUG28037           Date 17Aug10              */
 /*                      BUG27911           Date 20Jul10              */
 /*                      BUG27134 *REWRITE  Date 01Oct08              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058520 - Journaling improvement                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CBF012 - BF Infrastructure: Upgradability                   */
 /*       BUG28037 - Journal specific library.                        */
@@ -39,7 +41,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&SYSTEMID &ACTION)
- 
+
              DCL        VAR(&SYSTEMID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(6)
 /**********  DCL        VAR(&GXLIB) TYPE(*CHAR) LEN(10)                              */ /*BUG27911*/
@@ -59,16 +61,22 @@
              DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)                                   /*CBF012*/
              DCL        VAR(&CBSLIB) TYPE(*CHAR) LEN(10)                                  /*CBF012*/
              DCL        VAR(&CBALIB) TYPE(*CHAR) LEN(10)                                  /*CBF012*/
- 
+
              DCLF       FILE(GBEGINJRNF)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2003')
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
+/* Call new program to list objects not journaled */                                    /*MD058520*/
+             IF         COND(&ACTION *EQ '*START') THEN(DO)                             /*MD058520*/
+                CALL       PGM(GPBEGJLIST) PARM(&SYSTEMID &ACTION)                      /*MD058520*/
+                GOTO       CMDLBL(ENDJRN)                                               /*MD058520*/
+             ENDDO                                                                      /*MD058520*/
+                                                                                        /*MD058520*/
 /*  Get the global journaling system values. */
              CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
                           'GlobalJrnDtaaras' &SVAL1 +
@@ -79,11 +87,12 @@
                 IF         COND(&RSVALRTNC *NE '       ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
 /* Check whether data area or data queue journaling is required. */
                 CHGVAR     VAR(&JRNDA) VALUE(%SST(&SVAL1 1 1))
                 CHGVAR     VAR(&JRNDQ) VALUE(%SST(&SVAL2 1 1))
- 
+
+ENDJRN:                                                                                 /*MD058520*/
 /*  Set up library names. */
              CHGVAR     VAR(&GMLIB) VALUE(&SYSTEMID *CAT 'GMLIB')
              CHGVAR     VAR(&GPLIB) VALUE(&SYSTEMID *CAT 'GPLIB')
@@ -92,7 +101,7 @@
              CHGVAR     VAR(&BFLIB) VALUE(&SYSTEMID *CAT 'BFLIB')                         /*CBF012*/
              CHGVAR     VAR(&CBSLIB) VALUE(&SYSTEMID *CAT 'CBSLIB')                       /*CBF012*/
              CHGVAR     VAR(&CBALIB) VALUE(&SYSTEMID *CAT 'CBALIB')                       /*CBF012*/
- 
+
 /* Create file to be used to drive journaling process. */
              DLTF       FILE(QTEMP/GBEGINJRNF)
              MONMSG     MSGID(CPF0000)
@@ -100,7 +109,7 @@
              MONMSG     MSGID(CPF0000)
              CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(GBEGINJRNF)
- 
+
 /* If the action is to reset or end the journaling then end all journaling. */
              IF         COND(&ACTION *NE '*START') THEN(DO)
 /**********     ENDJRNPF   FILE(*ALL) JRN(&GXLIB/GPJRN)                              */ /*BUG27911*/
@@ -143,7 +152,13 @@ QSQEND:                                                                         
              IF         COND(&ACTION *EQ '*END') THEN(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+/* Call new program to list objects not journaled in case of *RESET*/                   /*MD058520*/
+             IF         COND(&ACTION *EQ '*RESET') THEN(DO)                             /*MD058520*/
+                CALL       PGM(GPBEGJLIST) PARM(&SYSTEMID &ACTION)                      /*MD058520*/
+             ENDDO                                                                      /*MD058520*/
+                                                                                        /*MD058520*/
+             GOTO       CMDLBL(STRJRN)                                                  /*MD058520*/
+
 /* Build up outfile to control the journaling process. */
              DSPOBJD    OBJ(&GMLIB/*ALL) OBJTYPE(*FILE) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/GJRNOBJ)
@@ -168,7 +183,7 @@ QSQEND:                                                                         
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/GJRNOBJ) +
                           OUTMBR(*FIRST *ADD)                                             /*CBF012*/
              MONMSG     MSGID(CPF2123)                                                    /*CBF012*/
- 
+
 /* If data area or data queue journaling selected then include these objects */
 /*  too.                                                                     */
              IF         COND(&JRNDA *EQ 'Y') THEN(DO)
@@ -223,7 +238,7 @@ QSQEND:                                                                         
                              OUTMBR(*FIRST *ADD)                                          /*CBF012*/
                 MONMSG     MSGID(CPF2123)                                                 /*CBF012*/
              ENDDO
- 
+
 /* Once the outfile has been completed then copy across to driving file. */
              CHKOBJ     OBJ(QTEMP/GJRNOBJ) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -232,18 +247,19 @@ QSQEND:                                                                         
              CPYF       FROMFILE(QTEMP/GJRNOBJ) +
                           TOFILE(QTEMP/GBEGINJRNF) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
- 
+
+STRJRN:                                                                                 /*MD058520*/
 /* Call program to remove records from the driving file that are not to be */
 /*  journaled.                                                             */
              CALL       PGM(GP000001)
- 
+
 /* Start journaling system. */
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              IF         COND(&ODOBTP *EQ '*FILE') THEN(DO)
                 IF         COND(%SST(&ODOBAT 1 2) *EQ 'PF') THEN(DO)
 /**********        STRJRNPF   FILE(&ODOBNM) JRN(&GXLIB/GPJRN) +                      */ /*BUG27911*/
@@ -270,11 +286,11 @@ READNEXT:
                 STRJRNOBJ  OBJ(&ODLBNM/&ODOBNM) OBJTYPE(*DTAQ) JRN(GPJRN)               /*BUG28037*/
                 MONMSG     MSGID(CPF700A)
              ENDDO
- 
+
              GOTO       CMDLBL(READNEXT)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -291,6 +307,6 @@ RCVMSG:
                 SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                              MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
              ENDDO
- 
+
 ENDPGM:
              ENDPGM

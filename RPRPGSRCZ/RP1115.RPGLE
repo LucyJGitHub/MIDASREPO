@@ -20,12 +20,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058431           Date 08Jul21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE075             Date 17Nov05               *
       *                 CSE071             Date 19Jul05               *
       *                 CGL031             Date 05Jul04               *
@@ -41,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058431 - Compilation issues on RP Program                  *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
@@ -68,40 +72,42 @@
      FPRICED    IF   E           K DISK    PREFIX(P)
      FSECTY     IF   E           K DISK    PREFIX(S)
      FINVTP     IF   E           K DISK    PREFIX(I)
- 
+
       /EJECT
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       * Following /COPY is the procedure prototype for the Format routine
       /COPY RPCPYSRC,RPFMTPPF
- 
+
       ** The following /COPY contains various standard declares
-     C/COPY RPCPYSRC,Std_Dcl
- 
+     C*COPY RPCPYSRC,Std_Dcl                                                                MD058431
+     C/COPY RPCPYSRC,STD_DCL                                                                MD058431
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
-     C/COPY RPCPYSRC,Mdn_Hd_DS
- 
+     C*/COPY RPCPYSRC,Mdn_Hd_DS                                                             MD058431
+     C/COPY RPCPYSRC,MDN_HD_DS                                                              MD058431
+
       **   Composite Data
      D CompData        S                   LIKE(TransData) INZ(*BLANKS)
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       **   Format for PF/PRICED
      D PRICEDds      E DS                  EXTNAME(PRICED)
      D                                     PREFIX(P)
@@ -111,17 +117,17 @@
       **   Format for PF/INVTPD
      D INVTPDds      E DS                  EXTNAME(INVTPD)
      D                                     PREFIX(I)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters
       **   Parameters for ProcFormat
      D   InData        S                   LIKE(TransData) INZ(*Blanks)
@@ -137,7 +143,7 @@
      D @KPVDTS                13     17S 0 INZ(*Zeros)
       **   Output queue name
      D OutQueue2       S                   LIKE(MQSQueue)
- 
+
      DOutParms         DS
      D   OutData                           LIKE(TransData) INZ(*BLANKS)
      D   OutLen                       4S 0 INZ(*ZERO)
@@ -147,107 +153,107 @@
       **   Key to PF/INVTPD.
      D @KCCYI          S                   LIKE(ICCYI) INZ(*Blanks)
      D @KINVT          S                   LIKE(IINVT) INZ(*Blanks)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       /EJECT
- 
+
       ** +--------------------------------------+
       ** ¦ Start F-specs                        ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      C* Extract the key fields from the data input.
- 
+
      C                   Eval      @KPSSN  = %subst(TransData:22:10)
      C                   Eval      @KPPRT  = %subst(TransData:32:2)
      C                   Eval      @KPVDTA = %subst(TransData:36:5)
      C                   Eval      @KPVDTP = @KPVDTS
- 
+
      C* Access original record on PF/PRICED.
- 
+
      C     @KPRICED      Chain     PRICEDF                            90
- 
+
       ** If error then perform any special processing and exit
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C* Format the data from PF/PRICED for Meridian.
- 
+
      C                   Eval      InData   = PRICEDds
      C                   Eval      InDBFile = 'PRICED    '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
- 
+
      C* Contruct the compound messgae format.
- 
+
      C                   Eval      WrkParms = OutParms
- 
+
      C* Access the related record on LF/SECTY.
- 
+
      C     @KPSSN        Chain     SECTYDF                            90
- 
+
       ** If Price record is live, but Security is not found, raise error
      C**********         If        (SRECI = 'D') And (*IN90 <> '0')             177415
      C                   If        (PRECI = 'D') And (*IN90 <> '0')             177415
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** If Price record is NOT live, and Security is not found, ignore
      C                   If        (*IN90 = '0')
- 
+
      C* Format the data from PF/SECTYD for Meridian.
- 
+
      C                   Eval      InData   = SECTYDds
      C                   Eval      InDBFile = 'SECTYD    '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
- 
+
      C* Contruct the compound message format.
- 
+
      C                   Eval      %subst(WrkData:WrkLen) = OutData
      C                   Eval      WrkLen = WrkLen + OutLen - 1
- 
+
      C* Access the related record on LF/INVTP.
- 
+
      C                   Eval      @KCCYI   = SNMCY
      C                   Eval      @KINVT   = SSITP
      C     @KINVTP       Chain     INVTPDF                            90
- 
+
       ** If error then perform any special processing and exit
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C* Format the data from PF/INVTPD for Meridian.
- 
+
      C                   Eval      InData   = INVTPDds
      C                   Eval      InDBFile = 'INVTPD    '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
- 
+
      C* Contruct the compound messgae format.
- 
+
      C                   Eval      %subst(WrkData:WrkLen) = OutData
- 
+
      C* Send the message for SEPRCSEC
- 
+
      C                   Eval      RAMSGTYPE=('SEPRCSEC_A')
      C                   Exsr      #SNDMSG
- 
+
      C                   EndIf
- 
+
      C* Return control at the end of the processing for the message.
- 
+
      C                   Commit
      C**********         Seton                                        LR        177415
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
@@ -269,14 +275,14 @@
       **   message queue. If error, dump program.                         **
       **                                                                  **
       **********************************************************************
- 
+
      C     #SNDMSG       Begsr
- 
+
      C* Set up the Operation and Table fields on the message.
- 
+
      C                   Eval      CompData =  %subst(TransData:1:20)
      C                   Eval      %subst(CompData:21) = WrkData
- 
+
      C* Call a standard routine to actually send the message
      C                   CallB     'RPSNDMSG'
      C                   Parm      OutQueue1     OutQueue2
@@ -284,14 +290,14 @@
      C                   Parm                    CompData
      C                   Parm                    CommitCtl
      C                   Parm                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   If        ReturnCode <> *blank
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C     #SNDMSGEnd    Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -309,20 +315,20 @@
       *****************************************************************
       *
      C     *PSSR         Begsr
- 
+
       ** If error in RP1115, set Return Code accordingly.
      C                   If        ReturnCode = *blank
      C                   Eval      ReturnCode = ('ErrRP1115')
      C                   EndIf
- 
+
      C     @RUN          IfEq      *BLANK
      C                   Move      'Y'           @RUN              1
      C                   Dump
      C                   EndIf
- 
+
      C                   SetOn                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
       *
       ********************************************************************
@@ -332,9 +338,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * MQSeries queue to write to - this parameter IS used in this module
      C                   PARM                    OutQueue1        48
@@ -346,17 +352,17 @@
      C                   PARM                    CommitCtl
       * Return Code
      C                   PARM                    ReturnCode
- 
+
      C* Key list for PF/PRICED.
      C     @KPRICED      KLIST
      C                   KFLD                    @KPSSN
      C                   KFLD                    @KPPRT
      C                   KFLD                    @KPVDTP
- 
+
      C* Key list for LF/INVTP.
      C     @KINVTP       KLIST
      C                   KFLD                    @KCCYI
      C                   KFLD                    @KINVT
- 
+
      C                   ENDSR
       *****************************************************************

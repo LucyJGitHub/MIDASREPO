@@ -17,8 +17,9 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD055146           Date 04Feb20               *
       *                 MD054544           Date 04Oct19               *
       *                 MD054479           Date 27Sep19               *
       *                 MD054107           Date 11Sep19               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *

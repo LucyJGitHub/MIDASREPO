@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -77,11 +79,11 @@
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK
       *****************************************************************                233698 236705
      F***SETRADL3***IF   E           K DISK    PREFIX(T_)                              233698 236705
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -101,59 +103,59 @@
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the SE standard declares
      D/COPY SECPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                               234440
       ** EU Tax Customer Position                                                             234440
      D ETCPOSND      E DS                  EXTNAME(ETCPOSND)                                  234440
- 
+
       ** Client Details data structure
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
- 
+
       ** Externally described DS for investment types
      D SDINV         E DS                  EXTNAME(INVTPD)
      D I_RECI        E                     EXTFLD(RECI)                                       234440
@@ -165,23 +167,23 @@
       ** Country of Tax Codes data structure                                                  236004
      D SDCTTX        E DS                  EXTNAME(SDCTTXPD)                                  236004
                                                                                               236004
- 
+
       ** DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External DS for Additional Customer Details                                          235216
      D SDACUS        E DS                  EXTNAME(SDACUSPD)                                  235216
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Input Parameters
      D DDOPDT          S              6
      D DDMVType        S              2
@@ -193,11 +195,11 @@
      D DMTD            S              5P 0                                                    236703
      D DDPTFR          S              4                                                       234440
      D DPNA            S             11P 0                                                    236705
- 
+
       ** Output Parameters
      D DDOPDTOk        S              1A
      D OPDT            S              5P 0
- 
+
       ** Working Variables
      D WkOPDT          S              5  0
      D ZALIGNok        S              1
@@ -213,7 +215,7 @@
      D POptn           S              7A
      D*WCust****       S              6S 0                                            233698 CSD027A
      D WCust           S              6A                                                     CSD027A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -231,32 +233,32 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       ** Clear output trade fields
- 
+
      C                   Z-ADD     0             OPDT
- 
+
       ** Validation
- 
+
      C                   EXSR      SROPDTV
- 
+
       ** If an error was found, set the return code appropriately
- 
+
      C                   IF        DDOPDTOk = 'N'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
       ** Return
- 
+
      C                   RETURN
       *****************************************************************
      C/EJECT
@@ -265,11 +267,11 @@
       * SROPDTV - Validation routine for Original Purchase Date       *
       *                                                               *
       *****************************************************************
- 
+
      C     SROPDTV       BEGSR
- 
+
       ** Validate if Security Customer is Live
- 
+
      C     DDDPSS        CHAIN     SECTYDF                            44
      C                   IF        *IN44 = *ON
      C                   MOVEL     DDDPSS        DBKEY
@@ -277,16 +279,16 @@
      C                   MOVE      '101'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Validate if Security Investment Type exist in INVTP
- 
+
      C                   CALL      'AOINVTR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    SITP
      C                   PARM                    NMCY
      C     SDINV         PARM      SDINV         DSFDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                   MOVE      *BLANKS       DBKEY
      C                   MOVEL     NMCY          DBKEY
@@ -295,10 +297,10 @@
      C                   MOVE      '102'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Original Purchase Date must be blank for Commodities and
       ** Equities
- 
+
      C                   IF        PROT = '2' AND DDOPDT <> *BLANKS OR PROT ='4'
      C                             AND DDOPDT <> *BLANKS
      C                             AND SETX <> 'Y'                                            234675
@@ -308,19 +310,19 @@
      C                   MOVEL     'SEA0904'     MsgIdXAr(Idx)
      C                   GOTO      EOPDTV
      C                   END
- 
+
       **  If Walkout, input on this field is allowed for 'D' and 'S'
       **  custody customer and Commodities or Equities
- 
+
      C**********         IF        DDMVType = 'WO' AND DDDPBN <> *BLANKS                      233778
      C                   IF        DDDPBN <> *BLANKS                                          233778
- 
+
      C                   CALL      'AOSECSR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    DDDPBN
      C     SDSECS        PARM      SDSECS        DSSDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                             AND PRtCd <> '*NRF   '                                     233778
      C                   MOVE      *BLANKS       DBKEY
@@ -329,12 +331,12 @@
      C                   MOVE      '103'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   IF        PRtcd = *BLANKS                                            233778
      C                   IF        BFCLAS = 'D' OR BFCLAS = 'S'
- 
+
       ** For Depot Walkout, Default LCPN to OPDT
- 
+
      C**********         IF        PROT <> '2' AND PROT <> '4'                                234675
      C                   IF        SETX = 'Y'                                                 234675
      C                             AND DDOPDT = *BLANKS
@@ -375,9 +377,9 @@
      C                   ENDIF                                                                235216
      C                   ENDIF                                                                235216
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        DDOPDT <> *BLANKS
      C                   MOVE      'N'           DDOPDTok
      C                   ADD       1             Idx
@@ -385,12 +387,12 @@
      C                   MOVEL     'SEA0912'     MsgIdXAr(Idx)
      C                   GOTO      EOPDTV
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ELSE                                                                 233778
      C                   CLEAR                   SDSECS                                       233778
      C                   ENDIF                                                                233778
- 
+
      C                   ENDIF
                                                                                               233698
       **  If Walkin, input on this field is mandatory if not processing                       233698
@@ -410,26 +412,26 @@
      C                   ENDIF                                                                233698
      C                   ENDIF                                                                233698
      C                   ENDIF                                                                233698
- 
+
       ** Convert to Screen format
- 
+
      C                   IF        OPDT <> 0
- 
+
      C                   Z-ADD     *ZEROS        ZDAYNO
      C                   Z-ADD     OPDT          ZDAYNO
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   MOVEL     ZDATE         DDOPDT
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDOPDT <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDOPDT        ZFIELD
      C                   CALLB     'ZALIGN'
@@ -437,20 +439,20 @@
      C                   PARM                    ZFIELD
      C                   PARM      0             ZADEC
      C                   PARM      6             ZADIG
- 
+
      C                   IF        ZALIGNOk = 'Y'
- 
+
      C                   MOVE      ZFIELD        ZDATEI
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEI
      C                   PARM      *ZEROS        ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
      C                   END
- 
+
       * If either ZALIGN and ZDATE1 errors
- 
+
      C                   IF        ZALIGNok = 'N' OR ErrorFlag = 'Y'
      C                   MOVE      'N'           DDOPDTok
      C                   ADD       1             Idx
@@ -458,9 +460,9 @@
      C                   MOVEL     'SEA0905'     MsgIdXAr(Idx)
      C                   GOTO      EOPDTV
      C                   END
- 
+
       ** It must not be greater than run date
- 
+
      C                   Z-ADD     ZDAYNO        WkOPDT
      C************       IF        WkOPDT > BJRDNB                                            234552
      C************       MOVE      'N'           DDOPDTok                                     234552
@@ -495,17 +497,17 @@
      C                   MOVEL     'SEA0920'     MsgIdXAr(Idx)                                235660
      C                   GOTO      EOPDTV                                                     235660
      C                   END                                                                  235660
- 
+
       * Update trade details
- 
+
      C                   MOVEL     ZDAYNO        OPDT
- 
+
      C                   END
- 
+
      C                   IF        OPDT = 0
      C                   MOVE      *BLANKS       DDOPDT
      C                   END
- 
+
      C     EOPDTV        ENDSR
       *****************************************************************
      C/EJECT                                                                                  236705
@@ -590,45 +592,45 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUTS
       ** Return Code
- 
+
      C                   PARM                    RetCodeIn
- 
+
       ** Input Fields
- 
+
      C                   PARM                    DDOPDT
      C                   PARM                    DDMVType
      C                   PARM                    DDDPSS
      C                   PARM                    DDDPBN
      C                   PARM                    DDDPBA                                       233698
- 
+
       ** ICD
       ** run date, date format
- 
+
      C                   PARM                    BJRDNB
      C                   PARM                    BJDFIN
      C                   PARM                    DMTD                                         236703
      C                   PARM                    DPMD                                         236705
      C                   PARM                    DPNA                                         236705
      C                   PARM                    DDPTFR                                       234440
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Original Purchase Date - Ok
- 
+
      C                   PARM                    DDOPDTOk
- 
+
       ** Original Purchase Date
- 
+
      C                   PARM                    OPDT
                                                                                               233698
       ** Define key list for file                                                             233698
@@ -650,14 +652,14 @@
      C     *LIKE         DEFINE    DPNA          WAmt                                         236705
      C     *LIKE         DEFINE    OPDT          WrkAPDT                                      236705
                                                                                               236705
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058177             Date 27May21             *
-      *  Prev Amend No. MD056565             Date 21Jan21             *
+      *  Last Amend No. MD055891             Date 01Sep20             *
+      *  Prev Amend No. MD058443             Date 12Jul21             *
+      *                 MD058177             Date 27May21             *
+      *                 MD056565             Date 21Jan21             *
       *                 MD056751             Date 20Sep20             *
       *                 MD056613             Date 20Sep20             *
       *                 MD057670             Date 02Mar21             *
@@ -26,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055891 - Deliverable Data Split for COB                    *
+      *  MD058443 - Remove record from SDSCOBTD as it was made        *
+      *             redundant                                         *
       *  MD058177 - Error for RPTRAQPD take-on. Use DISTINCT          *
       *             to cater for duplicate record.                    *
       *  MD056565 - Deliverable Data Split for APDFFLDPD              *
@@ -33,7 +38,7 @@
       *  MD056613 - Deliverable Data Split for CSD101                 *
       *  MD057670 - Deliverable Data Split for APNDCONPD              *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
-      *  MD056608 Deliverable Data Split for APFUNCPD                 *
+      *  MD056608 - Deliverable Data Split for APFUNCPD               *
       *  MD056696 - SCSARDPD, SCSAREPD and REAPWDPD should not be     *
       *             added as Bespoke record in SCTRGBTD.              *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -103,10 +108,13 @@
      C                   exsr      SR_SDIPVCTD                                              MD056613
                                                                                             MD056613
      C                   Other                                                              MD055681
+     C                   If        XINDEX <> 'CBDPRCTD'                                     MD055891
+     C                             and XINDEX <> 'CBMEXCTD'                                 MD055891
       * Update Extension file with content of 'old file'
      C                   If        %SUBST(XINDEX:2:4) <> 'PDFL'                             MD056565
      C                   exsr      SR_UpdExt
      C                   Endif                                                              MD056565
+     C                   endif                                                              MD055891
 
       * Add Bespoke record if not found in core file
      C                   exsr      SR_AddBsp
@@ -234,8 +242,11 @@
      C                   endif                                                              MD058177
      C                   eval      First = 'N'
      C                   ELSE
+     C                   If        WHFLDI = 'DHCPCA'                                        MD055891
+     C                   else                                                               MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                              MD055891
      C                   ENDIF
      C                   ENDIF
       *
@@ -342,6 +353,7 @@
      C                   eval      First = 'N'
      C                   ELSE
      C                   IF        WHFLDI = 'AXPROT'                                        MD055681
+     C                             or WHFLDI = 'DHCPCA'                                     MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD055681
      C                   eval      PSELECT = %trimr(PSELECT) + ', ' + '''Y'''               MD055681
      C                   else                                                               MD055681
@@ -392,6 +404,16 @@
 
       ** If records were added in Bespoke, records must be added in Extension file too
      C                   If        TotRow > 0
+                                                                                            MD055891
+      * if COB file, set unique number to the highest                                       MD055891
+     C                   if        XINDEX = 'CBDPRCTD'                                      MD055891
+     C                             or XINDEX = 'CBMEXCTD'                                   MD055891
+     C                             or XINDEX = 'CBMDCCTD'                                   MD055891
+     C                   CALL      'UP0888'                                                 MD055891
+     C                   PARM                    XINDEX                                     MD055891
+     C                   PARM                    ERROR                                      MD055891
+     C                   Endif                                                              MD055891
+                                                                                            MD055891
      C                   exsr      SR_AddExt
      C                   ENDIF
      C
@@ -448,7 +470,15 @@
      C+ delete from GLGXMXTD where XMORDR = 11                                              MD056751
      C/END-EXEC                                                                             MD056751
      C                   Endif                                                              MD056751
-                                                                                            zD057670
+     C                   If        XINDEX = 'SDSCOCTD'                                      MD058443
+     C/EXEC SQL                                                                             MD058443
+     C+ delete from SDSCOBTD  WHERE SRCODE = 'CYCL' and SRCDDP = 'PEND'                     MD058443
+     C/END-EXEC                                                                             MD058443
+     C/EXEC SQL                                                                             MD058443
+     C+ delete from SDSCOXTD  WHERE SRCODE = 'CYCL' and SRCDDP = 'PEND'                     MD058443
+     C/END-EXEC                                                                             MD058443
+     C                   Endif                                                              MD058443
+                                                                                            MD057670
      C                   ENDSR
 
       /EJECT

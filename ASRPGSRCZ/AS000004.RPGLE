@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -92,26 +94,26 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FASHGLKL0  UF A E           K DISK    INFSR(*PSSR)
       ** Hedge Linkage File Update by Hedge Id
- 
+
      FASHTRNL1  IF   E           K DISK    INFSR(*PSSR)
       ** Hedge Transaction File RTV by Hedge Id/Indicator
- 
+
      FSDHGSTL1  IF   E           K DISK    INFSR(*PSSR)
       ** Hedge Strategy by Shortname Master File Update Index
- 
+
      F***ASFHTRL1  IF   E           K DISK    INFSR(*PSSR)                                    CAS006
      FASFHTRL1  UF   E           K DISK    INFSR(*PSSR)                                       CAS006
      F                                                                                        CAS006
       ** Forecast Transaction Details Master File Retrieval Index
- 
+
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(DEALSDAF)
      F                                     IGNORE(DEALSDCF)
@@ -120,7 +122,7 @@
      F                                     IGNORE(DEALSDFF)
      F**********                           IGNORE(DEALSDGF)                                   CAS006
       ** Midas DL Deals File
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -128,7 +130,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -140,33 +142,33 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for General Ledger ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
                                                                                               229418
       ** External DS for Hedge ICD                                                            229418
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)                                  229418
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for SAR Details                                              CAS006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS006
                                                                                               CAS006
@@ -179,33 +181,33 @@
      D WkMatD                  1      7                                                       CAS006
      D WkMMon                  3      5                                                       CAS006
      D WkMYer                  6      7                                                       CAS006
- 
+
      D                 DS
      D WValDate                1      7
      D WValMonth               3      5
      D WValYear                6      7                                                       CAS006
- 
+
      D                 DS
      D WHDate                  1      7
      D WHMonth                 3      5
      D WHYear                  6      7                                                       CAS006
- 
+
      D WRun            S              1A
- 
+
       ** Parameters for Standard Access Objects
      D PRtCd           S              7A
      D POption         S              7A
- 
+
       ** Work Fields for SDBANKPD fields
      D WRunDay         S              5  0
      D PBankCurr       S              3A
      D PDateFormat     S              1A
- 
+
       ** Fields used for standard programs
      D PFInput         S              5  0
      D PNOutput        S              6  0
      D PAOutput        S              7A
- 
+
      D KHedgeInd       S              1A
      D WExpRec         S              1A
      D WCurrency       S              3A
@@ -219,7 +221,7 @@
      D WHAmount        S             20  0
      D CAS006          S              1                                                       CAS006
      D WkAmnt          S             20  0                                                    CAS006
- 
+
       ** Parameters for ZFREQB
      D PFrequency      S              1A
      D PDayNum         S              5  0
@@ -255,31 +257,31 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *****************************************************************
- 
+
       ** Read all the Hedges in the system
- 
+
      C                   READ      ASHGLKL0
- 
+
       ** Do while not end of file
- 
+
      C                   DOW       NOT %EOF(ASHGLKL0)
- 
+
       ** Assess hedge if effective date is equal to rundate
- 
+
      C                   IF        FSRECI = 'D' AND FSEFFD = WRunDay
- 
+
       ** Check if hedging forecast transactions
- 
+
      C                   EVAL      WHAmount = *ZEROS                                          CAS006
      C                   EVAL      KHedgeInd = 'H'
- 
+
      C     KHedgeTran    CHAIN     ASHTRNL1
- 
+
      C                   IF        %FOUND(ASHTRNL1) AND FSMOD = 'FH'
- 
+
       ** Retrieve Critical Terms:
       ** Transaction Currency and Maturity Date
- 
+
      C*****FSDLNO        CHAIN     ASFHTRL1                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     ASFHTRL1                                                   CLE148
@@ -291,12 +293,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   EVAL      WExpRec= FSERIN
      C                   EVAL      WCurrency = FSCCY
- 
+
       ** Retrieve Maturity Month
- 
+
      C**********         EVAL      PFInput = FSMDAT                                           229418
      C**********         EXSR      SRDate                                                     229418
      C**********         EVAL      WMatDate = PAOutput                                        229418
@@ -366,22 +368,22 @@
      C     KHedgeTran    READE     ASHTRNL1                                                   CAS006
                                                                                               CAS006
      C                   ENDDO                                                                CAS006
- 
+
      C                   ENDIF
- 
+
      C**********         EVAL      WEffect = *BLANKS                                          CAS006
      C                   EVAL      WAmount = *ZEROS
      C**********         EVAL      WHAmount = *ZEROS                                          CAS006
- 
+
       ** DERIVATIVES - Hedging Instruments
       ** Retrieve NPV Amounts
- 
+
      C                   EVAL      KHedgeInd = 'D'
- 
+
      C     KHedgeTran    CHAIN     ASHTRNL1                           26
- 
+
      C                   DOW       *IN26 = *OFF
- 
+
      C**********         IF        WEffect <> 'Y'                                             CAS006
      C                   IF        WNotEffct <> 'Y'                                           CAS006
                                                                                               CAS006
@@ -400,48 +402,48 @@
      C                   ELSE
      C                   LEAVE
      C                   ENDIF
- 
+
      C     KHedgeTran    READE     ASHTRNL1                               26
      C                   ENDDO
- 
+
      C**********         IF        WEffect = *BLANKS                                          CAS006
- 
+
       ***Hedged*Items******************************************************                   CAS006
       ***Retrieve*NPV*Amounts**********************************************                   CAS006
- 
+
      C**********         EVAL      KHedgeInd = 'H'                                            CAS006
- 
+
      C*****KHedgeTran    CHAIN     ASHTRNL1                           26                      CAS006
- 
+
      C**********         DOW       *IN26 = *OFF                                               CAS006
- 
+
      C**********         IF        WEffect <> 'Y'                                             CAS006
      C**********         EXSR      SRFCTran                                                   CAS006
      C**********         ELSE                                                                 CAS006
      C**********         LEAVE                                                                CAS006
      C**********         ENDIF                                                                CAS006
- 
+
      C*****KHedgeTran    READE     ASHTRNL1                               26                  CAS006
      C**********         ENDDO                                                                CAS006
- 
+
      C**********         ENDIF                                                                CAS006
- 
+
       ** Assess Effectiveness
- 
+
      C                   EXSR      SREffective
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Read next record on LF/ASHGLKL0
- 
+
      C                   READ      ASHGLKL0
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       ****************************************************************
@@ -454,34 +456,34 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
- 
+
      C     SRFwdCommit   BEGSR
- 
+
       ** Hedging Forecast Transactions
- 
+
      C*****FSDLNO        CHAIN     DEALS                                                      CAS006
      C*****FSDLNO        CHAIN     DEALSDBF                                            CAS006 CLE148
      C                   MOVEL     FSDLNO        FSDLNO2           6 0                        CLE148
      C     FSDLNO2       CHAIN     DEALSDBF                                                   CLE148
- 
+
      C**********         IF        %FOUND(DEALS)                                              CAS006
      C                   IF        %FOUND                                                     CAS006
- 
+
       ** Retrieve Value Date Month
- 
+
      C**********         EVAL      PFInput = VDAT                                             229418
      C**********         EXSR      SRDate                                                     229418
      C**********         EVAL      WValDate = PAOutput                                        229418
                                                                                               229418
      C                   EVAL      WEDiffDays = %ABS(WEMDate - VDAT)                          229418
      C                   EVAL      WLDiffDays = %ABS(WLMDate - VDAT)                          229418
- 
+
      C                   SELECT
- 
+
       ** Expenditures
- 
+
      C                   WHEN      WExpRec = 'E'
- 
+
      C                   IF        PUCY <> WCurrency OR
      C                             WEDiffDays > FSHLTO AND                                    229418
      C                             CAS006 = 'Y' OR                                            229418
@@ -500,9 +502,9 @@
      C                   EVAL      WkAmnt = PUAM * FSPCTG / 100                               CAS006
      C                   ADD       WkAmnt        WAmount                                      CAS006
      C                   ENDIF
- 
+
       ** Receipts
- 
+
      C                   WHEN      WExpRec = 'R'
      C                   IF        SLCY <> WCurrency OR
      C                             WEDiffDays > FSHLTO AND                                    229418
@@ -522,13 +524,13 @@
      C                   EVAL      WkAmnt = SLAM * FSPCTG / 100                               CAS006
      C                   ADD       WkAmnt        WAmount                                      CAS006
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                       CAS006
       /EJECT                                                                                  CAS006
       *****************************************************************                       CAS006
@@ -631,11 +633,11 @@
       ****************************************************************
       *
      C     SREffective   BEGSR
- 
+
       **  Retrieve Hedge Strategy details
- 
+
      C     FSHGST        CHAIN     SDHGSTL1
- 
+
      C                   IF        NOT %FOUND(SDHGSTL1)
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 3
@@ -644,25 +646,25 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **  If there is a mismatch in the critical terms, flag hedge
       **  as ineffective.
- 
+
      C**********         IF        WEffect = 'Y' OR WAmount <> WHAmount                       CAS006
      C**********         IF        WNotEffct = 'Y' OR WAmount <> WHAmount              CAS006 229418
      C                   IF        WNotEffct = 'Y' OR WAmount > WHAmount                      229418
      C                   EVAL      FSRECI = 'X'
      C                   EVAL      FSHEFP = *ZEROS
- 
+
      C                   ELSE
- 
+
       ** Set Next Assessment Date
- 
+
      C                   Z-ADD     100           FSHEFP
      C                   EVAL      PFrequency = FSEFFQ
      C                   EVAL      PDayNum = FSEFFD
      C                   EVAL      PDays = 31
- 
+
      C                   CALLB     'ZFREQB'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM                    PFrequency
@@ -672,7 +674,7 @@
      C                   PARM                    PDays
      C                   PARM                    PDateformat
      C     SDGELR        PARM                    SDGELR
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 4
@@ -683,9 +685,9 @@
      C                   ELSE
      C                   MOVE      PDayNum       FSEFFD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   Z-ADD     WAmount       FSDAMT
      C                   Z-ADD     *ZERO         FSDUPL
      C                   Z-ADD     WHAmount      FSHAMT
@@ -702,9 +704,9 @@
      C                   IF        CAS006 = 'Y'                                               CAS006
      C                   EVAL      FSRIND = 'B'                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
      C                   UPDATE    ASHGLKD0
- 
+
       ** If CAS006 is on, set Unrealised Profit/Loss in ASFHTRPD to zero.                     CAS006
                                                                                               CAS006
      C                   IF        CAS006 = 'Y'                                               CAS006
@@ -712,7 +714,7 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   ENDSR
- 
+
       *****************************************************************                       CAS006
       /EJECT                                                                                  CAS006
       *****************************************************************                       CAS006
@@ -751,17 +753,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDate        BEGSR
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    PFInput
      C                   PARM                    PDateFormat
      C                   PARM      *ZEROS        PNOutput
      C                   PARM      *BLANKS       PAOutput
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -773,23 +775,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Database error
- 
+
      C     PRtCd         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 1
@@ -798,17 +800,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WRunDay = BJRDNB
      C                   EVAL      PDateFormat = BJDFIN
      C                   EVAL      PBankCurr = BJCYCD
- 
+
       ** Key Lists
- 
+
      C     KHedgeTran    KLIST
      C                   KFLD                    FSHEDI
      C                   KFLD                    KHedgeInd
- 
+
       ** Determine if Hedge Accounting Phase B (CAS006) is installed.                         CAS006
                                                                                               CAS006
      C                   CALL      'AOSARDR0'                                                 CAS006
@@ -850,7 +852,7 @@
      C                   EXSR      *PSSR                                                      229418
      C                   ENDIF                                                                229418
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -861,20 +863,20 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

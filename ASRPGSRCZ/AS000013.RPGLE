@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -78,25 +80,25 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas AS Hedge Linkage File Retrieval by Hedge ID
      FASHGLKL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(LK:2)
- 
+
       ** Midas AS Hedge transaction by Module/HdgId/HdgInd
      FASHTRNLF  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(TR:2)
- 
+
       ** Midas AS Forecast transaction file retrieval index
      FASFHTRL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FH:2)
- 
+
       ** Deals File
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(DEALSDAF)
      F                                     IGNORE(DEALSDEF)
      F                                     IGNORE(DEALSDFF)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -115,48 +117,48 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Transaction Numbers
      D ArrDLNO         S              6  0 DIM(100)
- 
+
       ** Array of Amounts
      D ArrAMNT         S             20  5 DIM(100)
- 
+
       ** External DS for Midas Modules
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for Access Objects
      D PRetCode        S              7
      D POption         S              7
      D PCurrency       S              3
- 
+
       ** Work variables
      D WInAMNT         S             13  0
      D WOutAMNT        S             13  3
@@ -171,19 +173,19 @@
      D Wx              S              3  0
      D WRun            S              1
      D WFHURPL         S             13  0
- 
+
       ** Key Fields
      D KModule         S              2
      D KHedgeID        S              6  0
      D KDHind          S              1
      D KNPVM           S              1
      D KDEAL           S              6  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -194,60 +196,60 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Retrieve all live hedge linkages from ASHGLKPD
- 
+
      C                   READ      ASHGLKL1
- 
+
      C                   DOW       NOT %EOF(ASHGLKL1)
- 
+
      C                   IF        LKRECI = 'D'
      C                   EVAL      KModule = 'FH'
      C                   EVAL      KHedgeID = LKHEDI
      C                   EVAL      KDHind = 'H'
- 
+
       ** Check if hedged item is a forecast transaction
- 
+
      C     KHTRN         CHAIN     ASHTRNLF
- 
+
      C                   IF        %FOUND(ASHTRNLF)
- 
+
       ** Reset variables and arrays
- 
+
      C                   EXSR      SRReset
- 
+
       ** Access hedge currency details
- 
+
      C                   EXSR      SRCcyDet
- 
+
       ** Process Hedged Items
- 
+
      C                   EXSR      SRHedge
- 
+
       ** Process Derivatives
- 
+
      C                   EVAL      KModule = 'DL'
      C                   EVAL      KDHind = 'D'
- 
+
      C                   EXSR      SRDeriv
- 
+
       ** Compute and update the Unrealized Profit/Loss allocation
       ** of each Forecast Transaction for the hedge linkage
- 
+
      C                   EXSR      SRUpdURPL
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      ASHGLKL1
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -255,20 +257,20 @@
       * SRDeriv - Process Hedge Derivatives of Forecast Transactions  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDeriv       BEGSR
- 
+
      C     KHTRN         SETLL     ASHTRNLF
      C     KHTRN         READE     ASHTRNLF
- 
+
      C                   DOW       NOT %EOF(ASHTRNLF)
- 
+
       ** Access deal details to get the UNRL
- 
+
      C*****TRDLNO        CHAIN     DEALS                                                      CLE148
      C                   MOVEL     TRDLNO        TRDLNO2           6 0                        CLE148
      C     TRDLNO2       CHAIN     DEALS                                                      CLE148
- 
+
      C                   IF        %FOUND(DEALS)
      C                   IF        RCDT = 'B' OR RCDT = 'C' OR
      C                             RCDT = 'D'
@@ -280,15 +282,15 @@
      C                   EVAL      WrkPCTG = TRPCTG / 100
      C                   EXSR      SRNumDec
      C                   EVAL      WrkURPL = WOutAMNT * WrkPCTG
- 
+
      C                   EVAL      WSumURPL = WSumURPL + WrkURPL
      C                   ENDIF
- 
+
      C     KHTRN         READE     ASHTRNLF
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -296,42 +298,42 @@
       * SRHedge - Process Hedged Items of Forecast Transactions       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRHedge       BEGSR
- 
+
      C                   EVAL      Wx = 1
- 
+
      C     KHTRN         SETLL     ASHTRNLF
      C     KHTRN         READE     ASHTRNLF
- 
+
      C                   DOW       NOT %EOF(ASHTRNLF)
      C*****TRDLNO        CHAIN     ASFHTRL1                                                   CLE148
      C                   MOVEL     TRDLNO        TRDLNO2                                      CLE148
      C     TRDLNO2       CHAIN     ASFHTRL1                                                   CLE148
- 
+
      C                   IF        %FOUND(ASFHTRL1)  AND  FHRECI = 'D'
- 
+
      C                   EVAL      WInAMNT = FHAMNT
      C                   EXSR      SRNumDec
      C                   EVAL      WrkAMNT = WOutAMNT
- 
+
      C                   EVAL      WrkPCTG = TRPCTG / 100
      C                   EVAL      WProduct = WrkAMNT * WrkPCTG
      C                   EVAL      WSumAMNT = WSumAMNT + WProduct
- 
+
       ** Save values in array for use in update later
- 
+
      C**********         EVAL      ArrDLNO(Wx) = TRDLNO                                       CLE148
      C                   EVAL      ArrDLNO(Wx) = TRDLNO2                                      CLE148
      C                   EVAL      ArrAMNT(Wx) = WProduct
      C                   EVAL      Wx = Wx + 1
      C                   ENDIF
- 
+
      C     KHTRN         READE     ASHTRNLF
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -339,55 +341,55 @@
       * SRUpdURPL - Update the Unrealized Profit/Loss                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdURPL     BEGSR
- 
+
      C                   EVAL      Wx = 1
      C                   EVAL(R)   WFactor = WSumURPL / WSumAMNT
      C                   EVAL      WFHURPL = 0
- 
+
       ** If the sum of URPL for derivative is positive and WFactor is also positive
       ** or the sum of URPL for derivative is negative and WFactor is also negative
       ** reverse the sign of the WFactor to negate the URPL of the derivative
- 
+
      C                   IF        WSumURPL >= 0 AND WFactor >= 0 OR
      C                             WSumURPL < 0 AND WFactor < 0
      C                   EVAL      WFactor = WFactor * -1
      C                   ENDIF
- 
+
      C                   DOW       ArrDLNO(Wx) <> *ZERO
- 
+
      C     ArrDLNO(Wx)   CHAIN     ASFHTRL1
- 
+
      C                   IF        %FOUND(ASFHTRL1)  AND  FHRECI = 'D'
      C     ArrAMNT(Wx)   MULT(H)   WFactor       WrkVAR
- 
+
      C                   SELECT
      C                   WHEN      A6NBDP = *ZERO
      C     ArrAMNT(Wx)   MULT(H)   WFactor       WFHURPL
      C                   EVAL      FHURPL = FHURPL + WFHURPL
- 
+
      C                   WHEN      A6NBDP = 1
      C     WrkVar        MULT(H)   10            WFHURPL
      C                   EVAL      FHURPL = FHURPL + WFHURPL
- 
+
      C                   WHEN      A6NBDP = 2
      C     WrkVar        MULT(H)   100           WFHURPL
      C                   EVAL      FHURPL = FHURPL + WFHURPL
- 
+
      C                   WHEN      A6NBDP = 3
      C     WrkVar        MULT(H)   1000          WFHURPL
      C                   EVAL      FHURPL = FHURPL + WFHURPL
      C                   ENDSL
- 
+
      C                   UPDATE    ASFHTRD0
      C                   ENDIF
- 
+
      C                   EVAL      Wx = Wx + 1
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -396,25 +398,25 @@
       *            currency's number of decimal places                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNumDec      BEGSR
- 
+
      C                   SELECT
      C                   WHEN      A6NBDP = *ZERO
      C                   EVAL      WOutAMNT = WInAMNT
- 
+
      C                   WHEN      A6NBDP = 1
      C                   EVAL      WOutAMNT = WInAMNT / 10
- 
+
      C                   WHEN      A6NBDP = 2
      C                   EVAL      WOutAMNT = WInAMNT / 100
- 
+
      C                   WHEN      A6NBDP = 3
      C                   EVAL      WOutAMNT = WInAMNT / 1000
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -422,15 +424,15 @@
       * SRCcyDet - Access currency details                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCcyDet      BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM      LKCYCD        PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -439,9 +441,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -449,16 +451,16 @@
       * SRReset - Reset variables and arrays                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRReset       BEGSR
- 
+
      C                   EVAL      WSumURPL = *ZERO
      C                   EVAL      WSumAMNT = *ZERO
      C                   EVAL      ArrDLNO = *ZERO
      C                   EVAL      ArrAMNT = *ZERO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -466,22 +468,22 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Key list  for ASHTRNLF
- 
+
      C     KHTRN         KLIST
      C                   KFLD                    KModule
      C                   KFLD                    KHedgeID
      C                   KFLD                    KDHind
- 
+
      C     KURPL         KLIST
      C                   KFLD                    KNPVM
      C                   KFLD                    KDEAL
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -492,21 +494,21 @@
       *          This subroutine DUMPs the program just once.             *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

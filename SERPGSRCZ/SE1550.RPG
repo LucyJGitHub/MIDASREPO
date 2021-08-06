@@ -18,8 +18,9 @@
       *  (c) Finastra International Limited 2001                      *
       *      1988, 1991.                                              *
       *                                                               *
-      *  Last Amend No. 258879             Date 22May20               *
-      *  Prev Amend No. 249578             Date 22May20               *
+      *  Last Amend No. 260318             Date 07Jun21               *
+      *  Prev Amend No. 258879             Date 22May20               *
+      *                 249578             Date 22May20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -62,6 +63,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260318 - Event type for position settlements not shown       *
+      *           correctly in the projected account movements.       *
+      *           Applied for MD-57791.                               *
       *  258879 - Duplicate projected a/c movements for TS generated  *
       *           in COB. Applied fixes 255167 and 252669.            *
       *  249578 - Position settlements.  Applied 234878.              *
@@ -202,6 +206,9 @@
       /EJECT
      E                    CPY@    1   1 80                                S01117
      E/COPY ZSRSRC,ZHASHZ1
+      *                                                                                       260318
+     E                    TABCOD 10  10  4                                                    260318
+     E                    TABNAM  7  10 10                                                    260318
       /EJECT
      ITREVEDF     01
      I              PRFC                            TRPRFC                S01117
@@ -945,7 +952,20 @@
      C                     Z-ADDCCDT      VALD
      C                     END                                            S01510
      C*                                                                   S01510
-     C                     MOVELCCSS      PNAR
+      *                                                                                       260318
+      ** For depot or customer position events: write event name                              260318
+      ** security shortname and branch in narrative                                           260318
+      *                                                                                       260318
+     C                     MOVELCCTA      NAR25  25                                           260318
+     C                     MOVE CCSS      NAR21  21                                           260318
+     C           CCCE      LOKUPTABCOD    TABNAM         71                                   260318
+     C           *IN71     IFEQ '1'                                                           260318
+     C                     MOVELTABNAM    NAR21                                               260318
+     C                     ENDIF                                                              260318
+     C**********           MOVELCCSS      PNAR                                                260318
+     C                     MOVE NAR21     NAR25                                               260318
+     C                     MOVELNAR25     PNAR                                                260318
+      *                                                                                       260318
      C                     Z-ADDCCEA      PSTA
      C***********          Z-ADDCCBR      BRCD                            S01117
      C***********          MOVE CCBA      BRCA                     S01117 091969
@@ -998,3 +1018,8 @@
      C/COPY ZSRSRC,ZSYSTMZ1
 **  CPY@
 (c) Finastra International Limited 2001
+**   TABCOD -- EVENT CODES                                                                    260318
+31C131C231C331C431C531D131D231D331D431D5                                                      260318
+**   TABNAM -- EVENT NARRATIVES                                                               260318
+C-PART PAYC-COUPON  C-DIVIDENDC-MORT PAYC-MATURITYD-PART PAYD-COUPON                          260318
+D-DIVIDENDD-MORT PAYD-MATURITY                                                                260318

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058437           Date 09Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -60,12 +62,12 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -83,30 +85,30 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Instrument types
      D TABCDE          S              1S 0 DIM(8) CTDATA PERRCD(1)
      D TABTYP          S             16    DIM(8) ALT(TABCDE)
- 
- 
+
+
      D TRANS         E DS                  EXTNAME(TRANSD) PREFIX(TR_)
      D TRSET         E DS                  EXTNAME(TRSETD) PREFIX(TS_)
      D INTYP         E DS                  EXTNAME(INTYPD) PREFIX(IN_)
      D PRICS         E DS                  EXTNAME(PRICSD) PREFIX(PC_)
- 
- 
+
+
      D W#TABT          DS
      D  W#TDES                 1     16
- 
- 
+
+
      D W#SETD          DS
      D  W#SETM                 1      2
      D***W#SETA*                3     14                                                      CGL029
@@ -115,14 +117,14 @@
      D  W#SETA                 3     20                                                       CGL029
      D  W#SETB                21     23                                                       CGL029
      D  W#SETC                24     26                                                       CGL029
- 
- 
+
+
       ** Instrument type
      D FFISPT          S              1S 0
       ** Contract type
      D FFCNTT          S              1S 0
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -133,7 +135,7 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221
@@ -244,34 +246,34 @@
       *
      C*****T#VDAT********IFGE******I#EXTD***********************************    CDE002
      C     T#VDAT        IFGE      BJRDNB                                       CDE002
- 
+
      C                   Z-ADD     TR_COPR       FFPRIC
      C                   EXSR      FFPMCL
      C                   Z-ADD     FFPREM        T#MKVL
- 
+
      C                   ELSE
- 
+
      C     PC_NEWP       IFNE      *ZERO
- 
+
      C                   Z-ADD     PC_NEWP       FFPRIC
      C                   EXSR      FFPMCL
      C                   Z-ADD     FFPREM        MktVal           13 0
- 
+
      C                   Z-ADD     TR_COPR       FFPRIC
      C                   EXSR      FFPMCL
- 
+
      C     TR_TRTY       IFEQ      'P'
      C     MktVal        SUB       FFPREM        T#MKVL
      C                   ELSE
      C     FFPREM        SUB       MktVal        T#MKVL
      C                   ENDIF
- 
+
      C                   ELSE
      C                   Z-ADD     *ZERO         T#MKVL
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     IN_ISCY       T#VCCY
      C                   MOVEL     IN_ISCY       @CYCD
      C                   EXSR      ACSCCY
@@ -503,7 +505,7 @@
      C                   ELSE
      C                   MOVE      IN_ISCY       W#CCY             3
      C                   ENDIF
- 
+
      C     TR_NOCO       MULT      IN_CTAM       W#AMT            13 0
       *
       ** Delivery amount is incoming if bought call or sold put
@@ -528,9 +530,9 @@
       * MOVE COUNTER CURRENCY DETAILS TO WORK FIELDS
       ********************************************************************
      C     CNTCCY        BEGSR
- 
+
       * A FOREX option has a counter currency amount
- 
+
      C                   MOVE      IN_CTCY       W#CCY             3
      C     TR_NOCO       MULT      IN_CCAM       W#AMT            13 0
       *
@@ -555,7 +557,7 @@
       * PREMIUM CALCULATION
       ********************************************************************
      C     FFPMCL        BEGSR
- 
+
      C                   CALLB     'FFPMCL'
      C                   PARM      *ZERO         FFPREM           13 0
      C                   PARM      TR_NOCO       FFNOC             5 0
@@ -567,7 +569,7 @@
      C                   PARM      IN_CNTT       FFCNTT
      C                   PARM      IN_CTAM       FFCTAM           13 0
      C                   PARM      TR_STRP       FFSTRP           15 8                        215528
- 
+
      C                   ENDSR
       **************************************************************************
       /SPACE 5

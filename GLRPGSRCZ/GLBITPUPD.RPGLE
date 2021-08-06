@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR573975           Date 01Jun20               *
-      *  Prev Amend No. 254657             Date 01Jun20               *
+      *  Last Amend No. MD058173           Date 28Jun21               *
+      *  Prev Amend No. AR573975           Date 01Jun20               *
+      *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057744           Date 24Mar21               *
       *                 MD056651           Date 05Oct20               *
@@ -96,6 +97,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058173 - Hash Item input count on JRNE is updated when user*
+      *             amend the batch item details. Hash Item No. Input *
+      *             from Header should be retained during amend or de-*
+      *             lete of batch item regardless if feature CGL148 is*
+      *             On or Off.                                        *
       *  AR573975 - Associated Front Office ID is overridden with     *
       *             blanks when user tries to amend/accept JE inserted*
       *             via APIs. If Assoc. Front Office ID is not blank  *
@@ -1520,9 +1526,9 @@ E1   C                   ENDIF                                                  
       *                                                                                       CAP084
      C                   SUB       1             BRHINC                                       CAP084
                                                                                               CGL148
-     C     CGL148        Ifeq      'Y'                                                        CGL148
-     C                   z-add     BRHINC        BRHINI                                       CGL148
-     C                   Endif                                                                CGL148
+     C*****CGL148        Ifeq      'Y'                                               CGL148 MD058173
+     C**********         z-add     BRHINC        BRHINI                              CGL148 MD058173
+     C**********         Endif                                                       CGL148 MD058173
                                                                                               CAP084
       ** Else Add to the totals....                                                           CAP084
                                                                                               CAP084
@@ -1625,10 +1631,10 @@ E1   C                   ENDIF                                                  
       ** Reduce Hash Item No. calculated by 1.                                                CAP084
       *                                                                                       CAP084
      C                   SUB       1             BRHINC                                       CAP084
-     C     CGL148        Ifeq      'Y'                                                      MD056651
-     C     JAVAUSER      ANDEQ     'Y'                                                      MD056651
-     C                   z-add     BRHINC        BRHINI                                     MD056651
-     C                   Endif                                                              MD056651
+     C*****CGL148        Ifeq      'Y'                                             MD056651 MD058173
+     C*****JAVAUSER      ANDEQ     'Y'                                             MD056651 MD058173
+     C**********         z-add     BRHINC        BRHINI                            MD056651 MD058173
+     C**********         Endif                                                     MD056651 MD058173
                                                                                               CAP084
      C                   ENDIF                                                                CAP084
      C                   ENDIF                                                                CAP084

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -190,11 +192,11 @@
      C                   IF        OKDVBS1 <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKDVBS1 <> 'N'
      C                   MOVE      DDDVBS1       S1DVBS
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -205,14 +207,14 @@
       *                                                               *
       *****************************************************************
      C     SRValDivBs    BEGSR
- 
+
      C                   IF        DDDVBS1 = *BLANKS
      C                   MOVE      'N'           OKDVBS1
      C                   ADD       1             IDx
      C                   MOVEL     'DDDVBS1'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0207'     MsgIdXAr(IDx)
      C                   ELSE
- 
+
      C                   IF        DDDVBS1 <> '1' AND
      C                             DDDVBS1 <> '2' AND
      C                             DDDVBS1 <> '3'
@@ -221,26 +223,26 @@
      C                   MOVEL     'DDDVBS1'     FldNamXAr(IDx)
      C                   MOVEL     'SEA0207'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If day basis or divisor basis is amended, additional check
       *
      C                   IF        CSE007 = 'Y' OR
      C                             CEU017 = 'Y'
- 
+
      C                   IF        DDDYBS1 <> DYBS AND
      C                             DDDYBS1 <> *BLANKS AND
      C                             DDDVBS1 <> DVBS AND
      C                             DDDVBS1 <> *BLANKS
- 
+
      C                   CALL      'SE0041'
      C                   PARM      'B'           PVREQ
      C                   PARM                    S1SESN
      C                   PARM      *BLANKS       PCCY
      C                   PARM      LCPN          PDate
      C                   PARM      *BLANKS       PErrs
- 
+
      C     'W06'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'W'           OKDVBS1
@@ -248,7 +250,7 @@
      C                   MOVEL     'DDDVBS1'     WFldNmXAr(WIx)
      C                   MOVEL     'SEA0173'     WMsgIDxAr(WIx)
      C                   ENDIF
- 
+
      C     'W07'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'W'           OKDVBS1
@@ -256,7 +258,7 @@
      C                   MOVEL     'DDDVBS1'     WFldNmXAr(WIx)
      C                   MOVEL     'SEA0174'     WMsgIDxAr(WIx)
      C                   ENDIF
- 
+
      C     'W08'         LOOKUP    PErrs                                  01
      C                   IF        *IN01 = *ON
      C                   MOVE      'W'           OKDVBS1
@@ -264,11 +266,11 @@
      C                   MOVEL     'DDDVBS1'     WFldNmXAr(WIx)
      C                   MOVEL     'SEA0175'     WMsgIDxAr(WIx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

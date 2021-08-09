@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. CIR020             Date 05Aug21               *
       *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
@@ -91,7 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -338,6 +338,7 @@
      D CAP056          S              1A                                                      CAP056
      D CAS006          S              1A                                                      CAS006
      D CAP051          S              1A                                                    BUG18701
+     D CSD103          S              1A                                                      CIR020
                                                                                               CAP056
       ** Parameter fields when calling ZAFUTSTATP                                             CIR008
      D P_ACTN          S              1A                                                      CIR008
@@ -948,7 +949,13 @@
       * Class                                                                                 CDL038
       *                                                                                       CDL038
      C                   MOVEL     FRCLAS        CLAS                                         CDL038
-      *
+      *                                                                                       CIR020
+      ** Defaulting of LIBOR fields                                                           CIR020
+      *                                                                                       CIR020
+     C     CSD103        IFEQ      'Y'                                                        CIR020
+     C                   EXSR      SRLIBOR                                                    CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
       * WRITE DEAL
       *
      C                   WRITE     DEALSDGF
@@ -1223,6 +1230,13 @@
       * Class                                                                                 CDL038
       *                                                                                       CDL038
      C                   MOVEL     FRCLAS        CLAS                                         CDL038
+      *                                                                                       CIR020
+      ** Defaulting of LIBOR fields                                                           CIR020
+      *                                                                                       CIR020
+     C     CSD103        IFEQ      'Y'                                                        CIR020
+     C                   EXSR      SRLIBOR                                                    CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
       *
       * UPDATE DEAL
       *
@@ -2257,6 +2271,31 @@
      C                   IF        PRetCode = *BLANKS                                         CSD083
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
+                                                                                              CIR020
+      ** Check if switchable feature CSD103 is switched on.                                   CIR020
+                                                                                              CIR020
+     C                   EVAL      CSD103 = 'N'                                               CIR020
+                                                                                              CIR020
+     C                   CALL      'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRtCd                                        CIR020
+     C                   PARM      '*VERIFY'     POptn                                        CIR020
+     C                   PARM      'CSD103'      PSard                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C                   IF        (PRetCode <> *BLANKS) AND                                  CIR020
+     C                             (PRetCode <> '*NRF   ')                                    CIR020
+     C     *LOCK         IN        LDA                                                        CIR020
+     C                   EVAL      DBKEY = 'CSD103'                                           CIR020
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CIR020
+     C                   EVAL      DBASE = 911                                                CIR020
+     C                   OUT       LDA                                                        CIR020
+     C                   EXSR      *PSSR                                                      CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   IF        PRtCd = *BLANKS                                            CIR020
+     C                   EVAL      CSD103 = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
                                                                                               CAP084
       * If the user is connected via a browser, the job user name is the data                 CAP084
       * source conection name - the actual user name is stored in ZMUSER                      CAP084
@@ -2468,6 +2507,42 @@
      C                   ENDSR                                                                CSD015
       ****************************************************************                        CSD015
       /EJECT                                                                                  CSD015
+     C****************************************************************                        CIR020
+     C*                                                              *                        CIR020
+     C* SRLIBOR - DEFAULTING OF LIBOR FIELDS                         *                        CIR020
+     C*                                                              *                        CIR020
+     C****************************************************************                        CIR020
+     C     SRLIBOR       BEGSR                                                                CIR020
+                                                                                              CIR020
+     C                   MOVEL     'N'           UBLRT                                        CIR020
+     C                   MOVEL     *BLANKS       URFRR                                        CIR020
+     C                   MOVEL     *BLANKS       UCALM                                        CIR020
+     C                   Z-ADD     0             UBADJ                                        CIR020
+     C                   Z-ADD     0             UFLOR                                        CIR020
+     C                   Z-ADD     0             ULBDY                                        CIR020
+     C                   Z-ADD     0             ULODY                                        CIR020
+     C                   MOVEL     'N'           UOPSH                                        CIR020
+     C                   Z-ADD     0             URRDP                                        CIR020
+     C                   Z-ADD     0             UDBAV                                        CIR020
+     C                   MOVEL     'N'           URTKN                                        CIR020
+     C                   Z-ADD     0             TBADJ                                        CIR020
+                                                                                              CIR020
+     C                   MOVEL     'N'           TBLRT                                        CIR020
+     C                   MOVEL     *BLANKS       TRFRR                                        CIR020
+     C                   MOVEL     *BLANKS       TCALM                                        CIR020
+     C                   Z-ADD     0             TBADJ                                        CIR020
+     C                   Z-ADD     0             TFLOR                                        CIR020
+     C                   Z-ADD     0             TLBDY                                        CIR020
+     C                   Z-ADD     0             TLODY                                        CIR020
+     C                   MOVEL     'N'           TOPSH                                        CIR020
+     C                   Z-ADD     0             TRRDP                                        CIR020
+     C                   Z-ADD     0             TDBAV                                        CIR020
+     C                   MOVEL     'N'           TRTKN                                        CIR020
+     C                   Z-ADD     0             TBADJ                                        CIR020
+                                                                                              CIR020
+     C                   ENDSR                                                                CIR020
+     C****************************************************************                        CIR020
+      /EJECT                                                                                  CIR020
      C****************************************************************
      C*                                                              *
      C* SRERR - EXCEPTION ERRORS                                     *

@@ -19,8 +19,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -42,6 +44,10 @@
       *                                                               *
       *****************************************************************
 
+      * Base rate codes (Keyed by currency code and base rate code)                           CIR020
+     FSDBSRTL0  IF   E           K DISK                                                       CIR020
+     F                                     INFSR(*pssr)                                       CIR020
+                                                                                              CIR020
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,6 +84,7 @@
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                    S01194
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CIR020
 
      D** RECORD FORMATS FOR ACCESS TO BASE RATE DETAILS                   S01194
      D DSFDY         E DS                  EXTNAME(DSFDY)                       S01194
@@ -119,6 +126,16 @@
       ** (our) currency
      D SucucyOK        S              1A
 
+      ** Transaction type                                                                     CIR020
+     D Transtyp        S              2A                                                      CIR020
+                                                                                              CIR020
+     D PRtCd           S              7A                                                      CIR020
+     D POptn           S              7A                                                      CIR020
+     D PSard           S              6A                                                      CIR020
+                                                                                              CIR020
+      ** Switchable Feature                                                                   CIR020
+     D CSD103          S              1A                                                      CIR020
+                                                                                              CIR020
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -165,6 +182,39 @@
      C                   MOVEL     BABSRC        SRFRTE
      C                   END
      C                   END
+      * Key list                                                                              CIR020
+     C     BSRTFRA       KLIST                                                                CIR020
+     C                   KFLD                    SUCUCY                                       CIR020
+     C                   KFLD                    SRFRTE                                       CIR020
+                                                                                              CIR020
+      ** Check if switchable feature CSD103 is switched on.                                   CIR020
+                                                                                              CIR020
+     C                   EVAL      CSD103 = 'N'                                               CIR020
+                                                                                              CIR020
+     C                   CALL      'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRtCd                                        CIR020
+     C                   PARM      '*VERIFY'     POptn                                        CIR020
+     C                   PARM      'CSD103'      PSard                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C                   IF        PRtCd = *BLANKS                                            CIR020
+     C                   EVAL      CSD103 = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
+      ** Validate the base rate code used in FRA transactions                                 CIR020
+      *                                                                                       CIR020
+     C     Transtyp      IFEQ      'FR'                                                       CIR020
+     C     CSD103        ANDEQ     'Y'                                                        CIR020
+                                                                                              CIR020
+     C     BSRTFRA       CHAIN     SDBSRTL0                                                   CIR020
+     C                   IF        %FOUND(SDBSRTL0)                                           CIR020
+     C     BABLRT        IFEQ      'Y'                                                        CIR020
+     C                   MOVE      '5049508'     Msgid1                                       CIR020
+     C                   MOVE      'Y'           ErrorFound                                   CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
       *
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
@@ -193,6 +243,7 @@
      C                   PARM                    SUCUCY
      C                   PARM                    SUCUCYok
      C                   PARM                    SDBSRT
+     C                   PARM                    Transtyp                                     CIR020
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

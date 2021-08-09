@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058204           Date 24Jul21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD057939           Date 17May21               *
+      *  Prev Amend No. MD058204           Date 24Jul21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057078           Date 03Mar21               *
       *                 MD057082           Date 16Dec20               *
@@ -306,6 +307,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057939 - Two postings was generated but cancel each other  *
+      *             out. Ensure that the program will generate correct*
+      *             accrual/accrual account key when next payment date*
+      *             was amended to run date.                          *
       *  MD058204 - Parts Sold loan fee causes LEC06A 10014 failure.  *
       *             Amend to populate LKOLNO with OLNO from CLOANCL   *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
@@ -5641,6 +5646,16 @@
      C           CODT      IFGE STDATE                                                        CLE071
      C                     MOVEL'Y'       WKADDY                                              CLE071
      C                     MOVELCODT      ENDATE                                              CLE071
+     C           CODT      IFGT FEPEND                                                      MD057939
+     C                     Z-ADDFEPEND    ENDATE                                            MD057939
+     C                     ELSE                                                             MD057939
+     C           CODT      IFGT FENPYD                                                      MD057939
+     C           FENPYD    ANDNE0                                                           MD057939
+     C           FENPYD    ANDLTBJRDNB                                                      MD057939
+     C           FEPEND    ANDGTBJRDNB                                                      MD057939
+     C                     Z-ADDFENPYD    ENDATE                                            MD057939
+     C                     ENDIF                                                            MD057939
+     C                     ENDIF                                                            MD057939
      C           HSAKY1    SETGTFACHSAL1                                                      CLE071
      C                     READPFACHSAL1                 20                                   CLE071
      C                     EXSR AMTAC3                                                        CLE071
@@ -5671,6 +5686,16 @@
      C           CODT      IFGE STDATE                                                        CLE071
      C                     MOVEL'Y'       WKADDY                                              CLE071
      C                     MOVELCODT      ENDATE                                              CLE071
+     C           CODT      IFGT FEPEND                                                      MD057939
+     C                     Z-ADDFEPEND    ENDATE                                            MD057939
+     C                     ELSE                                                             MD057939
+     C           CODT      IFGT FENPYD                                                      MD057939
+     C           FENPYD    ANDNE0                                                           MD057939
+     C           FENPYD    ANDLTBJRDNB                                                      MD057939
+     C           FEPEND    ANDGTBJRDNB                                                      MD057939
+     C                     Z-ADDFENPYD    ENDATE                                            MD057939
+     C                     ENDIF                                                            MD057939
+     C                     ENDIF                                                            MD057939
      C           HSAKY1    SETGTFACHSAL1                                                      CLE071
      C                     READPFACHSAL1                 20                                   CLE071
      C                     EXSR AMTAC3                                                        CLE071
@@ -6642,6 +6667,14 @@
      C                     ENDIF                                                              227253
      C                     ENDIF                                                              227253
       *                                                                                       227253
+     C                     MOVE 'Y'       WBVNPD  1                                         MD057939
+     C           FENPYD    IFLE CODT                                                        MD057939
+     C           BJRDNB    ANDLECODT                                                        MD057939
+     C           FEPEND    ANDGTFENPYD                                                      MD057939
+     C           FELADT    ANDEQCODT                                                        MD057939
+     C                     MOVE 'N'       WBVNPD                                            MD057939
+     C                     ENDIF                                                            MD057939
+      *                                                                                     MD057939
      C***********          Z-ADDLKEAMT    FELPAM                   BH3467 BH3481
      C                     Z-ADDFELPAM    FEADBP                          100515
       *                                                                                       258597
@@ -6668,6 +6701,7 @@
      C           FENPYD    IFGT CODT                                                          261129
      C           FENPYD    ORLE CODT                                                       AR740063A
      C           FENPYD    ANDLEFEPEND                                                     AR740063A
+     C           WBVNPD    ANDEQ'Y'                                                         MD057939
      C********** FELOAN    ANDGT*BLANKS                                           AR740063A MD052410
      C                     Z-ADD0         FELPAM                          BH3481
      C                     ELSE                                                               218648

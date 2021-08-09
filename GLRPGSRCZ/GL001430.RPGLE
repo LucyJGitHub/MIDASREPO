@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057965           Date 28May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058526           Date 05Aug21               *
+      *  Prev Amend No. MD057965           Date 28May21
+      *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058526 - MT940 with incorrect Field 61 after SP23 Upgrade  *
+      *             (Recompile)                                       *
       *  MD057965 - Next Statement Date is set to 11months later when *
       *             MT940 statement frequency is 'E'                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

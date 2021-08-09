@@ -13,9 +13,15 @@
 /*                                                                   */                 /*CGL127AM*/
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+<<<<<<< HEAD
 /*       Last Amend No. AR568108           Date 23Aug10              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                  No. MD045372           Date 23May17              */
+=======
+/*       Last Amend No. AR568108           Date 16Apr19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD045372           Date 23May17              */
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
 /*                      CGL127AM           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -46,8 +52,13 @@
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*       AR568108 - GLC26 Failed. Copy EUPOSTPD only once. Pattern   */
+<<<<<<< HEAD
 /*                  fix to SC232773.                                 */
 /*                - Applied for MD-55555.                            */
+=======
+/*                  fix to SC232773                                  */
+/*                - Applied for MD-50913                             */
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045372 - Execute CGL010 process by a new component.       */
 /*       CGL127AM - COB Restructure - GL COB Optimisation Phase 1    */
@@ -351,7 +362,11 @@ LOOP:                                                                 /*CCB003*/
 /**/                                                                  /*CEU028*/
 /**  Add Records of PF/EUPOSTPD to PF/MANPOPD if CEU028 is installed  /*CEU028*/
 /**/                                                                  /*CEU028*/
+<<<<<<< HEAD
 /***END:***     IF         COND((&CEU028 *EQ 'Y') *AND +             */
+=======
+/***END:***     IF         COND((&CEU028 *EQ 'Y') *AND +             */                 /*AR568108*/
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
 /**********               (%SWITCH(XXXXXX00))) THEN(DO)              */          /*CEU028 AR568108*/
  END:        IF         COND((&CEU028 *EQ 'Y') *AND +
                           (%SWITCH(XXXXXX00)) *AND (&CSEQ *EQ 001)) +

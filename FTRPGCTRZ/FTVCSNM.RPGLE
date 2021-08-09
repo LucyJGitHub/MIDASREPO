@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051679           Date 09Nov18               *
+      *  Last Amend No. CDS100             Date 17Aug17               *
+      *  Prev Amend No. CDS103             Date 10Aug20               *
+      *                 MD051679           Date 09Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW213             Date 03Jun13               *
       *                 MD000091           Date 15May13               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDS100 - Patronymic and Gender fields for NON-account holder *
+      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051679 - Added clear before reading SDNOSTPD to ensure that*

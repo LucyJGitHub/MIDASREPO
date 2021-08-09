@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD026384           Date 25Jan18               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -103,6 +104,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026384 - Added generation by assignment processing.        *
+      *           - Applied for MD049367.                             *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
@@ -496,6 +499,9 @@
       ** Loan amendment in screen format - input fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
 
+      ** Loan amendment in screen format 2                                                  MD026384
+     D LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                                MD026384
+                                                                                            MD026384
       ** Current loan amendment in file format
      D CurFilLoam    E DS                  EXTNAME(LOAMSDK) PREFIX(CAM_)
 
@@ -5489,7 +5495,14 @@
      C                   MOVE      'M'           LAMNSG
       *
      C**********         MOVE      'N'           LAGASS                                       CLE106
+      *                                                                                     MD026384
+      ** GASS should be 'A' if generated from assignment else 'P'                           MD026384
+      *                                                                                     MD026384
+     C     DDGASS        IFEQ      'A'                                                      MD026384
+     C                   MOVE      DDGASS        LAGASS                                     MD026384
+     C                   ELSE                                                               MD026384
      C                   MOVE      'P'           LAGASS                                       CLE106
+     C                   ENDIF                                                              MD026384
       *
      C     DDATYP        IFEQ      'BC'
      C                   Z-ADD     BRTE          LABRTE
@@ -6057,6 +6070,10 @@
 
       ** Transaction information (DS) from source system  (screen format)
      C                   PARM                    LoamScnFmt
+      *                                                                                     MD026384
+      ** Transaction information 2                                                          MD026384
+      *                                                                                     MD026384
+     C                   PARM                    LoamSc2Fmt                                 MD026384
 
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam

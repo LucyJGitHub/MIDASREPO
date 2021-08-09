@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD058526           Date 05Aug21               *
+      *  Prev Amend No. FVT101             Date 07Oct16               *
+      *                 MD058285           Date 22Jun21               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD055642A          Date 27May20               *
       *                 CMG008             Date 20Feb20               *
@@ -55,8 +57,19 @@
       *                 CRE008             Date 24May02               *
       *                 CGL013  *CREATE    Date 17Apr02               *
       *                                                               *
-      *---------------------------------------------------------------*
+      *------------------------------------------------	---------------*
       *                                                               *
+      *  MD05826 - MT940 with incorrect Field 61 after SP23 Upgrade   *
+      *            (Recompile)                                        * 
+      *  FVT101  - Field 61 Enhancement on SWIFT Statement Messages   *
+      *          - Added hooks:                                       *
+      *             WNCPYSRC,FVT101004                                *
+      *             WNCPYSRC,FVT101005                                *
+      *             WNCPYSRC,FVT101006                                *
+      *             WNCPYSRC,FVT101007                                *
+      *             WNCPYSRC,FVT101008                                *
+      *             WNCPYSRC,FVT101009                                *
+      *             WNCPYSRC,FVT101010                                *    
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
       *           (Recompile)                                         *
@@ -124,6 +137,7 @@
       *                                                                                     BUG25147
      FGLMNARL1  IF   E           K DISK                      INFSR(*PSSR)                   BUG25147
       ** Midas GL Journal Entry - MultiCash - Retrieval.                                    BUG25147
+     F/COPY WNCPYSRC,FVT101004                                                                FVT101
      F/COPY WNCPYSRC,GLH00180
      FSDNTTIL0  IF   E           K DISK                      INFSR(*PSSR)                     CGL152
       ** Midas SD Network Transaction Identifier.                                             CGL152
@@ -410,6 +424,7 @@
      C                   IF        WkModuleID = 'FT'                            Fund Transfer
      C                   EXSR      $FT0325
      C                   ENDIF
+     C/COPY WNCPYSRC,FVT101010                                                                FVT101
 
       ** Format Field 61 / Sub field 6
 
@@ -615,6 +630,7 @@
      C                   ENDSL
       ** Override MGSFD6 if found to exist in SDNTTIPD                                        CGL152
      C                   EXSR      $CGL152SFld6                                               CGL152
+     C/COPY WNCPYSRC,FVT101006                                                                FVT101
      C/COPY WNCPYSRC,GLH00203
 
       *    --------      -----
@@ -706,6 +722,7 @@
                                                                                               CRE008
      C                   WHEN      WkModuleID = 'BA'                            Batch Input
      C                   EVAL      MGSFD8 = '//' + 'G' + GLSPOS
+     C/COPY WNCPYSRC,FVT101008                                                                FVT101
 
      C                   WHEN      WkModuleID = 'GL'                            General Ledger
      C                   EVAL      MGSFD8 = '//' + 'G' +  %SUBST(GLSPOS:3:5)
@@ -767,6 +784,7 @@
 
      C                   WHEN      WkModuleID = 'BA'                            Batch Input
      C                   EVAL      MGSFD9 = GLPNAR
+     C/COPY WNCPYSRC,FVT101009                                                                FVT101
 
       **  Fund transfer
 
@@ -1340,6 +1358,7 @@
      C                   IF        P@RTCD = *BLANKS                                           CGL152
      C                   EVAL      CGL152 = 'Y'                                               CGL152
      C                   ENDIF                                                                CGL152
+     C/COPY WNCPYSRC,FVT101005                                                                FVT101
                                                                                               CMG008
       ** Check if feature CMG008 is installed                                                 CMG008
                                                                                               CMG008

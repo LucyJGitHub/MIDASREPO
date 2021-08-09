@@ -15,11 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD034915           Date 26Aug20               *
       *                 MD046248           Date 27Oct17               *
+=======
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 MD035672           Date 07Sep15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -46,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
@@ -54,6 +60,11 @@
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *
+=======
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - Incorrect rate/spread (positive) is displayed.    *
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD046248 - Finastra Rebranding                               *
       *  MD035672 - Spread rate should be shown in spread rate field  *
       *             not in fixed rate field.                          *

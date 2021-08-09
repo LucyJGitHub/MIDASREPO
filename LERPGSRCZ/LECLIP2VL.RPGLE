@@ -11,11 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. MD042329           Date 04May21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD055219           Date 27May20               *
+=======
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD055219           Date 27May20               *
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -134,6 +139,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD042329 - Reject button is not working in loan.             *
       *           - Initialize CCLNIDT field at start of SRRSFD subr. *
@@ -141,6 +147,10 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
+=======
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate.                                    *
+>>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *           - DL ICD must not be used, removed unnecessary codes*
       *             of MD034449.                                      *
       *  MD055219 - Interest rate must not be zero for discount and   *

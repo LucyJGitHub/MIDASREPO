@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD050526           Date 27Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER074             Date 11Aug17               *
+      *  Prev Amend No. MD050526           Date 27Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL132             Date 15Mar13               *
       *                 AR855391           Date 27Oct11               *
       *                 CSD091             Date 04Jun11               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER074 - New Authority Holder Link Types but Exclude from KWG*
+      *           24c Reporting (Recompile)                           *      
       *  MD050526 - Maintain Customers tab Authority Holders Link and *
       *             Details by Country of Tax code not shown in red   *
       *             in case of errors                                 *

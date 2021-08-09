@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250822             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. FVT106             Date 22Jul20               *
+      *  Prev Amend No. CER075             Date 14Sep17               *
+      *                 250822             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
@@ -85,6 +87,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account Re-opening    *
+      *           Amendment of core hook GLAMA1VC07                   *
+      *           Amendment of core hook GLAMAD1V18                   *
+      *           Amendment of core hook GLAMAD1V19                   *
+      *  CER075 - KWG 24c Reporting Branch Enhancement                *
       *  250822 - Next Statement date is incorrect.  Ensure that      *
       *           DnxtSDat is always called to calculate value based  *
       *           on Frequency and/or Next Statement Day.             *
@@ -2553,6 +2560,8 @@
      C                   PARM                    WMsgDtXAr                                  BUG24157
       * KWG §24c reporting Y/N - Ok Flag                                                    BUG24157
      C                   PARM                    DD24COK                                    BUG24157
+      ** Branch                                                                               CER075
+     C                   PARM                    DDBRCA                                       CER075
                                                                                             BUG24157
       * Update error info with that returned from the validation module                     BUG24157
                                                                                             BUG24157

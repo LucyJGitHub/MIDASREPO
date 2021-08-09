@@ -44,10 +44,10 @@
       *                                                               *
       *****************************************************************
 
-      * Base rate codes (Keyed by currency code and base rate code)
-     FSDBSRTL0  IF   E           K DISK
-     F                                     INFSR(*pssr)
-
+      * Base rate codes (Keyed by currency code and base rate code)                           CIR020
+     FSDBSRTL0  IF   E           K DISK                                                       CIR020
+     F                                     INFSR(*pssr)                                       CIR020
+                                                                                              CIR020
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -128,14 +128,14 @@
 
       ** Transaction type                                                                     CIR020
      D Transtyp        S              2A                                                      CIR020
-
+                                                                                              CIR020
      D PRtCd           S              7A                                                      CIR020
-     D POptn           S              7A                                                      COR020
+     D POptn           S              7A                                                      CIR020
      D PSard           S              6A                                                      CIR020
                                                                                               CIR020
       ** Switchable Feature                                                                   CIR020
      D CSD103          S              1A                                                      CIR020
-
+                                                                                              CIR020
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -243,7 +243,7 @@
      C                   PARM                    SUCUCY
      C                   PARM                    SUCUCYok
      C                   PARM                    SDBSRT
-     C                   PARM                    Transtyp
+     C                   PARM                    Transtyp                                     CIR020
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

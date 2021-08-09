@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058102           Date 09Jun21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD058222           Date 08Jul21               *
+      *  Prev Amend No. MD058102           Date 09Jun21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 241243             Date 07Mar08               *
       *                 MD021335           Date 17Jan14               *
@@ -298,6 +299,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058222 - Interest payment not displayed on LOAC with zero  *
+      *             amount. Introduce system value ZeroFutIntPayInLOAC*
+      *             which determines whether to display or to suppress*
+      *             future interest payment event with zero amount in *
+      *             LOAC. Options for system value setting:           *
+      *             1. Y - display zero future interest payment, or   *
+      *             2. N - suppress zero future interest payment.     *
       *  MD058102 - Base rate code change on LOAMSDK and HISTSHQ does *
       *             not display negative base rates correctly. Display*
       *             '-' if negative for BC event. Pattern after fix   *
@@ -1430,6 +1438,7 @@
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I              'RepayDateOnMaturity 'C         WPARMM                                  MD045091
      I              'PDCLPAMVPIAC'        C         AOPIAC                                  MD050018
+     I              'ZeroFutIntPayInLOAC' C         AOZRIN                                  MD058222
       *                                                                                     MD050018
      I/COPY ZSRSRC,ZINTDYZ1
      I/COPY ZSRSRC,ZDATE9Z2
@@ -7499,6 +7508,12 @@
      C           NIDT      IFGE WDTIN
      C           WINTR     ANDGT*ZEROS
      C           VSLN      ANDLT20                                                           BUG4318
+     C           NIDT      ORGE WDTIN                                                       MD058222
+     C           WINTR     ANDEQ*ZEROS                                                      MD058222
+     C           VSLN      ANDLT20                                                          MD058222
+     C           REPT      ANDEQ2                                                           MD058222
+     C           CPAM      ANDNE*ZEROS                                                      MD058222
+     C           WKZRIN    ANDEQ'Y'                                                         MD058222
      C           WCDIN     IFEQ *BLANK
      C           WCDIN     OREQ 'B'
      C           NIDT      ANDLTRUND
@@ -10049,6 +10064,8 @@
      C           CLE134    IFEQ 'Y'                                                         MD050018
      C                     MOVELAOPIAC    SVALK2                                            MD050018
      C                     ENDIF                                                            MD050018
+     C                     MOVE *BLANKS   SVALK3                                            MD058222
+     C                     MOVELAOZRIN    SVALK3                                            MD058222
       *                                                                                     MD045091
      C                     CALL 'AOSVALR0'                                                  MD045091
      C                     PARM           RTNCDE                                            MD045091
@@ -10083,6 +10100,7 @@
      C                     ELSE                                                             MD045091
      C                     MOVELSVAL1     REDATM  1                                         MD045091
      C                     MOVELSVAL2     WKPIAC  1                                         MD050018
+     C                     MOVELSVAL3     WKZRIN  1                                         MD058222
      C                     ENDIF                                                            MD045091
       *
      C/COPY WNCPYSRC,LE0212C013

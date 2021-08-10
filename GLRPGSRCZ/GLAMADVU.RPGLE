@@ -151,7 +151,7 @@
       *                                                               *
       *  FVT106 - Automatic Account Closure and Account re-opening    *
       *           Addition of hooks: FVT106_006 to FVT106_010         *
-      *           Amendment of core hook GLH00652                     *
+      *           Amendment of core hook GLH00652.                    *
       *  MD039577 - Account maintenance - Account name different from *
       *  MD058101 - Default error Fixed commission default. Amend to  *
       *             default only when account type is Retail Account. *

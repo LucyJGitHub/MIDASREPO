@@ -125,7 +125,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
+      *  MD057871 - Allow a blank Floor when calling ARR Calculator.  *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *

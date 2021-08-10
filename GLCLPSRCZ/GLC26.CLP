@@ -46,7 +46,7 @@
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*       AR568108 - GLC26 Failed. Copy EUPOSTPD only once. Pattern   */
-/*                  fix to SC232773.                                 */
+/*                  fix to SC232773                                  */
 /*                - Applied for MD-55555.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045372 - Execute CGL010 process by a new component.       */

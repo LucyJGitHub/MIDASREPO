@@ -56,7 +56,7 @@
       *                                                               *
       *  MD026384 - Added generation by assignment processing.        *
       *             Recompiled due to changes in LELOA2PD.            *
-      *           - Applied for MD049367.                             *
+      *           - Applied for MD049367                              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

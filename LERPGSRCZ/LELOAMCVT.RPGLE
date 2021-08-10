@@ -46,7 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *

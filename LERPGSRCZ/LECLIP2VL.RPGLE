@@ -134,7 +134,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending.                       *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD042329 - Reject button is not working in loan.             *
       *           - Initialize CCLNIDT field at start of SRRSFD subr. *
       *           - Applied for MD056624.                             *

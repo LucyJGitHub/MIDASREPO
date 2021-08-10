@@ -34,8 +34,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058101           Date 24May21               *
-      *  Prev Amend No. 250822             Date 22May20               *
+      *  Last Amend No. FVT106             Date 20Jul20               *
+      *  Prev Amend No. MD039577           Date 08Jul16               *
+      *                 MD058101           Date 24May21               *
+      *                 250822             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR979910           Date 07Jun12               *
       *                 260405             Date 04Apr20               *
@@ -147,6 +149,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks: FVT106_006 to FVT106_010         *
+      *           Amendment of core hook GLH00652.                    *
+      *  MD039577 - Account maintenance - Account name different from *
       *  MD058101 - Default error Fixed commission default. Amend to  *
       *             default only when account type is Retail Account. *
       *  250822 - Commented-out /cpy GLAMADSMV1 as this is irrelevant *
@@ -1067,12 +1073,15 @@
      C                   EXSR      ValidateBOE                                              MD044880
                                                                                              BUG9141
      C                   WHEN         DDACTN = 'D'                                           BUG9141
+     C/COPY WNCPYSRC,FVT106_006                                                               FVT106
       ***Processing*for*Inserts                                                     BUG9141 MD024398
       *  Processing for Deletes - set up field values from file to prevent                  MD024398
       *  failures in validation                                                             MD024398
      C                   EXSR      SetupAmd                                                 MD024398
      C                   MOVEL     CurAcMast     AccnInMast                                 MD024398
+     C/COPY WNCPYSRC,FVT106_007                                                               FVT106
      C                   EVAL      DDACTN = 'D'                                             MD024398
+     C/COPY WNCPYSRC,FVT106_008                                                               FVT106
      C                   MOVEL     CurAcDebi     AccnInDebi                                 MD024398
      C                   MOVEL     CurAcCred     AccnInCred                                 MD024398
      C                   MOVEL     CurAcComm     AccnInComm                                 MD024398
@@ -1801,6 +1810,7 @@
       *
       *
      C                   MOVEL     DDCCY         CCY                                          240916
+     C                   MOVEL     BBCRNM        DDANAM                                     MD039577
      C                   MOVE      DDSTFQ        NDDSTFQ                                    MD042713
       *                                                                                     BUG13639
       ** Do not execute GLAMAD4DT when currency code is blanks,                             BUG13639
@@ -2584,6 +2594,7 @@
 
       * Set Valid file field for a delete.
      C                   IF        DDACTN = 'D'
+     C/COPY WNCPYSRC,FVT106_009                                                               FVT106
      C                   EVAL      ValidAccn = AccnFilFmt
      C                   MOVEL     ExCOFilFmt    ValidExCO                                   BUG4252
      C                   MOVEL     ExPWFilFmt    ValidExPW                                   BUG4252
@@ -2620,6 +2631,7 @@
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      V_AMAUTH = IF_AUTH                                         CAP086
      C                   ENDIF                                                                CAP086
+     C/COPY WNCPYSRC,FVT106_010                                                               FVT106
 
      C                   ENDSR
       *****************************************************************

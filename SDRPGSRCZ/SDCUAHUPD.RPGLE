@@ -29,6 +29,7 @@
       *                                                               *
       *  MD057294 - Missing Customer's Authority Holders Link after   *
       *             amend                                             *
+      *             Applied for MD-57680.                             * 
       *  MD053634 - Requested Customer “Authority Holders Link Report *
       *             for KWG$24c” not generated.                       *
       *  MD046248 - Finastra Rebranding                               *

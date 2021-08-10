@@ -25,7 +25,7 @@
       *                                                               *
       *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
-      *             the credit goes to the Account with Bank          *
+      *             the credit goes to the Account with Bank.         *
       *  MD056303 - Format error for Field 79 Line 3                  *
       *  MD056187 - Charges was deducted in the amount for MT199      *
       *             On Hold                                           *

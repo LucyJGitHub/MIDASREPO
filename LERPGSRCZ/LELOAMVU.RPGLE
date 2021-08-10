@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057922           Date 04May21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD026384           Date 25Jan18               *
+      *  Prev Amend No. MD057922           Date 04May21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD024811           Date 24Jan20               *
       *                 MD029046           Date 27Nov19               *
@@ -103,6 +104,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026384 - Added generation by assignment processing.        *
+      *           - Applied for MD049367.                             *
       *  MD057922 - SSI details are not defaulted on Loan Events.     *
       *             Ensure correct defaulting of Customer's SSI or    *
       *             Associated Loan during Loan Events (PI)           *
@@ -1455,6 +1458,10 @@
 
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    TranInLOAM
+      *                                                                                     MD026384
+      ** Secondary transaction information                                                  MD026384
+      *                                                                                     MD026384
+     C                   PARM                    TranInLOA2                                 MD026384
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

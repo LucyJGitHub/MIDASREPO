@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD057760           Date 01Apr21               *
-      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *  Last Amend No. FVT104             Date 11Dec18               *
+      *  Prev Amend No. MD057760           Date 01Apr21               *
+      *                 MD056838           Date 01Oct20               *
       *                 AR1095148          Date 07May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT104 - 4-Eyes Principle for Journal Upload Tool.           *
+      *           Added hooks : FVT104_001; FVT104_002;               *
+      *                         FVT104_003; FVT104_004;               *
+      *                         FVT104_005                            *
       *  MD057760 - Add error details in GL001601P1 report.           *
       *  MD056838 - Amend SFNUM type to packed decimal                *
       *  AR1095148 - Verify that currencies are in balance.           *
@@ -332,6 +337,8 @@
      C                   READ      GLJEIHL1
       *
      C                   DOW       NOT %EOF(GLJEIHL1)
+      *                                                                                       FVT104
+     C/COPY WNCPYSRC,FVT104_001                                                               FVT104
       *
       ** Reset the values
       *
@@ -350,6 +357,8 @@
      C                   IF        %FOUND(GLJEIPL1)                                         BUG26406
      C                   EXSR      SRProcsBcno
      C                   ENDIF                                                              BUG26406
+      *                                                                                       FVT104
+     C/COPY WNCPYSRC,FVT104_002                                                               FVT104
       *
      C                   READ      GLJEIHL1
      C                   ENDDO
@@ -627,9 +636,14 @@
       ** Override status with the system value
 
      C                   IF        PSVal1 <> *BLANKS
+      *                                                                                       FVT104
+     C/COPY WNCPYSRC,FVT104_003                                                               FVT104
+      *                                                                                       FVT104
      C**********                   and %LOOKUP('Y':ErrFlg) = 0                     BUG25452 BUG26086
      C                   EVAL      BRBTSF = PSVal1
      C**********         Else                                                      BUG25452 BUG26086
+      *                                                                                       FVT104
+     C/COPY WNCPYSRC,FVT104_004                                                               FVT104
      C                   ENDIF                                                              BUG26086
                                                                                             BUG26086
      C                   IF        %LOOKUP('Y':ErrFlg) <> 0                                 BUG26086
@@ -994,6 +1008,9 @@
      C                   MOVEL     'Y'           CGL016                                     BUG25187
      C                   ENDIF                                                              BUG25187
                                                                                             BUG25187
+      *                                                                                       FVT104
+     C/COPY WNCPYSRC,FVT104_005                                                               FVT104
+      *
      C                   ENDSR
       *****************************************************************
       /EJECT

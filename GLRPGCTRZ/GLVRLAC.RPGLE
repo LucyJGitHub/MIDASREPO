@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR939238           Date 23Apr12               *
+      *  Last Amend No. FVT106             Date 20Jul20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR939238           Date 23Apr12               *
       *                 AR1001991          Date 06Aug12               *
       *                 CRE114             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks FVT106_019 to FVT106_020          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR939238 - Array Index Error whenever during retail account  *
@@ -725,6 +728,7 @@
       ** IF ACCOUNT FOUND IT CANNOT BE FLAGGED FOR CLOSURE
      C     RECI          IfEq      '*'
      C     DACC          ORNE      0
+     C/COPY WNCPYSRC,FVT106_020                                                     FVT106
      C                   Move      'N'           DDCUSNOk
      C                   Move      'N'           DDCcyOk
      C                   Move      'N'           DDACodOk
@@ -1372,6 +1376,7 @@
      C                   Parm      '*FIRST'      @OPTN                                        CRE114
      C     SDBANK        Parm                    DSFDY                                        CRE114
      C                   EndIf                                                                CRE114
+     C/COPY WNCPYSRC,FVT106_019                                                     FVT106
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD048975           Date 08Jan18               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD029248           Date 22Aug14               *
       *                 MD055733           Date 03Jul20               *
       *                 AR927395           Date 05Aug13               *
@@ -123,6 +124,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048975 - Duplicated shadow movement in PAMV after          *
+      *             input/authorise MR for PDCL                       * 
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD029248 - Move interest amount for projection of risk loans *
@@ -912,6 +915,7 @@
      D CurArr          S              3    DIM(10)                                            CLE141
      D LocArr          S              3    DIM(10)                                            CLE141
      D PPDDI           S              1                                                       CLE141
+     D UpdateRSAC      S              1A   INZ('N')                                         MD048975     
       *
       /EJECT
       *    =============
@@ -1240,6 +1244,8 @@
 
      C                   EVAL      MR_PTRF = MRPCRF                                          CSF011A
                                                                                              CSF011A
+     C                   EVAL      UpdateRSAC = 'Y'                                         MD048975
+                                                                                            MD048975
       ***  Ensure that details used for update are right
       ***  - if so, bypass updating and return to calling program.
 
@@ -1436,6 +1442,7 @@
                                                                                              BUG4325
       ** If authorise mode, do not update the last change type                               BUG7348
      C                   If        MRCHTP = 'X'                                              BUG7348
+     C                   Eval      UpdateRSAC = 'N'                                         MD048975
      C                   Eval      MRCHTP = CHTP                                             BUG7348
      C                   EndIf                                                               BUG7348
       *                                                                                      BUG7348
@@ -5383,6 +5390,8 @@
      C                   MOVE      WSETT         SHTIST                                     MD023787
      C                   MOVE      Z#ADTA        Z#ADT1                                     MD023787
      C     WWACTN        IFEQ      'R'                                                      MD023787
+     C     WWACTN        OREQ      'A'                                                      MD048975
+     C     UpdateRSAC    OREQ      'N'                                                      MD048975
      C                   MOVE      Z#ADTA        Z#BDT1                                     MD023787
      C                   ENDIF                                                              MD023787
      C                   MOVE      'Y'           PDCLI                                      MD023787

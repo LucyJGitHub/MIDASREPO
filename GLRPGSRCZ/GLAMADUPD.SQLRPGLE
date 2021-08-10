@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 262263             Date 18Dec09               *
+      *  Last Amend No. FVT106             Date 16Sep20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 262263             Date 18Dec09               *
       *                 AR891357A          Date 12Mar20               *
       *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
@@ -139,6 +140,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks: FVT106_021 and FVT106_022        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
       *           Initialised the fields to zero for ATYP <> R.       *
@@ -3002,6 +3005,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      AC_DCSP = *ZEROS                                           CRE073
      C                   EVAL      AC_CCSP = *ZEROS                                           CRE073
      C                   ENDIF                                                                CRE073
+     C/COPY WNCPYSRC,FVT106_022                                                               FVT106
       *                                                                                       CRE073
       ** UPDATE Account
      C                   UPDATE    ACCNTABF
@@ -7068,6 +7072,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   Eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
+     C/COPY WNCPYSRC,FVT106_021                                                               FVT106
      C                   ENDSR
      C****************************************************************
       /EJECT

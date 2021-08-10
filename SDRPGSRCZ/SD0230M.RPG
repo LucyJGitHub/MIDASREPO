@@ -12,12 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL087             Date 04May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -30,6 +31,12 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
+      *           Upgrade to FM 2.1 20201.A                           *
+      *           Upgrade with fix AR1097429                          *
+      *    AR1097429 - Add processing to CDL087 in order to allow     *
+      *                Insertion, Update and Deletion of Extension    *
+      *                file                                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSD003 - Synon Closedown Project (SD):                       *
@@ -72,6 +79,14 @@
       * UPD : Midas SD Standing data controls update
       *
      F/COPY WNCPYSRC,SD0230MF01
+     FSDCOMPY1IF  E           K        DISK                                                   CDL087
+     F**********************************************KCOMIT                          CDL087 AR1097429
+     FSDCURRL0IF  E           K        DISK                                                   CDL087
+      *                                                                                       CDL087
+     FSDCOMPY2UF  E           K        DISK                      A                         AR1097429
+     F            SDCOMPD1                          KRENAMESDCOMY2                         AR1097429
+     F                                              KCOMIT                                 AR1097429
+      *                                                                                       CDL087
      E* Description     : Copyright notice for inclusion in all programs
      E*
      E********************************************************************
@@ -106,6 +121,13 @@
      I@1DBRC    E DSSDCOMPL1
       * UPD : Midas SD Company codes update
      I/COPY WNCPYSRC,SD0230MI01
+     I*                                                                                       CDL087
+     ISDBANK    E DSSDBANKPD                                                                  CDL087
+     I* DS FOR BANK DETAILS                                                                   CDL087
+     I*                                                                                       CDL087
+     IDSFDY     E DSDSFDY                                                                     CDL087
+     I* DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                          CDL087
+     I*                                                                                       CDL087
       * Current/previous master file format fields for change control
       *
      IQSDFC1    E DSSDFCTLL0
@@ -205,6 +227,15 @@
       * Initialize
      C                     EXSR ZZINIT
      C/COPY WNCPYSRC,SD0230MC13
+      *                                                                                       CDL087
+     C                     CALL 'AOBANKR0'                                                    CDL087
+     C                     PARM '*DBERR ' @RTCD   7                                           CDL087
+     C                     PARM '*FIRST ' @OPTN   7                                           CDL087
+     C           SDBANK    PARM SDBANK    DSFDY                                               CDL087
+      *                                                                                       CDL087
+     C           @RTCD     IFNE *BLANKS                                                       CDL087
+     C                     GOTO LREND                                                         CDL087
+     C                     END                                                                CDL087
       *
      C                     DO   *HIVAL
       * Initialise and load subfile page
@@ -228,6 +259,8 @@
      C                     END
      C                     END
      C/COPY WNCPYSRC,SD0230MC14
+      *                                                                                       CDL087
+     C           LREND     TAG                                                                CDL087
       *****************************************************************
       /EJECT
      CSR         BAIZSF    BEGSR
@@ -324,6 +357,7 @@
      C                     MOVEAWKIND0    *IN,32
      C/COPY WNCPYSRC,SD0230MC15
      C                     SETOF                     87    *
+     C                     SETOF                     35                                       CDL087
       * Clear subfile fields
      C                     EXSR MAIZ#1
       * If CHANGE mode, load subfile fields
@@ -332,6 +366,10 @@
       * Validate subfile record and calculate derived fields
      C                     EXSR DFV2RC
      C/COPY WNCPYSRC,SD0230MC16
+      *                                                                                       CDL087
+      * Retrieve Local Base Currency Code                                                     CDL087
+     C                     EXSR GCLBCY                                                        CDL087
+      *                                                                                       CDL087
      C                     END
       * Output to subfile
      C                     ADD  1         ##RROK     81    *
@@ -480,6 +518,7 @@
       * Set off error indicators
      C                     MOVEAWKIND0    *IN,32
      C/COPY WNCPYSRC,SD0230MC31
+     C                     SETOF                     35                                       CDL087
       * No errors
      C                     SETOF                     98
       * No SFLNXTCHG
@@ -503,6 +542,10 @@
       * Validate subfile record
      C                     EXSR DEV1RC
      C/COPY WNCPYSRC,SD0230MC17
+      *                                                                                       CDL087
+      * Validate Local Base Ccy                                                               CDL087
+     C                     EXSR DGLBCY                                                        CDL087
+      *                                                                                       CDL087
       * If SFLRCD invalid, note the fact
      C   98N99             Z-ADD##RR      ##SFRC     99    *
       *================================================================
@@ -574,6 +617,26 @@
       *================================================================
      CSR         DFEXIT    ENDSR
      C/COPY WNCPYSRC,SD0230MC18
+      /EJECT                                                                                  CDL087
+     CSR         DGLBCY    BEGSR                                                              CDL087
+      *================================================================                       CDL087
+      * Validate Currency                                                                     CDL087
+      *================================================================                       CDL087
+     C           #1LBCY    IFEQ *BLANKS                                                       CDL087
+     C                     MOVELBJCYCD    #1LBCY                                              CDL087
+     C                     ELSE                                                               CDL087
+      *                                                                                       CDL087
+     C           #1LBCY    CHAINSDCURRL0             95                                       CDL087
+     C           *IN95     IFEQ '1'                                                           CDL087
+     C                     SETON                     3598                                     CDL087
+     C                     MOVEL'SGX0066' ZAMSID                                              CDL087
+     C                     MOVEL'XXUSRMSG'ZAMSGF                                              CDL087
+     C                     EXSR ZASNMS                                                        CDL087
+     C                     END                                                                CDL087
+     C                     END                                                                CDL087
+      *                                                                                       CDL087
+      *============================================================                           CDL087
+     CSR         DGEXIT    ENDSR                                                              CDL087
       /EJECT
      CSR         EAPRSF    BEGSR
       *================================================================
@@ -617,6 +680,7 @@
       * Set off error indicators
      C                     MOVEAWKIND0    *IN,32
      C/COPY WNCPYSRC,SD0230MC19
+     C                     SETOF                     35                                       CDL087
      C                     SETOF                     98
       *
      C           W0PMD     IFEQ 'ADD'
@@ -624,6 +688,9 @@
      C           #1SEL     IFNE 'D'
      C                     EXSR DDNLRC
      C/COPY WNCPYSRC,SD0230MC20
+      *                                                                                       CDL087
+     C*                    EXSR DGLBCY                                                        CDL087
+      *                                                                                       CDL087
      C           W0NLR     IFNE 'Y'
      C                     EXSR ECADRQ
      C                     END
@@ -658,6 +725,7 @@
       * Screen errors
      C                     MOVEAWKIND1    *IN,32
      C/COPY WNCPYSRC,SD0230MC21
+     C                     SETON                     35                                       CDL087
       * Format error
      C                     SETON                     98    *
       * Enable entry
@@ -686,6 +754,7 @@
       * Screen errors
      C                     MOVEAWKIND1    *IN,32
      C/COPY WNCPYSRC,SD0230MC22
+     C                     SETON                     35                                       CDL087
       * Format error
      C                     SETON                     98    *
       * Enable entry
@@ -696,6 +765,14 @@
      C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
      C                     END
      C                     ELSE
+      *================================================================                    AR1097429
+      * Delete Extension file                                                              AR1097429
+      *================================================================                    AR1097429
+     C           APCMCD    CHAINSDCOMPY2             93                                    AR1097429
+     C           *IN93     IFEQ '0'                                                        AR1097429
+     C                     DELETSDCOMY2                                                    AR1097429
+     C                     ENDIF                                                           AR1097429
+      *                                                                                    AR1097429
       * DBF delete successful
       * Blank out record and protect from entry
      C                     EXSR MAIZ#1
@@ -721,7 +798,8 @@
       * Screen errors
      C                     MOVEAWKIND1    *IN,32
      C/COPY WNCPYSRC,SD0230MC23
-      * Format error
+     C                     SETON                     35                                       CDL087
+      * FORMAT ERROR
      C                     SETON                     98    *
       * Enable entry
      C                     SETOF                     87    *
@@ -784,6 +862,23 @@
       *================================================================
      CSR         GBEXIT    ENDSR
      C/COPY WNCPYSRC,SD0230MC24
+      /EJECT
+     CSR         GCLBCY    BEGSR
+      *================================================================
+      * Retrieve Local Base Currency Code
+      *================================================================
+     C           APCMCD    CHAINSDCOMPY1             93
+     C           *IN93     IFEQ '0'
+     C                     MOVE GLBCY     #1LBCY
+     C                     ELSE
+     C                     SETON                     3598
+     C                     MOVEL'SGX0067' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE *BLANKS   #1LBCY
+     C                     END
+      *================================================================
+     CSR         GCEXIT    ENDSR
       /EJECT
      CSR         MAIZ#1    BEGSR
       *================================================================
@@ -862,6 +957,20 @@
      C                     MOVEL'Y2U0004' W0RTN   7
      C                     ELSE
      C/COPY WNCPYSRC,SD0230MC08
+      *================================================================                    AR1097429
+      * Write to Extension file                                                            AR1097429
+      *================================================================                    AR1097429
+     C           APCMCD    CHAINSDCOMPY2             93                                    AR1097429
+     C           *IN93     IFEQ '1'                                                        AR1097429
+     C                     MOVE #1LBCY    GLBCY                                            AR1097429
+     C                     MOVE APCMCD    GCMPD                                            AR1097429
+     C                     WRITESDCOMY2                                                    AR1097429
+     C                     ELSE                                                            AR1097429
+     C                     MOVE #1LBCY    GLBCY                                            AR1097429
+     C                     MOVE APCMCD    GCMPD                                            AR1097429
+     C                     UPDATSDCOMY2                                                    AR1097429
+     C                     ENDIF                                                           AR1097429
+      *                                                                                    AR1097429
       * USER: Processing after Data update
      C                     Z-ADD1         WUNORC           No. of Records
      C                     Z-ADD*ZERO     WUNOAM           No. of Amends
@@ -1241,6 +1350,20 @@
       * If changed update record otherwise release record
      C           YCRDC     IFEQ 'Y'
      C                     UPDAT@APREB4                91  *
+      *================================================================                    AR1097429
+      * Update Extension file                                                              AR1097429
+      *================================================================                    AR1097429
+     C           APCMCD    CHAINSDCOMPY2             93                                    AR1097429
+     C           *IN93     IFEQ '1'                                                        AR1097429
+     C                     MOVE #1LBCY    GLBCY                                            AR1097429
+     C                     MOVE APCMCD    GCMPD                                            AR1097429
+     C                     WRITESDCOMY2                                                    AR1097429
+     C                     ELSE                                                            AR1097429
+     C                     MOVE #1LBCY    GLBCY                                            AR1097429
+     C                     MOVE APCMCD    GCMPD                                            AR1097429
+     C                     UPDATSDCOMY2                                                    AR1097429
+     C                     ENDIF                                                           AR1097429
+      *                                                                                    AR1097429
      C                     ELSE
       * Release record lock
      C                     UNLCKSDCOMPL1               91  *

@@ -12,8 +12,10 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0010 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034502           Date 25May15               *
+      *  Last Amend No. CDL086             Date 04May21               *
+      *  Prev Amend No. AR1014698          Date 04May21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034502           Date 25May15               *
       *                 CGL049             Date 17Feb15               *
       *                 MD022412           Date 16Sep13               *
       *                 CGL120             Date 06Aug12               *
@@ -66,6 +68,11 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CDL086 - Portuguese FX Revaluation Extensions                *
+      *           Upgrade to FM 2.1 20201.A with AR1014698.           *
+      *    AR1014698 - Reconciliation issues with Midas R4 system     *
+      *                (Child: AR1014700). Upgrade LBM001 as part of  *
+      *                CDL086.                                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034502 - FB Midas 2.1 SP8 Drop3 COB issues                 *
       *  CGL049   - Separate Out Processing of Spot Reval and FX Tfr  *
@@ -244,6 +251,10 @@
      F***GLSTTRL3IS  F     160  1AI     1 DISK                                       CER049 AR889490
      FGLSTTRL1  IS   F  160     1AIDISK    KEYLOC(1)                                        AR889490
      F/COPY WNCPYSRC,GL0400F001
+     FGLGESPV2  IS   F  620     1AIDISK    KEYLOC(1)                                       AR1014698
+     F                                     EXTIND(*INU2)                                   AR1014698
+     FGLGESPV3  IS   F  160     1AIDISK    KEYLOC(1)                                       AR1014698
+     F                                     EXTIND(*INU2)                                   AR1014698
 0020 F* 01            RATE CHANGE RECORD
 0021 F* 02            ITEMS IN CLEARING
 0022 F* 03            ACCOUNT POSTINGS RECORD
@@ -289,6 +300,7 @@
      D**********          TRI         5 15 0             TRLRS-INT                            CER049
      D**********          TRD         5  3 0             TRLRS-DEC                            CER049
      D**********          NARR    1   5 35               POST NAME                            CER049
+     D*
      D*INN             S              5  0 DIM(6)                               CALC-NO       CGL049
      D*INI             S             15  0 DIM(6)                               CALC-INT      CGL049
      D*IND             S              3  0 DIM(6)                               CALC-DEC      CGL049
@@ -296,13 +308,20 @@
      D*TRI             S             15  0 DIM(6)                               TRLRS-INT     CGL049
      D*TRD             S              3  0 DIM(6)                               TRLRS-DEC     CGL049
      D*NARR            S             35    DIM(6) CTDATA PERRCD(1)              POST NAME     CGL049
-     D INN             S              5  0 DIM(7)                               CALC-NO       CGL049
-     D INI             S             15  0 DIM(7)                               CALC-INT      CGL049
-     D IND             S              3  0 DIM(7)                               CALC-DEC      CGL049
-     D TRN             S              5  0 DIM(7)                               TRLRS-NO      CGL049
-     D TRI             S             15  0 DIM(7)                               TRLRS-INT     CGL049
-     D TRD             S              3  0 DIM(7)                               TRLRS-DEC     CGL049
-     D NARR            S             35    DIM(7) CTDATA PERRCD(1)              POST NAME     CGL049
+     D*INN             S              5  0 DIM(7)                               CALC-NOCGL049 CDL087
+     D*INI             S             15  0 DIM(7)                               CALC-INCGL049 CDL087
+     D*IND             S              3  0 DIM(7)                               CALC-DECGL049 CDL087
+     D*TRN             S              5  0 DIM(7)                               TRLRS-NCGL049 CDL087
+     D*TRI             S             15  0 DIM(7)                               TRLRS-ICGL049 CDL087
+     D*TRD             S              3  0 DIM(7)                               TRLRS-DCGL049 CDL087
+     D*NARR            S             35    DIM(7) CTDATA PERRCD(1)              POST NACGL049 CDL087
+     D INN             S              5  0 DIM(8)                               CALC-NO       CDL087
+     D INI             S             15  0 DIM(8)                               CALC-INT      CDL087
+     D IND             S              3  0 DIM(8)                               CALC-DEC      CDL087
+     D TRN             S              5  0 DIM(8)                               TRLRS-NO      CDL087
+     D TRI             S             15  0 DIM(8)                               TRLRS-INT     CDL087
+     D TRD             S              3  0 DIM(8)                               TRLRS-DEC     CDL087
+     D NARR            S             35    DIM(8) CTDATA PERRCD(1)              POST NAME     CDL087
 0119 D*
      D*     LOCAL DATA AREA
      D LDA            UDS           256
@@ -916,6 +935,27 @@
      I                             P   15   16 0ZZDEC                                         CER049
      I          NS  09                                                                        CER049
      I/COPY WNCPYSRC,GL0400I012
+     I*                                                                                    AR1014698
+     IGLGESPV2  NS  03    1 CP                                                             AR1014698
+     I                             P   74   80 3PSTA                                       AR1014698
+     I                                  1  331  ACPRC                                      AR1014698
+     I                                128  128  PRIN                                       AR1014698
+     I                                131  134  PRFC                                       AR1014698
+     I                                231  240  OTST                                       AR1014698
+     I                                241  250  OTTP                                       AR1014698
+     I                             P  251  258 0SDCB                                       AR1014698
+     I                             P  259  266 0SDLB                                       AR1014698
+     I                                267  268  BOKC                                       AR1014698
+     I                                590  599 0ACOD                                       AR1014698
+     I                                600  620  OTRF                                       AR1014698
+     I          NS  09                                                                     AR1014698
+     I*                                                                                    AR1014698
+     IGLGESPV3  NS  13    1 CT                                                             AR1014698
+     I         OR         1 CZ                                                             AR1014698
+     I                                  2    6 0NORE                                       AR1014698
+     I                             P    7   14 0ZZINT                                      AR1014698
+     I                             P   15   16 0ZZDEC                                      AR1014698
+     I          NS  09                                                                     AR1014698
       *                                                                                     AR910445
       **  Switchable Features Details                                                       AR910445
       *                                                                                     AR910445
@@ -1075,6 +1115,13 @@
      C*
      C*    IF END OF SET OF ACPO TRAILERS
      C/COPY WNCPYSRC,GL0400C003
+     C*                                                                                    AR1014698
+     C** IF GLGESPV3 RECORD READ - SET FLAG                                                AR1014698
+     C*                                                                                    AR1014698
+     C     *IN13         IFEQ      '1'                                                     AR1014698
+     C                   MOVE      'Y'           @FLG              1                       AR1014698
+     C                   END                                                               AR1014698
+     C*                                                                                    AR1014698
      C***41*****                                                                              CGL120
      C***ANN04**                                                                              CGL120
      C***ANN06**                                                                              CGL120
@@ -1087,6 +1134,7 @@
      CANN08
      CANN10
      CANN12                                                                                   CER049
+     CANN13                                                                                AR1014698
      CANN14              SETOFF                                           41                  CER049
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0400CCPG                                           S01408
@@ -1172,6 +1220,7 @@
      C   12              Z-ADD     5             P
      C   14              Z-ADD     6             P                                            CER049
      C/COPY WNCPYSRC,GL0400C004
+     C   13              Z-ADD     8             P                                         AR1014698
 0158 C*
       *                                                                                     BUG23102
       ** Add/Deduct to/from INPUT only if not zero and put back                             BUG23102
@@ -1275,6 +1324,13 @@
      CLR                 ENDIF                                                              MD034502
                                                                                             MD022412
      C/COPY WNCPYSRC,GL0400C005
+      *
+      ** PROCESS TRAILER GLGESPV3                                                          AR1014698
+      *                                                                                    AR1014698
+     CLR   @FLG          IFEQ      'Y'                                                     AR1014698
+     CLR                 Z-ADD     8             P                                         AR1014698
+     CLR                 EXSR      COMP                                                    AR1014698
+     CLR                 END                                                               AR1014698
 0189 C***LR***TOTACP        ADD       2             TOTREC            5 0                     CGL120
      C***LR                 READ      APOSTZZF                               61      CGL120 MD022412
      C***LR 61              MOVE      'T'           RECI                             CGL120 MD022412
@@ -1350,6 +1406,12 @@
      C***AN*U6**            SUB       2             INN(P)                           264038 AR994643
      C**********         END                                                         264038 AR994643
      C/COPY WNCPYSRC,GL0400C006
+      *
+      **IF GLGESPV2 BEING PROCESSED ADJUST BY 2 FOR GLGESPPP,ZZ                            AR1014698
+     C     P             IFEQ      8                                                       AR1014698
+     C     INN(P)        ANDEQ     0                                                       AR1014698
+     C                   ADD       2             INN(P)                                    AR1014698
+     C                   END                                                               AR1014698
       **If GLGESTL2 being processed adjust by 2 for GLGESTPD,ZZ                               CER049
      C     P             IFEQ      6                                                          CER049
      C     INN(P)        ANDEQ     0                                                          CER049
@@ -1920,4 +1982,5 @@ TRANSFER F/C INCOME AND EXPENSE
 AFTER END OF PERIOD
 STAMP TAX POST                                                                                CER049
 TRANSFER F/C INCOME AND EXPENSE                                                               CGL049
-     X/COPY WNCPYSRC,GL0400X001
+SPOT DATE ACCOUNT POST                                                                     AR1014698
+X/COPY WNCPYSRC,GL0400X001

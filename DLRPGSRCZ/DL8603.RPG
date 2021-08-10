@@ -1,0 +1,208 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Portuguese Forward Rates')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portuguese FX Revaluations                           *
+      *                                                               *
+      *  DL8603 - Calculate Forward Rate                              *
+      *                                                               *
+      *  Parameters: - - P0RTN  --   7    -- Return code;             *
+      *                  P0VIN  -- 256    -- Input value;             *
+      *                  P0VOUT -- 256    -- Output value;            *
+      *                                                               *
+      *  (c) Finastra International Limited 2021                      *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. CDL086  *CREATE    Date 04May21               *
+      *  Prev Amend No. XXXXXX             Date DDMMMYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL086 - Portuguese FX Revaluation Extensions                *
+      *           Upgrade to FM 2.1 2021.A                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  иииииииииииииии                                              *
+      *  90 -- Error detected.                                        *
+      *                                                               *
+      *                                                               *
+      *  Copied in routines:                                          *
+      *                                                               *
+      *  SRINIT -- Initialisation subroutine                          *
+      *  SRCALC -- Calculate forward rate                             *
+      *  *PSSR  -- Program error routine.                             *
+      *  SRFILE -- File error routine.                                *
+      *  SRERR  -- Error reporting routine.                           *
+      *                                                               *
+      *****************************************************************
+      *
+     F/EJECT
+      *-------------------------------------------------------------------
+      * Error processing array:
+     E/COPY CGCPYSRC,SRERRE
+      *
+     E                    CPY@    1   1 80               Copyright Finastra
+      *
+      *-------------------------------------------------------------------
+     I/COPY CGCPYSRC,SRERRI
+      *
+      * Error processing data structures
+      *...................................................................
+      * Incoming data structure
+     IP0VIN       DS                            256
+      * Spot rate
+     I                                        1  158I#SPOT
+      * Base currency interest rate as a percentage
+     I                                       16  308I#BINT
+      * Base currency - interest calculation days
+     I                                       31  330I#BDAY
+      * Other currency interest rate as a percentage
+     I                                       34  488I#OINT
+      * Other currency - interest calculation days
+     I                                       49  510I#ODAY
+      * Number of days to maturity
+     I                                       52  570I#DMAT
+      * Outgoing data structure
+     IP0VOUT      DS                            256
+      * Forward rate
+     I                                        1  158O#FRAT
+      *...................................................................
+      ********************************************************************
+     I/EJECT
+      ********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0VIN
+     C                     PARM           P0VOUT
+      *
+      * Add subroutine name to stack:
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+      *
+      * Initialise:
+     C                     EXSR SRINIT
+      *
+      * Calculate forward rate
+      *
+     C                     EXSR SRCALC
+      *
+     C           EXMAIN    TAG                             <<<=== EXMAIN
+      *
+      * Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     RETRN
+     C/EJECT
+      ********************************************************************
+      **  Subroutine SRCALC Calculate forward rate                      **
+      ********************************************************************
+     C           SRCALC    BEGSR                           * S R C A L C *
+      *
+      * Add subroutine name to stack:
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCALC'  @STK,Q
+      *
+      * Formula is F = S + S((Br*days/base day)-(Ir*days/i day))/(1+(Ir*days/i d
+      *
+      *      where   S is Spot rate
+      *              Br is base interest rate for period
+      *              Ir is other currency interest rate for period
+      *              days is number of days to maturity
+      *              base day is interest calculation basis for base currency
+      *              i day is interest calculation basis for other currency
+      *
+      * Calcuate   (Br*days/base day)
+      *
+     C           I#BINT    MULT I#DMAT    BASE   299
+     C           BASE      DIV  I#BDAY    BASE
+      *
+      * Calcuate   (Ir*days/i day)
+      *
+     C           I#OINT    MULT I#DMAT    OTHC   299
+     C           OTHC      DIV  I#ODAY    OTHC
+      *
+      * Calcuate   1 + (Ir*days/i day)
+      *
+     C           OTHC      ADD  100       OTHD   299
+      *
+      * Calculate  1 + ((Br*days/base day)-(Ir*days/i day))/(1+(Ir*days/i day))
+      *
+      * Multiply by 1000 to avoid rounding problem
+      *
+     C           BASE      SUB  OTHC      TOP    299
+     C           TOP       MULT 1000      TOP    299
+     C           TOP       DIV  OTHD      FACTOR 299
+     C           1000      ADD  FACTOR    FACTOR 299
+      *
+      * Calculate F = S + S((Br*days/base day)-(Ir*days/i day))/(1+(Ir*days/i da
+      *
+      * Half adjust result
+      *
+     C           I#SPOT    MULT FACTOR    RESULT 299
+     C           RESULT    DIV  1000      O#FRAT    H
+      *
+     C           EXCALC    TAG                             <<<=== EXCALC
+      *
+      * Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************
+      **  Subroutine SRINIT provides initialisation.                    **
+      ********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+      *
+      * Add subroutine name to stack:
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      * Define and clear error return code:
+     C                     MOVE *BLANKS   P0RTN
+      *
+      * Move the copyright parameter:
+     C                     MOVEACPY@      MKI@   80
+      *
+      * Clear the output values and the length:
+     C                     CLEARP0VOUT
+      *
+      * If number of days in year are zero then default to 360
+      *
+     C           I#BDAY    IFEQ 0
+     C                     Z-ADD360       I#BDAY
+     C                     ENDIF
+      *
+     C           I#ODAY    IFEQ 0
+     C                     Z-ADD360       I#ODAY
+     C                     ENDIF
+      *
+     C           EXINIT    TAG                             <<<=== EXINIT
+      *
+      * Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************
+      ** Subroutine *PSSR handles program errors.                       **
+      ********************************************************************
+      *
+     C/COPY CGCPYSRC,SRERRPSSR
+      *
+     C/EJECT
+     C********************************************************************
+      * File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2021

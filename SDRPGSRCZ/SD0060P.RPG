@@ -10,9 +10,10 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
-      *  Last Amend No. MD029161           Date 02Aug14               *
+      *  Last Amend No. CDL087             Date 04May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
+      *                 MD029161           Date 02Aug14               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -47,7 +48,9 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
-      *  MD046248 - Finastra Rebranding                               *
+      *     CDL087 - Multi Base CCY Spot and Forward Revaluation         *
+      *             Upgrade to FM 2.1 20201.A                            *
+      *     MD046248 - Finastra Rebranding                               *
       *     MD030956 - Additional changes to BFM-TI enhancement          *
       *     MD029161 - TI Departmental Server should not be displayed    *
       *                when CTI006 is enabled                            *
@@ -140,7 +143,12 @@
       ** IBLC 2002 Extended informations array                                                CER001
       *                                                                                       CER001
      E                    @CN     1   2 25               Long constants.
-     I/COPY WNCPYSRC,SD0060PIPG
+     I/COPY WNCPYSRC,SD0060PIPG                                                               CDL087
+     ISDBRCX    E DSSDBRCHX0                                                                  CDL087
+      ** External DS for branch extension details                                             CDL087
+      *                                                                                       CDL087
+     IDSFDY     E DSDSFDY                                                                     CDL087
+      * First DS for access programs, Short DS                                                CDL087
      IILLINE      DS                                                                          CER001
       *                                                                                       CER001
       ** Extended informations from IBLC 2002   (MAX 5 Lines)                                 CER001
@@ -197,8 +205,8 @@
      I*  Data Structure for Switchable Features                           CRT003
      I/COPY WNCPYSRC,SD0060PI01
      I*                                                                   CRT003
-     IDSFDY     E DSDSFDY                                                 CRT003
-     I* First DS for Access Programs, Short Data Structure                CRT003
+     I*****DSFDY     E DSDSFDY                                                         CRT003 CDL087
+     I**First*DS*for*Access*Programs,*Short*Data*Structure*                            CRT003 CDL087
      I/COPY WNCPYSRC,SD0060PI02
      I*                                                                   CTI001
      ISDMOD     E DSSDMMODPD                                              CTI001
@@ -717,6 +725,23 @@
       * 41 /COPY QQPFRSP - Branch Codes  *
      C*
      C/COPY WNCPYSRC,SD0060PRSP
+      *                                                                                       CDL087
+      ** Clear print field                                                                    CDL087
+     C                     MOVE *BLANK    XGLBCY                                              CDL087
+     C                     MOVE *BLANK    XGTFRI                                              CDL087
+      *                                                                                       CDL087
+      ** Obtain branch details via access pgm.                                                CDL087
+     C                     CALL 'AOBRCXR0'                                                    CDL087
+     C                     PARM '*MSG   ' @RTCD   7                                           CDL087
+     C                     PARM '*KEY   ' @OPTN   7                                           CDL087
+     C                     PARM           A8BRCD                                              CDL087
+     C           SDBRCX    PARM SDBRCX    DSFDY                                               CDL087
+      *                                                                                       CDL087
+      ** If a record is found, move file field to prtf detail line.                           CDL087
+     C           @RTCD     IFNE '*NRF'                                                        CDL087
+     C                     MOVELGLBCY     XGLBCY                                              CDL087
+     C                     MOVELGTFRI     XGTFRI                                              CDL087
+     C                     ENDIF                                                              CDL087
      C*
      C                     END                             *FI
      C                     END

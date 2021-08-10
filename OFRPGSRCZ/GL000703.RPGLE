@@ -602,7 +602,7 @@
      C                   CALLP     MQOPEN( HConn : MQOD : Options :                         MD041126
      C                                     HObj : OpenCode : Reason )                       MD041126
 
-     C                   If        OpenCode = CCFAIL                             \
+     C                   If        OpenCode = CCFAIL
      C                   ExSr      *PSSR
      C                   EndIf
 

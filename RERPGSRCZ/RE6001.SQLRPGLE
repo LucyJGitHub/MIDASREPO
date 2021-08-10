@@ -10,12 +10,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054698           Date 31Oct19               *
-      *  Prev Amend No. MD054017           Date 03Sep19               *
+      *  Last Amend No. EMP109             Date 07Jul21               *
+      *  Prev Amend No. MD054698           Date 31Oct19               *
+      *                 MD054017           Date 03Sep19               *
       *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  EMP109 - Fixed number of days in RE APR Calculation          *
+      *           (Formalisation of AR583105/MR7HFIX)                 *
+      *           Addition of hooks EMP109_001 to EMP109_003          *
       *  MD054698 - CER050 REC376A 00001 failed during COB            *
       *  MD054017-Change on validation of System Value "APR Formula"  *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1276,7 +1280,8 @@
       *
       * DEFINE CLRPFM COMMAND
      C                   MOVE      CMD(1)        CMD1             28
-      *
+
+     C/COPY WNCPYSRC,EMP109_001                                                          EMP109
      C     ENDFST        TAG
       *
      C                   ENDSR                                                  **INIT ENDSR**
@@ -1806,6 +1811,8 @@
      C     *IN53         IFEQ      '1'
      C     *IN54         ANDEQ     '1'
       *
+     C/COPY WNCPYSRC,EMP109_002                                                          EMP109
+      *
       * Set day number basis
       *
      C     WKDRCR        Ifeq      'D'
@@ -1827,6 +1834,7 @@
      C     ICBS          Ifeq      6
      C                   MOVE      '366'         AEDNB
      C                   Endif
+     C/COPY WNCPYSRC,EMP109_003                                                          EMP109
       *
      C                   EVAL      AERATE = *BLANKS                                      MD054017
      C                   IF        SYSVAL1 = 'Y' AND SYSVAL2 <> *BLANKS                  MD054017

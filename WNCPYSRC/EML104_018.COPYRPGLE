@@ -1,0 +1,79 @@
+      *****************************************************************                       EML104
+      *                                                               *                       EML104
+      *  Midas - Copy member for SD200105                             *                       EML104
+      *                                                               *                       EML104
+      *  EML104_018 - Midas SD Network Description - Browse           *                       EML104
+      *                                                               *                       EML104
+      *  Last Amend No. EML104  *CREATE    Date 05Feb20               *                       EML104
+      * FBMidas 2.1 ---- Base ----------------------------------------*                       EML104
+      *                                                               *                       EML104
+      *---------------------------------------------------------------*                       EML104
+      *                                                               *                       EML104
+      *  EML104 - Upgrade of EML010 to FB2.1 SP21                     *                       EML104
+      *           Structured field :86:                               *                       EML104
+      *                                                               *                       EML104
+      *****************************************************************                       EML104
+                                                                                              EML104
+      ** --- when EML104 - Ensure Deletion is possible for a network definition               EML104
+      *                                                                                       EML104
+     C                   If        *IN99                                        Found         EML104
+     C                             and Not *IN41                                and Fine      EML104
+     C                             and S0ACTCDE = 'D'                           and 'Delete'  EML104
+     C                             And EML104 = 'Y'                             and feature   EML104
+      *                                                                                       EML104
+     C                   Open      SDNWRKZ0                                                   EML104
+     C     S0NWRK        SETLL     SDNWRKZ0                               99                  EML104
+     C     *IN99         IFEQ      *OFF                                         Not found     EML104
+     C*** already        SetOFF                                       41                      EML104
+     C                   ELSE                                                   found         EML104
+      *                                                                                       EML104
+      ** loop until not found or found with another Input newtwork than itself                EML104
+      *                                                                                       EML104
+     C     *IN99         DOWEQ     *ON                                                        EML104
+      *                                                                                       EML104
+      ** Leave Loop wiht *IN99 = *Off                                                         EML104
+      *                                                                                       EML104
+     C     S0NWRK        READE     SDNWRKZ0                               41                  EML104
+      *                                                                                       EML104
+      ** Leave if No key found                                                                EML104
+      *                                                                                       EML104
+     C     *IN41         IFEQ      *ON                                          Not found     EML104
+     C                   SETOFF                                       99        Leave         EML104
+     C                   ENDIF                                                                EML104
+      *                                                                                       EML104
+      ** Leave if key found with another Network of himself (not deleted)                     EML104
+      *                                                                                       EML104
+     C     *IN41         IfEQ      *OFF                                         Found         EML104
+     C     S0NWRK        AndNE     X0NWRK                                                     EML104
+      *                                                                         is Newtwork   EML104
+     C                   OPEN      SDNWRKL0                                                   EML104
+     C     X0NWRK        CHAIN     SDNWRKD0                           41        Deleted ?     EML104
+     C                   CLOSE     SDNWRKL0                                     avoid CPF4293 EML104
+     C     *IN41         IFEQ      *ON                                                        EML104
+     C                   SetOff                                       41                      EML104
+     C                   Eval      EM_EDTYLC = 'D'                              Check next    EML104
+     C                   ENDIF                                                                EML104
+                                                                                              EML104
+     C     EM_EDTYLC     IfNe      'D'                                                        EML104
+     C                   SetOFF                                       99        Leave         EML104
+     C                   Endif                                                                EML104
+     C                   EndIf                                                                EML104
+      *                                                                                       EML104
+     C                   EndDo                                                                EML104
+      *                                                                                       EML104
+      ** Reverse *IN41 to flag an Error if found another Network                              EML104
+      *                                                                                       EML104
+     C     *IN41         COMP      *OFF                                   41    *ON==> *OFF   EML104
+     C                   EndIf                                                  found         EML104
+                                                                                              EML104
+      ** if found, then it couldn't be deleted                                                EML104
+     C   41              MOVEL     'EML1045'     ZAMSID                                       EML104
+     C   41              MOVEL     'XXUSRMSG'    ZAMSGF                                       EML104
+     C   41              EXSR      $ZaSndMsg                                                  EML104
+     C   41              MOVEL     'SDUSRMSG'    ZAMSGF                                       EML104
+     C   41              MOVE      'N'           ValidCodes                                   EML104
+     C                   Close     SDNWRKZ0                                                   EML104
+     C                   EndIf                                                                EML104
+      *****************************************************************                       EML104
+      * End of /COPY EML104_018                                       *                       EML104
+      *****************************************************************                       EML104

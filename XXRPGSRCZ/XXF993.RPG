@@ -1,0 +1,185 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX Reset MC Balances')                           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module
+      *                                                               *
+      *  XXF993 - Reset MC Balances                                   *
+      *                                                               *
+      *  Function: This program updates MCAVBLX0.  It resets          *
+      *            period, term 1, term2 and/or yearly averages       *
+      *            and movements.                                     *
+      *                                                               *
+      *  Called by: XXCF990 - Automatic update of balances            *
+      *                                                               *
+      *  Parameters: 2A Group code                                    *
+      *              1A Period Set                                    *
+      *              60 Current period number                         *
+      *              1A Return code                                   *
+      *                                                               *
+      *  Last Amend No. EML108             Date 20Jan20               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML108 - Upgrade FMD003 to FBM2.1SP21                        *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *  FMD003 - Automatic Update of Management accounts             *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLPERDL1IF  E           K        DISK
+      * Period Details by Year/Number
+     FGLPERDL5IF  E           K        DISK
+      * Period Details by Relative Period Number
+     FMCAVBLV0UF  E           K        DISK
+      * Century, Year & Period Number Data Sructure
+     E                    CPY@    1   1 80               Copyright
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+      *
+     I                                        1   60CYRNBR
+     I                                        1   20PEPDCT
+     I                                        3   40PEPDYR
+     I                                        5   60PEPDNY
+     I            DS
+      * Fields to enable check for blanks in DTPDCT (Century)
+     I                                        1   2 DTPDCT
+     I                                        1   1 D1PDCT
+     I                                        1   2 D2PDCT
+     I            DS
+      * Fields to enable check for blanks in DTPDYR (Year)
+     I                                        1   2 DTPDYR
+     I                                        1   1 D1PDYR
+     I                                        1   2 D2PDYR
+     I            DS
+      * Fields to enable check for blanks in DTPDNY (Number)
+     I                                        1   2 DTPDNY
+     I                                        1   1 D1PDNY
+     I                                        1   2 D2PDNY
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSTC    1
+     C                     PARM           CPNB    60
+     C                     PARM           RTCD    1
+      *
+     C           CYEAR     KLIST
+     C                     KFLD           PSTC    1
+     C                     KFLD           CCT     2
+     C                     KFLD           CPD     2
+     C                     KFLD           CYR     2
+      *
+     C           KEYCPD    KLIST
+     C                     KFLD           PSTC    1
+     C                     KFLD           ZERO    30
+      *
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     Z-ADD*ZEROS    ZERO
+     C                     MOVELCPNB      WYEAR   4
+     C                     MOVELWYEAR     CCT
+     C                     MOVE WYEAR     CPD
+     C                     MOVE CPNB      CYR
+      *
+     C           KEYCPD    CHAINGLPERDL5             10
+     C           *IN10     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLPERDL5'DBFILE           ************
+     C                     Z-ADD1         DBASE            * Error 01 *
+     C                     MOVELZERO      DBKEY            ************
+     C                     MOVEL'XXF993'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       RTCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Move GLPERDL5 Cent/Year/No. to numeric fields getting rid
+      * of following blanks
+     C                     Z-ADD0         PEPDCT
+     C                     Z-ADD0         PEPDYR
+     C                     Z-ADD0         PEPDNY
+     C           D2PDCT    IFEQ *BLANKS                    ---B001
+     C                     MOVE D1PDCT    PEPDCT
+     C                     ELSE                                001
+     C                     MOVE DTPDCT    PEPDCT
+     C                     END                             ---E001
+     C           D2PDYR    IFEQ *BLANKS                    ---B001
+     C                     MOVE D1PDYR    PEPDYR
+     C                     ELSE                                001
+     C                     MOVE DTPDYR    PEPDYR
+     C                     END                             ---E001
+     C           D2PDNY    IFEQ *BLANKS                    ---B001
+     C                     MOVE D1PDNY    PEPDNY
+     C                     ELSE                                001
+     C                     MOVE DTPDNY    PEPDNY
+     C                     END                             ---E001
+      *
+     C           CPNB      IFLT CYRNBR
+     C                     Z-ADDDTSPDD    CSPDD   50
+     C                     Z-ADDDTST1D    CST1D   50
+     C                     Z-ADDDTST2D    CST2D   50
+     C                     Z-ADDDTSOYD    CSOYD   50
+     C                     EXSR UPDAVB
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+      *
+      *******************************************************************
+      *                                                                 *
+      *  UPDAVB - Update MCAVBLX0                                       *
+      *                                                                 *
+      *******************************************************************
+     C           UPDAVB    BEGSR
+      *
+     C           CYEAR     CHAINGLPERDL1             10
+     C           *IN10     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLPERDL1'DBFILE           ************
+     C                     Z-ADD2         DBASE            * Error 02 *
+     C                     MOVELCYRNBR    DBKEY            ************
+     C                     MOVEL'XXF993'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       RTCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      *
+     C           *LOVAL    SETLLMCAVBLV0
+     C                     READ MCAVBLV0                 30
+     C           *IN30     DOWEQ'0'
+      *
+     C                     Z-ADD0         M1PAGG
+     C                     Z-ADD0         M1PDDR
+     C                     Z-ADD0         M1PDCR
+      *
+     C           CST1D     IFNE DTST1D
+     C                     Z-ADD0         M1T1AG
+     C                     Z-ADD0         M1T1DR
+     C                     Z-ADD0         M1T1CR
+     C                     ENDIF
+      *
+     C           CST2D     IFNE DTST2D
+     C                     Z-ADD0         M1T2AG
+     C                     Z-ADD0         M1T2DR
+     C                     Z-ADD0         M1T2CR
+     C                     ENDIF
+      *
+     C           CSOYD     IFNE DTSOYD
+     C                     Z-ADD0         M1YAGG
+     C                     Z-ADD0         M1YTDR
+     C                     Z-ADD0         M1YTCR
+     C                     ENDIF
+      *
+     C                     UPDATMCAVBLD0
+     C                     READ MCAVBLV0                 30
+     C                     ENDDO
+      *
+     C                     ENDSR
+     ***********************************************************
+**  CPY@
+(C) Copyright Finastra Systems Technology, Inc. 2020

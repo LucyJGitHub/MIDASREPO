@@ -1,0 +1,100 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Review members of GLAVBLPD and GLHIBLPD')     *
+/*OVRF*  OVRDBF FILE(MEMLIST) TOFILE(QAFDMBRL)                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  UTUMD001A - Organize members of MC files                     *
+      *                                                               *
+      *  Called by: UTCLUMD001                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. EML108             Date 12Jan09               *
+      *  Prev Amend No. UMD001             Date 12Jan09               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML108 - Upgrade FMD003 to FBM2.1SP21 (Recompile)            *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *                                                               *
+      *****************************************************************
+     FMEMLIST IF  E                    DISK
+     FGLHBCGL0IF  E           K        DISK
+      * Historic Balance Control Groups file
+     E                    CPY@    1   1 80               Copyright
+     E                    CMD     1   2 80               Commands
+     E                    FIL     1   9 20               Files
+     ICMDDS       DS                             80
+      *
+      **  DS to format commands for QCMDEXC
+      *
+     I                                       11  20 FILX
+     I                                       13  22 FIL1
+     I                                       29  30 MBRX
+     I                                       29  30 MBR1
+     I                                       42  51 FIL2
+     I                                       54  55 MBR2
+     I                                       41  42 GRP
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *LOVAL    SETLLGLHBCGL0
+     C                     READ GLHBCGL0                 10
+     C                     MOVEL*BLANKS   CMDDS
+     C                     MOVELCMD,1     CMDDS            * 3 ADDLFM
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      ** Add logical file member(s) to logical files based on PF/GLHIBLPD and GLAVBLPD
+     C                     Z-ADD1         X       20
+     C           HCTYLC    IFNE 'D'
+     C           X         DOWLE9
+     C                     MOVE FIL,X     FIL1             * 3
+     C                     MOVELHCCGCD    MBR1             * 3
+     C                     MOVELFIL,X     FIL2
+     C                     MOVELHCCGCD    MBR2
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDDS
+     C                     PARM 80        CMDLN  155
+     C                     ADD  1         X
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     READ GLHBCGL0                 10
+     C                     ENDDO
+      *
+      ** Remove logical file member(s) to logical files based on PF/GLHIBLPD and GLAVBLPD
+     C                     MOVEL*BLANKS   CMDDS
+     C                     MOVELCMD,2     CMDDS
+     C           1         SETLLMEMLIST
+     C                     READ MEMLIST                  10
+     C           *IN10     DOWEQ'0'
+     C                     MOVELMLNAME    CG      2
+     C           CG        CHAINGLHBCGL0             20
+     C           *IN20     IFEQ '1'
+     C                     MOVELMLFILE    FILX
+     C                     MOVELMLNAME    MBRX
+     C                     ENDIF
+     C                     READ MEMLIST                  10
+     C                     ENDDO
+      *
+     C                     MOVE '1'       *INLR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2009
+**  CMD - Commands for QCMDEXC
+ADDLFM FILE(xxxxxxxxxx) MBR(xx) DTAMBRS((xxxxxxxxxx (xx)))
+RMVM FILE(xxxxxxxxxx) MBR(xx)
+**  FIL - Files to add members to on insert
+GLHIBLPD  GLHIBLL0
+GLHIBLPD  GLHIBLL1
+GLHIBLPD  GLHIBLL2
+GLHIBLPD  GLHIBLL3
+GLHIBLPD  GLHIBLL4
+GLAVBLPD  GLAVBLL0
+GLAVBLPD  GLAVBLL1
+GLAVBLPD  GLAVBLL2
+GLAVBLPD  GLAVBLL3

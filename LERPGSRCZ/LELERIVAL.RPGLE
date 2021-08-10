@@ -14,7 +14,6 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-<<<<<<< HEAD
       *  Last Amend No. MD057871           Date 30Apr21               *
       *  Prev Amend No. CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -24,10 +23,6 @@
       *                 MD034915A          Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 MD024812A          Date 06Nov19               *
-=======
-      *  Last Amend No. MD057191           Date 02Dec20               *
-      *  Prev Amend No. MD024812A          Date 06Nov19               *
->>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -130,7 +125,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -152,12 +146,6 @@
       *             Allow negative input in Funding rate/spread.      *
       *             Use ZA0841 for validation instead of ZALIGN.      *
       *           - Applied for MD054876                              *
-=======
-      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
-      *             interest rate.                                    *
-      *           - DL ICD must not be used, removed unnecessary codes*
-      *             of MD034449.                                      *
->>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD024812A - Consider new maturity date if non-blanks and     *
       *              rollover date = current maturity date.           *
       *  MD024812 - Use system value to determine if interest payment *
@@ -1032,7 +1020,6 @@
 
       /COPY WNCPYSRC,LELERIV024
 
-<<<<<<< HEAD
       *                                                                                       CLE172
       **  Validate new backward-looking rate fields                                           CLE172
       *                                                                                       CLE172
@@ -1042,8 +1029,6 @@
      C                   EXSR      SRBLRTE                                                    CLE172
      C                   ENDIF                                                                CLE172
 
-=======
->>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *
       ** Validate New Change Indicator
       *
@@ -10004,11 +9989,7 @@
      C                   MOVE      'Y'           CLE141                                       CLE141
      C                   ENDIF                                                                CLE141
       **********                                                                   MD034449 MD057191
-<<<<<<< HEAD
       ***Access*Dealing*Details****************************************            MD034449 MD057191
-=======
-      ***Access*Dealing*Detail*****************************************            MD034449 MD057191
->>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       **********                                                                   MD034449 MD057191
      C**********         CALL      'AODEALR1'                                      MD034449 MD057191
      C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
@@ -10020,7 +10001,6 @@
      C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
      C**********         ENDIF                                                     MD034449 MD057191
-<<<<<<< HEAD
       *                                                                                       CLE172
       ** Determine if CLE172 is installed                                                     CLE172
       *                                                                                       CLE172
@@ -10034,8 +10014,6 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE172
      C                   MOVE      'Y'           CLE172                                       CLE172
      C                   ENDIF                                                                CLE172
-=======
->>>>>>> branch 'develop_VTB-FFT_2.1.23' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *
       **  Key list for LELOAML0
       *

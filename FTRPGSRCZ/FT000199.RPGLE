@@ -1,4 +1,3 @@
-<<<<<<< HEAD
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************

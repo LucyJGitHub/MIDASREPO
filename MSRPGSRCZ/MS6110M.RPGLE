@@ -378,28 +378,23 @@
 
       **  Declare MQI structures needed
       * MQI Constants
-     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
-     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
+     D/COPY QMQM/QRPGLESRC,CMQR
 
       ** Object Descriptor
      D MQOD            DS
-     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
-     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODR
 
       ** Message Descriptor
      D MQMD            DS
-     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
-     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDR
 
       ** Get message options
      D MQGMO           DS
-     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
-     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOR
 
       ** Put message options
      D MQPMO           DS
-     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
-     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOR
 
 
       ** The include below brings in the return code structure that
@@ -472,19 +467,6 @@
      D PMDNO           S              5P 0                                                  MD051624
      D PDATE6          S              6  0                                                  MD051624
      D PDATE7          S              7                                                     MD051624
-                                                                                            MD041126
-      ** MQ Parameters                                                                      MD041126
-     D HCONN           S             10I 0                                                  MD041126
-     D HIN             S             10I 0                                                  MD041126
-     D HANDLE          S             10I 0                                                  MD041126
-     D P@MsgLen        S             10I 0                                                  MD041126
-     D CCODE           S             10I 0                                                  MD041126
-     D OCODE           S             10I 0                                                  MD041126
-     D REASON          S             10I 0                                                  MD041126
-     D MESLEN          S             10I 0                                                  MD041126
-     D OPTS            S             10I 0                                                  MD041126
-     D QMNAME          S             48A                                                    MD041126
-                                                                                            MD041126
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
@@ -728,19 +710,8 @@
      C/COPY WNCPYSRC,MS6110MC03
 
       ** Send message
-     C                   Z-ADD     MQPUT         CID
-     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    p@msglen          9 0
-     C                   PARM                    p@msgbuf
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
      C**********         Z-ADD     MQPUT         CID                                        MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C**********         CALL      'QMQM'                                                   MD041126
      C**********         PARM                    CID               9 0                      MD041126
      C**********         PARM                    HCONN             9 0                      MD041126

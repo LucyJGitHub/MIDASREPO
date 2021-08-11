@@ -378,23 +378,28 @@
 
       **  Declare MQI structures needed
       * MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
 
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
 
       ** Message Descriptor
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
 
       ** Get message options
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
 
       ** Put message options
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
 
 
       ** The include below brings in the return code structure that
@@ -459,6 +464,19 @@
                                                                                               CTI004
       ** Declared variable for system value setting                                         MD048231
      D MMMPaper        S              1A                                                    MD048231
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D P@MsgLen        S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D QMNAME          S             48A                                                    MD041126
+                                                                                            MD041126
       *                                                                                     MD051624
      D WMACFLAG        S              1                                                     MD051624
      D WLATM           S              6                                                     MD051624

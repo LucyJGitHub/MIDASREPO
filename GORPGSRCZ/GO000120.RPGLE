@@ -11,17 +11,23 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1048337A         Date 09Nov12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CLE040             Date 13Oct04               *
+      *                 CLE040             Date 13Oct04               *
       *                 BG1673             Date 30Mar04               *
       *                 CGP003  *CREATE    Date 28Jan04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1048337A - GOC0120 was stopped for 5 mins during COB.      *
+      *             - Reduce the wait time to 1 minute and to         *
+      *               manually submit the RECEIVED message if there   *
+      *               is still no response from DTAQ.                 *
+      *             - Applied fix for MD08577.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE040 - Change of Management Limit COB                      *
       *  BG1673 - EOD process not working properly                    *
@@ -205,7 +211,8 @@
       *  Re-initialise Data queue parms
      C                   EVAL      DtqNam = 'GOMLCOBRSP'
      C                   MoveL     PSysVal1      DtqWait
- 
+     C                   EVAL      DtqWait= 60                                            AR1048337A
+
       ** Wait for data queue return prompt
      C                   CALL      'QRCVDTAQ'
      C                   PARM                    DtqNam
@@ -213,7 +220,12 @@
      C                   PARM                    DtqLen
      C                   PARM                    DtqRsp           10
      C                   PARM                    DtqWait           5 0
- 
+      *                                                                                   AR1048337A
+     C     DtqRsp        IFNE      'RECEIVED'                                             AR1048337A
+     C                   EVAL      DtqRsp=      'RECEIVED'                                AR1048337A
+     C                   EndIf                                                            AR1048337A
+      *                                                                                   AR1048337A
+
       ** Check for error
      C     DtqRsp        IFNE      'RECEIVED'
      C                   ExSr      *Pssr

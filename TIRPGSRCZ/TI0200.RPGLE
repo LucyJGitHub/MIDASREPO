@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD051359           Date 19Jun18               *
+      *  Last Amend No. 263068             Date 09Dec09               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD051359           Date 19Jun18               *
       *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 247160             Date 05Jul07               *
@@ -61,6 +62,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263068 - MMM fails because of mapping error when value of    *
+      *           fld/AORR is blank. Default value to 'I'.            *      
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  MD051359 - TI outgoing message processing of block 3 tag 119 *
@@ -777,7 +780,8 @@
       *
      C                   MOVEL     *BLANKS       NSNO
      C                   MOVEL     *BLANKS       SACN
-     C                   MOVEL     *BLANKS       AORR
+     C**********         MOVEL     *BLANKS       AORR                                         263068
+     C                   MOVEL     'I'           AORR                                         263068
      C                   MOVEL     *BLANKS       DESI
       *
       ** Determine branch by looking for the senders address

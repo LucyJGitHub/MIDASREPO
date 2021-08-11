@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. DAI102             Date 23Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 CAP207             Date 10Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -73,6 +74,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI102 - TI Posting Narrative Enhancement. Upgrade to FBM2.1 *
+      *           Include "Issuing Bank Reference" for LC postings    *
+      *           Used core hooks  TI0340MF01 and TI0340MC04.         *
+      *           Added hooks DAI102_008, DAI102_009, DAI102_010,     *
+      *           DAI102_011 and DAI102_012.                          *
+      *           Upgrade to FBMidas 2.1.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CAP207 - Account Balance Check extended to other APIs        *
@@ -211,6 +218,7 @@
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       * Array for Object Copyright Statement.
       *
+     D/COPY WNCPYSRC,DAI102_009                                                               DAI102
       *****************************************************************
       *
      D PSDS           SDS
@@ -268,6 +276,7 @@
      D**TIDLRF**               8     20                                                       212558
      D**TISEQN**              21     23  0                                                    212558
      D**TIVALD**              24     30  0                                                    212558
+     D/COPY WNCPYSRC,DAI102_008                                                               DAI102
       *
      D W#ASOC          DS
      D  W#CBN                  1      3  0
@@ -418,6 +427,7 @@
      C                   MOVE      'JEG'         PSTS
      C                   UPDATE    TIPOSTD8
      C                   ENDIF
+     C/COPY WNCPYSRC,DAI102_011                                                               DAI102
       *                                                                         151069
       *  If this is the first new entry to a previously unclosed batch          151069
       *  then re-fill previous values for debit and credit amounts.             151069
@@ -796,6 +806,7 @@
      C*******************ELSE                                                   139756
      C                   CLEAR                   BTNRDC                         157551
      C     TIDLTP        CAT       TIDLRF        BTNRDC
+     C/COPY WNCPYSRC,DAI102_010                                                               DAI102
      C*******************ENDIF                                                  139756
       * Account Type
      C                   MOVE      ATYP          BTACTY
@@ -1367,6 +1378,8 @@
      C                   KFLD                    TISEQN
      C                   KFLD                    TIVALD
       *
+     C/COPY WNCPYSRC,DAI102_012                                                               DAI102
+      *                                                                                       DAI102
      C     K#BCUR        KLIST
      C**********         KFLD                    DRCV                                         212558
      C                   KFLD                    TRDATE                                       212558

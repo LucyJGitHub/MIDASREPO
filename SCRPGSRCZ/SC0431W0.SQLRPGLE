@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054346           Date 18Jul21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP002 - Global Processing.                                  *
@@ -50,11 +52,11 @@
       * subfile display of inactive features                          *
      F                                     SFILE(Csfl:Crrn)
      F*Scsarjl1* IF   E           K DISK                                                    MD055681
-     FScpasspd  IF   E           K DISK    INFSR(*PSSR)                         CSC010
-     F                                     USROPN
+     F*Scpasspd* IF   E           K DISK    INFSR(*PSSR)                         CSC010     MD054346
+     F**********                           USROPN                                           MD054346
      F*Sccsecl1*IF***E           K DISK    INFSR(*PSSR)                                CSC010 CGP002
-     FGpcsecl1  IF   E           K DISK    INFSR(*PSSR)                                       CGP002
-     F                                     USROPN
+     F*Gpcsecl1* IF   E           K DISK    INFSR(*PSSR)                             CGP002 MD054346
+     F**********                           USROPN                                           MD054346
       * All core and non-core switchable features                     *
       /EJECT
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
@@ -110,6 +112,21 @@
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     Prefix(AB)                                       MD055681
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
+     D GPCSEC        E DS                  EXTNAME(GPSECJW0)                                MD054346
+     D PReturnCode     S              7A                                                    MD054346
+     D PAction         S              1A                                                    MD054346
+     D PValidList      S             10A   INZ('SCFEATVL')                                  MD054346
+     D PLibrary        S             10A                                                    MD054346
+     D PIDName         S            100A                                                    MD054346
+     D PPass1          S            600A                                                    MD054346
+     D PPass2          S            600A                                                    MD054346
+     D PDescr          S           1000A                                                    MD054346
+      * Action codes.                                                                       MD054346
+     D Insert          C                   CONST('A')                                       MD054346
+     D Modify          C                   CONST('M')                                       MD054346
+     D Reset           C                   CONST('R')                                       MD054346
+     D Delete          C                   CONST('D')                                       MD054346
+     D Find            C                   CONST('F')                                       MD054346
       *
       ** Output parameter O#Sarn is selected Feature Number
       *
@@ -404,6 +421,9 @@
      C                   EndIf
      C                   EndDo
      C*
+     C                   If        SQLCode = 100                                            MD054346
+     C                   seton                                        82                    MD054346
+     C                   ENDIF                                                              MD054346
      C** To ensure a new subfile is displayed RCDNBR=SFRCDNBR
      C*
      C                   Eval      RcdNbr = Crrn
@@ -476,22 +496,43 @@
      C**********         Open      SCCSECL1                                                   CGP002
      C*****sfnum         Chain     SCCSECD0                           73                      CGP002
      C**********         Close     SCCSECL1                                                   CGP002
-     C                   Open      GPCSECL1                                                   CGP002
-     C     sfnum         Chain     GPCSECD0                           73                      CGP002
-     C                   Close     GPCSECL1                                                   CGP002
+     C**********         Open      GPCSECL1                                          CGP002 MD054346
+     C*****sfnum         Chain     GPCSECD0                           73             CGP002 MD054346
+     C/EXEC SQL                                                                             MD054346
+     C+ SELECT *                                                                            MD054346
+     C+ into :GPCSEC                                                                        MD054346
+     C+ from GPSECJW0                                                                       MD054346
+     C+ where P@SARN = :sfnum                                                               MD054346
+     C/END-EXEC                                                                             MD054346
+     C                   setoff                                       73                    MD054346
+     C                   if        SQLCODE <> 0                                             MD054346
+     C                   seton                                        73                    MD054346
+     C                   endif                                                              MD054346
+     C**********         Close     GPCSECL1                                          CGP002 MD054346
      C*
      C* If there is no entry on delivered passwords file - error
      C*
-     C                   If        *In73
-     C                   Eval      Zamsid = 'CBM0240'
-     C                   Eval      Zamsgf = 'CBUSRMSG'
-     C                   Eval      Zamsda = sfnum
-     C                   Exsr      @Zasnms
-     C                   End
-     C                   Open      SCPASSPD
-     C     sfnum         Chain     SCPASSPD                           74
-     C                   Close     SCPASSPD
-     C                   If        *In74
+     C**********         If        *In73                                                    MD054346
+     C**********         Eval      Zamsid = 'CBM0240'                                       MD054346
+     C**********         Eval      Zamsgf = 'CBUSRMSG'                                      MD054346
+     C**********         Eval      Zamsda = sfnum                                           MD054346
+     C**********         Exsr      @Zasnms                                                  MD054346
+     C**********         End                                                                MD054346
+     C**********         Open      SCPASSPD                                                 MD054346
+     C*****sfnum         Chain     SCPASSPD                           74                    MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Find          PAction                                    MD054346
+     C                   PARM                    PValidList                                 MD054346
+     C                   PARM                    PLibrary                                   MD054346
+     C                   PARM      sfnum         PIDName                                    MD054346
+     C                   PARM      *Blanks       PPass1                                     MD054346
+     C                   PARM      *Blanks       PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
+     C**********         Close     SCPASSPD
+     C**********         If        *In74                                                    MD054346
+     C     PReturnCode   IFNE      *Blanks                                                  MD054346
      C*
      C* If there is no entry on passwords file - error
      C*
@@ -500,8 +541,9 @@
      C                   Eval      Zamsda = sfnum
      C                   Exsr      @Zasnms
      C                   End
-     C                   If        *In73 = *off and
-     C                             *In74 = *off
+     C                   If        *In73 = *off and                                         MD054346
+     C**********                   *In74 = *off                                             MD054346
+     C                             PReturnCode = *Blanks                                    MD054346
      C                   Eval      @SARD = sfnum
      C                   Call      'AOSARDR0'    pparm
      C                   If        @Rtcd = '*NRF'
@@ -595,7 +637,8 @@
      C                   Call      'SCC4200'
      C                   Parm                    Sfnum
      C                   Parm                    Sfsard
-     C                   Parm                    Pass
+     C**********         Parm                    Pass                                       MD054346
+     C                   Parm                    PPass1                                     MD054346
      C                   Parm                    RtnCde            7
      C                   If        RtnCde = *Blanks
      C                   Eval      *In50 = *on

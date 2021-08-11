@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Zone password migration')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000709 - Migration of zone password                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD054346 *CREATE   Date 18Jul21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054346 - Switchable Features Password Encryption          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
+
+             DCL        VAR(&DDSNWF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+/* Parameters passed to UP008010. */
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE('UPC000709')
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2021')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Migrate file first */
+             CALL       PGM(UP000710) PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+/* Migrate password in validation list*/
+             DLTF       FILE(QTEMP/SCPASSPD)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(&OLDLIB/SCPASSPD) +
+                          TOFILE(QTEMP/SCPASSPD) CRTFILE(*YES)
+
+             CALL       PGM(UP000709) PARM(&NEWLIB &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+END:
+             ENDPGM

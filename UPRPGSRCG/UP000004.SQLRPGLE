@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD055682           Date 31Jul20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD054346           Date 18Jul21               *
+      *  Prev Amend No. MD055682           Date 31Jul20               *
+      *                 MD055681           Date 31Jul20               *
       *                 CUP040 *CREATE      Date 08Aug13              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - New utility to remove Switchable Feature data.      *
@@ -33,7 +35,8 @@
      D x               S              3  0 INZ(1)
       *
      D*FeatureData     S             20    DIM(18) CTDATA PERRCD(1)                         MD055682
-     D FeatureData     S             20    DIM(19) CTDATA PERRCD(1)                         MD055682
+     D*FeatureData     S             20    DIM(19) CTDATA PERRCD(1)                MD055682 MD054346
+     D FeatureData     S             20    DIM(17) CTDATA PERRCD(1)                         MD054346
       *
      C     *ENTRY        PLIST
      C                   PARM                    PFeature
@@ -79,6 +82,7 @@
       * add SCSRDXTD                                                                        MD055681
       * replace SCSARTPD by SCSRTCTD                                                        MD055682
       * add SCSRTXTD                                                                        MD055682
+      * remove SCPASSPD, GPCSECPD                                                           MD054346
 ** FeatureData
 SCSARBPD  GBSARN
 SCSARCPD  ACSARN
@@ -97,5 +101,3 @@ SCSARVPD  GSSARN
 SCSARWPD  GTSARN
 SCSARXPD  DSON
 SCSARXPD  DDON
-SCPASSPD  P@SARN
-GPCSECPD  P@SARN

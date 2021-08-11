@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Feature Take on')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMC000213 - Take on program for GP features passwords       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD054346 *CREATE   Date 18Jul21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054346 - Switchable Features Password Encryption          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&GLOBPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BACKUPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(10)
+
+/*/COPY GPCPYSRCG,GPSVALDCL */
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2021')
+
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+             CHGVAR     VAR(&SVALK4) VALUE('BrgMidasGlobalPrefix')
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC &SVALK1 +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+
+             IF         COND(&RSVALRTNC *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             CHGVAR     VAR(&GLOBPRFX) VALUE(%SST(&SVAL4 1 2))
+
+/** The back up library should exists */
+             CHGVAR     VAR(&BACKUPLIB) VALUE('#.' *TCAT &GLOBPRFX +
+                             *TCAT 'GMLIB')
+             CHKOBJ     OBJ(&BACKUPLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** GPPASSPD in back up library should exists */
+             CHKOBJ     OBJ(&BACKUPLIB/GPPASSPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             CPYF       FROMFILE(&BACKUPLIB/GPPASSPD) +
+                          TOFILE(GPUPASPD) MBROPT(*REPLACE)
+
+/** Call take on program */
+             CALL       PGM(SM000213) PARM(&GMLIB &RTCD)
+             CLRPFM     FILE(GPUPASPD)
+             IF         COND(&RTCD *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Abnormal processing */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMC000213 ended abnormally - see joblog.') +
+                          MSGTYPE(*ESCAPE)
+
+ENDPGM:
+             ENDPGM

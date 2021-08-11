@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056206           Date 24Sep20              */
-/*       Prev Amend No. MD055267           Date 16Mar20              */
+/*       Last Amend No. AR683288           Date 28Apr11              */
+/*       Prev Amend No. MD056206           Date 24Sep20              */
+/*                      MD055267           Date 16Mar20              */
 /*                      CSW051             Date 15Mar18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
@@ -47,6 +48,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       AR683288 - CFCONTROL crashes after MOVE command from        */
+/*                  IFSFILES to QDLSFLR.  Command to populate        */
+/*                  IFSFILES is not available. TRAM DAT objects are  */
+/*                  expected to be in QDLS and not QOpenSys.         */
+/*                  Check system value. (Child: AR683289)            */
 /*       MD056206 - CFCONTROL job for London SpA ends abruptly.      */
 /*                - TRAMSWFT.DAT in use during Copy To PC Documemt   */
 /*                  command. Issue monitor message and retry the     */
@@ -153,6 +159,28 @@
 /* QOpenSys files and QDLS folder strings */                                              /*CSW025*/
              DCL        VAR(&IFSFILES) TYPE(*CHAR) LEN(256)                               /*CSW025*/
              DCL        VAR(&QDLSFLR) TYPE(*CHAR) LEN(256)                                /*CSW025*/
+                                                                                        /*AR683288*/
+/* Check System Value for Folder to Use */                                              /*AR683288*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*AR683288*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                /*AR683288*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                /*AR683288*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                               /*AR683288*/
 /*/COPY WNCPYSRC,CFC0185012                                          */
 
 /* Global monitor messages                                           */
@@ -165,6 +193,22 @@
              CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW051')                              /*CSW051*/
              IF (&PRTCD *EQ ' ') (CHGVAR (&CSW051) VALUE('Y'))                            /*CSW051*/
                                                                                           /*CSW051*/
+/* Check if to use QDLS instead of QOpenSys */                                          /*AR683288*/
+                                                                                        /*AR683288*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'TRAMinQDLS' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)                                              /*AR683288*/
+                                                                                        /*AR683288*/
+/* If the 'TRAMinQDLS system value is found set to Y, switch off CSW025                 /*AR683288*/
+/* to use QDLS */                                                                       /*AR683288*/
+                                                                                        /*AR683288*/
+             IF         COND(%SST(&SVAL1 1 1) *EQ 'Y') +
+                          THEN(CHGVAR VAR(&CSW025) +
+                          VALUE(' '))                                                   /*AR683288*/
+                                                                                        /*AR683288*/
 /* Notify data area that processing is active */
 /**********  IF         COND(&MPHAS *EQ 'A') THEN(CHGDTAARA +
                           DTAARA(CFSTAT (49 6)) VALUE('ACTIVE'))                       */ /*CCB020*/
@@ -423,6 +467,11 @@ CONT2:       CLRPFM     FILE(CFWOCMPD)
 /**********  CPYTOPCD   FROMFILE(CFWOCMPD) TOFLR(&FLR) +
 /**********               TODOC(TRAMHOST.DAT) REPLACE(*YES) +
 /**********               TRNFMT(*NOTEXT)                                                /*245314A*/
+             IF         COND(&CSW025 *NE 'Y') THEN(DO)                                  /*AR683288*/
+             CPYTOPCD   FROMFILE(CFWOCMPD) TOFLR(&FLR) +
+                          TODOC(TRAMHOST.DAT) REPLACE(*YES) +
+                          TRNFMT(*NOTEXT)                                               /*AR683288*/
+             ENDDO                                                                      /*AR683288*/
 /*/COPY WNCPYSRC,CFC0185014                                          */
                                                                      /*CCF001*/
                                                                      /*CCF001*/

@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DAI102             Date 23Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 212558             Date 30Jan03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
@@ -33,6 +34,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI102 - TI Posting Narrative Enhancement                    *
+      *           Include "Issuing Bank Reference" for LC postings    *
+      *           Used core hooks  TI0380C003 and TI0380F001.         *
+      *           Added hook DAI102_019.                              *
+      *           Upgrade to FBMidas 2.1.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  212558 - Recompile over changed file TIPOSTPD.               *
@@ -92,6 +98,7 @@
      C                   READ      TIPOSTPD                               89
      C                   ENDDO
       *
+     C/COPY WNCPYSRC,DAI102_019                                                               DAI102
       *
       *================================================================
       *  P R O G R A M     E N D                                      *

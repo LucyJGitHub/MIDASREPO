@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL182             Date 11May17               *
+      *  Last Amend No. MD026991           Date 04Jul19               *
+      *  Prev Amend No. DAI102             Date 23Jun19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL182             Date 11May17               *
       *                 CGL154             Date 13Oct14               *
       *                 MD027587           Date 19Jun14               *
       *                 TI010329           Date 28May13               *
@@ -77,6 +79,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026991 - Should follow forward value dates set for GL      *
+      *             transaction when CGL010 is On. Incorporate        *
+      *             processing for CGL010.                            *
+      *           - Applied for MD-25424                              *
+      *  DAI102 - TI Posting Narrative Enhancement. Upgrade to FBM2.1 *
+      *           Include "Issuing Bank Reference" for LC postings    *
+      *           Added hooks DAI102_013, DAI102_014, DAI102_015,     *
+      *                       DAI102_016, DAI102_017 and DAI102_018   *
+      *           Include fix 207747.                                 *
+      *           Upgrade to FBMidas 2.1.                             *
+      *  207747 - Missing code on TI0341M for DTA001 caused DBError.  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *           (Recompile)                                         *
@@ -262,6 +275,7 @@
       *
      FGLJENHL0  UF A E           K DISK    INFSR(*PSSR)
      FGLJENHL1  IF   E           K DISK    INFSR(*PSSR)
+     F/COPY WNCPYSRC,DAI102_014                                                               DAI102
       *                                                                                      BUG4860
      FTI0341P1  O    E             PRINTER INFDS(SPOOL1)  USROPN                             BUG4860
       *   Held Batch posting report                                                          BUG4860
@@ -287,6 +301,7 @@
       *  U7+U8 - Database Error                                       *
       *                                                               *
       *****************************************************************
+     D/COPY WNCPYSRC,DAI102_015                                                               DAI102
       *
      D PSDS           SDS
       *  Program status data structure.
@@ -321,6 +336,8 @@
      D  PcacFNAA     E                     EXTFLD(QQFNAA)                                     CGL029
      D  PcacFNIC     E                     EXTFLD(QQFNIC)                                     CGL029
       *
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)                                MD026991
+     D  GelrACCD     E                     EXTFLD(QQACCD)                                   MD026991
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
       *
@@ -349,6 +366,7 @@
      D**EVR6****              19     24                                                212600 212558
      D**TISEQN**              25     27  0                                             211073 212558
      D**TIVALD**              28     34  0                                             211073 212558
+     D/COPY WNCPYSRC,DAI102_013                                                               DAI102
       *
      D W#ASOC          DS
      D  W#CBN                  1      3  0
@@ -1123,9 +1141,27 @@
       *
       * Allow future or backvalued date if account is retail.
       * Keep date as from TI if it is invalid (batch will be held).               211074
+      *                                                                                     MD026991
+     C                   MOVE      *Blank        WALFU             1                        MD026991
+      *                                                                                     MD026991
+      ** If CGL010 is installed, set WALFU to 'Y' when either of the                        MD026991
+      ** conditions is satisfied                                                            MD026991
+      *                                                                                     MD026991
+     C                   IF        CGL010 = 'Y'                                             MD026991
+     C                   IF        (ATYP = 'N') And (BKAFVN = 'Y') Or                       MD026991
+     C                             (ATYP = 'D') And (BKAFVD = 'Y') Or                       MD026991
+     C                             (ATYP = 'C') And (BKAFVC = 'Y') Or                       MD026991
+     C                             (ATYP = 'G') And (BKAFVG = 'Y')                          MD026991
+     C                   EVAL      WALFU = 'Y'                                              MD026991
+     C                   ENDIF                                                              MD026991
+     C                   ENDIF                                                              MD026991
+      *                                                                                     MD026991
      C     ATYP          IFEQ      'R'
      C     MTIVD         ORLT      DACO                                           211074
      C     W#BACK        ORGT      BJBVPD                                         211074
+     C     MTIVD         ORGT      BJRDNB                                                   MD026991
+     C     CGL010        ANDEQ     'Y'                                                      MD026991
+     C     WALFU         ANDEQ     'Y'                                                      MD026991
      C                   Z-ADD     MTIVD         BTVLDT
      C                   ELSE
       * Otherwise allow backvalued date if management accounts is on.
@@ -1145,6 +1181,7 @@
      C**********         MOVEL     TIEVRF        BTNRDC                                212129 212600
      C     TIDLTP        CAT       TIDLRF        BTNRDC                                       212600
      C                   MOVEL     EVR6          RDC6                                         212600
+     C/COPY WNCPYSRC,DAI102_017                                                               DAI102
       * Account Type
      C                   MOVE      ATYP          BTACTY
       * Assoc. Customer No.
@@ -1728,6 +1765,22 @@
      C                   Z-ADD     1             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     MD026991
+      ** Retrieve Bank Details                                                              MD026991
+      *                                                                                     MD026991
+     C                   CALL      'AOGELRR0'                                               MD026991
+     C                   PARM      '*MSG'        WWRTCD            7                        MD026991
+     C                   PARM      '*FIRST'      WWOPTN            7                        MD026991
+     C     SDGELR        PARM      SDGELR        DSFDY                                      MD026991
+      *                                                                                     MD026991
+      **  Error?                                                                            MD026991
+      *                                                                                     MD026991
+     C     WWRTCD        IFNE      *BLANKS                                                  MD026991
+     C                   MOVEL     '*FIRST'      DBKEY                                      MD026991
+     C                   MOVEL     'SDGELRPD'    DBFILE                                     MD026991
+     C                   Z-ADD     1             DBASE                                      MD026991
+     C                   EXSR      *PSSR                                                    MD026991
+     C                   ENDIF                                                              MD026991
       *                                                                                       214390
       *  Free AOTIINR0 so it will recheck the Min/Max batch sizes on each program call        214390
      C                   CALL      'AOTIINR0'                                                 214390
@@ -1812,6 +1865,28 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU029
      C                   ENDIF
+      ** Access SAR details file to determine if CGL010 is installed.                       MD026991
+      *                                                                                     MD026991
+     C                   CALL      'AOSARDR0'                                               MD026991
+     C                   PARM      '       '     ##RTCD            7                        MD026991
+     C                   PARM      '*VERIFY'     ##OPTN            7                        MD026991
+     C                   PARM      'CGL010'      ##SARD            6                        MD026991
+      *                                                                                     MD026991
+      ** Database Error                                                                     MD026991
+      *                                                                                     MD026991
+     C     ##RTCD        IFNE      *BLANK                                                   MD026991
+     C     ##RTCD        ANDNE     '*NRF   '                                                MD026991
+     C                   Z-ADD     9             DBASE                                      MD026991
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD026991
+     C                   MOVEL     '*CALL'       DBKEY                                      MD026991
+     C                   EXSR      *PSSR                                                    MD026991
+     C                   ENDIF                                                              MD026991
+      *                                                                                     MD026991
+     C     ##RTCD        IFEQ      *BLANK                                                   MD026991
+     C                   MOVEL     'Y'           CGL010            1                        MD026991
+     C                   ELSE                                                               MD026991
+     C                   MOVEL     'N'           CGL010                                     MD026991
+     C                   ENDIF                                                              MD026991
       *                                                                                      BUG4704
       ** Access SAR details file to determine if CGL002 is installed.                        BUG4704
      C                   CALL      'AOSARDR0'                                                BUG4704
@@ -1838,6 +1913,7 @@
       *                                                                                      BUG4704
      C     *DTAARA       DEFINE                  GLREOV                                      BUG4704
      C                   IN        GLREOV                                                    BUG4704
+     C/COPY WNCPYSRC,DAI102_016                                                               DAI102
       *
       *  Set current batch number from data area TIBATCH
       *  If this is blank then set current batch no. as TILRBN
@@ -1993,6 +2069,8 @@
      C                   KFLD                    TISEQN
      C                   KFLD                    TIVALD
       *
+     C/COPY WNCPYSRC,DAI102_018                                                               DAI102
+      *                                                                                       DAI102
      C     K#PROJ        KLIST                                                  207601
      C**********         KFLD                    Y_TIDLBR                              207601 212129
      C**********         KFLD                    Y_TIDLTP                              207601 212129
@@ -2629,6 +2707,8 @@
       *                                                                                       214492
      C                   ENDSR                                                                214492
       *****************************************************************                       214492
+** CmdArr - Command To Execute via QCMDEXC  (Enhancement DAI102)                              DAI102
+DLYJOB DLY(1)                                                                                 DAI102
 ** WCompData - Dummy comparison timestamp                                                     212215
 2099-01-01-00.00.01.000000                                                                    212215
 ** HLDRSN                                                                                    BUG4860

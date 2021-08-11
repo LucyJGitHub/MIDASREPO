@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054346           Date 18Jul21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -51,7 +53,7 @@
       *****************************************************************
      F*SCSARSL1* UF A E           K DISK    INFSR(*PSSR)                                    MD055681
      F*SCCSECL1IF*E*****      K        DISK         KINFSR *PSSR                              CGP002
-     FGPCSECL1  IF   E           K DISK    INFSR(*PSSR)
+     F*GPCSECL1* IF   E           K DISK    INFSR(*PSSR)                                    MD054346
       *
       ** Update core switchable features file with new details
       *
@@ -109,6 +111,7 @@
      D REL104          C                   CONST('ABS R10.4')
      D REL105          C                   CONST('ABS R10.5')
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
+     D GPCSEC        E DS                  EXTNAME(GPSECJW0)                                MD054346
      C/TITLE Main Processing
       *================================================================
       *  P R O G R A M   S T A R T                                    *
@@ -395,7 +398,17 @@
       ** Does user have authority to update this feature?
       *
      C********** SARN      CHAINSCCSECL1             95                                       CGP002
-     C     SARN          CHAIN     GPCSECL1                           95
+     C*****SARN*         CHAIN     GPCSECL1                           95                    MD054346
+     C/EXEC SQL                                                                             MD054346
+     C+ SELECT *                                                                            MD054346
+     C+ into :GPCSEC                                                                        MD054346
+     C+ from GPSECJW0                                                                       MD054346
+     C+ where P@SARN = :SARN                                                                MD054346
+     C/END-EXEC                                                                             MD054346
+     C                   setoff                                       95                    MD054346
+     C                   if        SQLCODE <> 0                                             MD054346
+     C                   seton                                        95                    MD054346
+     C                   endif                                                              MD054346
       *
       ** If switchable feature already exists on file and this
       ** is an update function, we need to know if the user has

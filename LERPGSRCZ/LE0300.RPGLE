@@ -4202,7 +4202,8 @@
      C                   MOVEL     DRST          RDRST                                         14083
      C                   MOVEL     DRCL          RDRCL
      C                   MOVEL     SHTP          RSHTP                                         14083
-     C                   Z-ADD     FEBR          RFEBR                                         14083
+     C**********         Z-ADD     FEBR          RFEBR                                  14083 CSD103
+     C                   MOVE      FEBR          RFEBR                                        CSD103
      C                   MOVEL     FERS          RFERS                                         14083
      C                   MOVEL     PRTR2         RPRTR
      C                   MOVEL     SEQN          RSEQN

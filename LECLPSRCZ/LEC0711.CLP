@@ -199,27 +199,27 @@
                       CALL       PGM(LE0691A) PARM(&RSEQ &RENT)                           /*CLE165*/
                       ENDDO                                                               /*CLE165*/
              ELSE     CMD(DO)                                                             /*CLE165*/
-             		  CHGVAR     VAR(&SARD) VALUE('CLE053')                			      /*CLE053*/
-                      CHGVAR     VAR(&OPTN) VALUE('*VERIFY')         			          /*CLE053*/
-             		  CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD) 			          /*CLE053*/
-             		  IF         COND(&RTCD *EQ '       ') THEN(DO)     			      /*CLE053*/
-                                                                     					  /*CLE053*/
-             		  OVRDBF     FILE(LVEDSL4) POSITION(*KEY 2 LVEDIF1F +
-                          &RENT)                                     					  /*CLE053*/
-             		  MONMSG     MSGID(CPF0000)                           			      /*CLE053*/
-              		  OPNDBF     FILE(LVEDSL4) OPTION(*ALL)            				      /*CLE053*/
-             		  MONMSG     MSGID(CPF0000) EXEC(DO)   			                      /*CLE053*/
-             		  DLTOVR     FILE(LVEDSL4)         			                          /*CLE053*/
-                                                      					                  /*CLE053*/
-                 	  ENDDO                          				                      /*CLE053*/
-                                                        					              /*CLE053*/
-             		  CALL       PGM(LE1691) PARM(&RSEQ &RENT)     				          /*CLE053*/
-             		  DLTOVR     FILE(LVEDSL4)                                            /*CLE053*/
-             		  MONMSG     MSGID(CPF0000)                                			  /*CLE053*/
-             		  CLOF       OPNID(LVEDSL4)                                		  	  /*CLE053*/
-             		  MONMSG     MSGID(CPF0000)                                			  /*CLE053*/
-             		  ENDDO                                                    			  /*CLE053*/
-             		  ELSE       CMD(DO)                                       			  /*CLE053*/
+                      CHGVAR     VAR(&SARD) VALUE('CLE053')                               /*CLE053*/
+                      CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                              /*CLE053*/
+                      CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                    /*CLE053*/
+                      IF         COND(&RTCD *EQ '       ') THEN(DO)                       /*CLE053*/
+                                                                                          /*CLE053*/
+                      OVRDBF     FILE(LVEDSL4) POSITION(*KEY 2 LVEDIF1F +
+                          &RENT)                                                          /*CLE053*/
+                     MONMSG     MSGID(CPF0000)                                            /*CLE053*/
+                     OPNDBF     FILE(LVEDSL4) OPTION(*ALL)                                /*CLE053*/
+                     MONMSG     MSGID(CPF0000) EXEC(DO)                                   /*CLE053*/
+                     DLTOVR     FILE(LVEDSL4)                                             /*CLE053*/
+                                                                                          /*CLE053*/
+                     ENDDO                                                                /*CLE053*/
+                                                                                          /*CLE053*/
+                     CALL       PGM(LE1691) PARM(&RSEQ &RENT)                             /*CLE053*/
+                     DLTOVR     FILE(LVEDSL4)                                             /*CLE053*/
+                     MONMSG     MSGID(CPF0000)                                            /*CLE053*/
+                     CLOF       OPNID(LVEDSL4)                                            /*CLE053*/
+                     MONMSG     MSGID(CPF0000)                                            /*CLE053*/
+                     ENDDO                                                                /*CLE053*/
+                     ELSE       CMD(DO)                                                   /*CLE053*/
                       CALL    PGM(LE0691) PARM(&RSEQ &RENT)           /*S01117*/
                       ENDDO                                                               /*CLE053*/
                       ENDDO                                                               /*CLE165*/

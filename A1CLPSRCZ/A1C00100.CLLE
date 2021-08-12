@@ -1,0 +1,116 @@
+000100000000/*********************************************************************/
+000200000000/*STD    CLPBASEMOD                                                  */
+000300000000/*********************************************************************/
+000400000000/*                                                                   */
+000401000000/*       Midas - Securities Trading Module                           */
+000600000000/*                                                                   */
+000700000000/*       A1C00100 - Store EIR for SE Book Positions                  */
+000800000000/*                                                                   */
+000900000000/*       (c) Finastra International Limited 2021                     */
+001000000000/*                                                                   */
+001100000000/*       Last Amend No. BA1007  *CREATE    Date 01Jun21              */
+001200000000/*                                                                   */
+001300000000/*********************************************************************/
+001400000000/*                                                                   */
+001500000000/*       BA1007 - Store EIR for SE Book Positions                    */
+001600000000/*                                                                   */
+001700000000/*********************************************************************/
+001800000000             PGM
+001900000000
+002000000000             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+002100000000             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra Internation+
+002200000000                          al Limited 2021')
+002300000000             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('A1C00100  ')
+002400000000             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+002500000000             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+002600000000             DCL        (&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+002700000000             DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)
+002800000000             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+002900000000             DCL        VAR(&SDSTAT)  TYPE(*CHAR)  LEN(256)
+003000000000             DCL        (&BA1007) TYPE(*CHAR) LEN(1) VALUE(' ')
+003100000000             DCL        (&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+003200000000             MONMSG     MSGID(CPF2817)
+003300000000             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+003400000000             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+003500000000             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+003600000000
+003700000000             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+003800000000                          CMDLBL(ABNOR))
+003900000000
+004000000000             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+004100000000             CHGJOB     SWS(XXXXXX00)
+004200000000
+004300000000             SNDPGMMSG  MSG('A1C00100 - Store EIR for SE Book Position') TOMSGQ(MRUNQ)
+004400000000
+004500000000/***  Access Switchable Features file to see if BA1007  present  ***/
+004600000000
+004700000000             CALL       (AOSARDR0) PARM(&PRTCD '*VERIFY' 'BA1007')
+004800000000             IF         (&PRTCD *EQ ' ') (CHGVAR (&BA1007) VALUE('Y'))
+004900000000
+005000000000/***  If the BA1007 Feature is present                   ***/
+005100000000
+005200000000             IF         (&BA1007 *EQ 'Y') THEN(DO)
+005300000000
+005400000000/*          CHECK FOR COMPONENT RESTART                                   */
+005500000000
+005600000000                CHGVAR     VAR(&BUSY) VALUE(' ')
+005700000000                CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+005800000000
+005900000000/* IF RESTART, DISABLE ACCESS PATHS                              */
+006000000000
+006100000000                IF         COND(&BUSY = 'Y') THEN(DO)
+006200000000
+006300000000/* AND COPY FILES                                                */
+006400000000
+006500000000                   CPYF       FROMFILE(XA1BPPNPD) TOFILE(A1BPPNPD) MBROPT(*REPLACE) FMTOPT(*NONE)
+006600000000                   MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM A1BPPNPD)
+006700000000
+006800000000                   CHGVAR     VAR(&BUSY) VALUE('N')
+006900000000                   CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)
+007000000000
+007100000000                ENDDO
+007200000000
+007300000000/* DELETE COPY FILES                               */
+007400000000
+007500000000                DLTF       FILE(XA1BPPNPD)
+007600000000                MONMSG     MSGID(CPF0000)
+007700000000
+007800000000                CPYF       FROMFILE(A1BPPNPD) TOFILE(&TOLIB/XA1BPPNPD) MBROPT(*REPLACE) +
+007900000000                             CRTFILE(*YES) FMTOPT(*NONE)
+008000000000                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XA1BPPNPD))
+008100000000
+008200000000                CHGVAR     VAR(&BUSY) VALUE('Y')
+008300000000                CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)
+008400000000
+008500000000/***  CALL A10100 which will calculate LEIR and output to report **/
+008600000000                CALL       PGM(A10100)
+008700000000
+008800000000                DLTF       FILE(XA1BPPNPD)
+008900000000                MONMSG     MSGID(CPF0000)
+009000000000
+009100000000/* Database error processing */
+009200000000
+009300000000             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+009400000000                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+009500000000                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+009600000000                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+009700000000                GOTO       CMDLBL(END)
+009800000000             ENDDO
+009900000000
+010000000000             ENDDO
+010100000000
+010200000000             GOTO       CMDLBL(END)
+010300000000
+010400000000ABNOR:
+010500000000
+010600000000             CHGJOB     SWS(XXXXXX11)
+010700000000
+010800000000             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program A1C00100 ended abnormally +
+010900000000                          - see job log') TOMSGQ(MOPERQ)
+011000000000             MONMSG     MSGID(CPF0000 MCH0000)
+011100000000
+011200000000END:
+011300000000             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+011400000000                          Finastra International Limited 2021')
+011500000000
+011600000000             ENDPGM

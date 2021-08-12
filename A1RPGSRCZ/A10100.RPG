@@ -1,0 +1,482 @@
+000104000000     H        1
+000106000000      *****************************************************************
+000107000000/*STD *  RPGBASE                                                      *
+000108000000/*EXI *  TEXT('Midas SE Store EIR for SE Book Positions')             *
+000109000000      *****************************************************************
+000110000000      *                                                               *
+000111000000      *  Midas - Securities Trading Module                            *
+000112000000      *                                                               *
+000113000000      *  A10100   - Store EIR for SE Book Positions                   *
+000114000000      *             End of COB                                        *
+000115000000      *                                                               *
+000116000000      *  Function:  This program will run at the end of COB and will  *
+000117000000      *             calculate Last Effective Interest Rate and output *
+000118000000      *             it onto new report                                *
+000119000000      *                                                               *
+000120000000      *  (c) Finastra International Limited 2021                      *
+000121000000      *                                                               *
+000122000000      *  Last Amend No. BA1007  *CREATE    Date 01Jun21               *
+000123000000      *  Prev Amend No.                    Date ddmmmyy               *
+000124000000      *                                                               *
+000125000000      *---------------------------------------------------------------*
+000126000000      *                                                               *
+000127000000      *  BA1007 - Store EIR for SE Book Positions                     *
+000128000000      *                                                               *
+000129000000      *****************************************************************
+000130000000      *                                                               *
+000131000000      *  Use of indicators.                                           *
+000132000000      *                                                               *
+000133000000      *    U7+U8 - Database Error Indicator                           *
+000134000000      *                                                               *
+000135000000      *****************************************************************
+000136000000      *                                                               *
+000137000000      *  S U B R O U T I N E  I N D E X                               *
+000138000000      *                                                               *
+000139000000      *  *PSSR - Program exception error routine                      *
+000140000000      *  *INZSR - Program Initialisation Routine                      *
+000141000000      *                                                               *
+000142000000      *    The *INZSR subroutine will only get called automatically   *
+000143000000      *    on entry to the module the first time it is run            *
+000144000000      *    (unless you end the program with LR on).  Similarly        *
+000145000000      *    D-spec initialisation only happens the first time.  Use    *
+000146000000      *    RESET for subsequent passes.                               *
+000147000000      *                                                               *
+000148000000      *****************************************************************
+000153000000      *
+000154000000     FBKPHD   IF  E           K        DISK         KINFSR *PSSR
+000155000000     FA1BPPNL0UF  E           K        DISK         KINFSR *PSSR A
+000156000000     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+000157000000     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+000158000000     FSDBOOKL0IF  E           K        DISK         KINFSR *PSSR
+000159000000     FA10100P1O   E             09     PRINTER      KINFDS SPOOL
+000160000000     E                    ZA1        16  1               ZALIGN SR. ARRAY
+000161000000     E                    ZA2        16  1               ZALIGN SR. ARRAY
+000162000000     E                    ZS1        15  1 0
+000163000000     E                    ZS2        21  1
+000164000000     E                    ##CD       12  4               CD01-12 ARRAY
+000165000000     E                    ##CR       12  1               CR01-12 ARRAY
+000166000000     E/COPY ZSRSRC,ZNCDZ1
+000167000000     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+000168000000     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+000169000000     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+000170000000     E**
+000171000000     I            DS
+000172000000     I                                        1  150WORK15
+000173000000     I                                        1  150ZS1
+000174000000     ISPOOL       DS
+000175000000      * P1 printer file information data structure
+000176000000     I                                       83  92 SFILE
+000177000000     I                                    B 123 1240SFNUM
+000178000000     I                                    B 152 1530SFLIN
+000179000000     ILDAX       UDS                            600
+000180000000     I                                        1 256 ##LDA1
+000181000000     I                                      257 512 ##LDA2
+000182000000     I                                      513 600 ##LDA3
+000183000000     I                                        1 107 ##SECD
+000184000000     I                                        1   6 ##MATY
+000185000000     I                                       11  22 ##CPNR
+000186000000     I                                       31  31 ##DYBS
+000187000000     I                                       32  32 ##DVBS
+000188000000     I                                       33  33 ##STBS
+000189000000     I                                       34  35 ##SYBS
+000190000000     I                                       36  83 ##CD
+000191000000     I                                       36  39 ##CD01
+000192000000     I                                       40  43 ##CD02
+000193000000     I                                       44  47 ##CD03
+000194000000     I                                       48  51 ##CD04
+000195000000     I                                       52  55 ##CD05
+000196000000     I                                       56  59 ##CD06
+000197000000     I                                       60  63 ##CD07
+000198000000     I                                       64  67 ##CD08
+000199000000     I                                       68  71 ##CD09
+000200000000     I                                       72  75 ##CD10
+000201000000     I                                       76  79 ##CD11
+000202000000     I                                       80  83 ##CD12
+000203000000     I                                       84  95 ##CR
+000204000000     I                                       84  84 ##CR01
+000205000000     I                                       85  85 ##CR02
+000206000000     I                                       86  86 ##CR03
+000207000000     I                                       87  87 ##CR04
+000208000000     I                                       88  88 ##CR05
+000209000000     I                                       89  89 ##CR06
+000210000000     I                                       90  90 ##CR07
+000211000000     I                                       91  91 ##CR08
+000212000000     I                                       92  92 ##CR09
+000213000000     I                                       93  93 ##CR10
+000214000000     I                                       94  94 ##CR11
+000215000000     I                                       95  95 ##CR12
+000216000000     I                                       96 101 ##LCPN
+000217000000     I                                      102 107 ##NCD
+000218000000      *
+000219000000     I                                      116 180 SECD
+000220000000     I                                      116 1170CMFQ
+000221000000     I                                      118 118 DSCB
+000222000000     I                                      119 119 DSLC
+000223000000     I                                      120 120 PROT
+000224000000     I                                      121 123 NMCY
+000225000000     I                                      124 1240CDP
+000226000000     I                                      125 1250NMDP
+000227000000     I                                    P 126 1280MATY
+000228000000     I                                    P 129 1310LCPN
+000229000000     I                                    P 132 1340NCD
+000230000000     I                                    P 135 1370ISSD
+000231000000     I                                    P 138 1400ITLD
+000232000000     I                                    P 141 1430FCPN
+000233000000     I                                    P 144 1497CPNR
+000234000000     I                                    P 150 1559CFCT
+000235000000     I                                    P 156 1630CPDP
+000236000000     I                                    P 164 1710SFPP
+000237000000     I                                    P 172 1730IADJ
+000238000000     I                                    P 174 1760FNCD
+000239000000     I                                      177 177 DYBS
+000240000000     I                                      178 178 DVBS
+000241000000     I                                      179 179 STBS
+000242000000     I                                      180 181 SYBS
+000243000000     I                                      182 182 SPBS
+000244000000     I                                      183 183 PPDI
+000245000000     I                                      201 248 CD
+000246000000     I                                      201 2040CD01
+000247000000     I                                      205 2080CD02
+000248000000     I                                      209 2120CD03
+000249000000     I                                      213 2160CD04
+000250000000     I                                      217 2200CD05
+000251000000     I                                      221 2240CD06
+000252000000     I                                      225 2280CD07
+000253000000     I                                      229 2320CD08
+000254000000     I                                      233 2360CD09
+000255000000     I                                      237 2400CD10
+000256000000     I                                      241 2440CD11
+000257000000     I                                      245 2480CD12
+000258000000     I                                      249 260 CRDS
+000259000000     I                                      249 260 CR
+000260000000     I                                      249 249 CR01
+000261000000     I                                      250 250 CR02
+000262000000     I                                      251 251 CR03
+000263000000     I                                      252 252 CR04
+000264000000     I                                      253 253 CR05
+000265000000     I                                      254 254 CR06
+000266000000     I                                      255 255 CR07
+000267000000     I                                      256 256 CR08
+000268000000     I                                      257 257 CR09
+000269000000     I                                      258 258 CR10
+000270000000     I                                      259 259 CR11
+000271000000     I                                      260 260 CR12
+000272000000     I                                      261 2650IDAYS
+000273000000     I                                      266 2700IDYYR
+000274000000     I                                      271 280 SESN
+000275000000      *
+000276000000     I                                      281 403 ##TRDD
+000277000000     I                                      281 292 ##NOML
+000278000000     I                                      293 308 ##SYLP
+000279000000     I                                      309 314 ##TDVD
+000280000000     I                                      315 315 ##ACIN
+000281000000     I                                      316 331 ##FYLP
+000282000000     I                                      332 349 ##CONS
+000283000000     I                                      350 367 ##DSPR
+000284000000     I                                      368 385 ##INTR
+000285000000     I                                      386 403 ##CVAL
+000286000000     I                                      404 409 ##PUPP
+000287000000      *
+000288000000     I                                      410 4200NOML
+000289000000     I                                      421 4358TPDY
+000290000000     I                                      436 4400TDVD
+000291000000     I                                      441 441 ACIN
+000292000000     I                                      442 4568PRIC
+000293000000     I                                      457 4710CONS
+000294000000     I                                      472 4860DSPR
+000295000000     I                                      487 5010INTR
+000296000000     I                                      502 5160CVAL
+000297000000     I                                      517 5214PUPP
+000298000000      *
+000299000000     I                                      522 522 YP
+000300000000     I                                      523 523 LDAC
+000301000000      *
+000303000000     IWLDA        DS                            256
+000304000000     I                                      134 183 DBINF
+000305000000      *
+000309000000     IDBERR       DS
+000310000000     I                                        1   8 DBFILE
+000311000000     I                                        9  37 DBKEY
+000312000000     I                                       38  47 DBPGM
+000313000000     I                                       48  500DBASE
+000314000000      *
+000315000000     IDSFDY     E DSDSFDY
+000316000000     ISDBANK    E DSSDBANKPD
+000317000000      *
+000319000000      *****************************************************************
+000320000000      *                    MAIN PROCESSING                            *
+000321000000      *****************************************************************
+000322000000      *
+000323000000     C                     EXSR INIT
+000324000000      *
+000325000000     C                     MOVE 'N'       REPT    1
+000326000000      *
+000327000000     C           *LOVAL    SETLLBKPHD
+000328000000     C                     READ BKPHDDF                  73
+000329000000     C           *IN73     DOWEQ'0'
+000334000000      *
+000335000000      * GET SECURITY DETAILS
+000336000000      *
+000337000000     C           BHSC      CHAINSECTYDF              70
+000338000000      *
+000339000000      * PROCESS ONLY FOUND LIVE SECURITY
+000340000000      *
+000341000000     C           *IN70     IFEQ '0'
+000342000000     C           RECI      IFEQ 'D'
+000343000000     C           SYBS      ANDNE*BLANK
+000344000000      *
+000345000000      *
+000346000000      * SET NOMINAL CURRENCY DECIMAL PLACES
+000347000000      *
+000348000000     C           NMCY      IFEQ 'JPY'
+000349000000     C           NMCY      OREQ 'ITL'
+000350000000     C                     Z-ADD0         CDP
+000351000000     C                     END
+000352000000      *
+000353000000      * GET INVESTMENT TYPE DETAILS
+000354000000      *
+000355000000     C           INVTPK    KLIST
+000356000000     C                     KFLD           NMCY
+000357000000     C                     KFLD           SITP
+000358000000     C           INVTPK    CHAININVTPDF              71
+000359000000     C           *IN71     IFEQ '0'
+000360000000      *
+000361000000      * ONLY PROCESS IS PROCESSING TYPE IS NOT 2 4 OR 6
+000362000000      *
+000363000000     C           PROT      IFNE '2'
+000364000000     C           PROT      ANDNE'4'
+000365000000     C           PROT      ANDNE'6'
+000366000000      *
+000367000000     C           PROT      IFEQ '7'
+000368000000     C                     Z-ADD4         NMDP
+000369000000     C                     ELSE
+000370000000     C           PROT      IFEQ '8'
+000371000000     C                     Z-ADD2         NMDP
+000372000000     C                     END
+000373000000      *
+000374000000      * SET DAY/MONTH ARRAYS FOR SCREEN DISPLAY
+000375000000      *
+000376000000     C                     MOVEL*BLANK    ##CD
+000377000000     C                     Z-ADD1         X       30
+000378000000     C           X         DOUGT12
+000379000000     C           CD,X      IFNE *ZERO
+000380000000     C                     MOVE CD,X      ##CD,X
+000381000000     C                     END
+000382000000     C                     ADD  1         X
+000383000000     C                     END
+000384000000      *
+000385000000     C                     MOVE CR        ##CR
+000386000000      *
+000387000000      * SET TRADE/YIELD BASIS & DAY/DIVISOR BASIS
+000388000000      *
+000389000000     C           SYBS      IFNE *BLANK
+000390000000     C           STBS      ANDNE'Y'
+000391000000     C                     MOVEL'Y'       STBS
+000392000000     C                     END
+000393000000     C                     MOVELSTBS      ##STBS
+000394000000     C                     MOVELSYBS      ##SYBS
+000395000000      *
+000396000000     C                     MOVELDYBS      ##DYBS
+000397000000     C                     MOVELDVBS      ##DVBS
+000399000000     C                     MOVEL'Y'       YP
+000400000000      *
+000401000000      * SET Price
+000402000000      *
+000404000000     C                     Z-ADDLAVP      PRIC
+000405000000     C                     Z-ADD0         TPDY
+000406000000     C                     Z-ADD0         PUPP
+000407000000     C                     Z-ADD0         NOML
+000408000000      *
+000409000000      * SET value date
+000410000000      *
+000411000000      * GET Book Code
+000412000000     C           BHBK      CHAINSDBOOKL0             74
+000413000000     C           *IN74     IFEQ *OFF
+000414000000      *
+000415000000     C           BDSTAM    IFEQ 'N'
+000416000000     C                     Z-ADDLPSD      TDVD
+000417000000     C                     ELSE
+000418000000     C                     Z-ADDBJRDNB    TDVD
+000419000000     C                     ENDIF
+000420000000      *
+000421000000     C                     ELSE
+000422000000     C                     Z-ADDBJRDNB    TDVD
+000423000000     C                     ENDIF
+000424000000      *
+000425000000      * CALCULATE YIELD/PRICE AND INTEREST
+000426000000      *
+000427000000     C                     OUT  LDAX
+000428000000     C                     CALL 'A10101'
+000429000000     C           *LOCK     IN   LDAX
+000430000000     C                     Z-ADDLPSD      TDVD
+000431000000      *
+000432000000      * FORMAT and output EIR in A1BPPNPD
+000433000000      *
+000434000000     C           BKPE      KLIST
+000435000000     C                     KFLD           BHSC
+000436000000     C                     KFLD           BHBA
+000437000000     C                     KFLD           BHBK
+000438000000     C                     KFLD           BHMK
+000439000000     C                     KFLD           BHTV
+000440000000     C           *IN09     IFEQ '1'
+000441000000     C                     WRITEHEADP1
+000442000000     C                     SETOF                     09
+000443000000     C                     END
+000444000000      * Update if found Write if not found
+000445000000     C           BKPE      CHAINA1BPPNDF             72
+000446000000     C           *IN72     IFEQ '0'
+000447000000      * If change today
+000450000000      *  LAVP <> to PRIC
+000451000000      * or LEIR <> TPDY
+000452000000      * or LPSD <> TDVD
+000455000000     C           LAVP      IFNE PRIC
+000456000000     C           LEIR      ORNE TPDY
+000457000000     C           LPSD      ORNE TDVD
+000459000000     C                     Z-ADDTPDY      PRICP
+000460000000     C                     Z-ADDLEIR      LEIRP
+000461000000     C                     WRITEDETAIL
+000464000000     C                     Z-ADDPRIC      LAVP
+000465000000     C                     Z-ADDTPDY      LEIR
+000466000000     C                     Z-ADDTDVD      LPSD
+000467000000     C                     Z-ADDBJRDNB    LCHD
+000468000000     C                     UPDATA1BPPNDF
+000469000000     C                     MOVE 'Y'       REPT    1
+000470000000     C                     END
+000471000000     C                     ELSE
+000473000000     C                     Z-ADDTPDY      PRICP
+000474000000     C                     Z-ADD0         LEIRP
+000475000000     C                     WRITEDETAIL
+000478000000     C                     Z-ADDPRIC      LAVP
+000479000000     C                     Z-ADDTPDY      LEIR
+000480000000     C                     Z-ADDTDVD      LPSD
+000481000000     C                     Z-ADDBJRDNB    LCHD
+000482000000     C                     WRITEA1BPPNDF
+000483000000     C                     MOVE 'Y'       REPT    1
+000484000000     C                     END
+000485000000      * End of fOUND INVETMENT TYPE WITH VALID prot
+000486000000     C                     END
+000487000000     C                     END
+000488000000     C                     END
+000489000000      * End of fOUND live security with Yield basis defined
+000490000000     C                     END
+000491000000     C                     END
+000492000000     C                     READ BKPHDDF                  73
+000493000000     C                     ENDDO
+000494000000      *
+000495000000     C           REPT      IFEQ 'N'
+000496000000     C                     EXSR #NUL
+000497000000     C                     ENDIF
+000498000000      *
+000499000000     C                     EXSR TERM
+000500000000      *
+000501000000      ********************************************************************
+000502000000      *                                                               *
+000503000000      *   INIT      - Initilisation Subroutine                        *
+000504000000      *                                                               *
+000505000000      *   CALLED BY - MAIN PROCESSING                                 *
+000506000000      *                                                               *
+000507000000      *****************************************************************
+000508000000     C           INIT      BEGSR
+000509000000      *
+000510000000     C                     SETOF                     2098
+000511000000     C           *NAMVAR   DEFN           LDAX
+000512000000     C           *LOCK     IN   LDAX
+000513000000      *
+000514000000      **   ACCESS BANK DETAILS
+000515000000     C                     CALL 'AOBANKR0'                 Bank details
+000516000000     C                     PARM '*MSG   ' @RTCD   7
+000517000000     C                     PARM '*FIRST ' @OPTN   7
+000518000000     C           SDBANK    PARM SDBANK    DSFDY
+000519000000      *
+000520000000     C           @RTCD     IFNE *BLANKS                    ***************
+000521000000     C                     MOVEL'001'     DBASE            *             *
+000522000000     C                     MOVEL'SDBANKPD'DBFILE           * DB ERR  001 *
+000523000000     C                     MOVE *BLANKS   DBKEY            *             *
+000524000000     C                     EXSR *PSSR                      ***************
+000525000000     C                     ENDIF
+000526000000      *
+000527000000     C                     MOVE 'N'       UPSSR   1        *PSSR Control
+000528000000     C                     Z-ADD0         PAGE
+000529000000     C                     MOVE BJMRDT    MRDT
+000530000000     C                     MOVELBJURPT    TITL
+000531000000     C                     WRITEHEADP1
+000532000000      *
+000533000000     C                     ENDSR
+000534000000      *****************************************************************
+000535000000      *                                                               *
+000536000000      *   *PSSR     - File error handler                              *
+000537000000      *                                                               *
+000538000000      *   CALLS     - N/A                                             *
+000539000000      *                                                               *
+000540000000      *   CALLED BY - All subroutines from error processing           *
+000541000000      *                                                               *
+000542000000      *****************************************************************
+000543000000      *
+000544000000     C           *PSSR     BEGSR
+000545000000      *
+000546000000      ** Prevent recursive call
+000547000000      *
+000548000000     C           UPSSR     IFEQ 'N'                        Recursive call
+000549000000      *
+000550000000     C                     MOVE 'Y'       UPSSR            *PSSR Executed
+000551000000      *
+000552000000      ** Update local data area
+000553000000      *
+000554000000     C                     MOVEL'A10100'  DBPGM     P      Set program id
+000555000000      *
+000556000000     C           *NAMVAR   DEFN LDA       WLDA
+000557000000     C           *LOCK     IN   WLDA
+000558000000     C                     MOVELDBERR     DBINF
+000559000000     C                     OUT  WLDA
+000560000000      *
+000561000000     C                     MOVE *ON       *INU7            Database error
+000562000000     C                     MOVE *ON       *INU8            Database error
+000563000000     C                     DUMP                            Dump system var
+000564000000      *
+000565000000     C                     EXSR TERM                       Stop run
+000566000000      *
+000567000000     C                     ENDIF
+000568000000      *
+000569000000     C                     ENDSR
+000570000000      *
+000571000000      *****************************************************************
+000572000000      *                                                               *
+000573000000      *  #NUL   Print EMPTY REPORT                                    *
+000574000000      *                                                               *
+000575000000      *  The sub-routine writes the empty header                      *
+000576000000      *                                                               *
+000577000000      *****************************************************************
+000578000000      *
+000579000000     C           #NUL      BEGSR
+000580000000      *
+000581000000     C                     WRITEP1NULL                     Null report
+000582000000      *
+000583000000     C                     ENDSR
+000584000000      *****************************************************************
+000585000000      *                                                               *
+000586000000      *    #TERM  Program termination                                 *
+000587000000      *                                                               *
+000588000000      *    The sub-routine handles the program termination            *
+000589000000      *                                                               *
+000590000000      *****************************************************************
+000591000000      *
+000592000000     C           TERM      BEGSR
+000593000000      *
+000594000000     C                     WRITEP1FOOT                     Footer
+000595000000      *
+000596000000     C                     MOVE *ON       *INLR            Last record
+000597000000     C                     RETRN                           Return control
+000598000000      *
+000599000000     C                     ENDSR
+000600000000      *
+000601000000      *****************************************************************
+000602000000     C/COPY ZSRSRC,ZDATE1Z2
+000603000000     C/COPY ZSRSRC,ZDATE2Z2
+000604000000     C/COPY ZSRSRC,ZALIGNZ2
+000605000000     C/COPY ZSRSRC,ZSEDITZ3
+000606000000**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0006070000000366073110961461
+000608000000**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000609000000000031059090120151181212243273304334365
+000610000000**   ZMNM - MONTHS SHORT NAMES
+000611000000JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

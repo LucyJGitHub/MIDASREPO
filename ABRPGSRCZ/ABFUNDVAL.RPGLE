@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058448           Date 14Jul21               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. MD058547           Date 10Aug21               *
+      *  Prev Amend No. MD058448           Date 14Jul21               *
+      *                 MD058379           Date 12Jul21               *
       *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -54,6 +55,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058547 - User cannot amend a call notice deposit taken     *
+      *             because of error 45049507. Add DDACTN on call to  *
+      *             MMVACTINTR.                                       *
       *  MD058448 - Total Interest is not zero when backward          *
       *             looking rate is entered                           *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -3087,6 +3091,7 @@
      C                   PARM      N1INTR        PPINTR           11 7                        CDL038
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102                                       CDL102
+     C                   PARM                    DDACTN                                     MD058547
      C*******************PARM                    PPINTR           11 7                 CDL020 CDL038
                                                                                               CDL020
      C                   IF        RetCodeOut <> *Blanks                                      CDL020

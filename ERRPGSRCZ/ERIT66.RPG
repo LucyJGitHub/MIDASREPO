@@ -1,0 +1,165 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Facilities Processing')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT66 - Facilities Processing                               *
+      *                                                               *
+      *  Called By: RPG/ERIT60                                        *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI135             Date 01Dec08               *
+      *                 MBV006             Date 22Aug08               *
+      *                 235438                  11Aug05               *
+      *                 MMI120                  10Jun05               *
+      *                 MMI117                  17Jan05               *
+      *                 MMI096                  20Jun02               *
+      *                 UIT021                  29JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI135 - Fidi Plurimi                                        *
+      *  MBV006 - If extension record not found, return null values.  *
+      *  235438 - Do not issue a database error if extension record   *
+      *           not found. This covers the case of matured loans    *
+      *           attached to a facility already dropped.             *
+      *  MMI120 - Complete CR2005                                     *
+      *  MMI117 - CR2005                                              *
+      *  MMI096 - Rewrite Facilities Extraction                       *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FXXFCT1L0IF  E           K        DISK
+     F* Facilities Italy Extension File
+      *
+      *===============================================================*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      *
+      * Data structure for KYFAST key
+     I            DS
+     I                                        1   6 KY1
+     I                                        7   90KY2
+     I                                       10  110KY3
+     I                                        1  110WWFACT
+      **=================================================================
+     C                     EXSR #INIT
+      *----------------------------------------------------------------==
+      ** Access Loan type/sub-type Extension file
+     C                     MOVELEXFCUS    KY1
+     C                     Z-ADDEXFACT    KY2
+     C                     Z-ADDEXFCNO    KY3
+      *
+     C           KYFACT    CHAINXXFCT1L0             80
+     C           *IN80     IFEQ '1'                        - B1
+     C********** *LOCK     IN   LDA                                       235438
+     C**********           MOVEL'661'     DBASE            ************** 235438
+     C**********           MOVEL'FCLTYFXP'DBFILE           ** DB ERROR    235438
+     C**********           MOVELWWFACT    DBKEY            ************** 235438
+     C**********           EXSR #DBERR                                    235438
+     C                     MOVE *BLANKS   ICSBCL                          MBV006
+     C                     MOVE *BLANKS   ICLNTP                          MBV006
+     C                     MOVE *BLANKS   ICLKCD                          MBV006
+     C                     MOVE *BLANKS   ICDECD                          MBV006
+     C                     MOVE *BLANKS   ICLNSC                          MBV006
+     C                     Z-ADD*ZERO     ICEXPO                          MBV006
+     C                     MOVE *BLANKS   ICPOPT                          MBV006
+     C                     ELSE                            - X1
+      *
+     C                     MOVE PRSBCL    ICSBCL
+     C************         MOVE PRLNTP    ICLNTP                          MMI096
+     C                     MOVE PRSACO    ICLNTP                          MMI096
+     C************         MOVELPRLKCD    ICLKCD                          MMI096
+     C                     MOVE PRLKCD    ICLKCD                          MMI135
+     C                     MOVELPRSAPE    ICLKCD                          MMI096
+     C                     MOVE PRDECD    ICDECD
+     C                     MOVE PRLNSC    ICLNSC
+     C                     MOVE PREXPO    ICEXPO                          MMI117
+     C                     MOVE PRLNTP    ICPOPT                          MMI120
+      *
+     C                     END                             - E1
+      **=================================================================
+     C                     RETRN
+      **=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine
+      **
+      *----------------------------------------------------------------==
+     C           #INIT     BEGSR
+      *----------------------------------------------------------------==
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXFCUS  6        Facility customer
+     C                     PARM           EXFACT  30       Facility type
+     C                     PARM           EXFCNO  20       Facility number
+      *  Output Parameters
+     C                     PARM           ICSBCL  1        Stand-by Credit line
+     C                     PARM           ICLNTP  1        Line type
+     C                     PARM           ICLKCD 24        Link code CAUA
+     C                     PARM           ICDECD  3        Code of deliberating
+     C                     PARM           ICLNSC  1        Selection of criteria
+     C                     PARM           ICEXPO 130                      MMI117
+     C                     PARM           ICPOPT  1                       MMI120
+     C                     PARM           ERROR   1
+      *
+      **  Set up Facility Key
+     C           KYFACT    KLIST
+     C                     KFLD           KY1
+     C                     KFLD           KY2
+     C                     KFLD           KY3
+      *
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+      **=================================================================
+      **
+      **  #DBERR      Program-detected exception OR monitored error
+      **              sub-routine.
+      **
+     C*================================================================
+     C           #DBERR    BEGSR
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

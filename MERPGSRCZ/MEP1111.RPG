@@ -1,0 +1,241 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Write FT STP Queue Record')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module
+      *                                                               *
+      *  MEP1000 - Write FT STP Queue Record                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE065             Date 08Sep2004             *
+      *                 EEE058             Date 14Feb2003             *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE065 - FT Payment Routing                                  *
+      *  EEE065 - If blank queue then keep original                   *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+     FMEINCRL1IF  E           K        DISK
+      *
+      * RTV : Incoming Control
+      *
+     FMEINMPL1IF  E           K        DISK
+      *
+      * RTV : Incoming parts
+      *
+     FMEINDTS2IF  E           K        DISK                                                   EEE065
+      *                                                                                       EEE065
+      * RTV : Incoming Message Detail                                                         EEE065
+      *                                                                                       EEE065
+     FFTMESQV0UF  E           K        DISK                      A
+     F                                              KCOMIT
+      *
+      * RTV : Incoming parts
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E/COPY MECPYSRC,SRERRE
+      /EJECT
+     I@INDTS2     60                                                                          EEE065
+     I@IN35S2     61                                                                          EEE065
+      *                                                                                       EEE065
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource
+      *
+     I*
+     IRUNDTA    E DSRUNDAT
+      *
+      * Get Rundate - Rundate  *
+      *
+     IMESQ      E DSFTMESQV0
+      *
+      * Get Rundate - Rundate  *
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Message reference
+     I                                        1   80P1MSGR
+      *
+      * I :  Message part
+     I                                        9  110P1KPRT
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           P1PARM
+     C                     PARM           P2STPQ 20
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELP1MSGR    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Get data
+      *
+     C           KYMESQ    CHAIN@MESQV0              91
+     C           *IN91     IFEQ '1'
+     C                     CLEARMESQ
+     C                     Z-ADDP1MSGR    SQMSGR
+     C                     Z-ADDP1KPRT    SQKPRT
+     C                     ENDIF
+      *
+     C           KYINCR    CHAIN@INCRL1              90
+     C           *IN90     IFEQ '0'
+     C           KYINMP    CHAIN@INMPL1              90
+     C           *IN90     IFEQ '0'
+      *                                                                                       EEE065
+      * If blank queue then do not update                                                     EEE065
+      *                                                                                       EEE065
+     C           P2STPQ    IFNE *BLANKS                                                       EEE065
+     C                     MOVELP2STPQ    SQSTPQ
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+      * Set up status from message tag :XXX:                                                  EEE065
+     C           KDTS2     KLIST                                                              EEE065
+     C                     KFLD           P1MSGR           Msg Unique Refe                    EEE065
+     C                     KFLD           P1KPRT           Msg Part                           EEE065
+     C                     KFLD           K1MTG   5        Message Tag                        EEE065
+      *                                                                                       EEE065
+     C                     MOVEL':XXX:'   K1MTG                                               EEE065
+      *                                                                                       EEE065
+     C                     MOVEA'00'      *IN,60                                              EEE065
+     C           KDTS2     SETLLMEINDTS2                                                      EEE065
+     C           KDTS2     READEMEINDTS2                 80                                   EEE065
+      *                                                                                       EEE065
+     C           *IN80     IFEQ *OFF                                                          EEE065
+     C           *IN60     IFEQ '1'                                                           EEE065
+     C                     MOVELDTMFLD    SQSTAT                                              EEE065
+     C                     ELSE                                                               EEE065
+     C                     MOVELDSMF35    SQSTAT                                              EEE065
+     C                     ENDIF                                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C           *IN91     IFEQ '0'
+     C                     UPDAT@MESQV0
+     C                     ELSE
+     C                     WRITE@MESQV0
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    * SRACCS - valid access                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define fields
+      *
+      *
+      *  Set keylist for Incoming Message Part No. File
+      *
+     C           KYINCR    KLIST
+     C                     KFLD           P1MSGR
+      *
+     C           KYINMP    KLIST
+     C                     KFLD           P1MSGR
+     C                     KFLD           P1KPRT
+      *
+     C           KYMESQ    KLIST
+     C                     KFLD           P1MSGR
+     C                     KFLD           P1KPRT
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2003

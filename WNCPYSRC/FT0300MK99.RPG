@@ -1,0 +1,108 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 EEE058   *Create   Date 11Feb2003             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+      *                                                                                 MK0560
+      *  Test to see if FTPEXTP0 needs to be written to                                 MK0560
+      *                                                                                 MK0560
+     C           EEE058    IFEQ *BLANKS                                                 MK0560
+      *                                                                                 MK0560
+      *  Test for Mt910 processing active                                               MK0560
+      *                                                                                 MK0560
+     C                     CALL 'AOSARDR0'                                              MK0560
+     C                     PARM *BLANKS   P@RTCD                                        MK0560
+     C                     PARM '*VERIFY' P@OPTN                                        MK0560
+     C                     PARM 'EEE058'  @SARD                                         MK0560
+     C           SCSARD    PARM *BLANKS   DSFDY                                         MK0560
+      *                                                                                 MK0560
+      *  EEE058 processing active                                                       MK0560
+      *                                                                                 MK0560
+     C           P@RTCD    IFEQ *BLANKS                                                 MK0560
+     C                     MOVEL'EEE058'  EEE058  6                                     MK0560
+     C                     OPEN FTPEXTP0                                                MK0560
+     C                     ENDIF                                                        MK0560
+     C                     ENDIF                                                        MK0560
+      *                                                                                 MK0560
+      *  If EEE058 get extension data                                                   MK0560
+      *                                                                                 MK0560
+     C           EEE058    IFEQ 'EEE058'                                                MK0560
+      * get data                                                                        MK0560
+     C                     CALL 'FTP960'                                                MK0560
+     C                     PARM *BLANKS   P9RTN                                         MK0560
+     C                     PARM           P9PEXT                                        MK0560
+      * set commission amount if fixed commission                                       MK0560
+     C           PXCOMA    IFNE 0                                                       MK0560
+      *                                                                                 MK0560
+      * Set amount correctly                                                            MK0560
+      *                                                                                 MK0560
+      *                                                                                 MK0560
+      **  Get settlement currency details                                               MK0560
+      *                                                                                 MK0560
+     C                     CALL 'AOCURRR0'                                              MK0560
+     C                     PARM *BLANKS   P@RTCD                                        MK0560
+     C                     PARM '*KEY    'P@OPTN                                        MK0560
+     C                     PARM BJCYCD    WCURR                                         MK0560
+     C           SDCURR    PARM SDCURR    DSSDY                                         MK0560
+      *                                                                                 MK0560
+     C                     SELEC                                                        MK0560
+     C           A6NBDP    WHEQ 0                                                       MK0560
+     C                     Z-ADDPXCOMA    U#FAMT                                        MK0560
+     C           A6NBDP    WHEQ 1                                                       MK0560
+     C           PXCOMA    MULT 10        U#FAMT                                        MK0560
+     C           A6NBDP    WHEQ 2                                                       MK0560
+     C           PXCOMA    MULT 100       U#FAMT                                        MK0560
+     C           A6NBDP    WHEQ 3                                                       MK0560
+     C           PXCOMA    MULT 1000      U#FAMT                                        MK0560
+     C                     ENDSL                                                        MK0560
+      *                                                                                 MK0560
+      * Check if amount needs to be converted                                           MK0560
+      *                                                                                 MK0560
+     C           BJCYCD    IFNE V#CCCY                                                  MK0560
+      *                                                                                 MK0560
+     C                     CLEARD#DTA                                                   MK0560
+     C                     Z-ADDU#FAMT    D#FAMT                                        MK0560
+     C                     MOVELBJCYCD    D#FCCY                                        MK0560
+     C                     MOVELV#CCCY    D#TCCY                                        MK0560
+      *                                                                                 MK0560
+     C                     CALL 'AOCCYCV0'             9090                             MK0560
+     C                     PARM *BLANKS   O#RTN   7                                     MK0560
+     C                     PARM '*F*T*SPT'U#ACT   8                                     MK0560
+     C           D#DTA     PARM D#DTA     O#DTA 256                                     MK0560
+      *                                                                                 MK0560
+     C                     ELSE                                                         MK0560
+     C                     Z-ADDU#FAMT    D#TAMT                                        MK0560
+     C                     ENDIF                                                        MK0560
+      *                                                                                 MK0560
+      * Format for screen                                                               MK0560
+      *                                                                                 MK0560
+      *                                                                                 MK0560
+      **  Get settlement currency details                                               MK0560
+      *                                                                                 MK0560
+     C                     CALL 'AOCURRR0'                                              MK0560
+     C                     PARM *BLANKS   P@RTCD                                        MK0560
+     C                     PARM '*KEY    'P@OPTN                                        MK0560
+     C                     PARM V#CCCY    WCURR                                         MK0560
+     C           SDCURR    PARM SDCURR    DSSDY                                         MK0560
+      *                                                                                 MK0560
+     C                     MOVEL*BLANKS   S7TRCD                                        MK0560
+     C                     MOVEL*BLANKS   ZFIELD                                        MK0560
+     C                     MOVE D#TAMT    ZFIELD                                        MK0560
+     C                     Z-ADDA6NBDP    ZADEC                                         MK0560
+     C                     EXSR ZEDIT                                                   MK0560
+     C                     MOVE ZFIELD    S0TRCD                                        MK0560
+      *                                                                                 MK0560
+     C                     ENDIF                                                        MK0560
+      *                                                                                 MK0560
+     C                     ENDIF                                                        MK0560
+      *****************************************************************                 MK0560
+      * End of FT0300MK04                                             *                 MK0560
+      *****************************************************************                 MK0560

@@ -1,0 +1,673 @@
+     H        1   Y
+      *****************************************************************   USW004
+/*STD *  RPGBASE                                                      *   USW004
+/*EXI *  TEXT('Midas ER CALCULATE NUMERI ON ACCOUNTS')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERIT59 - ER Extract program - CALCULATE NUMERI ON ACCOUNTS   *
+      *                                                               *
+      *  (c) Copyright MISYS 2003                                     *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI140             Date 02Mar11               *
+      *                 MMI115             Date 24Mar04               *
+      *                 MMI110   *Create   Date 26SeP03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - Usura changes.                                      *
+      *  MMI115 - Option to calculate Numbers from start of quarter.  *
+      *  MMI110 - Rewrite Numbers calculation.                        *
+      *                                                               *
+      *****************************************************************
+      *                                                                   MMI098
+     FEREXTRPDIF  E                    DISK
+     FACCBR   IF  E           K        DISK
+     FGLSTMTP IF  E           K        DISK
+     FGLACPHL1IF  E           K        DISK
+     F            APOSTPDF                          KRENAMEGLACPF
+     FREHISDL IF  E           K        DISK
+3    FIRFXTBL1IF  E           K        DISK                               MMI098
+     FERNUMEPDO   E                    DISK
+      *                                                                   MMI098
+      * Narratives arrays (from CAP table)
+      *
+     E                    NAR        20 30                                MMI098
+      *
+      * Work data stucture for date calculations
+      *
+     I            DS
+     I                                        1   60WDATE
+     I                                        1   20WDAY
+     I                                        3   40WMON
+     I                                        5   60WYEAR
+      *
+      * DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *                                                                   MMI115
+      * DS for access programs, long data structure                       MMI115
+      *                                                                   MMI115
+     IDSSDY     E DSDSSDY                                                 MMI115
+      *
+      * External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Initial subroutine
+      *
+     C                     EXSR SRINIT
+      *
+      * Mainline
+      *
+     C                     READ EREXTRPD                 LR
+     C           *INLR     DOWEQ*OFF
+      *
+      * Process all Accounts extracted
+      *
+     C           EXLOTD    IFEQ 'GLA'
+      *
+      * Access Accounts file
+      *
+     C                     MOVE EXBRCD    BRCA
+     C                     MOVE EXCUST    CNUM
+     C                     MOVE EXCCYC    CCY
+     C                     MOVELEXDECK    ACOD
+     C                     MOVE EXTREF    ACSQ
+      *
+     C           KACC      CHAINACCBR                01
+      *
+     C           *IN01     IFEQ *OFF
+      *
+      * Reset output fields
+      *
+     C                     RESETERNUMED0
+      *
+      * Process postings on APOSTPD to calculate monthly average
+      * balance and quarterly movements
+      *
+     C                     EXSR SRAPOS
+      *
+      * Add quarterly movements from GLACPHPD
+      *
+     C                     EXSR SRGLAC
+      *
+      * For Retail Accounts only, process Historic Positions to
+      * calculate Numeri, and Monthly Average Cleared Balance
+      *
+     C           ATYP      IFEQ 'R'
+     C                     EXSR SRREHI
+     C                     ENDIF
+      *
+      * Output a record with calculated data to extension file
+      *
+     C                     EXSR SROUT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ EREXTRPD                 LR
+     C                     ENDDO
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRAPOS -  Process postings on APOSTPD                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAPOS    BEGSR
+      *
+     C                     Z-ADD*ZERO     PSTD
+     C                     Z-ADD*ZERO     WPSTD   50
+     C                     Z-ADDLDBL      WLDBL  150
+      *
+     C           KACC      CHAINGLSTMTP              01
+     C           *IN01     DOWEQ*OFF
+      *
+      * Calculate balance as at first day of current month by
+      * subtracting from ledger balance at end of month the
+      * amounts posted during the month
+      *
+     C           PSTD      IFGT BEGMON
+     C           DRCR      IFEQ 0
+     C                     SUB  PSTA      WLDBL
+     C                     ELSE
+     C                     ADD  PSTA      WLDBL
+     C                     ENDIF
+     C           WPSTD     IFEQ *ZERO
+     C                     Z-ADDPSTD      WPSTD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Quarter movements
+      *
+     C           PSTD      IFGE BEGQUA
+     C                     EXSR SRQUAR
+     C                     ENDIF
+      *
+     C           KACC      READEGLSTMTP                  01
+     C                     ENDDO
+      *
+      * If no movements during month, the average balance is
+      * equal to the current month. Otherwise, calculate it.
+      *
+     C           WPSTD     IFEQ *ZERO
+     C           LDBL      IFGE *ZERO
+     C                     Z-ADDLDBL      OUT661
+     C                     ELSE
+     C                     Z-SUBLDBL      OUT662
+     C                     ENDIF
+     C                     ELSE
+     C                     EXSR SRAVBL
+     C                     ENDIF
+      *
+      * Last Posting Date
+      *
+     C                     Z-ADDPSTD      OUT221
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRAVBL -  Calculate average balance                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAVBL    BEGSR
+      *
+      * Calculate numbers for period from beginning of month to
+      * first posting date.
+      *
+     C           WPSTD     SUB  BEGMON    NDAYS   50
+     C           WLDBL     MULT NDAYS     ITEM   150
+     C           ITEM      IFGE *ZERO
+     C                     Z-ADDITEM      OUT661
+     C                     ELSE
+     C                     Z-SUBITEM      OUT662
+     C                     ENDIF
+      *
+      * Reread all postings in current month, keep a running
+      * total of ledger balance and add numbers (i.e. balance
+      * multiplied by number of days) to relevant output field
+      *
+     C           KACCD     CHAINGLSTMTP              01
+     C           *IN01     DOWEQ*OFF
+      *
+      * Increase numbers
+      *
+     C           PSTD      SUB  WPSTD     NDAYS
+     C           WLDBL     MULT NDAYS     ITEM
+     C           ITEM      IFGE *ZERO
+     C                     ADD  ITEM      OUT661
+     C                     ELSE
+     C                     SUB  ITEM      OUT662
+     C                     ENDIF
+      *
+     C                     Z-ADDPSTD      WPSTD
+      *
+      * Increase running balance
+      *
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      WLDBL
+     C                     ELSE
+     C                     SUB  PSTA      WLDBL
+     C                     ENDIF
+      *
+     C           KACC      READEGLSTMTP                  01
+     C                     ENDDO
+      *
+      * Calculate numbers for period from last posting date to
+      * end of month.
+      *
+     C           BEGNEX    SUB  WPSTD     NDAYS
+     C           WLDBL     MULT NDAYS     ITEM
+     C           ITEM      IFGE *ZERO
+     C                     ADD  ITEM      OUT661
+     C                     ELSE
+     C                     SUB  ITEM      OUT662
+     C                     ENDIF
+      *
+      * Divide month numbers by number of days in month to obtain
+      * average balances
+      *
+     C                     DIV  MONLEN    OUT661    H
+     C                     DIV  MONLEN    OUT662    H
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRGLAC -  Process postings on GLACPHPD                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRGLAC    BEGSR
+      *
+     C           KACC      CHAINGLACPHL1             01
+     C           *IN01     DOWEQ*OFF
+      *
+      * Quarter movements
+      *
+     C           PSTD      IFGE BEGQUA
+     C                     EXSR SRQUAR
+     C                     ENDIF
+      *
+     C           KACC      READEGLACPHL1                 01
+     C                     ENDDO
+      *
+      * If Last Posting Date was not setup from APOSTPD, set up now
+      *
+     C           OUT221    IFEQ *ZERO
+     C                     Z-ADDPSTD      OUT221
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRQUAR -  Quarterly movements                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRQUAR    BEGSR
+      *
+      * Determine if Interest Capitalisation...
+      *
+     C                     MOVE 'N'       INTCAP  1
+     C           SPOS      IFEQ '  GE-IC'
+     C                     MOVELPNAR      WPNAR   5
+     C           PNAR      LOKUPNAR                      59
+     C           *IN59     IFEQ *ON
+     C           WPNAR     OREQ 'INTER'
+     C           WPNAR     OREQ 'Inter'                             1
+     C                     MOVE 'Y'       INTCAP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * ... No
+      *
+     C           INTCAP    IFEQ 'N'
+      *
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      OUT635
+     C                     ADD  1         OUT639
+     C                     ELSE
+     C                     ADD  PSTA      OUT636
+     C                     ADD  1         OUT640
+     C                     ENDIF
+      *
+      * ... Yes
+      *
+     C                     ELSE
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      OUT637
+     C                     ELSE
+     C                     ADD  PSTA      OUT638
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRREHI -  Calculate Numbers for Retail Accounts               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREHI    BEGSR
+      *
+      * Read all position records
+      *
+     C                     Z-ADD*ZERO     WHISD   50
+     C                     Z-ADD*ZERO     WHISB  150
+     C                     Z-ADD*ZERO     WKINT  180                      MMI115
+     C                     Z-ADD*ZERO     DRDAYS  30                      MMI140
+      *
+     C           KACC      CHAINREHISDL              01
+     C           *IN01     DOWEQ*OFF
+      *
+      * If position is in current year, calculate number of days
+      * from previous position change (or start of year) and
+      * multiply by previous balance to get numbers.
+      *
+     C           HISD      IFGT BEGYEA
+      *
+     C           WHISD     IFLT BEGYEA
+     C                     Z-ADDBEGYEA    WHISD
+     C                     ENDIF
+      *
+     C           HISD      SUB  WHISD     NDAYS
+     C           WHISB     MULT NDAYS     ITEM   150
+      *
+     C           ITEM      IFGE *ZERO
+     C           HISD      ANDGTLDID
+     C                     ADD  ITEM      OUT612
+     C                     ENDIF
+      *
+     C           ITEM      IFLT *ZERO
+     C           HISD      ANDGTLCID
+     C                     SUB  ITEM      OUT613
+     C                     ENDIF
+      *
+     C           ITEM      IFGE *ZERO
+     C           HISD      ANDLELDID
+     C                     ADD  ITEM      OUT614
+     C                     ENDIF
+      *
+     C           ITEM      IFLT *ZERO
+     C           HISD      ANDLELCID
+     C                     SUB  ITEM      OUT615
+     C                     ENDIF
+      *                                                                   MMI115
+      * Calculate Debit Interest in Period                                MMI115
+      *                                                                   MMI115
+     C           ITEM      IFGT *ZERO                                     MMI115
+     C           ITEM      MULT DRIR      DEBINT 180H                     MMI115
+     C                     ADD  DEBINT    WKINT                           MMI115
+     C                     ENDIF                                          MMI115
+      *                                                                   MMI115
+      * Adjustments to Debit Interest                                     MMI115
+      *                                                                   MMI115
+     C                     ADD  TMADI     OU6001                          MMI115
+      *                                                                   MMI140
+      * Number of days in period when balance is debit                    MMI140
+      *                                                                   MMI140
+     C           WHISB     IFGT *ZERO                                     MMI140
+     C                     ADD  NDAYS     DRDAYS                          MMI140
+     C                     ENDIF                                          MMI140
+      *
+     C                     ENDIF
+      *
+      * Calculate Numbers in current month, which will be used
+      * to calculate Average Cleared Balances.
+      *
+     C           HISD      IFGT BEGMON
+      *
+     C           WHISD2    IFLT BEGMON
+     C                     Z-ADDBEGMON    WHISD2
+     C                     ENDIF
+      *
+     C           HISD      SUB  WHISD2    NDAYS
+     C           WHISB     MULT NDAYS     ITEM   150
+      *
+     C           ITEM      IFGE *ZERO
+     C                     ADD  ITEM      OUT663
+     C                     ELSE
+     C                     SUB  ITEM      OUT664
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDHISD      WHISD   50
+     C                     Z-ADDHISD      WHISD2  50
+     C                     Z-ADDHISB      WHISB  150
+      *                                                                   MMI140
+      * Maximum balance in quarter                                        MMI140
+      *                                                                   MMI140
+     C           HISD      IFGE BEGQUA                                    MMI140
+     C           WHISB     ANDGTOUT953                                    MMI140
+     C                     Z-ADDWHISB     OUT953                          MMI140
+     C                     ENDIF                                          MMI140
+      *
+     C           KACC      READEREHISDL                  01
+     C                     ENDDO
+      *
+      * Calculate numbers for period from last position date to
+      * end of month.
+      *
+     C           WHISD     IFLT BEGYEA
+     C                     Z-ADDBEGYEA    WHISD
+     C                     ENDIF
+      *
+     C           BEGNEX    SUB  WHISD     NDAYS
+     C           HISB      MULT NDAYS     ITEM
+      *
+     C           ITEM      IFGE *ZERO
+     C           HISD      ANDGTLDID
+     C                     ADD  ITEM      OUT612
+     C                     ENDIF
+      *
+     C           ITEM      IFLT *ZERO
+     C           HISD      ANDGTLCID
+     C                     SUB  ITEM      OUT613
+     C                     ENDIF
+      *
+     C           ITEM      IFGE *ZERO
+     C           HISD      ANDLELDID
+     C                     ADD  ITEM      OUT614
+     C                     ENDIF
+      *
+     C           ITEM      IFLT *ZERO
+     C           HISD      ANDLELCID
+     C                     SUB  ITEM      OUT615
+     C                     ENDIF
+      *                                                                   MMI140
+      * Maximum balance in quarter                                        MMI140
+      *                                                                   MMI140
+     C           HISB      IFGT OUT953                                    MMI140
+     C                     Z-ADDHISB      OUT953                          MMI140
+     C                     ENDIF                                          MMI140
+      *                                                                   MMI140
+      * Number of days in period when balance is debit                    MMI140
+      *                                                                   MMI140
+     C           HISB      IFGT *ZERO                                     MMI140
+     C                     ADD  NDAYS     DRDAYS                          MMI140
+     C                     ENDIF                                          MMI140
+      *                                                                   MMI115
+      * Calculate Debit Interest in Period                                MMI115
+      *                                                                   MMI115
+     C           ITEM      IFGT *ZERO                                     MMI115
+     C           ITEM      MULT DRIR      DEBINT                          MMI115
+     C                     ADD  DEBINT    WKINT                           MMI115
+     C                     ENDIF                                          MMI115
+      *
+     C           WHISD2    IFLT BEGMON
+     C                     Z-ADDBEGMON    WHISD2
+     C                     ENDIF
+      *
+     C           BEGNEX    SUB  WHISD2    NDAYS
+     C           WHISB     MULT NDAYS     ITEM   150
+      *
+     C           ITEM      IFGE *ZERO
+     C                     ADD  ITEM      OUT663
+     C                     ELSE
+     C                     SUB  ITEM      OUT664
+     C                     ENDIF
+      *
+      * Divide month numbers by number of days in month to obtain
+      * average balances
+      *
+     C                     DIV  MONLEN    OUT663    H
+     C                     DIV  MONLEN    OUT664    H
+      *                                                                   MMI115
+      * Divide Interest work field according to int. calc. basis          MMI115
+      *                                                                   MMI115
+     C           DRIC      IFEQ 2                                         MMI115
+     C           DRIC      OREQ 5                                         MMI115
+     C                     DIV  36000     WKINT     H                     MMI115
+     C                     ELSE                                           MMI115
+     C                     DIV  36500     WKINT     H                     MMI115
+     C                     ENDIF                                          MMI115
+     C                     ADD  WKINT     OU6001                          MMI115
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SROUT  -  Write record to extension file                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROUT     BEGSR
+      *
+     C           CLBL      IFGE *ZERO
+     C                     Z-ADDCLBL      OUT665
+     C                     ELSE
+     C                     Z-SUBCLBL      OUT666
+     C                     ENDIF
+      *                                                                   MMI140
+      * Average balance in quarter                                        MMI140
+      *                                                                   MMI140
+     C           OUT612    ADD  OUT614    OU9478                          MMI140
+     C           FACT      IFEQ *ZERO                                     MMI140
+     C           DRDAYS    IFNE *ZERO                                     MMI140
+     C                     DIV  DRDAYS    OU9478                          MMI140
+     C                     ENDIF                                          MMI140
+     C                     ELSE                                           MMI140
+     C                     DIV  QUALEN    OU9478                          MMI140
+     C                     ENDIF                                          MMI140
+      *                                                                   MMI140
+      * Current interest rate and frequency                               MMI140
+      *                                                                   MMI140
+     C                     Z-ADDDRIR      ICDERT                          MMI140
+     C                     MOVE DRIF      INTFRQ                          MMI140
+      *
+      * Fill key fields
+      *
+     C                     MOVE EXTREF    TREF
+     C                     MOVE EXBRCD    BRCD
+      *
+     C                     WRITEERNUMED0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT -  Initial processing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           KACC      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+     C           KACCD     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           WPSTD
+      *
+      *  Access Banks Details to Retrieve Run Date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  Determine date fields
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM BJRDNB    ZDAYNO  50
+     C                     PARM 'D'       DATFIN  1
+     C           WDATE     PARM           ZDATE   60
+     C                     PARM *BLANKS   RETCOD  7
+      *
+      * Beginning of current month
+      *
+     C                     Z-ADD01        WDAY
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGMON  50
+      *
+      * Beginning of next month
+      *
+     C                     Z-ADDWDATE     SVDATE  60
+     C                     ADD  1         WMON
+     C           WMON      IFEQ 13
+     C                     Z-ADD1         WMON
+     C                     ADD  1         WYEAR
+     C                     ENDIF
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGNEX  50
+     C           BEGNEX    SUB  BEGMON    MONLEN  20
+      *
+      * Beginning of current quarter
+      *
+     C                     Z-ADDSVDATE    WDATE
+     C           WMON      IFEQ 2
+     C           WMON      OREQ 3
+     C                     Z-ADD1         WMON
+     C                     ENDIF
+     C           WMON      IFEQ 5
+     C           WMON      OREQ 6
+     C                     Z-ADD4         WMON
+     C                     ENDIF
+     C           WMON      IFEQ 8
+     C           WMON      OREQ 9
+     C                     Z-ADD7         WMON
+     C                     ENDIF
+     C           WMON      IFEQ 11
+     C           WMON      OREQ 12
+     C                     Z-ADD10        WMON
+     C                     ENDIF
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGQUA  50
+     C           BEGNEX    SUB  BEGQUA    QUALEN  20                      MMI140
+      *
+      * Beginning of current year
+      *
+     C                     Z-ADD1         WMON
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGYEA  50
+      *                                                                   MMI115
+      * If so required, calculate Numbers from Start of Quarter           MMI115
+      *                                                                   MMI115
+     C                     MOVEL'QUARTER' WKEY      P                     MMI115
+     C                     CALL 'AOFXTBR0'                                MMI115
+     C                     PARM '*BLANKS' @@RTCD                          MMI115
+     C                     PARM '*KEY   ' @@OPTN                          MMI115
+     C                     PARM 'NUM'     FIELD   3                       MMI115
+     C                     PARM           WKEY   18                       MMI115
+     C                     PARM           DSSDY                           MMI115
+      *                                                                   MMI115
+     C           @@RTCD    IFEQ *BLANKS                                   MMI115
+     C                     Z-ADDBEGQUA    BEGYEA                          MMI115
+     C                     ENDIF                                          MMI115
+      *                                                                   MMI098
+      * Setup array of Posting Narratives that will be used to            MMI098
+      * identify Interest Capitalisations                                 MMI098
+      *                                                                   MMI098
+     C                     Z-ADD0         X       20                      MMI098
+     C           'CAP'     CHAINIRFXTBL1             59                   MMI098
+     C           *IN59     DOWEQ*OFF                                      MMI098
+     C                     MOVELF0PNAR    XNAR   30                       MMI098
+     C           XNAR      LOKUPNAR                      26               MMI098
+     C  N26                ADD  1         X                               MMI098
+     C  N26                MOVELXNAR      NAR,X                           MMI098
+     C           'CAP'     READEIRFXTBL1                 59               MMI098
+     C                     ENDDO                                          MMI098
+      *
+     C                     ENDSR

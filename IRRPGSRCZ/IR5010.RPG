@@ -1,0 +1,1411 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Select internal table')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy.                   *
+      *                                                               *
+      *  IR5010 - Select internal table                               *
+      *                                                               *
+      *  Function:  This program maintains Midas Internal tables      *
+      *  (phase(s) I/C)                                               *
+      *                                                               *
+      *  Called By:  with parameter 'M' for maintenance               *
+      *              with parameter 'E' for enquire                   *
+      *                                                               *
+      *  Remark : This program is based upon PARIBAS Milano           *
+      *           Italian returns process : IT5010                    *
+      *                                                               *
+      *           program : Print functions are no more available     *
+      *                     Delete Action code is managed             *
+      *                     Returns parameter allow F3/F12 management *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT022  *Create    Date 14Jan97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns Upgrade to FM2.1                *
+      *  UIT022 - Telegramma Decadale                                 *
+      *                                                               *
+      *****************************************************************
+     ************************ Entry parameters ************************
+     **  TMODE               Mode code                                *
+     ************************ Files updated ***************************
+     **  IR5010DF            Mode > C   Dev > WORKSTN                 *
+     ************************ Work fields *****************************
+     **  WLPAG          4 0  Last page                                *
+     **  WCPAG          4 0  Current page                             *
+     **  WFLSF          2 0  1rst line of SFL                         *
+     **  WLLSF          2 0  Last line of SFL                         *
+     **  WLLOS          2 0  Last line on screen                      *
+     **  WNSRS          2 0  Nbr of SFL rec/scr                       *
+     **  WNLSR          2 0  Nbr of line by rec                       *
+     **  WLRSN          4 0  Last rcd in sfl                          *
+     **  WLRTN          4 0  Last rcd on SCR                          *
+     **  WRECM          4 0  MSG Rec number                           *
+     **  WNLIG          3 0  Cursor line                              *
+     **  WNCOL          3 0  Cursor column                            *
+     **  WFSRS          4 0  1rst sflrcd / screen                     *
+     **  WFROE          4 0  1rst sflrcd on error                     *
+     **  WFLD           6    Field                                    *
+     **  WT             9 0  Table index                              *
+     **  K999           3    Table key = '999'                        *
+     **  W1RSTI         1    First init flag                          *
+     **  WERFLG         1    One error flag                           *
+     **  WINFLG         1    Init step flag                           *
+     **  ZAMSID         7    MSG  Id send                             *
+     **  WDCLWF         1    DCL wrk fld stp                          *
+     **  WENDPG         1    Y->go end pgm                            *
+     **  WENDTC         1    Y->go end trans                          *
+     **  WENTER         1    Y-> Enter key                            *
+     **  WRECSL         1    Record selected Y/N                      *
+     **  WFLDPR         1    Field protected Y/N                      *
+     **  WRDCYM         8 0  Run date in CYMD fmt                     *
+     **  XTB10S         1    TB10 fmt status                          *
+     **  XF0PRS         1    F0PR fmt status                          *
+     **  WSFLS          1    SFL  fmt status                          *
+     **  TCVERR         7    Error on convert                         *
+     **  TCVDTA        32    Alphameric field parm                    *
+     **  TCVDCP         1 0  Number of decimal                        *
+     **  TCVEDC         1    Edit code                                *
+     **  TMODE          1    Mode code                                *
+     **  TINTCF         3    Table name parm FROM                     *
+     **  TINTCT         3    Table name parm TO                       *
+     **  TCVCHQ         1    Cheque fmt (**12Frs)                     *
+     **  TCVINT        15 0  Integer for convert                      *
+     **  TCVDEC         9 9  Decimal for convert                      *
+     **  WFLD15        15    15 right bytes                           *
+     **                      This field is used to locate the first   *
+     **                      line of each table (the one that have    *
+     **                      the 15 right bytes blank.                *
+     **  XTSTFD        30    To test narative                         *
+     **  XCVDCP         1 0  Decimal position                         *
+     **  XCVNUM        24 9  Numeric Bef/after cvt                    *
+     **  XCVALP        32    Alpha Bef/after cvt                      *
+     **  XCVEDC         1    Edit code                                *
+     **  XI             9 0  POSIT SCAN                               *
+     ************************ Subroutines *****************************
+     **  INZTR               Init screen                              *
+     **  VERTR               Verif screen                             *
+     **  SFINZ               File->Screen fields                      *
+     **  LOADSF              Load subfile                             *
+     **  INZMSG              Clear SFLMSG                             *
+     **  RDNEXT              Read next                                *
+     **  ERROR               Error                                    *
+     **  ZASNMS              Add msg in SFLMSG                        *
+     **  ERRBD               Error in database                        *
+     ************************ Indicators ******************************
+     **  *IN22               To Write/read subfil                     *
+     **  *IN23               To Write/read subfil                     *
+     **  *IN24               To clear subfile                         *
+     **  *IN25               DefilH                                   *
+     **  *IN26               SFLNXTMSG                                *
+     **  *IN27               Not more...                              *
+     **  *IN30               Not display fld                          *
+     **  *IN31               Error in Selector                        *
+     **  *IN52               Amend Y/N                                *
+     **  *IN65                                                        *
+     **  *IN67               POSIT SCAN                               *
+     ************************ Called programs *************************
+     **  'IR5020 '           Amend header of table                    *
+     **  'IR5030 '           Amend table                              *
+     **  'Y2CLMSC'           Clear SFLMSG                             *
+     **  'Y2SNMGC'           Add msg in SFLMSG                        *
+     ************************ Used /COPY ******************************
+     **   ZSRSRC,ZDATE2Z1                                             *
+     **   ZSRSRC,ZDATE1Z2                                             *
+     **   ZSRSRC,ZDATE2Z2                                             *
+     **   ZSRSRC,ZDATE2Z3                                             *
+     ******************************************************************
+    ? *                                                               *
+    ? *  IR5010 : Program name                                        *
+    ? *    F0PR : Main file for loading subfile - READ -              *
+    ? *      F0 : Main file prefix                                    *
+    ? *    PNAR : Control fields                                      *
+    ? *    TYLC : type of last change                                 *
+    ? *    0030 : Number of Subfile Record on a Screen                *
+    ? *    0001 : Number of line of one subfile record                *
+    ? *    0006 : First line of subfile                               *
+    ? *    0021 : Last line of subfile                                *
+    ? *                                                               *
+    ? *****************************************************************
+    ? *                                                               *
+    ? *---------------------------------------------------------------*
+    ? *   N0 IND.          FUNCTION                                   *
+    ? *   -------          --------                                   *
+    ? *   *INKC            Exit                                       *
+    ? *   *INKE            Refresh                                    *
+    ? *   *INLR            end of program                             *
+    ? *   U7,U8            Error switchs indicators                   *
+    ? *****************************************************************
+    ? *
+      *?Display file
+      *?------------------------------------------
+    ?FIR5010DFCF  E                    WORKSTN
+    ?F                                        WRECN KSFILE $SFLRCD1
+    ?F                                              KINFDS IOFB
+    ?F                                        WRECM KSFILE $MSGRCD
+    ? *
+      *?MIDAS/PUMA INTERFACE Internal Tables file
+      *?------------------------------------------
+     FIRFXTBL1IF  E           K        DISK
+    ? *
+     ******************************************************************
+    ? /COPY ZSRSRC,ZDATE2Z1
+     E                    TNR        30  1
+     ******************************************************************
+    ? *
+      *    Date in format CCYYMMDD
+     I            DS
+     I                                        1   80Z1CYMD
+     I                                        1   20Z1CC
+     I                                        3   40Z1YY
+     I                                        1   40Z1CY
+     I                                        5   60Z1MM
+     I                                        7   80Z1DD
+     I                                        5   80Z1MD
+      *    Date in format DDMMYY
+     I            DS
+     I                                        1   60Z2DDMY
+     I                                        1   20Z2MM
+     I                                        3   40Z2DD
+     I                                        5   60Z2YY
+      *    Date in format DDMMMYY
+     I            DS
+     I                                        1   7 Z3DMMM
+     I                                        1   20Z3DD
+     I                                        3   5 Z3MM
+     I                                        6   70Z3YY
+      *    Date in format DD/MM/YY
+     I            DS
+     I                                        1   8 Z4DFMT
+     I                                        1   2 Z4MM
+     I                                        3   3 Z4SLH1
+     I                                        4   5 Z4DD
+     I                                        6   6 Z4SLH2
+     I                                        7   8 Z4YY
+      *    Date in format DDMMCCYY
+     I            DS
+     I                                        1   80Z5DMCY
+     I                                        1   20Z5MM
+     I                                        3   40Z5DD
+     I                                        5   60Z5CC
+     I                                        7   80Z5YY
+      *    Date in format DD/MM/CCYY
+     I            DS
+     I                                        1  10 Z6DFMT
+     I                                        1   2 Z6MM
+     I                                        3   3 Z6SLH1
+     I                                        4   5 Z6DD
+     I                                        6   6 Z6SLH2
+     I                                        7   8 Z6CC
+     I                                        9  10 Z6YY
+      *    Date in day number
+     I            DS
+     I                                        1   50Z7DNBR
+    ? *    I/O Feedback area
+    ?IIOFB        DS
+    ?I                                    B 370 3710$VAR
+    ?I                                    B 378 3790ZZLINE
+    ? *    Local data area
+    ?I           UDS
+    ?I                                       34  83 PERRO
+    ?I                                      134 141 PFILN
+    ?I                                      142 170 PKEYF
+    ?I                                      171 180 PRPGN
+    ?I                                      181 183 PERRN
+    ? *    Program status data structure
+    ?I           SDS
+    ?I                                      244 253 $WRKI
+    ?I                                      254 263 $USRI
+    ? *
+    ?IKINTK       DS
+    ?I                                        1   3 $CINTC
+    ?I                                        4  18 BLANK
+    ? *
+      ***  Access data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+    ? /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           TMODE            Mode code 'M'/'E'
+      *
+    ? ***  Declare KLIST
+      *
+     C           KF0PR     KLIST
+     C                     KFLD           K999
+     C                     KFLD           KINTK
+     C                     MOVEL'999'     K999
+      *
+    ? ***  Description of the subfile
+    ? ***  > Number of Subfile Record on a Screen
+      *
+     C                     Z-ADD0030      WNSRS
+      *
+    ? ***  > Number of line of one subfile record
+      *
+     C                     Z-ADD0001      WNLSR
+      *
+    ? ***  > First line of subfile
+      *
+     C                     Z-ADD0006      WFLSF
+      *
+    ? ***  > Last line of subfile
+      *
+     C                     Z-ADD0021      WLLSF
+      *
+    ? ***  Declare work fields (This step must not be run)
+    ? ***        WDCLWF - Never equal to 'Y'
+      *
+     C           WDCLWF    IFEQ 'Y'
+     C                     Z-ADD0         WLPAG   40       Last page
+     C                     Z-ADD0         WCPAG   40       Current page
+     C                     Z-ADD0         WFLSF   20       1rst line of SFL
+     C                     Z-ADD0         WLLSF   20       Last line of SFL
+     C                     Z-ADD0         WLLOS   20       Last line on screen
+     C                     Z-ADD0         WNSRS   20       Nbr of SFL rec/scr
+     C                     Z-ADD0         WNLSR   20       Nbr of line by rec
+     C                     Z-ADD0         WLRSN   40       Last rcd in sfl
+     C                     Z-ADD0         WLRTN   40       Last rcd on SCR
+     C                     Z-ADD0         WRECM   40       MSG Rec number
+     C                     Z-ADD0         WNLIG   30       Cursor line
+     C                     Z-ADD0         WNCOL   30       Cursor column
+     C                     Z-ADD0         WFSRS   40       1rst sflrcd / screen
+     C                     Z-ADD0         WFROE   40       1rst sflrcd on error
+     C                     MOVEL*BLANK    WFLD    6        Field
+     C                     Z-ADD0         WT      90       Table index
+     C                     MOVEL*BLANK    K999    3        Table key = '999'
+     C                     MOVEL*BLANK    W1RSTI  1        First init flag
+     C                     MOVEL*BLANK    WERFLG  1        One error flag
+     C                     MOVEL*BLANK    WINFLG  1        Init step flag
+     C                     MOVEL*BLANK    ZAMSID  7        MSG  Id send
+     C                     MOVEL*BLANK    WDCLWF  1        DCL wrk fld stp
+     C                     MOVEL*BLANK    WENDPG  1        Y->go end pgm
+     C                     MOVEL*BLANK    WENDTC  1        Y->go end trans
+     C                     MOVEL*BLANK    WENTER  1        Y-> Enter key
+     C                     MOVEL*BLANK    WRECSL  1        Record selected Y/N
+     C                     MOVEL*BLANK    WFLDPR  1        Field protected Y/N
+     C                     Z-ADD0         WRDCYM  80       Run date in CYMD fmt
+     C                     MOVEL*BLANK    XTB10S  1        TB10 fmt status
+     C                     MOVEL*BLANK    XF0PRS  1        F0PR fmt status
+     C                     MOVEL*BLANK    WSFLS   1        SFL  fmt status
+     C                     MOVEL*BLANK    TCVERR  7        Error on convert
+     C                     MOVEL*BLANK    TCVDTA 32        Alphameric field parm
+     C                     MOVEL*BLANK    TCVDCP  10       Number of decimal
+     C                     MOVEL*BLANK    TCVEDC  1        Edit code
+     C                     MOVEL*BLANK    TMODE   1        Mode code M/E
+     C                     MOVEL*BLANK    TINTCF  3        Table name parm FROM
+     C                     MOVEL*BLANK    TINTCT  3        Table name parm TO
+     C                     MOVEL*BLANK    TCVCHQ  1        Cheque fmt (**12Frs)
+     C                     Z-ADD0         TCVINT 150       Integer for convert
+     C                     Z-ADD0         TCVDEC  99       Decimal for convert
+     C                     MOVEL*BLANK    WFLD15 15        15 right bytes
+     C                     MOVEL*BLANK    XTSTFD 30        To test narative
+     C           *LIKE     DEFN F0PNAR    XCPNAR           Save Control PNAR
+     C           *LIKE     DEFN F0INTC    XCINTC           Save Control INTC
+     C                     Z-ADD0         XCVDCP  10       Decimal position
+     C                     Z-ADD0         XCVNUM 249       Numeric Bef/after cvt
+     C                     MOVEL*BLANK    XCVALP 32        Alpha Bef/after cvt
+     C                     MOVEL*BLANK    XCVEDC  1        Edit code
+    ? *
+     C                     END
+      *
+    ? ***  Create subfile
+      *
+     C                     Z-ADD1         WFSRS
+     C                     MOVEL'1'       *IN24            To clear subfile
+     C                     WRITE$SFLCTL1
+     C                     MOVEL'0'       *IN24
+      *
+    ? ***  Initialize fields for all the program
+    ? ***  Standards fields on the top of the screen depending of TMODE
+      *
+     C           TMODE     IFEQ 'M'
+     C                     MOVEL'0'       *IN52            Amend Y/N
+     C                     ELSE
+     C                     MOVEL'1'       *IN52
+     C                     ENDIF
+      *
+     C                     MOVEL'IR5010 ' $JOBN
+      *
+      ***  Access SDBANKPD details
+      *
+     C                     MOVE *BLANKS   @RTCD   7
+     C                     CALL 'AOBANKR0'
+     C                     PARM           @RTCD
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  not found
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'1'       XTB10S  1
+     C                     ELSE
+     C           BJTYLC    IFEQ 'D'
+      *
+      ***  Found but deleted status
+      *
+     C                     MOVEL'2'       XTB10S
+     C                     ELSE
+     C                     MOVE '0'       XTB10S
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           XTB10S    IFNE '0'
+      *
+    ? ***  Initialize local data area field.
+      *
+     C                     MOVE *BLANKS   PERRO
+     C                     MOVEL'IR5010 ' PRPGN
+     C                     MOVEL'SDBANKPD'PFILN
+     C                     MOVEL*BLANKS   PKEYF
+     C                     MOVE '001'     PERRN
+     C                     EXSR ERRBD
+     C                     END
+      *
+    ? ***  Rundate read through SDBANKPD details
+      *
+     C                     MOVE BJMRDT    $RUNA
+     C                     MOVE BJMRDT    Z3DMMM
+     C                     EXSR DATE03
+     C                     Z-ADDZ1CYMD    WRDCYM
+      *
+    ? ***  Initialize fields attributs for all the program
+    ? ***  Initialize message_subfile the first time
+      *
+     C                     MOVEL'*'       $PGMQ
+     C                     Z-ADD1         WRECM
+      *
+    ? ***  Initialize Screen with table codes/names
+      *
+     C                     EXSR INZTR
+    ? *
+      ***  Manage Screen entry
+      *
+     C                     MOVEL'N'       WENDPG           Flag Endpgm
+     C           WENDPG    DOUEQ'Y'
+      *
+    ? ***   Reset Flag of Action entered (WENTER)
+    ? ***   Reset Flag of Action treated (WENDTC)
+      *
+     C                     MOVEL'N'       WENDTC
+     C                     MOVEL'N'       WENTER
+      *
+    ? ***   Save "control_fields"  (positioning)
+      *
+     C                     MOVEL$CINTC    XCINTC
+     C                     MOVEL$CPNAR    XCPNAR
+      *
+    ? ***   Find first sfl record to show
+      *
+     C           WFROE     IFNE 0
+     C                     Z-ADDWFROE     WRECN
+     C                     ELSE
+     C                     Z-ADDWFSRS     WRECN
+     C                     END
+      *
+    ? ***  Display the screen
+    ? *
+     C                     WRITE$TOPTRA                    Top of screen
+     C                     WRITE$MSGCTL                    error messages
+     C                     WRITE$CMDTXT1                   bottom of screen
+      *
+      ***  display subfile
+      *
+     C                     MOVEL'1'       *IN22            To Write/read subfile
+     C                     MOVEL'1'       *IN23            To Write/read subfile
+     C                     WRITE$SFLCTL1
+     C                     MOVEA'00'      *IN,22
+      *
+      ***  read User action entered
+      *
+     C                     READ $TOPTRA                  65
+     C                     READ $SFLCTL1                 65
+      *
+    ? ***  No cursor position in subfile
+      *
+     C                     Z-ADD0         WNLIG
+     C                     Z-ADD0         WNCOL
+      *
+    ? ***  Update information about screen
+      ***  - Keep first record to display
+    ? *
+     C                     Z-ADDZZLINE    WFSRS
+      *
+    ? ***  - keep Current page
+    ? *
+     C           ZZLINE    ADD  WNSRS     WCPAG
+     C                     SUB  1         WCPAG
+     C                     DIV  WNSRS     WCPAG
+      *
+    ? ***  Clear subfile of error messages
+      *
+     C                     EXSR INZMSG
+      *
+    ? ***  Reset error flag to 'N' and first record in error (WFROE)
+      *
+     C                     MOVEL'N'       WERFLG
+     C                     MOVEL'0'       *IN31
+     C                     Z-ADD0         WFROE
+      *
+      *** Is a valid action entered ?
+      *
+     C           *INKC     IFEQ '0'                        F3
+     C           *INKE     ANDEQ'0'                        F5
+     C           *INKI     ANDEQ'0'                        F9
+     C           *INKL     ANDEQ'0'                        F12
+     C           *IN25     ANDEQ'0'                        Rollup key
+     C                     MOVEL'Y'       WENTER
+     C                     END
+      *
+    ? ***  is something entered on positioning fields ?
+      *
+     C           $CINTC    IFNE XCINTC
+     C           $CPNAR    ORNE XCPNAR
+     C                     EXSR INZTR
+     C                     MOVEL'Y'       WENDTC           redisplay screen
+     C                     END
+      *
+      ***  Rollup - Rebuild subfile screen
+      *
+     C           *IN25     IFEQ '1'
+     C           WENDTC    ANDEQ'N'
+     C                     EXSR LOADSF
+     C                     MOVEL'Y'       WENDTC           redisplay screen
+     C                     END
+      *
+      ***  F5 - Refresh screen
+      *
+     C           *INKE     IFEQ '1'
+     C           WENDTC    ANDEQ'N'
+     C                     MOVEL*BLANK    $CINTC
+     C                     MOVEL*BLANK    $CPNAR
+     C                     EXSR INZTR
+     C                     MOVEL'Y'       WENDTC           Redisplay screen
+     C                     END
+      *
+      ***  F9 - Add a new table (CALL IR5020)
+      *
+     C           *INKI     IFEQ '1'
+     C           WENDTC    ANDEQ'N'
+     C                     CALL 'IR5020 '                  Amend header of table
+     C                     PARM *BLANK    $$INTC
+     C                     PARM 'C'       SELE
+     C                     PARM '      '  @PRET   7
+      *
+      ***  Check Return
+      *
+     C           @PRET     IFEQ *BLANKS
+      *
+      ***  New table --> rebuild subfile to show new table
+      *
+     C                     EXSR INZTR
+     C                     ENDIF
+      *
+     C           @PRET     IFEQ 'Y2U9999'                  F3 --> exit
+     C                     GOTO ENDPG
+     C                     ENDIF
+      *
+     C                     MOVEL'Y'       WENDTC           Redisplay screen
+     C                     END
+      *
+      ***  If it was not a Function key, check subfile entry
+      *
+     C           WENDTC    IFEQ 'N'
+     C                     EXSR VERTR
+     C           WERFLG    IFEQ 'N'
+     C                     EXSR INZTR
+     C                     END
+     C                     END
+      *
+    ? ***  If F3/F12 ->end of program
+      *
+     C           *INKC     IFEQ '1'
+     C           WENDTC    ANDEQ'N'
+     C           *INKL     OREQ '1'
+     C           WENDTC    ANDEQ'N'
+     C                     GOTO ENDPG                      Leave
+     C                     END
+      *
+     C                     END
+    ? *
+     C           ENDPG     TAG
+    ? *          -------------
+     C                     MOVEL'1'       *INLR
+    ? *
+    ? /EJECT
+      *****************************************************************
+    ? *   INZTR  - Initialization of the Screen transaction           *
+    ? *   -----                                                       *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           INZTR     BEGSR                           Init screen
+      *
+    ? ***  First run Flag
+      *
+     C           W1RSTI    IFEQ ' '
+     C                     MOVEL'Y'       W1RSTI
+     C                     ELSE
+     C                     MOVEL'N'       W1RSTI
+     C                     END
+      *
+    ? ***  Start of initialisation
+      *
+     C                     MOVE 'Y'       WINFLG           Init scr flag
+    ? *
+    ? ***  Load first page
+    ? *
+     C                     MOVEL'0'       *IN26            SFLNXTMSG
+     C                     EXSR LOADSF
+     C                     MOVE 'N'       WINFLG
+      *
+     C                     ENDSR
+    ? /EJECT
+      *****************************************************************
+    ? *   VERTR  - Verification of the screen transaction             *
+    ? *   -----                                                       *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           VERTR     BEGSR                           Verif screen
+      *
+    ? ***  Set on SFLNXTCHG flag
+      *
+     C                     MOVEL'1'       *IN26
+      *
+    ? ***  Read first record
+      *
+     C                     READC$SFLRCD1                 65
+     C                     MOVEL*IN65     WSFLS            Error in acces file
+      *
+    ? ***  While change records exist in subfile
+      *
+     C           WSFLS     DOWNE'1'
+      *
+    ? ***  Initialize fields attributs
+      *
+     C                     MOVEAWSVIN     *IN,30
+      *
+    ? ***  Verify Update fields (And prepare messages)
+      *
+     C           SELE      IFNE ' '
+     C           SELE      ANDNE'H'
+     C           SELE      ANDNE'E'
+     C           SELE      ANDNE'A'
+     C           SELE      ANDNE'D'                        Deletion
+     C           SELE      OREQ 'A'
+     C           TMODE     ANDNE'M'                        maintenance mode
+     C           SELE      OREQ 'D'
+     C           TMODE     ANDNE'M'                        Deletion
+      *
+    ? *** In case of error, error flag is set 'Y'
+    ? *** Send 'invalid option Specified'
+    ? *
+     C                     MOVEL'ITE5101' ZAMSID
+     C                     EXSR ERROR
+     C                     MOVEL'1'       *IN31            Error in Selector
+     C                     END
+      *
+    ? ***  Show first record in error (keep record number)
+    ? *
+     C           WERFLG    IFEQ 'Y'
+     C           WFROE     ANDEQ0
+     C                     Z-ADDWRECN     WFROE
+     C                     END
+      *
+      ***  Call IR5020 : header of table maintenance
+      *
+     C           SELE      IFEQ 'H'
+     C           TMODE     IFEQ 'M'
+      *
+      ***  Check table existance before call of IR5020
+      *
+     C           KCHK      KLIST
+     C                     KFLD           K999
+     C                     KFLD           KTABC  18
+      *
+     C                     MOVEL$$INTC    KTABC     P
+     C           KCHK      SETLLF0PR                     99
+     C           *IN99     IFEQ *OFF
+      *
+      ***  Send message 'Already deleted, Press F5 to Refresh screen'
+      *
+     C                     MOVEL'ITC0082' ZAMSID
+     C                     EXSR ERROR
+     C                     MOVEL'1'       *IN31            Error in Selector
+     C                     ELSE
+     C                     CALL 'IR5020 '                  Amend header of table
+     C                     PARM           $$INTC
+     C                     PARM 'A'       SELE
+     C                     PARM '      '  @PRET   7
+      *
+      ***  Check Return : F3, leave Program
+      *
+     C           @PRET     IFEQ 'Y2U9999'
+     C                     MOVE *ON       *INKC
+     C                     MOVE 'Y'       WERFLG
+     C                     MOVE 'N'       WENDTC
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  Enquiry mode : display header of table
+      ***  Check table existance before call of IR5020
+      *
+     C                     MOVEL$$INTC    KTABC     P
+     C           KCHK      SETLLF0PR                     99
+     C           *IN99     IFEQ *OFF
+      *
+      ***  Send message 'Already deleted, Press F5 to Refresh screen'
+      *
+     C                     MOVEL'ITC0082' ZAMSID
+     C                     EXSR ERROR
+     C                     MOVEL'1'       *IN31            Error in Selector
+     C                     ELSE
+     C                     CALL 'IR5020 '                  Amend header of table
+     C                     PARM           $$INTC
+     C                     PARM 'E'       SELE
+     C                     PARM '      '  @PRET   7
+      *
+      ***  Check Return : F3, leave Program
+      *
+     C           @PRET     IFEQ 'Y2U9999'
+     C                     MOVE *ON       *INKC
+     C                     MOVE 'Y'       WERFLG
+     C                     MOVE 'N'       WENDTC
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     END
+     C                     ELSE
+      *
+      ***  Enquire, Amend or delete TABLE details
+      *
+     C           SELE      IFEQ 'E'
+     C           SELE      OREQ 'A'
+     C           TMODE     ANDEQ'M'
+     C           SELE      OREQ 'D'                        Ask deletion
+     C           TMODE     ANDEQ'M'
+      *
+      ***  Check table existance before call of IR5030
+      *
+     C                     MOVEL$$INTC    KTABC     P
+     C           KCHK      SETLLF0PR                     99
+     C           *IN99     IFEQ *OFF
+      *
+      ***  Send message 'Already deleted, Press F5 to Refresh screen'
+      *
+     C                     MOVEL'ITC0082' ZAMSID
+     C                     EXSR ERROR
+     C                     MOVEL'1'       *IN31            Error in Selector
+     C                     ELSE
+     C                     CALL 'IR5030 '                  Amend table
+     C                     PARM           $$INTC
+     C                     PARM           SELE
+     C                     PARM '      '  @PRET   7
+      *
+      ***  Check Return : F3, leave Program
+      *
+     C           @PRET     IFEQ 'Y2U9999'
+     C                     MOVE *ON       *INKC
+     C                     MOVE 'Y'       WERFLG
+     C                     MOVE 'N'       WENDTC
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     END
+     C                     END
+      *
+      ***  Save indicators
+    ? *
+     C                     MOVEA*IN,30    WSVIN
+      *
+      ***  Update Subfile record
+    ? *
+     C                     UPDAT$SFLRCD1
+      *
+      ***  Check wethet another record is to be treated
+      *
+     C                     READC$SFLRCD1                 65
+     C                     MOVEL*IN65     WSFLS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+    ? /EJECT
+      *****************************************************************
+    ? *   SFINZ  - Initialize screen fields with file fields          *
+    ? *   -----                                                       *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           SFINZ     BEGSR                           File->Screen fields
+    ? *
+      ***  Move File field into screen subfile record
+      *
+     C                     MOVEL*BLANK    SELE
+     C                     MOVEL'0'       *IN31
+     C                     MOVELF0INTK    $$INTC
+     C                     MOVELF0PNAR    $$PNAR
+      *
+    ? ***  Save Display attribut
+      *
+     C                     MOVEL*IN,30    WSVIN
+      *
+     C                     ENDSR
+    ? /EJECT
+      *****************************************************************
+    ? *   LOADSF - Initialize subfile                                 *
+    ? *   -----                                                       *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           LOADSF    BEGSR                           Load subfile
+      *
+    ? ***  If it is screen initialization step
+      *
+     C           WINFLG    IFEQ 'Y'
+      *
+    ? ***  initialize last record number in the subfile and record number
+    ? *           equal 0
+     C                     Z-ADD0         WLRSN
+     C                     Z-ADD0         WRECN
+      *
+    ? ***  initialize Last page
+      *
+     C                     Z-ADD0         WLPAG
+      *
+    ? ***  Clear subfile
+      *
+     C                     MOVEL'1'       *IN24
+     C                     WRITE$SFLCTL1
+     C                     MOVEL'0'       *IN24
+      *
+    ? ***  Position to the first record Ok
+      *
+     C           KF0PR     SETLLF0PR                     65
+      *
+    ? ***  Read first record
+      *
+     C                     EXSR RDNEXT
+    ? *
+     C                     END                             Init.
+      *
+    ? ***  Number of record on this screen equal 0
+      *
+     C                     Z-ADD0         WLRTN
+      *
+    ? ***  Record number must be equal to last rcd in subfile
+      *
+     C                     Z-ADDWLRSN     WRECN
+      *
+    ? ***  While record exist and not end of screen
+      *
+     C           XF0PRS    DOWNE'1'
+     C           WLRTN     ANDLTWNSRS
+      *
+    ? ***  Initialize file fields -> subfile fields
+      *
+     C                     EXSR SFINZ
+      *
+    ? ***  Update Subfile
+      *
+     C                     ADD  1         WRECN            Record number
+     C                     ADD  1         WLRSN            Last rcd in SFL
+     C                     ADD  1         WLRTN            Last rcd on SCR
+     C                     WRITE$SFLRCD1
+      *
+    ? ***  Read next record
+      *
+     C                     EXSR RDNEXT
+    ? *
+     C                     ENDDO
+      *
+    ? ***  If subfile have not record
+      *
+     C           WLRSN     IFEQ 0
+      *
+    ? ***  Create one blank record (For no error when display screen)
+    ? *
+     C                     MOVEL'1'       *IN30            Not display fld
+     C                     MOVEL'1'       *IN27            Not more...
+     C                     ADD  1         WRECN
+     C                     ADD  1         WLRSN
+     C                     ADD  1         WLRTN
+     C                     WRITE$SFLRCD1
+     C                     MOVEL'0'       *IN30
+      *
+    ? ***  Send  'No data to display'
+    ? *
+     C                     MOVEL'ITE5001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+    ? ***  If last record, SFLEND is set off ('+' on last sfl rcd)
+      *
+     C           XF0PRS    IFEQ '1'
+     C                     MOVEL'1'       *IN27
+     C                     ELSE
+     C                     MOVEL'0'       *IN27
+     C                     END
+      *
+    ? ***  Last line of subfile on screen
+      *
+     C           WLRTN     MULT WNLSR     WLLOS
+     C                     ADD  WFLSF     WLLOS
+     C                     SUB  1         WLLOS
+      *
+    ? ***  First record to show is the first of the last loaded page
+      *
+     C           WLRSN     SUB  WLRTN     WFSRS
+     C                     ADD  1         WFSRS
+      *
+    ? ***  Last page
+      *
+     C                     ADD  1         WLPAG
+     C                     ENDSR
+    ? /EJECT
+      *****************************************************************
+    ? *   INZMSG - Initialize PGMQ for message subfile                *
+    ? *   ------                                                      *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           INZMSG    BEGSR                           Clear SFLMSG
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM 'IR5010 ' ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     FREE 'Y2CLMSC'
+      *
+     C                     ENDSR
+    ? /EJECT
+      *****************************************************************
+    ? *   RDNEXT - Read next record                                   *
+    ? *   ------                                                      *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           RDNEXT    BEGSR                           Read next
+      *
+     C           XF0PRS    DOUEQ'0'
+     C           WRECSL    ANDEQ'Y'
+     C           XF0PRS    OREQ '1'
+     C           K999      READEF0PR                     65
+     C                     MOVEL*IN65     XF0PRS
+     C           F0TYLC    IFEQ 'D'
+     C           *IN65     ANDEQ'0'
+     C                     MOVEL'2'       XF0PRS
+     C                     END
+     C           XF0PRS    IFEQ '0'
+     C                     MOVEL'N'       WRECSL
+      *
+    ? ***  Test "control_fields"
+      ***    Test value of narrative control
+      *
+     C           $CPNAR    IFNE *BLANK
+      *
+      ***  Narrative control is not equal blank
+      ***        Search first blank
+      *
+     C           ' '       SCAN $CPNAR    XI      90     67POSIT SCAN
+      *
+     C           XI        IFEQ 1
+     C           WERFLG    IFEQ 'N'
+      *
+      ***  Send 'First position must not be blank'
+      *
+     C                     MOVEL'ITE5011' ZAMSID
+     C                     EXSR ERROR
+     C                     END
+     C                     ELSE
+     C                     MOVEL*BLANK    XTSTFD
+     C                     MOVEA$CPNAR    TNR,1
+     C                     MOVEATNR,XI    XTSTFD
+     C           XTSTFD    IFNE *BLANK
+     C           WERFLG    ANDEQ'N'
+      *
+      ***  Send 'Data after 1rst blank are not valuable'
+      *
+     C                     MOVEL'ITE5018' ZAMSID
+     C                     EXSR ERROR
+     C                     END
+      *
+      ***  If blank not found in narrative control
+      *
+     C           *IN67     IFEQ '0'                        Scan indicator
+      *
+      ***  If Narrative field of file equal to narrative control
+      ***  Record is ok
+      *
+     C           F0PNAR    IFEQ $CPNAR
+     C                     MOVEL'Y'       WRECSL
+     C                     END
+     C                     ELSE
+      *
+      ***  If blank found in narrative control
+      ***     Search if the beginning of field (First position to first
+      ***     blank) is in the narrative field of file.
+      *
+     C                     SUB  1         XI
+     C           $CPNAR:XI SCAN F0PNAR                   67
+      *
+      ***  If found, Record is ok
+      *
+     C           *IN67     IFEQ '1'
+     C                     MOVEL'Y'       WRECSL
+     C                     END
+     C                     END
+     C                     END
+     C                     ELSE
+      *
+      ***  Narrative control is equal blank, Record is ok
+      *
+     C                     MOVEL'Y'       WRECSL
+     C                     END
+     C           WRECSL    IFEQ 'Y'
+      *
+    ? ***  Test internal condition of the record
+      *
+     C                     MOVE F0INTK    WFLD15
+     C           WFLD15    IFNE *BLANK
+     C                     MOVEL'N'       WRECSL            Not valid
+     C                     ELSE
+     C                     MOVEL'Y'       WRECSL            Valid
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+    ? /EJECT
+      *****************************************************************
+    ? *   ERROR  - Send Error message                                 *
+    ? *   ------                                                      *
+      *   Called by :                                                 *
+      *   Calls     :                                                 *
+      *****************************************************************
+      *
+     C           ERROR     BEGSR                           Error
+      *
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       WERFLG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  Standard subroutine : date conversion                        *
+      *****************************************************************
+    ? /COPY ZSRSRC,ZDATE1Z2
+    ? /COPY ZSRSRC,ZDATE2Z2
+    ? *
+    ? /EJECT
+      *****************************************************************
+      *  date conversion routines                                     *
+      *****************************************************************
+     C           DATE01    BEGSR
+      *
+      ***  Century
+      *
+     C                     MOVELZ1CC      Z5CC
+     C                     MOVELZ1CC      Z6CC
+      *
+      ***  Month
+      *
+     C                     Z-ADDZ1MM      PBI     20
+     C                     MOVELZ1MM      Z2MM
+     C           PBI       IFLT 1
+     C           PBI       ORGT 12
+     C                     MOVEL*BLANK    Z3MM
+     C                     ELSE
+     C                     MOVELZMNM,PBI  Z3MM
+     C                     END
+     C                     MOVELZ1MM      Z4MM
+     C                     MOVELZ1MM      Z5MM
+     C                     MOVELZ1MM      Z6MM
+      *
+      ***  Year & day
+      *
+     C                     MOVE Z1DD      Z2DD
+     C                     MOVE Z1DD      Z3DD
+     C                     MOVE Z1DD      Z4DD
+     C                     MOVE Z1DD      Z5DD
+     C                     MOVE Z1DD      Z6DD
+     C                     MOVE Z1YY      Z2YY
+     C                     MOVE Z1YY      Z3YY
+     C                     MOVE Z1YY      Z4YY
+     C                     MOVE Z1YY      Z5YY
+     C                     MOVE Z1YY      Z6YY
+     C           Z4MM      IFNE '00'
+     C           Z4DD      ANDNE'00'
+     C           Z4YY      ANDNE'00'
+     C                     MOVEL'/'       Z4SLH1
+     C                     MOVEL'/'       Z4SLH2
+     C                     MOVEL'/'       Z6SLH1
+     C                     MOVEL'/'       Z6SLH2
+     C                     ELSE
+     C                     MOVEL*BLANK    Z4SLH1
+     C                     MOVEL*BLANK    Z4SLH2
+     C                     MOVEL*BLANK    Z6SLH1
+     C                     MOVEL*BLANK    Z6SLH2
+     C                     END
+     C           Z4DD      IFEQ '00'
+     C                     MOVEL*BLANK    Z4DD
+     C                     END
+     C           Z4MM      IFEQ '00'
+     C                     MOVEL*BLANK    Z4MM
+     C                     END
+     C           Z4YY      IFEQ '00'
+     C           Z4MM      ANDEQ*BLANK
+     C                     MOVEL*BLANK    Z4YY
+     C                     END
+     C           Z6DD      IFEQ '00'
+     C                     MOVEL*BLANK    Z6DD
+     C                     END
+     C           Z6MM      IFEQ '00'
+     C                     MOVEL*BLANK    Z6MM
+     C                     END
+     C           Z6YY      IFEQ '00'
+     C           Z6MM      ANDEQ*BLANK
+     C                     MOVEL*BLANK    Z6YY
+     C                     END
+     C           Z6CC      IFEQ '00'
+     C                     MOVEL*BLANK    Z6CC
+     C                     END
+      *
+      ***  Find day number
+      *
+     C                     Z-ADDZ2DDMY    ZDATE
+     C                     MOVEL'1'       *IN98
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDZDAYNO    Z7DNBR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***   >>> Date DDMMYY -> CCYYMMDD
+      *
+      *****************************************************************
+     C           DATE02    BEGSR
+      *
+      ***  Century
+      *
+     C           Z2YY      IFGT 50
+     C                     Z-ADD19        Z1CC
+     C                     ELSE
+     C                     Z-ADD20        Z1CC
+     C                     END
+      *
+      ***  Year
+      *
+     C                     Z-ADDZ2YY      Z1YY
+      *
+      ***  Month
+      *
+     C                     Z-ADDZ2MM      Z1MM
+      *
+      ***  Day
+      *
+     C                     Z-ADDZ2DD      Z1DD
+     C                     EXSR DATE01
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  >>> Date DDMMMYY -> CCYYMMDD
+      *
+      *****************************************************************
+     C           DATE03    BEGSR
+      *
+      ***  Save indicator 67
+      *
+     C                     MOVEL*IN67     PBIN67  1
+      *
+      ***  Century
+      *
+     C           Z3YY      IFGT 50
+     C                     Z-ADD19        Z1CC
+     C                     ELSE
+     C                     Z-ADD20        Z1CC
+     C                     END
+      *
+      ***  Year
+      *
+     C                     Z-ADDZ3YY      Z1YY
+      *
+      ***  Month
+      *
+     C           Z3MM      IFNE 'JAN'
+     C           Z3MM      ANDNE'FEB'
+     C           Z3MM      ANDNE'MAR'
+     C           Z3MM      ANDNE'APR'
+     C           Z3MM      ANDNE'MAY'
+     C           Z3MM      ANDNE'JUN'
+     C           Z3MM      ANDNE'JUL'
+     C           Z3MM      ANDNE'AUG'
+     C           Z3MM      ANDNE'SEP'
+     C           Z3MM      ANDNE'OCT'
+     C           Z3MM      ANDNE'NOV'
+     C           Z3MM      ANDNE'DEC'
+     C                     Z-ADD00        Z1MM
+     C                     ELSE
+     C                     Z-ADD1         PBI
+     C           Z3MM      LOKUPZMNM,PBI                 67
+     C                     Z-ADDPBI       Z1MM
+     C                     END
+      *
+      ***  Day
+      *
+     C                     Z-ADDZ3DD      Z1DD
+     C                     EXSR DATE01
+      *
+      ***  Restore indicator 67
+      *
+     C                     MOVELPBIN67    *IN67
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  >>> Date DD/MM/YY -> CCYYMMDD
+      *
+      *****************************************************************
+     C           DATE04    BEGSR
+      *
+      ***  Century
+      *
+     C           Z4YY      IFGT '50'
+     C                     Z-ADD19        Z1CC
+     C                     ELSE
+     C                     Z-ADD20        Z1CC
+     C                     END
+      *
+      ***  Year
+      *
+     C                     MOVE Z4YY      Z1YY
+      *
+      ***  Month
+      *
+     C                     MOVE Z4MM      Z1MM
+      *
+      ***  Day
+      *
+     C                     MOVE Z4DD      Z1DD
+     C                     EXSR DATE01
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  >>> Date DDMMCCYY -> CCYYMMDD
+      *
+      *****************************************************************
+     C           DATE05    BEGSR
+      *
+      ***  Century
+      *
+     C                     Z-ADDZ5CC      Z1CC
+      *
+      ***  Year
+      *
+     C                     MOVE Z5YY      Z1YY
+      *
+      ***  Month
+      *
+     C                     Z-ADDZ5MM      Z1MM
+      *
+      ***  Day
+      *
+     C                     MOVE Z5DD      Z1DD
+     C                     EXSR DATE01
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***   >>> Date DD/MM/CCYY -> CCYYMMDD
+      *
+      *****************************************************************
+     C           DATE06    BEGSR
+      *
+      ***  Century
+      *
+     C                     MOVE Z6CC      Z1CC
+      *
+      ***  Year
+      *
+     C                     MOVE Z6YY      Z1YY
+      *
+      ***  Month
+      *
+     C                     MOVE Z6MM      Z1MM
+      *
+      ***  Day
+      *
+     C                     MOVE Z6DD      Z1DD
+     C                     EXSR DATE01
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  >>> Date DAY_NBR -> CCYYMMDD
+      *
+      *****************************************************************
+     C           DATE07    BEGSR
+      *
+      ***  Find date with day number
+      *
+     C                     Z-ADDZ7DNBR    ZDAYNO
+     C                     MOVEL'1'       *IN98
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDZDATE     Z2DDMY
+     C                     END
+     C                     EXSR DATE02
+     C                     EXSR DATE01
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  >>> Date DDMMYY__, __DDMMYY OR DD/MM/YY -> DD/MM/YY
+      *
+      *****************************************************************
+     C           DATEA4    BEGSR
+      *
+      ***  Save indicator 67
+      *
+     C                     MOVEL*IN67     PBIN67  1
+      *
+1    C           Z4DFMT    IFNE *BLANK
+1    C           '/'       SCAN Z4DFMT    PBX     90     67
+2    C           *IN67     IFEQ '0'
+      *
+2     ***       > '/' Not found - It may be a DDMMYY date
+      *
+2    C           '  '      SCAN Z4DFMT    PBX            67
+3    C           PBX       IFEQ 1
+3    C           *IN67     ANDEQ'1'
+3    C           PBX       OREQ 7
+3    C           *IN67     ANDEQ'1'
+      *
+3     ***  DDMMYY date --> DD/MM/YY date
+      *
+4    C           PBX       IFEQ 1
+4    C                     MOVE Z4DFMT    Z2DDMY
+4    C                     ELSE
+4    C                     MOVELZ4DFMT    Z2DDMY
+4    C                     END
+3    C                     EXSR DATE02
+3    C                     END
+2    C                     END
+1    C                     END
+     C                     EXSR DATE04
+      *
+      ***  Restore indicator 67
+      *
+     C                     MOVELPBIN67    *IN67
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  >>> Date DDMMCCYY__, __DDMMCCYY OR DD/MM/CCYY -> DD/MM/CCYY
+      *
+      *****************************************************************
+     C           DATEA6    BEGSR
+      *
+      ***  Save indicator 67
+      *
+     C                     MOVEL*IN67     PBIN67  1
+      *
+     C           Z6DFMT    IFNE *BLANK
+     C           '/'       SCAN Z6DFMT    PBX            67
+     C           *IN67     IFEQ '0'
+      *
+      ***  '/' Not found - It may be a DDMMCCYY date
+      *
+     C           '  '      SCAN Z6DFMT    PBX            67
+     C           PBX       IFEQ 1
+     C           *IN67     ANDEQ'1'
+     C           PBX       OREQ 9
+     C           *IN67     ANDEQ'1'
+      *
+      ***  DDMMCCYY date --> DD/MM/CCYY date
+      *
+     C           PBX       IFEQ 1
+     C                     MOVE Z6DFMT    Z5DMCY
+     C                     ELSE
+     C                     MOVELZ6DFMT    Z5DMCY
+     C                     END
+     C                     EXSR DATE05
+     C                     END
+     C                     END
+     C                     END
+     C                     EXSR DATE06
+      *
+      ***  Restore indicator 67
+      *
+     C                     MOVELPBIN67    *IN67
+      *
+     C                     ENDSR
+      *
+    ? /EJECT
+      *****************************************************************
+      *  ZASNMS - Send in PGMQ error message                          *
+      *  ------                                                       *
+      *  Called by  :                                                 *
+      *  Calls      :                                                 *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL'IR5010 ' ZAPGM
+     C                     END
+      *
+      ***  If no message file specified use default.
+      *
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'ITUSRMSG'ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *
+     C           ZAEXIT    ENDSR
+    ? *****************************************************************
+      *  ERRBD  - Error in database fiel subroutine                   *
+      *  ------                                                       *
+      *  Called by  :                                                 *
+      *  Calls      :                                                 *
+      *****************************************************************
+    ? *
+     C           ERRBD     BEGSR                           Error in database
+     C                     SETON                     U7U8LR
+     C                     ENDSR
+    ? *
+    ? /COPY ZSRSRC,ZDATE2Z3

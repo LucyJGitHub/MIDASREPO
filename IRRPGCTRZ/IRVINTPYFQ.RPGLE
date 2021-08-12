@@ -24,13 +24,14 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC120             Date 13Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CAP055             Date 13Mar02               *
+      *                 CAP055             Date 13Mar02               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CIR007             Date 11May01               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC120 - Allow frequency 'W' (Weekly) or 'F' (Fortnightly).  *
+      *           Added hooks: LUC120_009, LUC120_001, LUC120_002,    *
+      *                        LUC120_003                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP055 - APIs for FRA/IRS Caps/Collars/Floors                *
       *  CIR007 - Overnight Index Swaps                               *
@@ -138,6 +142,8 @@
       ** OVERNIGHT INDEX SWAPS                                                                CIR007
      DCIR007           S              1A                                                      CIR007
                                                                                               CIR007
+     D/COPY WNCPYSRC,LUC120_009                                                               LUC120
+                                                                                              LUC120
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -178,10 +184,15 @@
      C     STIPFR        ANDNE     'C'
      C     STIPFR        ANDNE     'Z'
      C     CIR001        ORNE      'Y'
+
+      /COPY WNCPYSRC,LUC120_001                                                               LUC120
+
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMA0042'     Msgid1
      C                   END
                                                                                               CAP055
+      /COPY WNCPYSRC,LUC120_002                                                               LUC120
+                                                                                              LUC120
       ** Interest payment frequency 'C' and 'Z' are not valid for deal type                   CAP055
       ** 'RR', 'RP' and 'RF'                                                                  CAP055
                                                                                               CAP055
@@ -284,6 +295,8 @@
      C                   PARM                    CIR007                                       CIR007
      C
  
+      /COPY WNCPYSRC,LUC120_003                                                               LUC120
+                                                                                              LUC120
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values

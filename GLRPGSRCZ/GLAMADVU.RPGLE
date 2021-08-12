@@ -34,8 +34,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR979910           Date 07Jun12               *
-      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *  Last Amend No. MD058101           Date 24May21               *
+      *  Prev Amend No. LUC139             Date 21Dec20               *
+      *                 CER009             Date 13Nov20               *
+      *                 AR979910           Date 07Jun12               *
+      *                 260405             Date 04Apr20               *      
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -144,6 +147,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058101 - Default error Fixed commission default. Amend to  *
+      *             default only when account type is Retail Account. *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
       *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
       *             constant timestamp value constant for validation  *
       *             indicating that no change has occured yet.        *
@@ -519,6 +526,8 @@
      D                                     PREFIX(V_)                                         CER001
      D SVRCD         E DS                  EXTNAME(REACX1PD)                                  CER001
      D                                     PREFIX(E_)                                         CER001
+     D ValidItalyExt E DS                  EXTNAME(GLVAMIT1PD)                                CER009
+     D                                     PREFIX(I_)                                         CER009
 
      D AccnFilFmt    E DS                  EXTNAME(ACCNTAB)
      D ExBXFilFmt    E DS                  EXTNAME(ACCNTBXC)
@@ -746,6 +755,7 @@
       *                                                                                       CER001
      D OkFlagsExt    E DS                  EXTNAME(GLEAMLX1PD)                                CER001
       *                                                                                       CER001
+     D OkFlagsItaly  E DS                  EXTNAME(GLEAMIT1PD)                                CER009
      D/COPY WNCPYSRC,GLH00644
       **--------------------------------------------------------------------------------------------
      D RUNDAT          DS            13
@@ -769,6 +779,13 @@
      D  #1FOTR                45     64                                                       CER001
      D  #1TMST                65     90Z                                                      CER001
       *                                                                                       CER001
+     D DataItaly       DS          1024                                                       CER009
+     D  I1CNUM                 1      6                                                       CER009
+     D  I1CCY                  7      9                                                       CER009
+     D  I1ACOD                10     19                                                       CER009
+     D  I1ACSQ                20     21                                                       CER009
+     D  I1BRCA                22     24                                                       CER009
+     D  I1ATYP                25     25                                                       CER009
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -884,6 +901,7 @@
      D WConstantTS     S             26A   INZ('0001-01-01-00.00.00.000000')                AR979910
       *                                                                                     BUG22742
      D/COPY OFCPYSRCZ,CRE101_039                                                              CRE101
+     D CER009          S              1    INZ('N')                                           CER009
      D/COPY WNCPYSRC,GLAMADVD01
 
       *                                                                                      LLN022A
@@ -1390,6 +1408,38 @@
       *****************************************************************                       CER001
       /EJECT                                                                                  CER001
      C/COPY WNCPYSRC,GLH00646
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  ValidateItaly - Routine to validate Italian Amad File        *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     ValidateItaly BEGSR                                                                CER009
+                                                                                              CER009
+     C                   MOVE      DDCUSN        I1CNUM                                       CER009
+     C                   MOVE      DDCCY         I1CCY                                        CER009
+     C                   MOVE      DDACOD        I1ACOD                                       CER009
+     C                   MOVE      DDACSQ        I1ACSQ                                       CER009
+     C                   MOVE      DDBRCA        I1BRCA                                       CER009
+     C                   MOVE      V_AMATYP      I1ATYP                                       CER009
+                                                                                              CER009
+     C**********         CALLB     'GLAMAD7VL'                                                CER009
+     C                   CALLB     'GLAMADIVL'                                                CER009
+     C                   PARM                    DataItaly                                    CER009
+     C                   PARM                    RegData                                      CER009
+     C                   PARM                    OkFlagsItaly                                 CER009
+     C                   PARM                    FldNameArr                                   CER009
+     C                   PARM                    MsgIdArr                                     CER009
+     C                   PARM                    MsgDtaArr                                    CER009
+     C                   PARM                    Ix                                           CER009
+     C                   PARM                    WFldNamArr                                   CER009
+     C                   PARM                    WMsgIdArr                                    CER009
+     C                   PARM                    WMsgDtaArr                                   CER009
+     C                   PARM                    WIdx                                         CER009
+     C                   PARM                    ValidItalyExt                                CER009
+                                                                                              CER009
+     C                   ENDSR                                                                CER009
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
       **********************************************************************
      C     GLVACSQ       BEGSR
 
@@ -1723,6 +1773,7 @@
      C*****DDACTN        IFNE      'I'                                                        240916
      C     DDACTN        IFEQ      'I'                                                        240916
      C     TIx           ANDEQ     0                                                          238839
+     C     A5ACTY        ANDEQ     'R'                                                      MD058101
      C                   EXSR      DFT@O
      C                   END
       *
@@ -2039,6 +2090,18 @@
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
+      ** Validate Italy Amad File                                                             CER009
+                                                                                              CER009
+     C     CER009        IFEQ      'Y'                                                        CER009
+     C                   EXSR      ValidateItaly                                              CER009
+                                                                                              CER009
+      ** If error in validation, fail this input                                              CER009
+                                                                                              CER009
+     C     Ix            IFNE      0                                                          CER009
+     C                   LEAVESR                                                              CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C                   ENDIF                                                                CER009
      C/COPY WNCPYSRC,GLH00648
      C     EValidTr      ENDSR
       *****************************************************************
@@ -2662,6 +2725,16 @@
      C                   PARM                    SVRCD                                        CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
+      ** Update Italian extension details if CER009 is switched on                            CER009
+                                                                                              CER009
+     C                   IF        @@RTCD = *BLANKS AND                                       CER009
+     C                             CER009 = 'Y'                                               CER009
+     C                   CALLB     'GLAMAD7UP'                                                CER009
+     C                   PARM                    @@RTCD                                       CER009
+     C                   PARM                    DDACTN                                       CER009
+     C                   PARM                    ValidItalyExt                                CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C/COPY WNCPYSRC,GLH00650
       * IF THERE WERE ANY ERRORS IN THE UPDATE FUNCTIONS, ROLLBACK ANY
       * UPDATES AND END THIS PROGRAM. OTHERWISE, COMMIT THE UPDATES
@@ -3953,6 +4026,30 @@
      C                   ELSE                                                                 CER001
      C                   MOVE      'N'           ULX606                                       CER001
      C                   ENDIF                                                                CER001
+                                                                                              CER009
+      ** Access SAR details file to determine if CER009 is switched on                        CER009
+                                                                                              CER009
+     C                   CALLB     'AOSARDR0'                                                 CER009
+     C                   PARM      *BLANKS       @RTCD                                        CER009
+     C                   PARM      '*VERIFY'     @OPTN                                        CER009
+     C                   PARM      'CER009'      @SARD                                        CER009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+      ** Database Error                                                                       CER009
+                                                                                              CER009
+     C     @RTCD         IFNE      *BLANKS                                                    CER009
+     C     @RTCD         ANDNE     '*NRF   '                                                  CER009
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CER009
+     C                   Z-ADD     903           DBASE                                        CER009
+     C                   MOVEL     'CER009'      DBKEY                                        CER009
+     C                   EXSR      *PSSR                                                      CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C     @RTCD         IFEQ      *BLANK                                                     CER009
+     C                   MOVE      'Y'           CER009                                       CER009
+     C                   ELSE                                                                 CER009
+     C                   MOVE      'N'           CER009                                       CER009
+     C                   ENDIF                                                                CER009
       *
       ** ACCESS GENERAL LEDGER DETAILS
       *

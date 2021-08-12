@@ -1,0 +1,139 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER I.C.D. - Italy setup')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ER9100WGI - European Reporting I.C.D. - Italy setup          *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021  *Create    Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+     F*
+     FSDBANKL1IF  E                    DISK
+     FERICDRL0UF  E           K        DISK                      A
+     F**********EROUTFPDUF  E           K        DISK                      A
+     F*
+     F*
+     E*****************************************************************
+     E*
+     E                    ICCD   20  20  2
+     E                    ICNA    1  20 20
+     E                    CPY@    1   1 80
+     I*****************************************************************
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*                                                                   ER
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+      **  D.s. FOR FORMATTING DEFAULT OUTPUT FILE    :
+     I            DS
+     I                                        1  10 OUTF
+     I                                        3   4 OUTF34
+     I*
+     I*****************************************************************
+      *
+      ** List of parameters.
+     C           *ENTRY    PLIST
+     C                     PARM           @RTRN   7
+     C                     PARM           @MODE   1
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C           1         CHAINSDBANKL1             01
+     C**
+     C**  IF RECORD NOT FOUND:
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'ER9100WG'DBPGM
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           @MODE     IFEQ '1'
+     C           @MODE     OREQ '2'
+     C*
+     C                     Z-ADD1         X       30
+     C           ICCD,X    DOWNE*BLANK
+     C                     MOVE ICCD,X    VDICCD  2
+     C           VDICCD    CHAINERICDRL0             10
+     C           *IN10     IFEQ '1'
+     C                     RESETERICDRD0
+     C                     MOVE ICCD,X    VDICCD
+     C                     MOVELICNA,X    VDICNA
+     C                     Z-ADDBJRDNB    VDLCD
+     C                     MOVE 'I'       VDTYLC
+     C                     WRITEERICDRD0
+     C                     END
+      *
+     C**********           EXSR OUTFSR
+      *
+     C                     ADD  1         X
+     C                     END
+      *
+     C                     ENDIF
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*****************************************************************
+      ** OUTFSR S/R   Write default record
+     C*================================================================
+     C           OUTFSR    BEGSR
+      *
+     C           KOUTF     KLIST
+     C                     KFLD           VDICCD
+     C                     KFLD           OUTF
+      *
+     C                     MOVEL'ERXXTRPD'OUTF             XX=BE,NL,etc...
+     C                     MOVELVDICCD    OUTF34
+      *
+     C********** KOUTF     CHAINEROUTFF0             10
+     C********** *IN10     IFEQ '1'
+     C**********           MOVELICCD,X    ERICCD           Ctry/Applicat.
+     C**********           MOVELOUTF      EROUTF           File name
+     C**********           MOVEL'M'       ERFREQ           Monthly
+     C**********           WRITEEROUTFF0
+     C**********           END
+      *
+     C                     ENDSR
+     C*================================================================
+     C*
+     C** *PSSR  S/R
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C**
+     C                     ENDSR
+     C*****************************************************************
+**  COUNTRY CODE
+IT
+**  COUNTRY NARRATIVE
+Italy
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

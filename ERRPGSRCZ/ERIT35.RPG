@@ -1,0 +1,292 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Decision table Account codes List')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  ERIT35   -  Decision table Account codes List                *
+      *                                                               *
+      *  Function:  This program produce an audit/full list of the    *
+      *             Italy Decision Table for the account codes        *
+      *                                                               *
+      *  (phase(s)) Input cycle on request                            *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021  *Create    Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  70         OVERFLOW INDICATOR FOR ERIT35P1                   *
+      *  80         EOF ERITACL1                                      *
+      *                                                               *
+      *  U7         DATABASE ERROR                                    *
+      *  U8         PROGRAM  ERROR                                    *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  #INIT  - Initial Subroutine                                  *
+      *  *PSSR  - Error subroutine                                    *
+      *  ZDATE2 - To convert a day number to date formats             *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+     FERITACL1IF  E           K        DISK
+      ** ER Decision Table - A/C code - Italy Prefix 'N3'
+      *
+     FERIT35P1O   E             70     PRINTER      KINFDS SPOOL1
+     FERIT35AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Account codes
+     ISDACOD    E DSSDACODPD
+      *
+     ISPOOLU      DS
+      *
+      **  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      *
+      **  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** Execute initial processing
+     C                     EXSR #INIT
+      *
+     C                     READ ERITACL1                 80
+      *
+     C           *IN80     IFEQ '0'                        - B1
+     C                     WRITEHEADLI
+     C                     ELSE                            - X1
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     END                             - E1
+      *
+      ** Detail processing
+     C           *IN80     DOWEQ'0'                        - B1
+      *
+     C                     MOVE N3ACOD    XRACOD
+     C                     Z-ADDN3RBND    XRDEBI
+     C                     Z-ADDN3RBNC    XRCRED
+     C                     Z-ADDN3CPND    XRCPDB
+     C                     Z-ADDN3CPNC    XRCPCR
+     C                     MOVE N3TYLC    XRTYLC
+      *
+      ** Setup Date in format DDMMMYY
+     C                     Z-ADDN3LCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    XRLCD
+      *
+      ** Setup narrative and type of account code
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM XRACOD    @OACCD  4
+     C                     PARM           SDACOD
+      *
+     C           @RTCD     IFEQ *BLANK                     - B2
+     C                     MOVELA5ACCN    XRNARA
+     C                     MOVE A5ACTY    XRTYPE
+     C                     ELSE                            - X2
+     C                     MOVE *BLANKS   XRNARA
+     C                     MOVE *BLANKS   XRTYPE
+     C                     END                             - E2
+      *
+      ** Test if overflow in printer file
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E2
+      *
+     C                     WRITEDETLI
+      *
+     C                     READ ERITACL1                 80
+     C                     ENDDO                           - E1
+      *
+      ** Write END OF REPORT
+     C                     WRITEENDLI
+      *
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVE '1'       *INLR
+     C                     END                             - E1
+      *
+     C                     RETRN
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT   - Initial Subroutine                                  *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           #INIT     BEGSR
+      *
+      ** Copyright
+     C                     MOVEACPY@      CPY@@   1
+      *
+      ** Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5                       USW004
+     C                     PARM           @RLEV   1                       USW004
+     C                     PARM           @RENT   3                       USW004
+     C                     PARM           PARCTR  2
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** 'User country code' must be in the title of display file
+     C                     MOVE PARCTR    XX
+      *
+      ** Initialize indicators:
+     C                     MOVE '0'       *IN
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'WWBFIL           ***************
+     C                     MOVEL'ERIT35'  WWBKEY           * DBERROR 001 *
+     C                     Z-ADD001       WWBASE           ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      * Record Printer file ERIT35P1 on RCF.
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     MOVELSFIL1     SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+      * Record Printer file ERIT35AU on RCF
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     MOVELSFILEU    SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO                      - B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END                             - E1
+      *
+      **  Update data area LDA.
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C* SRZSFL - Subroutine to call ZSFILE
+      *****************************************************************
+     C*
+     C           SRZSFL    BEGSR
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+      ****************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ****************************************************************
+      *
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

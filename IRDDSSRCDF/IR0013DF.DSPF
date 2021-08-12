@@ -1,0 +1,308 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas IR Voce/Sottovoce Original and Derived Dec')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR0013DF - Voce/Sottovoce Original and Derived Decision      *
+      *             Table Maintenance                                 *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 22Dec20               *
+      *  Prev Amend No. MMI001             Date 19Nov98               *
+      *                 UIT021             Date 07May97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI001 - Add ? processing to fields (removing mandatory fill)*
+      *  UIT021 - BOI Monthly Reporting                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      *  03 - F3 pressed                                        (ON)  *
+      *  05 - F5 pressed                                        (ON)  *
+      *  09 - F9 pressed                                        (ON)  *
+      *  12 - F12 pressed                                       (ON)  *
+      *                                                               *
+      *  13 - Delete authorised for the User                    (ON)  *
+      *  14 - Insert authorised for the User                    (ON)  *
+      *  15 - Protect all fields                                (ON)  *
+      *  16 - Add Mode                                          (ON)  *
+      *     - Change Mode                                       (OFF) *
+      *  17 - Amend authorised for the User                     (ON)  *
+      *                                                               *
+      *  19 - Selection field DHFTOR in error                   (ON)  *
+      *  20 - Field #1SELE : Selection in error                 (ON)  *
+      *  21 - Field #1FTOR : Voce/Sottovoce Original in error   (ON)  *
+      *  22 - Field #1ADCD : Addition Code in error             (ON)  *
+      *  23 - Field #1ACNA : A/C Nature in error                (ON)  *
+      *  24 - Field #1TPCU : Type of Customer in error          (ON)  *
+      *  25 - Field #1DUPE : Duration Codification in error     (ON)  *
+      *  26 - Field #1BACY : Base Ccy in error                  (ON)  *
+      *  27 - Field #1FTDE : Voce/Sottovoce Derived in error    (ON)  *
+      *                                                               *
+      *  30 - End of Error Message Subfile                            *
+      *     - End of Details Subfile                            (ON)  *
+      *     - Roll-Up authorised on Details Subfile             (OFF) *
+      *  35 - Roll-Up pressed                                   (ON)  *
+      *  45 - ENTER pressed on Details Subfile                  (OFF) *
+      *  63 - Input on Details Subfile                          (ON)  *
+      *  80 - Display Details Subfile Controle                  (ON)  *
+      *  81 - Display Details Subfile                           (ON)  *
+      *  80 and 81 - Clear Details Subfile                      (OFF) *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT
+     A                                      VLDCMDKEY(45 'ANY VALID KEY')
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A                                      HELP
+     A                                      HLPDOC('H021@000' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      CA03(03 'Exit')
+     A                                      CA05(05 'Refresh')
+     A N16 14N15
+     AO 16N15 17                            CA09(09 'Add Mode')
+     A                                      CA12(12 'Previous')
+      *
+      *-------------------------------------------------------------------------
+      ***  Error Messages Subfile
+      *-------------------------------------------------------------------------
+      *
+     A          R IR0013S0                  SFL
+     A                                      TEXT('(C) Midas-Kapiti Internationa-
+     A                                      l Ltd. 1997')
+     A                                      SFLMSGRCD(24)
+     A            DDSFKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+      *
+      *-------------------------------------------------------------------------
+      ***  Error Messages Subfile Controle and Footer
+      *-------------------------------------------------------------------------
+      *
+     A          R IR0013C0                  SFLCTL(IR0013S0)
+     A                                      TEXT('Message Subfile and Footer')
+     A                                      SFLSIZ(0014)
+     A                                      SFLPAG(0001)
+     A                                      SFLINZ
+     A                                      SFLDSPCTL
+     A                                      SFLDSP
+     A  30
+     AON30                                  SFLEND
+     A            DDPGMQ                    SFLPGMQ
+      *
+     A                                 23  2'F3=Main Menu   F5=Refresh'
+     A                                      DSPATR(HI)
+     A N16 14                          23 30'F9=Add Mode   F12=Previous'
+     A                                      DSPATR(HI)
+     A N16 13 14                       23 59'D=Delete'
+     A                                      DSPATR(HI)
+     A N16 13N14                       23 45'D=Delete'
+     A                                      DSPATR(HI)
+     A  16 17                          23 30'F9=Change Mode   F12=Previous'
+     A                                      DSPATR(HI)
+     A N16N14
+     AO 16N17                          23 30'F12=Previous'
+     A                                      DSPATR(HI)
+      *
+      *-------------------------------------------------------------------------
+      ***  Details Subfile
+      *-------------------------------------------------------------------------
+      *
+     A          R IR0013S1                  SFL
+     A                                      TEXT('Details Subfile')
+      *
+     A  63                                  SFLNXTCHG
+      *
+     A            #1SELE         1A  B  9  4TEXT('SELECTION')
+     A  20                                  DSPATR(RI)
+     A  20                                  DSPATR(PC)
+     A N15N20 13                            DSPATR(UL)
+     A  16
+     AON16N13
+     AO 15                                  DSPATR(PR)
+     A  16                                  DSPATR(ND)
+      *
+     A            #1FTOR         7A  B  9 10TEXT('VOCE/SOTTOVOCE ORIGINAL')
+     A  15
+     AON16                                  DSPATR(PR)
+     A  16N15                               DSPATR(UL)
+     A  21                                  DSPATR(RI)
+     A  21                                  DSPATR(PC)
+      *
+     A            #1ACNA         3A  B  9 25TEXT('A/C NATURE')
+     A**************************************CHECK(MF)                                         MMI001
+     A  23                                  DSPATR(RI)
+     A  23                                  DSPATR(PC)
+     A  16N15                               DSPATR(UL)
+     A  15
+     AON16                                  DSPATR(PR)
+      *
+     A            #1TPCU         2A  B  9 35TEXT('TYPE OF CUST.')
+     A**************************************CHECK(MF)                                         MMI001
+     A  24                                  DSPATR(RI)
+     A  24                                  DSPATR(PC)
+     A  16N15                               DSPATR(UL)
+     A  15
+     AON16                                  DSPATR(PR)
+      *
+     A            #1DUPE         2A  B  9 45TEXT('DURATION CODIFICATION')
+     A**************************************CHECK(MF)                                         MMI001
+     A  25                                  DSPATR(RI)
+     A  25                                  DSPATR(PC)
+     A  16N15                               DSPATR(UL)
+     A  15
+     AON16                                  DSPATR(PR)
+      *
+     A            #1BACY         1A  B  9 54TEXT('BASE CCY')
+     A  26                                  DSPATR(RI)
+     A  26                                  DSPATR(PC)
+     A  16N15                               DSPATR(UL)
+     A  15
+     AON16                                  DSPATR(PR)
+      *
+     A            #1ADCD         1A  B  9 61TEXT('ADDITION CODE')
+     A                                      CHECK(MF)
+     A  22                                  DSPATR(RI)
+     A  22                                  DSPATR(PC)
+     A N15N22 17                            DSPATR(UL)
+     A N16N17
+     AO 15                                  DSPATR(PR)
+      *
+     A            #1FTDE         7A  B  9 70TEXT('VOCE/SOTTOVOCE DERIVED')
+     A  27                                  DSPATR(RI)
+     A  27                                  DSPATR(PC)
+     A N15N27 17                            DSPATR(UL)
+     A N16N17
+     AO 15                                  DSPATR(PR)
+      *
+     A            #HADCD         1A  H
+     A            #HFTDE         7A  H
+      *
+      *-------------------------------------------------------------------------
+      ***  Details Subfile Controle
+      *-------------------------------------------------------------------------
+      *
+     A          R IR0013C1                  SFLCTL(IR0013S1)
+     A                                      TEXT('Details Subfile Controle')
+      *
+     A                                      SFLSIZ(0014)
+     A                                      SFLPAG(0013)
+     A N30                                  ROLLUP(35)
+     A                                      OVERLAY
+     A  81                                  SFLDSP
+     A  80                                  SFLDSPCTL
+     A N80N81                               SFLCLR
+     A  30                                  SFLEND
+      *
+      ***  Help Tag for DHFTOR : Voce/Sottovoce Original search field
+      *
+     A          H                           HLPDOC('H021@001' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(07 010 07 016)
+      *
+      ***  Help Tag for #1SELE : Selection
+      *
+     A          H                           HLPDOC('H021@002' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 004 21 004)
+      *
+      ***  Help Tag for #1FTOR : Voce/Sottovoce Original
+      *
+     A          H                           HLPDOC('H021@003' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 010 21 016)
+      *
+      ***  Help Tag for #1ACNA : A/C Nature
+      *
+     A          H                           HLPDOC('H021@004' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 025 21 027)
+      *
+      ***  Help Tag for #1TPCU : Type of Customer
+      *
+     A          H                           HLPDOC('H021@005' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 035 21 036)
+      *
+      ***  Help Tag for #1DUPE : Duration Codification
+      *
+     A          H                           HLPDOC('H021@006' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 045 21 056)
+      *
+      ***  Help Tag for #1BACY : Base Ccy
+      *
+     A          H                           HLPDOC('H021@007' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 054 21 054)
+      *
+      ***  Help Tag for #1ADCD : Addition Code
+      *
+     A          H                           HLPDOC('H021@008' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 061 21 061)
+      *
+      ***  Help Tag for #1FTDE : Voce/Sottovoce Derived
+      *
+     A          H                           HLPDOC('H021@009' 'ERITINS' 'ABSENG-
+     A                                      /ITL')
+     A                                      HLPARA(09 070 21 076)
+      *
+     A            RRN            4S 0H      SFLRCDNBR
+      *
+     A            ##PGM         10A  O  1  2TEXT('*PROGRAM')
+     A            ##JOB         10A  O  1 52TEXT('*JOB')
+     A            BJMRDT         7A  O  1 63TEXT('midas rundate')
+     A                                  1 72TIME
+      *
+     A                                  2 13'"BOI" Voce/Sottovoce Original and -
+     A                                      "BOI" Voce/Sottovoce'
+     A                                      DSPATR(HI)
+     A                                  3 23'Derived Decision Table Maintenance'
+     A                                      DSPATR(HI)
+      *
+     A                                  5  7'Voce/Sottovoce'
+     A                                      DSPATR(HI)
+     A                                  5 25'A/C'
+     A                                      DSPATR(HI)
+     A                                  5 32'Type of'
+     A                                      DSPATR(HI)
+     A                                  5 42'Duration'
+     A                                      DSPATR(HI)
+     A                                  5 53'Base'
+     A                                      DSPATR(HI)
+     A                                  5 60'Add.'
+     A                                      DSPATR(HI)
+     A                                  5 67'Voce/Sottovoce'
+     A                                      DSPATR(HI)
+      *
+     A                                  6 10'Original'
+     A                                      DSPATR(HI)
+     A                                  6 24'Nature'
+     A                                      DSPATR(HI)
+     A                                  6 33'Cust.'
+     A                                      DSPATR(HI)
+     A                                  6 42'Codific.'
+     A                                      DSPATR(HI)
+     A                                  6 53'Ccy'
+     A                                      DSPATR(HI)
+     A                                  6 60'Code'
+     A                                      DSPATR(HI)
+     A                                  6 70'Derived'
+     A                                      DSPATR(HI)
+      *
+     A            DHFTOR         7A  B  7 10TEXT('VOCE/SOTTOVOCE ORIGINAL')
+     A N19N16                               DSPATR(UL)
+     A  19                                  DSPATR(RI)
+     A  16                                  DSPATR(PR)
+     A  16                                  DSPATR(ND)
+      *

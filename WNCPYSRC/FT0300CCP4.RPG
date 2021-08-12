@@ -1,0 +1,125 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 04Oct11               *
+      *                 244728             Date 04Jan07               *
+      *                 STP010             Date 23Jan06               *
+      *                  STP006                 Date 22Nov04          *
+      *                  STP006                 Date 22Nov04          *
+      *                  ERN054                 Date 24Jun2003        *
+      *                  EEE058                 Date 12Feb2003        *
+      *                                                               *
+      *****************************************************************
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *         - I/O operation was applied to closed file FTPEXTP0   *
+      *  244728 - Move write to FTCRCKP0 to later in the program.     *
+      *  STP010 -  Set Sender = MHB for MTCASH payments               *
+      *  EBB013 -  Local Clearing Interface                           *
+      *  STP006 - Fill in Sender field for MTCASH with cust no.       *
+      *           rather than account's retail no.                    *
+      *  ERN054 - Agency message changes                              *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+      *****                                                                             MAR012MAR015
+     C*****      PNL012    IFEQ 'Y'                                                     MAR012MAR015
+      ********** ERAUTH    ANDEQ'Y'                                                     MAR012MAR015
+     C*****                MOVELOPPREF    CRPREF                                        MAR012MAR015
+     C*****                MOVEL'D'       CRRECI                                              MAR015
+     C*****                WRITE@CRCKP0                                                 MAR012MAR015
+     C*****                ENDIF                                                        MAR012MAR015
+      *****                                                                             MAR015244728
+     C*****      @REC1     IFEQ 'Y'                                                     MAR015244728
+     C*****                MOVELV1RECI    CRRECI                                        MAR015244728
+     C*****                MOVELOPPREF    CRPREF                                        MAR015244728
+     C*****                MOVELV1BRCA    CRBRCA                                        MAR015244728
+     C*****                MOVELV1CNUM    CRCNUM                                        MAR015244728
+     C*****                MOVELV1CCY     CRCCY                                         MAR015244728
+     C*****                MOVELV1ACOD    CRACOD                                        MAR015244728
+     C*****                MOVELV1ACSQ    CRACSQ                                        MAR015244728
+     C*****                Z-ADDV1SMAM    CRSMAM                                        MAR015244728
+     C*****                Z-ADDV1CLBL    CRCLBL                                        MAR015244728
+     C*****                Z-ADDV1ODLN    CRODLN                                        MAR015244728
+     C*****                Z-ADDV1AVBL    CRAVBL                                        MAR015244728
+     C*****                WRITE@CRCKP0                                                 MAR015244728
+     C*****                ENDIF                                                        MAR015244728
+      *****                                                                             MAR015244728
+     C*****      @REC2     IFEQ 'Y'                                                     MAR015244728
+     C*****                MOVELV2RECI    CRRECI                                        MAR015244728
+     C*****                MOVELOPPREF    OPPREF                                        MAR015244728
+     C*****                MOVELV2BRCA    CRBRCA                                        MAR015244728
+     C*****                MOVELV2CNUM    CRCNUM                                        MAR015244728
+     C*****                MOVELV2CCY     CRCCY                                         MAR015244728
+     C*****                MOVELV2ACOD    CRACOD                                        MAR015244728
+     C*****                MOVELV2ACSQ    CRACSQ                                        MAR015244728
+     C*****                Z-ADDV2SMAM    CRSMAM                                        MAR015244728
+     C*****                Z-ADDV2CLBL    CRCLBL                                        MAR015244728
+     C*****                Z-ADDV2ODLN    CRODLN                                        MAR015244728
+     C*****                Z-ADDV2AVBL    CRAVBL                                        MAR015244728
+     C*****                WRITE@CRCKP0                                                 MAR015244728
+     C*****                ENDIF                                                        MAR015244728
+      *****                                                                             MAR015244728
+     C*****      @REC1     IFNE 'Y'                                                     MAR015244728
+     C*****      @REC2     ANDNE'Y'                                                     MAR015244728
+     C*****      AUIN      ANDEQ'Y'                                                     MAR015244728
+     C*****                MOVELOPPREF    CRPREF                                        MAR015244728
+     C*****                MOVEL'D'       CRRECI                                        MAR015244728
+     C*****                WRITE@CRCKP0                                                 MAR015244728
+     C*****                ENDIF                                                        MAR015244728
+      *****                                                                             MAR012244728
+      *                                                                                       EBB013
+      **  If local clearing payment write record to FTLCDTPD                                  EBB013
+      *                                                                                       EBB013
+     C           @@LCLR    IFEQ 'Y'                                                           EBB013
+     C                     MOVE PREF      CLPREF                                              EBB013
+     C                     MOVE LCSETM    CLSETM                                              EBB013
+     C                     MOVE LCF108    CLF108                                              EBB013
+     C                     MOVE LCF113    CLF113                                              EBB013
+     C                     MOVE PREF      CLPREF                                              EBB013
+     C                     WRITEFTLCDTD0                                                      EBB013
+     C                     ENDIF                                                              EBB013
+      *                                                                                       EBB013
+      *  Test to see if FTPEXTP0 needs to be written to                                       EEE058
+      *                                                                                       EEE058
+     C           EEE058    IFEQ *BLANKS                                              EEE058 AR856737
+      *                                                                                       EEE058
+      *  Test for Mt910 processing active                                                     EEE058
+      *                                                                                       EEE058
+     C                     CALL 'AOSARDR0'                                                    EEE058
+     C                     PARM *BLANKS   P@RTCD                                              EEE058
+     C                     PARM '*VERIFY' P@OPTN                                              EEE058
+     C                     PARM 'EEE058'  @SARD                                               EEE058
+     C           SCSARD    PARM *BLANKS   DSFDY                                               EEE058
+      *                                                                                       EEE058
+      *  EEE058 processing active                                                             EEE058
+      *                                                                                       EEE058
+     C           P@RTCD    IFEQ *BLANKS                                                       EEE058
+     C                     MOVEL'EEE058'  EEE058  6                                           EEE058
+     C                     OPEN FTPEXTP0                                                      EEE058
+     C                     ENDIF                                                              EEE058
+     C                     ENDIF                                                              EEE058
+      *                                                                                       EEE058
+      *  If EEE058 write extension data                                                       EEE058
+      *                                                                                       EEE058
+     C           EEE058    IFEQ 'EEE058'                                                      EEE058
+      * get data                                                                              EEE058
+     C                     CALL 'FTP960'                                                      EEE058
+     C                     PARM *BLANKS   P9RTN                                               EEE058
+     C                     PARM           P9PEXT                                              EEE058
+      * If pension then transaction type is 1740 else  1730                                   ERN054
+     C                     SELEC                                                              ERN054
+     C           PXPENF    WHEQ 'Y'                                                           ERN054
+     C                     MOVEL'1740'    PXTTYP                                              ERN054
+     C                     OTHER                                                              ERN054
+     C                     MOVEL'1730'    PXTTYP                                              ERN054
+     C                     ENDSL                                                              ERN054
+      * set payment reference and write                                                       EEE058
+     C                     MOVELPREF      PXPREF                                              EEE058
+     C                     MOVELGNMTPY    PXMTPY                                              EEE058
+     C                     Z-ADDGNMSET    PXMSET                                              EEE058
+     C                     WRITE@PEXTP0                                                       EEE058
+     C                     ENDIF                                                              EEE058
+      *****************************************************************
+      * End of FT0300CCP4                                             *
+      *****************************************************************

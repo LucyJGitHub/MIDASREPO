@@ -23,12 +23,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC134             Date 23Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
@@ -46,6 +47,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC134 - Amend Customer Restrictions for MM deals            *
+      *           Addition of hook LUC134_001                         *
+      *           Addition of hook LUC134_002                         *
+      *           Addition of hook LUC134_003                         *
+      *           Addition of hook LUC134_004                         *
+      *           Addition of hook LUC134_005                         *
+      *           Addition of hook LUC134_006                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -169,6 +177,7 @@
  
       ** Customer Shortname field passed as a parameter
      D IKCSNM          S             10A
+     D/COPY WNCPYSRC,LUC134_001                                                               LUC134
       **
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -251,7 +260,9 @@
       ** Customer is a bank
       *
      C     DDTYPE        IFEQ      'TD'
+     C/COPY WNCPYSRC,LUC134_002                                                               LUC134
      C     DDTYPE        OREQ      'TI'
+     C/COPY WNCPYSRC,LUC134_003                                                               LUC134
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM1064'     Msgid2
      C                   END
@@ -259,7 +270,9 @@
      C                   ELSE
       *
      C     DDTYPE        IFEQ      'IP'
+     C/COPY WNCPYSRC,LUC134_004                                                               LUC134
      C     DDTYPE        OREQ      'IT'
+     C/COPY WNCPYSRC,LUC134_005                                                               LUC134
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM1065'     Msgid2
      C                   END
@@ -324,6 +337,7 @@
      C                   IF        PRtCd = *Blanks                                            CSD025
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
+     C/COPY WNCPYSRC,LUC134_006                                                               LUC134
                                                                                               CSD025
       ** Program, module and procedure names for database error processing.
       ** =================================================================

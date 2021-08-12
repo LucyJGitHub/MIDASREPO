@@ -1,0 +1,1682 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Voce/Sottovoce Original and Derived Dec')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR0013 - Voce/Sottovoce Original and Derived Decision Table  *
+      *           Maintenance                                         *
+      *                                                               *
+      *  Function:  This program maintain the decision table for the  *
+      *             Voce/Sottovoce Original and Derived.              *
+      *                                                               *
+      *  (phase(s)) Input cycle                                       *
+      *                                                               *
+      *  Called By: CLP/IRC0013 - Voce/Sottovoce Original and Derived *
+      *                           Decision Table Maintenance          *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. MMI001             Date 20Nov97               *
+      *                 UIT021  *Create    Date 07May97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  MMI001 - Upgrade Italian Library.                            *
+      *           '?' processing for selected fields.                 *
+      *  UIT021 - Bank of Italy Monthly Reporting.                    *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      *  03 and KC - F3 pressed                                 (ON)  *
+      *  05 - F5 pressed                                        (ON)  *
+      *  09 - F9 pressed                                        (ON)  *
+      *  12 and KL - F12 pressed                                (ON)  *
+      *  13 - Delete authorised for the User                    (ON)  *
+      *  14 - Insert authorised for the User                    (ON)  *
+      *  15 - Protect all fields                                (ON)  *
+      *  16 - Add Mode                                          (ON)  *
+      *     - Change Mode                                       (OFF) *
+      *  17 - Amend authorised for the User                     (ON)  *
+      *  19 - Selection field DHFTOR in error                   (ON)  *
+      *  20 - Field #1SELE : Selection in error                 (ON)  *
+      *  21 - Field #1FTOR : Voce/Sottovoce Original in error   (ON)  *
+      *  22 - Field #1ADCD : Addition Code in error             (ON)  *
+      *  23 - Field #1ACNA : A/C Nature in error                (ON)  *
+      *  24 - Field #1TPCU : Type of Customer in error          (ON)  *
+      *  25 - Field #1DUPE : Duration Codification in error     (ON)  *
+      *  26 - Field #1BACY : Base Ccy in error                  (ON)  *
+      *  27 - Field #1FTDE : Voce/Sottovoce Derived in error    (ON)  *
+      *  30 - End of Error Message Subfile                            *
+      *     - End of Details Subfile (End of File IRFTDEL1)     (ON)  *
+      *     - Roll-Up authorised on Details Subfile             (OFF) *
+      *  32 - Read Input entered on Details Subfile             (OFF) *
+      *  35 - Roll-Up pressed                                   (ON)  *
+      *  45 - ENTER pressed on Details Subfile                  (OFF) *
+      *  63 - Input on Details Subfile                          (ON)  *
+      *  80 - Display Details Subfile Controle                  (ON)  *
+      *  81 - Display Details Subfile                           (ON)  *
+      *  80 and 81 - Clear Details Subfile                      (OFF) *
+      *  88 - No Record on File IRFTDEL1 in Init. Processing    (ON)  *
+      *  89 - No record found on IRITCDL1 or IRFXTBL1           (OFF) *
+      *     - Record already exists on IRFTDEL1                 (ON)  *
+      *  90 - Used in External Subroutine                             *
+      *     - Chain on File IRFTDEL0 Fails                      (ON)  *
+      *     - Delete or Update on IRFTDEL1 Fails                (ON)  *
+      *     - Error on Called External Program                  (ON)  *
+      *  91 - Used in External Subroutine                             *
+      *     - Record Locked on IRFTDEL0                         (ON)  *
+      *  92 - Used in External Subroutine                             *
+      *  93 - Used in External Subroutine                             *
+      *  94 - Used in External Subroutine                             *
+      *  95 - Used in External Subroutine                             *
+      *  96 - Used in External Subroutine                             *
+      *  97 - Used in External Subroutine                             *
+      *  99 - Used in External Subroutine                             *
+      *  LR - End Of Program                                    (ON)  *
+      *  U7 - Database Error                                    (ON)  *
+      *  U8 - Program Error                                     (ON)  *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  MAIN   - Main Processing                                     *
+      *  SRF9   - F9 Processing                                       *
+      *  SRCHCK - Check if changes in subfile                         *
+      *  SRVAL  - Validation Processing                               *
+      *  INISFL - Initialize Subfile                                  *
+      *  LOASFE - Load Subfile                                        *
+      *  LOASF9 - Load Subfile when F9 has been pressed               *
+      *  PRESS  - Move the appropriate values into field WWAID        *
+      *           depending on which function key has been pressed.   *
+      *  INIT   - Initial Processing                                  *
+      *  ZASNMS - Send Message to Prpgram's Message Queue             *
+      *  *PSSR  - Program Error Processing                            *
+      *                                                               *
+      *  E X T E R N A L   S U B R O U T I N E   A N D                *
+      *  A N D   P R O G R A M   I N D E X                            *
+      *  =============================================                *
+      *                                                               *
+      *  ZALIGN   - Validate and Right-Align Numeric Fields.          *
+      *                                                               *
+      *  Y2CLMSC  - Clear Specific Program Message Queue              *
+      *  Y2SNMGC  - Send a Message to Specific Program Message Queue  *
+      *  ZVACTU   - Validate Action Code for User/Pgm                 *
+      *  ZVACTBU  - Validate Action Code for User/Pgm/Brch            *
+      *  AOBANKR0 - Access Program to Access Bank Details             *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      ***  BOI Voce/Sottovoce Codes                         - Prefix 'N2'
+      *
+     FERITCDL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Voce/Sottovoce Original & Derived Decision Table - Upd Index
+      ***                                                     Prefix 'N8'
+      *
+     FIRFTDEL0UF  E           K        DISK         KINFSR *PSSR A
+     F            IRFTDED0                          KRENAMEUPIRFTDE
+     F                                              KCOMIT
+      *
+      ***  Voce/Sottovoce Original & Derived Decision Table - Rtv Index
+      ***                                                     Prefix 'N8'
+      *
+     FIRFTDEL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Fixed tables for codes validations               - Prefix 'F0'
+      *
+     FIRFXTBL1IF  E           K        DISK
+      *
+      ***  Display File
+      *
+     FIR0013DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE IR0013S1
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      ***  Copyright
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ***  Local data area for database errors
+      *
+     IWLDA      E DSLDA                         256
+      *
+      ***  Program data structure.
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      ***  Stored extension file record.                                                     MMI001
+     IDSSDY     E DSDSSDY                                                                    MMI001
+      *                                                                                      MMI001
+      ***  Data Structure for Access Objects, Short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *                                                                                      MMI001
+      ***  Get the data structure passed from calling program.                               MMI001
+     IIRFXTB    E DSIRFXTBPD                                                                 MMI001
+      *
+      ***  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IZMUSER      DS                             17
+     I                                       11  13 BRCH
+      /EJECT
+      *****************************************************************
+      ***        P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ***  Execute Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ***  Execute Main Processing
+      *
+     C                     EXSR MAIN
+      *
+      ***  End of Program
+      *
+     C                     MOVE '1'       *INLR
+     C                     ROLBK
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      ***        P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN - Main Processing                                       *
+      *                                                               *
+      *  Called By: Program Processing                                *
+      *                                                               *
+      *  Calls: SRF9    - F9 Processing                               *
+      *         SRCHCK  - Check if changes in subfile                 *
+      *         INISFL  - Initialize Subfile                          *
+      *         LOASFE  - Load Subfile                                *
+      *         PRESS   - Move the appropriate values into field      *
+      *                   WWAID depending on which function key has   *
+      *                   been pressed.                               *
+      *         ZASNMS  - Send Message to Prpgram's Message Queue     *
+      *         Y2CLMSC - Clear Specific Program Message Queue        *
+      *         ZVACTU  - Validate Action Code for User/Pgm           *
+      *         ZVACTBU - Validate Action Code for User/Pgm/Brch      *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ***  'ADD MODE' on first cycle
+      *
+     C           *IN09     IFNE '1'                        - B1
+     C                     EXSR INISFL                     Init. Subfile
+     C                     EXSR LOASFE                     Load Subfile Enquiry
+     C                     Z-ADD1         RRN
+     C                     ENDIF                           - E1
+      *
+      ***  Do while not F3 or F12 pressed
+      *
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+      *
+     C                     MOVE DHFTOR    WWFTOR  7
+      *
+      ***  Reset F9 indicator
+      *
+     C                     MOVE '0'       *IN16
+      *
+      ***  Write subfile
+      *
+     C           *IN09     IFNE '1'                        - B2
+      *
+     C                     WRITEIR0013C0                   Bottom
+     C                     EXFMTIR0013C1                   Subfile
+      *
+      ***  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     MOVE '0'       *IN19
+      *
+      ***  Which key has been pressed ?
+      *
+     C                     EXSR PRESS
+      *
+      ***  Rollup has been pressed
+      *
+     C           WWAID     IFEQ 'UP'                       - B3
+     C                     Z-ADDWWRRN     RRN
+     C                     EXSR LOASFE
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF                           - E2
+      *
+      ***  F9 has been pressed
+      *
+     C           *IN09     IFEQ '1'                        - B2
+      *
+     C           BJSBRC    IFNE *BLANKS                    - B3
+      *
+      ***  Validate action codes for user
+      *
+     C                     CALL 'ZVACTU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM           ERR     10
+     C                     ELSE                            - X3
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C                     ENDIF                           - E3
+      *
+      ***  If action code invalid for user send a message
+      *
+     C           ERR       IFNE *ZEROS                     - B3
+      *
+     C                     MOVE '1'       *IN63
+     C                     MOVE '0'       *IN09
+     C                     MOVE 'ITI1301' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X3
+      *
+     C                     EXSR SRF9
+     C                     MOVE DHFTOR    WWFTOR
+      *
+     C           *INKC     IFEQ '1'                        - B4
+     C                     MOVE '0'       *IN16
+     C                     ENDIF                           - E4
+      *
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF                           - E2
+      *
+      ***  ENTER has been pressed
+      *
+     C           *IN45     IFEQ '0'                        - B2
+     C           *IN16     ANDEQ'0'
+      *
+     C           *IN45     IFEQ '0'                        - B3
+     C           DHFTOR    ANDNEWWFTOR
+      *
+     C           DHFTOR    IFNE *BLANKS                    - B4
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE DHFTOR    ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        - B5
+      *
+      ***  Voce/Sottovoce Original search field must be numeric
+      *
+     C                     MOVE '1'       *IN19
+     C                     MOVEL'ITI1325' ZAMSID
+     C                     EXSR ZASNMS
+     C                     Z-ADD1         RRN
+     C                     ELSE                            - X5
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+     C                     Z-ADD1         RRN
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E4
+      *
+     C                     ENDIF                           - E3
+      *
+      ***  Check if changes in subfile
+      *
+     C           *IN19     IFEQ '0'                        - B3
+     C                     EXSR SRCHCK
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF                           - E2
+      *
+      ***  F5 has been pressed : Refresh Processing ==> Rebuild Subfile
+      ***  or Back from F9 screen with F9 or F12
+      *
+     C                     MOVE *BLANKS   IN16
+     C           *IN05     IFEQ '1'                        - B2
+     C           *IN16     OREQ '1'
+     C                     MOVE 'Y'       IN16    1
+     C                     MOVE '0'       *IN16
+     C                     MOVE *BLANKS   DHFTOR
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+     C           RRN       IFEQ 0                          - B3
+     C   14                MOVE '1'       *IN09
+     C                     MOVE 'ITI1302' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X3
+     C                     Z-ADD1         RRN
+     C                     MOVE *BLANKS   IN16
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRF9 - F9 Processing                                         *
+      *                                                               *
+      *  Called By: MAIN - Main Processing                            *
+      *                                                               *
+      *  Calls: SRVAL   - Validation Processing                       *
+      *         INISFL  - Initialize Subfile                          *
+      *         LOASF9  - Load Subfile when F9 has been pressed       *
+      *         ZASNMS  - Send Message to Prpgram's Message Queue     *
+      *         Y2CLMSC - Clear Specific Program Message Queue        *
+      *                                                               *
+      *****************************************************************
+     C           SRF9      BEGSR
+      *
+     C                     MOVE '1'       *IN16
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     Z-ADD1         RRN
+      *
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+      *
+      ***  Write subfile 'F9'
+      *
+     C                     WRITEIR0013C0                   Bottom
+     C                     EXFMTIR0013C1                   Subfile
+      *
+      ***  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     Z-ADD0         WURRN
+      *
+      ***  F9 pressed once again = F12 is seton
+      *
+     C           *IN09     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN12
+     C                     MOVE '0'       *IN09
+     C                     ENDIF                           - E2
+      *
+      ***  Rollup has been pressed
+      *
+     C           *IN35     IFEQ '1'                        - B2
+     C                     Z-ADDW9RRN     RRN
+     C                     EXSR LOASF9
+     C                     ENDIF                           - E2
+      *
+      ***  ENTER has been pressed on 'F9' screen
+      *
+     C           *IN45     IFEQ '0'                        - B2
+     C                     READCIR0013S1                 32
+      *
+     C           *IN32     DOWEQ'0'                        - B3
+      *
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN63
+      *
+     C           #1FTOR    IFNE *BLANKS                    - B4
+     C           #1ADCD    ORNE *BLANKS
+     C           #1ACNA    ORNE *BLANKS
+     C           #1TPCU    ORNE *BLANKS
+     C           #1DUPE    ORNE *BLANKS
+     C           #1BACY    ORNE *BLANKS
+     C           #1FTDE    ORNE *BLANKS
+      *                                                                                      MMI001
+      ***  Validate Voce/Sottovoce : N8FTOR                                                  MMI001
+      *                                                                                      MMI001
+      ** Check if '?' processing required.                                                   MMI001
+      *                                                                                      MMI001
+     C                     MOVEL#1FTOR    POS1                                               MMI001
+      *                                                                                      MMI001
+     C           POS1      IFEQ '?'                        *B0                               MMI001
+      *                                                                                      MMI001
+     C                     MOVEL*BLANKS   $KEY                                               MMI001
+     C                     MOVELPOS1      $KEY                                               MMI001
+      *                                                                                      MMI001
+     C                     CALL 'AOITCDR0'                                                   MMI001
+     C                     PARM *BLANKS   $RTCD                                              MMI001
+     C                     PARM '*VERIFY' $OPTN                                              MMI001
+     C                     PARM           $KEY                                               MMI001
+      *                                                                                      MMI001
+     C           $RTCD     IFNE *BLANK                     *B1                               MMI001
+     C                     MOVE '1'       *IN21                                              MMI001
+     C                     MOVE '1'       *IN63                                              MMI001
+     C                     MOVEL'ITI1311' ZAMSID                                             MMI001
+     C                     EXSR ZASNMS                                                       MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X1                               MMI001
+     C                     MOVEL$KEY      #1FTOR                                             MMI001
+      *                                                                                      MMI001
+     C                     ENDIF                           *E1                               MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X0                               MMI001
+      *
+     C           #1FTOR    IFEQ *BLANKS                    - B5
+      *
+      ***  Voce/Sottovoce Original must be entered
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1313' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X5
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE #1FTOR    ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        - B6
+      *
+      ***  Voce/Sottovoce Original must be numeric
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1310' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X6
+      *
+     C                     MOVE ZFIELD    #1FTOR
+     C                     MOVE #1FTOR    KBOI
+     C           KBOI      SETLLERITCDD0                 89
+      *
+     C           *IN89     IFEQ '0'                        - B7
+      *
+      ***  Voce/Sottovoce not found
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1311' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E7
+      *
+     C                     ENDIF                           - E6
+      *
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           *E0                               MMI001
+      *
+      ***  Validate A/C Nature : N8ACNA
+      *
+      ** Check if '?' processing required.                                                   MMI001
+      *                                                                                      MMI001
+     C                     MOVEL#1ACNA    POS1    1                                          MMI001
+      *                                                                                      MMI001
+     C           POS1      IFEQ '?'                        *B0                               MMI001
+      *                                                                                      MMI001
+     C                     MOVEL*BLANKS   $KEY                                               MMI001
+     C                     MOVELPOS1      $KEY                                               MMI001
+      *                                                                                      MMI001
+     C                     CALL 'AOFXTBR0'                                                   MMI001
+     C                     PARM '*BLANKS' $RTCD   7                                          MMI001
+     C                     PARM '*KEY   ' $OPTN   7                                          MMI001
+     C                     PARM 'CNA'     FIELD   3                                          MMI001
+     C                     PARM           $KEY   18                                          MMI001
+     C           IRFXTB    PARM IRFXTB    DSSDY                                              MMI001
+      *                                                                                      MMI001
+     C           $RTCD     IFNE *BLANK                     *B1                               MMI001
+     C                     MOVE '1'       *IN23                                              MMI001
+     C                     MOVE '1'       *IN63                                              MMI001
+     C                     MOVEL'ITI1315' ZAMSID                                             MMI001
+     C                     EXSR ZASNMS                                                       MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X1                               MMI001
+     C                     MOVEL$KEY      #1ACNA                                             MMI001
+      *                                                                                      MMI001
+     C                     ENDIF                           *E1                               MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X0                               MMI001
+      *                                                                                      MMI001
+     C           #1ACNA    IFNE *BLANKS                    - B5
+      *
+      ***  Valid values are in Fixed Table 'CNA'
+      *
+     C                     MOVE 'CNA'     KINTC
+     C                     MOVE *BLANKS   KINTK
+     C                     MOVEL#1ACNA    KINTK
+      *
+     C           KFXTB     SETLLF0PR                     89
+     C           *IN89     IFEQ '0'                        - B6
+      *
+      ***  A/C Nature not valid
+      *
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1315' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E6
+      *
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           *E0                               MMI001
+      *
+      ***  Validate Type of Customer : N8TPCU
+      *                                                                                      MMI001
+      ** Check if '?' processing required.                                                   MMI001
+      *                                                                                      MMI001
+     C                     MOVEL#1TPCU    POS1    1                                          MMI001
+      *                                                                                      MMI001
+     C           POS1      IFEQ '?'                        *B0                               MMI001
+      *                                                                                      MMI001
+     C                     MOVEL*BLANKS   $KEY                                               MMI001
+     C                     MOVELPOS1      $KEY                                               MMI001
+      *                                                                                      MMI001
+     C                     CALL 'AOFXTBR0'                                                   MMI001
+     C                     PARM '*BLANKS' $RTCD                                              MMI001
+     C                     PARM '*KEY   ' $OPTN                                              MMI001
+     C                     PARM 'CLA'     FIELD                                              MMI001
+     C                     PARM           $KEY                                               MMI001
+     C           IRFXTB    PARM IRFXTB    DSSDY                                              MMI001
+      *                                                                                      MMI001
+     C           $RTCD     IFNE *BLANK                     *B1                               MMI001
+     C                     MOVE '1'       *IN24                                              MMI001
+     C                     MOVE '1'       *IN63                                              MMI001
+     C                     MOVEL'ITI1317' ZAMSID                                             MMI001
+     C                     EXSR ZASNMS                                                       MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X1                               MMI001
+     C                     MOVEL$KEY      #1TPCU                                             MMI001
+      *                                                                                      MMI001
+     C                     ENDIF                           *E1                               MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X0                               MMI001
+      *
+     C           #1TPCU    IFNE *BLANKS                    - B5
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE #1TPCU    ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        - B6
+      *
+      ***  Type of Customer must be numeric
+      *
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1316' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X6
+      *
+     C                     MOVE ZFIELD    #1TPCU
+      *
+      ***  Valid values are in Fixed Table 'CLA'
+      *
+     C                     MOVE 'CLA'     KINTC
+     C                     MOVE *BLANKS   KINTK
+     C                     MOVEL#1TPCU    KINTK
+      *
+     C           KFXTB     SETLLF0PR                     89
+     C           *IN89     IFEQ '0'                        - B7
+      *
+      ***  Type of Customer not valid
+      *
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1317' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E7
+      *
+     C                     ENDIF                           - E6
+      *
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           *E0                               MMI001
+      *
+      ***  Validate Duration Codification : N8DUPE
+      *                                                                                      MMI001
+      ** Check if '?' processing required.                                                   MMI001
+      *                                                                                      MMI001
+     C                     MOVEL#1DUPE    POS1    1                                          MMI001
+      *                                                                                      MMI001
+     C           POS1      IFEQ '?'                        *B0                               MMI001
+      *                                                                                      MMI001
+     C                     MOVEL*BLANKS   $KEY                                               MMI001
+     C                     MOVELPOS1      $KEY                                               MMI001
+      *                                                                                      MMI001
+     C                     CALL 'AOFXTBR0'                                                   MMI001
+     C                     PARM '*BLANKS' $RTCD                                              MMI001
+     C                     PARM '*KEY   ' $OPTN                                              MMI001
+     C                     PARM 'CMA'     FIELD                                              MMI001
+     C                     PARM           $KEY                                               MMI001
+     C           IRFXTB    PARM IRFXTB    DSSDY                                              MMI001
+      *                                                                                      MMI001
+     C           $RTCD     IFNE *BLANK                     *B1                               MMI001
+     C                     MOVE '1'       *IN25                                              MMI001
+     C                     MOVE '1'       *IN63                                              MMI001
+     C                     MOVEL'ITI1319' ZAMSID                                             MMI001
+     C                     EXSR ZASNMS                                                       MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X1                               MMI001
+     C                     MOVEL$KEY      #1DUPE                                             MMI001
+      *                                                                                      MMI001
+     C                     ENDIF                           *E1                               MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X0                               MMI001
+      *
+     C           #1DUPE    IFNE *BLANKS                    - B5
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE #1DUPE    ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        - B6
+      *
+      ***  Duration Codification must be numeric
+      *
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1318' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X6
+      *
+     C                     MOVE ZFIELD    #1DUPE
+      *
+      ***  Valid values are in Fixed Table 'CMA'
+      *
+     C                     MOVE 'CMA'     KINTC
+     C                     MOVE *BLANKS   KINTK
+     C                     MOVEL#1DUPE    KINTK
+      *
+     C           KFXTB     SETLLF0PR                     89
+     C           *IN89     IFEQ '0'                        - B7
+      *
+      ***  Duration Codification not valid
+      *
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1319' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E7
+      *
+     C                     ENDIF                           - E6
+      *
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           *E0                               MMI001
+      *
+      ***  Validate Base Ccy : N8BACY
+      *
+     C           #1BACY    IFNE *BLANKS                    - B5
+     C           #1BACY    ANDNE'Y'
+     C           #1BACY    ANDNE'N'
+      *
+      ***  Base Ccy invalid
+      *
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1320' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF                           - E5
+      *
+     C           *IN23     IFEQ '0'                        - B5
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C           *IN26     ANDEQ'0'
+      *
+     C           #1ACNA    IFEQ *BLANKS                    - B6
+     C           #1TPCU    ANDEQ*BLANKS
+     C           #1DUPE    ANDEQ*BLANKS
+     C           #1BACY    ANDEQ*BLANKS
+      *
+      ***  One of the 4th previous fields is Mandatory
+      *
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1321' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E6
+      *
+     C                     ENDIF                           - E5
+      *
+     C           *IN21     IFEQ '0'                        - B5
+     C           *IN23     ANDEQ'0'
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C           *IN26     ANDEQ'0'
+      *
+     C                     MOVEL#1FTOR    KFTOR
+     C                     MOVEL#1ACNA    KACNA
+     C                     MOVEL#1TPCU    KTPCU
+     C                     MOVEL#1DUPE    KDUPE
+     C                     MOVEL#1BACY    KBACY
+     C           KFTDE     SETLLIRFTDED0                 89
+     C           *IN89     IFEQ '1'                        - B6
+      *
+      ***  Already exists on file
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1312' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X6
+      *
+      ***  Validate input fields
+      *
+     C                     EXSR SRVAL
+      *
+     C                     ENDIF                           - E6
+      *
+      ***  No errors
+      *
+     C           *IN20     IFEQ '0'                        - B6
+     C           *IN21     ANDEQ'0'
+     C           *IN22     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C           *IN26     ANDEQ'0'
+     C           *IN27     ANDEQ'0'
+     C                     MOVE #1FTOR    N8FTOR
+     C                     MOVE #1ADCD    N8ADCD
+     C                     MOVE #1ACNA    N8ACNA
+     C                     MOVE #1TPCU    N8TPCU
+     C                     MOVE #1DUPE    N8DUPE
+     C                     MOVE #1BACY    N8BACY
+     C                     MOVE #1FTDE    N8FTDE
+     C                     Z-ADDBJRDNB    N8LCD
+     C                     MOVE 'I'       N8TYLC
+     C                     WRITEUPIRFTDE               21
+      *
+     C           *IN21     IFEQ '1'                        - B7
+      *
+      ***  Write error detected.
+      *
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1303' ZAMSID            Message id.
+     C                     MOVEL'ERUSRMSG'ZAMSGF            Message file.
+     C                     EXSR ZASNMS                      Send message
+      *
+     C                     ELSE                            - X7
+      *
+      ***  write done then proctect record
+      *
+     C                     MOVE '1'       *IN15
+      *
+     C                     COMIT
+      *
+     C                     ENDIF                           - E7
+      *
+     C                     ENDIF                           - E6
+      *
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           - E4
+      *
+     C           *IN63     IFEQ '1'                        - B4
+     C           WURRN     ANDEQ0
+     C                     Z-ADDRRN       WURRN   40
+     C                     ENDIF                           - E4
+     C                     UPDATIR0013S1
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN63
+      *
+      ***  Read next changed record
+      *
+     C                     READCIR0013S1                 32
+      *
+     C                     ENDDO                           - E3
+      *
+     C           WURRN     IFEQ 0                          - B3
+     C                     Z-ADD1         RRN
+     C                     ELSE                            - X3
+     C                     Z-ADDWURRN     RRN
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF                           - E2
+      *
+      ***  Refresh on F9 screen
+      *
+     C           *IN05     IFEQ '1'                        - B2
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     Z-ADD1         RRN
+     C                     ENDIF                           - E2
+      *
+     C                     ENDDO                           - E1
+      *
+     C           *IN12     IFEQ '1'                        - B1
+     C                     MOVE '0'       *IN12
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHCK - Check if changes in subfile                         *
+      *                                                               *
+      *  Called By: MAIN - Main Processing                            *
+      *                                                               *
+      *  Calls: SRVAL   - Validation Processing                       *
+      *         ZASNMS  - Send Message to Prpgram's Message Queue     *
+      *         ZVACTU  - Validate Action Code for User/Pgm           *
+      *         ZVACTBU - Validate Action Code for User/Pgm/Brch      *
+      *                                                               *
+      *****************************************************************
+     C           SRCHCK    BEGSR
+      *
+      ***  Retrieve all changed records
+      *
+     C                     READCIR0013S1                 32
+     C                     Z-ADD0         WURRN
+      *
+     C           *IN32     DOWEQ'0'                        - B1
+      *
+      ***  Validation on record subfile
+      *
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+      *
+     C           #1SELE    IFNE 'D'                        - B2
+     C           #1SELE    ANDNE*BLANKS
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1304' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X2
+      *
+      ***  Validate action codes for user if selection is not blank
+      ***  and equal to 'D'
+      *
+     C           #1SELE    IFEQ 'D'                        - B3
+      *
+     C           BJSBRC    IFNE *BLANKS                    - B4
+      *
+      ***  Validate action codes for user
+      *
+     C                     CALL 'ZVACTU'
+     C                     PARM #1SELE    ZACTN   1
+     C                     PARM           ERR     10
+     C                     ELSE                            - X4
+     C                     CALL 'ZVACTBU'
+     C                     PARM #1SELE    ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C                     ENDIF                           - E4
+      *
+     C           ERR       IFNE *ZEROS                     - B4
+      *
+      ***  If action code invalid for user send a message
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1305' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X4
+      *
+     C                     MOVE #1FTOR    KFTOR
+     C                     MOVE #1ACNA    KACNA
+     C                     MOVE #1TPCU    KTPCU
+     C                     MOVE #1DUPE    KDUPE
+     C                     MOVE #1BACY    KBACY
+     C           KFTDE     CHAINIRFTDEL0             9091
+     C           *IN90     IFEQ '1'                        - B5
+      *
+      ***  Record no longer on file
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1306' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X5
+     C           *IN91     IFEQ '1'                        - B6
+      *
+      ***  Record is locked
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1307' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X6
+     C                     DELETUPIRFTDE               90
+     C           *IN90     IFEQ '1'                        - B7
+      *
+      ***  Delete Error detected
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1308' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X7
+     C                     MOVE #HADCD    #1ADCD
+     C                     MOVE #HFTDE    #1FTDE
+     C                     MOVE '1'       *IN15
+     C                     ENDIF                           - E7
+     C                     ENDIF                           - E6
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           - E4
+      *
+     C                     ELSE                            - X3
+      *
+      ***  Validate input fields
+      *
+     C                     EXSR SRVAL
+      *
+      ***  No errors
+      *
+     C           *IN20     IFEQ '0'                        - B4
+     C           *IN21     ANDEQ'0'
+     C           *IN22     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C           *IN26     ANDEQ'0'
+     C           *IN27     ANDEQ'0'
+      *
+      ***  Upadte file and subfile
+      *
+     C                     MOVEL#1FTOR    KFTOR
+     C                     MOVEL#1ACNA    KACNA
+     C                     MOVEL#1TPCU    KTPCU
+     C                     MOVEL#1DUPE    KDUPE
+     C                     MOVEL#1BACY    KBACY
+     C           KFTDE     CHAINIRFTDEL0             9091
+      *
+     C           *IN90     IFEQ '1'                        - B5
+      *
+      ***  Record no longer on file
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1306' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X5
+     C           *IN91     IFEQ '1'                        - B6
+      *
+      ***  Record is locked
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1307' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X6
+     C                     MOVE #1ADCD    N8ADCD
+     C                     MOVE #1FTDE    N8FTDE
+     C                     Z-ADDBJRDNB    N8LCD
+     C                     MOVE 'A'       N8TYLC
+     C                     UPDATUPIRFTDE               90
+     C           *IN90     IFEQ '1'                        - B7
+      *
+      ***  Update Error detected
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITI1309' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E7
+     C                     ENDIF                           - E6
+     C                     ENDIF                           - E5
+      *
+     C                     ENDIF                           - E4
+      *
+     C                     ENDIF                           - E3
+     C                     COMIT
+      *
+     C                     ENDIF                           - E2
+      *
+     C           *IN63     IFEQ '1'                        - B2
+     C           WURRN     ANDEQ0
+     C                     Z-ADDRRN       WURRN
+     C                     ENDIF                           - E2
+     C                     UPDATIR0013S1
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+      *
+      ***  Read next changed record
+      *
+     C                     READCIR0013S1                 32
+      *
+     C                     ENDDO                           - E1
+      *
+     C           WURRN     IFEQ 0                          - B1
+     C                     Z-ADD1         RRN
+     C                     ELSE                            - X1
+     C                     Z-ADDWURRN     RRN
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL - Validation Processing                                *
+      *                                                               *
+      *  Called By: SRF9   - F9 Processing                            *
+      *             SRCHCK - Check if changes in subfile              *
+      *                                                               *
+      *  Calls: ZALIGN - Validate and Right-Align Numeric Fields.     *
+      *         ZASNMS - Send Message to Prpgram's Message Queue      *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL     BEGSR
+      *
+      ***  Validate Addition Code : N8ADCD
+      *
+     C           #1ADCD    IFNE *BLANKS                    - B1
+     C           #1ADCD    ANDNE'A'
+      *
+      ***  Addition Code invalid
+      *
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1314' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF                           - E1
+      *
+      ***  Validate Voce/Sottovoce Derived : N8FTDE
+      *                                                                                      MMI001
+      ** Check if '?' processing required.                                                   MMI001
+      *                                                                                      MMI001
+     C                     MOVEL#1FTDE    POS1                                               MMI001
+      *                                                                                      MMI001
+     C           POS1      IFEQ '?'                        *B0                               MMI001
+      *                                                                                      MMI001
+     C                     MOVEL*BLANKS   $KEY                                               MMI001
+     C                     MOVELPOS1      $KEY                                               MMI001
+      *                                                                                      MMI001
+     C                     CALL 'AOITCDR0'                                                   MMI001
+     C                     PARM *BLANKS   $RTCD                                              MMI001
+     C                     PARM '*VERIFY' $OPTN                                              MMI001
+     C                     PARM           $KEY                                               MMI001
+      *                                                                                      MMI001
+     C           $RTCD     IFNE *BLANK                     *B1                               MMI001
+     C                     MOVE '1'       *IN27                                              MMI001
+     C                     MOVE '1'       *IN63                                              MMI001
+     C                     MOVEL'ITI1323' ZAMSID                                             MMI001
+     C                     EXSR ZASNMS                                                       MMI001
+      *                                                                                      MMI001
+     C                     ELSE                            *X1                               MMI001
+     C                     MOVEL$KEY      #1FTDE                                             MMI001
+      *                                                                                      MMI001
+     C                     ENDIF                           *E1                               MMI001
+      *                                                                                      MMI001
+     C                     ENDIF                           *E0                               MMI001
+      *
+     C           #1FTDE    IFEQ *BLANKS                    - B1
+      *
+      ***  Voce/Sottovoce Derived must be entered
+      *
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1324' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X1
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE #1FTDE    ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        - B2
+      *
+      ***  Voce/Sottovoce Derived must be numeric
+      *
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1322' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X2
+      *
+     C                     MOVE ZFIELD    #1FTDE
+     C                     MOVE #1FTDE    KBOI
+     C           KBOI      SETLLERITCDD0                 89
+      *
+     C           *IN89     IFEQ '0'                        - B3
+      *
+      ***  Voce/Sottovoce Derived not found
+      *
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1323' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE                            - X3
+      *
+     C           #1FTDE    IFEQ #1FTOR                     - B4
+      *
+      ***  Voce/Sottovoce Derived must be different than Voce/Sottovoce Original
+      *
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITI1323' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+      *
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INISFL - Initialize Subfile                                  *
+      *                                                               *
+      *  Called By: MAIN - Main Processing                            *
+      *             SRF9 - F9 Processing                              *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           INISFL    BEGSR
+      *
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     WRITEIR0013C1
+     C                     MOVE '1'       *IN80
+     C                     Z-ADD0         RRN     40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LOASFE - Load Subfile                                        *
+      *                                                               *
+      *  Called By: MAIN - Main Processing                            *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           LOASFE    BEGSR
+      *
+      ***  If Selection field reset to blank by user ==> select all records
+      *
+     C           DHFTOR    IFNE WWFTOR                     - B1
+     C                     MOVE DHFTOR    WWFTOR
+     C                     ENDIF                           - E1
+      *
+      ***  Init screen line number
+      *
+     C                     Z-ADD0         WWCPT   20
+      *
+      ***  Account Key selected
+      *
+     C           DHFTOR    IFNE *BLANKS                    - B1
+     C                     MOVE DHFTOR    KBOI
+     C           KBOI      SETLLIRFTDEL1
+     C                     ELSE                            - X1
+     C           *LOVAL    SETLLIRFTDEL1
+     C                     ENDIF                           - E1
+      *
+      ***  Rollup pressed
+      *
+     C           WWAID     IFEQ 'UP'                       - B1
+     C                     MOVE WFTOR     KBOI
+     C           KBOI      SETLLIRFTDEL1
+     C                     ENDIF                           - E1
+      *
+      ***  Read record
+      *
+     C                     READ IRFTDEL1                 30
+      *
+      ***  Load subfile
+      *
+     C                     MOVE '0'       *IN63
+      *
+     C           *IN30     DOWEQ'0'                        - B1
+     C           WWCPT     ANDLT13
+      *
+     C                     MOVELN8FTOR    #1FTOR
+     C                     MOVE N8ADCD    #1ADCD
+     C                     MOVE N8ACNA    #1ACNA
+     C                     MOVE N8TPCU    #1TPCU
+     C                     MOVE N8DUPE    #1DUPE
+     C                     MOVE N8BACY    #1BACY
+     C                     MOVE N8FTDE    #1FTDE
+     C                     MOVE N8ADCD    #HADCD
+     C                     MOVE N8FTDE    #HFTDE
+      *
+     C                     MOVE *BLANKS   #1SELE
+      *
+      ***  Selection has been entered and not coming from F9
+      *
+     C           DHFTOR    IFNE *BLANKS                    - B2
+     C           IN16      ANDEQ*BLANKS
+      *
+      ***  Load Fields
+      *
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            Screen Line Nbr
+      *
+      ***  Write in Subfile
+      *
+     C                     WRITEIR0013S1
+      *
+     C                     ELSE                            - X2
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEIR0013S1
+      *
+     C                     ENDIF                           - E2
+      *
+      ***  Read next record
+      *
+     C           NEXT      TAG
+     C                     READ IRFTDEL1                 30
+     C                     MOVELN8FTOR    WFTOR
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     MOVELDHFTOR    WWFTOR
+     C                     Z-ADDRRN       WWRRN   40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LOASF9 - Load Subfile when F9 has been pressed               *
+      *                                                               *
+      *  Called By: SRF9 - F9 Processing                              *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           LOASF9    BEGSR
+      *
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN30
+      *
+      ** Init screen line number
+     C                     Z-ADD1         CPT     20
+      *
+      ** Load Subfile
+     C           CPT       DOWLE13                         - B1
+      *
+     C                     MOVE *BLANKS   #1FTOR
+     C                     MOVE *BLANKS   #1ADCD
+     C                     MOVE *BLANKS   #1ACNA
+     C                     MOVE *BLANKS   #1TPCU
+     C                     MOVE *BLANKS   #1DUPE
+     C                     MOVE *BLANKS   #1BACY
+     C                     MOVE *BLANKS   #1FTDE
+     C                     MOVE *BLANKS   #HADCD
+     C                     MOVE *BLANKS   #HFTDE
+      *
+      ** Load fields
+     C                     ADD  1         RRN        81
+     C                     ADD  1         CPT              Screen Line Nbr
+      *
+      ** Write in subfile
+     C                     WRITEIR0013S1
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     Z-ADDRRN       W9RRN   40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRESS - Move the appropriate values into field WWAID         *
+      *          depending on which function key has been pressed.    *
+      *                                                               *
+      *  Called By: MAIN - Main Processing                            *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           PRESS     BEGSR
+      *
+     C                     MOVE '  '      WWAID
+      *
+      ***  If ENTER pressed, the VLDCMDKEY indicator will be off
+      *
+     C           *IN45     IFEQ '0'                        - B1
+     C                     MOVE 'RA'      WWAID   2
+     C                     ENDIF                           - E1
+      *
+      ***  If F3
+      *
+     C           *INKC     IFEQ '1'                        - B1
+     C                     MOVE '03'      WWAID
+     C                     ENDIF                           - E1
+      *
+      ***  If F12
+      *
+     C           *INKL     IFEQ '1'                        - B1
+     C                     MOVE '12'      WWAID
+     C                     ENDIF                           - E1
+      *
+      ***  If ROLLUP pressed
+      *
+     C           *IN35     IFEQ '1'                        - B1
+     C                     MOVE 'UP'      WWAID
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT - Initial Processing                                    *
+      *                                                               *
+      *  Called By: Program Processing                                *
+      *                                                               *
+      *  Calls: ZASNMS   - Send Message to Prpgram's Message Queue    *
+      *         *PSSR    - Program Error Processing                   *
+      *         ZVACTU   - Validate Action Code for User/Pgm          *
+      *         ZVACTBU  - Validate Action Code for User/Pgm/Brch     *
+      *         AOBANKR0 - Access Program to Access Bank Details      *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ***  Copyright
+      *
+     C                     MOVEACPY@      CPY@@   1
+      *
+      ***  Redefine data error fields
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+     C                     MOVE '0'       *IN
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'ERUSRMSG'PMSGF  10
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'IR0013'  ZAPGM  10        Message queue
+     C                     MOVEL'ERUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ***  Access Bank details via access program
+      *
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK                     - B1
+     C                     MOVEL'SDBANKPD'WWBFIL           ***************
+     C                     MOVEL'IR0013'  WWBKEY           * DBERROR 001 *
+     C                     Z-ADD001       WWBASE           ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+      ***  Validate action codes for user
+      *
+     C           BJSBRC    IFNE *BLANKS                    - B1
+     C                     CALL 'ZVACTU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM           ERR     10
+     C           ERR       COMP *ZEROS                   14
+     C                     CALL 'ZVACTU'
+     C                     PARM 'A'       ZACTN   1
+     C                     PARM           ERR     10
+     C           ERR       COMP *ZEROS                   17
+     C                     CALL 'ZVACTU'
+     C                     PARM 'D'       ZACTN   1
+     C                     PARM           ERR     10
+     C           ERR       COMP *ZEROS                   13
+     C                     ELSE                            - X1
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C           ERR       COMP *ZEROS                   14
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'A'       ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C           ERR       COMP *ZEROS                   17
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'D'       ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C           ERR       COMP *ZEROS                   13
+     C                     ENDIF                           - E1
+      *
+      ***  Setup 'ADD' or 'AMEND' mode
+      *
+     C                     READ IRFTDEL1                 88
+     C           *IN88     IFEQ '1'                        - B1
+     C   14                MOVE '1'       *IN09
+     C                     MOVE 'ITI1302' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ***  Define Key List to Access IRFTDEL0 and IRFTDEL1
+      *
+     C           *LIKE     DEFN N8FTOR    KFTOR
+     C           *LIKE     DEFN N8ACNA    KACNA
+     C           *LIKE     DEFN N8TPCU    KTPCU
+     C           *LIKE     DEFN N8DUPE    KDUPE
+     C           *LIKE     DEFN N8BACY    KBACY
+      *
+     C           KFTDE     KLIST
+     C                     KFLD           KFTOR
+     C                     KFLD           KACNA
+     C                     KFLD           KTPCU
+     C                     KFLD           KDUPE
+     C                     KFLD           KBACY
+      *
+      ***  Define Key field to Access ERITCDL1
+      *
+     C           *LIKE     DEFN N2BOIC    KBOI
+      *
+      ***  Initialise working fields
+      *
+     C                     MOVE *BLANKS   DHFTOR
+     C                     MOVE *BLANKS   WWFTOR  7
+      *
+     C           *LIKE     DEFN N8FTOR    WFTOR
+      *
+      ***  Define keys for access to Fixed Table IRFXTBL1
+      *
+     C           *LIKE     DEFN F0INTC    KINTC
+     C           *LIKE     DEFN F0INTK    KINTK
+      *
+     C           KFXTB     KLIST
+     C                     KFLD           KINTC
+     C                     KFLD           KINTK
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send Message to Prpgram's Message Queue             *
+      *                                                               *
+      *  Called By: MAIN   - Main Processing                          *
+      *             SRF9   - F9 Processing                            *
+      *             SRCHCK - Check if changes in subfile              *
+      *             SRVAL  - Validation Processing                    *
+      *             INIT   - Initial Processing                       *
+      *                                                               *
+      *  Calls: Y2SNMGC - Send a Message to Specific Program Message  *
+      *                   Queue                                       *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      ***  Message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing                            *
+      *                                                               *
+      *  Called by: INIT - Initial Processing                         *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO                      - B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     ENDIF                           - E1
+      *
+      ***  Update data area LDA.
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      ***  ZALIGN SR. To Validate and Right-Align Numeric Fields.
+      *
+     C/COPY ZSRSRC,ZALIGNZ2
+      *
+      *****************************************************************
+      *
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

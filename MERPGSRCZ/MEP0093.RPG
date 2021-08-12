@@ -1,0 +1,229 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME Check if the message is for Target Balance')  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0093 - Check if the message is for Target Balance         *
+      *            Cash Pooling.                                      *
+      *            Check function for field SNDR                      *
+      *                                                               *
+      *  Function: This program checks if the message is for TB       *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 10Nov11               *
+      *                 HVB011             Date 20Sep11               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP Enhancements to Midas Plus level.     *
+      *  HVB011 - Target Balance Cash Pooling                         *
+      *                                                               *
+      *****************************************************************
+     FFTCENGP0IF  E           K        DISK
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IDSSDY     E DSDSSDY
+      **  Data Structures used by Access Programs, Long Data Structure
+      *
+      ** Account Details
+     IOACCNT    E DSACCNTAB
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IPCRIT     E DSMEGNCRPD
+      *
+      *  Return Criteria Details to calling program
+      *
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     IPIFDDT      DS
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+     I                                       31  41 WUSNDB
+     I                                       61 256 REST
+      *
+      *  Split the detail fields into field tag name and contents
+     IPIORDC      DS
+     I                                        1 256 WORDC
+     I                                       31  31 WSLASH
+     I                                       31  65 WORDC1
+      *
+     IPACUDF      DS
+     I                                        1 100 PAMAD
+     I                                       39  39 TBAC
+      *
+     I              'OTHR/HB POOLING'     C         CASHP
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *LIKE     DEFN WUTGCK    P@IN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C           WUFDDT    PARM           P@IN
+     C                     PARM           P#PTTN 32
+     C                     PARM           GDOPER  2
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           PCRIT
+      * If true put T
+     C                     MOVEL'F'       P#RETN
+     C           CASHP     SCAN P23E                     74
+      *
+      ** TARGET BALANCE for IN3
+      ** For IN3 message and Inctruction code not containing ZB Cashpool code
+     C           PMTPY     IFEQ 'IN3'
+     C           *IN74     ANDEQ'0'
+      *
+     C           WUSNDB    CHAINFTCENGP0             80
+     C           *IN80     IFEQ '0'
+      ** The sender is known/allowed CashPool Engine
+      *
+      ** It is expected/agreed that the Instruction code (field 23E) will contain code INTC
+      ** and either CMTO or CMSW
+     C           'INTC'    SCAN P23E                     75
+     C           'CMTO'    SCAN P23E                     76
+     C           'CMSW'    SCAN P23E                     77
+      *
+     C           *IN75     IFEQ '1'
+     C           *IN76     ANDEQ'1'
+     C           *IN75     OREQ '1'
+     C           *IN77     ANDEQ'1'
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Sender is not on the list of known CashPool Engine. Check if the Ordering customer has been
+      *  flagged for Target Balancing.  It is expected that the Ordering Customer from other
+      *  CashPool engine will have valid IBAN and the account will be in Midas.
+      *
+     C                     MOVE *BLANKS   PRTN    5
+     C                     MOVE *BLANKS   PAMAD
+     C                     MOVELP50       WORDC
+      **
+     C                     EXSR SRTBAC
+      *
+     C           PRTN      IFEQ *BLANKS
+     C           TBAC      ANDEQ'Y'
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** TARGET BALANCE for MT103
+      ** Instruction code not containing ZB Cashpool code and
+      ** Beneficiary Customer's account is flagged for Target Balance.
+     C           PMTPY     IFEQ '103'
+     C           *IN74     ANDEQ'0'
+      *
+     C                     MOVE *BLANKS   PRTN    5
+     C                     MOVE *BLANKS   PAMAD
+      ** Check if the Beneficiary Customer's account is flagged for Target Balance.
+     C                     MOVELP59       WORDC
+      *
+     C                     EXSR SRTBAC
+      *
+     C           PRTN      IFEQ *BLANKS
+     C           TBAC      ANDEQ'Y'
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Exit program
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  SRTBAC   : Check if Account Flagged for Target Balance       *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRTBAC    BEGSR
+      *
+     C                     MOVE *BLANKS   PIBAN  47
+     C                     MOVE *BLANKS   POWITH 47
+     C                     MOVE *BLANKS   PONOBL 34
+     C                     MOVE *BLANKS   P@IBAN 34
+      *
+      ** Remove / from IBAN number
+     C           WSLASH    IFEQ '/'
+     C           34        SUBSTWORDC1:2  PIBAN     P
+     C                     ELSE
+     C                     MOVELWORDC1    PIBAN
+     C                     ENDIF
+      ** check if valid IBAN
+     C                     CALL 'AOIBANR3'
+     C                     PARM *BLANKS   @RTCD   5
+     C                     PARM           PIBAN
+     C                     PARM           POWITH
+     C           P@IBAN    PARM           PONOBL
+      *
+     C           @RTCD     IFEQ *BLANKS
+      ** Get account details from the IBAN
+     C                     CALL 'AOIBANR4'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN   5
+     C                     PARM           P@IBAN
+     C           OACCNT    PARM           DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           RECI      ANDEQ'D'
+      ** Check if this account is flagged for Target Balance in the UDF file T_GZAMADEX.
+      *
+     C                     MOVE *BLANKS   PBRCA   3
+     C                     MOVE *BLANKS   PCNUM   6
+     C                     MOVE *BLANKS   PCCY    3
+     C                     MOVE *BLANKS   PACOD  10
+     C                     MOVE *BLANKS   PACSQ   2
+      *
+     C                     MOVE BRCA      PBRCA
+     C                     MOVE CNUM      PCNUM
+     C                     MOVE CCY       PCCY
+     C                     MOVE ACOD      PACOD
+     C                     MOVE ACSQ      PACSQ
+      *
+     C                     CALL 'MEP0100'
+     C                     PARM           PRTN
+     C                     PARM           PBRCA
+     C                     PARM           PCNUM
+     C                     PARM           PCCY
+     C                     PARM           PACOD
+     C                     PARM           PACSQ
+     C                     PARM           PAMAD
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2011

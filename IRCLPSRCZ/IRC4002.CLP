@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas IR ER INTERFACE WITH PUMA-MINERVA')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - European Reporting Module - Italy                   */
+/*                                                                   */
+/*       IRC4002 - ER INTERFACE WITH PUMA-MINERVA                    */
+/*                MINERVA Interface with system in OUTSOURCING       */
+/*                                                                   */
+/*       (C) Copyright Midas-Kapiti International Ltd. 1999          */
+/*                                                                   */
+/*       Last Amend No. LUC139             Date 21Dec20              */
+/*       Prev Amend No. MMI033             Date 06MAY99              */
+/*                      xxxxxx             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC139 - Upgrade UCI Italian Returns                        */
+/*       MMI033 - Bank Of Italy Monthly Reporting                    */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&@XXLIB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&@ERDLIB) TYPE(*CHAR) LEN(10)
+
+/* Get the library prefix */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&@XXLIB)
+             CHGVAR     VAR(&@ERDLIB) VALUE(&@XXLIB *CAT 'ERDLIB')
+
+             CLRPFM     FILE(&@ERDLIB/IRM21OPD)
+             MONMSG     MSGID(CPF3142) EXEC(CRTPF +
+                          FILE(&@ERDLIB/IRM21OPD) RCDLEN(80) +
+                          SIZE(500000 10000))
+
+             OVRDBF     FILE(M1LIR) TOFILE(&@ERDLIB/IRM21OPD)
+
+             CALL  PGM(IR4501)
+
+             DLTOVR     FILE(M1LIR)
+
+
+             CLRPFM     FILE(&@ERDLIB/IRM25OPD)
+             MONMSG     MSGID(CPF3142) EXEC(CRTPF +
+                          FILE(&@ERDLIB/IRM25OPD) RCDLEN(80) +
+                          SIZE(500000 10000))
+
+             OVRDBF     FILE(M1LIR) TOFILE(&@ERDLIB/IRM25OPD)
+
+             CALL  PGM(IR4503)
+
+             DLTOVR     FILE(M1LIR)
+
+
+             CLRPFM     FILE(&@ERDLIB/IRM71OPD)
+             MONMSG     MSGID(CPF3142) EXEC(CRTPF +
+                          FILE(&@ERDLIB/IRM71OPD) RCDLEN(80) +
+                          SIZE(500000 10000))
+
+             OVRDBF     FILE(M1LIR) TOFILE(&@ERDLIB/IRM71OPD)
+
+             CALL       PGM(IR4502)
+
+             DLTOVR     FILE(M1LIR)
+
+             ENDPGM

@@ -1,0 +1,226 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME Check if Clearing Code')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0097 - Check if Clearing Code is entered in field 57A     *
+      *            Account with Institution.                          *
+      *                                                               *
+      *  Function: This program does simple check on the length of    *
+      *            clearing code. It does not check the actual        *
+      *            data to see if it is valid                         *
+      *                                                               *
+      **?Following CLearing Code is expected to be used for STP       *
+      *                                                               *
+      **? Clearing code   Length of data                              *
+      *        FW            9            Fedwire                     *
+      *        BL            8            Bankleitzahl                *
+      *        SC            6            CHAPS Sort Code             *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 HVB017             Date 28Nov11               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  HVB017 - Check length of Clearing Code in 57A                *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IDSSDY     E DSDSSDY
+      **  Data Structures used by Access Programs, Long Data Structure
+      *
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IPCRIT     E DSMEGNCRPD
+      *
+      *  Return Criteria Details to calling program
+      *
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     IPIFDDT      DS
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+      * Account Line
+     I                                       31  66 I#ACLN
+      * Account Line first 2 characters
+     I                                       31  32 I#ACC2
+      * Account Line characters 3 and 4
+     I                                       33  34 I#AC34
+      * Account Line first 4 characters
+     I                                       31  34 I#ACCL
+      * Account Line account data
+     I                                       35  66 I#ACDT
+     I                                       67 256 REST
+      *
+      *  Defined Constants
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *LIKE     DEFN WUTGCK    P@IN
+      *
+      *?Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C           WUFDDT    PARM           P@IN
+     C                     PARM           P#PTTN 32
+     C                     PARM           GDOPER  2
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           PCRIT
+      * If true put T
+     C                     MOVEL'F'       P#RETN
+      *
+     C                     Z-ADD0         WCOUNT  20
+     C                     MOVE *BLANKS   WFIELD 30
+      *
+     C                     MOVELI#ACDT    WFIELD    P
+      *
+     C                     SELEC
+      *
+     C           I#ACCL    WHEQ '//FW'
+     C           I#ACCL    OREQ '//fw'
+     C                     EXSR SRFW
+      *
+     C           I#ACCL    WHEQ '//BL'
+     C           I#ACCL    OREQ '//bl'
+     C                     EXSR SRBL
+      *
+     C           I#ACCL    WHEQ '//SC'
+     C           I#ACCL    OREQ '//sc'
+     C                     EXSR SRSC
+      *
+     C                     ENDSL
+      *
+      ** *IN90 is OFF then no error found
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+      *  Exit program
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  SRFW     : Check for Fedwire Clearing Code                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFW      BEGSR
+      *
+      **?If //FW it must be followed by a 9 digit number. The number
+      **?must be followed by blanks.
+      *
+     C           DIGITS    CHECKWFIELD    WCOUNT         90
+      *
+      *  If *IN90 if off i.e. field is completely filled set it on
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*ON       *IN90
+     C                     ENDIF
+      *
+      *  6 Numeric follwowed by blanks
+      *
+     C           *IN90     IFEQ *ON
+     C           WCOUNT    ANDEQ10
+      *
+     C           ' '       CHECKWFIELD:10 WCOUNT         90
+      *
+     C                     ENDIF
+      **
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRBL     : Check for Bankleitzahl Clearing Code              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBL      BEGSR
+      *
+      **?If //BL it must be followed by a 8 digit number. The number
+      **?must be followed by blanks.
+      *
+     C           DIGITS    CHECKWFIELD    WCOUNT         90
+      *
+      *  If *IN90 if off i.e. field is completely filled set it on
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*ON       *IN90
+     C                     ENDIF
+      *
+      *  6 Numeric follwowed by blanks
+      *
+     C           *IN90     IFEQ *ON
+     C           WCOUNT    ANDEQ9
+      *
+     C           ' '       CHECKWFIELD:9  WCOUNT         90
+      *
+     C                     ENDIF
+      **
+      *
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRSC     : Check for CHAPS Sort Code                         *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSC      BEGSR
+      *
+      **?If //SC it must be followed by a 6 digit number. The number
+      **?must be followed by blanks.
+      *
+     C           DIGITS    CHECKWFIELD    WCOUNT         90
+      *
+      *  If *IN90 if off i.e. field is completely filled set it on
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*ON       *IN90
+     C                     ENDIF
+      *
+      *  6 Numeric follwowed by blanks
+      *
+     C           *IN90     IFEQ *ON
+     C           WCOUNT    ANDEQ7
+      *
+     C           ' '       CHECKWFIELD:7  WCOUNT         90
+      *
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2011

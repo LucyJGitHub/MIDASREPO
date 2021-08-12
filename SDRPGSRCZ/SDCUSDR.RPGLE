@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055373           Date 14Jul20               *
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Last Amend No. LUC139             Date 22Jan21               *
+      *  Prev Amend No. MD055373           Date 14Jul20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
       *  MD055373 - Audit trail not available                         *
       *           - Added DDIUSR and DDAUSR fields in the buffer.     *
       *  MD055446 - There are parties and fields missing from the BRT *	
@@ -320,6 +322,15 @@
       *                                                                                     AR316373
      D CusdExFilFmt  E DS                  EXTNAME(BYCUSTX0)                                AR316373
       *                                                                                     AR316373
+     D CuIt1FilFmt   E DS                  EXTNAME(SDCUT1PD)                                  LUC139
+     D                                     PREFIX(F_)                                         LUC139
+     D CuIt2FilFmt   E DS                  EXTNAME(SDCUT2PD)                                  LUC139
+     D                                     PREFIX(F_)                                         LUC139
+     D CurCuIt1      E DS                  EXTNAME (SDCUS1PD)                                 LUC139
+     D                                     PREFIX (I1@)                                       LUC139
+     D CurCuIt2      E DS                  EXTNAME (SDCUS2PD)                                 LUC139
+     D                                     PREFIX (I2@)                                       LUC139
+                                                                                              LUC139
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
       **--------------------------------------------------------------------------------------------
@@ -338,7 +349,8 @@
      D***illerBufEx2    S           5914A                                          MD054028 MD055446
      D***FillerBufEx2    S           5904A                                         MD055446 MD055373
      D FillerBufEx2    S           5884A                                                    MD055373
-     D FillerBufEx3    S           9999A                                                      CSW213
+     D****FillerBufEx3    S           9999A                                            CSW213 LUC139
+     D FillerBufEx3    S           9824A                                                      LUC139
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
      D FillerBufEx4    S           6039A                                                    MD044880
@@ -362,6 +374,8 @@
      C                   CLEAR                   CuFaFilFmt                                   CGL132
      C                   CLEAR                   CrsdFilFmt                                 MD051299
      C                   CLEAR                   PCrsdF                                     MD051299
+     C                   CLEAR                   CuIt1FilFmt                                  LUC139
+     C                   CLEAR                   CuIt2Filfmt                                  LUC139
      C     DDACTN        IFEQ      *BLANK
      C     AuthComp      IFEQ      'X'
      C                   MOVEL     'X'           DDACTN
@@ -477,7 +491,9 @@
      C                                       + NewPROFUser                                  MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
-     C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
+     C**********         EVAL      BufferEx3 = FillerBufEx3                            CSW213 LUC139
+     C                   EVAL      BufferEx3 = CurCuIt1 + CurCuIt2                            LUC139
+     C                                       + FillerBufEx3                                   LUC139
                                                                                               CSW213
      C                   EVAL      BufferEx4 = NewCuCUAH                                      CSW213
      C                                       + NewCuCCTX                                      CSW213
@@ -769,6 +785,8 @@
      C                   PARM                    NewCuSeco                                    CSW213
      C                   PARM                    NewCuMT3x                                    CSW213
                                                                                               CSD079
+     C                   PARM                    CuIt1FilFmt                                  LUC139
+     C                   PARM                    CuIt2FilFmt                                  LUC139
       * OK - Action code
      C                   PARM      *BLANK        DDACTNOK          1
       * OK - Customer Reference
@@ -887,6 +905,8 @@
       ** Currency/Time of Netting Details                                                  AR1086546
                                                                                            AR1086546
      C                   PARM                    CtnmFilFmt                                AR1086546
+     C                   PARM                    CuIt1FilFmt                                  LUC139
+     C                   PARM                    CuIt2FilFmt                                  LUC139
       ** Global Customer X-Reference                                                          222373
      C                   PARM                    GCustFilFmt                                  222373
      C                   PARM                    SwftFilFmt                                 BUG15872
@@ -932,6 +952,8 @@
      C                   PARM                    CrsdCtry                                   MD051299
      C**********         PARM                    CuSW13                              CSW213 MD022463
      C                   PARM                    NewCuBrtCent                               MD055446
+     C                   PARM                    CurCuIt1                                     LUC139
+     C                   PARM                    CurCuIt2                                     LUC139     
       *
 
      C                   ENDSR

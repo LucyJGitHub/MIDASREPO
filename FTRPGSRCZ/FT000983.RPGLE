@@ -17,18 +17,26 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 ESL038             Date 24Jan05               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG433             Date 02Dec05               *
+      *                 BUG433             Date 02Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CFT009  *CREATE    Date 29Jun00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  ESL038 - For Settle Date Date Less than Run Date             *
+      *           calculate offset from Settle Date rather than RunD  *
+
       *  MD046248 - Finastra Rebranding                               *
       *  BUG433 - Recompiled due to change in FTPDOCPD                *
       *  CFT009 - FT Fees and Charges                                 *
@@ -263,7 +271,8 @@
      C                   Eval      P_PayWork = P_SettWork + BCOPDO
      C                   Eval      P_SettWork = P_SettWork + BCOSDO
      C                   Else
-     C                   Eval      P_SettWork = W_Today + BCOSDO
+     C***********        Eval      P_SettWork = W_Today + BCOSDO                ESL038
+     C                   Eval      P_SettWork = P_SettWork + BCOSDO             ESL038
      C                   Eval      P_PayWork  = W_Today + BCOPDO
      C                   Endif
  
@@ -275,7 +284,8 @@
      C                   Eval      P_PayWork  = P_SettWork + ACOPDO
      C                   Eval      P_SettWork = P_SettWork + ACOSDO
      C                   Else
-     C                   Eval      P_SettWork = W_Today + ACOSDO
+     C*********          Eval      P_SettWork = W_Today + ACOSDO                ESL038
+     C                   Eval      P_SettWork = P_SettWork + ACOSDO             ESL038
      C                   Eval      P_PayWork  = W_Today + ACOPDO
      C                   Endif
  
@@ -305,6 +315,28 @@
      C                   Parm                    SettDateLoc
      C                   Parm      *Blanks       HolInd
      C                   EndDo
+                                                                                              ESL038
+      ** Check to see if the date is a working day in local currency                          ESL038
+      ** and location                                                                         ESL038
+                                                                                              ESL038
+     C                   CallB     'ZCHKH'                                                    ESL038
+     C                   Parm                    P_SettWork                                   ESL038
+     C                   Parm      BJLCCY        LoclCcy           3                          ESL038
+     C                   Parm      BJSLCD        LoclDateLoc       3                          ESL038
+     C                   Parm      *Blanks       HolInd            1                          ESL038
+                                                                                              ESL038
+      ** Check to see if the date is a working day. If not, add a day                         ESL038
+      ** until it is.                                                                         ESL038
+                                                                                              ESL038
+     C                   DoW       HolInd <> 'W'                                              ESL038
+     C                   Eval      P_SettWork = P_SettWork + 1                                ESL038
+     C                   CallB     'ZCHKH'                                                    ESL038
+     C                   Parm                    P_SettWork                                   ESL038
+     C                   Parm                    LoclCcy                                      ESL038
+     C                   Parm                    LoclDateLoc                                  ESL038
+     C                   Parm      *Blanks       HolInd                                       ESL038
+     C                   EndDo                                                                ESL038
+                                                                                              ESL038
      C                   EndIf
  
       ** Payment currency
@@ -327,6 +359,28 @@
      C                   Parm                    PayDateLoc
      C                   Parm      *Blanks       HolInd
      C                   EndDo
+                                                                                              ESL038
+      ** Check to see if the date is a working day in local currency                          ESL038
+      ** and location                                                                         ESL038
+                                                                                              ESL038
+     C                   CallB     'ZCHKH'                                                    ESL038
+     C                   Parm                    P_PayWork                                    ESL038
+     C                   Parm      BJLCCY        LoclCcy                                      ESL038
+     C                   Parm      BJSLCD        LoclDateLoc                                  ESL038
+     C                   Parm      *Blanks       HolInd                                       ESL038
+                                                                                              ESL038
+      ** Check to see if the date is a working day. If not, add a day                         ESL038
+      ** until it is.                                                                         ESL038
+                                                                                              ESL038
+     C                   DoW       HolInd <> 'W'                                              ESL038
+     C                   Eval      P_PayWork = P_PayWork + 1                                  ESL038
+     C                   CallB     'ZCHKH'                                                    ESL038
+     C                   Parm                    P_PayWork                                    ESL038
+     C                   Parm                    LoclCcy                                      ESL038
+     C                   Parm                    LoclDateLoc                                  ESL038
+     C                   Parm      *Blanks       HolInd                                       ESL038
+     C                   EndDo                                                                ESL038
+                                                                                              ESL038
      C                   EndIf
  
       * Convert work fields bank to 6,0

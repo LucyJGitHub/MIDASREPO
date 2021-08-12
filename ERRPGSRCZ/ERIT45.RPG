@@ -1,0 +1,402 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Decision table transaction type List')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  RPG/ERIT45 - Decision table transaction type List            *
+      *                                                               *
+      *  Function:  This program produce an Full list of the          *
+      *             Italian Decision Table for the Transaction type   *
+      *                                                               *
+      *  (phase(s)) Input cycle                                       *
+      *                                                               *
+      *  Called By: RPG/ER0020  'P'                                   *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. DBA302             Date 10Oct00               *
+      *                 UIT021  *Create    Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  DBA302 - After upgrade to DBA302 fields exist on different   *
+      *           files are defined with different lengths            *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - OVERFLOW INDICATOR FOR ERIT45P1                       *
+      *   80  - EOF ERITTTL1                                          *
+      *   87  - FDDTSTL0 indicator                                    *
+      *   88  - INVTO indicator                                       *
+      *                                                               *
+      *   U7  - DATABASE ERROR                                        *
+      *   U8  - PROGRAM  ERROR                                        *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  #INIT  - Initial Subroutine                                  *
+      *  *PSSR  - Error subroutine                                    *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      ** ER Decision Table - Trans. types - Italy Prefix 'N4'
+     FERITTTL1IF  E           K        DISK
+      *
+      ** 'IV' Investment type file
+     FINVTO   IF  E           K        DISK
+      *
+      **  Deal type/subtype file
+     FFDDTSTL0IF  E           K        DISK
+     F*
+     FERIT45P1O   E             70     PRINTER      KINFDS SPOOL1
+     FERIT45AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+     IFDDTSTPD                                                                    DBA302
+     I              PLDPCD                          FDDPCD                        DBA302
+      ** Rename fields for FDDTSTPD format                                        DBA302
+     IINVTPDF                                                                     DBA302
+      ** Rename fields for FDDTSTPD format                                        DBA302
+     I              PLDPCD                          INDPCD                        DBA302
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Book codes
+     ISDBOOK    E DSSDBOOKPD
+      *
+      ** External DS for Loan types/sub-types  'LE'
+     ISDLOAN    E DSSDLOANPD
+      *
+      ** External DS for Facility types  'FC'
+     ISDFACT    E DSSDFACTPD
+      *
+      ** External DS for Instruction types  'IT'
+     ISDINTY    E DSINTYPD
+      *
+     I            DS
+     I                                        1   2 WWKEY1
+     I                                        3   4 WWKEY2
+     I                                        1   4 WWKEY
+     I*
+     ISPOOLU      DS
+      *
+      **  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      *
+      **  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** Execute initial processing
+     C                     EXSR #INIT
+      *
+     C                     READ ERITTTL1                 80
+      *
+     C           *IN80     IFEQ '0'                        - B1
+     C                     WRITEHEADLI
+     C                     ELSE                            - X1
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     END                             - E1
+      *
+      ** Detail processing
+     C           *IN80     DOWEQ'0'                        - B1
+      *
+     C                     MOVE N4MMOD    XRMOD
+     C                     MOVE N4TTYP    XRTYPE
+     C                     Z-ADDN4RBND    XRDEBI
+     C                     Z-ADDN4RBNC    XRCRED
+     C                     Z-ADDN4CPND    XRCPDB
+     C                     Z-ADDN4CPNC    XRCPCR
+     C                     MOVE N4TYLC    XRTYLC
+      *
+      ** Setup date in format DDMMMYY
+     C                     Z-ADDN4LCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    XRLCD
+      *
+      ** Setup narrative 'DL'
+      *
+     C           N4MMOD    IFEQ 'DL'                       - B2
+     C                     MOVELN4TTYP    WWKEY
+      *
+      ***  Access combination deal type/deal subtype file
+      *
+     C                     MOVE WWKEY1    KDLTP            type
+     C                     MOVE WWKEY2    KDLST            subtype
+      *
+     C           KDTST     CHAINFDDTSTL0             87
+     C           *IN87     IFEQ *OFF
+     C                     MOVELNARR11    XRNARA           Narrative
+     C                     ELSE
+     C                     MOVEL*BLANKS   XRNARA
+     C                     ENDIF
+      *
+     C                     ENDIF                           Dealing/fiduciary
+      *
+      ** Setup narrative 'LE'
+     C           N4MMOD    IFEQ 'LE'                       - B2
+     C                     MOVELN4TTYP    WWKEY
+      *
+      ** Access loan type via access program
+     C                     CALL 'AOLOANR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WWKEY1    @OLNTY  2
+     C                     PARM WWKEY2    @OLNST  2
+     C           SDLOAN    PARM SDLOAN    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS                    - B3
+     C                     MOVELAYLNTD    XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Setup narrative 'FC'
+     C           N4MMOD    IFEQ 'FC'                       - B2
+     C                     MOVELN4TTYP    KEY3    3
+      *
+      ** Access Facility type via access program
+     C                     CALL 'AOFACTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM KEY3      @OFCTY  3
+     C                     PARM           SDFACT
+      *
+     C           @RTCD     IFEQ *BLANKS                    - B3
+     C                     MOVELAMFCNM    XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Setup narrative 'IV'
+     C           N4MMOD    IFEQ 'IV'                       - B2
+     C                     MOVELN4TTYP    IVKEYO  3
+     C           IVKEYO    CHAININVTO                88
+     C           *IN88     IFEQ '0'                        - B3
+     C                     MOVELINAM      XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Setup narrative 'IT'
+     C           N4MMOD    IFEQ 'IT'                       - B2
+     C                     MOVELN4TTYP    ITKEY7  7
+     C                     MOVE ITKEY7    ITKEY   5        Instrument type
+      *
+      ** Access Instruction type via access program
+     C                     CALL 'AOFFITR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM ITKEY     @OISTT  5
+     C           SDINTY    PARM SDINTY    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS                    - B3
+     C                     MOVELISTN      XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Test if overflow in printer file
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E2
+      *
+      ** Write detail in printer file
+     C                     WRITEDETLI
+      *
+     C                     READ ERITTTL1                 80
+     C                     ENDDO                           - E1
+      *
+      ** Write END OF REPORT
+     C                     WRITEENDLI
+      *
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVE '1'       *INLR
+     C                     END                             - E1
+      *
+     C                     RETRN
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT   - Initial Subroutine                                  *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           #INIT     BEGSR
+      *
+      ** Copyright
+     C                     MOVEACPY@      CPY@@   1
+      *
+      ** Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C                     PARM           PARCTR  2
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** 'User country code' must be in the title of display file
+     C                     MOVE PARCTR    XX
+      *
+      ** Initialize indicators:
+     C                     MOVE '0'       *IN
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'WWBFIL           ***************
+     C                     MOVEL'ERIT45'  WWBKEY           * DBERROR 001 *
+     C                     Z-ADD001       WWBASE           ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      * Record Printer file ERIT45P1 on RCF
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     MOVELSFIL1     SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+      * Record Printer file ERIT45AU on RCF
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     MOVELSFILEU    SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+      *
+      *** Key list definition
+      *
+     C           KDTST     KLIST                           Deal type/sbtype file
+     C                     KFLD           KDLTP   2
+     C                     KFLD           KDLST   2
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO                      - B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END                             - E1
+      *
+      **  Update data area LDA.
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C* SRZSFL - Subroutine to call ZSFILE
+     C*****************************************************************
+     C*
+     C           SRZSFL    BEGSR
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+      ****************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      *
+      *****************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

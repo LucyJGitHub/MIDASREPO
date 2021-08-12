@@ -1,0 +1,129 @@
+     H             /J
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR HYPOVEREINSBANK CHANGES')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR4019 - HYPOVEREINSBANK CHANGES                             *
+      *                                                               *
+      *  Called By: IRC1000 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 2000           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MMI136             Date 06Feb09               *
+      *                 MMI117             Date 31Jan05               *
+      *                 MMI115             Date 23Mar04               *
+      *                 BFRSV3             Date 22Nov02               *
+      *                 MBV002 *REWRITE    Date 25Mar02               *
+      *                 200160             Date 21Nov01               *
+      *                 MMI080             Date 03Jan01               *
+      *                 HVBMIL *CREATE     Date 24Feb99               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI136 - PUMA Changes December 2008 - Recompiled             *
+      *  MMI117 - CR 2005                    - Recompiled             *
+      *  MMI115 - PUMA Changes March 2004    - Recompiled             *
+      *  BFRSV3 - Set field 310 equal to field 308.                   *
+      *  MBV002 - Change A/c sequence in field 277 if Branch Code is  *
+      *           not 561.                                            *
+      *  200160 - Fill fields 603 and 703  for Voce 1228              *
+      *  MMI080 - PUMA Changes December 2000 - Recompiled             *
+      *  HVBMIL - HVB CHANGES                                         *
+      *                                                               *
+      *****************************************************************
+     FIRPUMAPDUP  E                    DISK
+      *
+     IIRFXTB    E DSIRFXTBPD
+     IDSSDY     E DSDSSDY
+      *
+     IDSPNAR      DS                             23
+     I                                        1   5 N001D
+     I                                        6   7 N002D
+     I                                        9  10 N100D
+     I                                       12  16 N001C
+     I                                       17  18 N002C
+     I                                       20  21 N100C
+     I                                       23  230N005
+      *
+     IMK204       DS                             35
+     I                                        1   4 LOTD
+     I                                        1   2 LOTGAR                BFRSV3
+     I                                       21  23 BRCA
+      *
+     IMK277       DS                             15
+     I                                       10  15 WCOD6
+     I                                       14  15 ACSQ
+      *****************************************************************
+     C*
+     C* All extractions
+     C*
+     C                     MOVE MK030     MK203
+     C*
+     C* Accounts extraction
+     C*
+     C           LOTD      IFEQ 'GLAC'
+      *
+     C                     MOVELWCOD6     WKEY07  7
+     C                     MOVE 'M'       WKEY07
+     C                     MOVELWKEY07    WKEY
+      *
+     C                     CALL 'AOFXTBR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM 'HAS'     FIELD   3
+     C                     PARM           WKEY   18
+     C           IRFXTB    PARM IRFXTB    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+      *
+     C                     MOVELF0PNAR    DSPNAR
+     C           MK601     IFGT 0
+     C                     MOVE N001D     MK001
+     C                     MOVE N002D     MK002
+     C                     MOVE N100D     MK100
+     C                     MOVE N100D     MK200
+     C                     END
+     C           MK602     IFGT 0
+     C                     MOVE N001C     MK001
+     C                     MOVE N002C     MK002
+     C                     MOVE N100C     MK100
+     C                     MOVE N100C     MK200
+     C                     END
+     C                     Z-ADDN005      MK005
+     C*
+     C           MK001     IFEQ 1228
+     C                     Z-ADDMK601     MK603
+     C                     Z-ADDMK701     MK703
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* If Branch Code not 561, amend Account Sequence
+     C*
+     C           MK001     IFLT 4000
+     C           BRCA      ANDNE'561'
+     C           BRCA      ANDNE*BLANKS
+     C                     MOVE ACSQ      WACSQ   20
+     C           WACSQ     IFNE 0
+     C           100       SUB  WACSQ     NACSQ   20
+     C                     MOVE NACSQ     ACSQ
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Valutaria
+     C*
+     C           LOTD      IFEQ 'DLEX'
+     C                     MOVE MK016     MK194
+     C                     ENDIF
+     C*                                                                   BFRSV3
+     C* Guarantees extraction                                             BFRSV3
+     C*                                                                   BFRSV3
+     C           LOTGAR    IFEQ 'GA'                                      BFRSV3
+     C                     MOVE MK308     MK310                           BFRSV3
+     C                     ENDIF                                          BFRSV3
+     C*
+     C                     UPDATIRPUMA

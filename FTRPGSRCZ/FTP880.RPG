@@ -1,0 +1,1548 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Display Ext   Customer Account')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FTP880 - Midas FT Display Ext   Customer Account             *
+      *                                                               *
+      *  Function:  This program displays Pekao account records       *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 EMRMK1  *Amend     Date 30Aug2005             *
+      *                 EEE058  *Amend     Date 29Jun2004             *
+      *                 E30004             Date 25Feb2004             *
+      *                 EEE058  *Amend     Date 10Jun2003             *
+      *                 EEE058  *Create    Date 27Feb2003             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  EMRMK1 - Call 2nd PCAT screen in Insert mode as well.        *
+      *  EEE058 - Add Partial IBAN selection criteria.                *
+      *         - Increase scan limit.                                *
+      *         - Add Status selection criteria.                      *
+      *  E30004 - Add status Information                              *
+      *  EEE058 - Add default account indicator                       *
+      *  EEE058- Incoming STP                                         *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  03    Cancel and exit                                        *
+      *  05    Refresh/Reload                                         *
+      *  09    Insert                                                 *
+      *  12    Cancel                                                 *
+      *  18    Change view                                            *
+      *  19    Change view                                            *
+      *  27    Rollup                                                 *
+      *  36    Redisplay screen                                       *
+      *  75    Multibranching indicator                               *
+      *  77    Allow F9                                               *
+      *  78    Allow F12                                              *
+      *  81    Sfldsp                                                 *
+      *  82    Scan criteria                                          *
+      *  90    Working indicator for errors                           *
+      *  98,99  General error indicators                              *
+      *                                                               *
+     F*****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   ZZINIT - Initialization                                     *
+      *   BAIZSF - Initialize and load subfile page                   *
+      *   CAEXFM - Display screen                                     *
+      *   BBLDSF - Display next SFL page                              *
+      *   MBFL#1 - Populate SFL fields                                *
+      *   MC#1FN - SFL record function fields                         *
+      *   DBPRSF - Process SFL records                                *
+      *   SRMBIN - Check multibranch action                           *
+      *   SRACTD - Check action code                                  *
+      *   SRRCHG - Record changed                                     *
+      *   MEIZ#2 - Initialize SFL control                             *
+      *   DAPR## - Process screen input                               *
+      *   ZXEXPG - Cancel and exit program                            *
+      *   FBRQRL - Request SFL reload                                 *
+      *                                                               *
+      *****************************************************************
+     FFTP880DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRC1
+     F                                        ##RR  KSFILE #SFLRC2
+     F                                        ##RR  KSFILE #SFLRC3
+     F                                              KINFDS INFDS#
+     F                                              KINFSR SRFILE
+      * DSP: Display Pekao Accounts    Display file
+      *
+     FFTPCATJ0IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR SRFILE
+      * RTV : Display Pekao Accounts    Retrieval index
+      *
+     FFTPCATJ1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * RTV : Display Pekao Accounts    Retrieval index
+      *
+     FFTPCATJ2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * RTV : Display Pekao Accounts    Retrieval index
+      *
+     FFTPCATV0IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * UPD : Incoming Msg Translation  Update index
+      *
+     FFTPCEXV0IF  E           K        DISK                           UC                      E30004
+     F*                                             KINFSR SRFILE                             E30004
+      * UPD : Incoming Msg Translation  Update index                                          E30004
+      *                                                                                       E30004
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E                    CMD@    1   1 80
+      *
+      *  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E*
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  Copysource for error processing
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource
+      *
+      *
+      /EJECT
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      * Get Rundate - Rundate  *
+      *
+     IMMODDS    E DSSDMMODPD
+      *
+      * Modules Data Structure *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP Action Code
+     I                                        1   1 P1ACTC
+     IP2PARM      DS                             68
+      * RCD: Passed Key                Retrieval index
+      * I : MAP IBAN
+     I                                        1  34 P2IBAN
+      * I : MAP Retail Number
+     I                                       35  50 P2RNB1
+      * I : MAP Retail Number 2
+     I                                       51  68 P2RNB2
+     IO2PARM      DS                             68
+      * KEY: Pekao Customer A/c Detail Retrieval index
+      * I : MAP IBAN
+     I                                        1  34 O2IBAN
+      * I : MAP Retail Number 1
+     I                                       35  50 O2RNB1
+      * I : MAP Retail Number 2
+     I                                       51  68 O2RNB2
+     I            DS
+     I                                        1 132 OAMSDA
+      * Message data for 'Invalid Action code (FT1)'
+      * *SFLSEL
+     I                                        1   1 ZA0001
+      *
+     IW0DATA      DS                            256
+      *
+      *  Define data structure used to pass parameters
+      *
+     I                                        1   3 B#BRCA
+     I                                        4   4 O#ACTD
+     I                                        5  14 O#CPGM
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1ACTC    PARM           WP0001  1        Action Code
+     C                     PARM           P2PARM           RCD: Incoming M
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+     C   12                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+     C   18                CAS            FBRQRL
+     C   19                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C                     WRITE#SFLCT1
+     C           ##SFL     WHEQ 'Account'
+     C                     WRITE#SFLCT2
+     C           ##SFL     WHEQ 'Benfcst'
+     C                     WRITE#SFLCT3
+     C                     ENDSL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile control
+      * DSPFIL: Init. Subfile Ctl - R10 Copy source templates  * 
+     C           KPOS1     KLIST
+     C                     KFLD           PCIBAN           IBAN
+     C           KPOS2     KLIST
+     C                     KFLD           PCRNB1           Retail Number 1
+     C                     KFLD           PCRNB2           Retail Number 2
+     C           KPOS3     KLIST
+     C                     KFLD           PCBEN1           Beneficiary Line 1
+      * Setup key
+     C                     MOVEL#2IBAN    PCIBAN           IBAN
+     C                     MOVEL#2RNBR    PCRNB1           Retail Number 1
+     C                     MOVE #2RNBR    PCRNB2           Retail Number 2
+     C                     MOVEL#2BEN1    PCBEN1           Beneficiary Line 1
+      *
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C           KPOS1     SETLL@PCATJ0
+     C                     READ @PCATJ0                8782*82=EOF
+     C           ##SFL     WHEQ 'Account'
+     C           KPOS2     SETLL@PCATJ1
+     C                     READ @PCATJ1                8782*82=EOF
+     C           ##SFL     WHEQ 'Benfcst'
+     C           KPOS3     SETLL@PCATJ2
+     C                     READ @PCATJ2                8782*82=EOF
+     C                     ENDSL
+      *
+      * Save previous selector values
+     C           *LIKE     DEFN #2IBAN    WZIBAN
+     C                     MOVEL#2IBAN    WZIBAN           IBAN
+     C           *LIKE     DEFN #2RNBR    WZRNBR
+     C                     MOVEL#2RNBR    WZRNBR           Retail number
+     C           *LIKE     DEFN #2BEN1    WZBEN1
+     C                     MOVEL#2BEN1    WZBEN1           Beneficiary line 1
+     C           *LIKE     DEFN #SBEN1    WSBEN1
+     C                     MOVEL#SBEN1    WSBEN1           Beneficiary line 1
+     C           *LIKE     DEFN #SBEN2    WSBEN2
+     C                     MOVEL#SBEN2    WSBEN2           Beneficiary line 2
+     C           *LIKE     DEFN #SPIBN    WSPIBN                                              EEE058
+     C                     MOVEL#SPIBN    WSPIBN           Partial IBAN                       EEE058
+     C           *LIKE     DEFN #SSTAT    WSSTAT                                              EEE058
+     C                     MOVEL#SSTAT    WSSTAT           Status                             EEE058
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C  N82                READP@PCATJ0                  90*
+     C  N82                READ @PCATJ0                  90*
+     C           ##SFL     WHEQ 'Account'
+     C  N82                READP@PCATJ1                  90*
+     C  N82                READ @PCATJ1                  90*
+     C           ##SFL     WHEQ 'Benfcst'
+     C  N82                READP@PCATJ2                  90*
+     C  N82                READ @PCATJ2                  90*
+     C                     ENDSL
+      *
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,36
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      *................................................................
+     C           #SBEN2    IFNE *BLANKS
+     C           PCBEN2    ANDNE#SBEN2
+     C           ##SFL     ANDEQ'Benfcst'
+      *
+      * Get first non-blank character
+      *
+     C                     MOVEL*BLANKS   ##001   1
+     C           1         DO   35        U#      30
+     C           1         SUBST#SBEN2:U# ##001
+     C           ##001     IFNE *BLANKS
+     C                     Z-ADDU#        Z#      30
+     C                     END
+     C                     ENDDO
+     C                     END
+     C           #SBEN1    IFNE *BLANKS
+     C           PCBEN1    ANDNE#SBEN1
+     C           ##SFL     ANDEQ'Account'
+     C           #SBEN1    ORNE *BLANKS
+     C           PCBEN1    ANDNE#SBEN1
+     C           ##SFL     ANDEQ'IBAN***'
+      *
+      * Get first non-blank character
+      *
+     C                     MOVEL*BLANKS   ##001   1
+     C           1         DO   18        U#      30
+     C           1         SUBST#SBEN1:U# ##001
+     C           ##001     IFNE *BLANKS
+     C                     Z-ADDU#        Y#      30
+     C                     END
+     C                     ENDDO
+     C                     END
+      *                                                                                       EEE058
+     C           #SPIBN    IFNE *BLANKS                                                       EEE058
+      *                                                                                       EEE058
+      * Get first non-blank character                                                         EEE058
+      *                                                                                       EEE058
+     C                     MOVEL*BLANKS   ##001   1                                           EEE058
+     C           1         DO   10        U#      30                                          EEE058
+     C           1         SUBST#SPIBN:U# ##001                                               EEE058
+     C           ##001     IFNE *BLANKS                                                       EEE058
+     C                     Z-ADDU#        X#      30                                          EEE058
+     C                     END                                                                EEE058
+     C                     ENDDO                                                              EEE058
+     C                     END                                                                EEE058
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record
+     C           #SBEN2    IFNE *BLANKS
+     C           PCBEN2    ANDNE#SBEN2
+     C           ##SFL     ANDEQ'Benfcst'
+      *
+      * Scan for string
+      *
+     C           #SBEN2:Z# SCAN PCBEN2:1                 90
+     C           *IN90     IFEQ '0'
+     C                     GOTO BB020
+     C                     END
+     C                     END
+     C           #SBEN1    IFNE *BLANKS
+     C           PCBEN1    ANDNE#SBEN1
+     C           ##SFL     ANDEQ'IBAN***'
+     C           #SBEN1    ORNE *BLANKS
+     C           PCBEN1    ANDNE#SBEN1
+     C           ##SFL     ANDEQ'Account'
+      *
+      * Scan for string
+      *
+     C           #SBEN1:Y# SCAN PCBEN1:1                 90
+     C           *IN90     IFEQ '0'
+     C                     GOTO BB020
+     C                     END
+     C                     END
+      *                                                                                       EEE058
+     C           #SPIBN    IFNE *BLANKS                                                       EEE058
+      *                                                                                       EEE058
+      * Scan for string                                                                       EEE058
+      *                                                                                       EEE058
+     C           #SPIBN:X# SCAN PCIBAN:1                 90                                   EEE058
+     C           *IN90     IFEQ '0'                                                           EEE058
+     C                     GOTO BB020                                                         EEE058
+     C                     END                                                                EEE058
+     C                     END                                                                EEE058
+      *                                                                                       EEE058
+     C           #SSTAT    IFNE *BLANKS                                                       EEE058
+     C           PCASTS    ANDNE#SSTAT                                                        EEE058
+      *                                                                                       EEE058
+      * Scan for string                                                                       EEE058
+      *                                                                                       EEE058
+     C           #SSTAT    SCAN PCASTS                   90                                   EEE058
+     C           *IN90     IFEQ '0'                                                           EEE058
+     C                     GOTO BB020                                                         EEE058
+     C                     END                                                                EEE058
+     C                     END                                                                EEE058
+      * Load SFL fields
+     C                     EXSR MBFL#1
+     C                     EXSR MC#1FN
+     C                     MOVEL'Y'       W0RSL   1
+      * USER: Initialise subfile record from DBF record
+      * DBF record not selected
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C                     WRITE#SFLRC1
+     C           ##SFL     WHEQ 'Account'
+     C                     WRITE#SFLRC2
+     C           ##SFL     WHEQ 'Benfcst'
+     C                     WRITE#SFLRC3
+     C                     ENDSL
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C                     READ @PCATJ0                  82*82=EOF
+     C           ##SFL     WHEQ 'Account'
+     C                     READ @PCATJ1                  82*82=EOF
+     C           ##SFL     WHEQ 'Benfcst'
+     C                     READ @PCATJ2                  82*82=EOF
+     C                     ENDSL
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C                     EXFMT#SFLCT1
+     C           ##SFL     WHEQ 'Account'
+     C                     EXFMT#SFLCT2
+     C           ##SFL     WHEQ 'Benfcst'
+     C                     EXFMT#SFLCT3
+     C                     ENDSL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * CALC: Subfile control function fields
+      * Change of position specified
+     C           WZIBAN    CASNE#2IBAN    FBRQRL
+     C           WZRNBR    CASNE#2RNBR    FBRQRL
+     C           WZBEN1    CASNE#2BEN1    FBRQRL
+     C           WSBEN1    CASNE#SBEN1    FBRQRL
+     C           WSPIBN    CASNE#SPIBN    FBRQRL                                              EEE058
+     C           WSSTAT    CASNE#SSTAT    FBRQRL                                              EEE058
+     C                     END
+      * USER: Process subfile control (Pre-confirm)
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * USER: Final processing (Pre-confirm)
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *
+      * CASE: CTL.*CMD key is CF09
+      *
+      *
+      * Call add processing
+      *
+     C           *IN09     IFEQ '1'                        *IF
+      *
+      * Check user has access to add
+      *
+     C                     MOVEL'I'       #1SEL
+     C  NU1                EXSR SRMBIN
+      *
+      * User does not have access
+      *
+     C           *IN99     IFEQ '1'                        *IF
+     C                     GOTO DAEXIT
+     C                     END                             *FI
+      *
+      * Set up parameters
+      *
+     C                     CLEARO2PARM
+     C           P1ACTC    IFEQ 'S'
+     C                     MOVEL#2IBAN    O2IBAN
+     C                     MOVEL#2RNBR    O2RNB1
+     C                     MOVE #2RNBR    O2RNB2
+     C                     END
+      *
+     C                     CALL 'FTP890'               9090
+     C                     PARM           P0RTN   7
+     C                     PARM 'I'       WP0001  1        Action Code
+     C                     PARM           O2PARM           KEY: Incoming M
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'MIN0019' P0RTN
+     C                     END                             *FI
+      *
+      *  Depending on return code - exit or re-display screen
+      *
+     C                     SELEC                           *SL
+      *
+      *  F12 pressed - redisplay subfile
+      *
+     C           P0RTN     WHEQ 'USR0790'                  *IF
+     C                     MOVEL*BLANKS   P0RTN            *Return code
+      *
+      * Send message 'F12 taken from previous screen'
+      *
+     C                     MOVEL'MIN0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO DAEXIT
+      *
+      *  F3 pressed - exit program
+      *
+     C           P0RTN     WHEQ 'Y2U9999'                  *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      *
+      *  If error redisplay
+      *
+     C           P0RTN     WHNE *BLANKS                    *IF
+      *
+      * Re-display screen
+      *
+     C                     MOVEL'MIN0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9836  *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DAEXIT
+      *
+      *  New selection - redisplay subfile
+      *
+     C           P0RTN     WHEQ *BLANKS                    *IF
+     C                     MOVEL'Y'       W0DCF
+     C                     GOTO DAEXIT
+     C                     ENDSL                           *LS
+     C                     ENDIF                           *FI
+      *
+      * USER: Process command keys
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+      * Read first changed slf record
+     C                     SETOF                         50
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C                     READC#SFLRC1                  92*
+     C           ##SFL     WHEQ 'Account'
+     C                     READC#SFLRC2                  92*
+     C           ##SFL     WHEQ 'Benfcst'
+     C                     READC#SFLRC3                  92*
+     C                     ENDSL
+     C           *IN92     DOWEQ'0'
+     C                     SETON                         50
+      * Process subfile record
+     C                     EXSR DCPRSR
+     C                     SELEC
+     C           ##SFL     WHEQ 'IBAN***'
+     C                     UPDAT#SFLRC1
+     C                     READC#SFLRC1                  92*
+     C           ##SFL     WHEQ 'Account'
+     C                     UPDAT#SFLRC2
+     C                     READC#SFLRC2                  92*
+     C           ##SFL     WHEQ 'Benfcst'
+     C                     UPDAT#SFLRC3
+     C                     READC#SFLRC3                  92*
+     C                     ENDSL
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+      *================================================================
+     C*                                                               *
+     C* SRACTD - Check Action code                                    *
+     C*                                                               *
+     C*                                                               *
+     C* Called by: DCPRSR                                             *
+     C*                                                               *
+      *================================================================
+     CSR         SRACTD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACTD'  @STK,Q
+      *
+      * Check all valid actions
+      *
+      *
+      * CASE: RCD.*SFLSEL is not valid
+      *
+     C           #1SEL     IFEQ ' '                        *IF
+     C                     GOTO EXACTD
+     C                     END                             *FI
+      * If called from window
+     C           #1SEL     IFNE 'E'                        *IF
+     C           P1ACTC    ANDEQ'1'                        *IF
+     C           P1ACTC    ANDEQ'S'                        *IF
+      * If Enquiry option
+     C           #1SEL     ORNE 'E'                        *IF
+     C           P1ACTC    ANDEQ'E'                        *IF
+      * If Update option
+     C           #1SEL     ANDNE'A'                        *IF
+     C           #1SEL     ANDNE'D'                        *IF
+     C           P1ACTC    ANDEQ'A'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SEL     ZA0001           *SFLSEL
+      * Send message 'Invalid Action code'
+     C                     MOVEL'MIN0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9836  *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO EXACTD
+     C                     END                             *FI
+      *
+      * Check multi-branch actions
+      *
+     C  NU1                EXSR SRMBIN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACTD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      *================================================================
+     C*                                                               *
+     C* SRMBIN - Check Multi-branch actions                           *
+     C*                                                               *
+     C*                                                               *
+     C* Called by: SRACTD                                             *
+     C*                                                               *
+      *================================================================
+     CSR         SRMBIN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMBIN'  @STK,Q
+      *
+      * Set up parameters
+      *
+     C                     CLEARW0DATA
+     C                     MOVEL*BLANKS   B#BRCA
+     C                     MOVEL#1SEL     O#ACTD
+     C                     MOVEL##PGM     O#CPGM
+      *
+      * If select and action is 1 then set to E
+      *
+     C           P1ACTC    IFEQ 'S'                        *IF
+     C           #1SEL     ANDEQ'1'
+     C                     MOVEL'E'       O#ACTD
+     C                     ENDIF                           *FI
+      *
+      * Check all valid actions
+      *
+     C                     CALL 'ME1190'               9090
+     C                     PARM *BLANKS   P0RTN   7
+     C                     PARM '*ACTCODE'W0ACT   8
+     C                     PARM           W0DATA
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'MIN0019' P0RTN
+     C                     SETON                     9836  *
+     C                     END                             *FI
+      *
+      * Invalid action
+      *
+     C           P0RTN     IFNE *BLANKS                    *IF
+     C           #1SEL     IFNE 'I'
+     C                     SETON                     9836  *
+     C                     ELSE                            *FI
+     C                     SETON                     99    *
+     C                     END                             *FI
+     C                     END                             *FI
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMBIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      *================================================================
+     C*                                                               *
+     C* SRRCHG - Record Changed                                       *
+     C*                                                               *
+     C*                                                               *
+     C* Called by: DCPRSR                                             *
+     C*                                                               *
+      *================================================================
+     CSR         SRRCHG    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRCHG'  @STK,Q
+      *
+      * Set up key from subfile record and chain to record
+      *
+     C           KYTRD0    KLIST
+     C                     KFLD           #1IBAN           IBAN
+     C*****                KFLD           #1RNB1           Retail Number 1
+     C*****                KFLD           #1RNB2           Retail Number 2
+      *
+      * Only chain if record if live #1RECI is 'D' or blank
+      *
+     C           #1RECI    IFEQ 'D'
+     C           #1RECI    OREQ ' '
+     C           KYTRD0    CHAIN@PCATV0              90    *
+      *
+      * Record not found - database error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'FTPCATV0'W0FILE
+     C                     MOVEL#1IBAN    W0KEY     P
+     C                     Z-ADD4         W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C                     ELSE
+     C                     MOVEL#1RECI    PCRECI
+     C                     END
+      *
+      *  If action code is not blank then send messge record has been
+      *  deleted if RECI not equal to 'D' or blanks
+      *
+     C           #1SEL     IFNE *BLANKS
+     C           PCRECI    IFNE 'D'
+     C           PCRECI    ANDNE*BLANKS
+      * Send message 'Invalid Action code - record deleted'
+     C                     MOVEL'MIN0216' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9836  *
+     C                     END
+     C                     GOTO EXRCHG
+     C                     END
+      *
+      *  Reload subfile record
+      *  Get extension data                                                                   E30004
+     C           KYTRD0    CHAIN@PCEXV0              90    *                                  E30004
+     C           *IN90     IFEQ *ON                                                           E30004
+     C                     CLEARPCASTS                                                        E30004
+     C                     ENDIF                                                              E30004
+      *
+     C                     EXSR MBFL#1
+     C                     EXSR MC#1FN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRCHG    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,36
+     C                     MOVEL*BLANKS   P0RTN
+     C                     SETOF                     98    *
+     C                     EXSR MC#1FN
+      * USER: Process subfile record (Pre-confirm)
+      *
+      * Check action code is valid, if invalid exit.
+      *
+     C                     EXSR SRACTD
+      *
+      * Check record is active
+      *
+     C                     EXSR SRRCHG
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCENDT                     *QUIT
+     C                     END                             *FI
+      *
+      * Call option
+      *
+     C                     SELEC
+      *
+      * Item selected
+      *
+     C           #1SEL     WHEQ '1'
+     C                     MOVEL#1IBAN    P2IBAN
+     C                     MOVEL#1RNB1    P2RNB1
+     C                     MOVEL#1RNB2    P2RNB2
+     C                     MOVEL'PTC0020' P0RTN            *Return code
+     C                     EXSR ZXEXPG
+      *
+      *
+      * Amend, Delete and Enquire
+      *
+     C           #1SEL     WHEQ 'A'
+     C           #1SEL     OREQ 'D'
+     C           #1SEL     OREQ 'E'
+      *
+      * Set up parameters
+      *
+     C                     MOVEL#1IBAN    O2IBAN
+     C                     MOVEL#1RNB1    O2RNB1
+     C                     MOVEL#1RNB2    O2RNB2
+      *
+     C                     CALL 'FTP890'               9090
+     C                     PARM           P0RTN   7
+     C                     PARM #1SEL     WP0001  1        Action Code
+     C                     PARM           O2PARM           KEY: Incoming M
+      *
+      * If in error set up return code
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0019' P0RTN
+     C                     END
+      *
+      * Cal new maintenance function
+     C           P0RTN     IFEQ *BLANKS                    *IF
+     C                     CALL 'FTP1095'
+     C                     PARM           P0RTN   7
+     C                     PARM #1SEL     WP0001  1        Action Code
+     C                     PARM           O2PARM           KEY: Incoming M
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'MIN0019' P0RTN
+     C                     END                             *FI
+      *
+      *  Depending on return code - exit or re-display screen
+      *
+     C                     SELEC                           *SL
+      *
+      *  F12 pressed - redisplay subfile
+      *
+     C           P0RTN     WHEQ 'USR0790'                  *IF
+      *
+      * Send message 'F12 taken from previous screen'
+      *
+     C                     MOVEL'MIN0015' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9836  *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCENDT                     *QUIT
+      *
+      *  F3 pressed - exit program
+      *
+     C           P0RTN     WHEQ 'Y2U9999'                  *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      *
+      *  If error redisplay
+      *
+     C           P0RTN     WHNE *BLANKS                    *IF
+      *
+      * Re-display screen
+      *
+     C                     MOVEL'MIN0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9836  *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCENDT                     *QUIT
+      *
+      *  Function completed normally
+      *
+     C           P0RTN     WHEQ *BLANKS                    *IF
+     C                     ENDSL                           *LS
+      *
+     C           DCENDT    TAG
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                             FI *IN98
+      *
+      *  If option did not end in error, F12 or F3 then update record
+      *  with changes
+      *
+     C           P0RTN     IFEQ *BLANKS
+     C           *IN98     ANDEQ'0'
+     C                     EXSR SRRCHG
+     C                     END
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *
+      * If *IN18 or *IN19 change view
+      *
+     C                     SELEC
+     C           *IN18     WHEQ '1'
+     C           ##SFL     ANDEQ'Account'
+     C           *IN18     OREQ '1'
+     C           ##SFL     ANDEQ'Benfcst'
+     C                     MOVEL*BLANKS   ##SFL
+     C                     MOVEL'IBAN***' ##SFL
+     C           *IN18     WHEQ '1'
+     C           ##SFL     ANDEQ'IBAN***'
+     C           *IN19     OREQ '1'
+     C           ##SFL     ANDEQ'Benfcst'
+     C                     MOVEL*BLANKS   ##SFL
+     C                     MOVEL'Account' ##SFL
+     C           *IN19     WHEQ '1'
+     C           ##SFL     ANDEQ'IBAN***'
+     C           *IN19     OREQ '1'
+     C           ##SFL     ANDEQ'Account'
+     C                     MOVEL*BLANKS   ##SFL
+     C                     MOVEL'Benfcst' ##SFL
+     C                     END
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @PCATJ0  fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELPCRECI    #1RECI           Record Identifi
+     C                     MOVELPCAJOB    #1AJOB           Job name
+     C                     MOVELPCAUSR    #1AUSR           User name
+     C                     Z-ADDPCATIM    #1ATIM           Action Time
+     C                     MOVELPCARDT    #1ARDT           Action Date
+     C                     MOVELPCAACT    #1AACT           Action Type
+     C                     Z-ADDPCRDNB    #1RDNB           Run day number
+     C                     MOVELPCRNB1    #1RNB1
+     C                     MOVELPCRNB2    #1RNB2
+     C                     MOVELPCIBAN    #1IBAN
+     C                     MOVELPCBEN1    #1BEN1
+     C                     MOVELPCBEN2    #1BEN2
+     C                     MOVELPCRNB1    #1RNBR
+     C                     MOVE PCRNB2    #1RNBR
+     C                     MOVELPCASTS    #1ASTS                                              E30004
+      *
+      * If deleted stop subfile selection and place deleted in
+      * access point
+      *
+     C           #1RECI    IFEQ '*'                        Record Identifi
+     C                     MOVEL*BLANKS   #1BEN1
+     C                     MOVELU#DELT    #1BEN1
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     GOTO MBEXIT
+     C                     END
+      *
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MC#1FN    BEGSR
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+     CSR         MCEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+      *
+      * Initialise header and footer fields
+      *
+     C                     MOVEL*BLANK    ##ONAM           Option Name
+     C                     MOVEL*BLANK    ##CMD1           CMD Line 1
+     C                     MOVEL*BLANK    ##CMD2           CMD Line 2
+      *
+     C                     MOVELP1ACTC    #PACTC           Action Code
+     C                     MOVEL*BLANK    #2IBAN           Network
+     C                     MOVEL*BLANK    #2RNBR           Message Field Tag
+     C                     MOVEL*BLANK    #2BEN1           Currency Code
+      *
+      * Fill Command lines and narrative text from messages
+      *
+     C                     SELEC
+      *
+      * Enquiry screen
+      *
+     C           P1ACTC    WHEQ 'E'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'PTC0016' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONAM
+      *
+      * Action codes
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0045' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0315' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Update screen
+      *
+     C           P1ACTC    WHEQ 'A'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'PTC0017' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONAM
+      *
+      * Action codes
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0048' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0316' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Allow function key 9
+      *
+     C                     MOVEL'1'       *IN77
+      *
+      * Selection screen
+      *
+     C           P1ACTC    WHEQ 'S'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'PTC0019' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONAM
+      *
+      * Action codes
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0051' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'PTC0018' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Allow function keys 12
+      *
+     C                     MOVEL'1'       *IN78
+      *
+     C                     ENDSL
+      *
+      * Get deleted text
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0214' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           *LIKE     DEFN #1BEN1    U#DELT
+     C                     MOVEL#MSTX1    U#DELT
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      *
+      * CASE: CTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     END                             *FI
+      * CASE: CTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     END                             *FI
+      *
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Copy any undisplayed messages back to caller
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'MEMSG   'ZADFMF 10
+     C                     Z-ADD10        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C**********           Z-ADD500       W0SLM   50                                          EEE058
+     C                     Z-ADD5000      W0SLM   50                                          EEE058
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+     C                     Z-ADD0         Q       50
+     C                     MOVEA'00'      *IN,77
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Set multi-branch indicator
+      *
+     C           WUMBIN    IFNE 'Y'                        Multi Branched ?
+     C                     MOVEL'0'       *IN75
+     C                     ELSE
+     C                     MOVEL'1'       *IN75
+     C                     END
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Open file FTPCATJ0
+      *
+     C           FIL001    IFEQ *BLANKS
+      *
+      *  Override file FTPCATJ0 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'FTPCATJ0'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     OPEN FTPCATJ0
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      * Open file FTPCATV0
+      *
+     C           FIL002    IFEQ *BLANKS
+      *
+      *  Override file FTPCATV0 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'FTPCATV0'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     OPEN FTPCATV0
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+      *
+      * Open file FTPCATJ1
+      *
+     C           FIL003    IFEQ *BLANKS
+      *
+      *  Override file FTPCATJ1 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'FTPCATJ1'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     OPEN FTPCATJ1
+     C                     MOVEL'Y'       FIL003  1
+     C                     END
+      *
+      * Open file FTPCATJ2
+      *
+     C           FIL004    IFEQ *BLANKS
+      *
+      *  Override file MEDECDL4 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'FTPCATJ2'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD5         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     OPEN FTPCATJ2
+     C                     MOVEL'Y'       FIL004  1
+     C                     END
+      *                                                                                       E30004
+      * Open file FTPCEXV0                                                                    E30004
+      *                                                                                       E30004
+     C           FIL005    IFEQ *BLANKS                                                       E30004
+      *                                                                                       E30004
+      *  Override file FTPCEXV0 to share(*NO)                                                 E30004
+      *                                                                                       E30004
+     C                     MOVEACMD@,1    EDT                                                 E30004
+     C                     MOVEL'FTPCEXV0'U#FILE 10                                           E30004
+     C                     MOVEAU#FILE    EDT,17                                              E30004
+     C                     MOVEAEDT       OVRDBF 80                                           E30004
+     C                     Z-ADD80        CMDLEN 155                                          E30004
+     C                     CALL 'QCMDEXC'                9090                                 E30004
+     C                     PARM           OVRDBF                                              E30004
+     C                     PARM           CMDLEN                                              E30004
+      *                                                                                       E30004
+     C           *IN90     IFEQ '1'                                                           E30004
+     C                     MOVEL'*CALL  ' W0FILE                                              E30004
+     C                     MOVEL'QCMDEXC' W0KEY                                               E30004
+     C                     Z-ADD3         W0ERNB                                              E30004
+     C                     MOVEL'MEM5003' W0MSGD                                              E30004
+     C                     MOVEL'MIDAS  ' W0MSGF                                              E30004
+     C                     EXSR SRERR                                                         E30004
+     C                     END                                                                E30004
+      *                                                                                       E30004
+     C                     OPEN FTPCEXV0                                                      E30004
+     C                     MOVEL'Y'       FIL005  1                                           E30004
+     C                     END                                                                E30004
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      * Move input parameters to key fields for positioning DBF
+     C                     MOVELP2IBAN    #2IBAN
+     C                     MOVELP2RNB1    #2RNBR
+     C                     MOVE P2RNB2    #2RNBR
+      *
+      * If IBAN then IBAN else number
+      *
+     C                     MOVEL*BLANKS   ##SFL
+     C           P1ACTC    IFEQ 'S'
+     C           P2IBAN    ANDEQ*BLANKS
+     C                     MOVEL'Account' ##SFL  10
+     C                     ELSE
+     C                     MOVEL'IBAN***' ##SFL
+     C                     END
+      *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY MECPYSRC,SRERRC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2003
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

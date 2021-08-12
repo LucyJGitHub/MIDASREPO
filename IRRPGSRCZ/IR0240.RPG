@@ -1,0 +1,520 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Daily Posting Conversion')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR0240 - IR Daily Posting Conversion                         *
+      *                                                               *
+      *  Function:  At the end of the month, this program converts    *
+      *             PF/IRDPSTPD daily postings file into required     *
+      *             format to be downloaded (PF/ERITDTPD)             *
+      *  (phase(s)) : Close of Business - End of Month                *
+      *               After successfull run of IRC0105 EOM component  *
+      *                                                               *
+      *  Called By: IRC0240 - IR Daily Posting Conversion             *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 13Jan21               *
+      *                 MMI032             Date 25AUG98               *
+      *                 UIT021             Date 24jun98               *
+      *                 UIT021             Date 05fev97               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI032 - FICS BOI Interface amendment to incorporate         *
+      *           data dic 3.0 changes                                *
+      *  UIT021 - BOI Monthly Reporting - data dict 2.6.3 changes     *
+      *  UIT021 - BOI Monthly Reporting                               *
+      *                                                               *
+      *****************************************************************
+     FIRDPSTPDIF  E                    DISK         KINFSR *PSSR
+      *** European Reporting Daily Postings file           Prefix 'IB'
+      *
+     FSDCRT1L0IF  E           K        DISK         KINFSR *PSSR
+      *** Currency Ext. detail for Italian Returns         Prefix 'PB'
+      *
+     FSDCTT1L0IF  E           K        DISK         KINFSR *PSSR
+      *** Country Ext. detail for Italian Returns          Prefix 'PE'
+      *
+     FERITDTPDO   E                    DISK         KINFSR *PSSR
+      ***  European Reporting Production Extract File      Prefix 'IC'
+      *
+      /EJECT
+      /COPY ZSRSRC,ZDATE9Z1
+      ***  Array definition for ZDATE9 conversion YYYYMMDD
+      *
+     E                    DECP    1   4  4 1
+      *
+      ***  ZCCYCN used array
+      *
+     E                    POWER   1   8  8 3
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *-------------------------------*
+      ***  Working Data structures  ***
+      *-------------------------------*
+     IIRSTAT    E DSIRSTAT
+      ***  Italian Returns Status
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ***  First Data structure for Access object programs (L:200)
+      *
+     IDSSDY     E DSDSSDY
+      ***  Secondary DS for Access Object Programs (L:800)
+      *
+      /COPY ZSRSRC,ZDATE9Z2
+      ***  DS to conversion date routine ZDATE9
+      *
+      *****************************************************************
+      *                        M A I N L I N E S                      *
+      *****************************************************************
+      *
+      ***  Read Daily Posting file and Output Production Extract file
+      *
+     C                     READ IRAPOSD0                 89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     EXSR #FILL
+      *
+     C                     WRITEERITTRD0
+      *
+      ***  Next record
+      *
+     C                     READ IRAPOSD0                 89
+     C                     ENDDO
+      *
+      ***  Normal Termination
+      *
+     C                     Z-ADDWWRRNV    IRSQCT           Rel. Rec. Number.
+     C                     OUT  IRSTAT                     Last Used Nbr
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                E N D    O F    M A I N L I N E S              *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *  #FILL  - Reset And Fill Extract Production Record            *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #FILL     BEGSR
+      *
+      ***  Reset Record for Output
+     C                     CLEARERITTRD0
+      *
+      *** Default values (to be over-written by calculated values)
+     C*                    Z-ADD0         ICCONS           Consol. Code
+     C                     Z-ADD99        ICMBCD           Mobil. Code
+     C                     Z-ADD99        ICCLAC           Class of Account
+     C                     Z-ADD9         ICRTTP           Rate Type
+     C                     Z-ADD9         ICMOOP           Motiv of Operat.
+     C                     Z-ADD770       ICSECL           Secur. listed
+     C                     Z-ADD999       ICSECT           Secur. Type
+     C           '7990001' CAT  'W0':0    ICFIID           Financial instit.
+     C                     Z-ADD9         ICFXSP           Forex Sale/Purch. ind
+     C***********          Z-ADD999       ICAGCT           Agricult. CrediMMI032
+     C***********          Z-ADD999       ICAGCL           Agricult. CrediMMI032
+     C***********          Z-ADD99        ICECBD           Econm. Branch dMMI032
+     C*                    Z-ADD0         ICUNAM           Unpaid Amount
+     C*                    Z-ADD0         ICPOPT           Pool Operat. Type
+     C           '7990001' CAT  'W0':0    ICBKPL           Bank cd of Pool Leadr
+     C                     Z-ADD9         ICTPPL           Type of Pool Leader
+     C                     Z-ADD9         ICTPUV           Type Underlying Value
+     C                     Z-ADD999       ICNBUM           Nbr of Unpaid Months
+     C                     Z-ADD999999    ICTPPR           Type of Product
+     C***********          Z-ADD999999    ICPEPR           Pers. of ProducMMI032
+     C                     Z-ADD777777793 ICFSCD           Fiscal Cd of Cntrpy
+      *                    Z-ADD0         ICPATP           Type of Participation
+      *                    Z-ADD0         ICPAWN           Type of Pawn
+      *
+      ***  Record type is set to 001
+     C                     Z-ADD1         ICRTYP
+      *
+      ***  Audit Trail Data Build From Posting Narrative
+     C                     MOVELIBPNAR    ICAUTR
+      *
+      ***  RRN Sequence
+     C           WWRRNV    IFNE 999999                     Max. reached
+     C                     ADD  1         WWRRNV
+     C                     ELSE
+     C                     Z-ADD1         WWRRNV
+     C                     ENDIF
+     C                     Z-ADDWWRRNV    ICSQCT
+      *
+      ***  UIC Currency Code retrieve from Ccy ext. details
+     C           IBCCY     CHAINSDCRT1L0             88
+     C           *IN88     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDCRT1L0'DBFILE           * DBERROR 001 *
+     C                     MOVELIBCCY     DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDPBUCCY    ICUCCY
+      *
+      ***  UIC country code : Ext detail of Country code of customer
+     C                     MOVELIBCNUM    @KEY1  10
+     C                     MOVELIBCNUM    ICCUST
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERROR 002 *
+     C                     MOVEL@KEY1     DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BBCOLC    CHAINSDCTT1L0             88
+     C           *IN88     IFEQ *ON
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDCTT1L0'DBFILE           * DBERROR 003 *
+     C                     MOVELBBCOLC    DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDPEUCTR    ICUCTR
+      *
+      ***  Line Item
+     C                     Z-ADDIBRBNB    ICLINI
+      *
+      ***  Complementary item
+     C                     Z-ADDIBCPNB    ICCPAC
+      *
+      ***  Value Date :  Posting date YYYYMMDD
+     C                     Z-ADD0         ICSTRD
+     C                     Z-ADDIBPSTD    @@DAYN  50       5S0
+     C                     EXSR ZDATE9
+     C           @@RTN     IFEQ '0'
+     C                     Z-ADD@@VDT     ICSTRD           YYYYMMDD
+     C                     ENDIF
+      *
+      *** Book Balance in original currency : Posting amount
+      ***       (Always written with 2 decimals, no comma)
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM IBCCY     @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 004 *
+     C                     MOVEL@CCY      DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  All posting amount have to be written with 2 decimals
+     C           4         SUB  A6NBDP    X       10
+      *
+      ***  As decimal places may be 0, 1, 2 or 3,
+      ***           DECP,X may be 100.0, 010.0, 001,0 or 000.1
+     C           IBPSTA    MULT DECP,X    ICBVFX           Post. Amnt with 2 dec
+      *
+      ***  Convert amount in Lira using Spot rate  (ZCCYCN routine)
+     C                     Z-ADDIBPSTA    ZAMTF            Posting amount
+     C                     MOVELIBCCY     ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+      *
+     C                     EXSR ZCCYCN                     ZAMTT Post. Amnt in
+     C           4         SUB  ZCDPT     X                Local Ccy
+     C           ZAMTT     MULT DECP,X    ICBVLR           with 2 dec.
+      *
+      ***  Debit (A) / credit indicator
+     C           IBDRCR    IFEQ 0
+     C                     MOVE 'D'       ICCRDR
+     C                     ELSE
+     C                     MOVE 'A'       ICCRDR
+     C                     ENDIF
+      *
+      ***  Residence Digit : 1 when customer lived in Italy, else 2
+     C           BBCOLC    IFEQ BJCNCD                     Bank cntry is ITALY
+     C                     Z-ADD1         ICRSDG
+     C                     ELSE
+     C                     Z-ADD2         ICRSDG
+     C                     ENDIF
+      *
+      ***  Currency digit : Posting in Lira --> 1, else 2
+     C           IBCCY     IFEQ BJLCCY                     Local Ccy is Lira
+     C                     Z-ADD1         ICCYDG
+     C                     ELSE
+     C                     Z-ADD2         ICCYDG
+     C                     ENDIF
+      *
+      ***  UIC causale code
+     C                     Z-ADDIBCAUC    ICOPCD
+      *
+      ***  Use ERIT63 program to fill customer relative fields
+     C                     CALL 'ERIT63'
+     C                     PARM           ICCUST           Input
+     C                     PARM *ZERO     RTCONS  10       Output
+     C                     PARM *ZERO     RTCPTY  40       Output
+     C                     PARM *ZERO     RTECSG  30       Output
+     C                     PARM *BLANKS   RTFIID  9        Output
+     C                     PARM *ZERO     RTDBCD  10       Output
+     C                     PARM *ZERO     RTECBC  30       Output
+     C                     PARM 99999     RTPRCT  50       Output(Default)
+     C                     PARM *ZERO     RTCNTP  50       Output
+     C                     PARM 777777793 RTFSCD 110       Output(Default)
+     C                     PARM *BLANKS   RTBNTP  1        Output
+     C                     PARM *ZERO     RTCUCR  90       Output
+     C                     PARM *ZERO     RTCRTP  10       Output
+     C                     PARM *BLANKS   RTCRNM 60        Output
+     C                     PARM *BLANKS   RTFCCR 16        Output
+     C                     PARM *BLANKS   RTHOLC 30        Output
+     C                     PARM *ZERO     RTHLCD  60       Output
+     C                     PARM *BLANKS   RTCUAD 40        Output
+     C                     PARM *BLANKS   RTCUCT 40        Output
+     C                     PARM *BLANKS   RTCCCN  7        Output
+     C                     PARM *BLANKS   RTCCCL 15        Output
+     C                     PARM *BLANKS   RTCCCD  3        Output
+     C                     PARM *ZERO     RTCURF  10       Output
+     C                     PARM *ZERO     RTCPPT  20       Output
+     C                     PARM *BLANKS   ERROR   1        Return
+      *
+     C           ERROR     IFEQ 'Y'
+     C                     Z-ADD11        DBASE            ***************
+     C                     MOVEL'ERIT63  'DBFILE           * DBERROR 011 *
+     C                     MOVELERROR     DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDRTCONS    ICCONS           Consol. code
+     C                     Z-ADDRTCPTY    ICCPTY           Ctrpy. code
+     C                     Z-ADDRTECSG    ICECSG           Econom. Subgrp
+     C                     MOVELRTFIID    ICFIID           Fin. Instit.
+     C*don't setup         MOVELRTDBCD    ICCUDB           Doubtfull Code
+     C                     Z-ADDRTECBC    ICECBC           Econ. Branch class.
+     C                     Z-ADDRTPRCT    ICPRCT           Provincia
+     C                     Z-ADDRTCNTP    ICCNTP           Cprty type
+     C                     Z-ADDRTFSCD    ICFSCD           Fiscal Code
+     C*don't setup         MOVE RTBNTP    ICBNTP           Beneficiary type
+     C*don't setup         MOVELRTCUCR    ICCUCR           CR Customer Code
+     C*don't setup         Z-ADDRTCRTP    ICCRTP           CR Client type
+     C*dont setup          MOVELRTCRNM    ICCRNM           Client CR Name
+     C*don't setup         MOVELRTFCCR    ICFCCR           Fiscal c Ctrpy/Issuer
+     C*don't setup         MOVELRTHOLC    ICHOLC           HO Client Office
+     C*don't setup         Z-ADDRTHLCD    ICHLCD           CAB cd HO Client Off
+     C*don't setup         MOVELRTCUAD    ICCUAD           Client Address
+     C*don't setup         MOVELRTCUCT    ICCUCT           Client City
+     C*don't setup         MOVELRTCCCN    ICCCCN           CCIAA Reg. Client Nr.
+     C*don't setup         MOVELRTCCCL    ICCCCL           CCIAA HO Client Loc.
+     C***********          MOVELRTCCCD    ICCCCD                      MMI032
+     C*don't setup         Z-ADDRTCURF    ICCURF           Central Dei Rischi Rp
+     C*don't setup         Z-ADDRTCPPT    ICCPPT
+      *
+      ***  Call sub-program only for change on branch code
+     C           IBBRCA    IFNE WWBRCA
+      *
+      ***  Use ERIT61 program to fill branch relative fields
+     C                     CALL 'ERIT61'
+     C                     PARM           IBBRCA           Input
+     C                     PARM *ZERO     RTORSP  50       Output
+     C                     PARM *ZERO     RTONSP  90       Output
+     C                     PARM *ZERO     RTORPR  50       Output
+     C                     PARM *ZERO     RTORPA  30       Output
+     C                     PARM *BLANKS   ERROR   1        Return
+      *
+     C           ERROR     IFEQ 'Y'
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVEL'ERIT61  'DBFILE           * DBERROR 012 *
+     C                     MOVELERROR     DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE IBBRCA    WWBRCA  3
+     C                     ENDIF
+      *
+     C                     Z-ADDRTORSP    ICORSP           Loc Orgn. Info Sporte
+     C                     Z-ADDRTORPR    ICORPR                    Info Provin.
+     C                     Z-ADDRTORPA    ICORPA                    Info Paese
+      *
+      ***  Codes stored at branch level are to be used to identify bank
+      *
+     C*don't setup         Z-ADDRTORSP    ICICCR
+     C*don't setup         Z-ADDRTONSP    ICOCCR
+      *
+      ***  Identify daily extracted record by origin applic.id
+      ***  set to "DLEX a/c key" and decision key set to source of posting
+     C           'DLEX'    CAT  IBAKEY:1  ICORAP
+     C                     MOVELIBSPOS    ICDECK
+      *
+      ***  Identify end position
+     C                     MOVE '*'       ICEND
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial Subroutine                                  *
+      *  ------                                                       *
+      *  Called by : start of pgm                                     *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *                                                               *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in IR Status Data area (take Sequence counter)
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           IRSTAT
+     C           *LOCK     IN   IRSTAT
+      *
+     C                     Z-ADDIRSQCT    WWRRNV  60       Rel. Rec. Number.
+      *
+      ***  Access  SDBANKPD Details
+      *
+     C                     MOVEL*BLANKS   @RTCD
+     C                     MOVEL'*FIRST ' @OPTN
+     C                     CALL 'AOBANKR0'
+     C                     PARM           @RTCD
+     C                     PARM           @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 005 *
+     C                     MOVEL'*FIRST ' DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access Local Currency details for ZCCYCN subroutine usage
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BJLCCY    @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 006 *
+     C                     MOVEL@CCY      DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJLCCY    ZCCYT            Local CCY
+     C                     Z-ADDA6SPRT    ZRATET           Today Spot rate
+     C                     Z-ADDA6NBDP    ZCDPT            dec places
+     C                     MOVE A6MDIN    ZMDINT           M/D indicator
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      * Called by :                                                   *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *  Standard Subroutines :                                       *
+      *  --------------------                                         *
+      *      ZDATE9 : Convert Day nbr to YYYYMMDD                     *
+      *      ZCCYCN : Convert Amount from 1 ccy to another one using  *
+      *               Spot rate                                       *
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE9Z3
+      *
+      /COPY ZSRSRC,ZCCYCN
+      *
+      ***  Array Definition : copy of ZSRSRC/ZDATE9Z4
+      *
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  DECP array
+0001                                   Ccy with 3 dec --> Mult. by   0.1
+0010                                            2 dec                1
+0100                                            1 dec               10
+1000                                            0 dec              100
+**  POWER array
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

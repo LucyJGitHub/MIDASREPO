@@ -1,0 +1,161 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 23Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 PNL012             Date 16Sep05               *
+      *                 233571             Date 29Jun05               *
+      *                  MK0534                 Date 23Feb2005        *
+      *                  ESL038                 Date 21Oct2004        *
+      *                 150983             Date 09Jun99               *
+      *                 ESL003 *Create     Date 08Jun98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  PNL012 - Account Payments Authorisation Processing           *
+      *           Also added 233571                                   *
+      *  233571 - Write/update both accounts on file.                 *   PNL012
+      *  MK0534 - Remove ESL003 as the bank doesn't want it anymore.  *
+      *  ESL038 - ING STP Development                                 *
+      *  150983 - Check if Authorise Indicator (AUIN) is equal to 'Y' *
+      *           before writing the transaction to file INPYADPP.    *
+      *  ESL003 - Generation of Payment Advices from Incomig Payments *   ESL003
+      *                                                               *
+      *****************************************************************
+      *
+      *                                                                                       ERN054
+      ** If ERN054 call validator                                                             ERN054
+      *                                                                                       ERN054
+     C           ERN054    IFEQ 'Y'                                                           ERN054
+      *                                                                                       ERN054
+     C                     MOVELP@ODTA    P@ODTX256                                           233571
+     C                     MOVELSOODTA    P@ODTA                                              ERN054
+      * Clear parameters                                                                      ERN054
+     C                     MOVELPREF      CRPREF                                              ERN054
+     C           CRPREF    CHAIN@CRCKV0              90                                       ERN054
+     C           *IN90     IFEQ *ON                                                           ERN054
+     C                     CLEARDSCRCK                                                        ERN054
+      *---------------------------------------------------------------------
+     C                     MOVEL'D'       CRRECI
+     C                     MOVELPREF      CRPREF
+     C                     MOVELPOBRCA    CRBRCA
+     C                     MOVELPOCNUM    CRCNUM
+     C                     MOVELPOCCY     CRCCY
+     C                     MOVELPOACOD    CRACOD
+     C                     MOVELPOACSQ    CRACSQ
+      *
+      *---------------------------------------------------------------------
+      * Balances on Authorisation
+     C                     Z-ADDSMAM      CRSMAM
+     C                     Z-ADDPOCLBL    CRCLBL
+     C                     Z-ADDPOODLN    CRODLN
+     C                     Z-ADDPOAVBL    CRAVBL
+      *
+      *---------------------------------------------------------------------
+      * Credit Check
+     C                     MOVELPODRCK    CRDRCK
+     C                     MOVEL*BLANKS   CRCPRF
+     C                     MOVELU0RTCE    CROVRT
+     C                     MOVELP@ODTX    P@ODTA                                              233571
+     C                     MOVELPOBRCA    CRCBRC                                              233571
+     C                     MOVELPOCNUM    CRCCUS                                              233571
+     C                     MOVELPOCCY     CRCCCY                                              233571
+     C                     MOVELPOACOD    CRCACD                                              233571
+     C                     MOVELPOACSQ    CRCASQ                                              233571
+      *---------------------------------------------------------------------
+     C                     WRITE@CRCKV0                                                       ERN054
+     C                     ELSE                                                               ERN054
+      *---------------------------------------------------------------------
+     C                     MOVEL'D'       CRRECI
+     C                     MOVELPOBRCA    CRBRCA
+     C                     MOVELPOCNUM    CRCNUM
+     C                     MOVELPOCCY     CRCCY
+     C                     MOVELPOACOD    CRACOD
+     C                     MOVELPOACSQ    CRACSQ
+      *
+      *---------------------------------------------------------------------
+      * Balances on Authorisation
+     C                     Z-ADDSMAM      CRSMAM
+     C                     Z-ADDPOCLBL    CRCLBL
+     C                     Z-ADDPOODLN    CRODLN
+     C                     Z-ADDPOAVBL    CRAVBL
+      *
+      *---------------------------------------------------------------------
+      * Credit Check
+     C                     MOVELPODRCK    CRDRCK
+     C                     MOVEL*BLANKS   CRCPRF
+     C                     MOVELU0RTCE    CROVRT
+     C                     MOVELP@ODTX    P@ODTA                                              233571
+     C                     MOVELPOBRCA    CRCBRC                                              233571
+     C                     MOVELPOCNUM    CRCCUS                                              233571
+     C                     MOVELPOCCY     CRCCCY                                              233571
+     C                     MOVELPOACOD    CRCACD                                              233571
+     C                     MOVELPOACSQ    CRCASQ                                              233571
+     C                     UPDAT@CRCKV0                                                       ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+     C                     ENDIF                                                              ERN054
+      *****                                                               ESL003              MK0534
+      ***Do the processing only for incoming payments.                    ESL003              MK0534
+      *****                                                               ESL003              MK0534
+     C*****      *IN60     IFEQ *OFF                                      ESL003              MK0534
+     C*****      AUIN      ANDEQ'Y'                                       150983              MK0534
+      *****                                                               ESL003              MK0534
+      ***Set parameters for call.                                         ESL003              MK0534
+      *****                                                               ESL003              MK0534
+     C*****                MOVE UEPREF    P@PREF 15        Payment Ref    ESL003              MK0534
+     C*****                MOVE *BLANKS   @RTCD   7        Return Code    ESL003              MK0534
+      *****                                                               ESL003              MK0534
+     C*****                CALL 'FTCE034'                                 ESL003              MK0534
+     C*****                PARM           P@PREF                          ESL003              MK0534
+     C*****                PARM           @RTCD                           ESL003              MK0534
+      *****                                                               ESL003              MK0534
+     C*****      @RTCD     IFNE *BLANKS                                   ESL003              MK0534
+     C*****      *LOCK     IN   DLDA                                      ESL003              MK0534
+     C*****                MOVEL'FT0060 ' DBPGM                           ESL003              MK0534
+     C*****                MOVEL'FTCE034' DBFILE           ************   ESL003              MK0534
+     C*****                MOVEL'*CALL'   DBKEY            * DBERR 90 *   ESL003              MK0534
+     C*****                Z-ADD90        DBASE            ************   ESL003              MK0534
+     C*****                OUT  DLDA                                      ESL003              MK0534
+     C*****                SETON                     U7U8LR               ESL003              MK0534
+     C*****                DUMP                                           ESL003              MK0534
+      *****                                                               ESL003              MK0534
+     C*****                EXSR DALLOC                                    ESL003              MK0534
+     C*****                RETRN                                          ESL003              MK0534
+     C*****                ENDIF                                          ESL003              MK0534
+      *****                                                               ESL003              MK0534
+     C*****                ENDIF                                          ESL003              MK0534
+      *****                                                               ESL003              MK0534
+      *
+      ** Credit Authorisation Cascade processing                                              PNL012
+     C           ESL038    IFEQ 'Y'                                                           PNL012
+     C           PNL012    ANDNE'Y'                                                           PNL012
+     C           ESL038    OREQ 'Y'                                                           PNL012
+     C           PNL012    ANDEQ'Y'                                                           PNL012
+     C           AUIN      ANDEQ'Y'                                                           PNL012
+      *                                                                                       PNL012
+      ** Call Credit Authorisation Cascade program                                            PNL012
+     C                     CALL 'FTP1130'                                                     PNL012
+     C                     PARM           P#RTCD  7                                           PNL012
+     C                     PARM           PREF                                                PNL012
+     C                     PARM 0         @FTMSG  80                                          MARCIN
+     C                     PARM 0         @FTKPR  30                                          MARCIN
+      *                                                                                       PNL012
+      **  Check for problem in called program                                                 PNL012
+     C           P#RTCD    IFEQ '*ERROR'                                                      PNL012
+     C                     MOVE '902'     DBASE                                               PNL012
+     C                     MOVELPREF      DBKEY                                               PNL012
+     C                     MOVEL'FTP1130 'DBFILE                                              PNL012
+     C                     OUT  DLDA                                                          PNL012
+     C                     SETON                     U7U8LR                                   PNL012
+     C                     DUMP                                                               PNL012
+     C                     EXSR DALLOC                                                        PNL012
+     C                     RETRN                                                              PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     ENDIF                                                              ESL038
+      *                                                                                       ESL038
+      *****************************************************************
+      * End of FT0060C019                                             *
+      *****************************************************************

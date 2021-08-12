@@ -1,0 +1,142 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR FACILITIES/TRANSACTIONS LINKS')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR4001 - FACILITIES/TRANSACTIONS LINKS                       *
+      *                                                               *
+      *  Called By: IRC4000 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 13Jan21               *
+      *                 MMI140             Date 28Feb11               *
+      *                 MMI138             Date 24Mar10               *
+      *                 MMI136             Date 06Feb09               *
+      *                 MMI117             Date 21Jan05               *
+      *                 231005             Date 31Dec04               *
+      *                 MMI115             Date 23Mar04               *
+      *                 MMI108             Date 11Jul03               *
+      *                 216416             Date 31Mar03               *
+      *                 215253             Date 24Feb03               *
+      *                 MMI106             Date 21Feb03               *
+      *                 MMI096  *Rewrite   Date 16Sep02               *
+      *                 MMI091             Date 27Dec01               *
+      *                 MMI087             Date 23MAY01               *
+      *                 MMI080             Date 03Jan01               *
+      *                 MMI033  *CREATE    Date 29JUN99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Set up IFREF correctly                              *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011 - Recompiled             *
+      *  MMI138 - PUMA Changes March 2010    - Recompiled             *
+      *  MMI136 - PUMA Changes December 2008 - Recompiled             *
+      *  MMI117 - CR2005                     - Recompiled             *
+      *  231005 - Do not include forward loans.                       *
+      *  MMI115 - PUMA Changes March 2004 - Recompiled                *
+      *  MMI108 - PUMA Changes June 2003  - Recompiled                *
+      *  216416 - Swap fields 564 and 304 in work field ICGUTP.       *
+      *  215253 - Ignore matured loans.                               *
+      *  MMI106 - PUMA Changes January 2003  - Recompiled             *
+      *  MMI096 - Rewrite Guarantees extraction.                      *
+      *  MMI091 - PUMA Changes December 2001 - Recompiled             *
+      *  MMI087 - Importing fixes from Luxembourg version: reinsert   *
+      *           line for facilities where value (ICBVLR) <> 0       *
+      *  MMI080 - PUMA Changes December 2000 - Recompiled             *
+      *  MMI033 - Minerva Interface                                   *
+      *                                                               *
+      *****************************************************************
+     FERITTRPDIP  E                    DISK
+     FIRPUMAL0UF  E           K        DISK
+     FIRFCLTPDO   E                    DISK
+      *                                                                   215253
+     E/COPY ZSRSRC,ZDATE9Z1                                               215253
+      *                                                                   215253
+     IIRSTAT    E DSIRSTAT                                                215253
+      *                                                                   215253
+     I/COPY ZSRSRC,ZDATE9Z2                                               215253
+      *
+     IIFKEY       DS                             15
+     I                                        1   60IFKE01
+     I                                        7   90IFKE07
+     I                                       10  110IFKE10
+      *
+     IICORAP      DS                             35
+     I                                        1   4 ICOR01
+     I                                        6  20 ICOR06
+     I                                       18  20 ICOR18
+     I                                        6  18 #COR01                Cnum/Ccy/Acod (4)
+     I                                       25  26 #COR02                AcSq
+      *                                                                   215253
+      * Ignore Matured Loans                                              215253
+      * Ignore Forward Loans                                              231005
+      *                                                                   215253
+     C           ICOR01    IFEQ 'LECL'                                    215253
+     C           ICENDD    IFGT *ZERO                                     215253
+     C           ICENDD    ANDLEREPDAT                                    215253
+     C           ICUNAM    ANDEQ*ZERO                                     215253
+     C           ICSTRD    ORGT REPDAT                                    231005
+     C                     MOVE '000000'  ICFCUS                          215253
+     C                     ENDIF                                          215253
+     C                     ENDIF                                          215253
+      *
+     C           ICFCUS    IFNE '000000'
+     C           ICFACT    ANDNE0
+     C           ICFCNO    ANDNE0
+     C           ICBVLR    ANDNE0
+     C           ICOR01    ANDNE'FCLT'
+     C           ICOR18    ANDNE'REP'
+     C                     MOVE ICFCUS    IFKE01
+     C                     MOVE ICFACT    IFKE07
+     C                     MOVE ICFCNO    IFKE10
+      *
+     C           ICOR01    IFEQ 'GLAC'
+     C                     MOVEL#COR01    IFREF            Cnum/Ccy/Acod (4)
+     C                     MOVE #COR02    IFREF            AcSq
+     C                     ELSE
+     C                     MOVE ICOR06    IFREF
+     C                     ENDIF
+      *
+      * Write a reference record for each transaction covered by the
+      * Facility (but not for Guarantees received).
+      *
+     C           ICOR01    IFNE 'GUAR'
+     C                     WRITEIRFCLT
+     C                     ENDIF
+      *
+      * Update field 564 on Facility with corresponding field from
+      * first Real Guarantee
+      *
+     C           ICOR01    IFEQ 'GUAR'
+     C           ICGURP    ANDEQ1
+     C           IFKEY     CHAINIRPUMAL0             80
+     C           *IN80     IFEQ '0'
+     C           MK564     ANDEQ0
+     C***********          MOVELICGUTP    MK564                           216416
+     C                     MOVE ICGUTP    MK564                           216416
+     C                     UPDATIRPUMA
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*                                                                   215253
+     C           *INZSR    BEGSR                                          215253
+     C*                                                                   215253
+     C           *NAMVAR   DEFN           IRSTAT                          215253
+     C                     IN   IRSTAT                                    215253
+     C                     Z-ADDIREMD     @@DAYN  50                      215253
+     C                     EXSR ZDATE9                                    215253
+     C                     Z-ADD@@VDT     REPDAT  80                      215253
+     C*                                                                   215253
+     C                     ENDSR                                          215253
+      *                                                                   215253
+     I/COPY ZSRSRC,ZDATE9Z3                                               215253
+      *                                                                   215253
+     I/COPY ZSRSRC,ZDATE9Z4                                               215253

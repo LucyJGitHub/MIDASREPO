@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR950498           Date 13Apr12               *      
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. CER009             Date 16Nov20               *
+      *                 LUC116             Date 21Jan19               *
+      *                 AR950498           Date 13Apr12               *      
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -115,6 +118,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns Upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MP                               *
+      *  LUC116 - Facility Expiry and Last Availability Dates -       *
+      *             Until Further Notice                              *
+      *             Addition of hook LUC116_003                       *
+      *             Addition of hook LUC116_004                       *
       *  AR950498 - Facility availability should be zero if           *
       *             availability date passed.                         *
       *             If system value SetFcltyAvailToZero is 'Y' and    *
@@ -1026,6 +1035,28 @@
      C                     ELSE                                           CSD007
      C                     MOVE 'N'       CSD007                          CSD007
      C                     ENDIF                                          CSD007
+      *                                                                                       CER009
+      ** Verify if PUMA 2 upgrade is installed                                                CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+     C           PRTCD     IFNE *BLANKS                                                       CER009
+     C           PRTCD     ANDNE'*NRF   '                                                     CER009
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER009
+     C                     MOVEL'CER009'  DBKEY                                               CER009
+     C                     Z-ADD900       DBASE                                               CER009
+     C                     EXSR *PSSR                                                         CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                   147221
       ** Check condition for CER020                                                           CER020
       *                                                                                       CER020
@@ -1213,6 +1244,57 @@
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
      C                     MOVEL'LE0170'  #PGM                            S01241
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           *INKC     IFEQ *OFF                                                          CER009
+     C           *INKH     ANDEQ*OFF                                                          CER009
+     C           *INKL     ANDEQ*OFF                                                          CER009
+     C           *INKV     ANDEQ*OFF                                                          CER009
+     C           *INKW     ANDEQ*OFF                                                          CER009
+     C           *INKX     ANDEQ*OFF                                                          CER009
+     C           *IN76     ANDEQ*OFF                                                          CER009
+     C           *IN77     ANDEQ*OFF                                                          CER009
+      *                                                                                       CER009
+     C                     MOVE CUSTNO    WWCUST  6                                           CER009
+     C                     MOVE DFACT     WWFACT  30                                          CER009
+     C                     MOVE DFCNO     WWFCNO  20                                          CER009
+      *                                                                                       CER009
+     C                     CALL 'LE0172'                                                      CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM WWCUST    PFCUS   6                                           CER009
+     C                     PARM WWFACT    PFTYP   30                                          CER009
+     C                     PARM WWFCNO    PFNUM   20                                          CER009
+     C                     PARM FCCY      PCCY    3                                           CER009
+     C                     PARM           P@INKC  1                                           CER009
+     C                     PARM           P@INKL  1                                           CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+      *                                                                                       CER009
+     C           P@INKC    IFEQ 'Y'                                                           CER009
+     C                     MOVE *ON       *INKC                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           P@INKL    IFEQ 'Y'                                                           CER009
+     C                     MOVE 'N'       WRETRN                                              CER009
+     C                     GOTO BYP1                                                          CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+     C                     MOVE *ON       *INU7                                               CER009
+     C                     MOVE *ON       *INU8                                               CER009
+     C                     MOVEL'LE0172'  DBFILE                                              CER009
+     C                     MOVEL*BLANKS   DBKEY                                               CER009
+     C                     MOVE '901'     DBASE                                               CER009
+     C                     MOVE *ON       *INLR                                               CER009
+     C                     MOVE *ON       *INKC                                               CER009
+     C                     DUMP                                                               CER009
+     C                     GOTO FIN                                                           CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
      C*                                                                   S01241
      C***********BGL5ST    IFEQ 'Y'                                 S01241S01251
      C           BGWDPR    IFEQ 'Y'                                       S01251
@@ -2174,11 +2256,13 @@
 0544 C*********44          MOVE '       ' DATS,I                          CLE004
 0544 C         44          MOVE '       ' DAT,I                           CLE004
 0545 C         44          GOTO BYP3
+     C/COPY WNCPYSRC,LUC116_003
 0546 C***********          MOVE DAYS,I    ZDAYNO                          CLE004
 0546 C                     MOVE DAY,I     ZDAYNO                          CLE004
 0547 C                     EXSR ZDATE2
 0548 C***********          MOVE ZADATE    DATS,I                          CLE004
 0548 C                     MOVE ZADATE    DAT,I                           CLE004
+     C/COPY WNCPYSRC,LUC116_004
 0549 C           BYP3      TAG                             ** BYP3 TAG **
 0550 C           I         ADD  1         I
 0551 C********   I         COMP 8                      43                 S01270

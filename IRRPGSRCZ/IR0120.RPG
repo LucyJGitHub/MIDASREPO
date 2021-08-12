@@ -1,0 +1,528 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR FX Control Extract Report - Monthly')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas ABS - BOI Returns                                      *
+      *                                                               *
+      *  IR0120   - FX Control Extract Report - Monthly/Previous      *
+      *             months Postings by Causale Code with RRN          *
+      *                                                               *
+      *  Function:  This report shows all the accounting entries for  *
+      *             the current or previous month that have been      *
+      *             allocated a prestatie code with the relative      *
+      *             record number for reference.                      *
+      *                                                               *
+      *  (phase(s)) On request, during Input Cycle                    *
+      *                                                               *
+      *  Called By: IRC0120                                           *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. UIT021             Date 14FEB97               *
+      *  Prev Amend No.                    Date                       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  UIT021 - BOI Monthly Reporting                               *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  25 -  Monthly Postings                                       *
+      *  26 -  Previous Monthly Postings                              *
+      *                                                               *
+      *  30 -  Currency has 0 decimal places                          *
+      *  31 -  Currency has 1 decimal places                          *
+      *  32 -  Currency has 2 decimal places                          *
+      *  33 -  Currency has 3 decimal places                          *
+      *                                                               *
+      *  40 -  Debit Postings Amount                                  *
+      *  41 -  Credit Postings Amount                                 *
+      *                                                               *
+      *  80 -  End of Postings file                                   *
+      *                                                               *
+      *  LR -  End processing                                         *
+      *  U7 -  Data-base error control                                *
+      *  U8 -  Data-base error control                                *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  #UINIT -  Initial processing                                 *
+      *  #URCFA -  Register the AU Printer file via RCF               *
+      *  #URCFP -  Register the P1 Printer file via RCF               *
+      *  #UNCCY -  New Currency Processing                            *
+      *  #UDETL -  Set up indicators to condition output of current   *
+      *            month's or previous month's posting title and open *
+      *            the printer files                                  *
+      *  *PSSR  -  Error subroutine                                   *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      ***  Monthly Posting detail file                    Prefix 'IB'
+      *
+     FIRMPSTL6IF  E           K        DISK         KINFSR *PSSR
+      *
+     FIR0120P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL1
+     FIR0120AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ***  Local data area for database errors
+      *
+     IWLDA      E DSLDA                         256
+      *
+      ***  Data Area giving Installation Control Details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ***  Program data structure.
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      ***  DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ***  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  External DS for Currency Details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ***  File Information Data Structure - P1 report
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OVFLI1
+     I                                    B 367 3680PRTLI1
+      *
+      ***  File Information Data Structure - AU report
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Data structure for handling decimal places
+      *
+     I            DS
+     I                                        1  150AMTD
+     I                                        1  151AMTD1
+     I                                        1  152AMTD2
+     I                                        1  153AMTD3
+     I                                       16  300AMTC
+     I                                       16  301AMTC1
+     I                                       16  302AMTC2
+     I                                       16  303AMTC3
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ***  Initial subroutine
+      *
+     C                     EXSR #UINIT
+      *
+      ***  Loop until end of file
+      *
+     C           *IN80     DOWEQ'0'                           B1
+      *
+      ***  Change of branch
+      *
+     C           IBBRCA    IFNE WWBRCA                        B2
+     C                     MOVE IBBRCA    RBRCA               Branch code
+     C                     WRITEIR120P11
+     C                     MOVE IBBRCA    WWBRCA  3
+     C                     END                                E2
+      *
+      ***  Change of currency
+      *
+     C           IBCCY     IFNE WWCCY                         B2
+     C                     EXSR #UNCCY
+     C                     MOVE IBCCY     WWCCY   3
+     C                     END                                B2
+      *
+      ***  Decide if amount is Debit or Credit
+      *
+     C           IBDRCR    COMP 0                    41  40
+     C           *IN40     IFEQ '1'                           B2
+     C                     Z-ADDIBPSTA    AMTD                Debit Psoting
+     C                     ELSE                               X2
+     C                     Z-ADDIBPSTA    AMTC                Credit Posting
+     C                     END                                E2
+      *
+      ***  Check if retail.
+      *
+     C           IBATYP    IFEQ 'R'                           B2
+     C                     MOVE '(R)'     RATYP               Account type
+     C                     ELSE                               X2
+     C                     MOVE *BLANK    RATYP
+     C                     END                                E2
+      *
+      ***  Check if resident.
+      *
+     C           IBRENR    IFEQ 'R'                           B2
+     C                     MOVE 'Yes'     RRENR               Account type
+     C                     ELSE                               X2
+     C                     MOVE 'No '     RRENR
+     C                     END                                E2
+      *
+     C                     MOVE IBCCY     RCCY                Ccy code
+     C                     Z-ADDIBRRN     RRRN                Relative record nu
+     C                     MOVE IBCAUC    RCAUC               Causale code
+     C                     MOVELIBCNUM    RCNUM               Customer number
+     C                     Z-ADDIBACOD    RACOD               Account code
+     C                     Z-ADDIBACSQ    RACSQ               Account sequence
+     C                     MOVELIBPNAR    RPNAR               Posting Narrative
+      *
+      ***  Write report line
+      *
+     C                     EXSR #UCKOV
+     C                     WRITEIR120P12
+      *
+      ***  Read next record from file
+      *
+     C                     READ IRMPSTL6                 80
+      *
+     C           PENT      IFNE 'ALL'
+     C           *IN80     ANDEQ*OFF
+     C           IBBRCA    ANDEQPENT
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+      *
+     C                     ENDDO                              E1
+      *
+      ***  Print 'End of Report' and return to calling program
+      *
+     C           WWEND     IFEQ *BLANKS                       B1
+     C                     WRITEIR120P13
+     C                     END                                E1
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** #UCKOV -  CHECK FOR REPORT OVERFLOW                          *
+      ** -------                                                      *
+      **                                                              *
+      ** CALLED BY   MAIN                                             *
+      **                                                              *
+      *****************************************************************
+     C           #UCKOV    BEGSR
+      *
+     C                     Z-ADD3         #RQDLN  30
+     C                     Z-ADD0         #DIFLN  30
+      *
+      * Calculate number of available lines on current page
+      * (ie. difference between overflow line and current print line)
+      * If number of available lines is less than number of required
+      * lines, output headers
+      *
+     C           OVFLI1    SUB  PRTLI1    #DIFLN
+      *
+     C           #DIFLN    IFLT #RQDLN                        B1
+     C                     WRITEIR120P11
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #UNCCY - NEW CURRENCY PROCESSING       7                     *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : Main Processing                                  *
+      *                                                               *
+      *  CALLS     : *PSSR    - Error Handling Subroutine             *
+      *              AOCURRR0 - Pgm to access Currency Details file   *
+      *****************************************************************
+     C           #UNCCY    BEGSR
+      *
+      ***  Access Currency Details file for currency decimal places
+      ***  and set indicators to output amounts
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM IBCCY     @KEY2   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B2
+     C                     Z-ADD1         WWBASE           ****************
+     C                     MOVEL'SDCURRPD'WWBFIL           * DB ERROR 001 *
+     C                     MOVELIBCCY     WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     Z-ADD0         Z       30
+     C                     MOVEA'0000'    *IN,30
+     C           A6NBDP    ADD  30        Z
+     C                     MOVE '1'       *IN,Z
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UDETL - SET UP INDICATORS TO CONDITION OUTPUT OF CURRENT    *
+      *  _______  MONTH'S OR PREVIOUS MONTH'S POSTING TITLE           *
+      *                                                               *
+      *  CALLED BY : #UINIT - Initial processing                      *
+      *              *PSSR                                            *
+      *****************************************************************
+     C           #UDETL    BEGSR
+      *
+      ***  Current month's report
+      *
+     C           RPTTYP    IFEQ 'M'
+     C                     MOVE '1'       *IN25
+     C                     END
+      *
+      ***  Previous month's report
+      *
+     C           RPTTYP    IFEQ 'P'
+     C                     MOVE '1'       *IN26
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UINIT - Initial processing                                  *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : Main processing                                  *
+      *                                                               *
+      *  CALLS       *PSSR    - Error Handling Subroutine             *
+      *              AOBANKR0 - Pgm to access Bank details file       *
+      *****************************************************************
+     C           #UINIT    BEGSR
+      *
+      ***  Receive parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RPTTYP  1
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ***  Define keys
+     C           *LIKE     DEFN IBBRCA    KBRCA
+     C           *LIKE     DEFN IBCAUC    KCAUC
+     C           *LIKE     DEFN IBCCY     KCCY
+     C           *LIKE     DEFN IBRRN     KRRN
+      *
+     C           KRMP      KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCAUC
+     C                     KFLD           KCCY
+     C                     KFLD           KRRN
+      *
+      ***  Set up keys according to RCF parameters (branch)
+     C                     MOVE *LOVAL    KBRCA
+     C                     MOVE *LOVAL    KCCY
+     C                     MOVE *LOVAL    KCAUC
+     C                     MOVE *LOVAL    KRRN
+     C           PENT      IFNE 'ALL'
+     C                     MOVE PENT      KBRCA
+     C                     END
+      *
+      ***  Redefine data error fields
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ***  Access Bank details via access program
+      ***  (database error handling done in access program)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      *** Ensure audit report is recorded by RCF
+      *
+     C                     MOVE *BLANKS   WRCFAU  1
+     C                     EXSR #URCFA
+      *
+      ***  Clear Work fields
+      *
+     C                     Z-ADD0         AMTD
+     C                     Z-ADD0         AMTC
+     C                     MOVE *BLANKS   WWEND   1
+      *
+      ***  Set up indicators to condition output of current month's
+      ***  or previous month's postings title
+     C                     EXSR #UDETL
+      *
+      ***  Read first record from postings files
+      *
+     C           KRMP      SETLLIRMPSTL6
+      *
+     C                     READ IRMPSTL6                 80
+      *
+     C           PENT      IFNE 'ALL'
+     C           *IN80     ANDEQ*OFF
+     C           IBBRCA    ANDNEPENT
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+      *
+      ***  If no records exist, print header and 'No Details to Report'
+      *
+     C           *IN80     IFEQ '1'                           B1
+     C                     MOVE 'N'       WWEND
+     C                     WRITEHEADAU
+     C                     WRITENORCDS
+     C                     ELSE
+      *
+      ***  Ensure report spool file is recorded by RCF
+      *
+     C                     EXSR #URCFP
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #URCFP - Register the Px Printer file via RCF                *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UINIT                                           *
+      *                                                               *
+      *  CALLS     : ZSFILE                                           *
+      *****************************************************************
+     C           #URCFP    BEGSR
+      *
+      ***  Ensure report spool file recorded by RCF
+      *
+     C                     OPEN IR0120P1
+     C                     Z-ADDSFNUM1    WSNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           WSNUM1
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'                           B1
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #URCFA - Register the AU Printer file via RCF                *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UINIT, *PSSR                                    *
+      *                                                               *
+      *  CALLS     : ZSFILE                                           *
+      *****************************************************************
+     C           #URCFA    BEGSR
+      *
+      ***  Ensure audit report is recorded by RCF
+      *
+     C           WRCFAU    IFNE 'Y'                           B1
+     C                     MOVE 'Y'       WRCFAU
+      *
+     C                     Z-ADDSFNUMU    WSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           WSNUMU
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+     C           ZSERR     IFEQ 'Y'                           B2
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                                E2
+      *
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           WWBASE    IFEQ *ZERO                         B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+      *
+      ***  Set up indicators to condition output of current month's
+      ***  or previous month's postings title
+      *
+     C                     EXSR #UDETL
+      *
+     C                     END                                E1
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+      ***  Print header and error message
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+      ***  Ensure audit report is recorded by RCF
+      *
+     C                     EXSR #URCFA
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

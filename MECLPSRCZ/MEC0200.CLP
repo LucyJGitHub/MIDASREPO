@@ -9,12 +9,15 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD031937           Date 13Jan15              */
+/*       Prev Amend No. AR856737           Date 13Sep11              */
+/*                      EEE065             Date 01Oct2004            */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 10Aug04              */
+/*                      228542             Date 10Aug04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      183583             Date 27Jun01              */
@@ -33,6 +36,11 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       EEE065 - Free Fmt Messages: user who created/generated the  */
+/*                msg should not be able to release the same message */
+/*                Used /COPY  MEC0200002 and MEC0200004              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       183583 - Add processing for extension file backup.          */

@@ -1,0 +1,582 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Stamp Duty Codes Subfile Maintenance')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas    - Retail Module                                     *
+      *                                                               *
+      ***REM001S  - Stamp Duty Codes Subfile Maintenance              *   LUC140
+      *  XX1401S  - Stamp Duty Codes Subfile Maintenance              *   LUC140
+      *             (Enquiry Only)                                    *
+      *                                                               *
+      *  Function:  To display Stamp Duty Codes using subfile display *
+      *   (I/C)     'A'amend  'D'elete  'E'nquiry and  F9 to add new  *
+      *             Stamp codes.                                      *
+      *                                                               *
+      *  Called By: Main menu                                         *
+      *                                                               *
+      *  Calls    : AOCURRR0 - Currency Codes Access Object           *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC140             Date 24Feb21               *
+      *  Prev Amend No. MMI013 *CREATE     Date 23Mar98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *  MMI013 - Retail Stamp Duty and Account Changes               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  -  First-time loop.                                     *
+      *   03  -  F3  KEY - Exit program.                              *
+      *   05  -  F5  KEY - Refresh.                                   *
+      *   09  -  F9  Add mode.                                        *
+      *   12  -  F12 KEY - Previous screen.                           *
+      *   40  -  General error field indicator.                       *
+      *   50  -  Error Message Subfile end.                           *
+      *   70  -  Subfile Display Control Indicator (Message Subfile)  *
+      *   71  -  Subfile End Indicator                                *
+      *   80  -  Subfile Display Control Indicator                    *
+      *   81  -  Subfile End Indicator                                *
+      * U7+U8 -  Database Error                                       *
+      *   LR  -  Last record                                          *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #MINIT - Initialise program.                                 *
+      *  #MMAIN - Main Processing.                                    *
+      *  #MLOAD - Load records into subfile.                          *
+      *  #MCHEK - Check if there is any record in subfile.            *
+      *  #MCLER - Clear the message file.                             *
+      *  #MFORM - Format yearly amount.                               *
+      *  #MREFS - Blank out all subfile record selections             *
+      *  #MPROC - Process subfile selections                          *
+      *  #MEXIT - End processing .                                    *
+      *  ZASNMS - Send message to the program message queue.          *
+      *  *PSSR  - Error processing subroutine                         *
+      *  *INZSR - Auto program initialisation                         *
+      *                                                               *
+      *****************************************************************
+     F*
+     F**********REM001SDCF  E                    WORKSTN                  LUC140
+     FXX1401SDCF  E                    WORKSTN                            LUC140
+     F                                        RRN   KSFILE REM001S2
+      ** Stamp Duty Code Subfile Display
+      *
+     F**********RESDCDV0IF  E           K        DISK                     LUC140
+     FXXSDCDV0IF  E           K        DISK                               LUC140
+      ** Stamp Duty Code File
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      ** Copyright Array
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      ** Copyright array
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for Access Programs
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     IRUNDT       DS
+      ** Data Area Rundat
+      *
+     I                                        1   7 RUNA
+     I                                        3   5 UMONH
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ISDCURR    E DSSDCURRPD
+      **  External data structures for Currency Details
+      *
+     I/EJECT
+     C/TITLE Main Processing
+      *================================================================
+      *  M A I N L I N E  -  P R O G R A M   S T A R T                *
+      *================================================================
+      *
+      ** Program Initialisation
+      *
+     C                     EXSR #MINIT
+      *
+      ** Mainline Processing
+      *
+     C                     EXSR #MMAIN
+      *
+      ** Exit Program
+      *
+     C                     EXSR #MEXIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/TITLE SR/#MINIT
+      *****************************************************************
+      *                                                               *
+      *  #MINIT - Initialise program.                                 *
+      *                                                               *
+      *  Called By: Mainline Processing                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MINIT    BEGSR
+      *
+      ** Only do first time through
+      *
+     C           *IN01     IFEQ *OFF
+      *
+      ** Move the copyright array.
+      *
+     C                     MOVELCPY@,1    COPY   80
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'REM001D' DBPGM                           LUC140
+     C                     MOVEL'XX1401D' DBPGM                           LUC140
+     C                     OUT  LDA
+      *
+      ** Get run date from data area
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Define message file name
+      *
+     C                     MOVEL'ITUSRMSG'ZAMSGF
+      *
+     C                     MOVE *ON       *IN01
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/#MMAIN
+      *****************************************************************
+      *                                                               *
+      *  #MMAIN - Main screen processing                              *
+      *                                                               *
+      *  Called By: Mainline Processing                               *
+      *  Calls: #MLOAD , #MCHEK , #MREFS , #MPROC                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MMAIN    BEGSR
+      *
+      ** Loop until F3 or F12is pressed
+      *
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+      *
+      ** Clear subfile
+      *
+     C                     Z-ADD0         RRN
+     C                     SETON                     80
+     C                     WRITEREM001C2
+     C                     SETOF                     80
+      *
+      ** If SDC Code code has been entered , set file pointer
+      *
+     C           SMSDC2    IFNE *BLANKS
+     C           *LOVAL    SETLLRESDCDPP
+     C           SMSDC2    SETLLRESDCDPP
+     C                     ELSE
+     C           *LOVAL    SETLLRESDCDPP
+     C                     ENDIF
+      *
+      ** Load Subfile
+      *
+     C                     EXSR #MLOAD
+      *
+      ** Display Command Line
+      *
+     C                     WRITEREM001F1
+      *
+      ** Check any records loaded into subfile
+      *
+     C                     EXSR #MCHEK
+      *
+      ** Display Subfile
+      *
+     C                     Z-ADD1         RRN
+     C                     EXFMTREM001C2
+      *
+      ** If F5 is pressed , refresh subfile records selections
+      *
+     C           *INKE     IFEQ *ON
+     C                     EXSR #MFRES
+     C                     ENDIF
+      *
+      ** Process subfile selection
+      *
+     C                     EXSR #MPROC
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#MLOAD
+      *****************************************************************
+      *                                                               *
+      *  #MLOAD - Load records into subfile                           *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls: #MFORM                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MLOAD    BEGSR
+      *
+      ** Load subfile
+      *
+     C                     DO   *HIVAL
+     C                     ADD  1         RRN
+     C*********            READ RESDCDV0                 81               LUC140
+     C                     READ XXSDCDV0                 81               LUC140
+     C           *IN81     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+     C                     MOVE MSDC      SMSDC1
+     C                     MOVE MDESC     SDESC1
+     C                     MOVE MCYCD     SCYCD1
+     C                     EXSR #MFORM
+     C                     WRITEREM001S2
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#MFORM
+      *****************************************************************
+      *                                                               *
+      *  #MFORM - Format yearly amount                                *
+      *                                                               *
+      *  Called By: #MLOAD                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MFORM    BEGSR
+      *
+      *
+      ** Get the number of decimal places for the yearly amount
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM MCYCD     PTCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELMCYCD     DBKEY            ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Format Yearly Amount
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE MYAMT     ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SYAMT1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#MCHEK
+      *****************************************************************
+      *                                                               *
+      *  #MCHEK - Check any record in subfile                         *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls: #MCLER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MCHEK    BEGSR
+      *
+      ** If no subfile record to display , display notify message
+      ** and write one blank subfile record
+      *
+     C                     MOVE *OFF      *IN40
+     C           RRN       IFLE 0
+     C                     MOVE *ON       *IN40
+     C                     MOVEL'XXX0013' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     Z-ADD1         RRN
+     C                     CLEARSMSDC1
+     C                     CLEARSDESC1
+     C                     CLEARSCYCD1
+     C                     CLEARSYAMT1
+     C                     WRITEREM001S2
+     C                     ENDIF
+      *
+      ** If no subfile record to display , display notify message
+      ** else error message queue
+      *
+     C           *IN40     IFEQ *ON
+     C                     WRITEREM001S1
+     C                     ELSE
+     C                     EXSR #MCLER
+     C                     WRITEREM001S1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REFRES
+      *****************************************************************
+      *                                                               *
+      *  #MFRES - Refresh all subfile records selections              *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MFRES    BEGSR
+      *
+      ** Blank out all previous subfile record selections
+      *
+     C                     DO   *HIVAL
+      *
+     C                     READCREM001S2                 80
+      *
+     C           *IN80     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    SSEL1
+     C                     UPDATREM001S2
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#MPROC
+      *****************************************************************
+      *                                                               *
+      *  #MPROC - Process Subfile Selections                          *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MPROC    BEGSR
+      *
+      ** If F3 has not been pressed
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     DO   *HIVAL
+      *
+     C                     READCREM001S2                 80
+     C           *IN80     IFEQ *ON
+     C           *IN03     OREQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** Stamp Duty Code Enquiry
+      *
+     C           SSEL1     IFEQ 'E'
+     C*********            CALL 'REM001E'                                 LUC140
+     C                     CALL 'XX1401E'                                 LUC140
+     C                     PARM SMSDC1    PSDC    2
+     C                     PARM ' '       PACTD   1
+     C                     PARM ' '       PRCMD   1
+     C           PRCMD     IFEQ 'E'
+     C                     MOVEL'Y2U9999' P0RTN
+     C                     MOVE *ON       *IN03
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update subfile record
+      *
+     C                     MOVE *BLANK    SSEL1
+     C                     UPDATREM001S2
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#MCLER
+      *****************************************************************
+      *                                                               *
+      *  #MCLER - Clear the message file.                             *
+      *                                                               *
+      *  Called By: #MCHEK                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MCLER    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     SETOF                     40
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZASNMS
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send message to the program message queue.          *
+      *                                                               *
+      *  Called By: #MCHEK                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#MEXIT
+      *****************************************************************
+      *                                                               *
+      *  #MEXIT - End processing .                                    *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MEXIT    BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      /TITLE SR/*INZSR
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Auto Program Initialisation                         *
+      *                                                               *
+      *  Called By: Program                                           *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Receive parameters from Calling Program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           UP0001  1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+      ** Right-align the amount
+      *
+     C/COPY ZSRSRC,ZEDITZ2
+      ** Format the amount based on the number of decimal places
+      *
+      /EJECT
+      ****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(C) Copyright Midas-Kapiti International Ltd. 1998

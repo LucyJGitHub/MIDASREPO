@@ -32,8 +32,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057294           Date 03Dec20               *
-      *  Prev Amend No. MD050526           Date 27Oct20               *
+      *  Last Amend No. MD058097           Date 23Apr21               *
+      *  Prev Amend No. LUC139             Date 23Dec20               *
+      *                 BUG14313           Date 21Oct20               *
+      *                 MD057294           Date 03Dec20               *
+      *                 MD050526           Date 27Oct20               *
       *                 AR970389B          Date 16Sep20               *
       *                 AR970389A          Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -158,6 +161,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058097 - Hot fix CUSD Insert check                         *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1                *
+      *  BUG14313 - Italian Enhancement and API ECM Clash on Customer *
+      *             Details API                                       *
+      *             CER009 - Puma II                                  *
+      *             CER008 - Base Italian Features                    *
       *  MD057294 - Missing Customer's Authority Holders Link after   *
       *             amend                                             *
       *  MD050526 - Maintain Customers tab Authority Holders Link and *
@@ -573,6 +582,10 @@
      D                                     PREFIX(CR)                                         CGL157
      D TransCRSD     E DS                  EXTNAME(SDCRSSPD)                                  CGL157
      D                                     PREFIX(CS)                                         CGL157
+     D TranInIt1     E DS                  EXTNAME (SDCUS1PD)                                 LUC139
+     D                                     PREFIX(I1)                                         LUC139
+     D TranInIt2     E DS                  EXTNAME (SDCUS2PD)                                 LUC139
+     D                                     PREFIX(I2)                                         LUC139
 
       * Valid Customer layout
      D ValidCusd     E DS                  EXTNAME(SDVCUSDPD)
@@ -663,6 +676,14 @@
       ** Valid Currency/Time of Netting Details file                                       AR1086546
      D ValidCtnm     E DS                  EXTNAME (SDVCTNMPD)                             AR1086546
      D                                     PREFIX (V_)                                     AR1086546
+      ** Valid Italian Details file                                                         BUG14313
+     D ValidCuIt1    E DS                  EXTNAME(SDCUT1PD)                                BUG14313
+     D                                     PREFIX(V_)                                       BUG14313
+                                                                                            BUG14313
+      ** Valid PUMA Details file                                                            BUG14313
+     D ValidCuIt2    E DS                  EXTNAME(SDCUT2PD)                                BUG14313
+     D                                     PREFIX(V_)                                       BUG14313
+                                                                                            BUG14313
       * (Current) Customer record in file Format
      D CustFilFmt    E DS                  EXTNAME(SDCUSTPD)
       * Current Customer - SWIFT Details  in File Format                                      CSW207
@@ -797,6 +818,10 @@
      D                                     PREFIX (W@)                                        CGL157
      D CurCuCRSD     E DS                  EXTNAME (SDCRDDPD)                                 CGL157
      D                                     PREFIX (W@)                                        CGL157
+     D CurCuIt1      E DS                  EXTNAME (SDCUS1PD)                                 LUC139
+     D                                     PREFIX (I1@)                                       LUC139
+     D CurCuIt2      E DS                  EXTNAME (SDCUS2PD)                                 LUC139
+     D                                     PREFIX (I2@)                                       LUC139     
                                                                                               CSD079
       ** (Current) Customer in Screen Format - Service Fees                                   CSD079
      D CurCuSfee     E DS                  EXTNAME (SDSFEEPD)                                 CSD079
@@ -851,6 +876,14 @@
      D GCustFilFmt   E DS                  EXTNAME(GPCUSTXPD)                                 222373
       ** Current Customer in Screen Format - MT3xx BEI Details                                222373
      D CuMT3X        E DS                  EXTNAME(SDCUMTPD)                                  222373
+                                                                                            BUG14313
+      ** (Current) Italian Features in File Format                                          BUG14313
+     D CuIt1FilFmt   E DS                  EXTNAME(SDCUT1PD)                                BUG14313
+     D                                     PREFIX(F_)                                       BUG14313
+                                                                                            BUG14313
+      ** (Current) PUMA Details in File Format                                              BUG14313
+     D CuIt2FilFmt   E DS                  EXTNAME(SDCUT2PD)                                BUG14313
+     D                                     PREFIX(F_)                                         LUC139
 
      D ExtData       E DS                  EXTNAME(SDCUEXPD)
       * SD Customer details Extra Data - File (D/B) format
@@ -908,6 +941,8 @@
      D T_DDACTNOK    E                     EXTFLD(DDACTNOK)                                AR1086546
      D T_DDCUSTOK    E                     EXTFLD(DDCUSTOK)                                AR1086546
      D T_DDNTCPOK    E                     EXTFLD(DDNTCPOK)                                AR1086546
+     D OKCuIt1       E DS                  EXTNAME(SDECUIT1PD)                              BUG14313
+     D OKCuIt2       E DS                  EXTNAME(SDECUIT2PD)                              BUG14313
 
      D RUNDAT        E DS            13                                                       CSD079
      D RDLUP                   1      2  0                                                    CSD079
@@ -972,6 +1007,8 @@
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
+     D  TransIt1               1      1                                                       LUC139
+     D  TransIt2               2    175                                                       LUC139
                                                                                               CSW213
      D TransInEx4      DS          9999                                                       CSW213
      D  TransCUAH                          LIKE(TranInCUAH)                                   CSW213
@@ -991,6 +1028,8 @@
      D  CCDDCUSN     E                     EXTFLD(DDCUSN)                                     CGL157
      D  CCDDSTYP     E                     EXTFLD(DDSTYP)                                     CGL157
      D SDCRDD        E DS                  EXTNAME(SDCRDDPD)                                  CGL157
+     D SDCUS1        E DS                  EXTNAME(SDCUS1PD)                                  LUC139
+     D SDCUS2        E DS                  EXTNAME(SDCUS2PD)                                  LUC139
       ** Customer dtls Bank directory details                                                 CSW213
      D/COPY WNCPYSRC,SDH00575
                                                                                               CSD079
@@ -1100,6 +1139,8 @@
      D RepCurx         S              1A   inz('N')                                           CSD079
      D RepCrsh         S              1A   inz('N')                                           CGL157
      D RepCrsd         S              1A   inz('N')                                           CGL157
+     D RepIt1          S              1A   inz('N')                                           LUC139
+     D RepIt2          S              1A   inz('N')                                           LUC139
 
      D DBerrUpd        C                   CONST('DB error in CUSD API update')
                                                                                               222373
@@ -1139,6 +1180,8 @@
      D ULX008          S              1A   inz('N')                                           CSD079
      D ULX012          S              1A   inz('N')                                           CSD079
      D ULX609          S              1A   inz('N')                                           CSD079
+     D CER008          S              1A   Inz('N')                                         BUG14313
+     D CER009          S              1A   Inz('N')                                         BUG14313
      D CSW207          S              1A                                                    BUG14992
      D CSD021          S              1A   inz('N')                                         BUG16705
      D CDL025          S              1A   inz('N')                                        AR1086546
@@ -1186,7 +1229,8 @@
      D***FillerBufEx2    S           5590A                                         MD054028 MD055446
      D***FillerBufEx2    S           5580A                                         MD055446 MD055373
      D FillerBufEx2    S           5560A                                                    MD055373
-     D FillerBufEx3    S           9999A                                                      CSW213
+     D*FillerBufEx3    S           9999A                                               CSW213 LUC139
+     D FillerBufEx3    S           9824A                                                      LUC139
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
      D FillerBufEx4    S           6039A                                                    MD044880
@@ -1307,6 +1351,8 @@
      C                   EVAL      ExtData    = TransCUEX                                   MD044880
      C                   EVAL      TranInCRSS = TransCRSS                                     CGL157
      C                   EVAL      TranInCRDD = TransCRSD1 + TransCRSD2                       CGL157
+     C                   EVAL      TranInIt1  = TransIt1                                      LUC139
+     C                   EVAL      TranInIt2  = TransIt2                                      LUC139     
      C                   IF        CER050 = 'Y'                                             MD054028
      C                   EVAL      DDAPRC = TransCR50                                       MD054028
      C                   ENDIF                                                              MD054028
@@ -1468,6 +1514,18 @@
      C                   EVAL      RepCrsd = 'Y'                                              CGL157
      C                   ENDIF                                                                CGL157
      C                   EndIf                                                                CSD079
+     C                   If        CER008 = 'Y'                                               LUC139
+     C     GHSUBS        Scan      TranInIt1                              99                  LUC139
+     C                   If        *in99                                                      LUC139
+     C                   Eval      RepIt1  = 'Y'                                              LUC139
+     C                   EndIf                                                                LUC139
+     C                   EndIf                                                                LUC139
+     C                   If        CER009 = 'Y'                                               LUC139
+     C     GHSUBS        Scan      TranInIt2                              99                  LUC139
+     C                   If        *in99                                                      LUC139
+     C                   Eval      RepIt2  = 'Y'                                              LUC139
+     C                   EndIf                                                                LUC139
+     C                   EndIf                                                                LUC139
 
       ** If any of the flags set above is true, do the data
       ** substution subroutine.
@@ -1487,6 +1545,11 @@
      C                              RepCrsh = 'Y' OR RepCrsd = 'Y' OR                         CGL157
      C                              RepCufd = 'Y' OR RepCurx = 'Y' )                          CSD079
      C                   EXSR      DtaSubs                                                    CSD079
+     C                   else                                                                 LUC139
+     C                   if        (CER008 = 'Y' AND RepIt1  = 'Y')                           LUC139
+     C                             or (CER009 = 'Y' and RepIt2  = 'Y')                        LUC139
+     C                   EXSR      DtaSubs                                                    LUC139
+     C                   endif                                                                LUC139
      C                   endif                                                                CSD079
      C                   endif
 
@@ -1610,7 +1673,9 @@
      C                                       + TransUser                                    MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
-     C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
+     C**********         EVAL      BufferEx3 = FillerBufEx3                            CSW213 LUC139
+     C                   EVAL      BufferEx3 = TranInIt1 + TranInIt2                          LUC139
+     C                                       + FillerBufEx3                                   LUC139
                                                                                               CSW213
      C                   EVAL      BufferEx4 = TranInCUAH                                     CSW213
      C                                       + TranInCCTX                                     CSW213
@@ -1733,6 +1798,8 @@
      C                   PARM                    TranInPrim                                   CSW213
      C                   PARM                    TranInSeCo                                   CSW213
      C                   PARM                    TranInMT3X                                   CSW213
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+     C                   PARM                    CuIt2FilFmt                                BUG14313
       *
       * OK - Action code
      C                   PARM                    DDActnOK          1
@@ -1808,6 +1875,8 @@
      C                   MOVEL     CuFaFilFmt    ValidFTCS                                    CGL132
      C                   MOVEL     CuCrFilFmt    ValidCRSH                                    CGL157
      C                   MOVEL     CuCdFilFmt    ValidCRSD                                    CGL157
+     C                   MOVEL     CuIt1FilFmt   ValidCuIt1                                 BUG14313
+     C                   MOVEL     CuIt2FilFmt   ValidCuIt2                                 BUG14313
 
       * For Amends, convert the Customer to screen format
       *                                                                                     MD054028
@@ -1840,6 +1909,8 @@
      C                   PARM                    ValidCulx2                                   CSD079
      C                   PARM                    ValidCulx1                                   CSD079
      C                   PARM                    ValidCtnm                                 AR1086546
+     C                   PARM                    ValidCuIt1                                 BUG14313
+     C                   PARM                    ValidCuIt2                                 BUG14313
       ** Global Customer X-Reference                                                          222373
      C                   PARM                    GCustFilFmt                                  222373
      C                   PARM                    ValidSwft                                    CSW207
@@ -1886,6 +1957,8 @@
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
      C                   PARM                    CurCuBrTCent                               MD055446
+     C                   PARM                    CurCuIt1                                     LUC139
+     C                   PARM                    CurCuIt2                                     LUC139
 
      C                   MOVE      DDAPRC        ADDDAPRC          1                        MD054028
       ** Customer Details
@@ -2478,6 +2551,28 @@
 
      C/COPY WNCPYSRC,SDCUSDVU01
 
+      ** Validate Italian Details                                                           BUG14313
+                                                                                            BUG14313
+     C                   IF        CER008 = 'Y'                                             BUG14313
+     C**********                   AND TranInIt1 <> *BLANKS                          LUC139 MD058097
+     C                   EXSR      SRValdCuIt1                                              BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        Idx <> 0                                                 BUG14313
+     C                   LEAVESR                                                            BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Validate PUMA Details                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        CER009 = 'Y'                                             BUG14313
+     C**********                   AND TranInIt2  <> *BLANKS                         LUC139 MD058097
+     C                   EXSR      SRValdCuIt2                                              BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        Idx <> 0                                                 BUG14313
+     C                   LEAVESR                                                            BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -2928,6 +3023,8 @@
      C                   PARM                    CueuFilFmt                                   CSD079
      C                   PARM                    CuibfFilFmt                                  CSD079
      C                   PARM                    CtnmFilFmt                                AR1086546
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+     C                   PARM                    CuIt2FilFmt                                BUG14313
       ** Global Customer X-Reference                                                          222373
      C                   PARM                    GCustFilFmt                                  222373
      C                   PARM                    SwftFilFmt                                   CSW207
@@ -2973,6 +3070,8 @@
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
      C                   PARM                    CurCuBrTCent                               MD055446
+     C                   PARM                    CurCuIt1                                     LUC139
+     C                   PARM                    CurCuIt2                                     LUC139
 
      C                   MOVE      DDAPRC        ADDDAPRC                                   MD054028
       ** Substitute the data for the various parts of the transaction,
@@ -3524,6 +3623,38 @@
      C                   MOVEL     IncDATA       TranInCrdd                                   CGL157
      C                   ENDIF                                                                CGL157
      C                   endif                                                                CSD079
+     C                   If        CER008  = 'Y' and                                          LUC139
+     C                             RepIt1  = 'Y'                                              LUC139
+     C                   clear                   IncData                                      LUC139
+     C                   clear                   CurData                                      LUC139
+     C                   RESET                   ReturnCode                                   LUC139
+     C                   CALLB     'APDTASUBS'                                                LUC139
+      ** Return Code                                                                          LUC139
+     C                   PARM                    ReturnCode                                   LUC139
+      ** Substitution character                                                               LUC139
+     C                   PARM                    GHSUBS                                       LUC139
+      ** Incoming Data                                                                        LUC139
+     C                   PARM      TranInIt1     IncData                                      LUC139
+      ** Current Data                                                                         LUC139
+     C                   PARM      CurCuIt1      CurData                                      LUC139
+     C                   MOVEL     IncDATA       TranInIt1                                    LUC139
+     C                   Endif                                                                LUC139
+     C                   If        CER009  = 'Y' and                                          LUC139
+     C                             RepIt2  = 'Y'                                              LUC139
+     C                   clear                   IncData                                      LUC139
+     C                   clear                   CurData                                      LUC139
+     C                   RESET                   ReturnCode                                   LUC139
+     C                   CALLB     'APDTASUBS'                                                LUC139
+      ** Return Code                                                                          LUC139
+     C                   PARM                    ReturnCode                                   LUC139
+      ** Substitution character                                                               LUC139
+     C                   PARM                    GHSUBS                                       LUC139
+      ** Incoming Data                                                                        LUC139
+     C                   PARM      TranInIt2     IncData                                      LUC139
+      ** Current Data                                                                         LUC139
+     C                   PARM      CurCuIt2      CurData                                      LUC139
+     C                   MOVEL     IncDATA       TranInIt2                                    LUC139
+     C                   Endif                                                                LUC139
 
      C                   endsr
 
@@ -3768,6 +3899,8 @@
      C                   CLEAR                   CurCuCRSH                                    CGL157
      C                   CLEAR                   CurCuCRSD                                    CGL157
      C                   CLEAR                   CurCuBrTCent                               MD055446
+     C                   CLEAR                   CurCuIt1                                     LUC139
+     C                   CLEAR                   CurCuIt2                                     LUC139     
 
      C                   MOVE      *ALL'Y'       OKCuPrim
      C                   MOVE      *ALL'Y'       OKCuSeco
@@ -3797,6 +3930,8 @@
      C                   MOVE      *ALL'Y'       OKCuFtcs                                     CGL132
      C                   MOVE      *ALL'Y'       OKCRSHDets                                   CGL157
      C                   MOVE      *ALL'Y'       OKCRSCtry                                    CGL157
+     C                   MOVE      *ALL'Y'       OKCuIt1                                    BUG14313
+     C                   MOVE      *ALL'Y'       OKCuIt2                                    BUG14313
 
      C                   CLEAR                   ValidCusd
      C                   CLEAR                   ValidCuBr
@@ -3818,6 +3953,8 @@
      C                   CLEAR                   ValidFTCS                                    CGL132
      C                   CLEAR                   ValidCRSH                                    CGL157
      C                   CLEAR                   ValidCRSD                                    CGL157
+     C                   CLEAR                   ValidCuIt1                                 BUG14313
+     C                   CLEAR                   ValidCuIt2                                 BUG14313
 
       * Reset packed fields of Private Banking Details                                      BUG14161
      C                   Z-ADD     0             V_PBPBST                                   BUG14161
@@ -4560,6 +4697,8 @@
      C                   PARM                    ValidFTCS                                    CGL132
      C                   PARM                    ValidCRSH                                    CGL157
      C                   PARM                    PCrsdF                                       CGL157
+     C                   PARM                    ValidCuIt1                                 BUG14313
+     C                   PARM                    ValidCuIt2                                 BUG14313
       * Base Rate Auth req                                                                    222373
      C                   PARM                    AUTHRQ            1                          222373
       * Authorisation Mode                                                                    222373
@@ -6252,6 +6391,90 @@
      C                   ENDSR                                                                CER059
       *****************************************************************                       CER059
       /EJECT                                                                                  CER059
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      * SRVALDCUIT1 - Validate Italian Details                        *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SrValdCuIt1   BEGSR                                                              BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'SDCUS11VL'                                              BUG14313
+     C**********         PARM                    ValidCusd                         BUG14313 MD058097
+     C                   PARM                    PData                                      MD058097
+     C                   PARM                    TranInIt1                                  BUG14313
+     C                   PARM                    OKCuIt1                                    BUG14313
+                                                                                            BUG14313
+      ** Error fields/message IDs/message data (arrays) from/to caller                      BUG14313
+                                                                                            BUG14313
+     C                   PARM                    FldNameArr                                 BUG14313
+     C                   PARM                    MsgIdArr                                   BUG14313
+     C                   PARM                    MsgDtaArr                                  BUG14313
+                                                                                            BUG14313
+      ** Array index (3P0) from/to caller                                                   BUG14313
+                                                                                            BUG14313
+     C                   PARM                    Idx                                        BUG14313
+                                                                                            BUG14313
+      ** Warning fields/message IDs/message data (arrays) from/to                           BUG14313
+      ** caller                                                                             BUG14313
+                                                                                            BUG14313
+     C                   PARM                    WFldNamArr                                 BUG14313
+     C                   PARM                    WMsgIDArr                                  BUG14313
+     C                   PARM                    WMsgDtaArr                                 BUG14313
+                                                                                            BUG14313
+      ** Array index (3P0) from/to caller                                                   BUG14313
+                                                                                            BUG14313
+     C                   PARM                    WIdx                                       BUG14313
+                                                                                            BUG14313
+      ** Valid Italian Details (DS) from/to caller                                          BUG14313
+                                                                                            BUG14313
+     C                   PARM                    ValidCuIt1                                 BUG14313
+                                                                                            BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      * SRVALDCUIT2 - Validate Puma Details                           *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SrValdCuIt2   BEGSR                                                              BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'SDCUS12VL'                                              BUG14313
+     C**********         PARM                    ValidCusd                         BUG14313 MD058097
+     C                   PARM                    PData                                      MD058097
+     C                   PARM                    TranInIt2                                  BUG14313
+     C                   PARM                    ValidCuIt1                                   LUC139
+     C                   PARM                    OKCuIt2                                    BUG14313
+                                                                                            BUG14313
+      ** Error fields/message IDs/message data (arrays) from/to caller                      BUG14313
+                                                                                            BUG14313
+     C                   PARM                    FldNameArr                                 BUG14313
+     C                   PARM                    MsgIdArr                                   BUG14313
+     C                   PARM                    MsgDtaArr                                  BUG14313
+                                                                                            BUG14313
+      ** Array index (3P0) from/to caller                                                   BUG14313
+                                                                                            BUG14313
+     C                   PARM                    Idx                                        BUG14313
+                                                                                            BUG14313
+      ** Warning fields/message IDs/message data (arrays) from/to                           BUG14313
+      ** caller                                                                             BUG14313
+                                                                                            BUG14313
+     C                   PARM                    WFldNamArr                                 BUG14313
+     C                   PARM                    WMsgIDArr                                  BUG14313
+     C                   PARM                    WMsgDtaArr                                 BUG14313
+                                                                                            BUG14313
+      ** Array index (3P0) from/to caller                                                   BUG14313
+                                                                                            BUG14313
+     C                   PARM                    WIdx                                       BUG14313
+                                                                                            BUG14313
+      ** Valid Italian Details (DS) from/to caller                                          BUG14313
+                                                                                            BUG14313
+     C                   PARM                    ValidCuIt2                                 BUG14313
+                                                                                            BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
+
       *****************************************************************                       CER059
       *                                                               *                     MD050526
       * SrChkErr                                                      *                     MD050526
@@ -6882,6 +7105,48 @@
      C     *DTAARA       DEFINE                  RUNDAT                                       CSD079
      C                   IN        RUNDAT                                                     CSD079
                                                                                               CSD079
+      ** Check if enhancement CER008 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER008'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER008'                                        BUG14313
+     C                   EVAL      DBASE  = 917                                             BUG14313
+     C                   EXSR      *PSSR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER008 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER008 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Check if enhancement CER009 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER009'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER009'                                        BUG14313
+     C                   EVAL      DBASE  = 918                                             BUG14313
+     C                   EXSR      *PSSR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER009 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER009 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
       ** Check if SWIFT 2007 is installed                                                   BUG14992
                                                                                             BUG14992
      C                   CALL      'SWIF2007'                                               BUG14992

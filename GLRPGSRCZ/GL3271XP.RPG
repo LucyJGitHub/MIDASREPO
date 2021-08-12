@@ -1,0 +1,327 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Accounts BOI extension PF setup')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL3271XP - Accounts Extension File Setup                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems, Ltd. 2006           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. CER009  *CREATE    Date 16Aug06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UIC Italian Returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
+      *                                                               *
+      *****************************************************************
+     FACCNTAB IF  E                    DISK
+      ** Accounts master file
+      *
+     FREACT1L0UF  E           K        DISK                      A
+      ** Extended Accounts file
+      *
+     FSDCUT1L0IF  E           K        DISK
+      ** Extended Customer Details
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    WCI        22  1
+     E                    WCP     1  39  1   WCCP    2 0
+     E                    WCD     1  39  1   WCCD    2 0
+     E                    IBA        30  1
+      ** CIN Calculation - work arrays
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ISDBRCH    E DSSDBRCHPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Program Start
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      A@CPY  80
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTR    7
+     C                     PARM           PMODE   1
+      *
+     C           *LIKE     DEFN CNUM      KCNUM
+     C           *LIKE     DEFN CCY       KCCY
+     C           *LIKE     DEFN ACOD      KACOD
+     C           *LIKE     DEFN ACSQ      KACSQ
+     C           *LIKE     DEFN BRCA      KBRCA
+      *
+     C           KAACKY    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+      ** Take on, set up fields
+      *
+     C                     READ ACCNTAB                  31
+     C           *IN31     DOWEQ*OFF
+      *
+     C                     MOVE CNUM      KCNUM
+     C                     MOVE CCY       KCCY
+     C                     Z-ADDACOD      KACOD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVE BRCA      KBRCA
+      *
+     C           KAACKY    CHAINREACT1L0             31
+      *
+      ** Set file field values to appropriate default
+      *
+     C           *IN31     IFEQ *ON
+     C                     MOVE CNUM      PQCNUM
+     C                     MOVE CCY       PQCCY
+     C                     Z-ADDACOD      PQACOD
+     C                     Z-ADDACSQ      PQACSQ
+     C                     MOVE BRCA      PQBRCA
+     C                     Z-ADD99        PQMBCD
+     C                     MOVE *ZEROS    PQCATC
+     C                     MOVE *ZEROS    PQTPAC
+     C                     MOVE *ZEROS    PQCLRL
+     C                     MOVE *ZEROS    PQACST
+     C                     Z-ADD*ZEROS    PQUNDT
+     C                     MOVE *BLANKS   PQLNIT                                LUC139
+     C                     Z-ADD*ZEROS    PQTEGL                                LUC139
+     C                     Z-ADD*ZEROS    PQCMPC                                LUC139
+     C                     EXSR SRCIN
+      *
+     C                     WRITEREACT1D0
+      *
+     C                     ELSE
+     C                     EXSR SRCIN
+     C                     UPDATREACT1D0
+     C                     ENDIF
+      *
+     C                     READ ACCNTAB                  31
+     C                     ENDDO
+      *
+      ** End Program and Return
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCIN  - Calculate CIN - Set-up                              *
+      *                                                               *
+      *****************************************************************
+     C           SRCIN     BEGSR
+      *
+      ** Only calculate CIN if Account is Retail
+      *
+     C                     DO
+     C           ATYP      IFNE 'R'
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM BRCA      PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ** Access ABI/CAB codes from Customer Extended Details
+      *
+     C           A8BICN    CHAINSDCUT1L0             91
+     C           *IN91     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** Set up CIN Calculation Input Array:
+      **   1- 5 ABI Code
+      **   6-10 CAB Code
+      **  11-12 '00'
+      **  13-22 Retail A/C Number
+      *
+     C                     MOVEA'00'      WCI,11
+     C                     MOVELACNO      WACNO  10
+     C                     MOVEAWACNO     WCI,13
+      *
+      ** Calculate CIN
+      *
+     C                     EXSR SRCINC
+      *
+      ** Calculate IBAN
+      *
+     C                     EXSR SRIBAN
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRCINC - Calculate CIN                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRCINC    BEGSR
+      *
+     C                     Z-ADD*ZEROS    WTOT
+     C                     Z-ADD*ZEROS    X       20
+      *
+     C                     DO   22
+      *
+     C                     ADD  1         X
+     C           X         DIV  2         WRIS    30
+     C                     MVR            WRES    20
+      *
+     C                     MOVE *OFF      *IN32
+     C                     Z-ADD1         W       30
+      *
+     C           WRES      IFEQ 1
+     C           WCI,X     LOKUPWCD,W                    32
+     C           *IN32     IFEQ *ON
+     C                     ADD  WCCD,W    WTOT    40
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           WCI,X     LOKUPWCP,W                    32
+     C           *IN32     IFEQ *ON
+     C                     ADD  WCCP,W    WTOT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           WTOT      DIV  26        WTOT
+     C                     MVR            WRES
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRIBAN - Calculate IBAN Check Digits                         *
+      *                                                               *
+      *****************************************************************
+     C           SRIBAN    BEGSR
+      *
+      ** pos. 1- 2: Numeric translation of CIN
+      *
+     C                     ADD  10        WRES
+     C                     MOVE WRES      WRK02   2
+     C                     MOVEAWRK02     IBA,1
+      *
+      ** pos. 13-14: Zeros
+      *
+     C                     MOVEA'00'      IBA,13
+      *
+      ** pos. 15-24: Retail Account Number
+      *
+     C                     MOVEAWACNO     IBA,15
+      *
+      ** pos. 25-28: Numeric translation of 'IT'
+      *
+     C                     MOVEA'1829'    IBA,25
+      *
+      ** pos. 29-30: Zeros
+      *
+     C                     MOVEA'00'      IBA,29
+      *
+      ** Divide work field by 97 and store remainder
+      *
+     C                     MOVEAIBA       WRK30A 30
+     C                     MOVE WRK30A    WRK30  300
+     C                     DIV  97        WRK30
+     C                     MVR            WRES
+      *
+      ** Obtain IBAN Check Digits as difference between 98 & remainder
+      *
+     C           98        SUB  WRES      WRES
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2006
+** WCP
+A00
+000
+B01
+101
+C02
+202
+D03
+303
+E04
+404
+F05
+505
+G06
+606
+H07
+707
+I08
+808
+J09
+909
+K10
+L11
+M12
+N13
+O14
+P15
+Q16
+R17
+S18
+T19
+U20
+V21
+W22
+X23
+Y24
+Z25
+-26
+.27
+ 28
+** WCD
+A01
+001
+B00
+100
+C05
+205
+D07
+307
+E09
+409
+F13
+513
+G15
+615
+H17
+717
+I19
+819
+J21
+921
+K02
+L04
+M18
+N20
+O11
+P03
+Q06
+R08
+S12
+T14
+U16
+V10
+W22
+X25
+Y24
+Z23
+-27
+.28
+ 26

@@ -1,0 +1,337 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Loans/Parts Purc/Parts Sold - PUMA')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0193 - Midas Loans / Parts Purchased / Parts Sold          *
+      *             PUMA 2 details                                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. CER009  *CREATE    Date 16Aug06               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC139 - UCI Italian Returns Upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
+      *                                                               *
+      *****************************************************************
+     FLECLT1L0IF  E           K        DISK
+      ** Customer loans Index file
+      *
+     FLE0193DFCF  E                    WORKSTN
+      ** Display file
+      *
+     E                    CPY@    1   1 80
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      ** Copyright array
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM #0PGM
+     I                                      244 253 #0JOB
+     I                                      254 263 #0USER
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      *
+     IDSSDY     E DSDSSDY
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  M A I N   P R O C E S S I N G                                *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR SRINIT
+      *
+     C                     WRITELE0193F0
+     C                     EXFMT#MSGCTL
+      *
+      ** Return Function Key pressed
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE 'Y'       P@INKC
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'Y'       P@INKL
+     C                     ENDSL
+      *
+      ** Execute routine to exit program
+      *
+     C                     EXSR SREND
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND - Routine to exit program                              *
+      *                                                               *
+      *****************************************************************
+     C           SREND     BEGSR
+      *
+      ** Exit program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFTOS - Routine to move file fields to screen fields        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFTOS    BEGSR
+      *
+     C                     MOVE PFMOOP    #0MOOP
+      *
+     C           PFAGCT    IFNE *ZEROS
+     C                     MOVE PFAGCT    #0AGCT
+     C                     ELSE
+     C                     MOVE *BLANK    #0AGCT
+     C                     ENDIF
+      *
+     C           PFAGCL    IFNE *ZEROS
+     C                     MOVE PFAGCL    #0AGCL
+     C                     ELSE
+     C                     MOVE *BLANK    #0AGCL
+     C                     ENDIF
+      *
+     C           PFECBD    IFNE *ZEROS
+     C                     MOVE PFECBD    #0ECBD
+     C                     ELSE
+     C                     MOVE *BLANK    #0ECBD
+     C                     ENDIF
+      *
+     C                     MOVE PFSBCR    #0SBCR
+      *
+     C                     MOVE PFINSB    #0INSB
+      *
+     C           PFTPPR    IFNE *ZEROS
+     C                     MOVE PFTPPR    #0TPPR
+     C                     ELSE
+     C                     MOVE *BLANK    #0TPPR
+     C                     ENDIF
+      *
+     C           PFPEPR    IFNE *ZEROS
+     C                     MOVE PFPEPR    #0PEPR
+     C                     ELSE
+     C                     MOVE *BLANK    #0PEPR
+     C                     ENDIF
+      *
+     C                     MOVE PFGLPA    #0GLPA
+      *
+     C                     MOVE PFTPFD    #0TPFD
+      *
+     C                     MOVE PFSBLW    #0SBLW
+      *
+     C           PFDPIV    IFNE *ZEROS
+     C                     MOVE PFDPIV    #0DPIV
+     C                     ELSE
+     C                     MOVE *BLANK    #0DPIV
+     C                     ENDIF
+      *
+     C                     MOVE PFEDIV    #0EDIV
+      *
+     C           PFEDIV    IFEQ *BLANKS
+     C                     MOVE '000'     #0EDIV
+     C                     ENDIF
+      *
+     C           PFCATC    IFNE *ZEROS
+     C                     MOVE PFCATC    #0CATC
+     C                     ELSE
+     C                     MOVE *BLANK    #0CATC
+     C                     ENDIF
+      *
+     C                     MOVE PFTPAC    #0TPAC
+      *
+     C                     MOVE PFCLRL    #0CLRL
+      *
+     C                     MOVE PFACST    #0ACST
+      *
+     C                     MOVE PFLNIT    #0LNIT
+      *
+     C                     Z-ADD3         ZADEC   10
+      *
+     C           PFTEGL    IFNE *ZEROS
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVE PFTEGL    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0TEGL
+     C                     ELSE
+     C                     MOVE *BLANK    #0TEGL
+     C                     ENDIF
+      *
+     C           PFUNDT    IFNE *ZEROS
+     C                     Z-ADDPFUNDT    ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #0UNDT
+     C                     ENDIF
+      *
+     C           PFPSAM    IFNE *ZEROS
+     C                     MOVE PFPSAM    ZFIELD    P
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0PSAM
+     C                     ENDIF
+      *
+     C                     MOVE PFLEAD    #0LEAD
+      *
+     C                     MOVE PFPTRP    #0PTRP                                           LUC139
+      *                                                                                    LUC139
+     C           PFCMPC    IFNE *ZEROS                                                     LUC139
+     C                     MOVEL*BLANK    ZFIELD                                           LUC139
+     C                     MOVE PFCMPC    ZFIELD                                           LUC139
+     C                     EXSR ZEDIT                                                      LUC139
+     C                     MOVE ZFIELD    #0CMPC                                           LUC139
+     C                     ELSE                                                            LUC139
+     C                     MOVE *BLANK    #0CMPC                                           LUC139
+     C                     ENDIF                                                           LUC139
+      *                                                                                    LUC139
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Routine to handle initial processing                *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C*********            PARM           PLNRF   60
+     C                     PARM           PLNRF   6
+     C                     PARM           PCCY    3
+     C                     PARM           P@INKC  1
+     C                     PARM           P@INKL  1
+      *
+      ** Setup key values using transaction data passed from caller
+      *
+     C           *LIKE     DEFN PFLNRF    KLNRF
+     C                     MOVE PLNRF     KLNRF
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'LE0193'  DBPGM
+      *
+     C           KLNRF     CHAINLECLT1L0             6061
+     C           *IN60     IFEQ *ON
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C           *IN61     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'LECLT1L0'DBFILE
+     C                     MOVELKLNRF     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Redefine data-base error fields for program
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Setup file value used in database error during access to
+      ** retrieval index
+      *
+     C           *LIKE     DEFN DBFILE    WWEXTF
+     C**********           MOVEL'CLOANKXP'WWEXTF                                           LUC139
+     C                     MOVEL'LECLT1PD'WWEXTF                                           LUC139
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN   7
+     C                     PARM           PCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  WRTCD   7
+     C                     PARM '*FIRST'  WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C                     MOVE *ON       *IN25
+     C                     MOVE 'N'       P@INKC
+     C                     MOVE 'N'       P@INKL
+      *
+     C                     EXSR SRFTOS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZEDIT - Insert Decimal points and 0s for numeric fields      *
+      *                                                               *
+      *****************************************************************
+     C           ZEDIT     BEGSR
+     C                     CALL 'ZEDIT'
+     C                     PARM           ZFIELD
+     C                     PARM           ZADEC
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ZDATE2 - Convert Midas date values                           *
+      *                                                               *
+      *****************************************************************
+     C           ZDATE2    BEGSR
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO
+     C                     PARM           BJDFIN
+     C                     PARM *ZEROS    ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program exception error routine                      *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'*ERROR'  PRTCD
+      *
+     C                     EXSR SREND
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

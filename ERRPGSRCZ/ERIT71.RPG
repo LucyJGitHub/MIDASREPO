@@ -1,0 +1,391 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Retail Interest and Charges')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT71 - Retail Interest and Charges                         *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 2000.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI080             Date 03Jan01               *
+      *                 MMI075 *create     Date 09Aug00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI080 - PUMA Changes December 2000 - Recompiled             *
+      *  MMI075 - Midas Italy Puma/2 changes                          *
+      *                                                               *
+     F*****************************************************************
+     FIRPUMAPDIP  E           K        DISK                               MMI033
+     FSDACODL1IF  E           K        DISK
+     FERCURRL1IF  E           K        DISK
+     FERICDRL0IF  E           K        DISK
+     FAPOSTL1 IF  E           K        DISK
+     F* Postings
+     F*
+     FQSYSPRT O   F     132            PRINTER
+     E                    SSA    12  12  3
+     E                    NAR        20 30
+      *                                                                   S01522
+     ICORAP       DS                                                      086125
+      **  Data Structure for Customer and Branch                          086125
+      *                                                                   086125
+     I                                        1   4 $MODUL                086125
+     I                                        6  11 $CNTNB                086125
+     I                                       12  14 $CCY                  086125
+     I                                       15  240$RET1                 086125
+     I                                       25  260$SEQN                 086125
+     I                                       27  29 $BRCH                 086125
+     I                                       16  20 $LOAN                 086125
+     I            DS
+     I                                        1   60XWENDD
+     I                                        1   20XDAY
+     I                                        3   40XMONTH
+     I                                        5   60XYEAR
+     I            DS
+     I                                        1   60YWSTRD
+     I                                        1   20YDAY
+     I                                        3   40YMONTH
+     I                                        5   60YYEAR
+      *                                                                   086125
+     C* Retrieve the posting narrative:                                   S01522
+     C*                                                                   S01522
+     C                     MOVELMK204     CORAP
+     C                     MOVE $RET1     WACOD  10
+     C           $MODUL    IFEQ 'GLAC'
+     C           WACOD     CHAINSDACODL1             59
+     C  N59      A5ACTY    IFEQ 'R'
+     C                     EXSR ELAB                                      S01522
+     C                     EXCPTPLUTOL
+     C                     END
+     C                     END
+     C*                                                                   111921
+     C********************************************************************S01522
+     C           ELAB      BEGSR
+     C*
+     C                     SETOF                     505152
+     C                     Z-ADDEXSTRD    STRD    50
+     C                     Z-ADDEXSTRD    LSTD    50
+     C                     Z-ADDEXENDD    ENDD    50
+     C                     Z-ADDEXENDD    ENDD1   50
+     C                     SUB  1         ENDD1   50
+     C                     Z-ADD0         AMTDEB 153
+     C                     Z-ADD0         AMTCRE 153
+     C                     Z-ADD0         AMTCRW 153
+     C                     Z-ADD0         WCONP   50
+     C*
+     C                     SETOF                     21
+     C           KACXC     SETLLAPOSTPDF
+     C           *IN21     DOWEQ'0'
+     C           KACXC     READEAPOSTPDF                 21
+     C           *IN21     IFEQ '0'
+     C                     MULT -1        SDCB
+     C           PSTD      IFGT STRD
+     C                     Z-ADDSDCB      LSTB   153
+     C                     END
+     C           PSTD      IFGT LSTD
+     C                     Z-ADD0         WCONP
+     C                     END
+     C           PSTD      IFGT LSTD
+     C           PSTD      ANDLEENDD
+     C           WCONP     ANDEQ0
+     C                     ADD  1         WCONP
+     C                     Z-ADDSDCB      LSTB   153
+     C                     EXSR ELAB1L
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDENDD      DIFDAT  50
+     C                     SUB  LSTD      DIFDAT  50
+     C           MK765     IFGT 0
+     C                     Z-ADDMK765     LSTL   150
+     C                     Z-ADDLSTL      LSTB   153
+     C                     MULT -1        LSTB   153
+     C                     ELSE
+     C                     Z-ADDMK766     LSTL   150
+     C                     Z-ADDLSTL      LSTB   153
+     C                     END
+     C                     EXSR ELAB1L
+     C*
+     C           $CCY      CHAINERCURRL1             80
+      *
+     C                     MOVELVRCYCD    RTCYCD  2        CCY CODE
+     C                     Z-ADDVRNBDP    CONBDP  10       Dec places
+     C                     Z-ADDVRSPRT    @@RAT1 138
+     C                     MOVE VRMDIN    @@MDI1  1
+     C                     EXSR ZA0900                     Cross X-rate
+      *
+     C                     Z-ADDAMTCRE    OUTAMT           820  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    INAMNT           820  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    MK820            820
+     C*
+      *
+     C                     Z-ADDAMTDEB    OUTAMT           823  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    INAMNT           823  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    MK823            823
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           ELAB1L    BEGSR                           ** #INIT BEGSR **
+     C*
+     C                     EXSR LASTP
+     C*
+     C                     Z-ADD0         AMTCRW
+     C           LSTB      IFLT 0
+     C                     Z-ADDLSTB      AMTCRW
+     C                     MULT -1        AMTCRW
+     C           AMTCRW    IFGT AMTCRE
+     C                     Z-ADDAMTCRW    AMTCRE
+     C                     END
+     C                     ELSE
+     C           LSTB      IFGT AMTDEB
+     C                     Z-ADDLSTB      AMTDEB
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDPSTD      LSTD
+     C*
+     C                     EXCPTPIPPOL
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C** LAST POSTING DATE                                                AG0001
+     C**=================================================================
+     C           LASTP     BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C           PSTA      IFNE 0
+     C           PSTD      ANDLEENDD1
+     C*                                                                   AG0001
+     C                     MOVEL'D'       #SDFMT                          AG0001
+     C                     Z-ADDPSTD      #SDAYN                          AG0001
+     C                     CALL 'ZA0140'                                  AG0001
+     C                     PARM           #SDAYN  50                      AG0001
+     C                     PARM           #SDFMT  1                       AG0001
+     C                     PARM           #SDATE  60                      AG0001
+     C                     PARM           #SDATA  7                       AG0001
+     C                     PARM           #SRTN   1                       AG0001
+     C                     PARM           #SDAT8  80                      AG0001
+     C                     MOVEL#SDAT8    ICLSTM  80                      AG0001
+     C*                                                                   AG0001
+     C                     END
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           CONV1     BEGSR
+      *-----------------------------------------------------------
+      *
+      *
+     C                     Z-ADDOUTAMT    $OUTAM 183
+      *
+     C                     SELEC                           Decimal places
+     C           CONBDP    WHEQ 0
+     C           OUTAMT    MULT 100       AMTITL 183
+     C           CONBDP    WHEQ 1
+     C           OUTAMT    MULT 10        AMTITL
+     C           CONBDP    WHEQ 2
+     C                     Z-ADDOUTAMT    AMTITL
+     C           CONBDP    WHEQ 3
+     C           OUTAMT    DIV  10        AMTITL
+     C                     ENDSL
+      *
+     C                     Z-ADDAMTITL    INAMNT
+     C* N60                EXCPTDSPCON
+      *
+     C                     ENDSR                           **ZA0909 TAG**
+      *****************************************************************
+     C           CALCON    BEGSR
+      *-----------------------------------------------------------
+      *
+      ** Initialize fields
+     C                     Z-ADDINAMNT    INAMNT 160
+     C                     Z-ADD0         OUTAMT 160
+      **
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'D'
+     C           @@RAT1    MULT @@RAT2    WWRAT  138
+     C           INAMNT    MULT WWRAT     OUTAMT    H
+     C                     END
+      **
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'M'
+     C           INAMNT    MULT @@RAT1    OUTAMT
+     C           OUTAMT    DIV  @@RAT2    OUTAMT    H
+     C                     END
+      **
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'D'
+     C           INAMNT    MULT @@RAT2    OUTAMT
+     C           OUTAMT    DIV  @@RAT1    OUTAMT    H
+     C                     END
+      **
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'M'
+     C           @@RAT1    MULT @@RAT2    WWRAT
+     C           INAMNT    DIV  WWRAT     OUTAMT    H
+     C                     END
+     C                     Z-ADD0         WKOUTA 160
+     C           OUTAMT    DIV  10        WKOUTA    H
+     C           WKOUTA    MULT 10        OUTAMT
+      **
+     C                     ENDSR
+      *
+      ********************************************************************ER0317
+     C**  INIT                                                          **S01522
+     C********************************************************************S01522
+     C           *INZSR    BEGSR                           * S R P N A R *S01522
+     C*                                                                   S01522
+     C           *ENTRY    PLIST
+     C                     PARM           BJMRDT  7        Run date
+     C                     PARM           BJURPT 53        Rpt Title
+     C                     PARM           LASTSQ  60       Output Parm
+      *                                                    (last seq num)
+     C           KACXC     KLIST
+     C                     KFLD           $BRCH
+     C                     KFLD           $CNTNB
+     C                     KFLD           $CCY
+     C                     KFLD           $RET1
+     C                     KFLD           $SEQN
+     C*                                                    *****************
+     C                     MOVELBJMRDT    WDAT5   5
+     C                     MOVE WDAT5     WDAT3   3
+     C                     Z-ADD1         X       20
+     C           WDAT3     LOKUPSSA,X                    50
+     C   50                Z-ADDX         WDAT2   20
+     C   50                MOVELBJMRDT    WDAT4   4
+     C   50                MOVE WDAT2     WDAT4
+     C   50                MOVELWDAT4     WDAT6   6
+     C   50                MOVE BJMRDT    WDAT2
+     C   50                MOVE WDAT2     WDAT6
+     C                     MOVE WDAT6     XWENDD
+     C                     Z-ADDXWENDD    YWSTRD
+      *
+     C           YMONTH    IFLE 3
+     C                     Z-ADD01        YMONTH
+     C                     END
+     C           YMONTH    IFGE 4
+     C           YMONTH    ANDLE6
+     C                     Z-ADD04        YMONTH
+     C                     END
+     C           YMONTH    IFGE 7
+     C           YMONTH    ANDLE9
+     C                     Z-ADD07        YMONTH
+     C                     END
+     C           YMONTH    IFGE 10
+     C           YMONTH    ANDLE12
+     C                     Z-ADD010       YMONTH
+     C                     END
+     C*
+     C                     Z-ADDXWENDD    #SDATE
+     C                     MOVEL'D'       #SDTFM
+     C                     MOVEL*BLANKS   #SRTRN
+     C                     Z-ADD*ZEROS    #SDGIM
+     C*
+     C                     CALL 'ZA0270'
+     C                     PARM           #SDATE  60
+     C                     PARM           #SDTFM  1
+     C                     PARM           #SRTRN  1
+     C                     PARM           #SDGIM  50
+     C                     Z-ADD#SDGIM    EXENDD  50
+     C*                                                    *****************
+     C                     Z-ADD01        YDAY
+     C                     Z-ADDYWSTRD    #SDATE
+     C                     MOVEL'D'       #SDTFM
+     C                     MOVEL*BLANKS   #SRTRN
+     C                     Z-ADD*ZEROS    #SDGIM
+     C*
+     C                     CALL 'ZA0270'
+     C                     PARM           #SDATE  60
+     C                     PARM           #SDTFM  1
+     C                     PARM           #SRTRN  1
+     C                     PARM           #SDGIM  50
+     C                     Z-ADD#SDGIM    EXSTRD  50
+     C*                                                                   S01522
+     C           'IT'      CHAINERICDRL0             80
+      *
+      ***  Access Italian ER currency defintion : retrieve Rate /vs base CCY
+      *
+     C           VDCCYC    CHAINERCURRL1             80
+      *
+     C                     Z-ADDVRSPRT    @@RAT2 138       Spot rate
+     C                     MOVE VRMDIN    @@MDI2  1        Mult/Div Ind
+     C                     Z-ADDVRNBDP    CUNBDP  10       Dec places
+      *
+     C                     ENDSR                                          S01522
+      *
+     C*
+     C           ZA0900    BEGSR
+     C*
+     C           @@RAT1    IFEQ *ZERO                      B1
+     C                     Z-ADD1         @@RAT1
+     C                     END                             E1
+     C*
+     C           @@RAT2    IFEQ *ZERO                      B1
+     C                     Z-ADD1         @@RAT2           *1
+     C                     END                             E1
+     C*
+     C**  IF THE FIRST RATE M/D INDICATOR IS 'M' MULTIPLY,
+     C**             ELSE DIVIDE
+     C*
+     C           @@MDI1    IFEQ 'M'                        B1
+     C                     Z-ADD@@RAT1    @@CSRT 159       *1
+     C                     ELSE                            X1
+     C           1         DIV  @@RAT1    @@CSRT    H      *1
+     C                     END                             E1
+     C*
+     C**  IF THE SECOND RATE M/D INDICATOR IS 'D' MULTIPLY,
+     C**             ELSE DIVIDE
+     C*
+     C           @@MDI2    IFEQ 'D'                        B1
+     C           @@CSRT    MULT @@RAT2    @@CSRT    H      *1
+     C                     ELSE                            X1
+     C           @@CSRT    DIV  @@RAT2    @@CSRT    H      *1
+     C                     END                             E1
+     C*
+     C*
+     C**  SET FIRST CCY MULTIPLY/DIVIDE *IN TO MULTIPLY
+     C                     MOVE 'M'       @@FCMD  1
+     C*
+     C           ZA0909    ENDSR                           **ZA0909 TAG**
+      *-----------------------------------------------------------
+     C********************************************************************S01522
+     OQSYSPRT E  1             PIPPOL
+     O                         MK277     15
+     O******                   STRD    +001
+     O                         VALD    +001
+     O                         PSTD    +001
+     O                         ICLSTM  +001
+     O                         DIFDAT2 +001
+     O                         LSTB  K +001
+     O****++++                 HISB  2 +001
+     O                         PSTA  2 +001
+     O                         DRCR  2 +001
+     O                         PNAR    +001
+     O        E  1             PLUTOL
+     O                                   17 'SLD L.MED.PASSIVO'
+     O                         AMTCRE2   35
+     O                                   65 'SLD L.MED.ATTIVO '
+     O                         AMTDEB2   80
+     O        E  1             PLUTOL
+     O                                   17 '820              '
+     O                         MK820 2   35
+     O                                   65 '823              '
+     O                         MK823 2   80
+     O        E  1             PLUTOL
+     O                                   17 'SLD L.ATTIVO  765'
+     O                         MK765 2   35
+     O                                   65 'SLD L.PASSIVO 766'
+     O                         MK766 2   80
+**  MONTH SHORTNAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

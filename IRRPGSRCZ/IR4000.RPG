@@ -1,0 +1,416 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Facilities')                                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  IR4000 - Facilities                                          *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 2000.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MMI140             Date 28Feb11               *
+      *                 MMI138             Date 24Mar10               *
+      *                 MMI136             Date 06Feb09               *
+      *                 MMI080             Date 03Jan01               *
+      *                 MMI075 *Create          09Aug00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011 - Recompiled             *
+      *  MMI138 - PUMA Changes March 2010    - Recompiled             *
+      *  MMI136 - PUMA Changes December 2008 - Recompiled             *
+      *  MMI080 - PUMA Changes December 2000 - Recompiled             *
+      *  MMI075 - Midas Italy Puma/2 changes                          *
+      *                                                               *
+     F*****************************************************************
+     FIRPUMAPDUP  E                    DISK
+     FFCLTYBILIF  E           K        DISK
+     FFCLTYBICIF  E           K        DISK
+     F            FCLTYFMF                          KRENAMEFCLTYFMC
+     FCLOANC  IF  E           K        DISK
+     FACCBR   IF  E           K        DISK
+     FERITTTL0IF  E           K        DISK
+     FIRFCLTPDO   E                    DISK
+     FQSYSPRT O   F     132            PRINTER
+      *
+     E                    CFC        99  3 0
+     E                    FTR       999 17   CUP     3 0
+     E                    FT1       999 11   CUF     3 0
+      ** DEFINIZIONE SCHIERE
+      *
+     IACCNTABF
+     I              CNUM                            ACUNM
+     I              FACT                            AFACT
+     I              FCNO                            AFCNO
+     I              CCY                             ACCY
+     ICLOANZ1F
+     I              NLRA                            ##NLRA
+     I            DS
+     I                                        1   6 WL277
+     I                                        7   90WD277
+     I                                       10  110WF277
+     I                                       12  13 WT277
+     I                                        1  13 DS277
+     I            DS
+     I                                        1   4 WT204
+     I                                        1  20 WL204
+     I                                       21  23 WD204
+     I                                        1  23 DS204
+      *
+     I            DS
+     I                                        1   6 WT206
+     I                                        7   9 WL206
+     I                                       10  11 WD206
+     I                                       12  13 WR206
+     I                                        1  13 DS206
+      *
+      *****************************************************************
+      *               M   A   I   N       L   I   N   E               *
+      *****************************************************************
+      *
+     C  N99                EXSR INIZ
+      *
+     C                     MOVELMK277     DS277
+     C                     MOVELMK204     DS204
+     C           MKUIA     IFEQ '205'
+     C           WT204     ANDNE'GA00'
+     C*          WL277     IFEQ 1574
+     C*                    SETON                     61
+     C*                    END
+     C           MK010     IFGT 19990731
+     C           MK010     OREQ 0
+     C           WT277     IFNE 'TR'
+     C                     EXCPTLEGGO
+     C           WT277     IFEQ 'CA'
+     C                     EXSR ELABCA
+     C                     ELSE
+     C                     EXSR ELAB
+     C                     END
+     C                     ELSE
+     C                     EXSR ELABTR
+     C                     END
+     C                     END
+     C                     END
+      *
+      *****************************************************************
+      * ELABCA * ESTRAE DAL FILE IRPUMAPD I CAMPI NECESSARI           *
+      *****************************************************************
+      *
+     C           ELABCA    BEGSR
+      *
+     C                     SETOF                     50
+      *
+     C           KFCLT     SETLLFCLTYBIC
+      *
+      *
+     C                     DO   *HIVAL
+     C           KFCLT     READEFCLTYBIC                 50
+      *
+      ** USCITA PER FINE FILE
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** NON ELABORA CAMPI 001 - 002 - 003
+      *
+     C                     EXSR ELAB1
+     C*
+     C                     EXSR ELAB2
+     C*
+     C                     ENDDO
+      *
+     C           MK001     IFEQ 9125
+     C                     Z-ADD1         MK057
+     C                     Z-ADD1000001   MK054
+     C                     MOVELMK030     MK055
+     C                     UPDATIRPUMA
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * ELAB   * ESTRAE DAL FILE IRPUMAPD I CAMPI NECESSARI           *
+      *****************************************************************
+      *
+     C           ELAB      BEGSR
+      *
+     C                     SETOF                     50
+      *
+     C           KFCLT     SETLLFCLTYBIL
+      *
+      *
+     C                     DO   *HIVAL
+     C           KFCLT     READEFCLTYBIL                 50
+      *
+      ** USCITA PER FINE FILE
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** NON ELABORA CAMPI 001 - 002 - 003
+      *
+     C                     EXSR ELAB1
+     C*
+     C                     EXSR ELAB2
+     C*
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * ELAB1  * LEGGO FACILITY SY LOANS E ACCOUNT                    *
+      *****************************************************************
+      *
+     C           ELAB1     BEGSR
+      *
+     C           CNUM      SETLLCLOANC
+      *
+     C                     DO   *HIVAL
+     C           CNUM      READECLOANC                   51
+      *
+      ** USCITA PER FINE FILE
+      *
+     C           *IN51     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** NON ELABORA CAMPI 001 - 002 - 003
+      *
+     C           CNUM      IFEQ FCUS
+     C           FACT      ANDEQFTYP
+     C           FCNO      ANDEQFSEQ
+     C                     MOVEL*BLANK    WCAM09  9
+     C*******              MOVE '1 REX831'WCAM09
+     C           PTYP      IFEQ 61
+     C           PTYP      OREQ 62
+     C           PTYP      OREQ 64
+     C           PSAM      IFEQ 0
+     C                     MOVE '1 REX'   WCAM09
+     C                     ELSE
+     C                     MOVE '1    '   WCAM09
+     C                     END
+     C                     ELSE
+     C                     MOVE '1    '   WCAM09
+     C                     END
+     C                     MOVE LNRF      WCAM06  6
+     C                     MOVE WCAM09    WCAM15 15
+     C                     MOVELWCAM06    WCAM15
+     C                     EXCPTPIPPO
+     C                     MOVELMK277     IFKEY
+     C                     MOVELMK277     IFKEY
+     C                     MOVELWCAM15    IFREF
+     C                     WRITEIRFCLT
+     C                     ENDIF
+     C*
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * ELABTR * CHECK IF TRANCE IS MULTIPLE FACILITY                 *
+      *****************************************************************
+      *
+     C           ELABTR    BEGSR
+      *
+     C           KFCLT     CHAINFCLTYBIL             59
+      *
+     C                     Z-ADD1         X
+     C           CAFT      LOKUPCFC,X                    30
+     C   30                DO
+      *
+     C                     MOVELCANM      WL277
+     C                     MOVELCAFT      WD277
+     C                     MOVELCAFN      WF277
+      *
+     C                     ADD  1         COUNT
+     C                     Z-ADDCOUNT     MK057
+     C           CNUM      IFEQ CANM
+     C                     MOVEL'505'     MKUIA
+     C                     Z-ADD1         MK057
+     C                     Z-ADD1000001   MK054
+     C                     MOVELCNUM      MK055
+     C                     ELSE
+     C                     MOVELDS277     $FIL17 17
+     C                     MOVE CNUM      $FIL17
+     C                     MOVELDS277     $FIL11 11
+     C                     Z-ADD1         X
+     C           $FIL17    LOKUPFTR,X                    50
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'505'     MKUIA
+     C                     ELSE
+     C                     Z-ADD1         X       30
+     C           $FIL11    LOKUPFT1,X                    50
+     C           *IN50     IFEQ '0'
+     C                     ADD  1         ZZ
+     C                     MOVEL$FIL11    FT1,ZZ
+     C                     Z-ADD1         CUF,ZZ
+     C                     END
+     C                     ADD  1         CUF,ZZ
+     C                     ADD  1         XY
+     C                     MOVEL$FIL17    FTR,XY
+     C                     Z-ADDCUF,ZZ    CUP,XY
+     C                     Z-ADDCUF,ZZ    MK057
+     C                     MOVEL$FIL17    $FCL11 11
+     C                     MOVE $FCL11    MK058
+     C                     Z-ADD9125      MK001
+     C                     Z-ADD90        MK002
+     C                     MOVELMK030     MK203
+     C                     MOVELCANM      MK055
+     C                     END
+     C                     END
+      *
+     C           KFCLT     SETLLFCLTYBIL
+      *
+      *
+     C                     DO   *HIVAL
+     C           KFCLT     READEFCLTYBIL                 50
+      *
+      ** USCITA PER FINE FILE
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVELCNUM      WT206
+     C                     MOVELFACT      WL206
+     C                     MOVELFCNO      WD206
+     C                     MOVELTRCA      WR206
+     C                     MOVEL*BLANK    MK204
+     C                     MOVELMK277     MK204
+     C                     MOVELDS206     MK277
+     C                     Z-ADD0         MK689
+     C                     Z-ADD0         MK690
+     C                     Z-ADD0         MK790
+      *
+     C                     EXCPTSPERO
+     C                     UPDATIRPUMA
+     C                     ENDDO
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * ELAB2  * LEGGO FACILITY SY ACCNTAB                            *
+      *****************************************************************
+      *
+     C           ELAB2     BEGSR
+      *
+     C           KACCN     SETLLACCBR
+      *
+      *
+     C                     DO   *HIVAL
+     C           KACCN     READEACCBR                    52
+      *
+      ** USCITA PER FINE FILE
+      *
+     C           *IN52     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** NON ELABORA CAMPI 001 - 002 - 003
+      *
+     C           CNUM      IFEQ ACUNM
+     C           FACT      ANDEQAFACT
+     C           FCNO      ANDEQAFCNO
+     C                     MOVELACUNM     WCAM09
+     C                     MOVE ACCY      WCAM09
+     C                     MOVELACOD      WCAM06
+     C                     MOVE ACSQ      WCAM06
+     C*                    MOVELWCAM05    WCAM06
+     C                     MOVELWCAM09    WCAM15
+     C                     MOVE WCAM06    WCAM15
+     C                     EXCPTPLUTO
+     C                     MOVELMK277     IFKEY
+     C                     MOVELWCAM15    IFREF
+     C                     WRITEIRFCLT
+     C                     ENDIF
+     C*
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * ESTRAZ * ESTRAE DAL FILE IRPUMAPD I CAMPI NECESSARI           *
+      *****************************************************************
+      *
+     C           INIZ      BEGSR
+      *
+     C                     SETON                     99
+      *
+     C           KFCLT     KLIST
+     C                     KFLD           WL277
+     C                     KFLD           WD277
+     C                     KFLD           WF277
+      *
+     C           KACCN     KLIST
+     C                     KFLD           WD204
+     C                     KFLD           WL277
+      *
+     C                     Z-ADD2         COUNT   50
+     C                     SETOF                     60
+      *
+     C           *LOVAL    SETLLERITTTL0
+     C                     READ ERITTTL0                 30
+     C*
+     C                     Z-ADD0         XY      30
+     C                     Z-ADD0         ZZ      30
+     C                     Z-ADD0         X       30
+     C** MAIN PROCESSING
+     C           *IN30     DOWEQ'0'                        - B1
+     C*
+     C           N4MMOD    IFEQ 'FC'
+     C           N4RBND    ANDEQ912510
+     C                     ADD  1         X
+     C                     MOVELN4TTYP    $FIL3   3                       UIT021
+     C                     MOVE $FIL3     CFC,X                           UIT021
+     C                     END
+     C*
+     C                     READ ERITTTL0                 30
+     C*
+     C                     END                             - E1
+     C*
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * DEFINIZIONE TRACCIATI DI OUTPUT                               *
+      *****************************************************************
+      *
+     OQSYSPRT E  1             LEGGO
+     O                         MK277     15
+     O        E  1             PIPPO
+     O                         MK277     20
+     O                         FACT    +001
+     O                         FCNO    +001
+     O                         LNRF    +001
+     O                         WCAM15    70
+     O                                   80 'LOANS'
+     O        E  1             PLUTO
+     O                         MK277     20
+     O                         FACT    +001
+     O                         FCNO    +001
+     O                         ACUNM   +001
+     O                         ACCY    +001
+     O                         ACOD    +001
+     O                         ACSQ    +001
+     O                         WCAM15    70
+     O                                   80 'ACCNT'
+     O        E  1             SPERO
+     O                         MK001      5
+     O                         MK002   +001
+     O                         MK277   +001
+     O                         MK204   +001
+     O                         MK030   +001
+     O                         MK055   +001
+     O                         MK054   +001
+     O                                 +001 'TRNACE'

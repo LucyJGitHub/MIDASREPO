@@ -1,0 +1,111 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Validate CR Code')                            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data                                        *
+      *                                                               *
+      *  SDCRVAL  - Validate CR Code                                  *
+      *                                                               *
+      *  (C) Copyright Misys 2008                                     *
+      *                                                               *
+      *  Last Amend No. LUC139              Date 23Dec20              *
+      *  Prev Amend No. MMI136   *Create    Date 12Dec08              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  MMI136 - Puma December 2008 changes                          *
+      *                                                               *
+      *****************************************************************
+     E                    WCR        13  1
+     E                    WDIS   10  10  1 0
+     E                    WFAC    1  11 11 0
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           CRCODE 13
+     C                     PARM           RETCOD  1
+      *
+     C                     MOVE *BLANKS   RETCOD
+     C                     MOVEACRCODE    WCR
+     C                     MOVE WCR,12    CIN01   10
+     C                     MOVE WCR,13    CIN02   1
+      *
+      * Calculate first check digit
+      *
+     C                     Z-ADD*ZERO     TOTAL  130
+     C                     Z-ADD*ZERO     X       20
+      *
+     C           X         DOWLE10
+      *
+      * Odd digits - retrieve value from array and add to total
+     C                     ADD  1         X
+     C                     MOVE WCR,X     Y       10
+     C           Y         ADD  1         Z       20
+     C                     ADD  WDIS,Z    TOTAL
+      *
+      * Even digits - add digit to total
+     C           X         IFLE 10
+     C                     ADD  1         X
+     C                     MOVE WCR,X     Y
+     C                     ADD  Y         TOTAL
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * First check digit is the complement to 10 of the work total
+      *
+     C                     MOVE TOTAL     WRK1    10
+     C           10        SUB  WRK1      WRK1
+      *
+      * Calculate second check digit
+      *
+     C                     Z-ADD*ZERO     TOTAL  130
+      *
+     C           1         DO   11        X
+     C                     MOVE WCR,X     Y
+     C           X         MULT Y         WRK13  130
+     C                     MULT WFAC,X    WRK13
+     C                     ADD  WRK13     TOTAL
+     C                     ENDDO
+      *
+      * Add together digits of work total
+      *
+     C                     MOVE TOTAL     WRK13A 13
+     C                     MOVEAWRK13A    WCR
+     C                     Z-ADD*ZERO     TOTAL
+      *
+     C           1         DO   13        X
+     C                     MOVE WCR,X     Y
+     C                     ADD  Y         TOTAL
+     C                     ENDDO
+      *
+      * Second check digit is the last digit of result
+      *
+     C                     MOVE TOTAL     WRK2    1
+      *
+      * If first check digit differs from received value return error
+      *
+     C           WRK1      IFNE CIN01
+     C           WRK2      ORNE CIN02
+     C                     MOVE 'E'       RETCOD
+     C                     ENDIF
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+**  WDIS
+0246813579
+**  WFAC
+10000000000
+01000000000
+00100000000
+00010000000
+00001000000
+00000100000
+00000010000
+00000001000
+00000000100
+00000000010
+00000000001

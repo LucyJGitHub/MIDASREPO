@@ -1,0 +1,316 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME  STP Repair account on PCAT')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0009 - STP Repair account on PCAT                         *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 MKFX01             Date 23Jan06               *
+      *                 E30004             Date 25Feb2004             *
+      *                 ERN054             Date 16Jul2003             *
+      *                 EEE058             Date 06May2003             *
+      *                 EEE058             Date 11Feb2003             *
+      * Midas Release 4.01 -------------------------------------------*
+      *                                                               *
+      *  Function:  This program places the customer in the field     *
+      *  from a specified account                                     *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2002       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  E30004 - Change to PCAT Recompile                            *
+      *  ERN054 - Agent message changes (Recompile)                   *
+      *  EEE058 - Default Account indicator                           *
+      *  EEE058 - Incoming STP idenifier is Elixir customer           *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FFTRBRCV0IF  E                    DISK
+      *
+      *  Retail branches for STP
+      *
+     FFTPCATJ1IF  E           K        DISK
+      *
+      *  Customer Accounts table
+      *
+     F/EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+      *
+     IPIFDDT      DS
+     I                                        1 256 WRFDDT
+     I                                        6 256 WRTGVL
+     I                                       20  54 IBEN1
+     I                                       55  89 IBEN2
+     I                                       90 124 IBEN3
+     I                                      125 159 IBEN4
+     I                                      160 194 IBEN5
+     I                                       20  25 U#CNUA
+     I                                      195 256 IREST
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IPRFDDT      DS
+     I                                        1 256 WIFDDT
+     I                                        6 256 WITGVL
+     I                                        2  19 NACCR
+     I                                        2   7 NCNUM
+     I                                        8  10 NCCY
+     I*****                                  11  14 NACOD                                  MD31937
+     I*****                                  15  16 NACSQ                                  MD31937
+     I*****                                  17  19 NBRCA                                  MD31937
+     I*****                                  20  54 RBEN1                                  MD31937
+     I*****                                  55  89 RBEN2                                  MD31937
+     I*****                                  90 124 RBEN3                                  MD31937
+     I*****                                 125 159 RBEN4                                  MD31937
+     I*****                                 160 194 RBEN5                                  MD31937
+     I*****                                 195 256 RREST                                  MD31937
+     I                                       11  20 NACOD                                  MD31937
+     I                                       21  22 NACSQ                                  MD31937
+     I                                       23  25 NBRCA                                  MD31937
+     I                                       26  60 RBEN1                                  MD31937
+     I                                       61  95 RBEN2                                  MD31937
+     I                                       96 130 RBEN3                                  MD31937
+     I                                      131 165 RBEN4                                  MD31937
+     I                                      166 200 RBEN5                                  MD31937
+     I                                      201 256 RREST                                  MD31937
+     ID@ACCT    E DSACCNTAB
+      *
+      * ACCNTABF - Account details record format data structure
+      *
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+     IPCRIT     E DSMEGNCRPD
+      * Criteria rule hit
+      *
+     IP9PEXT    E DSFTPEXTP0
+      *
+      * FT PCAT extension details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      * SDCUSTPD - Customer details
+      *
+     I              '0123456789'          C         DIGITS
+     I              'NO ORDERING CUSTOME- C         P50C
+     I              'R ON MT910'
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+     C           *LIKE     DEFN WRTGVL    P#RPP1
+     C           *LIKE     DEFN WITGVL    P#RPP2
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      *  Process field
+      *
+     C                     MOVELP#RPP1    PIFDDT
+     C                     MOVELP#RPP1    PRFDDT
+     C                     SETOF                     90
+      *
+     C           KPCAT1    KLIST
+     C                     KFLD           PCRNB1
+     C                     KFLD           PCRNB2
+      *
+     C           1         SUBSTIBEN1:1   U#0001  1
+     C           U#0001    IFEQ '/'
+     C           34        SUBSTIBEN1:2   I#ACLN 35 P
+     C                     ELSE
+     C           34        SUBSTIBEN1:1   I#ACLN 35 P
+     C                     ENDIF
+      *
+      * Repair Account
+      *
+     C                     CALL 'FTP970'
+     C                     PARM *BLANKS   @RTN    7
+     C                     PARM           I#ACLN 35
+     C                     PARM *BLANKS   O#ACLN 35
+      *
+      *
+      * Check if Retail account. If yes, it must not start with '/' and all
+      * subsequent beneficiary lines must be blank
+      *
+     C                     MOVELO#ACLN    @RETL     P
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM           @RETL  10        I:Account Identifier
+     C                     PARM *BLANKS   @CNNM   6        I:Customer Number
+     C                     PARM *BLANKS   @CUCD   3        I:Currency Code
+     C*****                PARM *BLANKS   @ACCD   4        I:Account Code Num              MD31937
+     C                     PARM *BLANKS   @ACCD  10        I:Account Code Num              MD31937
+     C                     PARM *BLANKS   @ACSQ   2        I:Account Sequence
+     C                     PARM *BLANKS   @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+     C           @RTCD     IFEQ *BLANKS
+      *
+     C                     SETOF                     90
+     C           U#0001    IFEQ '/'
+     C                     MOVE *BLANKS   @TACC  10
+     C                     MOVELO#ACLN    @TACC     P
+     C                     MOVEL@TACC     RBEN1     P
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   RBEN2
+     C                     MOVE *BLANKS   RBEN3
+     C                     MOVE *BLANKS   RBEN4
+     C                     MOVE *BLANKS   RBEN5
+      *
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+     C                     ELSE
+      *
+     C                     SETON                     90
+      *
+     C                     ENDIF
+      *
+     C           *IN90     IFEQ *ON
+      * Check if IBAN, if yes it should start with '/PL'
+      *
+      *  Check if Country Code PL, if not add it
+      *
+     C                     MOVE *BLANKS   W@IBAN
+     C                     MOVELO#ACLN    W@IBAN 34 P
+     C                     MOVELW@IBAN    W@CTRY  2 P
+     C           W@CTRY    IFNE 'PL'
+     C                     MOVEL'PL'      W@CTRY
+     C                     MOVE *BLANKS   P@IBAN 36
+     C                     MOVE W@IBAN    P@IBAN
+     C                     MOVELW@CTRY    P@IBAN
+     C                     MOVE *BLANKS   W@IBAN
+     C                     MOVELP@IBAN    W@IBAN
+     C                     ENDIF
+      *
+      * Repair Check Digit
+      *
+     C           2         SUBSTW@IBAN:1  ISO     2 P
+      *** Call AOIBANR0 to validate the IBAN check digits                 CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOIBANR0'                                CFT004
+     C                     PARM *BLANKS   @RTCD                           CFT004
+     C                     PARM 'V'       IACTN   1                       CFT004
+     C                     PARM ISO       ICNTY   2                       CFT004
+     C                     PARM W@IBAN    IIBANP 34                       CFT004
+     C                     PARM           OBBAN  30                       CFT004
+     C                     PARM           OIBAN  34                       CFT004
+     C                     PARM           OCKDG   2                       CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOIBANR4'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM           OIBAN
+     C           D@ACCT    PARM *BLANKS   DSSDY
+      *
+     C           P@RTCD    IFEQ *BLANKS
+      *
+     C                     SETOF                     90
+     C                     MOVE *BLANKS   RBEN1
+     C           '/'       CAT  OIBAN:0   RBEN1     P
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+     C                     ELSE
+      *
+     C                     SETON                     90
+      *
+     C                     ENDIF
+      *
+     C           *IN90     IFEQ *ON
+      * Check PCAT database
+     C           16        SUBSTO#ACLN:1  PCRNB1    P
+     C           18        SUBSTO#ACLN:17 PCRNB2    P
+     C           KPCAT1    CHAIN@PCATJ1              90
+      *
+     C           *IN90     IFEQ *OFF
+      *
+     C                     MOVE *BLANKS   W@IBAN
+     C           '/PL'     CAT  PCIBAN:0  W@IBAN    P
+     C                     MOVELW@IBAN    RBEN1     P
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+     C                     ELSE
+      *
+     C           10        SUBSTO#ACLN:1  @RNB   10 P
+     C                     MOVE 'N'       @FOUND  1
+      *
+     C                     READ FTRBRCV0                 70
+     C           *IN70     DOWEQ*OFF
+     C           @FOUND    ANDNE'Y'
+      *
+     C                     MOVE *BLANKS   W@RNB1 34
+     C           RBPMTH    IFEQ 'Y'
+      *
+     C           RBBRCH    CAT  @RNB:0    W@RNB1    P
+     C           16        SUBSTW@RNB1:1  PCRNB1    P
+     C           18        SUBSTW@RNB1:17 PCRNB2    P
+     C           KPCAT1    CHAIN@PCATJ1              60
+     C           *IN60     IFEQ *OFF
+     C                     MOVE 'Y'       @FOUND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ FTRBRCV0                 70
+      *
+     C                     ENDDO
+      *
+     C           @FOUND    IFNE 'Y'
+     C                     MOVE *BLANKS   W@IBAN
+     C           '/PL'     CAT  PCIBAN:0  W@IBAN    P
+     C                     MOVELW@IBAN    RBEN1     P
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+     C                     ENDIF
+      *
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *  Exit program
+      *
+     C   U1                DUMP
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2002

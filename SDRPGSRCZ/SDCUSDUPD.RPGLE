@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. BUG14313           Date 21Oct20               *
+      *                 MD056982           Date 12Oct20               *
+      *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
@@ -155,6 +157,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1                *
+      *  BUG14313 - Italian Enhancement and API ECM Clash on Customer *
+      *             Details API (CER008/CER009 Upgrade to MidasPlus)  *
+      *             CER009 - Puma II                                  *
+      *             CER008 - Base Italian Features                    *
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
@@ -587,6 +594,8 @@
      D ULX004          S              1A   inz('N')                                           CSD079
      D CDL025          S              1A   inz('N')                                        AR1086546
      D PMODE           S              1A                                                      CSD079
+     D CER008          S              1A   INZ('N')                                         BUG14313
+     D CER009          S              1A   INZ('N')                                         BUG14313
                                                                                               CSD079
       *Run date DS                                                                            CSD079
      DRUNDAT           DS                                                                     CSD079
@@ -1017,6 +1026,24 @@
      D TranInMT3X    E DS                  EXTNAME(SDCUMTPD)                                  CFT050
      D***ZMUSER*       DS            17                                            MD026835 MD027492
      D**WUSRID**               1     10                                            MD026835 MD027492
+      ** Ext. DS for Italian Details in valid format                                        BUG14313
+     D*SDVCUIT1*     E DS                  EXTNAME(SDVCUIT1PD)                       BUG14313 LUC139
+     D SDVCUIT1      E DS                  EXTNAME(SDCUT1PD)                                  LUC139
+     D                                     PREFIX(V_)                                       BUG14313
+                                                                                            BUG14313
+      ** Ext. DS for PUMA Details in valid format                                           BUG14313
+     D*SDVCUIT2*     E DS                  EXTNAME(SDVCUIT2PD)                              BUG14313
+     D SDVCUIT2      E DS                  EXTNAME(SDCUT2PD)                         BUG14313 LUC139
+     D                                     PREFIX(V_)                                         LUC139
+                                                                                            BUG14313
+      ** Italian Details in File Format                                                     BUG14313
+     D CuIt1FilFmt   E DS                  EXTNAME(SDCUT1PD)                                BUG14313
+     D                                     PREFIX(A_)                                       BUG14313
+                                                                                            BUG14313
+      ** Puma Details in File Format                                                        BUG14313
+     D CuIt2FilFmt   E DS                  EXTNAME(SDCUT2PD)                                BUG14313
+     D                                     PREFIX(A_)                                       BUG14313
+                                                                                            BUG14313
      D/COPY WNCPYSRC,SDCUSDDD02
       ** Ext. DS for Curency/Time of Netting Details in File Format                        AR1086546
      D*CTNMFilFmt    E DS                  EXTNAME(SDCTNMPD)                     AR1086546 MD038401B
@@ -2246,6 +2273,28 @@
                                                                                            AR1086546
      C                   ENDIF                                                             AR1086546
                                                                                               CSD079
+      ** Update Italian Details                                                             BUG14313
+                                                                                            BUG14313
+     C                   IF        A_CUTYLC = 'I' OR                                        BUG14313
+     C                             A_CUTYLC = 'A' OR                                        BUG14313
+     C                             A_CUTYLC = 'D' OR                                        BUG14313
+     C                             A_CUTYLC = 'C' OR                                        BUG14313
+     C                             A_CUTYLC = 'R'                                           BUG14313
+                                                                                            BUG14313
+     C                   IF        CER008 = 'Y' AND                                         BUG14313
+     C                             CSD079 = 'Y'                                             BUG14313
+     C                   EXSR      SRUpdCuIt1                                               BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Update Puma Details                                                                BUG14313
+                                                                                            BUG14313
+     C                   IF        CER009 = 'Y' AND                                         BUG14313
+     C                             CSD079 = 'Y'                                             BUG14313
+     C                   EXSR      SRUpdCuIt2                                               BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
       ** If 24x7 Midas Availability is installed                                              CSC011
       ** and Support System is active                                                         CSC011
                                                                                               CSC011
@@ -2484,6 +2533,11 @@
      C                   PARM                    TranInPrim                                   CFT050
      C                   PARM                    TranInSeco                                   CFT050
      C                   PARM                    TranInMT3X                                   CFT050
+                                                                                            BUG14313
+      ** Italian Details in File Format                                                     BUG14313
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+      ** PUMA Details in File Format                                                        BUG14313
+     C                   PARM                    CuIt2FilFmt                                BUG14313
      C/COPY WNCPYSRC,SDH00751
       *
       * OK - Action code
@@ -2689,6 +2743,11 @@
      C                   PARM                    TranInPrim                                   CFT050
      C                   PARM                    TranInSeco                                   CFT050
      C                   PARM                    TranInMT3X                                   CFT050
+                                                                                            BUG14313
+      ** Italian Details in File Format                                                     BUG14313
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+      ** PUMA Details in File Format                                                        BUG14313
+     C                   PARM                    CuIt2FilFmt                                BUG14313
       * OK - Action code                                                                      CSD021
      C                   PARM      *BLANK        DDACTNOK          1                          CSD021
       *                                                                                       CSD021
@@ -7002,6 +7061,8 @@
       ** Externally described DS for CRS valid Transaction Detail                             CGL157
      C                   PARM                    SDVCRSH                                      CGL157
      C                   PARM                    PCrsdF                                       CGL157
+     C                   PARM                    SDVCUIT1                                   BUG14313
+     C                   PARM                    SDVCUIT2                                   BUG14313
       * Base Rate Auth req                                                                    CSD012
      C                   PARM                    AUTHRQ            1                          CSD012
       * Authorisation Mode                                                                    CSD012
@@ -7791,6 +7852,47 @@
      C                   ELSE                                                                 CSW207
      C                   EVAL      CSW207 = 'N'                                               CSW207
      C                   ENDIF                                                                CSW207
+      ** Check if enhancement CER008 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER008'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER008'                                        BUG14313
+     C                   EVAL      DBASE  = 926                                             BUG14313
+     C                   EXSR      SRERR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER008 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER008 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Check if enhancement CER009 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER009'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER009'                                        BUG14313
+     C                   EVAL      DBASE  = 927                                             BUG14313
+     C                   EXSR      SRERR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER009 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER009 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
                                                                                               CGL132
      C                   IF        CGL132 = 'Y'                                               CGL132
                                                                                               CGL132
@@ -10467,6 +10569,73 @@
      C                   ENDSR                                                             AR1086546
                                                                                            AR1086546
       *****************************************************************                    AR1086546
+      /EJECT                                                                                BUG14313
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      *  SRUPDCUIT1 - Update Italian Details                          *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SRUpdCuIt1    BEGSR                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        ACTN <> 'I'                                              BUG14313
+     C                   EVAL      WFIND = 'Y'                                              BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      WFIND = 'N'                                              BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'SDCUS11UP'                                              BUG14313
+     C                   PARM                    ACTN                                       BUG14313
+     C                   PARM      *BLANKS       @RTCD                                      BUG14313
+     C                   PARM                    WFIND                                      BUG14313
+     C                   PARM                    SDVCUIT1                                   BUG14313
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+                                                                                            BUG14313
+      ** If there were any errors in the update functions                                   BUG14313
+                                                                                            BUG14313
+     C                   IF        @RTCD <> *BLANKS                                         BUG14313
+     C                   EVAL      DBKEY = *BLANKS                                          BUG14313
+     C**********         EVAL      DBKEY = A_VBBCUST                                 BUG14313 LUC139
+     C                   EVAL      DBKEY = V_BBCUST                                           LUC139
+     C                   EVAL      DBFILE = 'SDCUT1PD'                                      BUG14313
+     C                   EVAL      DBASE = 054                                              BUG14313
+     C                   EXSR      SRERR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      *  SRUPDCUIT2 - Update PUMA Details                             *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SRUpdCuIt2    BEGSR                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        ACTN <> 'I'                                              BUG14313
+     C                   EVAL      WFIND = 'Y'                                              BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      WFIND = 'N'                                              BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'SDCUS12UP'                                              BUG14313
+     C                   PARM                    ACTN                                       BUG14313
+     C                   PARM      *BLANKS       @RTCD                                      BUG14313
+     C                   PARM                    WFIND                                      BUG14313
+     C                   PARM                    SDVCUIT2                                   BUG14313
+                                                                                            BUG14313
+      ** If there were any errors in the update functions                                   BUG14313
+                                                                                            BUG14313
+     C                   IF        @RTCD <> *BLANKS                                         BUG14313
+     C                   EVAL      DBKEY = *BLANKS                                          BUG14313
+     C**********         EVAL      DBKEY = A_VPCCUST                                 BUG14313 LUC139
+     C                   EVAL      DBKEY = V_PCCUST                                           LUC139
+     C                   EVAL      DBFILE = 'SDCUT2PD'                                      BUG14313
+     C                   EVAL      DBASE = 055                                              BUG14313
+     C                   EXSR      SRERR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
 **  CPY@
 (c) Finastra International Limited 2001
 ** CMD1                                                                                       CSD012

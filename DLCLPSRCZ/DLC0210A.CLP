@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CDL099             Date 09Oct17              */
+/*       Last Amend No. LUC121             Date 11Feb19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CDL099             Date 09Oct17              */
 /*                      CSW214             Date 25Nov14              */
 /*                      AR583880           Date 19Aug14              */
 /*                      AR402334           Date 19Aug14              */
@@ -64,6 +65,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*     LUC121 - Add call to Bank's own confirmation program.         */
+/*              Use of core hooks members DLC0210A01 & DLC0210A13.   */
 /*     MD046248 - Finastra Rebranding                                */
 /*     CDL099 - Split Value Dates                                    */
 /*     CSW214 - SWIFT Changes 2014                                   */

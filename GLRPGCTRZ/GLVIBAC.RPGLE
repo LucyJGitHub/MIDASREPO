@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037025           Date 10Feb16               *
+      *  Last Amend No. LUC103             Date 17Dec14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037025           Date 10Feb16               *
       *                 MD029037           Date 25Jul14               *
       *                 AR816838           Date 17Jul14               *
       *                 MD000091           Date 07May13               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC103   - IBAN Extra Validation                             *
+      *             (New copy members GLH01008, GLH01009, GLH01010)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037025 - Recompiled due to changes in INPAYIB              *
       *  MD029037 - Unable to close acount due to IBAN error          *
@@ -161,7 +164,8 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
+     D/COPY WNCPYSRC,GLH01008                                                              LUC103
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -646,6 +650,7 @@
       *
       *
       *
+     C/COPY WNCPYSRC,GLH01009                                                             LUC103
       *
       ** If an error was found, set the return code appropriately
       *
@@ -717,7 +722,8 @@
       ** an external data area
  
      C/COPY ZACPYSRC,DBFIELDS
- 
+
+     C/COPY WNCPYSRC,GLH01010                                                             LUC103
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

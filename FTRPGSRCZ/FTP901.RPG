@@ -1,0 +1,288 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Reset Failed Messages')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FTP901 - FT Reset Failed Messages                            *
+     F*                                                               *
+     F*  (C) Copyright Misys International Banking Systems 2001       *
+     F*                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+     F*  Prev Amend No. AR856737           Date 13Sep11               *
+     F*                 MMFIX              Date 08Sep2008             *
+     F*                 PL0001 *Create     Date 04Oct2001             *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+     F*  MMFIX - Incomplete fix 247197. FTSTPF flag not reset         *
+     F*          causing messages not processed after Queue reset     *
+     F*  PL0001 - STP additions                                       *
+     F*                                                               *
+     F*****************************************************************
+     FMEINFTV2UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     IINLF      E DSMEINLFPD
+      *
+      * Define parameters to be passed for FT IMM update
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Switchable Features Descriptions *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM *BLANKS   @RTN    7
+      *
+      *  Set up primary reference
+      *
+     C                     MOVEL*BLANKS   W0PREF
+      *
+      * Initialise program
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If Car not active set return to spaces
+      *
+     C                     MOVEL*BLANKS   O@PREF 15
+     C           PL0001    IFEQ 'PL0001'
+      *
+      *  Reset  messages
+      *
+     C                     EXSR SRRSET
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPREF   : Create Payment Reference                          *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRSET    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRRSET'  @STK,Q
+      *
+      *  Read until end of file
+      *
+     C                     READ @INFTV2                  90
+      *
+     C           *IN90     IFEQ *OFF
+     C           *IN90     DOWEQ*OFF
+      *
+      *  Blank out field
+      *
+     C                     MOVEL*BLANKS   FTINFG
+     C                     MOVEL*BLANKS   FTSTPF                               MMFIX
+      *
+      *  Update
+      *
+     C                     EXCPTUPDFT
+      *
+      *  Create log record
+      *
+      *
+      *  Fill record format data structure with available data
+      *
+     C           *LIKE     DEFN LFMSID    W0MSID           Action - Msg ID
+     C           *LIKE     DEFN LFMSDT    W0MSDT           Action Data
+     C                     CLEARINLF
+      *
+     C                     Z-ADDFTMSGR    LFMSGR           Unique Ref.
+     C                     Z-ADDFTKPRT    LFKPRT           Part No.
+     C                     MOVEL'STP0001' LFMSID           Action - Msg ID
+     C                     MOVEL*BLANKS   LFMSDT           Action Data
+     C                     MOVEL'XXUSRMSG'LFMSGF           Message File
+     C                     MOVEL*BLANKS   LFARSM           Action Result
+     C                     MOVEL*BLANKS   LFARSD           Act Result Data
+     C                     MOVEL##PGM     LFCPGM           Calling Process
+     C                     MOVEL##PGM     LFRPGM           Called Process
+      *
+      *  N.B. Audit Stamp details are determined in called program
+      *
+      *
+      *  Set up data to be passed using the rcd format data structure
+      *
+     C                     CALL 'ME1040'               90
+     C                     PARM '*ADD    'W2ACT   8
+     C                     PARM           INLF
+     C                     PARM *BLANKS   W2RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W2RTN     ORNE *BLANKS
+     C                     MOVEL'ME1040  'W0FILE           ***************
+     C                     MOVEL'*CALL   'W0KEY            * DB ERROR 2  *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Commit
+      *
+     C                     COMIT
+      * Read next record
+     C                     READ @INFTV2                  90
+     C                     ENDDO
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRSET    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       #FIRST  1
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Access SAR details file to see if PL0001 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'PL0001'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Allow Batch Authorisation processing
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           PL0001    ANDEQ*BLANKS
+     C                     MOVEL'PL0001'  PL0001  6
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Open file
+      *
+     C                     OPEN MEINFTV2
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 30 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+      *
+      /EJECT
+     O@INFTV2 E                UPDFT
+     O                         FTINFG
+     O                         FTSTPF                                                    MMFIX
+**  CPY@ table
+(C) Copyright Misys International Banking Systems 2001

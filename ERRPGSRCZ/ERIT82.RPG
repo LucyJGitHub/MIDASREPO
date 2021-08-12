@@ -1,0 +1,691 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Voce/Sottovoce Decision Table')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT82 - Voce/Sottovoce Decision Table processing            *
+      *                                                               *
+      *  Called By: RPG/ERIT60 - Midas ER IT Reporting - Main         *
+      *                          Component                            *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI115             Date 01Apr04               *
+      *                 UIT021             Date 24Jun98               *
+      *                 UIT021                  14may97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI115 - PUMA Changes March 2004    - Recompiled             *
+      *  UIT021 - Bank of Italy Monthly Reporting (recompiled)        *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  I N T E R N A L   S U B - R O U T I N E S                    *
+      *  =========================================                    *
+      *                                                               *
+      *  *INZSR   - Initialisation processing                         *
+      *  SRCANA   - Check if condition depending of Account Nature    *
+      *             Code is valid                                     *
+      *  SRTPCU   - Check if condition depending of Type of Customer  *
+      *             is valid                                          *
+      *  SRDUPE   - Check if condition depending of Duration Period   *
+      *             is valid                                          *
+      *  SRBACY   - Check if condition depending of Base Ccy is valid *
+      *  SRDBER   - Program-detected exception OR monitored error     *
+      *             sub-routine.                                      *
+      *                                                               *
+      *  E X T E R N A L   S U B - R O U T I N E S                    *
+      *  A N D   P R O G R A M S   I N D E X                          *
+      *  =========================================                    *
+      *                                                               *
+      *  ZFDWT    - External Sub-Routines to Add Nbr Working Days     *
+      *             to a Date                                         *
+      *  ZDAT10   - External Sub-Routine to Convert Date YYYYMMDD     *
+      *             to Midas Day Number                               *
+      *                                                               *
+      *  AOBANKR0 - Access Program to access Bank Details             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F O N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      *  50 - No record on ERFTDEL1 for Voce/Sottovoce Orig.    (OFF) *
+      *  51 - End Of File ERFTDEL1 for Voce/Sottovoce Orig.     (ON)  *
+      *     - End Of File IRFXTBL1 for Fixed Table 'CMA'        (ON)  *
+      *  52 - Chain fails on SDACODXP or IRFXTBL1               (ON)  *
+      *     - Used on SRDUPE Sub-Routine                              *
+      *                                                               *
+      *  U7 - Database Error                                          *
+      *  LR - End Of Program                                          *
+      *                                                               *
+      *****************************************************************
+      *
+      ***  Voce/Sottovoce Orig. & Derived Dec. Table - Rtv Index - Prefix 'N8'
+      *
+     FIRFTDEL1IF  E           K        DISK
+      *
+      ***  Account Code Extended Details             - Rtv Index - Prefix 'PM'
+      *
+     FSDACT1L0IF  E           K        DISK
+      *
+      ***  Fixed tables for codes validations                    - Prefix 'F0'
+      *
+     FIRFXTBL1IF  E           K        DISK
+      *
+      ********************************************************************
+      *
+      ***  Arrays to check Duration Period in Days
+      *
+     E                    CDPD      100  2               Codifications
+     E                    VDPD      100  2 0             Values
+      *
+      ***  Arrays to check Duration Period in Months
+      *
+     E                    CDPM      100  2               Codifications
+     E                    VDPM      100  2 0             Values
+      *
+      ***  External Sub-Routine to Add Nbr Working Days to a Date
+      *
+     E/COPY ZSRSRC,ZHOLE
+      *
+      ***  External Sub-Routine to Convert Date YYYYMMDD to Midas Day Number
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+      *
+      ***  Array for Copyright
+      *
+     E                    CPY@    1   1 80
+      *
+      ********************************************************************
+      *
+      ***  Extract Production File record.
+      *
+     I@ITTR     E DSERITTRPD
+      *
+      ***  Data structure for defined Account Code issued from Transaction
+      ***  Reference
+      *
+     I            DS
+     I                                        1   9 WW1
+     I                                       10  19 @ACOD
+     I                                       20  21 WW2
+     I                                        1  21 WWTREF
+      *
+      ***  Data structure for defined Number of days or Months and Code 'D'
+      ***  = Days or 'M' = Months from Fixed Table 'CMA' for Duration Period
+      *
+     I            DS
+     I                                        1   20NUMBER
+     I                                        3   3 CODEDM
+     I                                        1   3 WWPNAR
+      *
+      ***  Data structure for Value Date form ERITTRL1
+      *
+     I            DS
+     I                                        1   80WWSTRD
+     I                                        1   40AASTRD
+     I                                        5   60MMSTRD
+     I                                        7   80JJSTRD
+      *
+      ***  Data structure for defined Work Maturity Date YYYYMMDD
+      *
+     I            DS
+     I                                        1   80WWENDD
+     I                                        1   40WAENDD
+     I                                        5   60WMENDD
+     I                                        7   80WJENDD
+      *
+      ***  Local data area for Database Error Details
+      *
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      ***  Program status data structure
+      *
+     I           SDS
+     I                                     *PROGRAM PGM
+      *
+      ***  DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ***  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  External Sub-Routines to Add Nbr Working Days to a Date
+      *
+     E/COPY ZSRSRC,ZHOLI
+     E/COPY ZSRSRC,ZHOLDS
+      *
+      ***  External Sub-Routine to Convert Date YYYYMMDD to Midas Day Number
+      *
+     E/COPY ZSRSRC,ZDAT10Z1
+      *
+      ***  Data structure for compilation - Copyright insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ********************************************************************
+      *
+      ***  Main processing
+     C           ICLINI    SETLLIRFTDED0                 50
+     C           *IN50     IFEQ '1'                        *B1
+     C                     MOVE 'N'       FLOK    1
+      *
+      ***  If records found on Decision Table for Voce/Sottovoce original
+     C           ICLINI    READEIRFTDED0                 51
+      *
+     C           *IN51     DOWEQ'0'                        *B2
+     C           FLOK      ANDEQ'N'
+      *
+      ***  Initialise flag
+     C                     MOVE 'Y'       FLAG    1
+      *
+      ***  Check if condition depending of A/C Nature is valid if Lot Descriptor
+      ***  = 'GLA' (Extract from General Ledger) other cases are to be bypassed
+     C           @LOTD     IFEQ 'GLA'                      *B3
+     C                     EXSR SRACNA
+     C                     ELSE
+     C           N8ACNA    IFNE *BLANKS
+     C                     MOVE 'X'       FLAG
+     C                     ENDIF
+     C                     ENDIF                           *E3
+     C           FLAG      IFEQ 'Y'                        *B3
+      *
+      ***  If Condition depending of A/C Nature is valid,
+      ***  check if condition depending of Type of Customer is valid
+     C                     EXSR SRTPCU
+     C           FLAG      IFEQ 'Y'                        *B4
+      *
+      ***  If Conditions depending of A/C Nature and Type of Customer are valid,
+      ***  check if condition depending of Duration Period is valid
+     C                     EXSR SRDUPE
+     C           FLAG      IFEQ 'Y'                        *B5
+      *
+      ***  If Conditions depending of A/C Nature, Type of Customer and Duration
+      ***  Period are valid,
+      ***  check if condition depending of Base Ccy is valid
+     C                     EXSR SRBACY
+     C           FLAG      IFEQ 'Y'                        *B6
+      *
+      ***  If Conditions depending of A/C Nature, Type of Customer, Duration
+      ***  Period and Base Ccy are valid,
+      ***  stop read on Decision Table with Voce/Sottovoce original,
+     C                     MOVE 'Y'       FLOK
+      *
+      ***  Else read next record on Decision Table with Voce/Sottovoce original
+      *
+     C                     ENDIF                           *E6
+     C                     ENDIF                           *E5
+     C                     ENDIF                           *E4
+     C                     ENDIF                           *E3
+      *
+     C           FLOK      IFEQ 'N'                        *B2
+     C           ICLINI    READEIRFTDED0                 51
+     C                     ENDIF
+      *
+     C                     ENDDO                           *E2
+      *
+     C           FLOK      IFEQ 'Y'                        *B2
+      *
+      ***  If Conditions depending of A/C Nature, Type of Customer, Duration
+      ***  Period and Base Ccy are valid,
+      ***  setup Return Code to blank, Addition Code and Line Item to
+      ***  Voce/Sottovoce Derived
+      *
+     C                     MOVE ' '       @RTCD
+     C                     MOVE N8ADCD    @ADCD
+     C                     Z-ADDN8FTDE    ICLINI
+      *
+     C                     ELSE                            *X2
+      *
+      ***  Else setup Return Code to 'Y' = Voce/Sottovoce found but no
+      ***  depending conditions are valid (EXCEPT for A/C nature)
+     C           FLAG      IFNE 'X'
+     C                     MOVE 'Y'       @RTCD
+     C                     ENDIF
+      *
+     C                     ENDIF                           *E2
+      *
+     C                     ENDIF                           *E1
+      *
+      ***  End of program
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      ********************************************************************
+      *                                                                  *
+      *  *INZSR - Initialisation processing                              *
+      *                                                                  *
+      *  Called by: Main processing                                      *
+      *                                                                  *
+      *  Calls: SRDBER   - Program-detected exception OR monitored error *
+      *                    sub-routine.                                  *
+      *         ZDAT10   - External Sub-Routine to Convert Date YYYYMMDD *
+      *                    to Midas Day Number                           *
+      *         AOBANKR0 - Access Program to access Bank Details         *
+      *                                                                  *
+      ********************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+      *
+      ***  Input Parameters
+      *
+     C                     PARM           @TREF  21        Transaction Reference
+     C                     PARM           @LOTD   3        Lot descriptor
+     C                     PARM           @CCY    3        Currency Code
+     C                     PARM           @BNBI   1        Bank/Non Bank ind.
+     C                     PARM           @CUST   6        Customer Number
+      *
+      ***  Input/Output Parameter
+      *
+     C                     PARM           @ITTR            ERITTRPD Rcd Format
+      *
+      ***  Output Parameters
+      *
+     C                     PARM           @RTCD   1        Return Code
+     C                     PARM           @ADCD   1        Addition Code
+      *
+      ***  Setup WWTREF to Input Parameter for define Account Code
+      *
+     C                     MOVEL@TREF     WWTREF
+      *
+      ***  Define Work fields 'Type of Customer Condition' and 'Duration
+      ***  Period Condition'
+      *
+     C           *LIKE     DEFN N8TPCU    WWTPCU
+     C           *LIKE     DEFN N8DUPE    WWDUPE
+      *
+      ***  Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      ***  Define keys for access to Fixed Table
+      *
+     C           *LIKE     DEFN F0INTC    KINTC
+     C           *LIKE     DEFN F0INTK    KINTK
+      *
+     C           KFXTB     KLIST
+     C                     KFLD           KINTC
+     C                     KFLD           KINTK
+      *
+      ***  Access Banks Details to Retreive Currency Code
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @@RTCD    IFNE *BLANK                     *B1
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDBANKPD'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL'BANK'    DBKEY            *****************
+     C                     EXSR SRDBER
+     C                     ENDIF                           *E1
+      *
+      ***  Load Arrays to check Duration Period Condition from Fixed Table 'CMA'
+      *
+     C                     MOVE 'CMA'     KINTC
+     C           KINTC     SETLLF0PR
+     C           KINTC     READEF0PR                     51
+     C           *IN51     DOWEQ'0'                        *B1
+     C                     MOVELF0PNAR    WWPNAR
+     C                     MOVELF0INTK    WWINTK  2
+     C           CODEDM    IFEQ 'D'                        *B2
+     C                     ADD  1         D       30
+     C                     MOVE NUMBER    VDPD,D
+     C                     MOVE WWINTK    CDPD,D
+     C                     ENDIF                           *E2
+     C           CODEDM    IFEQ 'M'                        *B2
+     C                     ADD  1         M       30
+     C                     MOVE NUMBER    VDPM,M
+     C                     MOVE WWINTK    CDPM,M
+     C                     ENDIF                           *B2
+     C           KINTC     READEF0PR                     51
+     C                     ENDDO                           *E1
+      *
+      ***  Convert Value Date YYYYMMDD to Midas Day Number
+      *
+     C                     Z-ADDICSTRD    ZZDTIN
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    VALDAT  50
+      *
+      ***  Convert Maturity Date YYYYMMDD to Midas Day Number
+      *
+     C                     Z-ADDICENDD    ZZDTIN
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    MATDAT  50
+      *
+      ***  Initialise Work Fields
+      *
+     C                     MOVE *BLANKS   ZLOC
+      *
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      *  SRCANA - Check if condition depending of Account Nature Code is *
+      *           valid                                                  *
+      *                                                                  *
+      *  Called by: Main processing                                      *
+      *                                                                  *
+      *  Calls: SRDBER - Program-detected exception OR monitored error   *
+      *                  sub-routine.                                    *
+      *                                                                  *
+      ********************************************************************
+     C           SRACNA    BEGSR
+      *
+      ***  Testing condition if field N8ACNA not blank
+      *
+     C           N8ACNA    IFNE *BLANKS                    *B1
+      *
+      ***  Retreive Account Nature Code from Account Code on Account Code
+      ***  Extended Details (SDACODXP)
+      *
+     C           @ACOD     CHAINSDACT1L0             52
+      *
+     C           *IN52     IFEQ '0'                        *B2
+      *
+      ***  If found
+      *
+     C           PMACNA    IFNE N8ACNA                     *B3
+      *
+      ***  If Account Nature Codes differents, setup FLAG to 'N' = Condition
+      ***  not valid
+      *
+     C                     MOVE 'N'       FLAG
+     C                     ENDIF                           *E3
+      *
+     C                     ELSE                            *X2
+      *
+      ***  If not found, Database Error
+      *
+     C                     MOVEL'002'     DBASE            *****************
+     C                     MOVEL'SDACODXP'DBFILE           ** DB ERROR 02 **
+     C                     MOVEL@ACOD     DBKEY            *****************
+     C                     EXSR SRDBER
+      *
+     C                     ENDIF                           *E2
+      *
+     C                     ENDIF                           *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      *  SRTPCU - Check if condition depending of Type of Customer is    *
+      *           valid                                                  *
+      *                                                                  *
+      *  Called by: Main processing                                      *
+      *                                                                  *
+      *  Calls: None                                                     *
+      *                                                                  *
+      ********************************************************************
+     C           SRTPCU    BEGSR
+      *
+      ***  Testing condition if field N8TPCU not blank
+      *
+     C           N8TPCU    IFNE *BLANKS                    *B1
+      *
+      ***  Retreive special Type of Customer in Fixed Table 'CLB'
+      *
+     C                     MOVE 'CLB'     KINTC
+     C                     MOVE *BLANKS   KINTK
+     C                     MOVEL@CUST     KINTK
+      *
+     C           KFXTB     CHAINF0PR                 52
+      *
+     C           *IN52     IFEQ '0'                        *B2
+      *
+      ***  If found = Special Customer, setup WWTPCU to the 2 first digits
+      ***  from Narrative
+      *
+     C                     MOVELF0PNAR    WWTPCU
+      *
+     C                     ELSE                            *X2
+      *
+      ***  If not found, check if Bank or not
+      *
+     C           @BNBI     IFEQ 'Y'                        *B3
+      *
+      ***  Bank/Non Bank Indicator = 'Y' => Bank, setup WWTPCU to '03' = Banks
+      *
+     C                     MOVE '03'      WWTPCU
+     C                     ELSE                            *X3
+      *
+      ***  Bank/Non Bank Indicator = 'N' => Non Bank, setup WWTPCU to '04' =
+      ***  Customer (Not Bank)
+      *
+     C                     MOVE '04'      WWTPCU
+     C                     ENDIF                           *E3
+      *
+     C                     ENDIF                           *E2
+      *
+     C           WWTPCU    IFNE N8TPCU                     *B2
+      *
+      ***  If Types of Customer differents, setup FLAG to 'N' = Condition
+      ***  not valid
+      *
+     C                     MOVE 'N'       FLAG
+     C                     ENDIF                           *E2
+      *
+     C                     ENDIF                           *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      *  SRDUPE - Check if condition depending of Duration Period is     *
+      *           valid                                                  *
+      *                                                                  *
+      *  Called by: Main processing                                      *
+      *                                                                  *
+      *  Calls: ZFDWT - External Sub-Routines to Add Nbr Working Days    *
+      *                 to a Date                                        *
+      *                                                                  *
+      ********************************************************************
+     C           SRDUPE    BEGSR
+      *
+      ***  Testing condition if field N8DUPE not blank
+      *
+     C           N8DUPE    IFNE *BLANKS                    *B1
+      *
+      ***  Initialise Work field
+      *
+     C                     MOVE '  '      WWDUPE
+      *
+     C           ICENDD    IFEQ 0                          *B2
+      *
+      ***  If Maturity Date = 0 => Call, setup WWDUPE to '00'
+      *
+     C                     MOVE '00'      WWDUPE
+      *
+     C                     ELSE                            *X2
+      *
+      ***  Check Duration Period:
+      *
+     C                     MOVE '0'       *IN52
+     C                     Z-ADD0         D
+      *
+      ***  Calculate Work Maturity Date with adding Working Days
+      *
+     C           *IN52     DOWEQ'0'                        *B3
+      *
+     C                     ADD  1         D
+     C           CDPD,D    IFEQ *BLANKS                    *B4
+      *
+     C                     MOVE '1'       *IN52
+      *
+     C                     ELSE                            *X4
+      *
+     C                     Z-ADDVALDAT    ZDAYNO
+     C                     Z-ADDVDPD,D    ZNRDYS
+     C                     MOVE @CCY      ZCCY
+     C                     EXSR ZFWDT
+      *
+      ***  Check if Maturity Date is later or equal than Work Maturity Date
+      ***  Calculated
+      *
+     C           MATDAT    IFLE ZDYNBR                     *B5
+     C                     MOVE CDPD,D    WWDUPE
+     C                     MOVE '1'       *IN52
+     C                     ENDIF                           *E5
+      *
+     C                     ENDIF                           *E4
+      *
+     C                     ENDDO                           *E3
+      *
+     C           WWDUPE    IFEQ *BLANKS                    *B3
+      *
+     C                     MOVE '0'       *IN52
+     C                     Z-ADD0         M
+      *
+      ***  Calculate Work Maturity Date with adding Months
+      *
+     C           *IN52     DOWEQ'0'                        *B4
+      *
+     C                     ADD  1         M
+     C           CDPM,M    IFEQ *BLANK                     *B5
+      *
+     C                     MOVE '1'       *IN52
+      *
+     C                     ELSE                            *X5
+      *
+     C           VDPM,M    DIV  12        WWA     20
+     C                     MVR            WWM     20
+     C                     Z-ADDICSTRD    WWSTRD
+     C           AASTRD    ADD  WWA       WAENDD
+     C           MMSTRD    ADD  WWM       WMENDD
+     C                     Z-ADDJJSTRD    WJENDD
+     C           WMENDD    IFGT 12                         *B6
+     C                     ADD  1         WAENDD
+     C                     SUB  12        WMENDD
+     C                     ENDIF                           *E6
+      *
+      ***  Check if Maturity Date is later or equal than Work Maturity Date
+      ***  Calculated
+      *
+     C           ICENDD    IFLE WWENDD                     *B7
+     C                     MOVE CDPM,M    WWDUPE
+     C                     MOVE '1'       *IN52
+     C                     ENDIF                           *E7
+      *
+     C                     ENDIF                           *E5
+      *
+     C                     ENDDO                           *E4
+      *
+     C                     ENDIF                           *E3
+      *
+     C                     ENDIF                           *E2
+      *
+     C           WWDUPE    IFNE N8DUPE                     *B2
+      *
+      ***  If Duration Codifications differents, setup FLAG to 'N' = Condition
+      ***  not valid
+      *
+     C                     MOVE 'N'       FLAG
+     C                     ENDIF                           *E2
+      *
+     C                     ENDIF                           *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      *  SRBACY - Check if condition depending of Base Ccy is valid      *
+      *                                                                  *
+      *  Called by: Main processing                                      *
+      *                                                                  *
+      *  Calls: None                                                     *
+      *                                                                  *
+      ********************************************************************
+     C           SRBACY    BEGSR
+      *
+      ***  Testing condition if field N8BACY not blank
+      *
+     C           N8BACY    IFNE *BLANKS                    *B1
+      *
+     C           N8BACY    IFEQ 'Y'                        *B2
+      *
+      ***  If Base Currency = 'Y' => Currency must be the same
+      *
+     C           @CCY      IFNE BJCYCD                     *B3
+      *
+      ***  If Currency differents, setup FLAG to 'N' = Condition not valid
+      *
+     C                     MOVE 'N'       FLAG
+     C                     ENDIF                           *E3
+      *
+     C                     ELSE                            *X2
+      *
+      ***  If Base Currency = 'N' => Currency must be differents
+      *
+     C           @CCY      IFEQ BJCYCD                     *B3
+      *
+      ***  If Currency the same, setup FLAG to 'N' = Condition not valid
+      *
+     C                     MOVE 'N'       FLAG
+     C                     ENDIF                           *E3
+      *
+     C                     ENDIF                           *E2
+      *
+     C                     ENDIF                           *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      *  SRDBER - Program-detected exception OR monitored error          *
+      *           sub-routine.                                           *
+      *                                                                  *
+      *  Called by: Main processing                                      *
+      *                                                                  *
+      *  Called: None                                                    *
+      *                                                                  *
+      ********************************************************************
+     C           SRDBER    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'E'       @RTCD
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ***  External Sub-Routines to Add Nbr Working Days to a Date
+      *
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZFWDT
+      *
+      ********************************************************************
+      *
+      ***  External Sub-Routine to Convert Date YYYYMMDD to Midas Day Number
+      *
+     C/COPY ZSRSRC,ZDAT10Z2
+      *
+      ********************************************************************
+      *
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

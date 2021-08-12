@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR923246           Date 15Mar12               *      
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. LUC125             Date 10Jun19               *
+      *  Prev Amend No. AR923246           Date 15Mar12               *      
+      *                 MD034915           Date 26Aug20               *
       *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
       *                 MD056223           Date 15Jul20               *
@@ -428,6 +429,56 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC125 - Make Profit Centre pass through from Transaction    *
+      *           (Upgrade A66108 to FM2.1)                           *
+      *           Use of core hook LE0450FFPG                         *
+      *           Use of core hook LE0450C024                         *
+      *           Use of core hook LE0450C070                         *
+      *           Use of core hook LEH00473                           *
+      *           Use of core hook LE0450C035                         *
+      *           Addition of hook LUC125_001                         *
+      *           Addition of hook LUC125_002                         *
+      *           Addition of hook LUC125_003                         *
+      *           Addition of hook LUC125_004                         *
+      *           Addition of hook LUC125_005                         *
+      *           Addition of hook LUC125_006                         *
+      *           Addition of hook LUC125_007                         *
+      *           Addition of hook LUC125_008                         *
+      *           Addition of hook LUC125_009                         *
+      *           Addition of hook LUC125_010                         *
+      *           Addition of hook LUC125_011                         *
+      *           Addition of hook LUC125_012                         *
+      *           Addition of hook LUC125_013                         *
+      *           Addition of hook LUC125_014                         *
+      *           Addition of hook LUC125_015                         *
+      *           Addition of hook LUC125_016                         *
+      *           Addition of hook LUC125_017                         *
+      *           Addition of hook LUC125_018                         *
+      *           Addition of hook LUC125_019                         *
+      *           Addition of hook LUC125_020                         *
+      *           Addition of hook LUC125_021                         *
+      *           Addition of hook LUC125_022                         *
+      *           Addition of hook LUC125_023                         *
+      *           Addition of hook LUC125_024                         *
+      *           Addition of hook LUC125_025                         *
+      *           Addition of hook LUC125_026                         *
+      *           Addition of hook LUC125_027                         *
+      *           Addition of hook LUC125_028                         *
+      *           Addition of hook LUC125_029                         *
+      *           Addition of hook LUC125_030                         *
+      *           Addition of hook LUC125_031                         *
+      *           Addition of hook LUC125_032                         *
+      *           Addition of hook LUC125_033                         *
+      *           Addition of hook LUC125_034                         *
+      *           Addition of hook LUC125_035                         *
+      *           Addition of hook LUC125_036                         *
+      *           Addition of hook LUC125_037                         *
+      *           Addition of hook LUC125_038                         *
+      *           Addition of hook LUC125_039                         *
+      *           Addition of hook LUC125_040                         *
+      *           Addition of hook LUC125_041                         *
+      *           Addition of hook LUC125_042                         *
+      *           Addition of hook LUC125_043                         *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
       *             when written. (Child: AR923248)                   *      
@@ -7033,7 +7084,9 @@ L118 I                             P   72   77 7RTSPL
 1088 C   88              MOVE      'P'           AKY(10)
 1089 C   88              Z-SUB     ACAMNT        ACAMNT
 1090 C  N88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_001                                                   LUC125
 1091 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_002                                                   LUC125
 1092 C**
 1093 C     CPAM          SUB       TOTI          ACAMNT                   89
 1094 C                   MOVE      'B'           AKY(10)
@@ -7527,7 +7580,9 @@ L118 I                             P   72   77 7RTSPL
 1129 C   88              MOVE      'P'           AKY(10)
 1130 C   88              Z-SUB     ACAMNT        ACAMNT
 1131 C  N88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_003
 1132 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_004
      C                   ENDIF
 1133 C**
 1134 C     CPAM          SUB       TOTI          ACAMNT                   89
@@ -8490,7 +8545,9 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEA     '    '        AKY(6)                                        CLE00
      C                   MOVE      'I'           AKY(10)                                       CLE00
      C                   MOVE      '1'           *IN21                                         CLE00
+     C/COPY WNCPYSRC,LUC125_005                                                   LUC125
      C                   EXSR      AKYOUT                                                      CLE00
+     C/COPY WNCPYSRC,LUC125_006                                                   LUC125
      C                   MOVE      '0'           *IN21                                         CLE00
       *                                                                   180044
      C     *IN15         IFEQ      '1'                                                         18004
@@ -9301,8 +9358,10 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C                   MOVE      'A'           AKY(3)                                        16597
      C                   MOVE      BKAKY         AKY(6)                                        16597
+     C/COPY WNCPYSRC,LUC125_007                                                   LUC125
      C     ACAMNT        IFGT      0                                                           16597
      C                   MOVE      'D'           AKY(10)                                       16597
+     C/COPY WNCPYSRC,LUC125_008                                                   LUC125
      C                   ELSE                                                                  16597
      C                   MOVE      'P'           AKY(10)                                       16597
      C                   Z-SUB     ACAMNT        ACAMNT                                        16597
@@ -9338,6 +9397,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
       *                                                                                       CAS009
      C                   ENDIF                                                                 16597
+     C/COPY WNCPYSRC,LUC125_009                                                   LUC125
      C                   MOVE      *OFF          *IN65                                         16597
       *                                                                   165977
       ** Total amount for settlement                                      165977
@@ -10383,7 +10443,9 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      'R'           AKY(3)                                        S0139
      C                   MOVEA     BKAKY         AKY(6)                                        S0139
      C                   MOVE      'E'           AKY(10)                                       S0139
+     C/COPY WNCPYSRC,LUC125_010                                                   LUC125
      C                   EXSR      AKYOUT                                                      S0139
+     C/COPY WNCPYSRC,LUC125_011                                                   LUC125
      C                   END                                                                   S0139
 1539 C***********TOTI      SUB  AIPD      ACAMNT       8889               S01392
       *                                                                                     AR317587
@@ -10416,6 +10478,7 @@ L118 I                             P   72   77 7RTSPL
 1540 C                   MOVE      'A'           AKY(3)
 1541 C                   MOVEA     BKAKY         AKY(6)
 1542 C  N88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_012                                                   LUC125
 1543 C   88              MOVE      'P'           AKY(10)
 1544 C   88              Z-SUB     ACAMNT        ACAMNT
      C                   SETON                                        65
@@ -10451,6 +10514,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
       *                                                                                       CAS009
      C                   SETOFF                                       65
+     C/COPY WNCPYSRC,LUC125_013                                                   LUC125
 1546 C**
 1547 C**   TOTAL AMOUNT FOR SETTLEMENT
 1548 C**
@@ -11605,14 +11669,17 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                 16597
       *                                                                   165977
      C                   Z-ADD     WRK13         ACAMNT                                        16597
+     C/COPY WNCPYSRC,LUC125_014                                                   LUC125
      C     ACAMNT        IFLT      0                                                           16597
      C                   MOVE      'P'           AKY(10)                                       16597
      C                   Z-SUB     ACAMNT        ACAMNT                                        16597
      C                   ELSE                                                                  16597
      C                   MOVE      'D'           AKY(10)                                       16597
+     C/COPY WNCPYSRC,LUC125_015                                                   LUC125
      C                   ENDIF                                                                 16597
      C     ACAMNT        IFNE      0                                                           16597
      C                   EXSR      AKYOUT                                                      16597
+     C/COPY WNCPYSRC,LUC125_016                                                   LUC125
      C                   ENDIF                                                                 16597
       *                                                                   165977
       ** Settlement amount key                                            165977
@@ -12030,6 +12097,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01076
      C                   SETON                                        53                       S0127
+     C/COPY WNCPYSRC,LUC125_017                                                   LUC125
      C                   EXSR      AKYOUT                                                      S0127
      C**                                                                  S01270
      C**   GENERATE NEW LOAN-TYPE/SUB-TYPE ACCOUNT KEYS                   S01270
@@ -12040,6 +12108,7 @@ L118 I                             P   72   77 7RTSPL
      C/COPY WNCPYSRC,LEH01077
      C                   SETOFF                                       53                       S0127
      C                   EXSR      AKYOUT                                                      S0127
+     C/COPY WNCPYSRC,LUC125_018                                                   LUC125
      C                   END                                                                   S0127
       *                                                                   CAC001
      C     BGN0ST        IFEQ      'Y'                                                         CAC00
@@ -12368,6 +12437,7 @@ L118 I                             P   72   77 7RTSPL
      C***********          Z-ADDACAMNT    ACAMNT              S01270BH3409BH3482
      C***********          MOVE 'P'       AKY,10                    BH3409BH3482
      C***********          END                                      BH3409BH3482
+     C/COPY WNCPYSRC,LUC125_019                                                   LUC125
      C                   Z-ADD     AIPD          ACAMNT                                        BH348
      C                   SETON                                        53                       S0127
      C                   EXSR      AKYOUT                                                      S0127
@@ -12379,6 +12449,7 @@ L118 I                             P   72   77 7RTSPL
 0781 C                   MOVEA     CLASA         AKY(11)
      C                   SETOFF                                       53                       S0127
      C                   EXSR      AKYOUT                                                      S0127
+     C/COPY WNCPYSRC,LUC125_020                                                   LUC125
      C                   END                                                                   S0127
       *                                                                                       233887
       ** Generate Account Key for nonlinear accounting                                        233887
@@ -12441,6 +12512,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
       *                                                                                       233887
      C                   MOVE      'D'           AKY(10)                                       BH348
+     C/COPY WNCPYSRC,LUC125_021                                                   LUC125
      C                   SETON                                        53                       BH348
      C                   EXSR      AKYOUT                                                      BH348
       *                                                                   BH3482
@@ -12451,6 +12523,7 @@ L118 I                             P   72   77 7RTSPL
 0781 C                   MOVEA     CLASA         AKY(11)
      C                   SETOFF                                       53                       BH348
      C                   EXSR      AKYOUT                                                      BH348
+     C/COPY WNCPYSRC,LUC125_022                                                   LUC125
      C                   END                                                                   BH348
       *                                                                   BH3482
      C                   END                                                                   S0127
@@ -13699,6 +13772,7 @@ L118 I                             P   72   77 7RTSPL
      C*****CLE031        IFEQ      'Y'                                             MD051695 MD051874
      C**********         EXSR      GETSETTLE                                       MD051695 MD051874
      C**********         ENDIF                                                     MD051695 MD051874
+     C/COPY WNCPYSRC,LUC125_023                                                   LUC125
       *                                                                                       262967
       ** WORIGA = Y: Original Loan Repayment must generate                                    262967
       ** an additiona account key XI                                                          262967
@@ -13944,6 +14018,7 @@ L118 I                             P   72   77 7RTSPL
      CAN 88              Z-SUB     ACAMNT        ACAMNT
      C   45
      CANN88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_024                                                   LUC125
      C     CLE028        IFEQ      'Y'
      C     PTYP          ANDEQ     80
      C     ADIF          ANDEQ     'Y'
@@ -13987,6 +14062,7 @@ L118 I                             P   72   77 7RTSPL
 1786 C  N89              EXSR      AKYOUT
      C                   ENDIF
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC125_025                                                   LUC125
       *                                                                                       CLE028
       ** Generate charge amortisation account key for                                         CLE028
       ** add on charges type of loan                                                          CLE028
@@ -15078,10 +15154,13 @@ C    C                   ENDIF                                                  
 2001 C  N45              GOTO      REVSRT
 2002 C**
 2003 C                   Z-ADD     TOTI          ACAMNT                 8889
+     C/COPY WNCPYSRC,LUC125_026                                                   LUC125
 2004 C   88              MOVE      'P'           AKY(10)
 2005 C   88              Z-SUB     ACAMNT        ACAMNT
 2006 C  N88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_027                                                   LUC125
 2007 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_028                                                   LUC125
 2008 C**
 2009 C     OPAM          SUB       TOTI          ACAMNT                   89
 2010 C                   MOVE      'B'           AKY(10)
@@ -15279,6 +15358,7 @@ C    C                   ENDIF                                                  
 2026 C  N45              GOTO      INTKEY
 2027 C**
 2028 C                   Z-ADD     TOTI          ACAMNT                 8889
+     C/COPY WNCPYSRC,LUC125_029                                                   LUC125
      C     CAS009        IFEQ      'Y'
       *                                                                                       232348
       ** Only process EIR cost accounting if loan's value date is same                        232348
@@ -15303,7 +15383,9 @@ C    C                   ENDIF                                                  
 2029 C   88              MOVE      'P'           AKY(10)
 2030 C   88              Z-SUB     ACAMNT        ACAMNT
 2031 C  N88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_030                                                   LUC125
 2032 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_031                                                   LUC125
      C                   ENDIF
 2033 C**
 2034 C     OPAM          SUB       TOTI          ACAMNT                   89
@@ -15401,6 +15483,7 @@ C    C                   ENDIF                                                  
      C                   ENDIF
       *                                                                                       CLE031
 2045 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_032                                                   LUC125
      C     WORIGL        IFEQ      'Y'                                                      CLE134
      C     WTOTDI        ANDNE     0                                                        CLE134
      C     WDECRF        ANDEQ     'Y'                                                      CLE134
@@ -15506,6 +15589,7 @@ C    C                   ENDIF                                                  
      C                   ENDIF
      C   45
 2057 CAN 88              Z-SUB     ACAMNT        ACAMNT
+     C/COPY WNCPYSRC,LUC125_033                                                   LUC125
       *                                                                                       CAS009
       ** If CAS009 is enabled, generate posted to date a/c keys only if                       CAS009
       ** the hedging amortisation method is not 'N' (non-linear).                             CAS009
@@ -15533,6 +15617,7 @@ C    C                   ENDIF                                                  
      C                   ELSE
 2058 C  N89              EXSR      AKYOUT
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC125_034                                                   LUC125
       *                                                                                       CAS009
       ** Update the accrued interest to date from EIR start date                              CAS009
       ** if CAS009 is enabled.                                                                CAS009
@@ -15661,7 +15746,9 @@ C    C                   ENDIF                                                  
 2085 C**
 2086 C                   Z-ADD     IWOD          ACAMNT                   89    INT. W/O
 2087 C                   MOVE      'I'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_035                                                   LUC125
 2088 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_036                                                   LUC125
       *                                                                   CAC001
      C     BGN0ST        IFEQ      'Y'                                                         CAC00
      C     FPRCL         ANDNE     *BLANKS                                                     CAC00
@@ -16101,6 +16188,7 @@ C    C                   ENDIF                                                  
 2171 CAN 88              Z-SUB     ACAMNT        ACAMNT
      C   45
 2172 CANN88              MOVE      'D'           AKY(10)
+     C/COPY WNCPYSRC,LUC125_037                                                   LUC125
      C     CLE028        IFEQ      'Y'
      C     PTYP          ANDEQ     80
      C     ADIF          ANDEQ     'Y'
@@ -16126,8 +16214,10 @@ C    C                   ENDIF                                                  
       ** Suppress Linear Amortisation for Discount Loans when                                 232315
       ** the Amortisation Method is 'N'on-Linear.                                             232315
       *                                                                                       232315
+     C/COPY WNCPYSRC,LUC125_038                                                   LUC125
      C                   ELSE
 2173 C  N89              EXSR      AKYOUT
+     C/COPY WNCPYSRC,LUC125_039                                                   LUC125
       *                                                                                       CLE028
       ** Generate charge account key for flat rate loans                                      CLE028
       ** when an interest accrual key has also been generated                                 CLE028
@@ -17985,6 +18075,7 @@ C    C                   ENDIF                                                  
      C  N88              MOVE      'D'           AKY(10)                                       S0139
      C   88              MOVE      'P'           AKY(10)                        PREMIUM        S0139
      C   88              Z-SUB     ACAMNT        ACAMNT                                        S0139
+     C/COPY WNCPYSRC,LUC125_040                                                   LUC125
       *                                                                                       CAS009
       ** If CAS009 is enabled, generate accrued discount/premium not yet posted               CAS009
       ** a/c keys only if the amortisation method is not 'N' (non-linear).                    CAS009
@@ -18008,6 +18099,7 @@ C    C                   ENDIF                                                  
      C                   ELSE
      C  N89              EXSR      AKYOUT                                                      S0139
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC125_041                                                   LUC125
       *                                                                                       CAS009
      C                   SETOFF                                       65                       S0139
      C*                                                                   S01392
@@ -18076,7 +18168,9 @@ C    C                   ENDIF                                                  
      C*                                                                   S01392
      C                   Z-ADD     INTA          ACAMNT                   89                   S0139
      C                   MOVE      'N'           AKY(10)                                       S0139
+     C/COPY WNCPYSRC,LUC125_042                                                   LUC125
      C  N89              EXSR      AKYOUT                                                      S0139
+     C/COPY WNCPYSRC,LUC125_043                                                   LUC125
      C*                                                                   S01392
      C**  PRINCIPAL NOT ROLLED OVER                                       S01392
      C*                                                                   S01392

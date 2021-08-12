@@ -1,0 +1,755 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Update PLN Commission rates')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FTP955 - FT Update PLN Commission rates                      *
+     F*                                                               *
+     F*  (C) Copyright Misys International Banking Systems 2003       *
+     F*                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+     F*  Prev Amend No. AR856737           Date 13Sep11               *
+     F*                 ESL038             Date 04Oct2004             *
+     F*                 EEE065             Date 23Sep2004             *
+     F*                 EEE058 *Create     Date 20Mar2003             *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+     F*  ESL038 - ING STP Development                                 *
+     F*  EEE065 - FT Payment Routing. Recompiled.                     *
+     F*  EEE058 - Incoming STP changes                                *
+     F*                                                               *
+     F*****************************************************************
+     FFTPCHGL0UF  E           K        DISK
+     F                                              KCOMIT
+      *  FT Commission table
+      *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     ISDCURR    E DSSDCURRPD
+     ISVCURR      DS                            800
+     I                                        1   3 SVCCY
+      *
+      * Currencies structure for saving
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Switchable Features Descriptions *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures for Currency Definition
+      *
+     ID#DTA       DS                            256
+      *
+      *  Calling parameter data structure for AOCCYCV0
+      *
+      *                                       From Currency & amount
+     I                                        1   3 D#FCCY
+     I                                    P   4  110D#FAMT
+      *                                       To Currency & amount
+     I                                       12  14 D#TCCY
+     I                                    P  15  220D#TAMT
+      *                                       Rate and multi/div ind.
+     I                                       23  23 D#MDIN
+     I                                    P  24  368D#RATE
+      *                            Output     Rate and multi/div ind.
+      *                                       If no in rate
+     I                                       37  37 O#MDIN
+     I                                    P  38  508O#RATE
+      *
+      *
+     I              'ABCDEFGHIJ'          C         ##DEF
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM *BLANKS   @RTN    7
+      *
+      * Initialise program
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If Car active process table
+      *
+     C           EEE058    IFEQ 'EEE058'
+      * only do defined sets
+     C                     MOVEL*BLANKS   PYCHCD
+     C           PYCHCD    SETLLFTPCHGD0
+     C                     READ FTPCHGD0                 92
+     C           *IN92     DOUEQ*ON
+      *
+      * Process if currency base specified
+     C           OTHCCY    IFNE *BLANKS
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC01    U#STOC                                              EEE065
+     C                     Z-ADDSABC01    U#SABC                                              EEE065
+     C                     Z-ADDENOC01    U#ENOC                                              EEE065
+     C                     Z-ADDEABC01    U#EABC                                              EEE065
+     C                     Z-ADDMIOC01    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC01    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC01    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC01    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC01    U#SSOC                                              STP998
+     C                     Z-ADDSSBC01    U#SSBC                                              STP998
+     C                     Z-ADDSEOC01    U#SEOC                                              STP998
+     C                     Z-ADDSSEC01    U#SSEC                                              STP998
+     C                     Z-ADDSMIO01    U#SMIO                                              STP998
+     C                     Z-ADDSMIB01    U#SMIB                                              STP998
+     C                     Z-ADDSMAC01    U#SMAC                                              STP998
+     C                     Z-ADDSMAB01    U#SMAB                                              STP998
+      *                                                                                       STP998
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC01                                              EEE065
+     C                     Z-ADDU#SABC    SABC01                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC01                                              EEE065
+     C                     Z-ADDU#EABC    EABC01                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC01                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC01                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC01                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC01                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC01                                              STP998
+     C                     Z-ADDU#SSBC    SSBC01                                              STP998
+     C                     Z-ADDU#SEOC    SEOC01                                              STP998
+     C                     Z-ADDU#SSEC    SSEC01                                              STP998
+     C                     Z-ADDU#SMIO    SMIO01                                              STP998
+     C                     Z-ADDU#SMIB    SMIB01                                              STP998
+     C                     Z-ADDU#SMAC    SMAC01                                              STP998
+     C                     Z-ADDU#SMAB    SMAB01                                              STP998
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC02    U#STOC                                              EEE065
+     C                     Z-ADDSABC02    U#SABC                                              EEE065
+     C                     Z-ADDENOC02    U#ENOC                                              EEE065
+     C                     Z-ADDEABC02    U#EABC                                              EEE065
+     C                     Z-ADDMIOC02    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC02    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC02    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC02    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC02    U#SSOC                                              STP998
+     C                     Z-ADDSSBC02    U#SSBC                                              STP998
+     C                     Z-ADDSEOC02    U#SEOC                                              STP998
+     C                     Z-ADDSSEC02    U#SSEC                                              STP998
+     C                     Z-ADDSMIO02    U#SMIO                                              STP998
+     C                     Z-ADDSMIB02    U#SMIB                                              STP998
+     C                     Z-ADDSMAC02    U#SMAC                                              STP998
+     C                     Z-ADDSMAB02    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC02                                              EEE065
+     C                     Z-ADDU#SABC    SABC02                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC02                                              EEE065
+     C                     Z-ADDU#EABC    EABC02                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC02                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC02                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC02                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC02                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC02                                              STP998
+     C                     Z-ADDU#SSBC    SSBC02                                              STP998
+     C                     Z-ADDU#SEOC    SEOC02                                              STP998
+     C                     Z-ADDU#SSEC    SSEC02                                              STP998
+     C                     Z-ADDU#SMIO    SMIO02                                              STP998
+     C                     Z-ADDU#SMIB    SMIB02                                              STP998
+     C                     Z-ADDU#SMAC    SMAC02                                              STP998
+     C                     Z-ADDU#SMAB    SMAB02                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC01    ANDNE0                                                             EEE065
+     C           EABC01    ADD  1         SABC02                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC03    U#STOC                                              EEE065
+     C                     Z-ADDSABC03    U#SABC                                              EEE065
+     C                     Z-ADDENOC03    U#ENOC                                              EEE065
+     C                     Z-ADDEABC03    U#EABC                                              EEE065
+     C                     Z-ADDMIOC03    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC03    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC03    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC03    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC03    U#SSOC                                              STP998
+     C                     Z-ADDSSBC03    U#SSBC                                              STP998
+     C                     Z-ADDSEOC03    U#SEOC                                              STP998
+     C                     Z-ADDSSEC03    U#SSEC                                              STP998
+     C                     Z-ADDSMIO03    U#SMIO                                              STP998
+     C                     Z-ADDSMIB03    U#SMIB                                              STP998
+     C                     Z-ADDSMAC03    U#SMAC                                              STP998
+     C                     Z-ADDSMAB03    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC03                                              EEE065
+     C                     Z-ADDU#SABC    SABC03                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC03                                              EEE065
+     C                     Z-ADDU#EABC    EABC03                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC03                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC03                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC03                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC03                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC03                                              STP998
+     C                     Z-ADDU#SSBC    SSBC03                                              STP998
+     C                     Z-ADDU#SEOC    SEOC03                                              STP998
+     C                     Z-ADDU#SSEC    SSEC03                                              STP998
+     C                     Z-ADDU#SMIO    SMIO03                                              STP998
+     C                     Z-ADDU#SMIB    SMIB03                                              STP998
+     C                     Z-ADDU#SMAC    SMAC03                                              STP998
+     C                     Z-ADDU#SMAB    SMAB03                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC02    ANDNE0                                                             EEE065
+     C           EABC02    ADD  1         SABC03                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC04    U#STOC                                              EEE065
+     C                     Z-ADDSABC04    U#SABC                                              EEE065
+     C                     Z-ADDENOC04    U#ENOC                                              EEE065
+     C                     Z-ADDEABC04    U#EABC                                              EEE065
+     C                     Z-ADDMIOC04    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC04    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC04    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC04    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC04    U#SSOC                                              STP998
+     C                     Z-ADDSSBC04    U#SSBC                                              STP998
+     C                     Z-ADDSEOC04    U#SEOC                                              STP998
+     C                     Z-ADDSSEC04    U#SSEC                                              STP998
+     C                     Z-ADDSMIO04    U#SMIO                                              STP998
+     C                     Z-ADDSMIB04    U#SMIB                                              STP998
+     C                     Z-ADDSMAC04    U#SMAC                                              STP998
+     C                     Z-ADDSMAB04    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC04                                              EEE065
+     C                     Z-ADDU#SABC    SABC04                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC04                                              EEE065
+     C                     Z-ADDU#EABC    EABC04                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC04                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC04                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC04                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC04                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC04                                              STP998
+     C                     Z-ADDU#SSBC    SSBC04                                              STP998
+     C                     Z-ADDU#SEOC    SEOC04                                              STP998
+     C                     Z-ADDU#SSEC    SSEC04                                              STP998
+     C                     Z-ADDU#SMIO    SMIO04                                              STP998
+     C                     Z-ADDU#SMIB    SMIB04                                              STP998
+     C                     Z-ADDU#SMAC    SMAC04                                              STP998
+     C                     Z-ADDU#SMAB    SMAB04                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC03    ANDNE0                                                             EEE065
+     C           EABC03    ADD  1         SABC04                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC05    U#STOC                                              EEE065
+     C                     Z-ADDSABC05    U#SABC                                              EEE065
+     C                     Z-ADDENOC05    U#ENOC                                              EEE065
+     C                     Z-ADDEABC05    U#EABC                                              EEE065
+     C                     Z-ADDMIOC05    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC05    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC05    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC05    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC05    U#SSOC                                              STP998
+     C                     Z-ADDSSBC05    U#SSBC                                              STP998
+     C                     Z-ADDSEOC05    U#SEOC                                              STP998
+     C                     Z-ADDSSEC05    U#SSEC                                              STP998
+     C                     Z-ADDSMIO05    U#SMIO                                              STP998
+     C                     Z-ADDSMIB05    U#SMIB                                              STP998
+     C                     Z-ADDSMAC05    U#SMAC                                              STP998
+     C                     Z-ADDSMAB05    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC05                                              EEE065
+     C                     Z-ADDU#SABC    SABC05                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC05                                              EEE065
+     C                     Z-ADDU#EABC    EABC05                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC05                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC05                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC05                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC05                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC05                                              STP998
+     C                     Z-ADDU#SSBC    SSBC05                                              STP998
+     C                     Z-ADDU#SEOC    SEOC05                                              STP998
+     C                     Z-ADDU#SSEC    SSEC05                                              STP998
+     C                     Z-ADDU#SMIO    SMIO05                                              STP998
+     C                     Z-ADDU#SMIB    SMIB05                                              STP998
+     C                     Z-ADDU#SMAC    SMAC05                                              STP998
+     C                     Z-ADDU#SMAB    SMAB05                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC04    ANDNE0                                                             EEE065
+     C           EABC04    ADD  1         SABC05                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC06    U#STOC                                              EEE065
+     C                     Z-ADDSABC06    U#SABC                                              EEE065
+     C                     Z-ADDENOC06    U#ENOC                                              EEE065
+     C                     Z-ADDEABC06    U#EABC                                              EEE065
+     C                     Z-ADDMIOC06    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC06    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC06    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC06    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC06    U#SSOC                                              STP998
+     C                     Z-ADDSSBC06    U#SSBC                                              STP998
+     C                     Z-ADDSEOC06    U#SEOC                                              STP998
+     C                     Z-ADDSSEC06    U#SSEC                                              STP998
+     C                     Z-ADDSMIO06    U#SMIO                                              STP998
+     C                     Z-ADDSMIB06    U#SMIB                                              STP998
+     C                     Z-ADDSMAC06    U#SMAC                                              STP998
+     C                     Z-ADDSMAB06    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC06                                              EEE065
+     C                     Z-ADDU#SABC    SABC06                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC06                                              EEE065
+     C                     Z-ADDU#EABC    EABC06                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC06                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC06                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC06                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC06                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC06                                              STP998
+     C                     Z-ADDU#SSBC    SSBC06                                              STP998
+     C                     Z-ADDU#SEOC    SEOC06                                              STP998
+     C                     Z-ADDU#SSEC    SSEC06                                              STP998
+     C                     Z-ADDU#SMIO    SMIO06                                              STP998
+     C                     Z-ADDU#SMIB    SMIB06                                              STP998
+     C                     Z-ADDU#SMAC    SMAC06                                              STP998
+     C                     Z-ADDU#SMAB    SMAB06                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC05    ANDNE0                                                             EEE065
+     C           EABC05    ADD  1         SABC06                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC07    U#STOC                                              EEE065
+     C                     Z-ADDSABC07    U#SABC                                              EEE065
+     C                     Z-ADDENOC07    U#ENOC                                              EEE065
+     C                     Z-ADDEABC07    U#EABC                                              EEE065
+     C                     Z-ADDMIOC07    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC07    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC07    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC07    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC07    U#SSOC                                              STP998
+     C                     Z-ADDSSBC07    U#SSBC                                              STP998
+     C                     Z-ADDSEOC07    U#SEOC                                              STP998
+     C                     Z-ADDSSEC07    U#SSEC                                              STP998
+     C                     Z-ADDSMIO07    U#SMIO                                              STP998
+     C                     Z-ADDSMIB07    U#SMIB                                              STP998
+     C                     Z-ADDSMAC07    U#SMAC                                              STP998
+     C                     Z-ADDSMAB07    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC07                                              EEE065
+     C                     Z-ADDU#SABC    SABC07                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC07                                              EEE065
+     C                     Z-ADDU#EABC    EABC07                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC07                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC07                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC07                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC07                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC07                                              STP998
+     C                     Z-ADDU#SSBC    SSBC07                                              STP998
+     C                     Z-ADDU#SEOC    SEOC07                                              STP998
+     C                     Z-ADDU#SSEC    SSEC07                                              STP998
+     C                     Z-ADDU#SMIO    SMIO07                                              STP998
+     C                     Z-ADDU#SMIB    SMIB07                                              STP998
+     C                     Z-ADDU#SMAC    SMAC07                                              STP998
+     C                     Z-ADDU#SMAB    SMAB07                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC06    ANDNE0                                                             EEE065
+     C           EABC06    ADD  1         SABC07                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC08    U#STOC                                              EEE065
+     C                     Z-ADDSABC08    U#SABC                                              EEE065
+     C                     Z-ADDENOC08    U#ENOC                                              EEE065
+     C                     Z-ADDEABC08    U#EABC                                              EEE065
+     C                     Z-ADDMIOC08    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC08    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC08    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC08    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC08    U#SSOC                                              STP998
+     C                     Z-ADDSSBC08    U#SSBC                                              STP998
+     C                     Z-ADDSEOC08    U#SEOC                                              STP998
+     C                     Z-ADDSSEC08    U#SSEC                                              STP998
+     C                     Z-ADDSMIO08    U#SMIO                                              STP998
+     C                     Z-ADDSMIB08    U#SMIB                                              STP998
+     C                     Z-ADDSMAC08    U#SMAC                                              STP998
+     C                     Z-ADDSMAB08    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC08                                              EEE065
+     C                     Z-ADDU#SABC    SABC08                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC08                                              EEE065
+     C                     Z-ADDU#EABC    EABC08                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC08                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC08                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC08                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC08                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC08                                              STP998
+     C                     Z-ADDU#SSBC    SSBC08                                              STP998
+     C                     Z-ADDU#SEOC    SEOC08                                              STP998
+     C                     Z-ADDU#SSEC    SSEC08                                              STP998
+     C                     Z-ADDU#SMIO    SMIO08                                              STP998
+     C                     Z-ADDU#SMIB    SMIB08                                              STP998
+     C                     Z-ADDU#SMAC    SMAC08                                              STP998
+     C                     Z-ADDU#SMAB    SMAB08                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC07    ANDNE0                                                             EEE065
+     C           EABC07    ADD  1         SABC08                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     Z-ADDSTOC09    U#STOC                                              EEE065
+     C                     Z-ADDSABC09    U#SABC                                              EEE065
+     C                     Z-ADDENOC09    U#ENOC                                              EEE065
+     C                     Z-ADDEABC09    U#EABC                                              EEE065
+     C                     Z-ADDMIOC09    U#MIOC                                              EEE065
+     C                     Z-ADDMIBC09    U#MIBC                                              EEE065
+     C                     Z-ADDMAOC09    U#MAOC                                              EEE065
+     C                     Z-ADDMXBC09    U#MXBC                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDSSOC09    U#SSOC                                              STP998
+     C                     Z-ADDSSBC09    U#SSBC                                              STP998
+     C                     Z-ADDSEOC09    U#SEOC                                              STP998
+     C                     Z-ADDSSEC09    U#SSEC                                              STP998
+     C                     Z-ADDSMIO09    U#SMIO                                              STP998
+     C                     Z-ADDSMIB09    U#SMIB                                              STP998
+     C                     Z-ADDSMAC09    U#SMAC                                              STP998
+     C                     Z-ADDSMAB09    U#SMAB                                              STP998
+      *                                                                                       EEE065
+     C                     EXSR SRRCHG
+      *                                                                                       EEE065
+     C                     Z-ADDU#STOC    STOC09                                              EEE065
+     C                     Z-ADDU#SABC    SABC09                                              EEE065
+     C                     Z-ADDU#ENOC    ENOC09                                              EEE065
+     C                     Z-ADDU#EABC    EABC09                                              EEE065
+     C                     Z-ADDU#MIOC    MIOC09                                              EEE065
+     C                     Z-ADDU#MIBC    MIBC09                                              EEE065
+     C                     Z-ADDU#MAOC    MAOC09                                              EEE065
+     C                     Z-ADDU#MXBC    MXBC09                                              EEE065
+      * STP values                                                                            STP998
+     C                     Z-ADDU#SSOC    SSOC09                                              STP998
+     C                     Z-ADDU#SSBC    SSBC09                                              STP998
+     C                     Z-ADDU#SEOC    SEOC09                                              STP998
+     C                     Z-ADDU#SSEC    SSEC09                                              STP998
+     C                     Z-ADDU#SMIO    SMIO09                                              STP998
+     C                     Z-ADDU#SMIB    SMIB09                                              STP998
+     C                     Z-ADDU#SMAC    SMAC09                                              STP998
+     C                     Z-ADDU#SMAB    SMAB09                                              STP998
+      *                                                                                       EEE065
+      * Correct start points if not zero                                                      EEE065
+     C           U#SABC    IFNE 0                                                             EEE065
+     C           EABC08    ANDNE0                                                             EEE065
+     C           EABC08    ADD  1         SABC09                                              EEE065
+     C                     ENDIF                                                              EEE065
+     C           U#SSBC    IFNE 0                                                             STP998
+     C           SSEC08    ANDNE0                                                             STP998
+     C           SSEC08    ADD  1         SSBC09                                              STP998
+     C                     ENDIF                                                              STP998
+      *                                                                                       EEE065
+     C                     UPDATFTPCHGD0                                                      EEE065
+     C                     COMIT                                                              EEE065
+      *                                                                                       EEE065
+     C                     ENDIF
+      *
+     C                     READ FTPCHGD0                 92
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCHG   : Recalculate change                                *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRCHG    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRRCHG'  @STK,Q
+      *
+      *  Use AOCCYCV0 to convert currencies
+     C           *LIKE     DEFN STOC01    U#STOC                                              EEE065
+     C           *LIKE     DEFN SABC01    U#SABC                                              EEE065
+     C           *LIKE     DEFN ENOC01    U#ENOC                                              EEE065
+     C           *LIKE     DEFN EABC01    U#EABC                                              EEE065
+     C           *LIKE     DEFN MIOC01    U#MIOC                                              EEE065
+     C           *LIKE     DEFN MIBC01    U#MIBC                                              EEE065
+     C           *LIKE     DEFN MAOC01    U#MAOC                                              EEE065
+     C           *LIKE     DEFN MXBC01    U#MXBC                                              EEE065
+     C           *LIKE     DEFN SSOC01    U#SSOC                                              STP998
+     C           *LIKE     DEFN SSBC01    U#SSBC                                              STP998
+     C           *LIKE     DEFN SEOC01    U#SEOC                                              STP998
+     C           *LIKE     DEFN SSEC01    U#SSEC                                              STP998
+     C           *LIKE     DEFN SMIO01    U#SMIO                                              STP998
+     C           *LIKE     DEFN SMIB01    U#SMIB                                              STP998
+     C           *LIKE     DEFN SMAC01    U#SMAC                                              STP998
+     C           *LIKE     DEFN SMAB01    U#SMAB                                              STP998
+      *
+     C                     CLEARO#DTA
+     C                     MOVELOTHCCY    D#FCCY
+     C                     MOVELBJCYCD    D#TCCY
+      * Convert Start amount
+     C*********            Z-ADDSTOC01    D#FAMT                                              EEE065
+     C                     Z-ADDU#STOC    D#FAMT                                              EEE065
+      *
+     C                     CALL 'AOCCYCV0'             9090
+     C                     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*SPT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C**********           Z-ADDD#TAMT    SABC01                                              EEE065
+     C                     Z-ADDD#TAMT    U#SABC                                              EEE065
+      * Convert End amount
+     C**********           Z-ADDENOC01    D#FAMT                                              EEE065
+     C                     Z-ADDU#ENOC    D#FAMT                                              EEE065
+      *
+     C                     CALL 'AOCCYCV0'             9090
+     C                     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*SPT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C           *LIKE     DEFN EABC01    ##TOP
+     C                     MOVEL*ALL'9'   ##TOP
+     C           EABC01    IFNE ##TOP
+     C**********           Z-ADDD#TAMT    EABC01                                              EEE065
+     C                     Z-ADDD#TAMT    U#EABC                                              EEE065
+     C                     ENDIF
+      * Convert Start commission
+     C**********           Z-ADDMIOC01    D#FAMT                                              EEE065
+     C                     Z-ADDU#MIOC    D#FAMT                                              EEE065
+      *
+     C                     CALL 'AOCCYCV0'             9090
+     C                     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*SPT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C**********           Z-ADDD#TAMT    MIBC01                                              EEE065
+     C                     Z-ADDD#TAMT    U#MIBC                                              EEE065
+      * Convert End commission
+     C**********           Z-ADDMAOC01    D#FAMT                                              EEE065
+     C                     Z-ADDU#MAOC    D#FAMT                                              EEE065
+      *
+     C                     CALL 'AOCCYCV0'             9090
+     C                     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*SPT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C***********          Z-ADDD#TAMT    MXBC01                                              EEE065
+     C                     Z-ADDD#TAMT    U#MXBC                                              EEE065
+      *
+     C                     Z-ADDU#SSOC    D#FAMT                                              STP998
+      *                                                                                       STP998
+     C                     CALL 'AOCCYCV0'             9090                                   STP998
+     C                     PARM *BLANKS   O#RTN   7                                           STP998
+     C                     PARM '*F*T*SPT'W0ACT   8                                           STP998
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           STP998
+      *                                                                                       STP998
+     C                     Z-ADDD#TAMT    U#SSBC                                              STP998
+      * Convert End amount                                                                    STP998
+     C                     Z-ADDU#SEOC    D#FAMT                                              STP998
+      *                                                                                       STP998
+     C                     CALL 'AOCCYCV0'             9090                                   STP998
+     C                     PARM *BLANKS   O#RTN   7                                           STP998
+     C                     PARM '*F*T*SPT'W0ACT   8                                           STP998
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           STP998
+      *                                                                                       STP998
+     C           *LIKE     DEFN EABC01    ##STOP                                              STP998
+     C                     MOVEL*ALL'9'   ##STOP                                              STP998
+     C           EABC01    IFNE ##STOP                                                        STP998
+     C                     Z-ADDD#TAMT    U#SSEC                                              STP998
+     C                     ENDIF                                                              STP998
+      * Convert Start commission                                                              STP998
+     C                     Z-ADDU#SMIO    D#FAMT                                              STP998
+      *                                                                                       STP998
+     C                     CALL 'AOCCYCV0'             9090                                   STP998
+     C                     PARM *BLANKS   O#RTN   7                                           STP998
+     C                     PARM '*F*T*SPT'W0ACT   8                                           STP998
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           STP998
+      *                                                                                       STP998
+     C                     Z-ADDD#TAMT    U#SMIB                                              STP998
+      * Convert End commission                                                                STP998
+     C                     Z-ADDU#SMAC    D#FAMT                                              STP998
+      *                                                                                       STP998
+     C                     CALL 'AOCCYCV0'             9090                                   STP998
+     C                     PARM *BLANKS   O#RTN   7                                           STP998
+     C                     PARM '*F*T*SPT'W0ACT   8                                           STP998
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           STP998
+      *                                                                                       STP998
+     C                     Z-ADDD#TAMT    U#SMAB                                              STP998
+      *
+     C***********          COMIT                                                              EEE065
+      *  Unwind subroutine stack name
+      *
+     C           EXRCHG    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       #FIRST  1
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Access SAR details file to see if PL0001 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'EEE058'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Car active
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           EEE058    ANDEQ*BLANKS
+     C                     MOVEL'EEE058'  EEE058  6
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Define data areas
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 30 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+      *
+      /EJECT
+**  CPY@ table
+(C) Copyright Misys International Banking Systems 2003

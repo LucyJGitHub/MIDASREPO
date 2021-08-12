@@ -1,0 +1,299 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME Set Auto Athorisation Indicator')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0060 - Set Auto Athorisation Indicator                    *
+      *                                                               *
+      *  Function:  This program places the customer in the field     *
+      *  from a specified account                                     *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2002       *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 MMFIX1             Date 21Feb06               *
+      *                 MKFX01             Date 23Jan06               *
+      *                 ESL038             Date 30Nov2004             *
+      *                 EEE058             Date 28Nov2002             *
+      * Midas Release 4.01--------------------------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  MMFX01 - When field 24=Cr than wrong currency and amount     *
+      *           used to check threshold                             *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  ESL038 - ING FT STP Development                              *
+      *  EEE058 - Repair field 50                                     *
+      *                                                               *
+      *****************************************************************
+     FMEINMPL1IF  E           K        DISK
+      *
+      *  Message parts file for currency of payment and amount
+      *
+     FMEINCRL1IF  E           K        DISK
+      *
+      *  Midas ME I.M Control Retrieval index
+      *
+     FFTAALMP0IF  E                    DISK
+      *
+      *  Auto Authorisation Limit
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IDSCURR    E DSSDCURRPD                                                                  EEE058
+      *                                                                                       EEE058
+      * Data Structures for Currency Definition                                               EEE058
+      *                                                                                       EEE058
+     ID#DTA       DS                            256                                           EEE058
+      *                                                                                       EEE058
+      *  Calling parameter data structure for AOCCYCV0                                        EEE058
+      *                                                                                       EEE058
+      *                                       From Currency & amount                          EEE058
+     I                                        1   3 D#FCCY                                    EEE058
+     I                                    P   4  110D#FAMT                                    EEE058
+      *                                       To Currency & amount                            EEE058
+     I                                       12  14 D#TCCY                                    EEE058
+     I                                    P  15  220D#TAMT                                    EEE058
+      *                                       Rate and multi/div ind.                         EEE058
+     I                                       23  23 D#MDIN                                    EEE058
+     I                                    P  24  368D#RATE                                    EEE058
+      *                            Output     Rate and multi/div ind.                         EEE058
+      *                                       If no in rate                                   EEE058
+     I                                       37  37 O#MDIN                                    EEE058
+     I                                    P  38  508O#RATE                                    EEE058
+      *                                                                                       EEE058
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+      *
+     IPIFDDT      DS
+     I                                        1 256 WRFDDT
+     I                                        6 256 WRTGVL
+     I                                       20  24 LINE1
+     I                                       20  25 U#CNUA
+     I                                       55 256 REST
+     I                                       66 256 RESTA
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IPRFDDT      DS
+     I                                        1 256 WIFDDT
+     I                                        6 256 WITGVL
+     I                                        2  19 NACCR
+     I                                        2   7 NCNUM
+     I                                        8  10 NCCY
+     I*****                                  11  14 NACOD
+     I*****                                  15  16 NACSQ
+     I*****                                  17  19 NBRCA
+     I*****                                  20 256 N50INF
+     I                                       55  55 DOT
+     I                                       66  66 DOTA
+     I                                       11  20 NACOD
+     I                                       21  22 NACSQ
+     I                                       23  25 NBRCA
+     I                                       26 262 N50INF
+     IP@FMT     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+     ID@ACCT    E DSACCNTAB
+      * ACCNTABF - Account details record format data structure
+      *
+      *
+     IPCRIT     E DSMEGNCRPD
+      * Criteria rule hit
+      *
+     I              '0123456789'          C         DIGITS
+     I              'NO ORDERING CUSTOME- C         P50C
+     I              'R ON MT910'
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+     C           *LIKE     DEFN WRTGVL    P#RPP1
+     C           *LIKE     DEFN WITGVL    P#RPP2
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      *  Process field
+      *
+     C                     MOVELP#RPP1    PIFDDT
+     C                     MOVELP#RPP1    PRFDDT
+      * Save GNAUTO
+     C                     MOVE GNAUTO    SAUTO   1
+      *
+      * If Amount Greater than Limit      , Set off Autho autorisation
+     C           1         SETLL@AALMP0
+     C                     READ @AALMP0                  91
+     C           *IN91     IFEQ *OFF
+      *
+     C           PHMSGR    CHAIN@INCRL1              91
+      *
+      * When message not found - skip the rest of processing
+      *
+     C           *IN91     IFEQ *OFF
+      *
+      *
+      * get part information
+     C           KINMP     KLIST
+     C                     KFLD           MPMSGR
+     C                     KFLD           MPKPRT
+     C                     Z-ADDPHMSGR    MPMSGR
+     C                     Z-ADDPHPART    MPKPRT
+      * get data
+     C           KINMP     CHAIN@INMPL1              91
+      *
+      * When message not found - skip the rest of processing
+      *
+     C           *IN91     IFEQ *OFF
+      *
+     C                     CLEARD#DTA                                                         EEE058
+      * Get currency details of message                                                       EEE058
+     C                     MOVE P24       @24     2
+     C           @24       IFNE 'CR'                                                          MMFIX1
+     C                     MOVELMPCYCD    @CCY             Message currency                   EEE058
+     C                     ELSE                                                               MMFIX1
+     C           PNWRK     IFEQ 'MTCASH'                                                      MMFIX1
+     C                     MOVELP32A      DSTRAN                                              MMFIX1
+     C                     ELSE                                                               MMFIX1
+     C                     MOVELPDCA      DSTRAN                                              MMFIX1
+     C                     ENDIF                                                              MMFIX1
+     C                     MOVELTVCCY     @CCY                                                MMFIX1
+     C                     ENDIF                                                              MMFIX1
+      *                                                                                       EEE058
+     C                     CALL 'AOCURRR0'                                                    EEE058
+     C                     PARM *BLANKS   @RTCD   7                                           EEE058
+     C                     PARM '*KEY   ' @OPTN   7                                           EEE058
+     C                     PARM           @CCY    3                                           EEE058
+     C           DSCURR    PARM DSCURR    P@FMT                                               EEE058
+      *                                                                                       MMFIX1
+     C           *LIKE     DEFN D#FAMT    @@FMAM                                              MMFIX1
+     C           @24       IFNE 'CR'                                                          MMFIX1
+     C                     Z-ADDMPPYAM    @@FMAM                                              MMFIX1
+     C                     ELSE                                                               MMFIX1
+     C                     MOVEL*BLANKS   ZFIELD                                              MMFIX1
+     C                     MOVELTVAMT     ZFIELD                                              MMFIX1
+     C                     Z-ADDA6NBDP    ZADEC   10                                          MMFIX1
+     C           13        SUB  A6NBDP    ZADIG   20                                          MMFIX1
+      *                                                                                       MMFIX1
+     C           ',':'.'   XLATEZFIELD    ZFIELD                                              MMFIX1
+     C                     CALL 'ZALIGN'                                                      MMFIX1
+     C                     PARM *BLANKS   ZRTN    7                                           MMFIX1
+     C                     PARM           ZFIELD 16                                           MMFIX1
+     C                     PARM           ZADEC   10                                          MMFIX1
+     C                     PARM           ZADIG   20                                          MMFIX1
+     C                     PARM *BLANKS   ZAFLD  16                                           MMFIX1
+      *                                                                                       MMFIX1
+      * only check if entered amount is correct                                               MMFIX1
+     C           ZRTN      IFEQ *BLANKS                                                       MMFIX1
+      * Set up amount                                                                         MMFIX1
+     C                     Z-ADD0         ##PYAM                                              MMFIX1
+     C                     MOVE ZFIELD    ##PYAM 130                                          MMFIX1
+     C                     Z-ADD##PYAM    @@FMAM                                              MMFIX1
+      *                                                                                       MMFIX1
+     C                     ENDIF                                                              MMFIX1
+     C                     ENDIF                                                              MMFIX1
+      *                                                                                       MMFIX1
+     C           @24       IFNE 'CR'                                                          MMFIX1
+     C           PNWRK     ANDNE'ELIXIR'                                                      MMFIX1
+     C                     SELEC                                                              FT0001
+     C           A6NBDP    WHEQ 0                                                             FT0001
+     C                     Z-ADD@@FMAM    D#FAMT                                              MMFIX1
+     C           A6NBDP    WHEQ 1                                                             FT0001
+     C           @@FMAM    MULT 10        D#FAMT                                              MMFIX1
+     C           A6NBDP    WHEQ 2                                                             FT0001
+     C           @@FMAM    MULT 100       D#FAMT                                              MMFIX1
+     C           A6NBDP    WHEQ 3                                                             FT0001
+     C           @@FMAM    MULT 1000      D#FAMT                                              MMFIX1
+     C                     ENDSL                                                              FT0001
+     C                     ELSE                                                               MMFIX1
+     C                     Z-ADD@@FMAM    D#FAMT                                              MMFIX1
+     C                     ENDIF                                                              MMFIX1
+      *                                                                                       FT0001
+     C                     MOVEL@CCY      D#FCCY                                              MMFIX1
+      * Get currency details of amount to convert                                             EEE058
+     C                     MOVELAACURR    @CCY             Message currency                   EEE058
+      *                                                                                       EEE058
+     C                     CALL 'AOCURRR0'                                                    EEE058
+     C                     PARM *BLANKS   @RTCD   7                                           EEE058
+     C                     PARM '*KEY   ' @OPTN   7                                           EEE058
+     C                     PARM           @CCY    3                                           EEE058
+     C           DSCURR    PARM DSCURR    P@FMT                                               EEE058
+      * Continue if found                                                                     FT0001
+     C           @RTCD     IFEQ *BLANKS                                                       EEE058
+     C                     MOVELAACURR    D#TCCY                                              FT0001
+      * Convert currency                                                                      FT0001
+      *                                                                                       EEE058
+     C                     CALL 'AOCCYCV0'             9090                                   EEE058
+     C                     PARM *BLANKS   O#RTN   7                                           EEE058
+     C                     PARM '*F*T*SPT'W0ACT   8                                           EEE058
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           EEE058
+      *                                                                                       EEE058
+      * get amount entered                                                                    FT0001
+     C                     MOVEL*BLANKS   ZFIELD           B:Check Field                      ERN055
+     C                     MOVELAAAMNT    ZFIELD           B:Check Field                      EEE058
+     C                     Z-ADDA6NBDP    ZADEC   10       I:No Of Decs                       EEE058
+     C           13        SUB  A6NBDP    ZADIG   20       I:No Of Digits                     EEE058
+      *                                                                                       EEE058
+     C                     CALL 'ZALIGN'               90                                     EEE058
+     C                     PARM *BLANKS   ZRTN    7        B:Return Code                      EEE058
+     C                     PARM           ZFIELD 16        B:Check Field                      EEE058
+     C                     PARM           ZADEC   10       I:No Of Decs                       EEE058
+     C                     PARM           ZADIG   20       I:No Of Digits                     EEE058
+     C                     PARM *BLANKS   ZAFLD  16        O:Check Field                      EEE058
+      *                                                                                       EEE058
+      * only check if entered amount is correct                                               EEE058
+     C           ZRTN      IFEQ *BLANKS                                                       EEE058
+      * Set up amount                                                                         EEE058
+     C                     MOVE ZFIELD    ##CAMT 130                                          EEE058
+     C           D#TAMT    IFGT ##CAMT                                                        EEE058
+     C                     MOVE *BLANKS   GNAUTO                                              EEE058
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+     C                     ELSE
+     C                     MOVE SAUTO     GNAUTO
+     C                     ENDIF
+     C                     ENDIF                                                              EEE058
+     C                     ENDIF                                                              EEE058
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+      *  Exit program
+      *
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2002

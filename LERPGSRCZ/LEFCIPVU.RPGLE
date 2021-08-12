@@ -27,8 +27,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. LUC139             Date 08Jan21               *
+      *  Prev Amend No. Bug14554(CER009)   Date 18Nov20               *
+      *                 CER009             Date 18Nov20               *
+      *                 MD039655           Date 03Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031146           Date 08Apr16               *
@@ -83,6 +86,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  BUG14554 - Italian fields entered for facilities do not      *
+      *             appear during delete. Update facility number      *
+      *             generated for Italian field facilities (CER009)   *
+      *  CER009 - PUMA II Upgrade to MP                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -288,6 +296,9 @@
       ** LE Facilities LUX Valid File Format                                                  CER001
       *                                                                                       CER001
                                                                                               CER001
+     D ValidFCIPItl  E DS                  EXTNAME(LEVFCIT1PD)                                CER009
+      ** Valid Italian Details Layout                                                         CER009
+                                                                                              CER009
       * (Current) Facility record FM in file Format
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FM_)
@@ -336,6 +347,7 @@
       * Error indicators
      D OKFcPrim      E DS                  EXTNAME(LEEFCIPPD)
      D OKFcSeco      E DS                  EXTNAME(LEEFCISPD)
+     D OkFCIPItl     E DS                  EXTNAME(LEEFCIT1PD)                                CER009
       *                                                                                       CLE106
       ** Flags to indicate whether Pay Settlement instruction fields                          CLE106
       **  are valid                                                                           CLE106
@@ -423,6 +435,11 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CER009
+      ** External DS for Dealing ICD                                                          CER009
+                                                                                              CER009
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)                                  CER009
+      ** External DS for Currency Details                                                     CER009
 
      D ExtData       E DS                  EXTNAME(LEFCEXPD)
      D FCIPNotes     E DS                  EXTNAME(LEFCNTPD) PREFIX(N_)                     BUG10093
@@ -451,6 +468,10 @@
      D  #1CCY                 13     15                                                       CER001
      D  #1AMNT                16     30S 0                                                    CER001
 
+     D DataItal        DS          1024                                                       CER009
+     D  DataCCY                1      3                                                       CER009
+     D  DataBNDCSP             4      5                                                       CER009
+                                                                                              CER009
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -525,6 +546,7 @@
      D ZAMSGF          S             10A                                                      CLE106
      D ZAMSDA          S            132A                                                      CLE106
      D ZAMSTX          S            132A                                                      CLE106
+     D CER009          S              1A                                                      CER009
 
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
@@ -1424,6 +1446,10 @@
      C                   ENDIF                                                                CER001
      C                   ENDIF                                                                CER001
 
+     C                   If        CER009 = 'Y'                                               CER009
+     C                   Exsr      ValidateItal                                               CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -1662,6 +1688,39 @@
      C                   PARM                    WIdx                                         CER001
      C                   PARM                    ValidLUX                                     CER001
      C                   ENDSR                                                                CER001
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  ValidateItal - Validate PUMA II Details                      *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+                                                                                              CER009
+     C     ValidateItal  Begsr                                                                CER009
+                                                                                              CER009
+     C                   Eval      DataCCY = DDFCCY                                           CER009
+     C                   Eval      DataBNDCSP = BNDCSP                                        CER009
+                                                                                              CER009
+     C                   Callb     'LEFCIP4VL'                                                CER009
+     C                   Parm                    DataItal                                     CER009
+     C                   Parm                    RegData                                      CER009
+     C                   Parm                    OkFCIPItl                                    CER009
+                                                                                              CER009
+     C                   Parm                    FldNameArr                                   CER009
+     C                   Parm                    MsgIDArr                                     CER009
+     C                   Parm                    MsgDtaArr                                    CER009
+     C                   Parm                    Idx                                          CER009
+                                                                                              CER009
+     C                   Parm                    WFldNamArr                                   CER009
+     C                   Parm                    WMsgIDArr                                    CER009
+     C                   Parm                    WMsgDtaArr                                   CER009
+     C                   Parm                    WIdx                                         CER009
+                                                                                              CER009
+     C                   Parm                    ValidFCIPItl                                 CER009
+                                                                                              CER009
+     C                   Endsr                                                                CER009
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
       *****************************************************************
       *                                                               *
       * ValdateAmd - Routine to check whether the fields amended      *
@@ -1815,6 +1874,14 @@
      C                   PARM                    DDACTN                                       CER001
      C                   PARM                    ValidLUX                                     CER001
      C                   ENDIF                                                                CER001
+                                                                                              CER009
+     C                   If        CER009  = 'Y'                                              CER009
+     C                   Callb     'LEFCIP4UP'                                                CER009
+     C                   Parm                    ReturnCode                                   CER009
+     C                   Parm                    DDACTN                                       CER009
+     C                   Parm                    ValidFCIpItl                                 CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
      C                   ENDIF
 
      C                   ENDSR
@@ -1900,6 +1967,9 @@
      C                   EVAL      LVTMSP   = TimeStamp                                       CER001
      C                   EVAL      V_FNFRNT = V_FPFRNT                                      MD031146
      C                   EVAL      V_FNAFRT = V_FPAFRT                                      MD031146
+                                                                                              CER009
+     C                   EVAL      VPRFRNT  = APFOAsocID                                      CER009
+     C                   EVAL      VPRTMES  = TimeStamp                                       CER009
 
      C                   EXSR      SRSTAT                                                    BUG8870
 
@@ -1922,13 +1992,16 @@
      C                   MOVEL     DDCSSN        V_FPCNUM
      C                   MOVEL     DDCSSN        V_FNCNUM
      C                   MOVEL     DDCSSN        LVCNUM                                       CER001
+     C                   MOVEL     DDCSSN        VPRCNUM                                      CER009
      C                   MOVEL     DDFACT        V_FPFACT
      C                   MOVEL     DDFACT        V_FNFACT
      C                   MOVEL     DDFACT        LVFACT                                       CER001
+     C                   MOVEL     DDFACT        VPRFACT                                      CER009
 
      C                   MOVEL     DDFCNO        V_FPFCNO
      C                   MOVEL     DDFCNO        V_FNFCNO
      C                   MOVEL     DDFCNO        LVFCNO                                       CER001
+     C                   MOVEL     DDFCNO        VPRFCNO                                      CER009
      C                   EVAL      LVEXPO  =  V_FNPEXP                                        CER001
       *
       ***  Update valid Fclty: Last action code
@@ -2010,6 +2083,8 @@
 
      C                   END
 
+     C                   MOVE      V_FPFCNO      LVFCNO                                     BUG14554
+     C                   MOVE      V_FPFCNO      VPRFCNO                                    BUG14554
 
      C                   ENDSR
       *****************************************************************                      BUG8870
@@ -2477,6 +2552,34 @@
      C                   MOVE      'N'           CLE106                                       CLE106
      C                   ENDIF                                                                CLE106
       *
+      ** Access SAR details to determine if CER009 is switched on                             CER009
+                                                                                              CER009
+     C                   Call      'AOSARDR0'                                                 CER009
+     C                   Parm      *BLANKS       PRTCD                                        CER009
+     C                   Parm      '*VERIFY'     POPTN                                        CER009
+     C                   Parm      'CER009'      PSARD                                        CER009
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+     C                   If        PRTCD = *BLANKS                                            CER009
+     C                   Eval      CER009 = 'Y'                                               CER009
+     C                   Else                                                                 CER009
+     C                   Eval      CER009 = 'N'                                               CER009
+                                                                                              CER009
+     C                   If        PRTCD <> '*NRF'                                            CER009
+     C     *LOCK         IN        LDA                                                        CER009
+     C                   Eval      DBKEY = 'CER009'                                           CER009
+     C                   Eval      DBFILE = 'SCSARDPD'                                        CER009
+     C                   Eval      DBASE = 900                                                CER009
+     C                   Out       LDA                                                        CER009
+     C                   Exsr      *PSSR                                                      CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
+     C                   Callb     'AODEALR1'                                                 CER009
+     C                   Parm      *BLANKS       PRTCD                                        CER009
+     C                   Parm      '*FIRST'      POPTN                                        CER009
+     C     SDDEAL        Parm      SDDEAL        DSSDY                                        CER009
 
      C* Override SKTranFlLR
      C                   Z-ADD     50            MESLEN           15 5

@@ -1,0 +1,347 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facilities extended details')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0172 - Facilities Extension Details Window                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. CER009  *CREATE    Date 16Aug06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
+      *                                                               *
+      *****************************************************************
+     FLEFCT1L0IF  E           K        DISK
+      ** Facilities index file
+      *
+     FLE0172DFCF  E                    WORKSTN
+      ** Display file
+      *
+     E                    CPY@    1   1 80
+      *
+     E                    C2         14  1
+      ** Array C2 stores amount with decimal (Execution time array)
+      *
+     E                    C1         13  1 0
+      ** Array C1 stores amount as it is (Execution time array)
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+     I            DS
+     I                                        1  14 WAMTD
+     I                                        1  14 C2
+      ** Data structure to redefine array C2 as returned field WAMTD
+      *
+     I            DS
+     I                                        1  130WAMTW
+     I                                        1  130C1
+      ** Data structure to redefine array C1 as input field WAMTW
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM #0PGM
+     I                                      244 253 #0JOB
+     I                                      254 263 #0USER
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISCSARD    E DSSCSARDPD
+      ** SCSARDD0 - SAR Descriptions record format data structure
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External DS for CCY Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  M A I N  P R O C E S S I N G                                 *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR SRINIT
+      *
+     C                     WRITELE0172F0
+     C                     EXFMT#MSGCTL
+      *
+      ** Return Function Key pressed
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE 'Y'       P@INKC
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'Y'       P@INKL
+     C                     ENDSL
+      *
+     C                     EXSR SREND
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND - Routine to exit program                              *
+      *                                                               *
+      *****************************************************************
+     C           SREND     BEGSR
+      *
+      ** Exit program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFTOS - Routine to move file fields to screen fields        *
+      *                                                               *
+      *****************************************************************
+     C           SRFTOS    BEGSR
+      *
+     C                     MOVE PRSBCL    #0SBCL
+     C                     MOVE PROPPL    #0OPPL
+     C           #0OPPL    IFEQ *BLANKS
+     C                     MOVE '0'       #0OPPL
+     C                     ENDIF
+     C                     MOVE PRDECD    #0DECD
+     C                     MOVE PRSACO    #0SACO
+      *
+     C                     MOVE PRSAPE    WAMTW
+     C                     MOVE 3         WQECN
+     C                     EXSR SR0920
+     C                     MOVE WAMTD     #0SAPE
+      *
+     C           PREXPO    IFNE *ZEROS
+     C                     MOVE *BLANK    ZFIELD 16
+     C                     MOVE PREXPO    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC   10
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0EXPO
+     C                     ELSE
+     C                     MOVEL*BLANKS   #0EXPO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Routine to handle initial processing                *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C                     PARM           PFCUS   6
+     C                     PARM           PFTYP   30
+     C                     PARM           PFNUM   20
+     C                     PARM           PCCY    3
+     C                     PARM           P@INKC  1
+     C                     PARM           P@INKL  1
+      *
+      ** Setup key values using transaction data passed from caller
+      *
+     C           *LIKE     DEFN PRCNUM    KFCUS
+     C           *LIKE     DEFN PRFACT    KFTYP
+     C           *LIKE     DEFN PRFCNO    KFNUM
+      *
+     C           KFCLT     KLIST
+     C                     KFLD           KFCUS
+     C                     KFLD           KFTYP
+     C                     KFLD           KFNUM
+      *
+     C                     MOVE PFCUS     KFCUS
+     C                     MOVE PFTYP     KFTYP
+     C                     MOVE PFNUM     KFNUM
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'LE0172'  DBPGM
+     C                     MOVE 'N'       P@INKC
+     C                     MOVE 'N'       P@INKL
+      *
+     C           KFCLT     CHAINLEFCT1L0             6061
+      *
+     C           *IN60     IFEQ *ON
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C           *IN61     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'LEFCT1L0'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Get Currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN   7
+     C                     PARM           PCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Get Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C                     MOVE *ON       *IN25
+      *
+     C                     EXSR SRFTOS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR0920 - Back office amount editor                           *
+      *                                                               *
+      *****************************************************************
+     C           SR0920    BEGSR
+      *
+      ** Initialization
+      *
+     C                     MOVE '0'       WSWT1   1
+      *
+      ** Finding where decimal position is
+      *
+     C           14        SUB  WQECN     WQECW   20
+      *
+      ** Finding out most significant position
+      *
+     C           WQECW     SUB  1         WSIG    20
+     C                     MOVEA*BLANKS   C2
+     C                     Z-ADD1         CT1     20
+      *
+      ** Check to see if no of decimal places is zero, it zero
+      ** then significant position is 14 and position 1 is blank
+      *
+     C           WQECW     IFEQ 14
+     C                     Z-ADD14        WSIG
+     C                     Z-ADD2         CT2     20
+     C                     ELSE
+     C                     Z-ADD1         CT2
+     C                     ENDIF
+      *
+      ** Performing actual movement
+      *
+     C           CT2       DOWLT15
+     C           CT1       ANDLT14
+      *
+      ** Switch for zero suppression
+      *
+     C                     MOVE '0'       WSWT
+      *
+      ** If element of Array C1  is Zero and Index CT2 for array C2
+      ** is *LT sig position and also *LT decimal position then zero
+      ** can be suppressed and zero suppression switch is seton
+      *
+     C           C1,CT1    IFEQ 0
+     C           WSWT1     ANDEQ'0'
+     C           CT2       ANDLTWSIG
+     C           CT2       ANDLTWQECW
+     C                     MOVE *BLANK    C2,CT2
+     C                     MOVE '1'       WSWT    1
+     C                     ENDIF
+      *
+      ** If index CT2 for array C2 is equal to the decimal position
+      ** and not equal to the length of the array C2(14) then move
+      ** decimal position and increment CT2 by 1
+      *
+     C           CT2       IFEQ WQECW
+     C           CT2       ANDNE14
+     C                     MOVE '.'       C2,CT2
+     C                     ADD  1         CT2
+     C                     ENDIF
+      *
+      ** If zero has not been suppressed then move element from array
+      ** C1 to C2, seton zero suppression switch over(WSWT1)
+      *
+     C           WSWT      IFEQ '0'
+     C                     MOVE C1,CT1    C2,CT2
+     C                     MOVE '1'       WSWT1
+     C                     ENDIF
+      *
+     C                     ADD  1         CT1
+     C                     ADD  1         CT2
+      *
+     C                     ENDDO
+      *
+      ** Dummy moves for definition of work fields
+      *
+     C                     GOTO ZA0929
+     C                     MOVE WQECN     WQECN   10
+      *
+     C           ZA0929    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZEDIT - Insert Decimal points and 0s for numeric fields      *
+      *                                                               *
+      *****************************************************************
+     C           ZEDIT     BEGSR
+     C                     CALL 'ZEDIT'
+     C                     PARM           ZFIELD
+     C                     PARM           ZADEC
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program exception error routine                      *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'*ERROR'  PRTCD
+      *
+     C                     EXSR SREND
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

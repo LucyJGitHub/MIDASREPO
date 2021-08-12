@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD020934           Date 11May19              */     
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC118             Date 13Feb19             */
+/*       Prev Amend No. MD020934           Date 11May19              */     
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      258994             Date 16Mar09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -38,6 +39,10 @@
 /*                                                                  */
 /*---------------------------------------------------------------------
 /*                                                                 */
+/*       LUC118 - Upgrade of S21045 to FB Midas 2.1                */
+/*                BV Auto transfer of interbranch account balances */
+/*                BVINTBR                                          */
+/*                Uses new core hooks SEC0610004                   */
 /*       MD020934 - COB component LERC135 failed due to CDL045.    */
 /*                  Amend length of field &EXTLIB from 8 to 10 to  */
 /*                  avoid truncated library name which causes error*/

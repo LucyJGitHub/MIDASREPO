@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC141             Date 23Feb21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,10 +18,13 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. S01413 *CREATE     DATE 13APR93              */
+/*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC141 - Scalare                                            */
+/*                Use of /COPYS REC3763001                           */
+/*                              REC3763002                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */

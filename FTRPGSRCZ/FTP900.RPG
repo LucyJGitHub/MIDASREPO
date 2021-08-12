@@ -1,0 +1,430 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Create Message reference')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FTP900 - FT Create Message reference                         *
+     F*                                                               *
+     F*  (C) Copyright Misys International Banking Systems 2001       *
+     F*                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+     F*  Prev Amend No. AR856737           Date 13Sep11               *
+     F*                 PL0001 *Amend      Date 29Jan2003             *
+     F*                 PL0001 *Create     Date 03Oct2001             *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+     F*  PL0001 - Create new payment reference                        *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E                    C@        100  1
+     E                    I@        100  1
+      *
+      *  Copyright table
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Switchable Features Descriptions *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+     ISWDT2       DS                              6
+      *
+      *  Data structure for date change
+      *
+     I                                        1   2 DD
+     I                                        3   4 MM
+     I                                        5   6 YY
+      *
+     IIPREF       DS                             15
+      *
+      *  Data structure create Payment reference
+      *
+     I                                        1   1 W#P
+     I                                        2   70W#MRDT
+     I                                        8   8 W#C1
+     I                                        9   9 W#C2
+     I                                       10  10 W#C3
+     I                                       11  11 W#C4
+     I                                       12  13 W#PYTP
+     I                                       14  15 W#STMT
+      *
+      *
+     IOTSTPD      DS                            256
+     I                                        1   20R#SQ1
+     I                                        3   40R#SQ2
+     I                                        5   60R#SQ3
+     I                                        7   80R#SQ4
+     I                                        9  100R#LIM
+     I                                       11  15 R#RUNA
+     I                                       11  150R#RUND
+     I                                       21 120 R#CHAR
+      *
+     IINSTPD      DS                            256                                           PL0001
+     I                                        1   20P#SQ1                                     PL0001
+     I                                        3   40P#SQ2                                     PL0001
+     I                                        5   60P#SQ3                                     PL0001
+     I                                        7   80P#SQ4                                     PL0001
+     I                                        9  100P#LIM                                     PL0001
+     I                                       11  15 P#RUNA                                    PL0001
+     I                                       11  150P#RUND                                    PL0001
+     I                                       21 120 P#CHAR                                    PL0001
+      *                                                                                       PL0001
+     I              'ABCDEFGHIJ'          C         ##DEF
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM *BLANKS   @RTN    7
+     C                     PARM           I@PYTP  2
+     C                     PARM           I@STMT  2
+     C                     PARM           O@PREF 15
+      *
+      *  Set up primary reference
+      *
+     C                     MOVEL*BLANKS   W0PREF
+      *
+      * Initialise program
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If Car not active set return to spaces
+      *
+     C                     MOVEL*BLANKS   O@PREF 15
+     C           PL0001    IFEQ 'PL0001'
+      *
+      *  Create reference
+      *
+     C                     EXSR SRPREF
+     C                     MOVELIPREF     O@PREF 15
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPREF   : Create Payment Reference                          *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPREF    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPREF'  @STK,Q
+      *
+      *  Get data from data area
+      *
+      * Select on payment type                                                                PL0001
+      * Outgoing                                                                              PL0001
+     C                     SELEC                                                              PL0001
+     C           I@PYTP    WHEQ 'OP'                                                          PL0001
+     C           *LOCK     IN   OTSTPD
+      *
+      *  Output data to data area
+      *
+     C                     MOVEAC@,R#SQ1  W#C1
+     C                     MOVEAC@,R#SQ2  W#C2
+     C                     MOVEAC@,R#SQ3  W#C3
+     C                     MOVEAC@,R#SQ4  W#C4
+     C                     MOVELI@PYTP    W#PYTP
+     C                     MOVELI@STMT    W#STMT
+      *
+      *  Add 1 to sequence 4
+      *
+     C                     ADD  1         R#SQ4
+     C           R#SQ4     IFGT R#LIM
+     C                     Z-ADD1         R#SQ4
+     C                     ADD  1         R#SQ3
+     C           R#SQ3     IFGT R#LIM
+     C                     Z-ADD1         R#SQ3
+     C                     ADD  1         R#SQ2
+     C           R#SQ2     IFGT R#LIM
+     C                     Z-ADD1         R#SQ2
+     C                     ADD  1         R#SQ1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Output data to data area
+      *
+     C                     OUT  OTSTPD
+      *                                                                                       PL0001
+      * Incoming                                                                              PL0001
+     C           I@PYTP    WHEQ 'IN'                                                          PL0001
+     C           *LOCK     IN   INSTPD                                                        PL0001
+      *                                                                                       PL0001
+      *  Output data to data area                                                             PL0001
+      *                                                                                       PL0001
+     C                     MOVEAI@,P#SQ1  W#C1                                                PL0001
+     C                     MOVEAI@,P#SQ2  W#C2                                                PL0001
+     C                     MOVEAI@,P#SQ3  W#C3                                                PL0001
+     C                     MOVEAI@,P#SQ4  W#C4                                                PL0001
+     C                     MOVELI@PYTP    W#PYTP                                              PL0001
+     C                     MOVELI@STMT    W#STMT                                              PL0001
+      *                                                                                       PL0001
+      *  Add 1 to sequence 4                                                                  PL0001
+      *                                                                                       PL0001
+     C                     ADD  1         P#SQ4                                               PL0001
+     C           P#SQ4     IFGT P#LIM                                                         PL0001
+     C                     Z-ADD1         P#SQ4                                               PL0001
+     C                     ADD  1         P#SQ3                                               PL0001
+     C           P#SQ3     IFGT P#LIM                                                         PL0001
+     C                     Z-ADD1         P#SQ3                                               PL0001
+     C                     ADD  1         P#SQ2                                               PL0001
+     C           P#SQ2     IFGT P#LIM                                                         PL0001
+     C                     Z-ADD1         P#SQ2                                               PL0001
+     C                     ADD  1         P#SQ1                                               PL0001
+     C                     ENDIF                                                              PL0001
+     C                     ENDIF                                                              PL0001
+     C                     ENDIF                                                              PL0001
+      *                                                                                       PL0001
+      *  Output data to data area                                                             PL0001
+      *                                                                                       PL0001
+     C                     OUT  INSTPD                                                        PL0001
+     C                     ENDSL                                                              PL0001
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPREF    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       #FIRST  1
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Access SAR details file to see if PL0001 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'PL0001'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Allow Batch Authorisation processing
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           PL0001    ANDEQ*BLANKS
+     C                     MOVEL'PL0001'  PL0001  6
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Define data areas
+      *
+     C           *NAMVAR   DEFN OTSTPDA   OTSTPD
+     C           *NAMVAR   DEFN INSTPDA   INSTPD                                              PL0001
+      *
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 30 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Obtain Midas run date in user format
+      *
+     C                     CALL 'ZDATE2'               9090Entry parameter
+     C                     PARM WURDNB    ZDAYNO  50       Value date
+     C                     PARM WUDFF     ZDATFM  1        Date format ind
+     C                     PARM           ZDATE   60       Value date
+     C                     PARM           ZADATE  7        Run-date in DDM
+      *
+      * Set up payment reference r
+      *
+     C                     MOVEL*BLANKS   W#YMD   6
+     C           WUDFF     IFEQ 'M'
+     C                     MOVELZDATE     SWDT1   6
+     C           2         SUBSTSWDT1:1   MM
+     C           2         SUBSTSWDT1:3   YY
+     C           2         SUBSTSWDT1:5   DD
+     C                     MOVELSWDT2     W#YMD
+     C                     ELSE
+      *
+      * DDMMYY format display
+      *
+     C                     MOVELZDATE     SWDT1
+     C           2         SUBSTSWDT1:1   YY
+     C           2         SUBSTSWDT1:3   MM
+     C           2         SUBSTSWDT1:5   DD
+     C                     MOVELSWDT2     W#YMD
+     C                     END
+      *
+      *  Set fields
+      *
+     C                     MOVEL'P'       W#P
+     C                     MOVELW#YMD     W#MRDT
+     C                     MOVELI@PYTP    W#PYTP
+     C                     MOVEL'00'      W#STMT
+      *
+      *  Get current coding
+      *
+     C                     IN   OTSTPD
+      *
+      *  Check date  - if different reset sequence
+      *
+     C           R#RUNA    IFEQ *BLANKS
+     C           R#RUND    ORNE WURDNB
+     C           *LOCK     IN   OTSTPD
+     C                     Z-ADD1         R#SQ1
+     C                     Z-ADD1         R#SQ2
+     C                     Z-ADD1         R#SQ3
+     C                     Z-ADD1         R#SQ4
+     C                     Z-ADDWURDNB    R#RUND
+     C                     OUT  OTSTPD
+     C                     ENDIF
+      *
+      *  Check setup
+      *
+     C           R#CHAR    IFEQ *BLANKS
+     C           *LOCK     IN   OTSTPD
+     C                     Z-ADD10        R#LIM
+     C                     MOVEL##DEF     R#CHAR
+     C                     OUT  OTSTPD
+     C                     ENDIF
+      *
+      * Move characters to array
+      *
+     C                     MOVEAR#CHAR    C@
+      *                                                                                       PL0001
+      *  Get current coding                                                                   PL0001
+      *                                                                                       PL0001
+     C                     IN   INSTPD                                                        PL0001
+      *                                                                                       PL0001
+      *  Check date  - if different reset sequence                                            PL0001
+      *                                                                                       PL0001
+     C           P#RUNA    IFEQ *BLANKS                                                       PL0001
+     C           P#RUND    ORNE WURDNB                                                        PL0001
+     C           *LOCK     IN   INSTPD                                                        PL0001
+     C                     Z-ADD1         P#SQ1                                               PL0001
+     C                     Z-ADD1         P#SQ2                                               PL0001
+     C                     Z-ADD1         P#SQ3                                               PL0001
+     C                     Z-ADD1         P#SQ4                                               PL0001
+     C                     Z-ADDWURDNB    P#RUND                                              PL0001
+     C                     OUT  INSTPD                                                        PL0001
+     C                     ENDIF                                                              PL0001
+      *                                                                                       PL0001
+      *  Check setup                                                                          PL0001
+      *                                                                                       PL0001
+     C           P#CHAR    IFEQ *BLANKS                                                       PL0001
+     C           *LOCK     IN   INSTPD                                                        PL0001
+     C                     Z-ADD10        P#LIM                                               PL0001
+     C                     MOVEL##DEF     P#CHAR                                              PL0001
+     C                     OUT  INSTPD                                                        PL0001
+     C                     ENDIF                                                              PL0001
+      *                                                                                       PL0001
+      * Move characters to array                                                              PL0001
+      *                                                                                       PL0001
+     C                     MOVEAP#CHAR    I@                                                  PL0001
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+      *
+      /EJECT
+**  CPY@ table
+(C) Copyright Misys International Banking Systems 2001

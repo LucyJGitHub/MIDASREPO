@@ -1,0 +1,239 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Read access to Voce/Sottovoce Codes')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data Module.                                *
+      *                                                               *
+      *  AOITCDR0 - Read access to Voce/Sottovoce Codes               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1996           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 12Jan21               *
+      *  Prev Amend No. MMI001  *Create    Date 19Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  MMI001 - Upgrade Italian Library.                            *
+      *                                                               *
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       01      OFF 1ST TIME ROUND
+      *       90      FILE ERROR
+      *       91      FILE OPEN ERROR
+      *       92      ERROR ON FILE CLOSE
+      *       93      FILE EMPTY
+      *       94      EOF
+      *       95      NO RECORD FOUND
+      *       96      PARAMETER ERROR
+      *       97      IF NO SELECTION
+      *       98      ERROR ON PROGRAM CALL (SDFPSRB)
+      *       LR      LAST RECORD
+      *
+      ********************************************************************
+      *
+     FERITCDL1IF  E           K        DISK                           UC
+      * Midas ER Italy - Voce/Sottovoce Codes
+      *
+      *****************************************************************
+      *
+     E                    @MG     1   1 50
+     E                    CPY@    1   1 80               ACT Copyright arr
+      * Description     : Copyright notice for inclusion in all ACT progra
+      *
+      *****************************************************************
+     I* Description     : Copyright notice for inclusion in all ACT progra
+      *
+     IA@CPY       DS
+      * ACT Copyright array
+     I                                        1  80 CPY@
+      *
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSERITCDPD
+      * Voce/Sottovoce Codes record format data structure
+      *
+     IP@FMT     E DSDSFDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+      *
+      /EJECT
+      *****************************************************
+      *
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@0KEY  7        I:Key field
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+     C           KKEY      KLIST
+     C                     KFLD           K@0KEY
+      *
+     C           *LIKE     DEFN N2BOIC    K@0KEY
+      *
+     C                     MOVELP@0KEY    K@0KEY
+      *
+      *****************************************************
+      *
+      * Access Option *SAME input
+      *
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+      *
+     C                     SETOF                     909192 ς Reset
+     C                     SETOF                     939495 ς error
+     C                     SETOF                     969798 ς indicators
+      *
+      * First call - open file :
+      *
+     C           *IN01     IFEQ '0'                        IF 1 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN ERITCDL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+      *
+      * Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 2 FREE PGM
+     C                     CLOSEERITCDL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST REC
+     C           *LOVAL    SETLLERITCDL1             9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT REC
+     C                     READ ERITCDL1               9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST REC
+     C           *HIVAL    SETGTERITCDL1               90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.REC
+     C                     READPERITCDL1               9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEYED ACC
+     C           P@OPTN    OREQ '*VERIFY'                  OR
+     C           P@0KEY    IFEQ '?'                        IF 8 SELECT
+     C                     CALL 'ERM001'               98    <SELECT>
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C                     PARM *BLANK    P@KEY1  7          B:Key
+     C                     MOVE P@KEY1    P@0KEY
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C           *IN97     CABEQ'1'       T@SKIP             No selection
+     C           *IN98     CABEQ'1'       T@SKIP             Program error
+     C                     END                             FI 8
+     C                     MOVELP@0KEY    K@0KEY
+     C           KKEY      CHAINERITCDL1             9590    Get record
+     C           *IN95     CABEQ'1'       T@SKIP             No record fnd
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parameter err
+     C                     END                             FI 8
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          μμμμμμμμμμμμμ
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No record fnd
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Program nm
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Message fle
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA 50          I:Message dta
+     C                     PARM '*DIAG'   P@MGTP  7          I:Message tpe
+     C                     END                             FI 9
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR '                  IF
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+     C           P@OPTN    IFNE '*VERIFY'                  IF 13
+     C           P@OPTN    ANDNE'*FREE  '                    AND
+     C           P@RTCD    ANDNE'*OPTION'                    AND
+     C                     MOVELD@FMT     P@FMT            FI 13
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+**
+IRFXTBPD  AOFXTBR0  INTERNAL TABLE
+** CPY@     : Copyright notice for inclusion in all ACT programs
+(c) COPYRIGHT MKI INTERNATIONAL 1996. COMPANY CONFIDENTIAL.

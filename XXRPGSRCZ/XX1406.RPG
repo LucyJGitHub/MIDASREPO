@@ -1,0 +1,213 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Return rundate month in numbers')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas    - Retail Module                                     *
+      *                                                               *
+      ***REM006   - Return rundate month in numbers                   *   LUC140
+      *  XX1406   - Return rundate month in numbers                   *   LUC140
+      *                                                               *
+      *  Function:  Return rundate month from characters to numeric   *
+      *   (I/C)                                                       *
+      *                                                               *
+      *  Called By: Main menu                                         *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC140             Date 24Feb21               *
+      *  Prev Amend No. MMI013 *CREATE     Date 01Apr98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *  MMI013 - Retail Stamp Duty and Account Changes               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   32  -  Look up table sucessful                              *
+      *   LR  -  Last record                                          *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #MMAIN - Main Processing                                     *
+      *  #MEXIT - Exit Program                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      ** Copyright Array
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Month/Day Table
+      *
+     E                    TABMN   1  12  3   TABDY   2 0
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      ** Copyright array
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for Access Programs
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     IRUNDT       DS
+      ** Data Area Rundat
+      *
+     I                                        1   7 RUNA
+     I                                        3   5 UMONH
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I            DS
+      ****************************************************************
+     I/EJECT
+      ****************************************************************
+     C/TITLE Main Processing
+      *================================================================
+      *  M A I N L I N E  -  P R O G R A M   S T A R T                *
+      *================================================================
+      *
+      ** Mainline Processing
+      *
+     C                     EXSR #MMAIN
+      *
+      ** Exit program
+      *
+     C                     EXSR #MEXIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      ****************************************************************
+      /TITLE SR/#MAIN
+      *****************************************************************
+      *                                                               *
+      *  #MMAIN - Main processing                                     *
+      *                                                               *
+      *  Called By: Program                                           *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MMAIN    BEGSR
+      *
+      ** Move the copyright array.
+      *
+     C                     MOVELCPY@,1    COPY   80
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'REM006'  DBPGM                           LUC140
+     C                     MOVEL'XX1406'  DBPGM                           LUC140
+     C                     OUT  LDA
+      *
+      ** Get run date from data area
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Move rundate month to paramter entry list
+      *
+     C           UMONH     LOKUPTABMN     TABDY          32
+     C           *IN32     IFEQ *ON
+     C                     MOVE TABDY     @MNUM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      /TITLE SR/#MEXIT
+      *****************************************************************
+      *                                                               *
+      *  #MEXIT - Exit Program                                        *
+      *                                                               *
+      *  Called By: Mainline                                          *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MEXIT    BEGSR
+      *
+      ** exit program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*INZSR
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Auto Program Initialisation                         *
+      *                                                               *
+      *  Called By: Program                                           *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Receive parameter from Calling Program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @MNUM   2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(C) Copyright Midas-Kapiti International Ltd. 1998
+** MONTH/DAY TABLE
+JAN01
+FEB02
+MAR03
+APR04
+MAY05
+JUN06
+JUL07
+AUG08
+SEP09
+OCT10
+NOV11
+DEC12

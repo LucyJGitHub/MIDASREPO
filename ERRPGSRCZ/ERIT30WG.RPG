@@ -1,0 +1,183 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Decision table Account code setup')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT30WG - Decision table Account code setup.                *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021  *Create    Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  80     -  Access file                                        *
+      *  U7U8   -  Database error.                                    *
+      *  LR     -  Terminates program.                                *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  *PSSR  -  Error subroutine                                   *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+     FERITACL0UF  E           K        DISK         KINFSR *PSSR A
+      * ER Decision Table - A/C code - Italy               Prefix 'N3'
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ** External DS for Account codes
+     ISDACOD    E DSSDACODPD
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** List of parameters.
+     C           *ENTRY    PLIST
+     C                     PARM           @RTRN   7
+     C                     PARM           @MODE   1
+      *
+      ** Copyright
+     C                     MOVEACPY@      CPY@@   1
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Access Bank details via access program
+      *
+     C                     CALL 'AOBANKR0'             90
+      *
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'WWBFIL           ***************
+     C                     MOVEL'ERIT30WG'WWBKEY           * DBERROR 001 *
+     C                     Z-ADD001       WWBASE           ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           @MODE     IFEQ '1'
+     C           @MODE     OREQ '2'
+      *
+      ** Access Account codes file via access program
+      *
+     C                     CALL 'AOACODR0'
+      *
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM *BLANKS   @OACCD  4
+     C                     PARM           SDACOD
+      *
+     C           @RTCD     DOWEQ*BLANKS                    - B1
+      *
+      ** Take not titla only
+     C           A5TOIN    IFNE 'Y'                        - B2
+      *
+     C           A5ACCD    CHAINERITACL0             80
+      *
+     C           *IN80     IFEQ '1'                        - B3
+     C                     MOVELA5ACCD    N3ACOD
+     C                     Z-ADD0         N3RBND
+     C                     Z-ADD0         N3RBNC
+     C                     Z-ADDBJRDNB    N3LCD
+     C                     MOVE 'I'       N3TYLC
+     C                     WRITEERITACD0
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+      *
+      ** Read next record via access program
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM *BLANKS   @OACCD  4
+     C                     PARM           SDACOD
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO                      - B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END                             - E1
+      *
+      **  Update data area LDA.
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

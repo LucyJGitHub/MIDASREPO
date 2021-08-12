@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057246           Date 08Jan21               *
-      *  Prev Amend No. BUG25122A          Date 02Sep09               *
+      *  Last Amend No. LUC140             Date 23Feb21               *
+      *  Prev Amend No. LUC139             Date 07Jan21               *
+      *                 CER009             Date 13Nov20               *
+      *                 MD057246           Date 08Jan21               *
+      *                 BUG25122A          Date 02Sep09               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039072           Date 25Jul16               *
@@ -86,6 +89,13 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *           (MMI013 - Midas Italy RE Stamp Duty and Account)    *
+      *           Add hook LUC140_025                                 *
+      *           Amend core hooks GL3572FFPG, GL3572IIPG,            *
+      *           GL3572C001, GL3572CCPG.                             *
+      *  LUC139 - UIC Italian Returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to FM2.1                            *      
       *  MD057246 - Multiple calls to UTCHOBJEX. Move call to         *
       *             AOSARDR0 after GOTO START.                        *
       *  BUG25122A - Applied missing FOKFIX functionality             *
@@ -213,6 +223,10 @@
      FBYACCTY0IF  E           K        DISK                                                  LLN022A
       ** Account Details Extention File - retrieval                                          LLN022A
       *                                                                                      LLN022A
+      *                                                                                       CER009
+     FREACT1L0IF  E           K        DISK                                                   CER009
+      ** Accounts Maintenance BOI extension details                                           CER009
+      *                                                                                       CER009
      FREACX1PDIF  E           K        DISK                                                   CER001
      F*                                                                   S01408
      FRECCY   IF  E           K        DISK                               CDE002
@@ -1520,6 +1534,32 @@
      C                     MOVEL'Y'       MTFLAG  1                                        BUG25122A
      C                     ENDIF                                                           BUG25122A
       *                                                                                    BUG25122A
+      ** Check if feature CER009 is installed                                                 CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+     C           PRTCD     IFNE *BLANKS                                                       CER009
+     C           PRTCD     ANDNE'*NRF   '                                                     CER009
+     C                     MOVE *ON       *INU7                                               CER009
+     C                     MOVE *ON       *INU8                                               CER009
+     C                     MOVE *ON       *INLR                                               CER009
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER009
+     C                     MOVEL'011'     DBASE                                               CER009
+     C                     MOVEL'CER009'  DBKEY                                               CER009
+     C                     EXSR *PSSR                                                         CER009
+     C                     GOTO END                                                           CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANK                                                        CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C                     Z-ADD0         CINUAF
      C                     Z-ADD0         COCLAF
      C                     Z-ADD0         COCFAF
@@ -1687,6 +1727,13 @@
       *                                                                                       CRE090
      C           START     TAG                             ** START TAG **
      C*                                                                   S01408
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     Z-ADDACOD      N#ACOD                                              CER009
+     C                     MOVE C#ACOD    NACOD                                               CER009
+     C           KEYAC     CHAINREACT1L0             95                                       CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C/COPY WNCPYSRC,LUC140_025                                                               LUC140
      C           ULX004    IFEQ 'Y'                                                           CER001
       *                                                                                       CER001
      C/COPY WNCPYSRC,GL3572CCP3                                           S01408
@@ -2797,6 +2844,22 @@
       *                                                                                      LLN022A
      C                     ENDIF                                                             LLN022A
       *                                                                                      LLN022A
+      *                                                                                       CER009
+      ** If CER009 is switched on                                                             CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE *OFF      *IN41                                               CER009
+     C           ATYP      IFEQ 'R'                                                           CER009
+     C                     MOVE *ON       *IN41                                               CER009
+     C                     ENDIF                                                              CER009
+     C                     Z-ADD4         RQDLN                                               CER009
+     C           OFLLN     SUB  PRTLN     REMLN                                               CER009
+     C           REMLN     IFLE RQDLN                                                         CER009
+     C                     WRITEGL3572HR                                                      CER009
+     C                     ENDIF                                                              CER009
+     C                     WRITEGL3572FC                                                      CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C                     END
       *-------------------------------------------------------------------
      C*

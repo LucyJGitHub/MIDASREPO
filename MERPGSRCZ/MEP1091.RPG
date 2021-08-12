@@ -1,0 +1,145 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME  Check if the message is from Ebanking')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP1091 - Check if the message is from Ebanking              *
+      *            and if it can be auto authorised.                  *
+      *                                                               *
+      *  Function:  This check function accepts field 32A             *
+      *             (DateCurrencyAmount) and checks if the            *
+      *             EBanking payments can be auto authorised. Payment *
+      *             can be authorised except for following condition  *
+      *             * MT202 cover is required                         *
+      *             * Payment amount is above set limit for Ord cust  *
+      *             * New customer                                    *
+      *             * Customers flagged as exception                  *
+      *             In-house program does all the checks and decides  *
+      *             if payment can be auto authorised                 *
+      *                                                               *
+      *  Last Amend No. LUC111   MD49398   Date 05Oct2017             *
+      *  Prev Amend No. LUC110   MD49398   Date 19Aug2016             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC111 - STP changes for in-house eBanking payment           *
+      *         - Enhance to process message from other Ebanking      *
+      *           source (e.g. EGate) and different payment type.     *
+      *  LUC110   - STP enhancement for EBanking                      *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IPCRIT     E DSMEGNCRPD
+      *
+      *  Return Criteria Details to calling program
+      *
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6 256 WUTGCK
+     I                                       31  36 W#DATE
+     I                                       37  39 W#CCY
+     I                                       40  57 W#AMT
+      *
+     IW#P23       DS
+     I                                        1   5 WTAG1
+     I                                        6 256 W#23E
+     I                                        6  55 W#P23E                                    LUC111
+      *
+     IW#P50       DS
+     I                                        1   5 WTAG2
+     I                                       31  65 W#ORC1
+     I                                       66 256 REST2
+      *
+     IW#P57       DS
+     I                                        1   5 WTAG3
+     I                                       31  65 W#ACB1
+     I                                       66 100 W#ACB2
+     I                                      101 256 REST3
+      *
+      *
+      * Expand check for all messages.  Check is now done in in-house program                 LUC111
+     I******        'OTHR/UCBANKING     ' C         EBANKC                             LUC110 LUC111
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *LIKE     DEFN WUTGCK    P@IN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C           WUFDDT    PARM           P@IN
+     C                     PARM           P#PTTN 32
+     C                     PARM           GDOPER  2
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           PCRIT
+      * If true put T
+     C                     MOVEL'F'       P#RETN
+      *
+      *** Reset working fields
+     C                     MOVE *BLANKS   W#P23
+     C                     MOVE *BLANKS   W#P50
+     C                     MOVE *BLANKS   W#P57
+      *
+     C           PMTPY     IFEQ 'IN3'
+      *** Reset working fields
+      *
+     C                     MOVELP23E      W#P23
+     C                     MOVELP50       W#P50
+     C                     MOVELP57       W#P57
+      *
+     C*****      EBANKC    SCAN W#23E                    75                                   LUC111
+     C*****      *IN75     IFEQ '1'                                                           LUC111
+      *** EBanking Payment
+      ** Call In-house program
+      ** Account with Bank is used to check if previously MT202 cover was required
+      ** Ordering customer is used to check if exception for the customer exist
+     C                     CALL 'CM1220'               9090
+     C                     PARM *BLANKS   W#RTN   7        Return code
+     C                     PARM           W#CCY            Pay Ccy
+     C                     PARM           W#AMT            Pay Amount
+     C                     PARM           W#ORC1           Ordering Cust
+     C                     PARM           W#ACB1           Acc with Bank1
+     C                     PARM           W#ACB2           Acc with Bank2
+     C                     PARM           W#P23E           Instruction Code                   LUC111
+     C                     PARM *BLANKS   W#AUT   1        Auto Authorise
+      *
+      *
+     C           W#AUT     IFEQ 'Y'
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+     C*****                ENDIF                                                              LUC111
+      *
+     C                     ENDIF
+      *
+      *  Exit program
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2016

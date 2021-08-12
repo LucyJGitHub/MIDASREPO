@@ -1,0 +1,219 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME Check Function')                              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0098 - Check Function.  For ZB checks if both  Ordering   *
+      *            and Beneficiary Accounts are flagged for ZB        *
+      *                                                               *
+      *  Function: This program checks if the accounts used for ZB    *
+      *            is Zero Balance Accounts                           *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 17Nov11               *
+      *                 HVB018  *CREATE    Date 17Nov11               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP Enhancements to Midas Plus level.     *
+      *  HVB018 - ZB Cash Polling.  Zero Balance account check        *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IDSSDY     E DSDSSDY
+      **  Data Structures used by Access Programs, Long Data Structure
+      *
+      ** Account Details
+     IOACCNT    E DSACCNTAB
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IPCRIT     E DSMEGNCRPD
+      *
+      *  Return Criteria Details to calling program
+      *
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     IPIFDDT      DS
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+     I                                       31  41 WUSNDB
+     I                                       61 256 REST
+      *
+      *  Split the detail fields into field tag name and contents
+     IPIORDC      DS
+     I                                        1 256 WORDC
+     I                                       31  31 WSLASH
+     I                                       31  65 WORDC1
+      *
+     IPACUDF      DS
+     I                                        1 100 PAMAD
+     I                                       39  39 TBAC
+     I                                       40  40 ZBAC
+      *
+     I              'OTHR/HB POOLING'     C         CASHP
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *LIKE     DEFN WUTGCK    P@IN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C           WUFDDT    PARM           P@IN
+     C                     PARM           P#PTTN 32
+     C                     PARM           GDOPER  2
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           PCRIT
+      *
+      * If true put T
+     C                     MOVEL'F'       P#RETN
+      *
+     C                     MOVE *BLANKS   VBEN    1
+     C                     MOVE *BLANKS   VORD    1
+      *
+     C           CASHP     SCAN P23E                     74
+      *
+      ** Zero Balance for IN3
+      ** For ZB messages the Inctruction code will contain ZB Cashpool code
+     C           PMTPY     IFEQ 'IN3'
+     C           *IN74     ANDEQ'1'
+      *
+      ** For Zero Balance CashPooling both Ordering and Beneficiary account
+      *  must be flagged for ZB CashPooling.
+      *
+      *  It is expected that the crediting and debiting accounts will be
+      *  specified in IBAN format.
+      *
+      ** Check if the Ordering customer has been flagged for ZB Cash Pooling.
+     C                     MOVE *BLANKS   PRTN    5
+     C                     MOVE *BLANKS   PAMAD
+     C                     MOVELP50       WORDC
+      *
+     C                     EXSR SRZBAC
+      *
+     C           PRTN      IFEQ *BLANKS
+     C           ZBAC      ANDEQ'Y'
+     C                     MOVE 'Y'       VORD
+     C                     ENDIF
+      *
+     C           VORD      IFEQ 'Y'
+      ** Check if the Beneficiary Customer's account is flagged for ZB CashPooling.
+      *
+     C                     MOVE *BLANKS   PRTN    5
+     C                     MOVE *BLANKS   PAMAD
+     C                     MOVE *BLANKS   WORDC
+     C                     MOVELP59       WORDC
+      *
+     C                     EXSR SRZBAC
+      *
+     C           PRTN      IFEQ *BLANKS
+     C           ZBAC      ANDEQ'Y'
+     C                     MOVE 'Y'       VBEN    1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           VORD      IFEQ 'Y'
+     C           VBEN      ANDEQ'Y'
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+      *  Exit program
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRZBAC   : Check if Account Flagged for Cash Pooling         *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRZBAC    BEGSR
+      *
+     C                     MOVE *BLANKS   PIBAN  47
+     C                     MOVE *BLANKS   POWITH 47
+     C                     MOVE *BLANKS   PONOBL 34
+     C                     MOVE *BLANKS   P@IBAN 34
+     C                     MOVE *BLANKS   DSSDY
+      *
+      ** Remove / from IBAN number
+     C           WSLASH    IFEQ '/'
+     C           34        SUBSTWORDC1:2  PIBAN     P
+     C                     ELSE
+     C                     MOVELWORDC1    PIBAN
+     C                     ENDIF
+      ** check if valid IBAN
+     C                     CALL 'AOIBANR3'
+     C                     PARM *BLANKS   @RTCD   5
+     C                     PARM           PIBAN
+     C                     PARM           POWITH
+     C           P@IBAN    PARM           PONOBL
+      *
+     C           @RTCD     IFEQ *BLANKS
+      ** Get account details from the IBAN
+     C                     CALL 'AOIBANR4'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           P@IBAN
+     C           OACCNT    PARM           DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           RECI      ANDEQ'D'
+      ** Check if this account is flagged for Cash Pooling in the UDF file T_GZAMADEX.
+      *
+     C                     MOVE *BLANKS   PBRCA   3
+     C                     MOVE *BLANKS   PCNUM   6
+     C                     MOVE *BLANKS   PCCY    3
+     C                     MOVE *BLANKS   PACOD  10
+     C                     MOVE *BLANKS   PACSQ   2
+      *
+     C                     MOVE BRCA      PBRCA
+     C                     MOVE CNUM      PCNUM
+     C                     MOVE CCY       PCCY
+     C                     MOVE ACOD      PACOD
+     C                     MOVE ACSQ      PACSQ
+      *
+     C                     CALL 'MEP0100'
+     C                     PARM           PRTN
+     C                     PARM           PBRCA
+     C                     PARM           PCNUM
+     C                     PARM           PCCY
+     C                     PARM           PACOD
+     C                     PARM           PACSQ
+     C                     PARM           PAMAD
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2011

@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD048980           Date 15Dec17               *
+      *  Last Amend No. LUC140             Date 23Feb21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD048980           Date 15Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042411           Date 18Nov16               *
       *                 MD033583           Date 03Jun15               *
@@ -86,6 +87,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *           (MMI013 - Midas Italy RE Stamp Duty and Account)    *
+      *           Amendment of core hooks GL3320FFPG, GL3320CCP1,     *
+      *           GL3320CCP2.                                         *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD048980 - Dumps in GLC3320                                  *
       *  MD046248 - Finastra Rebranding                               *

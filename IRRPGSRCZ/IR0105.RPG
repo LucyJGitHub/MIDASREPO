@@ -1,0 +1,419 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Daily Postings Extract')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas ABS - Italian Returns Module                           *
+      *                                                               *
+      *  IR0105   - Daily Postings Extract                            *
+      *                                                               *
+      *  Function:  This program extracts the accounting generated    *
+      *             entries                                           *
+      *                                                               *
+      *  (phase(s)) Automatically, during Close of Business           *
+      *                                                               *
+      *  Called By: IRC0105 - Daily Postings Extract                  *
+      *                                                               *
+      *  (c) Copyright Midas-Kapiti International 1997.               *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. 211141             Date 28Oct02               *
+      *                 MMI063             Date 26Oct99               *
+      *                 UIT021                  10FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  211141 - Avoid duplicate key error after 1 million postings  *
+      *  MMI063 - Antilaundering version 7 - Extract all postings,    *
+      *           even if Causale is zero.                            *
+      *  UIT021 - Bank Of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  04 - POSTING TO BE EXCLUDED                                  *
+      *  10 - FIRST CYCLE                                             *
+      *  49 - CHAIN FAIL INDICATOR                                    *
+      *  50 - CHAIN FAIL INDICATOR                                    *
+      *  51 - CHAIN FAIL INDICATOR                                    *
+      *  99 - ERROR IN ZALIGN                                         *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  #UINIT -  Initial processing                                 *
+      *  *PSSR  -  Error subroutine                                   *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      * Postings file                               Prefix 'IB'
+     FIRAPOSPDIP  E                    DISK         KINFSR *PSSR
+      *
+      * Previous month Postings file
+     F***IRPMPCL2IF  E           K        DISK         KINFSR *PSSR       211141
+     FIRPMPCPDIF  E                    DISK         KINFSR *PSSR          211141
+     F            IRAPOSD0                          KRENAMEIRPMPCDF
+      *
+      * Monthly Postings file
+     F***IRMPSTL2IF  E           K        DISK         KINFSR *PSSR       211141
+     FIRMPSTPDIF  E                    DISK         KINFSR *PSSR          211141
+     F            IRAPOSD0                          KRENAMEIRMPSTDF
+      *
+      * Next month Postings file
+     F***IRNMPSL0IF  E           K        DISK         KINFSR *PSSR       211141
+     FIRNMPSPDIF  E                    DISK         KINFSR *PSSR          211141
+     F            IRAPOSD0                          KRENAMEIRNMPSDF
+      *
+      * Daily Postings file
+     FIRDPSTPDO   E                    DISK         KINFSR *PSSR
+     F            IRAPOSD0                          KRENAMEIRDPSTDF
+      *
+     FSDBCT1L0IF  E           K        DISK
+      *Branch Codes                    Rtv Index           Prefix PA.
+      *
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    XBRC       99  3
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZALIGNZ1
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Rename Previous postings file
+     IIRPMPCDF
+     I              IBCNUM                          PCNUM
+     I              IBCCY                           PCCY
+     I              IBACOD                          PACOD
+     I              IBACSQ                          PACSQ
+     I              IBPSTD                          PPSTD
+     I              IBVALD                          PVALD
+     I              IBPNAR                          PPNAR
+     I              IBPSTA                          PPSTA
+     I              IBDRCR                          PDRCR
+     I              IBSPOS                          PSPOS
+     I              IBBRCA                          PBRCA
+     I              IBRIND                          PRIND
+     I              IBATYP                          PATYP
+     I              IBPRIN                          PPRIN
+     I              IBPRFC                          PPRFC
+     I              IBACSC                          PACSC
+     I              IBDLRF                          PDLRF
+     I              IBPREF                          PPREF
+     I              IBOTRF                          POTRF
+     I              IBOTST                          POTST
+     I              IBOTTP                          POTTP
+     I              IBBOKC                          PBOKC
+     I              IBNITM                          PNITM
+     I              IBTRCY                          PTRCY
+     I              IBSTYP                          PSTYP
+     I              IBORBR                          PORBR
+     I              IBSPRT                          PSPRT
+     I              IBAKEY                          PAKEY
+     I              IBLRNL                          PLRNL
+     I              IBRENR                          PRENR
+     I              IBCAUC                          PCAUC
+     I              IBRBNB                          PRBNB
+     I              IBCPNB                          PCPNB
+     I              IBRRN                           PRRN
+      *
+      ** Rename Monthly postings file
+     IIRMPSTDF
+     I              IBCNUM                          MCNUM
+     I              IBCCY                           MCCY
+     I              IBACOD                          MACOD
+     I              IBACSQ                          MACSQ
+     I              IBPSTD                          MPSTD
+     I              IBVALD                          MVALD
+     I              IBPNAR                          MPNAR
+     I              IBPSTA                          MPSTA
+     I              IBDRCR                          MDRCR
+     I              IBSPOS                          MSPOS
+     I              IBBRCA                          MBRCA
+     I              IBRIND                          MRIND
+     I              IBATYP                          MATYP
+     I              IBPRIN                          MPRIN
+     I              IBPRFC                          MPRFC
+     I              IBACSC                          MACSC
+     I              IBDLRF                          MDLRF
+     I              IBPREF                          MPREF
+     I              IBOTRF                          MOTRF
+     I              IBOTST                          MOTST
+     I              IBOTTP                          MOTTP
+     I              IBBOKC                          MBOKC
+     I              IBNITM                          MNITM
+     I              IBTRCY                          MTRCY
+     I              IBSTYP                          MSTYP
+     I              IBORBR                          MORBR
+     I              IBSPRT                          MSPRT
+     I              IBAKEY                          MAKEY
+     I              IBLRNL                          MLRNL
+     I              IBRENR                          MRENR
+     I              IBCAUC                          MCAUC
+     I              IBRBNB                          MRBNB
+     I              IBCPNB                          MCPNB
+     I              IBRRN                           MRRN
+      *
+      ** Rename Next month postings file
+     IIRNMPSDF
+     I              IBCNUM                          NCNUM
+     I              IBCCY                           NCCY
+     I              IBACOD                          NACOD
+     I              IBACSQ                          NACSQ
+     I              IBPSTD                          NPSTD
+     I              IBVALD                          NVALD
+     I              IBPNAR                          NPNAR
+     I              IBPSTA                          NPSTA
+     I              IBDRCR                          NDRCR
+     I              IBSPOS                          NSPOS
+     I              IBBRCA                          NBRCA
+     I              IBRIND                          NRIND
+     I              IBATYP                          NATYP
+     I              IBPRIN                          NPRIN
+     I              IBPRFC                          NPRFC
+     I              IBACSC                          NACSC
+     I              IBDLRF                          NDLRF
+     I              IBPREF                          NPREF
+     I              IBOTRF                          NOTRF
+     I              IBOTST                          NOTST
+     I              IBOTTP                          NOTTP
+     I              IBBOKC                          NBOKC
+     I              IBNITM                          NNITM
+     I              IBTRCY                          NTRCY
+     I              IBSTYP                          NSTYP
+     I              IBORBR                          NORBR
+     I              IBSPRT                          NSPRT
+     I              IBAKEY                          NAKEY
+     I              IBLRNL                          NLRNL
+     I              IBRENR                          NRENR
+     I              IBCAUC                          NCAUC
+     I              IBRBNB                          NRBNB
+     I              IBCPNB                          NCPNB
+     I              IBRRN                           NRRN
+      *
+      ** Rename postings file
+     IIRAPOSD0
+     I              IBRRN                           ERRN
+      *
+      ** Irstat data area
+     IIRSTTD    E DSIRSTAT
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Country Details
+     ISDCTRY    E DSSDCTRYPD
+      *
+      ** External DS for Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** External DS for Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** First pass
+     C           *IN10     IFEQ *OFF                       - B1
+     C                     MOVE *ON       *IN10
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Access Bank details via access program
+      ** (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Access Data Area IRSTAT
+     C           *NAMVAR   DEFN IRSTAT    IRSTTD
+     C                     IN   IRSTTD
+      *
+      * ACCESS BRANCHES EXTENTION TO SETUP TABLE
+      *
+     C                     Z-ADD1         I       20
+      *
+     C                     READ SDBCT1L0                 32
+      *
+     C           *IN32     DOWEQ'0'                        - B2
+     C           PAINCL    IFEQ 'Y'                        - B3
+     C                     MOVE PABRCD    XBRC,I
+     C                     ADD  1         I
+     C                     ENDIF                           - E3
+     C                     READ SDBCT1L0                 32
+     C                     ENDDO                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     MOVE *OFF      *IN04
+      *
+      ** Include check for End of month flag and value date against
+      ** the end of month date if not a manual posting
+     C           IREMI     IFEQ 'M'                        - B1
+     C           IREMI     OREQ 'X'
+      *
+      ** Test whether posting is a manual payment (if the last six
+      ** positions on IBSPOS are numeric), do not process any manual
+      ** postings.
+     C                     MOVE IBSPOS    WWSPOS  6
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVELWWSPOS    ZFIELD
+     C                     Z-ADD6         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        - B2
+     C           IBVALD    IFGT IREMD                      - B3
+     C                     MOVE *ON       *IN04
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C                     Z-ADD1         I
+     C           IBBRCA    LOKUPXBRC                     32
+      *
+      ** All Postings with a Causale Code should be reported;
+      ** if Causlale code is blank, ignore
+      ** Include check on the indicator set in the above processing
+     C********** IBCAUC    IFNE 0                          - B1           MMI063
+     C********** *IN04     ANDEQ*OFF                                      MMI063
+     C********** *IN32     ANDEQ*ON                                       MMI063
+     C*                                                                   MMI063
+     C           *IN04     IFEQ *OFF                                      MMI063
+     C           *IN32     ANDEQ*ON                                       MMI063
+      *
+     C           *IN11     IFEQ *OFF                       - B2
+     C                     MOVE *ON       *IN11
+      *
+     C                     Z-ADD0         IBRRN
+      *
+      ** Access next month's postings file only if records have been
+      ** written to it in an EoM on the day before
+     C           IRPSTI    IFEQ 'Y'                        - B3
+     C********** *HIVAL    SETLLIRNMPSL0                                  211141
+     C**********           READPIRNMPSL0                 49               211141
+     C           *HIVAL    SETLLIRNMPSPD                                  211141
+     C                     READPIRNMPSPD                 49               211141
+     C           *IN49     IFEQ '1'                        - B4
+     C                     Z-ADD1         WWBASE           ************
+     C                     MOVEL'*HIVAL'  WWBKEY           * DBERR 01 *
+     C                     MOVE 'IRNMPSL0'WWBFIL           ************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E4
+     C                     Z-ADDNRRN      IBRRN
+      *
+     C                     ELSE                            - X3
+      *
+      ** else, Access monthly postings file
+     C********** *HIVAL    SETLLIRMPSTL2                                  211141
+     C**********           READPIRMPSTL2                 50               211141
+     C           *HIVAL    SETLLIRMPSTPD                                  211141
+     C                     READPIRMPSTPD                 50               211141
+      *
+     C           *IN50     IFEQ '0'                        - B4
+     C                     Z-ADDMRRN      IBRRN
+     C                     ELSE                            - X4
+      ** if no monthly postings, access previous month postings file
+     C********** *HIVAL    SETLLIRPMPCL2                                  211141
+     C**********           READPIRPMPCL2                 51               211141
+     C           *HIVAL    SETLLIRPMPCPD                                  211141
+     C                     READPIRPMPCPD                 51               211141
+     C           *IN51     IFEQ '0'                        - B5
+     C                     Z-ADDPRRN      IBRRN
+     C                     END                             - E5
+     C                     END                             - E4
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+     C           IBRRN     IFEQ 999999                     - B2
+     C                     Z-ADD0         IBRRN
+     C                     END                             - E2
+     C                     ADD  1         IBRRN
+      *
+      ** Postings without Lira/non-Lira code
+      *
+     C           IBLRNL    IFEQ *BLANK                     - B2
+     C           IBLRNL    OREQ *ZERO
+     C           IBCCY     IFEQ BJLCCY                     - B3
+     C                     MOVE 'L'       IBLRNL
+     C                     ELSE                            - X3
+     C                     MOVE 'F'       IBLRNL
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Write the record
+     C                     WRITEIRDPSTDF
+     C                     END                             - E1
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *    ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.     *
+      *                                                               *
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+      *****************************************************************
+**  CPY@
+(c) Copyright Midas-Kapiti International Ltd. 1997.

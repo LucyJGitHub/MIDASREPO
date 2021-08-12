@@ -1,0 +1,2636 @@
+     H        1                           F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF FILE(MGOREFLX) TOFILE(MGOREFL0)                       *
+/*OVRF*: OVRDBF FILE(MGOMSGLX) TOFILE(MGOMSGPD)                       *
+/*EXI *  TEXT('Midas ME  MTn95 Messages Maintenance')                 *
+      *****************************************************************
+      *                                                               *
+      *   Midas - MESSAGE MANAGEMENT                                  *
+      *                                                               *
+      *  MEP730 - MTn95 Messages Maintenance                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd, 2004            *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 EEE065             Date 01Oct2004             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Renamed QQDFAC field in SDBRCHPD                    *
+      *  EEE065 - Free Fmt msgs: user who generated/created/last      *
+      *           amended the msg should not be able to release       *
+      *           the same message.                                   *
+      *           Update the century fields CIND and CINDV.           *
+      *           SWIFT MT195/295 Message Maintenance                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     FMEP730DFCF  E                    WORKSTN
+     F                                        S0RRN KSFILE MEP730S0
+     F                                        S1RRN KSFILE MEP730S1
+     F                                        S2RRN KSFILE MEP730S2
+      *
+     FMGOREFL0UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FMGOREFLXIF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREFDI
+     FMGOMSGPDUF  E           K        DISK                      A
+     F                                              KCOMIT
+     FMGOMSGLXIF  E           K        DISK
+     F            MGOMSGD0                          KRENAMEMGOMSGDI
+     FFDMNTHLLIF  E           K        DISK         KINFSR *PSSR
+      * Midas month shortnames
+      *
+      *
+      ** Messages Reference Extension File (by TRNO)
+     FMGOREFV2UF  E           K        DISK                      A
+     F                                              KCOMIT
+      *
+      /EJECT
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      * ***************************************
+      *
+      *       KC      END OF JOB SCREEN COMMAND (F3)
+      *       KI      SWITCH TO ADD OPTIONAL FIELDS MODE (F9)
+      *       KJ      DELETE RECORD SCREEN COMMAND (F10)
+      *               PROCEED CHANGE OF THE FIELDS
+      *       KL      REDISPLAY INITIAL SCREEN COMMAND (F12)
+      *
+      *
+      *       10      ERROR - Validation Error
+      *       11      Enable F10
+      *       12      Enable F9
+      *       13      Message accessed is DELETED
+      *       14      Action code is 'D'
+      *       20      ERROR - Highlight Action code field
+      *       21      ERROR - Highlight TRN field
+      *       22      ERROR - Highlight Related Reference field (F21)
+      *       23      ERROR - Highlight "Include field 79" field
+      *       24      ERROR - Highlight field 79 in subfile MEP730S0
+      *       24              Subfile Next Change for MEP730S0
+      *       25      ERROR - Highlight Select field S1SEL/S2SEL in MEP730S1/S2
+      *       25              Subfile Next Change for MEP730S1/S2
+      *       30      Highlight S1FLD/S2FLD in MEP730S1/S2
+      *       31      Subfile clear (all subfiles)
+      *      N31      Subfile display (all subfiles)
+      *       48      DSPATR(UL) - underlined
+      *      N48      Protect all screen fields
+      *       49      Multibranching is ON
+      *       50      Record not found in MGOREFLX
+      *       51      EOF of MGOMSGLX
+      *       52      Used for reading/Chaining subfiles
+      *       53      CHAIN MGOREFV2 (@OREFV2)                           MMS00N
+      *       54      CHAIN MGOREFL0
+      *       55      CHAIN MGOMSGPD
+      *       60      Subfile End (all subfiles)
+      *       80      Work indicator used in LOKUPs
+      *       81      Work indicator
+      *       90-93   Work indicators
+      *       97      Work error indicator used in some subroutines
+      *       98      Date format is MMDDYY
+      *      N98          - " _      DDMMYY
+      *       99      Database error
+      *
+      *       LR      End program
+      *       U7      Abnormal End of program (*PSSR)
+      *       U8      Abnormal End of program (*PSSR)
+      *
+      ********************************************************************
+      *  Include arrays for ZDATE1
+     E/COPY ZSRSRC,ZDATE1Z1
+      *
+     E                    CPY@    1   1 50               COPYRIGHT MKI
+      *
+      ** Messages which can be queiried by MTn95
+     E                    MTP     1   2  3               MSG TYPES
+      *
+      ** Fields and their option (Mandatory/Optional)
+     E                    FLD     1  22  2   FMO     1
+      *
+      ** Minimum and maximum indexes for each type of message
+     E                    LMT     1   4  3 0
+      *
+      *     Array MTP contains list of message types for which the program can
+      *  genearate MTn95 queries message
+      *     Array FLD contains field tags which can be present in different
+      *  types of messages. For each item from FLD an item of FMO array
+      *  has a value either M(andatory) or O(ptional)
+      *     Array LMT has two items for each item of MTP array. First item in
+      *  pair is the minimum index in FLD/FMO arrays for message type of MTP;
+      *  second item - maximum index
+      *
+     E                    TRNA       16  1
+      *
+     E                    Z06         6  1
+      *
+     E                    FLA        24  1
+      *  OMT - Original message tags
+     E                    OMT       100  5
+      *  OMF - Original message fields
+     E                    OMF       100 50
+      *  OMS - Original message selected fields flags
+     E                    OMS       100  1
+      *  GNR - message types that shouldn't be generated for dest customer
+     E                    GNR        15  3               msg type not gen.
+      *  Include month shortnames array
+     E/COPY ZSRSRC,ZVLDTZ1
+      *
+      *  Set initialise month shortnames array from FDMNTHPP file
+     I/COPY ZSRSRC,ZVLDTZ2
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     IF0BANK    E DSSDBANKPD
+      *
+     IF0BRCD    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                      AR856737
+      *
+     IF0CUST    E DSSDCUSTPD
+      *
+     IF0USER    E DSMUSERDD
+      *
+     IF0MGME    E DSSDMGMEPD
+      *
+     IF0MTAG    E DSSDMTAGPD
+      *  Message Tags Format Data Structure
+     IP0FMTL    E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file (long DS)
+      *
+     IP0FMTS    E DSDSFDY
+      * External Data structure to hold the outgoing record format
+      * of the file (short DS)
+      *
+     I            DS
+     I                                        1  24 FLD32A
+     I                                        1   2 YY32A
+     I                                        3   4 MM32A
+     I                                        5   6 DD32A
+     I                                        7   9 CCY32A
+     I                                       10  24 AMT32A
+      *  Release date data structure
+     I            DS
+     I                                        1   7 RELD
+     I                                        1   2 RDD#D
+     I                                        3   5 RMMM#D
+     I                                        1   3 RMMM#M
+     I                                        4   5 RDD#M
+     I                                        6   7 RYY
+      *
+     I            DS
+     I                                        1  16 @TRN
+     I                                        1   2 MSGPRX
+     I                                        3   80RDMGDE
+     I                                        9  140@TIM
+     I                                       15  160@SEQ
+      *
+      **  TRN data structure
+     I            DS
+     I                                        1   5 OMTAG
+     I                                        2   3 TAGN
+      *
+      **  MIR data structure
+     I            DS
+     I                                        1  28 OMMIR
+     I                                        1   6 OMDATE
+     I                                       19  28 OM11S3
+      *
+      **  Data structures for date conversions
+     I            DS
+     I                                        1   6 YYMMDD
+     I                                        1   2 W0YY
+     I                                        3   4 W0MM
+     I                                        5   6 W0DD
+     I            DS
+     I                                        1   6 W0DATE
+     I                                        1   2 W0DAT1
+     I                                        3   4 W0DAT2
+     I                                        5   6 W0DAT3
+      *
+     IW0DATA      DS                            256
+      *  Define data structure used to pass parameters
+     I                                        1   3 B#BRCA
+     I                                        4   4 O#ACTD
+     I                                        5  14 O#CPGM
+     I            DS
+      *  Message Data
+     I                                        1 132 ZAMSDA
+     I                                        1  16 TRN008
+     I                                       17  24 ACT008
+      * Data for message STP2008: TRN, action (inserted/amended)
+      * STP2008: Message &1 successfully &2
+     I                                        1   1 CHR014
+     I                                        2   3 FLD014
+      * Data for message STP2014: Invalid character
+      * STP2014: Invalid characted &1 in field &2
+     I                                        1  16 TRN025
+      * Data for message STP2025: TRN
+      * STP2025: Message &1 not found
+     I                                        1  16 TRN030
+     I                                       17  22 NTW030
+      * Data for message XXX2030: TRN, Network
+      * STP2030: Message &1 is a &2 message. Function works only for SWIFT msgs
+     I                                        1   6 CUS036
+      * Data for message XXX2036: Customer number
+      * STP2036: Cancellation message can't be generated for dest. customer &1
+      *
+      * Named Constant used to determine if a field contains invalid
+      * characters for Telex and S.W.I.F.T.
+      *
+     I              'ABCDEFGHIJKLMNOPQRST-C         ISO
+     I              'UVWXYZ 1234567890/-?-
+     I              '?:().,''+'
+      *-------------------------------------------------------------------------
+      *
+      **  Perform initial process
+     C                     EXSR #MINIT
+      *
+      **  Display initial screen until F3 pressed
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     MOVE *ON       *IN48
+      ** If no errors clear fields
+     C           *IN10     IFEQ *OFF
+     C                     MOVE *BLANKS   X2ACTN
+     C                     MOVE *BLANKS   X2TRN
+     C                     MOVE *BLANKS   X2F21
+     C                     MOVE *BLANKS   X2I79
+     C                     MOVE 'MTn95'   X1MTPY
+     C                     CLEAROMMIR
+     C                     CLEARORITRN
+     C                     CLEARORMTPY
+     C                     ENDIF
+      *
+     C                     EXSR #MDSP1
+     C                     EXSR #MIDET
+      *
+      **  If F3 pressed exit program
+     C           *INKC     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  Validate first screen
+     C                     EXSR #MVACT
+      *
+      **  Validate Query and Narrative if insert
+     C           *IN10     IFEQ *OFF
+      *
+      **  Display initial screen until F3 pressed
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C                     EXSR #MQUNT
+      * Validate
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C                     EXSR #MQUNV
+     C                     ENDIF
+      * Leave loop if no errors
+     C           *IN10     IFEQ *OFF
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      * Loop if F03 of F12
+     C           *INKC     IFEQ *ON
+     C           *INKL     OREQ *ON
+     C                     ITER
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  If no errors on first screen display detail screen
+     C           *IN10     IFEQ *OFF
+     C                     EXSR #MDETL
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *   #MDSP1 - Display first screen (action  screen)              *
+      *****************************************************************
+      *
+     C           #MDSP1    BEGSR
+      *
+     C                     WRITEMEP730X1
+     C                     WRITE#MSGCTL
+     C                     EXFMTMEP730X2
+     C                     CALL 'ZM1002'
+      *
+     C                     MOVEAZ06       *IN,20
+     C                     SETOF                     103031
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MQUNT - Display Query and Narrative on Insert              *
+      *****************************************************************
+      *
+     C           #MQUNT    BEGSR
+      *
+      *
+     C                     WRITEMEP730X1
+     C                     WRITE#MSGCTL
+     C                     EXFMTMEP730X4
+      *
+     C                     CALL 'ZM1002'
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MQUNV - Validate Querey and Narrative on Insert            *
+      *****************************************************************
+      *
+     C           #MQUNV    BEGSR
+     C                     SETOF                     10
+      * First line is mandatory
+     C           X475A     IFEQ *BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2038' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1060
+     C                     ENDIF
+      * No blank lines between text
+     C           X475A     IFEQ *BLANKS
+     C           X475B     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1061
+     C                     ENDIF
+      * No blank lines between text
+     C           X475B     IFEQ *BLANKS
+     C           X475C     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1062
+     C                     ENDIF
+      * No blank lines between text
+     C           X475C     IFEQ *BLANKS
+     C           X475D     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1063
+     C                     ENDIF
+      * No blank lines between text
+     C           X475D     IFEQ *BLANKS
+     C           X475E     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1064
+     C                     ENDIF
+      * No blank lines between text
+     C           X475E     IFEQ *BLANKS
+     C           X475F     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1065
+     C                     ENDIF
+      * No blank lines between text
+     C           X477AA    IFEQ *BLANKS
+     C           X477AB    ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1067
+     C                     ENDIF
+      * No blank lines between text
+     C           X477AB    IFEQ *BLANKS
+     C           X477AC    ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1068
+     C                     ENDIF
+      * No blank lines between text
+     C           X477AC    IFEQ *BLANKS
+     C           X477AD    ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1069
+     C                     ENDIF
+      * No blank lines between text
+     C           X477AD    IFEQ *BLANKS
+     C           X477AE    ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1070
+     C                     ENDIF
+      * No blank lines between text
+     C           X477AE    IFEQ *BLANKS
+     C           X477AF    ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1071
+     C                     ENDIF
+      * Check for /n/
+     C           1         SUBSTX475A:1   ##001A  1
+     C           ##001A    IFEQ '/'
+     C           1         SUBSTX475A:3   ##001A  1
+     C           ##001A    IFEQ '/'
+     C           1         SUBSTX475A:2   ##001A  1
+     C           ##001A    IFLT '1'
+     C           ##001A    ORGT '9'
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2040' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1060
+     C                     ENDIF
+     C           ##001A    IFGE '1'
+     C           ##001A    ANDLE'9'
+      * Start of line must be //
+     C           X475B     IFNE '//'
+     C           X475B     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1061
+     C                     ENDIF
+      * Start of line must be //
+     C           X475C     IFNE '//'
+     C           X475C     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1062
+     C                     ENDIF
+      * Start of line must be //
+     C           X475D     IFNE '//'
+     C           X475D     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1063
+     C                     ENDIF
+      * Start of line must be //
+     C           X475E     IFNE '//'
+     C           X475E     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1064
+     C                     ENDIF
+      * Start of line must be //
+     C           X475F     IFNE '//'
+     C           X475F     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1065
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      * Check for /nn/
+     C           1         SUBSTX475A:1   ##001A  1
+     C           ##001A    IFEQ '/'
+     C           1         SUBSTX475A:4   ##001A  1
+     C           ##001A    IFEQ '/'
+     C           1         SUBSTX475A:2   ##001A  1
+     C           1         SUBSTX475A:3   ##001B  1
+     C           ##001A    IFLT '1'
+     C           ##001A    ORGT '9'
+     C           ##001B    ORLT '1'
+     C           ##001B    ORGT '9'
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2040' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1060
+     C                     ENDIF
+     C           ##001A    IFGE '1'
+     C           ##001A    ANDLE'9'
+      * Start of line must be //
+     C           X475B     IFNE '//'
+     C           X475B     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1061
+     C                     ENDIF
+      * Start of line must be //
+     C           X475C     IFNE '//'
+     C           X475C     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1062
+     C                     ENDIF
+      * Start of line must be //
+     C           X475D     IFNE '//'
+     C           X475D     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1063
+     C                     ENDIF
+      * Start of line must be //
+     C           X475E     IFNE '//'
+     C           X475E     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1064
+     C                     ENDIF
+      * Start of line must be //
+     C           X475F     IFNE '//'
+     C           X475F     ANDNE*BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1065
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MDETL - Detail screen and validation processing            *
+      *****************************************************************
+      *
+     C           #MDETL    BEGSR
+      *
+     C                     SELEC
+      ** Allow F10 and change functional keys text
+     C           X2ACTN    WHEQ 'D'
+     C                     SETON                     11  14
+      ** Highlight DELETED
+     C           X2ACTN    WHEQ 'E'
+     C           MGST      ANDEQ'DLTD'
+     C                     SETON                     13
+      ** Allow validation
+     C           X2ACTN    WHEQ 'I'
+     C           X2ACTN    OREQ 'A'
+     C                     MOVE 'Y'       DOVALI
+      *
+     C                     ENDSL
+      *
+      ** While neither F3 nor F12 pressed
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      **  Display detail screen
+     C                     EXSR #MDSP2
+      *
+     C                     SELEC
+      *
+      **  If F3 or F12 pressed or Enquiry exit
+     C           *INKC     WHEQ *ON
+     C           *INKL     OREQ *ON
+     C           X2ACTN    OREQ 'E'
+     C                     LEAVE
+      *
+      **  If Delete requested and F10 pressed - delete message
+     C           X2ACTN    WHEQ 'D'
+     C           *INKJ     ANDEQ*ON
+     C                     EXSR #MDLTM
+     C                     LEAVE
+      *
+      ** If F9 taken to add new fields
+     C           *INKI     WHEQ *ON
+     C                     EXSR #MADDF
+      *
+      **  If validation required - validate
+     C           DOVALI    WHEQ 'Y'
+     C                     EXSR #MVMSG
+      **    If no errors
+     C           *IN10     IFEQ *OFF
+      **       Send user information message (i.e Press to continue or F10
+      **       to continue insertion/amendment)
+     C                     MOVEL'MEM1085' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF    P
+     C                     EXSR ZASNMS
+      **       Allow F10 and re-display protected
+     C                     MOVE *ON       *IN11
+     C                     MOVE *OFF      *IN48
+     C                     MOVE 'N'       DOVALI
+     C                     EXSR #MLSFL
+     C                     ENDIF
+      *
+      ** If F10 taken to continue editing
+     C           *INKJ     WHEQ *ON
+      **       Unprotect fields, disable F10, false errors and request
+      **       validation
+     C                     SETON                     48  10
+     C                     SETOF                     11
+     C                     MOVE 'Y'       DOVALI
+     C                     EXSR #MLSFL
+      *
+      **  If screen was protected and F10 was not taken - output message
+     C           *INKJ     WHEQ *OFF
+     C                     EXSR #MWRIT
+     C                     LEAVE
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MDSP2 - Display second screen (detail screen)              *
+      *****************************************************************
+     C           #MDSP2    BEGSR
+      *
+     C                     WRITEMEP730X1
+     C                     WRITEMEP730X3
+     C                     WRITE#MSGCTL
+     C           IS79      IFEQ 'Y'
+     C                     MOVE *ON       *IN24
+     C                     EXFMTMEP730C0
+     C                     MOVE *OFF      *IN24
+     C                     ELSE
+     C                     EXFMTMEP730C1
+     C                     ENDIF
+     C                     CALL 'ZM1002'
+      *
+     C                     SETOF                     10  11
+     C                     SETOF                     30  31
+     C                     MOVEAZ06       *IN,20
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MLSFL - Load subfile                                       *
+      *                                                               *
+      *     *IN48 - ON    Unprotect fields                            *
+      *             OFF   Protect fields                              *
+      *****************************************************************
+     C           #MLSFL    BEGSR
+      *
+     C           IS79      IFEQ 'Y'
+     C                     EXSR #MLSF0
+     C                     ELSE
+     C                     EXSR #MLSF1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MINIT - inital process                                     *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           #MINIT    BEGSR
+      *
+     C                     MOVE *BLANKS   ZAPGM  10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+     C                     MOVE *BLANK    @RUN    1
+      *
+     C                     MOVE *BLANKS   P0RTCD  7
+     C                     MOVE *BLANKS   P0OPTN  7
+     C                     MOVE *BLANKS   P0BRCD  3
+     C                     MOVE *BLANKS   P0CUST 10
+     C                     MOVE *BLANKS   P0USER 10
+     C                     MOVE *BLANKS   P0KSTS  7
+     C                     MOVE *BLANKS   ZACT    1
+     C                     MOVE *BLANKS   ZBR     3
+     C                     MOVE *BLANKS   DFBRCD  3        Default branch
+     C                     MOVE *BLANKS   WK16   16
+     C                     MOVE *BLANKS   CHR03   3
+      *
+     C                     MOVE *BLANKS   ZSWFT  12
+      *
+     C                     MOVE *BLANK    SCRNM  20
+     C                     MOVE *BLANK    SCSID  12
+     C                     MOVE *BLANK    STELX  10
+     C                     MOVE *BLANK    SSTTX  12
+      *
+     C                     MOVEA*ALL'0'   Z06
+     C                     MOVE *BLANK    W0CHR1  1
+     C                     MOVE *BLANKS   F32TXT 28
+     C                     MOVE *BLANK    DOVALI  1
+     C                     MOVE *BLANK    IS79    1
+     C           *LIKE     DEFN TRNO      ORITRN
+     C           *LIKE     DEFN MTAG      W0MTAG
+     C           *LIKE     DEFN MTAG      P0MTAG
+     C           *LIKE     DEFN MTPY      P0MTPY
+     C           *LIKE     DEFN MTPY      ORMTPY
+     C           *LIKE     DEFN C0F112    SVF112
+     C                     MOVE *BLANKS   ZSDATE  6
+      *
+     C                     Z-ADD0         ZVERR   10
+     C                     Z-ADD0         P       30
+     C                     Z-ADD0         FLDNO   20
+      *
+     C                     Z-ADD0         S0RRN   50
+     C                     Z-ADD0         S1RRN   50
+     C                     Z-ADD0         S2RRN   50
+     C                     Z-ADD0         EI      30
+     C                     Z-ADD0         SI      30
+     C                     Z-ADD0         XI      30
+     C                     Z-ADD0         YI      30
+     C                     Z-ADD0         OMSIZE  30
+     C                     Z-ADD0         @TIM
+     C                     Z-ADD0         ZMDAY   50
+      *
+      * Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      * Get Rundate
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      * Set screen constants
+     C                     MOVE PGM       SPGM
+     C                     MOVE WSID      SWSID
+     C                     MOVE USER      SUSER
+     C                     MOVE AGMRDT    SRUNA
+      *
+     C                     MOVELPGM       ZAPGM
+      *
+      * Get Standing Date ICD details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P0RTCD
+     C                     PARM '*FIRST'  P0OPTN
+     C           F0BANK    PARM *BLANKS   P0FMTS
+      *
+     C           P0RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Set *IN98 on if date format is MMDDYY, or off otherwise
+     C           BJDFIN    COMP 'M'                      98
+      *
+      * Initialise arrays according to Multi/Single-Branching
+     C           AGMBIN    IFEQ 'Y'
+     C                     ENDIF
+      *
+      **  Access User details for user's authority
+     C                     CALL 'AOUSERR0'
+     C                     PARM *BLANKS   P0RTCD
+     C                     PARM '*KEY   ' P0OPTN
+     C                     PARM USER      P0USER
+     C           F0USER    PARM *BLANKS   P0FMTL
+      *
+     C           P0RTCD    IFNE *BLANKS
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVELUSER      DBKEY            * DB ERROR 02 *
+     C                     MOVEL'AOUSERR0'DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  If multibranching use default branch
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE DBRN      DFBRCD
+     C                     MOVE *ON       *IN49
+      *
+      **  If System is single branch use single branch
+     C                     ELSE
+     C                     MOVE BJSBRC    DFBRCD
+     C                     ENDIF
+      *
+      **  Initialise constant fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+      ** CRLF control character for message data records
+      *
+     C                     MOVE CRLF      CTRC
+      *
+      ** Convert run date to YYMMDD
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZMDATE  6
+     C                     MOVE ZMDATE    RDMGDE
+      **  Access SDMGMEPD for history retention period
+     C                     CALL 'AOMGMER0'
+     C                     PARM *BLANKS   P0RTCD
+     C                     PARM '*FIRST ' P0OPTN
+     C           F0MGME    PARM *BLANKS   P0FMTS
+      *
+     C           P0RTCD    IFNE *BLANKS
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'*FIRST'  DBKEY            * DB ERROR 06 *
+     C                     MOVEL'AOMGMER0'DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Convert history retention date to YYMMDD
+     C           BJRDNB    ADD  ENDSMN    ZMDAY
+     C                     CALL 'ZM0060'
+     C                     PARM           ZMDAY
+     C                     PARM           ZMDATE
+     C                     MOVE ZMDATE    HRDT
+      *
+      ** Read month shortnames file
+     C                     READ FDMNTHLL                 99
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVEL'FDMNTHLL'DBFILE           ***************
+     C                     MOVEL'*FIRST'  DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MVACT - Validate Action Code                               *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           #MVACT    BEGSR
+      *
+      **  'Action entered is invalid' error
+     C           X2ACTN    IFNE 'I'
+     C           X2ACTN    ANDNE'A'
+     C           X2ACTN    ANDNE'E'
+     C           X2ACTN    ANDNE'D'
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2000' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1020
+     C                     ENDIF
+      *
+      * Check multi-branch actions
+      *
+     C  NU1                EXSR SRMBIN
+      *
+      ** Validate TRN if input
+     C           X2ACTN    IFEQ 'I'
+     C           X2TRN     IFNE *BLANKS
+     C                     EXSR #MVTRN
+      * Generate TRN if was not input
+     C                     ELSE
+     C                     EXSR #MGTRN
+     C                     ENDIF
+     C           *IN10     IFEQ *OFF
+     C                     SETON                     48
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  F21 (Related Reference) is mandatory on Input
+     C           X2ACTN    IFEQ 'I'
+     C           X2F21     ANDEQ*BLANKS
+     C                     MOVEL'STP2011' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1022
+     C                     GOTO #MVI79
+     C                     ENDIF
+      *
+      **  On Input access original message by Related Reference
+     C           X2ACTN    IFEQ 'I'
+     C           X2F21     ANDNE*BLANKS
+     C           X2F21     CHAINMGOREFLX             50
+     C           *IN50     IFEQ *ON
+     C                     MOVELX2F21     TRN025
+     C                     MOVEL'STP2025' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1022
+     C                     GOTO #MVI79
+     C                     ELSE
+      **
+      ** Access destination customer details to check whether creating
+      ** of cancellation messages is possible for the message
+     C                     EXSR #MVORM
+     C           *IN97     IFEQ *ON
+     C                     SETON                     1022
+     C                     GOTO #EVACT
+     C                     ENDIF
+      **
+      ** Save message type of original message
+     C                     MOVELMTPY      ORMTPY
+     C                     MOVELMIR       OMMIR
+      **
+     C                     ENDIF
+      *
+      **  On E, A or D access MTn95 by TRN
+     C                     ELSE
+     C           X2TRN     IFNE *BLANKS
+     C           X2TRN     CHAINMGOREFLX             50
+     C           *IN50     IFEQ *ON
+     C                     MOVEL'MEM1045' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1021
+     C                     GOTO #MVI79
+      **
+      ** Save message type of original message
+     C                     ELSE
+     C                     SELEC
+     C           MTPY      WHEQ '195'
+     C                     MOVEL'103'     ORMTPY
+     C           MTPY      WHEQ '295'
+     C                     MOVEL'202'     ORMTPY
+     C                     ENDSL
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** In Insert message has been read should be MT103 or MT202 message
+      ** On Enquiry, Amend or Delete - MT195 or  MT295
+     C           X2ACTN    IFEQ 'I'
+     C           MTPY      ANDEQ'103'
+     C           X2ACTN    OREQ 'I'
+     C           MTPY      ANDEQ'202'
+     C           X2ACTN    ORNE 'I'
+     C           MTPY      ANDEQ'195'
+     C           X2ACTN    ORNE 'I'
+     C           MTPY      ANDEQ'295'
+      * This OK
+     C                     ELSE
+     C                     MOVELTRNO      TRN025
+     C                     MOVEL'STP2012' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C           X2ACTN    IFEQ 'I'
+     C                     SETON                     1022
+     C                     ELSE
+     C                     SETON                     1021
+     C                     ENDIF
+     C                     GOTO #MVI79
+     C                     ENDIF
+      *
+      **  If user is not Bank officer/System routing officer check
+      **  whether USER has authority to the action code for the branch
+      **  of message
+     C           BANK      IFNE 'Y'
+     C           ROUF      ANDNE'Y'
+     C                     CALL 'ZVACTBU'
+     C                     PARM X2ACTN    ZACT
+     C                     PARM BRCA      ZBR
+     C                     PARM 0         ZVERR
+      *
+      **  Issue error message if user not authorised to action
+     C           ZVERR     IFNE 0
+     C                     MOVEL'MEM1077' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1020
+     C                     GOTO #EVACT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  'Message status prevents amendment/deletion' error
+     C           X2ACTN    IFEQ 'A'
+     C           X2ACTN    OREQ 'D'
+     C           MGSG      IFNE '1'
+     C                     MOVEL'STP2003' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     10
+     C                     GOTO #EVACT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #MVI79    TAG
+      *
+      ** Include Field 79 must be either Y or N on input; ignore it on
+      ** other action codes
+     C           X2ACTN    IFEQ 'I'
+     C           X2I79     ANDEQ*BLANK
+     C                     MOVEL'STP2023' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1023
+     C                     GOTO #EVACT
+     C                     ENDIF
+      *
+     C           X2ACTN    IFEQ 'I'
+     C           X2I79     ANDNE'Y'
+     C           X2I79     ANDNE'N'
+     C                     MOVEL'STP2024' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1023
+     C                     GOTO #EVACT
+     C                     ELSE
+     C                     MOVE X2I79     IS79
+     C                     ENDIF
+      *
+      ** If no errors on initial screen
+     C           *IN10     IFEQ *OFF
+      *
+      ** Load original message into OM* arrays
+     C           X2ACTN    IFEQ 'I'
+     C                     MOVELX2F21     ORITRN
+     C                     EXSR #MLMSG
+     C                     ENDIF
+      *
+      **  Load MTn95 message
+     C           X2ACTN    IFEQ 'E'
+     C           X2ACTN    OREQ 'A'
+     C           X2ACTN    OREQ 'D'
+     C                     EXSR #MLN95
+     C                     ENDIF
+      *
+      ** Create MTn95 message
+     C           X2ACTN    IFEQ 'I'
+     C                     EXSR #MCRTM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Set up input screen fields
+     C                     MOVE NWRK      C0NTWK
+     C                     MOVE NWDS      C0ADDR
+     C                     MOVE BRCA      C0BRCD
+     C                     MOVE DECN      C0CUST
+      *
+      **  *IN48 is set off to set ON the protection code (DSPATR PR)
+      **  in the display file
+     C           X2ACTN    IFEQ 'A'
+     C           X2ACTN    OREQ 'I'
+     C                     MOVE *ON       *IN48
+     C                     ENDIF
+     C           X2ACTN    IFEQ 'E'
+     C           X2ACTN    OREQ 'D'
+     C                     MOVE *OFF      *IN48
+     C                     ENDIF
+      *
+     C           #EVACT    ENDSR
+      /EJECT
+      *================================================================
+      *                                                               *
+      * SRMBIN - Check Multi-branch actions                           *
+      *                                                               *
+      *                                                               *
+      * Called by: #MVACT                                             *
+      *                                                               *
+      *================================================================
+     CSR         SRMBIN    BEGSR
+      *
+      * Set up parameters
+      *
+     C                     CLEARW0DATA
+     C                     MOVEL*BLANKS   B#BRCA
+     C                     MOVELX2ACTN    O#ACTD
+     C                     MOVELPGM       O#CPGM
+      *
+      * Check all valid actions
+      *
+     C                     CALL 'ME1190'               9090
+     C                     PARM *BLANKS   P0RTN   7
+     C                     PARM '*ACTCODE'W0ACT   8
+     C                     PARM           W0DATA
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                                           *IF
+     C                     MOVEL'FTUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'PR10012' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1020
+     C                     ENDIF
+      *
+      * Invalid action
+      *
+     C           P0RTN     IFNE *BLANKS                                      *IF
+     C                     SETON                     1020      *
+     C                     END                                               *FI
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************
+      *   #MCRTM - Create MTn95 message                               *
+      *****************************************************************
+      *
+     C           #MCRTM    BEGSR
+      *
+      ** Set message type in title of the screen
+     C                     MOVELMTPY      W0CHR1
+     C           'MT'      CAT  W0CHR1:0  X1MTPY
+     C                     CAT  '95':0    X1MTPY
+      *
+      ** Create and format field 11S
+     C                     MOVELORMTPY    C0F111           Msg type
+      *  If MIR of original message in OMMIR is available use it for
+      *  subfileds 2 and 3 of field 11S
+     C           OMMIR     IFNE *BLANKS
+     C                     MOVELOMDATE    C0F112
+     C                     MOVELOM11S3    C0F113
+     C                     ELSE
+     C                     Z-ADD1         XI
+     C           BJDFIN    IFEQ 'D'
+     C           RMMM#D    LOKUP@MT,XI                   80
+     C                     ELSE
+     C           RMMM#M    LOKUP@MT,XI                   80
+     C                     ENDIF
+     C           *IN80     IFEQ *ON
+     C                     MOVE XI        MM32A
+     C                     ENDIF
+     C           RYY       CAT  MM32A:0   C0F112    P
+      *  ensure that day no has leading zero (if less than 10)
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE RDD#D     XI
+     C                     MOVE XI        RDD#D
+     C                     CAT  RDD#D:0   C0F112           Release date
+     C                     ELSE
+     C                     MOVE RDD#M     XI
+     C                     MOVE XI        RDD#M
+     C                     CAT  RDD#M:0   C0F112
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Store C0F112 for further validation
+     C                     MOVE C0F112    SVF112
+      *
+     C           X2I79     IFEQ 'N'
+      *
+      ** Load subfile with fields of original message
+     C                     EXSR #MLSF1
+      *
+      ** If field 79 exists just output blank lines
+     C                     ELSE
+     C           1         DO   35        S0RRN
+     C                     MOVE *BLANKS   S0F79
+     C                     SETON                         48
+     C                     SETOF                         24
+     C                     WRITEMEP730S0
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   #MLMSG - Load message to be cancelled                       *
+      *****************************************************************
+      *
+     C           #MLMSG    BEGSR
+      *
+     C                     CLEAROMT
+     C                     CLEAROMF
+     C                     CLEAROMS
+      *
+     C                     Z-ADD0         XI
+     C           ORITRN    CHAINMGOMSGLX             51
+      *
+      **  Load message records with message reference to arrays
+     C           *IN51     DOWEQ*OFF
+      *
+     C                     ADD  1         XI
+     C                     MOVE MFLD      OMF,XI
+      *  On field change:
+      *     - set TAG
+      *     - set selected flag if input new message
+      *     - on 'E', 'D', 'A' set selected flag to 'D', for it will be set
+      *       in #MLN95 subroutine according to real MTn95 message
+     C           MTAG      IFNE *BLANKS
+     C           X2ACTN    IFEQ 'I'
+     C                     MOVE 'I'       OMS,XI
+     C                     ELSE
+     C                     MOVE 'D'       OMS,XI
+     C                     ENDIF
+     C                     MOVE MTAG      OMT,XI
+     C                     ENDIF
+      *
+     C           ORITRN    READEMGOMSGLX                 51
+     C                     ENDDO
+      *
+      ** Store number of lines in original message
+     C                     Z-ADDXI        OMSIZE
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   #MVMSG - validate input message                             *
+      *****************************************************************
+      *
+     C           #MVMSG    BEGSR
+      **  Further validation unnecessary if the Enquiry option was
+      **  taken
+      *
+      **  'Action entered is invalid' error
+     C           X2ACTN    IFEQ 'I'
+      *
+      **  If user is not Bank officer/System routing officer check
+      **  whether USER has authority to the action code for the branch
+      **  specified
+     C           BANK      IFNE 'Y'
+     C           ROUF      ANDNE'Y'
+     C                     CALL 'ZVACTBU'
+     C                     PARM X2ACTN    ZACT
+     C                     PARM C0BRCD    ZBR
+     C                     PARM 0         ZVERR
+      *
+      **  Issue error message if user not authorised to action
+     C           ZVERR     IFNE 0
+     C                     MOVEL'MEMSG'   ZAMSGF    P
+     C                     MOVEL'MEM1077' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1020
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           IS79      IFEQ 'Y'
+     C                     EXSR #MVF79
+     C                     ELSE
+     C                     EXSR #MVSEL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           X2ACTN    IFEQ 'A'
+     C           IS79      IFEQ 'Y'
+     C                     EXSR #MVF79
+     C                     ELSE
+     C                     EXSR #MVSEL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If no errors attempt to route message
+     C           *IN10     IFEQ *OFF
+     C                     MOVELC0NTWK    NWRK      P
+     C                     ENDIF
+      *
+     C           #EVMSG    ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MVTRN - validate user-supplied TRN                         *
+      *****************************************************************
+      *
+     C           #MVTRN    BEGSR
+      *
+      ** Check TRN does not already exist
+     C           X2TRN     SETLLMGOREFLX                 50
+      *
+     C           *IN50     IFEQ *ON
+     C                     MOVEL'MEM1088' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1021
+     C                     GOTO #EVTRN
+     C                     ENDIF
+      *
+      ** Move TRN to array for processing
+     C                     MOVEAX2TRN     TRNA
+      ** Set field number
+     C                     Z-ADD20        FLDNO
+     C                     EXSR #MTRNA
+      *
+     C           *IN97     IFEQ *ON
+     C                     SETON                     2110
+     C                     ENDIF
+      *
+     C           #EVTRN    ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MTRNA - validate TRN in TRNA array                         *
+      *****************************************************************
+      *
+     C           #MTRNA    BEGSR
+      *
+      ** Reset error indicator
+     C                     MOVE *OFF      *IN97
+      *
+     **  TRN in field 20 should start with MX for this message
+     C           FLDNO     IFEQ 20
+     C           TRNA,1    ANDNE'M'
+     C           FLDNO     OREQ 20
+     C           TRNA,2    ANDNE'X'
+     C                     MOVEL'STP2026' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     GOTO #ETRNA
+     C                     ENDIF
+      *
+     **  Check TRN does not contain embedded blanks (only for TRN - field 20)
+     C           FLDNO     IFEQ 20
+     C                     MOVEATRNA      WK16
+     C           ' '       SCAN WK16      P              81
+     C                     MOVE *BLANKS   WK16
+     C           *IN81     IFEQ *ON
+     C                     MOVEATRNA,P    WK16
+     C                     SUB  1         P
+     C                     ELSE
+     C                     Z-ADD16        P
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ *ON
+     C           WK16      ANDNE*BLANKS
+     C                     MOVEL'MEM1089' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     GOTO #ETRNA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Check that first and last characters are not slash '/'
+      *  and there are no double-slash "//" within TRN
+      *  (Position of last character is P)
+     C                     MOVEATRNA      WK16
+     C           '//'      SCAN WK16                     81
+     C           TRNA,1    IFEQ '/'
+     C           TRNA,P    OREQ '/'
+     C           *IN81     OREQ *ON
+     C                     MOVEL'STP2002' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     GOTO #ETRNA
+     C                     ENDIF
+      *
+     C           #ETRNA    ENDSR
+      *******************************************************************
+     C/EJECT
+      *******************************************************************
+      *                                                                 *
+      * ZASNMS - Send Message to Program Message Queue                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+      *
+     C                     MOVE *BLANK    ZAPGRL           Rel queue
+     C                     MOVE *BLANK    ZAMSID           Message Id.
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MIDET - Initialise detail screen fields                    *
+      *****************************************************************
+     C           #MIDET    BEGSR
+      *
+     C                     MOVE *BLANKS   C0BRCD
+     C                     MOVE *BLANKS   C0ADDR
+     C                     MOVE *BLANKS   C0CUST
+     C                     MOVE *BLANKS   C0NTWK
+     C                     MOVE *BLANKS   C0F111
+     C                     MOVE *BLANKS   C0F112
+     C                     MOVE *BLANKS   C0F113
+      *
+      ** Initialise detail screen fields
+     C                     SETOF                     111213
+     C                     SETOF                     14
+     C                     MOVE 'N'       DOVALI
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MDLTM - Delete message                                     *
+      *****************************************************************
+     C           #MDLTM    BEGSR
+      **  For deletions access existing message records
+     C           X2TRN     CHAINMGOREFD0             54
+      *
+     C                     MOVE *BLANKS   TODY
+     C                     TIME           LATM
+     C                     MOVE BJMRDT    LADT
+      *
+      **  For deletion update reference record
+     C                     MOVE '4'       MGSG
+     C                     MOVE 'DLTD'    MGST
+     C                     UPDATMGOREFD0
+      *
+     C/COPY WNCPYSRC,MEP730C001
+      *
+     C                     COMIT
+      *
+      **  On successful Deletion send message
+     C                     MOVELX2TRN     TRN008
+     C                     MOVEL'deleted 'ACT008
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2008' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MVF21 - Validate field 21: Related Reference               *
+      *****************************************************************
+      *
+     C           #MVF21    BEGSR
+      ** Related Reference field is mandatory
+     C           X2F21     IFEQ *BLANKS
+     C                     MOVEL'STP2011' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     1022
+     C                     ELSE
+      ** Move Related Reference to array for processing
+     C                     MOVEAX2F21     TRNA
+      ** Set field number
+     C                     Z-ADD21        FLDNO
+     C                     EXSR #MTRNA
+      *
+     C           *IN97     IFEQ *ON
+     C                     SETON                     2210
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MVF79 - Validate field 79: Narrative Description of the    *
+      *            Original Message                                   *
+      *****************************************************************
+     C           #MVF79    BEGSR
+      *
+     C                     READCMEP730S0                 52
+     C                     MOVE *OFF      *IN24
+     C           *IN52     DOWEQ*OFF
+      *
+      ** Narrative lines should not start with '/'
+     C                     MOVELS0F79     W0CHR1
+     C           W0CHR1    IFEQ '/'
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2027' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1024
+     C                     ENDIF
+      *
+      ** Check for non-SWIFT characters
+     C           ISO       CHECKS0F79     XI             81
+     C           *IN81     IFEQ *ON
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2014' ZAMSID
+     C                     MOVE '79'      FLD014
+     C           1         SUBSTS0F79:XI  CHR014
+     C                     EXSR ZASNMS
+     C                     SETON                     1024
+     C                     ENDIF
+      *
+      ** If an error found update subfile record
+     C                     UPDATMEP730S0
+      *
+     C                     READCMEP730S0                 52
+     C                     MOVE *OFF      *IN24
+     C                     ENDDO
+      *
+      ** At least one line should not be empty
+     C           *IN10     IFEQ *OFF
+     C                     Z-ADD0         XI
+     C           1         DO   35        S0RRN
+     C           S0RRN     CHAINMEP730S0             52
+     C           S0F79     IFNE *BLANK
+     C                     ADD  1         XI
+     C                     ENDIF
+     C                     ENDDO
+     C           XI        IFEQ 0
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2034' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1024
+     C           1         CHAINMEP730S0             52
+     C                     UPDATMEP730S0
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #EF79     ENDSR
+      *****************************************************************
+      /EJECT
+      *******************************************************************
+      * #MWRIT - Output message                                         *
+      *******************************************************************
+     C           #MWRIT    BEGSR
+      *
+     C                     SELEC
+      **  For amendment delete existing message records
+     C           X2ACTN    WHEQ 'A'
+     C           X2TRN     CHAINMGOMSGPD             55
+      *
+     C           *IN55     DOWEQ*OFF
+     C                     DELETMGOMSGD0
+     C           X2TRN     READEMGOMSGPD                 55
+     C                     ENDDO
+      *
+     C           X2TRN     CHAINMGOREFL0             99
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVELX2TRN     DBKEY            * DB ERROR 08 *
+     C                     MOVEL'MGOREFL0'DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  If message status has changed..
+     C           MGSG      IFNE '1'
+     C                     MOVEL'MEMSG   'ZAMSGF    P      Message file.
+     C                     MOVEL'MEM1086' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     10
+     C                     GOTO #EWRT
+     C                     ENDIF
+      *
+      **  For (I)nsert set up reference record
+     C           X2ACTN    WHEQ 'I'
+      *
+      **  Check that TRN has not already been used
+     C           X2TRN     SETLLMGOREFLX                 50
+      *
+      ** If TRN already used, generate new one.
+     C           *IN50     IFEQ *ON
+     C                     EXSR #MGTRN
+     C                     MOVEL@TRN      TRNO
+      *
+      ** TRN entered by user...
+     C                     ELSE
+     C                     MOVE X2TRN     TRNO
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     MOVE *BLANKS   TODY
+     C           @TIM      IFEQ 0
+     C                     TIME           @TIM
+     C                     ENDIF
+     C                     Z-ADD@TIM      MGTM
+     C                     Z-ADD@TIM      LATM
+     C                     MOVE BJMRDT    LADT
+      *
+     C           X2ACTN    IFEQ 'I'
+     C                     MOVE 'ME'      MODI
+     C                     MOVE *BLANKS   TRNF
+     C                     MOVE *BLANKS   TRNM
+     C                     MOVE C0BRCD    BRCA
+     C                     MOVE X1MTPY    MTPY
+     C                     MOVE 'N'       MPRY
+     C                     MOVE '1'       MGSG
+     C                     MOVE 'CRTD'    MGST
+     C                     Z-ADD0         RELT
+     C                     MOVE *BLANKS   MIR
+     C                     Z-ADD0         NSNO
+     C                     MOVE *BLANKS   SACN
+     C                     MOVE *BLANKS   AORR
+     C                     MOVE *BLANK    DESI
+      *
+     C                     Z-ADDRDMGDE    MGDE
+      *
+      ** Set-up Message Generation  Century flag
+     C                     MOVELMGDE      YY      20
+     C           YY        IFLT 72
+     C                     MOVE '2'       CIND
+     C                     ELSE
+     C                     MOVE '1'       CIND
+     C                     ENDIF
+      *
+      ** Setup century indicator CINDV for value date SVDT
+     C           SVDT      IFEQ *BLANK
+     C                     MOVE *BLANK    CINDV
+     C                     ELSE
+     C                     MOVELSVDT      YY      20
+     C           YY        IFLT 72
+     C                     MOVE '2'       CINDV
+     C                     ELSE
+     C                     MOVE '1'       CINDV
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     TIME           MGTM
+     C                     MOVELBJMRDT    LADT
+     C                     MOVE MGTM      LATM
+     C                     MOVEL*BLANKS   PTST
+     C                     MOVEL*BLANKS   MPDE
+     C                     MOVE *BLANKS   RELD
+     C                     MOVEL*BLANKS   RUSR
+     C                     MOVEL*BLANKS   RWSN
+      *
+     C                     MOVE *BLANKS   CFPF
+     C                     MOVE *BLANKS   TSKS
+     C                     MOVE *BLANKS   TSKY
+     C                     Z-ADD0         PT210
+     C                     Z-ADD0         AVDT
+     C                     Z-ADD0         ASEQ
+     C                     MOVE *BLANKS   TODY
+     C                     WRITEMGOREFD0
+      *
+      **  Write a record also to the Message Reference Extension File.
+     C                     MOVE USER      MGNBY
+     C                     MOVE *BLANKS   LAMBY
+     C                     WRITE@OREFV2
+      *
+     C                     ENDIF
+      *
+      **  For amendment update reference record
+     C           X2ACTN    IFEQ 'A'
+     C                     MOVE 'AMND'    MGST
+     C                     MOVELBJMRDT    LADT
+     C                     TIME           LATM
+     C                     UPDATMGOREFD0
+      *
+      **  Update field for Last Amendment by User in the Ext. File
+     C                     MOVE *IN13     UMIN13  1
+     C           TRNO      CHAIN@OREFV2              13
+     C           *IN13     IFEQ '0'
+     C                     MOVE USER      LAMBY
+     C                     UPDAT@OREFV2
+     C                     ELSE
+      *
+      **  Write a record also to the Message Reference Extension File.
+     C                     MOVE USER      MGNBY
+     C                     MOVE *BLANKS   LAMBY
+     C                     WRITE@OREFV2
+     C                     END
+     C                     MOVE UMIN13    *IN13
+      *
+     C                     ENDIF
+      *
+      **  Write message records (if amend or insert)
+     C           X2ACTN    IFEQ 'I'
+     C           X2ACTN    OREQ 'A'
+      *
+      **  Field 20 TRN
+     C                     MOVE ':20: '   MTAG
+     C                     MOVELTRNO      MFLD      P
+     C                     WRITEMGOMSGD0
+      **  Field 21 Related Reference
+     C                     MOVE ':21: '   MTAG
+     C                     MOVELX2F21     MFLD      P
+     C                     WRITEMGOMSGD0
+      **  Field 75 Queries
+     C                     MOVE ':75: '   MTAG
+     C                     MOVELX475A     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C           X475B     IFNE *BLANKS
+     C                     MOVELX475B     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X475C     IFNE *BLANKS
+     C                     MOVELX475C     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X475D     IFNE *BLANKS
+     C                     MOVELX475D     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X475E     IFNE *BLANKS
+     C                     MOVELX475E     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X475F     IFNE *BLANKS
+     C                     MOVELX475F     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+      **  Field 77A Narrative
+     C           X477AA    IFNE *BLANKS
+     C                     MOVE ':77A:'   MTAG
+     C                     MOVELX477AA    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C           X477AB    IFNE *BLANKS
+     C                     MOVELX477AB    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X477AC    IFNE *BLANKS
+     C                     MOVELX477AC    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X477AD    IFNE *BLANKS
+     C                     MOVELX477AD    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X477AE    IFNE *BLANKS
+     C                     MOVELX477AE    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C           X477AF    IFNE *BLANKS
+     C                     MOVELX477AF    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+     C                     ENDIF
+      ** Field 11S MT and Date of Original Message
+     C                     MOVE ':11S:'   MTAG
+     C                     MOVELC0F111    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     MOVELC0F112    MFLD      P
+     C                     WRITEMGOMSGD0
+     C           C0F113    IFNE *BLANKS
+     C                     MOVELC0F113    MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ENDIF
+      ** Write either field 79 or fields from original message
+     C           IS79      IFEQ 'Y'
+     C                     MOVE ':79: '   MTAG
+     C           1         DO   35        S0RRN
+     C           S0RRN     CHAINMEP730S0             52
+     C           *IN52     IFEQ *OFF
+     C           S0F79     ANDNE*BLANKS
+     C                     MOVELS0F79     MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANK    MTAG
+     C                     ENDIF
+     C                     ENDDO
+      ** fields from original message
+     C                     ELSE
+     C                     Z-ADD1         XI
+     C                     MOVE *BLANKS   MTAG
+     C           XI        DOWLEOMSIZE
+     C           OMS,XI    IFNE 'D'
+     C           OMT,XI    CAT  OMF,XI:0  MFLD      P
+     C                     WRITEMGOMSGD0
+     C                     ADD  1         XI
+      ** Skip the field that was not selected
+     C                     ELSE
+     C                     ADD  1         XI
+     C           OMT,XI    DOWEQ*BLANKS
+     C           XI        ANDLEOMSIZE
+     C                     ADD  1         XI
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,MEP730C002
+      *
+     C                     COMIT
+      *
+      **  On successful Inserts/Amendments send message
+     C           X2ACTN    IFEQ 'I'
+     C           X2ACTN    OREQ 'A'
+     C                     MOVELX2TRN     TRN008
+     C                     SELEC
+     C           X2ACTN    WHEQ 'I'
+     C                     MOVEL'inserted'ACT008
+     C           X2ACTN    WHEQ 'A'
+     C                     MOVEL'amended 'ACT008
+     C                     ENDSL
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P      Message file.
+     C                     MOVEL'STP2008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           #EWRT     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * *PSSR  - Program Exception Error Routine                        *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     ROLBK
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN
+     C                     MOVEL'MEP730'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * #MLFDS - Access field description                               *
+      *                                                                 *
+      * W0MTAG 5A    Message Tag                                        *
+      * ORMTPY 3A    Message Type                                       *
+      *                                                                 *
+      *   Returns F0MTAG format or blank field EFISFD                   *
+      *******************************************************************
+      *
+     C           #MTAGD    BEGSR
+      *
+     C                     CALL 'AOMTAGR0'
+     C                     PARM *BLANK    P0RTCD           B:Return code
+     C                     PARM '*KEY'    P0OPTN           I:Option
+     C                     PARM W0MTAG    P0MTAG           I:Key field
+     C                     PARM ORMTPY    P0MTPY           I:Key field
+     C           F0MTAG    PARM           P0FMTS           O:Format
+     C           P0RTCD    IFNE *BLANK
+     C                     CALL 'AOMTAGR0'
+     C                     PARM *BLANK    P0RTCD           B:Return code
+     C                     PARM '*KEY'    P0OPTN           I:Option
+     C                     PARM W0MTAG    P0MTAG           I:Key field
+     C                     PARM 'ALL'     P0MTPY           I:Key field
+     C           F0MTAG    PARM           P0FMTS           O:Format
+     C           P0RTCD    IFNE *BLANK
+     C                     MOVE *BLANKS   EFISFD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * #MCLS1 - Clear Subfiles                                         *
+      *******************************************************************
+      *
+     C           #MCLS1    BEGSR
+      *
+     C                     MOVE *ON       *IN31
+      *
+      ** If Include Field 79 is Y clear subfile MEP730S0
+      ** Else clear MEP730S1
+     C           IS79      IFEQ 'Y'
+     C                     WRITEMEP730C0
+     C                     Z-ADD0         S0RRN
+     C                     ELSE
+     C                     WRITEMEP730C1
+     C                     Z-ADD0         S1RRN
+     C                     ENDIF
+     C                     MOVE *OFF      *IN31
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * #MCLS2 - Clear Subfile MEP730S2                                 *
+      *******************************************************************
+      *
+     C           #MCLS2    BEGSR
+      *
+     C                     MOVE *ON       *IN31
+     C                     WRITEMEP730C2
+     C                     Z-ADD0         S2RRN
+     C                     MOVE *OFF      *IN31
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * #MGTRN - Generate Trnasaction Reference Number                  *
+      *******************************************************************
+      *
+     C           #MGTRN    BEGSR
+      *
+     C                     MOVE 'MX'      MSGPRX
+     C                     TIME           @TIM
+     C                     Z-ADD1         @SEQ
+      *
+      ** If TRN already used, generate another one.
+      *
+     C           @TRN      SETLLMGOREFLX                 50
+      *
+     C           *IN50     DOWEQ*ON
+     C                     ADD  1         @SEQ
+     C           @TRN      SETLLMGOREFLX                 50
+     C                     ENDDO
+      *
+     C                     MOVE @TRN      X2TRN
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * #MLN95 - Load message n95                                       *
+      *                                                                 *
+      *   X2TRN contains TRN of MTn95                                   *
+      *******************************************************************
+      *
+     C           #MLN95    BEGSR
+      *
+     C                     MOVE 'N'       IS79
+      * Clear Query Fields
+     C                     Z-ADD1         #75     50
+     C                     CLEARX475A
+     C                     CLEARX475B
+     C                     CLEARX475C
+     C                     CLEARX475D
+     C                     CLEARX475E
+     C                     CLEARX475F
+      * Clear Narrative Fields
+     C                     Z-ADD1         #77A    50
+     C                     CLEARX477AA
+     C                     CLEARX477AB
+     C                     CLEARX477AC
+     C                     CLEARX477AD
+     C                     CLEARX477AE
+     C                     CLEARX477AF
+      *
+     C           X2TRN     CHAINMGOMSGD0            N55
+     C           *IN55     DOWEQ*OFF
+      *
+      ** Field :75: of MTn95
+     C           MTAG      IFEQ ':75: '
+     C                     MOVELMFLD      X475A     P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X475B     P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X475C     P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X475D     P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X475E     P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X475F     P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Field :77A: of MTn95
+     C           MTAG      IFEQ ':77A:'
+     C                     MOVELMFLD      X477AA    P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X477AB    P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X477AC    P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X477AD    P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X477AE    P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           MTAG      IFEQ *BLANKS
+     C                     MOVELMFLD      X477AF    P
+     C                     ADD  1         #75     50
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+      ** Field :20: of MTn95
+     C           MTAG      WHEQ ':20: '
+     C                     MOVELMFLD      X2TRN     P
+      *
+      ** Field :21: of MTn95
+     C           MTAG      WHEQ ':21: '
+     C                     MOVELMFLD      X2F21     P
+      *
+      ** Load original message
+     C           X2ACTN    IFNE 'I'
+     C                     MOVELX2F21     ORITRN
+     C                     EXSR #MLMSG
+     C                     ENDIF
+      *
+      ** Field :11S: of MTn95
+     C           MTAG      WHEQ ':11S:'
+     C                     MOVELMFLD      C0F111    P
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C           *IN55     IFEQ *OFF
+     C           MTAG      ANDEQ*BLANKS
+     C           W0CHR1    ANDNE':'
+     C                     MOVELMFLD      C0F112    P
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDIF
+     C           *IN55     IFEQ *OFF
+     C           MTAG      ANDEQ*BLANKS
+     C           W0CHR1    ANDNE':'
+     C                     MOVELMFLD      C0F113    P
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     ENDIF
+      ** Skip reading next record after processing of field :11S:
+     C                     ITER
+      *
+      ** Field 79
+     C           MTAG      WHEQ ':79: '
+     C                     MOVE 'Y'       IS79
+     C                     EXSR #MCLS1
+     C                     MOVE *OFF      *IN24
+     C           X2ACTN    IFEQ 'A'
+     C                     MOVE *ON       *IN48
+     C                     ELSE
+     C                     MOVE *OFF      *IN48
+     C                     ENDIF
+     C           *IN55     DOWEQ*OFF
+     C                     ADD  1         S0RRN
+     C                     MOVELMFLD      S0F79     P
+     C                     WRITEMEP730S0
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     ENDDO
+      *
+      ** If Amend write empty records to subfile
+     C                     ADD  1         S0RRN
+     C                     MOVE *BLANKS   S0F79
+     C           X2ACTN    IFEQ 'A'
+     C           S0RRN     DO   35        S0RRN
+     C                     WRITEMEP730S0
+     C                     ENDDO
+     C                     ENDIF
+     C                     ITER
+      *
+      ** All other fields (i.e. copy of fields of original message)
+     C           MTAG      WHEQ *BLANKS
+     C           W0CHR1    ANDEQ':'
+     C                     MOVEAMFLD      FLA
+     C           FLA,5     IFNE ':'
+     C                     MOVE ' '       FLA,5
+     C                     ENDIF
+     C                     MOVEAFLA       W0MTAG
+     C                     Z-ADD1         XI
+     C           W0MTAG    LOKUPOMT,XI                   80
+     C                     MOVE 'I'       OMS,XI
+     C                     ENDSL
+     C           X2TRN     READEMGOMSGD0            N    55
+     C                     MOVELMFLD      W0CHR1
+     C                     ENDDO
+      *
+      ** Load message into subfile
+     C           IS79      IFNE 'Y'
+     C                     EXSR #MLSF1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      * #MF32A - Format field 32A                                       *
+      *                                                                 *
+      *    Input/Output: F32TXT                                         *
+      *******************************************************************
+      *
+     C           #MF32A    BEGSR
+      *
+      ** Clear work fields
+     C                     MOVE *BLANKS   FLD32A
+      *
+      ** Find comma in amount and substitute it with a point
+     C                     MOVEAF32TXT    FLA
+     C                     Z-ADD1         XI
+     C           ','       LOKUPFLA,XI                   80
+     C           *IN80     IFEQ *ON
+     C                     MOVE '.'       FLA,XI
+     C                     ENDIF
+      *
+     C                     MOVEAFLA       FLD32A
+      *
+      ** Format date
+     C           BJDFIN    IFEQ 'M'
+     C           MM32A     CAT  '/':0     F32TXT    P
+     C                     CAT  DD32A:0   F32TXT
+     C                     ELSE
+     C           DD32A     CAT  '/':0     F32TXT    P
+     C                     CAT  MM32A:0   F32TXT
+     C                     ENDIF
+     C                     CAT  '/':0     F32TXT
+     C                     CAT  YY32A:0   F32TXT
+      *
+      ** Move currency code
+     C                     CAT  CCY32A:1  F32TXT
+      *
+      ** Move amount
+     C                     CAT  AMT32A:1  F32TXT
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *****************************************************************
+      *   #MVSEL - Validate selection of optional fields              *
+      *****************************************************************
+     C           #MVSEL    BEGSR
+      *
+     C                     READCMEP730S1                 52
+     C                     MOVE *OFF      *IN25
+     C           *IN52     DOWEQ*OFF
+      *
+      ** Selection must be either I or D
+     C           S1SEL     IFNE 'I'
+     C           S1SEL     ANDNE'D'
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     MOVEL'STP2028' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1025
+     C                     UPDATMEP730S1
+     C                     ELSE
+     C                     Z-ADD1         YI
+     C           S1MTAG    LOKUPOMT,YI                   80
+     C                     MOVE S1SEL     OMS,YI
+     C                     ENDIF
+      *
+     C                     READCMEP730S1                 52
+     C                     MOVE *OFF      *IN25
+     C                     ENDDO
+      *
+      ** If no errors re-load subfile
+     C           *IN10     IFEQ *OFF
+     C                     MOVE 'N'       DOVALI
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   #MLSF0 - Update narrative subfile to protect/unprotect      *
+      *            fields                                             *
+      *     *IN48 - ON    - unprotect                                 *
+      *             OFF   - protect                                   *
+      *****************************************************************
+     C           #MLSF0    BEGSR
+      *
+     C           1         DO   35        S0RRN
+      *
+     C           S0RRN     CHAINMEP730S0             52
+     C                     UPDATMEP730S0
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   #MLSF1 - Load subfile with included fields of original msg  *
+      *****************************************************************
+     C           #MLSF1    BEGSR
+      *
+      ** Clear subfile
+     C                     EXSR #MCLS1
+      *
+      ** Find type of message in array MTP, then find Start and End indexes
+      ** in FLD/FMO arrays for this type of message
+      ** SI - start index, EI - end index
+     C                     Z-ADD1         SI
+     C           ORMTPY    LOKUPMTP,SI                   80
+     C           *IN80     IFEQ *ON
+     C                     SUB  1         SI
+     C                     MULT 2         SI
+     C                     ADD  1         SI
+     C           SI        ADD  1         EI
+     C                     ENDIF
+      *
+      **  Load message into subfile
+     C                     MOVE *OFF      *IN25
+     C                     MOVE *OFF      *IN12
+      * If Enquiry or Delete, hide selection field
+     C           X2ACTN    IFEQ 'E'
+     C           X2ACTN    OREQ 'D'
+     C                     MOVE *ON       *IN15
+     C                     ELSE
+     C                     MOVE *OFF      *IN15
+     C                     ENDIF
+      *
+     C           1         DO   OMSIZE    YI
+      *
+      ** If MTAG is not blank and field is selected output field description
+     C           OMT,YI    IFNE *BLANK
+     C                     Z-ADDSI        XI
+     C                     MOVELOMT,YI    OMTAG
+     C           TAGN      LOKUPFLD,XI                   80
+      ** If field is mandatory suppress selection field
+     C           *IN80     IFEQ *ON
+     C           XI        ANDLELMT,EI
+     C           FMO,XI    ANDEQ'M'
+     C           X2ACTN    ANDNE'E'
+     C           X2ACTN    ANDNE'D'
+     C                     MOVE *OFF      *IN48
+      ** If field is optional and not selected skip to next field and
+      ** enable F9 (i.e. set *IN12 ON)
+     C                     ELSE
+     C           OMS,YI    IFEQ 'I'
+     C                     MOVE *ON       *IN48
+     C                     ELSE
+     C                     MOVE *ON       *IN12
+     C                     ADD  1         YI
+     C           YI        DOWLEOMSIZE
+     C           OMT,YI    ANDEQ*BLANKS
+     C                     ADD  1         YI
+     C                     ENDDO
+     C                     SUB  1         YI
+     C                     ITER
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE OMS,YI    S1SEL
+     C                     MOVELOMT,YI    S1MTAG
+      ** Write MTAG header record to subfile
+     C                     MOVE *OFF      *IN30            Normal attr
+     C                     MOVELOMT,YI    W0MTAG
+     C                     EXSR #MTAGD
+     C           OMT,YI    CAT  EFISFD:1  S1FLD     P
+     C                     ADD  1         S1RRN
+     C                     WRITEMEP730S1
+     C                     ENDIF
+      *
+      ** Write field record to subfile
+     C                     MOVE *ON       *IN30            Highlight
+     C                     MOVE *OFF      *IN48
+      *
+      ** Do extra formating for field 32A
+     C           OMT,YI    IFEQ ':32A:'
+     C                     MOVELOMF,YI    F32TXT
+     C                     EXSR #MF32A
+     C                     MOVELF32TXT    S1FLD     P
+     C                     ELSE
+     C                     MOVELOMF,YI    S1FLD     P
+     C                     ENDIF
+     C                     MOVE OMS,YI    S1SEL
+     C                     ADD  1         S1RRN
+     C                     WRITEMEP730S1
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   #MLSF2 - Load subfile with excluded fields of original msg  *
+      *****************************************************************
+     C           #MLSF2    BEGSR
+      *
+      ** Clear subfile
+     C                     EXSR #MCLS2
+      *
+      **  Load message into subfile
+     C                     MOVE *OFF      *IN25
+     C           1         DO   OMSIZE    YI
+      *
+      ** If MTAG is not blank and field is excluded output field description
+     C           OMT,YI    IFNE *BLANK
+     C           OMS,YI    ANDEQ'D'
+     C                     MOVE *ON       *IN48
+     C                     ELSE
+     C                     ADD  1         YI
+     C           YI        DOWLEOMSIZE
+     C           OMT,YI    ANDEQ*BLANKS
+     C                     ADD  1         YI
+     C                     ENDDO
+     C                     SUB  1         YI
+     C                     ITER
+     C                     ENDIF
+     C                     MOVE OMS,YI    S2SEL
+     C                     MOVELOMT,YI    S2MTAG
+      ** Write MTAG header record to subfile
+     C                     MOVE *OFF      *IN30            Normal attr
+     C                     MOVELOMT,YI    W0MTAG
+     C                     EXSR #MTAGD
+     C           OMT,YI    CAT  EFISFD:1  S2FLD     P
+     C                     ADD  1         S2RRN
+     C                     WRITEMEP730S2
+      *
+      ** Write field record to subfile
+     C                     MOVE *ON       *IN30            Highlight
+     C                     MOVE *OFF      *IN48
+      *
+     C           YI        DO   OMSIZE    YI
+     C                     MOVE *BLANK    S2SEL
+     C                     MOVELOMF,YI    S2FLD     P
+     C                     ADD  1         S2RRN
+     C                     WRITEMEP730S2
+     C           YI        ADD  1         XI
+     C           OMT,XI    IFNE *BLANKS
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   #MADDF - Process F9 - allow user to select excluded fields  *
+      *****************************************************************
+     C           #MADDF    BEGSR
+      *
+      ** Load subfile
+     C                     EXSR #MLSF2
+     C                     MOVE *ON       *IN10
+      *
+      ** While neither F3 nor F12 pressed
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           *IN10     ANDEQ*ON
+      *
+      ** Display screen
+     C                     EXSR #MDSPA
+      *
+     C                     SELEC
+      *
+      **  If F3 or F12 pressed or Enquiry exit
+     C           *INKC     WHEQ *ON
+     C           *INKL     OREQ *ON
+     C                     LEAVE
+      *
+      **  Validate selection
+     C                     OTHER
+     C                     EXSR #MVSL2
+     C                     ENDSL
+      *
+     C                     ENDDO
+     C                     MOVE *OFF      *IN10
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MDSPA - Display additonal fields screen                    *
+      *****************************************************************
+     C           #MDSPA    BEGSR
+      *
+     C                     SETOF                     11  12
+     C                     WRITEMEP730X1
+     C                     WRITEMEP730X3
+     C                     WRITE#MSGCTL
+     C                     EXFMTMEP730C2
+     C                     CALL 'ZM1002'
+      *
+     C                     MOVE *OFF      *IN10
+     C                     MOVEAZ06       *IN,20
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   #MVSL2 - Validate selection of optional fields on F9-screen *
+      *****************************************************************
+     C           #MVSL2    BEGSR
+      *
+     C                     READCMEP730S2                 52
+     C                     MOVE *OFF      *IN25
+     C           *IN52     DOWEQ*OFF
+      *
+      ** Selection must be either I or D or blank
+     C           S2SEL     IFNE 'I'
+     C           S2SEL     ANDNE'D'
+     C           S2SEL     ANDNE*BLANK
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     MOVEL'STP2029' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     1025
+     C                     UPDATMEP730S2
+     C                     ENDIF
+      *
+      ** If selection changed to 'I', update array
+     C           S2SEL     IFEQ 'I'
+     C                     Z-ADD1         YI
+     C           S2MTAG    LOKUPOMT,YI                   80
+     C                     MOVE S2SEL     OMS,YI
+     C                     ENDIF
+      *
+     C                     READCMEP730S2                 52
+     C                     MOVE *OFF      *IN25
+     C                     ENDDO
+      *
+      ** If no errors re-load main subfile
+     C           *IN10     IFEQ *OFF
+     C                     EXSR #MLSF1
+     C                     MOVE 'Y'       DOVALI
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   #MVORM - Validate original message                          *
+      *                                                               *
+      *   Check whether it's allowed to create cancellation message   *
+      *   for this message and for destination customer               *
+      *****************************************************************
+     C           #MVORM    BEGSR
+      *
+      ** If destination customer not entered then OK
+      *
+     C****       DECN      IFEQ 0                                                          MD31937
+     C           DECN      IFEQ *BLANKS                                                    MD31937
+     C                     ELSE
+      *
+      ** Access SDCUSTPD for the destination customer details.
+      *
+     C                     MOVELDECN      P0CUST    P
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' P0RTCD
+     C                     PARM '*KEY   ' P0OPTN
+     C                     PARM           P0CUST
+     C                     PARM *BLANKS   P0KSTS
+     C           F0CUST    PARM *BLANKS   P0FMTL
+      *
+      ** Customer record not found - Error
+      *
+     C           P0RTCD    IFNE *BLANKS
+     C                     MOVE '007'     DBASE              * * * * * * *
+     C                     MOVELP0CUST    DBKEY              * DBERR 007 *
+     C                     MOVEL'SDCUSTPD'DBFILE             * * * * * * *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Is message type to be generated ?
+      *
+     C                     MOVE BBNG01    GNR,1
+     C                     MOVE BBNG02    GNR,2
+     C                     MOVE BBNG03    GNR,3
+     C                     MOVE BBNG04    GNR,4
+     C                     MOVE BBNG05    GNR,5
+     C                     MOVE BBNG06    GNR,6
+     C                     MOVE BBNG07    GNR,7
+     C                     MOVE BBNG08    GNR,8
+     C                     MOVE BBNG09    GNR,9
+     C                     MOVE BBNG10    GNR,10
+     C                     MOVE BBNG11    GNR,11
+     C                     MOVE BBNG12    GNR,12
+     C                     MOVE BBNG13    GNR,13
+     C                     MOVE BBNG14    GNR,14
+     C                     MOVE BBNG15    GNR,15
+      *
+      ** Any of the following names can be entered on BBNGxx on
+      ** Sdcustpd to show the messages are not to be generated.
+      **  -'n95' where n is the 1st digit of the cancelled message type.
+      **  -'n9*' any of the n90 series of messages.
+      **  -'n**' any of the 'n00' series of messages.
+      **  -'*95' no cancellation messages are produced.
+      *
+      ** Initially fill up the test field with 'n95' where n is the 1st
+      ** digit of the message type.
+      *
+     C                     MOVE MTPY      CHR03
+     C                     MOVE '95'      CHR03
+      ** 'n95' valid
+     C           CHR03     LOKUPGNR                      90
+      ** 'n9*' valid
+     C                     MOVE '*'       CHR03
+     C           CHR03     LOKUPGNR                      91
+      ** 'n**' valid
+     C                     MOVE '**'      CHR03
+     C           CHR03     LOKUPGNR                      92
+      ** '*95' VALID
+     C           '*95'     LOKUPGNR                      93
+      *
+      ** If the message is not to be generated set on 97.
+      *
+     C           *IN90     IFEQ *ON
+     C           *IN91     OREQ *ON
+     C           *IN92     OREQ *ON
+     C           *IN93     OREQ *ON
+     C                     MOVELDECN      CUS036
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     MOVEL'STP2036' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     GOTO #EVORM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Convert run date to YYMMDD, for SWIFT VALUE DATE VALIDATION.
+     C                     CALL 'ZM0060'               99
+     C                     PARM BJRDNB    ZMDAY
+     C                     PARM           ZSDATE
+      *
+      ** Program ended in error.
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE '009'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 009 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Suppress query message (MTn95), when the SWIFT value
+      ** date of the message is not past.
+      *
+     C           SVDT      IFGT ZSDATE
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     MOVEL'STP2037' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     GOTO #EVORM
+     C                     ENDIF
+      *
+      ** Original message should be SWIFT message and a cancellation
+      ** message should not be generated already
+     C           NWRK      IFNE 'SWIFT'
+     C                     MOVEL'STP2030' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     MOVELTRNO      TRN030
+     C                     MOVELNWRK      NTW030
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     GOTO #EVORM
+     C                     ENDIF
+      *
+     C           CARQ      IFEQ 'Y'
+     C                     MOVEL'STP2031' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     MOVELTRNO      TRN025
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     ENDIF
+      *
+      ** Original message should be in group 2 OR 3 (i.e. message has been
+      ** transmitted and acknoledged
+     C           MGSG      IFNE '3'
+     C           MGST      ANDNE'TRAN'
+     C                     MOVEL'STP2033' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF    P
+     C                     EXSR ZASNMS
+     C                     SETON                     97
+     C                     ENDIF
+      *
+     C           #EVORM    ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+      *
+     C*********************/COPY ZSRSRC,ZDATE1Z3
+     C********The source ZDATE1Z3 is included below *****************
+     C/COPY WNCPYSRC,MEP730SWTR
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** CPY@   **      OBJECT COPYRIGHT
+(C) Copyright Misys International Banking Systems Ltd. 2004
+** MTP ** Types Of Messages that can be cancelled by MTn95
+103
+202
+** FLD, FMO ** Fields and their type (Mandatory, Optional)
+20M
+32M
+50M
+52O
+53O
+54O
+56O
+57O
+59M
+70O
+71O
+72O
+20M
+21M
+32M
+52O
+53O
+54O
+56O
+57O
+58M
+72O
+** LMT ** Index Limits for arrays FLD, FMO
+001
+012
+013
+022

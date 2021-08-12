@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC139             Date 21Dec20               *
+      *  Prev Amend No. CER009             Date 13Nov20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UIC Italian features upgrade to FM2.1 (Recompile)   *
+      *  CER009 - Puma II Upgrade to FM2.1 (Recompile)                *  
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER001 - LUX Upgrade to MidasPlus                            *

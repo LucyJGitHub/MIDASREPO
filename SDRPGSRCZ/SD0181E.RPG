@@ -12,8 +12,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CTI006             Date 31Mar14               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER009             Date 23Nov20               *
+      *                 MD040370           Date 20Jun18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CTI006             Date 31Mar14               *
       *                 MD026677           Date 12May14               *
       *                 CGL133             Date 01May13               *
       *                 CGL132             Date 01May13               *
@@ -49,6 +52,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MidasPlus                        *
+      *  MD040370 - MIDAS Country Codes maintenance function does     *
+      *             not work correctly. (Recompile)                   *      
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *  MD026677 - FATCA Agreement Type field does not display a     *
@@ -137,6 +144,9 @@
      IDATALX      DS                           1024                                           CER001
      I                                        1   2 W1CNCD                                    CER001
      I                                        3   4 #1ISOC                                    CER001
+     IDATAIT      DS                           1024                                           CER009
+     I                                        1   2 ITCNCD                                    CER009
+     I                                        3   5 ITUCTR                                    CER009
       /EJECT
       * Data structures:
      IPGMDS     ESDSY2PGDSP
@@ -533,6 +543,9 @@
       * CASE: WRK.S01212 is Fix installed
      C           WUMFTS    IFEQ 'Y'                        *IF
      C/COPY WNCPYSRC,SD0181EC01
+     C                     MOVE 'N'       CE9RET                                              CER009
+     C                     MOVE 'N'       CE9RUN                                              CER009
+     C                     MOVEL#1CNCD    ITCNCD                                              CER009
       *                                                                                       CER001
      C           ULX004    IFEQ 'Y'                                                           CER001
      C           ULX043    OREQ 'Y'                                                           CER001
@@ -542,6 +555,7 @@
      C                     MOVE 'N'       W0DCF                                               CER001
      C                     MOVEL#1CNCD    W1CNCD                                              CER001
       *                                                                                       CER001
+     C           CE9RET    IFEQ 'N'                                                           CER009
      C           ULX004    IFEQ 'Y'                                                           CER001
      C                     CALL 'SD0183'                                                      CER001
      C                     PARM           @RTNCD  7                                           CER001
@@ -560,6 +574,7 @@
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
      C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
      C           ULX043    IFEQ 'Y'                                                           CER001
      C                     CALL 'SD0184'                                                      CER001
@@ -580,10 +595,42 @@
       ** If F12 was pressed in called program                                                 CER001
       *                                                                                       CER001
      C           W0RTN     IFEQ 'USR0790'                                                     CER001
+     C           ULX004    IFEQ 'Y'                                                           CER009
      C                     MOVE 'Y'       LOOP                                                CER001
+     C                     ELSE                                                               CER009
+     C                     MOVE 'N'       LOOP                                                CER009
+     C                     ENDIF                                                              CER009
+     C                     MOVE 'N'       CE9RET                                              CER009
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
      C                     ENDIF                                                              CER001
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           W0RTN     ANDEQ*BLANKS                                                       CER009
+     C                     MOVE 'Y'       CE9RUN                                              CER009
+     C                     CALL 'SD0185'                                                      CER009
+     C                     PARM *BLANK    W0RTN                                               CER009
+     C                     PARM 'E'       @ACTCD                                              CER009
+     C                     PARM           DATAIT                                              CER009
+      *                                                                                       CER009
+      ** If F12 was pressed in called program or window/DB error                              CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C           W0RTN     OREQ 'USR0563'                                                     CER009
+     C           W0RTN     OREQ 'Y2U0004'                                                     CER009
+     C                     MOVE 'Y'       W0DCF                                               CER009
+     C                     ENDIF                                                              CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C                     SELEC                                                              CER009
+     C           ULX004    WHEQ 'Y'                                                           CER009
+     C           ULX043    ANDEQ'Y'                                                           CER009
+     C                     MOVE 'Y'       CE9RET                                              CER009
+     C           ULX004    WHEQ 'Y'                                                           CER009
+     C           ULX043    ANDEQ'N'                                                           CER009
+     C                     MOVE 'N'       CE9RET                                              CER009
+     C                     ENDSL                                                              CER009
+     C                     MOVE 'Y'       LOOP                                                CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
      C                     ENDDO                                                              CER001
       *                                                                                       CER001
@@ -593,6 +640,25 @@
       *                                                                                       CER001
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           CE9RUN    ANDEQ'N'                                                           CER009
+     C                     CALL 'SD0185'                                                      CER009
+     C                     PARM *BLANK    W0RTN                                               CER009
+     C                     PARM 'E'       @ACTCD                                              CER009
+     C                     PARM           DATAIT                                              CER009
+      *                                                                                       CER009
+      ** If F12 was pressed in called program or window/DB error                              CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C           W0RTN     OREQ 'USR0563'                                                     CER009
+     C           W0RTN     OREQ 'Y2U0004'                                                     CER009
+     C                     MOVE 'Y'       W0DCF                                               CER009
+     C                     ENDIF                                                              CER009
+     C           W0RTN     IFNE *BLANKS                                                       CER009
+     C                     GOTO DCEXIT                                                        CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
       * CASE: WRK.Window required is Yes
      C           WUD2DD    IFEQ *BLANK                     *IF
       * WM call Window Manager - Window manager  *
@@ -1447,6 +1513,23 @@
      C                     MOVE *ON       *INLR                                               CER001
      C                     EXSR *PSSR                                                         CER001
      C                     ENDIF                                                              CER001
+      *                                                                                       CER009
+      ** Check if CER009 is enabled                                                           CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CE9RET  1                                           CER009
+     C                     MOVE 'N'       CE9RUN  1                                           CER009
       *                                                                                       CSD031
       ** Check if switchable feature CSD046 is on                                             CSD031
       *                                                                                       CSD031

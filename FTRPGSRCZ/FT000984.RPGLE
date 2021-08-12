@@ -25,8 +25,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 232571             Date 23Mar05               *
+      *                 MARCIN             Date 31Dec2004             *
+      *                 ESL038             Date 01Nov2004             *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -51,6 +56,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *           Applied 232571, MARCIN, ESL038 changes.             *
+      *  232571 - Ensure STP and CustType fields are set up correctly.*
+      *  MARCIN - Convert alt cust no. to Midas customer number.      *
+      *  ESL038 - ING STP Development                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -85,6 +96,12 @@
       * Customer Details
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
  
+      * Extended Receivers Charges                                                            ESL038
+     FFTRICHV2  IF   E           K DISK    INFSR(*PSSR)                                       ESL038
+                                                                                              ESL038
+      * Custome Alternative Details                                                          MD31937
+     FSDACUSV1  IF   E           K DISK    INFSR(*PSSR)                                      MD31937
+                                                                                             MD31937
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -255,6 +272,9 @@
      D CFT120          S              1A                                                      CFT120
  
      D STP             S              1
+                                                                                              ESL038
+     D Esl038          S              1                                                       ESL038
+                                                                                              ESL038
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -267,6 +287,22 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
+                                                                                              ESL038
+      ** Check for Receiver Charges Extensions                                                ESL038
+                                                                                              ESL038
+     C                   If        ESL038 = *blanks                                           ESL038
+     C                   Call      'AOSARDR0'                                                 ESL038
+     C                   Parm      *BLANKS       P@RTCD            7                          ESL038
+     C                   Parm      '*VERIFY'     P@OPTN            7                          ESL038
+     C                   Parm      'ESL038'      P@SARD            6                          ESL038
+     C     ScSard        Parm      *BLANKS       DSFDY                                        ESL038
+      *                                                                                       ESL038
+     C                   If        P@Rtcd = *blanks                                           ESL038
+     C                   Eval      ESL038 = 'Y'                                               ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      ESL038 = 'N'                                               ESL038
+     C                   Endif                                                                ESL038
+     C                   Endif                                                                ESL038
  
       * Ensure transaction type a) is in transaction type table and
       *  b) that flag 'Receivers charges' = 'Y'
@@ -291,10 +327,187 @@
      C                   Eval      SetCcy      = SMCY
      C                   EVAL      ChgExch     = OPCHRT
      C                   EVAL      ChgCcy      = OPCHGC
-     C                   EVAL      STP         = OPSTPI
+      ****               EVAL      STP         = OPSTPI                                       232571
+     C                   EVAL      STP         = OPAUTO                                       232571
      C                   EVAL      ChargesDR = CDRO
      C                   Eval      SettAmt = SMAM
      C                   Eval      P_ADDC = ADDC
+                                                                                              ESL038
+      ** Receiver Charges Extension Pprocessing                                               ESL038
+                                                                                              ESL038
+     C                   If        ESL038 = 'Y' and P_Transtype = 'OP'                        ESL038
+                                                                                              ESL038
+      * Set Up key                                                                            ESL038
+     C                   Eval      CurCcy = Pccy                                              ESL038
+     C                   Eval      Tranty = 'OP'                                              ESL038
+                                                                                              ESL038
+     C                   Select                                                               ESL038
+     C                   When      Dstt = 'S'                                                 ESL038
+     C                   Eval      PtyId  = DST1                                              ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        %Subst(PtyId:9:3) = *blanks                                ESL038
+     C                   Eval      %Subst(PtyId:9:3) = 'XXX'                                  ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+     C                   When      Dstt = 'F' or                                              ESL038
+     C                             Dstt = 'R'                                                 ESL038
+     C                   Eval      Cust = Dst1                                                ESL038
+     C                   Eval      Custtype = Dstt                                            232571
+     C                   Exsr      #OtPay                                                     ESL038
+                                                                                              ESL038
+     C                   Clear                   P@Customer                                   ESL038
+     C                   Eval      P@Customer = WCustNo                                       ESL038
+                                                                                              ESL038
+     C                   CallB     'AOCUSTR0'                                                 ESL038
+     C                   Parm      *Blanks       P@Rtcd            7                          ESL038
+     C                   Parm      '*KEY   '     P@Optn            7                          ESL038
+     C                   Parm                    P@Customer       10                          ESL038
+     C                   Parm      *Blanks       P@KYST            7                          ESL038
+     C     SDCUST        Parm      *Blanks       DSSDY                                        ESL038
+                                                                                              ESL038
+     C                   If        P@Rtcd = *blanks and BBCSID <> *Blanks                     ESL038
+     C                   Eval      PtyId  = BBCSID                                            ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        %Subst(PtyId:9:3) = *blanks                                ESL038
+     C                   Eval      %Subst(PtyId:9:3) = 'XXX'                                  ESL038
+     C                   Endif                                                                ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      Ptyid = P@Customer                                         ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * Destination is a GL or Customer                                                       ESL038
+     C                   When      Dstt = 'C' or Dstt = 'G'                                   ESL038
+                                                                                              ESL038
+     C                   Clear                   P@Customer                                   ESL038
+     C                   Eval      P@Customer = %SubSt(Dst1:1:6)                              ESL038
+                                                                                              ESL038
+     C                   CallB     'AOCUSTR0'                                                 ESL038
+     C                   Parm      *Blanks       P@Rtcd            7                          ESL038
+     C                   Parm      '*KEY   '     P@Optn            7                          ESL038
+     C                   Parm                    P@Customer       10                          ESL038
+     C                   Parm      *Blanks       P@KYST            7                          ESL038
+     C     SDCUST        Parm      *Blanks       DSSDY                                        ESL038
+                                                                                              ESL038
+     C                   If        P@Rtcd = *blanks and BBCSID <> *Blanks                     ESL038
+     C                   Eval      PtyId  = BBCSID                                            ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        %Subst(PtyId:9:3) = *blanks                                ESL038
+     C                   Eval      %Subst(PtyId:9:3) = 'XXX'                                  ESL038
+     C                   Endif                                                                ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      Ptyid = P@Customer                                         ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+     C                   Endsl                                                                ESL038
+                                                                                              ESL038
+     C                   Select                                                               ESL038
+      * Intermediary Institution is a Swift                                                   ESL038
+     C                   When      Inbt = 'S'                                                 ESL038
+     C                   If        %Subst(Inb1:1:1) <> '/'                                    ESL038
+     C                   Eval      RiBicc = Inb1                                              ESL038
+     C                   Eval      RiBicb = %Subst(Inb1:9:3)                                  ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      RiBicc = Inb2                                              ESL038
+     C                   Eval      RiBicb = %Subst(Inb2:9:3)                                  ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        RiBicb = *blanks                                           ESL038
+     C                   Eval      RiBicb = 'XXX'                                             ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * If entered as a customer                                                              ESL038
+     C                   When      Inbt = 'C'                                                 ESL038
+                                                                                              ESL038
+     C                   Clear                   P@Customer                                   ESL038
+     C                   If        %Subst(Inb1:1:1) <> '/'                                    ESL038
+     C                   Eval      P@Customer = %SubSt(Inb1:1:6)                              ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      P@Customer = %SubSt(Inb1:1:6)                              ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+     C                   CallB     'AOCUSTR0'                                                 ESL038
+     C                   Parm      *Blanks       P@Rtcd            7                          ESL038
+     C                   Parm      '*KEY   '     P@Optn            7                          ESL038
+     C                   Parm                    P@Customer       10                          ESL038
+     C                   Parm      *Blanks       P@KYST            7                          ESL038
+     C     SDCUST        Parm      *Blanks       DSSDY                                        ESL038
+                                                                                              ESL038
+     C                   If        P@Rtcd = *blanks and BBCSID <> *blanks                     ESL038
+     C                   Eval      RiBicc = BBCSID                                            ESL038
+     C                   Eval      RiBicb = %Subst(BbCsid:9:3)                                ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        RiBicb = *blanks                                           ESL038
+     C                   Eval      RiBicb = 'XXX'                                             ESL038
+     C                   Endif                                                                ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      RiBicc = P@Customer                                        ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * Account with Institution is a Swift                                                   ESL038
+     C                   When      Acbt = 'S'                                                 ESL038
+     C                   If        %Subst(Acb1:1:1) <> '/'                                    ESL038
+     C                   Eval      RiBicc = Acb1                                              ESL038
+     C                   Eval      RiBicb = %Subst(Acb1:9:3)                                  ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      RiBicc = Acb2                                              ESL038
+     C                   Eval      RiBicb = %Subst(Acb2:9:3)                                  ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        RiBicb = *blanks                                           ESL038
+     C                   Eval      RiBicb = 'XXX'                                             ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * If entered as a customer                                                              ESL038
+     C                   When      Acbt = 'C'                                                 ESL038
+                                                                                              ESL038
+     C                   Clear                   P@Customer                                   ESL038
+     C                   If        %Subst(Acb1:1:1) <> '/'                                    ESL038
+     C                   Eval      P@Customer = %SubSt(Acb1:1:6)                              ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      P@Customer = %SubSt(Acb1:1:6)                              ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+     C                   CallB     'AOCUSTR0'                                                 ESL038
+     C                   Parm      *Blanks       P@Rtcd            7                          ESL038
+     C                   Parm      '*KEY   '     P@Optn            7                          ESL038
+     C                   Parm                    P@Customer       10                          ESL038
+     C                   Parm      *Blanks       P@KYST            7                          ESL038
+     C     SDCUST        Parm      *Blanks       DSSDY                                        ESL038
+                                                                                              ESL038
+     C                   If        P@Rtcd = *blanks and BBCSID <> *blanks                     ESL038
+     C                   Eval      RiBicc = BBCSID                                            ESL038
+     C                   Eval      RiBicb = %Subst(BbCsid:9:3)                                ESL038
+                                                                                              ESL038
+      * If blanks fill with XXX                                                               ESL038
+     C                   If        RiBicb = *blanks                                           ESL038
+     C                   Eval      RiBicb = 'XXX'                                             ESL038
+     C                   Endif                                                                ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      RiBicc = P@Customer                                        ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+      * If IBAN In beneficiary                                                                ESL038
+     C                   When      Bnct = 'A' and %Subst(Bnc1:1:1) = '/'                      ESL038
+                                                                                              ESL038
+                                                                                              ESL038
+     C                   Eval      RiBicc = '????  ??'                                        ESL038
+     C                   Eval      %Subst(RiBicc:5:2) = %Subst(Bnc1:2:2)                      ESL038
+                                                                                              ESL038
+     C                   Eval      RiBicb = '???'                                             ESL038
+                                                                                              ESL038
+     C                   Endsl                                                                ESL038
+                                                                                              ESL038
+      * Look up details                                                                       ESL038
+     C                   Exsr      #CustLook                                                  ESL038
+                                                                                              ESL038
+     C                   Else                                                                 ESL038
+                                                                                              ESL038
  
       *
       * Calculate charges for destination
@@ -337,6 +550,9 @@
      C                   Exsr      #OtPay
      C                   Exsr      #CustLook
      C                   Endif
+                                                                                              ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
  
       * ================================================================
       * Customer Credit Transfers
@@ -579,6 +795,52 @@
      C                   Eval      TotInChgCcy = *Zeros
  
      C                   Eval      ChgCd = *Blanks
+                                                                                              ESL038
+      ** Receiver Charges Extension Pprocessing                                               ESL038
+                                                                                              ESL038
+     C                   If        ESL038 = 'Y' and P_Transtype = 'OP'                        ESL038
+                                                                                              ESL038
+      * Define key                                                                            ESL038
+     C     HRichV2       Klist                                                                ESL038
+     C                   Kfld                    PTYID                                        ESL038
+     C                   Kfld                    CURCCY                                       ESL038
+     C                   Kfld                    TRANTY                                       ESL038
+     C                   Kfld                    RIBICC                                       ESL038
+     C                   Kfld                    RIBICB                                       ESL038
+                                                                                              ESL038
+      * Set Up key                                                                            ESL038
+                                                                                              ESL038
+      * Full key                                                                              ESL038
+     C     HRichV2       Chain     @RichV2                                                    ESL038
+     C                   If        Not %Found                                                 ESL038
+                                                                                              ESL038
+      * All branches for BIC                                                                  ESL038
+     C                   Eval      RiBicB = '???'                                             ESL038
+     C     HRichV2       Chain     @RichV2                                                    ESL038
+     C                   If        Not %Found                                                 ESL038
+                                                                                              ESL038
+      * All branches for Bank in country                                                      ESL038
+     C                   Eval      %Subst(RiBicc:7:2) = '??'                                  ESL038
+     C     HRichV2       Chain     @RichV2                                                    ESL038
+     C                   If        Not %Found                                                 ESL038
+                                                                                              ESL038
+      * Any bank for country                                                                  ESL038
+     C                   Eval      %Subst(RiBicc:1:4) = '????'                                ESL038
+     C     HRichV2       Chain     @RichV2                                                    ESL038
+     C                   If        Not %Found                                                 ESL038
+      * Any bank full stop                                                                    232571
+     C                   Eval      %Subst(RiBicc:5:2) = '??'                                  232571
+     C     HRichV2       Chain     @RichV2                                                    232571
+     C                   If        Not %Found                                                 232571
+     C                   Eval      *In97 = *On                                                ESL038
+     C                   Endif                                                                232571
+     C                   Endif                                                                ESL038
+     C                   Endif                                                                ESL038
+     C                   Endif                                                                ESL038
+     C                   Endif                                                                ESL038
+                                                                                              ESL038
+     C                   Else                                                                 ESL038
+                                                                                              ESL038
  
      C                   If        CustType = 'C'                                             241255
      C                   Eval      PTYID = WCustNo
@@ -597,6 +859,8 @@
      C     TPI           Chain     FtRichL0                           97
      C                   Endif
      C                   Endif
+                                                                                              ESL038
+     C                   Endif                                                                ESL038
  
       * If currency blanked via chain to FtRich, reinstate as current pay currency.
      C                   If        CurCcy = *Blanks
@@ -733,6 +997,19 @@
       *                                                               *
       *****************************************************************
      C     FormatAcc     Begsr
+                                                                                              MARCIN
+     C                   If            Dstt = 'C'                                             MARCIN
+     C                             And %Subst(Cust:7:1) <> *blanks                            MARCIN
+     C                   MoveL     *blanks       @@Cust           12                          MARCIN
+     C                   MoveL     Cust          @@Cust                                       MARCIN
+     C     @@Cust        Chain     SDACUSD0                                                   MARCIN
+                                                                                              MARCIN
+     C                   If        %Found                                                     MARCIN
+     C                   MoveL     *blanks       Cust                                         MARCIN
+     C                   MoveL     E5CUST        Cust                                         MARCIN
+     C                   EndIf                                                                MARCIN
+                                                                                              MARCIN
+     C                   EndIf                                                                MARCIN
  
      C                   Movel     Cust          CNum35
  

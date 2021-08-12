@@ -10,18 +10,22 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC118             Date 13Feb19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CCB003  *CREATE    Date 01Nov96              */
+/*                      CCB003  *CREATE    Date 01Nov96              */
 /*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC118 - Upgrade of S21045 to FB Midas 2.1                  */
+/*                 BV Auto transfer of interbranch account balances  */
+/*                 BVINTBR; uses core hook REC6413INT and LUC118_003 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB003 - COB Performance Enhancements - Task Split          */
 /*                End Proc                                           */
@@ -89,6 +93,8 @@
  
 /* If message = FINISH, terminate the program */
  
+/*/COPY WNCPYSRC,LUC118_003                                          */
+
              IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
              GOTO       CMDLBL(END)
              ENDDO

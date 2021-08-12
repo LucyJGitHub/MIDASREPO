@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054083           Date 09Aug19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. LUC139             Date 15Jan21               *
+      *  Prev Amend No. CER009             Date 11Nov20               *
+      *                 MD054083           Date 09Aug19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD021104           Date 26Jun15               *
@@ -149,6 +151,8 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
       *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *      
+      *  CER009 - Puma II Upgrade to Midasplus                        *
       *  MD054083 - No APR rate fields in List of Today's report      *
       *             (DL0205P1)                                        *
       *  CER050 - Annualised Percentage Rate                          *
@@ -426,6 +430,13 @@
      F*                                                                   S01408
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,DL0205FFPG                                           S01408
+      *                                                                                       CER009
+     FMMLDT1L0IF  E           K        DISK         KINFSR *PSSR                              CER009
+      ** Money Market deals extension file                                                    CER009
+      *                                                                                       CER009
+     FDLFXT1L0IF  E           K        DISK         KINFSR *PSSR                              CER009
+      ** FX deals extension file                                                              CER009
+      *                                                                                       CER009
      FMMDLX1L0IF  E           K        DISK         KINFSR *PSSR      UC                      CER001
       *                                                                                       CER001
      FMMDBX1L0IF  E           K        DISK         KINFSR *PSSR      UC                      CER001
@@ -1911,6 +1922,20 @@
      C                     SETOF                     17                   CDL049
      C                     ENDIF                                          CDL049
      C*                                                                   S01408
+      *                                                                                       CER009
+      ** Check feature 'CER009' existence                                                     CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM '       ' PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANK                                                        CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
 0516 C*****                MOVE 'A'       CKEY    7                       S01194
 0517 C*****                MOVEL'20'      CCYKY  12                       S01194
 0518 C*****                MOVE '1'       CCYKY2  4                       S01194
@@ -3315,6 +3340,65 @@
      C                     ENDIF                                          CDL006
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0205CCP7                                           S01408
+      *                                                                                       CER009
+      ** If BOI Reports is switched on and not an Internal Deal                               CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           DTYP      ANDNE'ID'                                                          CER009
+     C           DTYP      ANDNE'IL'                                                          CER009
+     C           DTYP      ANDNE'PS'                                                          CER009
+     C           DTYP      ANDNE'NX'                                                          CER009
+      *                                                                                       CER009
+      ** Get European Reporting details for primary file                                      CER009
+      *                                                                                       CER009
+     C                     MOVE *OFF      *IN80                                               CER009
+     C                     MOVE *OFF      *IN81                                               CER009
+      *                                                                                       CER009
+     C                     MOVE *OFF      *IN82                                               CER009
+     C                     MOVE *OFF      *IN83                                               CER009
+      *                                                                                       CER009
+      ** FX deals extension record details                                                    CER009
+      *                                                                                       CER009
+     C           *IN06     IFEQ *ON                                                           CER009
+     C           DLNO      CHAINDLFXT1L0             88                                       CER009
+     C           *IN88     IFEQ *ON                                                           CER009
+     C           *LOCK     IN   LDA                                                           CER009
+     C                     MOVEL'DLFXT1PD'DBFILE                                              CER009
+     C                     MOVEL'018'     DBASE                                               CER009
+     C                     MOVELDLNO      DBKEY                                               CER009
+     C                     MOVEL'DL0205'  DBPGM                                               CER009
+     C                     OUT  LDA                                                           CER009
+     C                     EXSR *PSSR                                                         CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE *ON       *IN82                                               CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** MM deals extension record details                                                    CER009
+      *                                                                                       CER009
+     C           *IN07     IFEQ *ON                                                           CER009
+     C           DLNO      CHAINMMLDT1L0             88                                       CER009
+     C           *IN88     IFEQ *ON                                                           CER009
+     C           *LOCK     IN   LDA                                                           CER009
+     C                     MOVEL'DLLDT1PD'DBFILE                                              CER009
+     C                     MOVEL'019'     DBASE                                               CER009
+     C                     MOVELDLNO      DBKEY                                               CER009
+     C                     MOVEL'DL0205'  DBPGM                                               CER009
+     C                     OUT  LDA                                                           CER009
+     C                     EXSR *PSSR                                                         CER009
+     C                     ELSE                                                               CER009
+     C           DTYP      IFEQ 'IP'                                                          CER009
+     C           DTYP      OREQ 'TI'                                                          CER009
+     C           DTYP      OREQ 'CL'                                                          CER009
+     C                     MOVE *ON       *IN82                                               CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE *ON       *IN83                                               CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Get European reporting details for primary file                                      CER001
       *                                                                                       CER001
@@ -4406,6 +4490,21 @@
      O*                                                                   S01408
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,DL0205OOP5                                           S01408
+      *                                                                                       CER009
+     O        D  1     06 82                                                                  CER009
+     O                                   33 'MOTIVATION OF OPER.:'                            CER009
+     O                         PJMOOP    35                                                   CER009
+     O                                   57 'TYPE OF PRODUCT:'                                CER009
+     O                         PJTPPR    64                                                   CER009
+     O                                   93 'PERSONALISATION'                                 CER009
+     O                                  103 ' OF OPER.:'                                      CER009
+     O                         PJPEPR   110                                                   CER009
+     O        D  2     06 82                                                                  CER009
+     O                                   33 'GLOBAL/PARTIAL OPER.:'                           CER009
+     O                         PJGLPA    35                                                   CER009
+     O                                   90 'OPER. WITH THIRD'                                CER009
+     O                                  103 ' PARTY FUNDS:'                                   CER009
+     O                         PJTPFD   105                                                   CER009
      O*                                                                   S01408
      O*                                                                   S01434
      O** REPORT FIELDS ADDED FOR ROLLOVER                                 S01434
@@ -4546,6 +4645,72 @@
      O*                                                                   S01408
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,DL0205OOP3                                           S01408
+     O        D  1     07 82                                                                  CER009
+     O                                   33 'MOTIVATION OF OPER.:'                            CER009
+     O                         PIMOOP    35                                                   CER009
+     O                                   57 'AGRIC CRED. CLASS:'                              CER009
+     O                         PIAGCT    61                                                   CER009
+     O                                   80 'AGRIC LAWS CLASS:'                               CER009
+     O                         PIAGCL    84                                                   CER009
+     O                                  103 'ECON. BRANCH DEST:'                              CER009
+     O                         PIECBD   106                                                   CER009
+     O                                  129 'SUBSIDIZED CRED. IND.:'                          CER009
+     O                         PISBCR   131                                                   CER009
+      *                                                                                       CER009
+     O        D  1     07 82                                                                  CER009
+     O                                   33 'LAW FOR SUB. CREDIT :'                           CER009
+     O                         PISBLW    37                                                   CER009
+     O                                   57 'SUB. INT. FOR EXPT:'                             CER009
+     O                         PIINSB    59                                                   CER009
+     O                                  103 'TYPE OF PRODUCT:'                                CER009
+     O                         PITPPR   110                                                   CER009
+     O        D  1     07 82                                                                  CER009
+     O                                   23 'PERSONALISATION'                                 CER009
+     O                                   33 ' OF OPER.:'                                      CER009
+     O                         PIPEPR    40                                                   CER009
+     O                                   57 'GLOB/PART OPER.:'                                CER009
+     O                         PIGLPA    59                                                   CER009
+     O                                  103 'PRIORITY RISK PROD.:'                            CER009
+     O                         PIPTRP   107                                                   CER009
+      *                                                                                       CER009
+     O        D  1     07 82                                                                  CER009
+     O                                   20 'OPER. WITH THIRD'                                CER009
+     O                                   33 ' PARTY FUNDS:'                                   CER009
+     O                         PITPFD    35                                                   CER009
+     O                                   54 'DEST. PROV. OF '                                 CER009
+     O                                   65 'INVESTMENT:'                                     CER009
+     O                         PIDPIV    71                                                   CER009
+     O                                  103 'ECON. DEST. INVEST:'                             CER009
+     O                         PIEDIV   107                                                   CER009
+     O        D  1     07 82                                                                  CER009
+     O                                   33 'CATEGORY CODE CR . :'                            CER009
+     O                         PICATC    45                                                   CER009
+     O                                   80 'TYPE OF ACTIVITY:'                               CER009
+     O                         PITPAC    84                                                   CER009
+     O                                  103 'CLIENT ROLE:'                                    CER009
+     O                         PICLRL   107                                                   CER009
+     O        D  1     07 82                                                                  CER009
+     O                                   33 'ACCOUNT STATUS:'                                 CER009
+     O                         PIACST    37                                                   CER009
+     O        D  2     07 82                                                                  CER009
+     O                                   33 'EFFECTIVE GLOBAL RATE:'                          CER009
+     O                         PITEGL    43 '    0.   '                                       CER009
+      *                                                                                       CER009
+     O        D  1     07 83                                                                  CER009
+     O                                   33 'MOTIVATION OF OPER.:'                            CER009
+     O                         PIMOOP    35                                                   CER009
+     O                                   57 'TYPE OF PRODUCT:'                                CER009
+     O                         PITPPR    64                                                   CER009
+     O                                   93 'PERSONALISATION'                                 CER009
+     O                                  103 ' OF OPER.:'                                      CER009
+     O                         PIPEPR   110                                                   CER009
+     O        D  2     07 83                                                                  CER009
+     O                                   33 'GLOBAL/PARTIAL OPER.:'                           CER009
+     O                         PIGLPA    35                                                   CER009
+     O                                   90 'OPER. WITH THIRD'                                CER009
+     O                                  103 ' PARTY FUNDS:'                                   CER009
+     O                         PITPFD   105                                                   CER009
+      *                                                                                       CER009
      O        D  1     07 02 76                                                               CER001
      O                                   32 'SUBORDINATE :'                                   CER001
      O                         VLSUBR    34                                                   CER001

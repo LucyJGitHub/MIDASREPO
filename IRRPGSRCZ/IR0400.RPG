@@ -1,0 +1,295 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Italian Returns Status data area Setup')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR0400 - Italian Returns Status data area Setup              *
+      *                                                               *
+      *  Function:  This program will calculates the EOM date         *
+      *  (phase(s)) and update accordingly the dtaara IRSTAT.         *
+      *                                                               *
+      *  Called By: IRC0400 - IR Status data area Setup               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. 227407             Date 01Jun04               *
+      *                 UIT021             Date 03feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  227407 - End of month indicator not set to 'M' when it       *
+      *           should be.                                          *
+      *  UIT021 - BOI Monthly Reporting                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+      ***  Standard subroutines arrays
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE3
+     IIRSTTD    E DSIRSTAT
+      ***  Italian Returns Status Data area
+      *
+     ILDA       E DSLDA                         256
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+      *
+      ***  Working Data Structure : Access Object
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, Short data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ***  General Ledger ICD
+      *
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  If the rundate and the date of next working day are in the same month
+      ***  this is not an EOM, thus IREMI='D', IREMD=0 and IREMT=' '.
+      ***  Else (EOM)
+      ***  IREMD is Calendar End of month Date
+      ***  IREMI if event control date is equal to EOMdate and Next working
+      ***        date - 1, then 'D'
+      ***        else if event ctrl date is equal to EOMdate and accrual
+      ***             profit date, then 'M'
+      ***        If event control date not equal to EOMdate 'X'
+      ***  IREMT = 'Y' if EOM month number is 12
+      ***        = 'S' if EOM month number is 6
+      ***        = 'T' if EOM month number is 3 or 9
+      ***        = 'M' if EOM month number is 1,2,4,5,7,8,10 or 11 (other)
+      *
+      ***  1) Check Rundate month with Next working date month
+      *
+     C           WSRUNM    IFEQ WSNWDM
+      *
+      ***  Same month --> not EOM
+      *
+     C                     MOVE 'D'       IREMI
+     C                     Z-ADD*ZERO     IREMD
+     C                     MOVE *BLANKS   IREMT
+     C                     ELSE
+      *
+      ***  EOM : 2) Calculate Calendar EOM : Next Working date 01/MMYY - 1
+      ***           (Rem : ZDATE contains Next working date DDMMYY)
+      *
+     C                     MOVEL01        ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     MOVEL'ZDATE1'  DBFILE           * DBERROR 000 *
+     C           'ERROR'   CAT  '001':1   DBKEY     P      ***************
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***   ZDAYNO contains first day of Next working date month
+      *
+     C           ZDAYNO    SUB  1         IREMD
+      *
+      ***  3) Event Control Date is the lesser of Accrual date and
+      ***     Next Working date - 1.
+      *
+     C           BJDNWD    SUB  1         WWNWD   50       Nxt Wrkg date - 1
+      *
+     C********** BKAPDT    IFLT WWNWD                                     227407
+     C           BKAPDT    IFLE WWNWD                                     227407
+     C                     Z-ADDBKAPDT    WWEVCD  50       Event control date
+     C                     MOVE *ON       WWACCR           Flag : Accrual date
+     C                     ELSE
+      *
+     C                     Z-ADDWWNWD     WWEVCD
+      *                                                    Flag : Nxt Wrkg day-1
+     C                     ENDIF
+      *
+      ***  4) Event Ctrl date if not equal EOM calendar date
+      ***       then move 'X' in IREMI
+      ***       else if Evnt ctrl date is Accrual date , move 'M' into IREMI
+      ***            else Evnt ctrl dt is Nxt wrkg day - 1, move 'D' into IREMI
+      *
+     C           WWEVCD    IFNE IREMD
+     C                     MOVE 'X'       IREMI
+     C                     ELSE
+      *
+     C           WWACCR    IFNE *ON                        Not Accrual date
+     C                     MOVE 'D'       IREMI
+     C                     ELSE
+      *
+     C                     MOVE 'M'       IREMI            Accrual date
+     C                     ENDIF
+      *
+     C                     ENDIF                           WWEVCD
+      *
+      ***  5) define IREMT based on Rundate month (kept in WXMONT)
+      *
+     C                     MOVE 'M'       IREMT            default EOM
+     C                     SELEC
+     C           WXMONT    WHEQ 3
+     C           WXMONT    OREQ 9
+     C                     MOVE 'T'       IREMT            EOQuater
+     C           WXMONT    WHEQ 6
+     C                     MOVE 'S'       IREMT            EOHalf-year
+     C           WXMONT    WHEQ 12
+     C                     MOVE 'Y'       IREMT            EOYear
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      ***  Update Italian Returns Status Data Area
+      *
+     C                     OUT  IRSTTD
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *               E N D    O F    M A I N L I N E S               *
+      *****************************************************************
+      *
+      *****************************************************************
+      *   *INZSR - Initial subroutine                                 *
+      *   ------                                                      *
+      *   Called by : pgm start                                       *
+      *   Calls     : *PSSR                                           *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Reset Working flag
+      *
+     C                     MOVE *OFF      WWACCR  1        EVCD flag
+     C                     MOVE '0'       *IN98            Date format DDMMYY
+      *
+      ***  Obtain the Current Processing Date & Date of Next Working Day
+      ***  from Installation Control (SDBANKPD)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'*FIRST'  DBKEY     P      * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Obtain the Accrual Processing Date from installation (SDGELRPD)
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDGELR    PARM SDGELR    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY     P      * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access Data Area IRSTAT
+      *
+     C           *NAMVAR   DEFN IRSTAT    IRSTTD
+     C           *LOCK     IN   IRSTTD                 02
+      *
+      ***  DB Error if no data area found
+      *
+     C           *IN02     IFEQ *ON
+     C                     MOVE '003'     DBASE            ***************
+     C                     MOVEL'IRSTAT'  DBKEY     P      * DBERROR 003 *
+     C                     MOVE '*DTAARA' DBFILE           ***************
+     C                     MOVELPGM       DBPGM
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      ***  Convert Run Date into DDMMYY
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      ***  Save value of Run Date Month and Year
+      *
+     C                     MOVE ZDATE     WSRUNM  40       MMYY
+     C                     MOVELWSRUNM    WXMONT  20       MM
+      *
+      ***  Convert Date of Next Working Day into DDMMYY
+      *
+     C                     Z-ADDBJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      ***  Save value of Date of Next Working Day Month and Year
+      *
+     C                     MOVE ZDATE     WSNWDM  40       MMYY
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C           DBASE     IFEQ *ZERO
+     C                     Z-ADD999       DBASE
+     C                     MOVE *ON       *INU7
+     C                     ELSE
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ***  Copy in Calculation Specs. for Standard subroutine
+      *
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      ***  Copy After Output Specs. for Arrays used by standard subroutine
+      *
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

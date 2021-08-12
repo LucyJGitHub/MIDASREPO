@@ -23,7 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-     *  MD041126 - Certify WebSphere MQ 9 with Midas product line    * 
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    * 
       *           - Applied for MD055613.                             *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *

@@ -22,11 +22,15 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2016*************                  HUT111
       *  (c) Finastra International Systems Ltd. 2020                 *                  HUT111
       *                                                               *
-      *  Last Amend No. HUT111             Date 08Apr20               *
-      *  Prev Amend No. HUT024  *CREATE    Date 17Oct16               *
+      *  Last Amend No. MD058450           Date 10Aug21               *
+      *  Prev Amend No. HUT111             Date 08Apr20               *
+      *                 HUT024  *CREATE    Date 17Oct16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058450 - Component XXC111030 failed due to I/O error       *
+      *             CPF5004 file XX111030P1. Change printerfile       *
+      *             overflow to 66. (Recompile)                       *
       *  HUT111 - Corporate Actions Blocked Credit Account            *
       *           (Upgrade HUT024 to FM2.1 SP22)                      *
       *  HUT024  Corporate Actions Blocked Credit Account            *

@@ -255,7 +255,7 @@
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL045*/
              DCL        VAR(&CDL034) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD027681*/
-             DCL        VAR(&CIR020) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD058555*/
+             DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD058555*/
                                                                                           /*CDL045*/
 /* Define parameters used in AOSVALR0 to retrieve system value                            /*CDL045*/
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CDL045*/
@@ -398,13 +398,13 @@
                           VAR(&CDL034) VALUE('Y'))                                      /*MD027681*/
 /**/                                                                                    /*MD027681*/
 /**/                                                                                    /*MD058555*/
-/** Check for Switchable feature CIR020                            */                   /*MD058555*/
+/** Check for Switchable feature CDL102                            */                   /*MD058555*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058555*/
-             CHGVAR     VAR(&SARD) VALUE('CIR020')                                      /*MD058555*/
+             CHGVAR     VAR(&SARD) VALUE('CDL102')                                      /*MD058555*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
                                            &FMT)                                        /*MD058555*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
-                          VAR(&CIR020) VALUE('Y'))                                      /*MD058555*/
+                          VAR(&CDL102) VALUE('Y'))                                      /*MD058555*/
 /**/                                                                                    /*MD058555*/
 /** Check for Switchable feature CER069                            */                     /*CER069*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER069*/
@@ -1422,7 +1422,7 @@
                MONMSG     MSGID(CPF0000)                                                  /*CDL013*/
              ENDDO                                                                        /*CDL013*/
           ENDDO                                                                           /*CDL013*/
-          IF         COND(&CIR020 *EQ 'Y' *AND %SWITCH(XXXXXX00)) THEN(DO)              /*MD058555*/
+          IF         COND(&CDL102 *EQ 'Y' *AND %SWITCH(XXXXXX00)) THEN(DO)              /*MD058555*/
              CLRPFM FILE(DLLIBEPD)                                                      /*MD058555*/
           ENDDO                                                                         /*MD058555*/
                                                                                           /*CER050*/

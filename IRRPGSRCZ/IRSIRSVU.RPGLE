@@ -33,10 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058492           Date 06Aug21               *
-      *  Prev Amend No. MD049387           Date 19Jan18               *
+      *  Last Amend No. MD058556           Date 16Aug21               *
+      *  Prev Amend No. MD058492           Date 06Aug21               *
+      *                 MD049387           Date 19Jan18               *
       *                 MD047859           Date 19Sep17               *
-      *                 AR933170           Date 07Jun13               *      
+      *                 AR933170           Date 07Jun13               *
       *                 MD057437           Date 20Jan21               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
@@ -120,13 +121,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
+      *             behavior.                                         *
+      *           - Recompile all objects affected by AR933170.       *
       *  MD058492 - Condition fix MD-57437 so as it will be executed  *
       *             if action is not Reject.                          *
       *  MD049387 - Principal Change Schedule values not accepted     *
       *  MD047859 - Correct buffer conflict of AR933171 fix           *
       *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
       *             DDFOID as parameters. (Child: AR933171)           *
-      *           - Partially applied by MD047859.                    *      
+      *           - Partially applied by MD047859.                    *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
       *             Fix is to not allow CIRS transaction with         *
       *             Principal change (Decrease) that will result to   *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD027429           Date 26Jun14               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD058307           Date 06Aug21               *
+      *  Prev Amend No. MD027429           Date 26Jun14               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD024398           Date 11May14               *
       *                 AR693564           Date 08Oct12               *
@@ -40,6 +41,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
+      *             Amend to add validation when overline % will      *
+      *             cause overdrawn amount to exceed 13digits.        *
       *  MD027429 - Tranches exceeded facility amount of Credit       *
       *             Agreement. Display message when facility amount   *
       *             of TR's exceeded facility amount of Credit        *
@@ -127,6 +131,11 @@
      F                                     PREFIX(SQ)                                       AR693564
       ** Logical file for  LEVFAMDPD                                                        AR693564
       *                                                                                     AR693564
+     FFCLTYL3   IF   E           K DISK    INFSR(*PSSR)                                     MD058307
+     F                                     RENAME(FCLTYFMF:FCLTYF3)                         MD058307
+     F                                     PREFIX(FM_)                                      MD058307
+      ** Logical file for  FCLTYFM                                                          MD058307
+      *                                                                                     MD058307
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -279,6 +288,12 @@
      D WPEAInd         S              1A                                                      CSC054
                                                                                               CSC024
      D wSeqFlag        S              1A                                                    MD024398
+     D WK_DAMT         S             14  0                                                  MD058307
+     D WK_MaxAmt       S             13  0 INZ(9999999999999)                               MD058307
+     D K#CNUM3         S                   LIKE(CNUM)                                       MD058307
+     D K#FACT3         S                   LIKE(FACT)                                       MD058307
+     D K#FCNO3         S                   LIKE(FCNO)                                       MD058307
+                                                                                            MD058307
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -603,6 +618,25 @@
      C                   MOVEL     'S#SIGN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0326'     MsgIdArr(Ix)
      C                   END
+      *                                                                                     MD058307
+      ** Check if Overline % will cause total overdraft amount to exceed 13-digit           MD058307
+      *                                                                                     MD058307
+     C                   IF        S#AAMTok <> 'N'                                          MD058307
+     C                             AND S#FATP = 'FI'                                        MD058307
+     C                             AND S#ACTN <> 'D'                                        MD058307
+     C                   MOVEL     S#CSSN        K#CNUM3                                    MD058307
+     C                   MOVEL     S#FACT        K#FACT3                                    MD058307
+     C                   MOVEL     S#FCNO        K#FCNO3                                    MD058307
+     C     FCFAC3        CHAIN     FCLTYF3                                                  MD058307
+     C                   EVAL(H)   WK_DAMT = W#AAMT + FM_FAMT                               MD058307
+     C                   EVAL(H)   WK_DAMT = WK_DAMT * (FM_OVPC + 100) / 100                MD058307
+     C                   IF        WK_DAMT > WK_MaxAmt                                      MD058307
+     C                   Move      'W'           S#AAMTok                                   MD058307
+     C                   ADD       1             Wx                                         MD058307
+     C                   Movel     'DDOVPC'      WFldNamArr(Wx)                             MD058307
+     C                   Movel     'LEF0615'     WMsgIDArr(Wx)                              MD058307
+     C                   ENDIF                                                              MD058307
+     C                   ENDIF                                                              MD058307
  
      C                   ENDSR
       *****************************************************************
@@ -1870,6 +1904,12 @@
      C                   KFLD                    K#FACT
      C                   KFLD                    K#FCNO
      C                   KFLD                    K#VLDT
+                                                                                            MD058307
+     C     FCFAC3        KLIST                                                              MD058307
+     C                   KFLD                    K#CNUM3                                    MD058307
+     C                   KFLD                    K#FACT3                                    MD058307
+     C                   KFLD                    K#FCNO3                                    MD058307
+                                                                                            MD058307
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================

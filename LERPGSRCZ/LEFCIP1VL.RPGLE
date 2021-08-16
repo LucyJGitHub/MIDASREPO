@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD027065           Date 22Sep20               *      
+      *  Last Amend No. MD058307           Date 06Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD027065           Date 22Sep20               *
       *                 MD053093           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
       *                 MD039655           Date 03Sep19               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
+      *             Amend to add validation when overline % will      *
+      *             cause overdrawn amount to exceed 13digits.        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
@@ -567,6 +571,9 @@
      D W#NAFN          S              2  0                                                    CLE147
      D W#LIVE          S              1A                                                      CLE147
      D KDLNO           S              6  0                                                    CLE147
+     D WK_OVPC         S                   LIKE(OVPC)                                       MD058307
+     D WK_DAMT         S             14  0                                                  MD058307
+     D WK_MaxAmt       S             13  0 INZ(9999999999999)                               MD058307
 
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -1090,6 +1097,7 @@
      C     VOVPC         BEGSR
 
       **  Must be valid per ZALIGN
+     C                   EVAL      Wk_OVPC = @@OVPC                                         MD058307
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDOVPC        ZFIELD
      C                   Z-ADD     3             ZADEC
@@ -1103,11 +1111,13 @@
      C                   ELSE
      C     DDACTN        IFEQ      'I'
      C                   MOVE      ZFIELD        W#OVPC
+     C                   MOVE      ZFIELD        Wk_OVPC                                    MD058307
      C                   ELSE
      C     DDACTN        IFEQ      'A'
      C     FacAmChg      ANDNE     'Y'
      C     *LIKE         DEFINE    OVPC          W#OVPC
      C                   MOVE      ZFIELD        W#OVPC
+     C                   MOVE      ZFIELD        Wk_OVPC                                    MD058307
      C     @@OVPC        IFNE      W#OVPC
      C                   MOVE      'Y'           FacAmChg
      C                   ENDIF
@@ -1115,6 +1125,19 @@
      C                   ENDIF
      C                   ENDIF
       *
+      ** Check if Overline % will cause total overdraft amount to exceed 13-digit           MD058307
+      *                                                                                     MD058307
+     C                   IF        DDOVPCOK <> 'N'                                          MD058307
+     C                             AND DDFAMTOK <> 'N'                                      MD058307
+     C                   EVAL(H)   WK_DAMT = W#FAMT * (Wk_OVPC + 100) / 100                 MD058307
+     C                   IF        WK_DAMT > WK_MaxAmt                                      MD058307
+     C                   Move      'W'           DDOVPCOK                                   MD058307
+     C                   ADD       1             WId                                        MD058307
+     C                   Movel     'DDOVPC'      WFldNmXAr(WId)                             MD058307
+     C                   Movel     'LEF0614'     WMsgIdXAr(WId)                             MD058307
+     C                   ENDIF                                                              MD058307
+     C                   ENDIF                                                              MD058307
+      *                                                                                     MD058307
      C                   ENDSR
       *****************************************************************
      C/EJECT

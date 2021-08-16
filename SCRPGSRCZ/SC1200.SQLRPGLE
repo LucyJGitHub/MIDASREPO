@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054346           Date 18Jul21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -49,7 +51,7 @@
       *****************************************************************
      F*SCSARDPD* IF   E             DISK    INFSR(*PSSR)                                    MD055681
      F*SCSARSL1* IF   E           K DISK    INFSR(*PSSR)                         CSC007     MD055681
-     FSCPASSPD  UF A E           K DISK    INFSR(*PSSR)
+     F*SCPASSPD* UF A E           K DISK    INFSR(*PSSR)                                    MD054346
      F******SCSAUDPDO   E           K        DISK         KINFSR *PSSR                        171530
       /EJECT
       *
@@ -97,6 +99,20 @@
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
       *
+     D PReturnCode     S              7A                                                    MD054346
+     D PAction         S              1A                                                    MD054346
+     D PValidList      S             10A   INZ('SCFEATVL')                                  MD054346
+     D PLibrary        S             10A                                                    MD054346
+     D PIDName         S            100A                                                    MD054346
+     D PPass1          S            600A                                                    MD054346
+     D PPass2          S            600A                                                    MD054346
+     D PDescr          S           1000A                                                    MD054346
+      * Action codes.                                                                       MD054346
+     D Insert          C                   CONST('A')                                       MD054346
+     D Modify          C                   CONST('M')                                       MD054346
+     D Reset           C                   CONST('R')                                       MD054346
+     D Delete          C                   CONST('D')                                       MD054346
+     D Find            C                   CONST('F')                                       MD054346
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
@@ -175,13 +191,24 @@
      C/END-EXEC                                                                             MD055681
      C******IN25         IFEQ      *ON                                                CSC00 MD055681
      C                   IF        SQLCODE = 100                                            MD055681
-     C     SARN          CHAIN     SCPASSPD                           74
+     C*****SARN          CHAIN     SCPASSPD                           74                    MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Find          PAction                                    MD054346
+     C                   PARM                    PValidList                                 MD054346
+     C                   PARM                    PLibrary                                   MD054346
+     C                   PARM      SARN          PIDName                                    MD054346
+     C                   PARM      *Blanks       PPass1                                     MD054346
+     C                   PARM      *Blanks       PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
       *
       ** Check to see if an entry already exists on password file -
       ** ie user may have run this program once, terminated it and
       ** already entered some details on the password file.
       *
-     C     *IN74         IFEQ      *ON
+     C******IN74         IFEQ      *ON                                                      MD054346
+     C     PReturnCode   IFNE      *Blanks                                                  MD054346
       *
       ** Call command SCCRTKEYB via CL program to update and allow
       ** use of passwords.
@@ -189,7 +216,8 @@
      C                   CALL      'SCC4200'
      C                   PARM                    SARN
      C                   PARM                    SARD
-     C                   PARM                    PASS
+     C**********         PARM                    PASS                                       MD054346
+     C                   PARM                    PASS             16                        MD054346
      C                   PARM                    RTNCDE            7
       *
       ** F3 pressed - exit program.
@@ -201,12 +229,22 @@
       ** Write to the password file.
       *
      C     RTNCDE        IFEQ      *BLANKS
-     C                   MOVE      SARN          P@SARN
-     C     *IN74         IFEQ      *OFF
-     C                   UPDATE    SCPASSD0
-     C                   ELSE
-     C                   WRITE     SCPASSD0
-     C                   ENDIF
+     C**********         MOVE      SARN          P@SARN                                     MD054346
+     C******IN74         IFEQ      *OFF                                                     MD054346
+     C**********         UPDATE    SCPASSD0                                                 MD054346
+     C**********         ELSE                                                               MD054346
+     C**********         WRITE     SCPASSD0                                                 MD054346
+     C**********         ENDIF                                                              MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Insert        PAction                                    MD054346
+     C                   PARM                    PValidList                                 MD054346
+     C                   PARM                    PLibrary                                   MD054346
+     C                   PARM      SARN          PIDName                                    MD054346
+     C                   PARM      PASS          PPass1                                     MD054346
+     C                   PARM      PASS          PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
       *
       ** Write the event to the audit report.
       *

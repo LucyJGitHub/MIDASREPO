@@ -16,14 +16,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD057885           Date 13Apr21               *
-      *  Prev Amend No. MD056781           Date 20Sep20               *
+      *  Last Amend No. MD054346           Date 18Jul21               *
+      *  Prev Amend No. MD057885           Date 13Apr21               *
+      *                 MD056781           Date 20Sep20               *
       *                 MD055681           Date 31Jul20               *
       *                 MD055694           Date 09Mar20               *
       *                 CSW219 *CREATE     Date 04Mar19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD057885 - Remove CSW220 changes                             *
       *  MD056781 - Deliverable Data Split for MESWACPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -51,7 +53,7 @@
 
       **
      F*SCSARDL0* UF A E           K DISK                                                    MD055681
-     FSCPASSPD  UF A E           K DISK
+     F*SCPASSPD* UF A E           K DISK                                                    MD054346
      F*SCSARSL1* IF   E           K DISK                                                    MD055681
      F*MESWACL0* IF   E           K DISK                                                    MD056781
       *
@@ -124,6 +126,22 @@
      D PRetCode        S              7A
      D POption         S              7A
      D XXFeat          S              6A                                                    MD055681
+     D P@SARN          S              6A                                                    MD054346
+     D PASS            S             16A                                                    MD054346
+     D PReturnCode     S              7A                                                    MD054346
+     D PAction         S              1A                                                    MD054346
+     D PValidList      S             10A   INZ('SCFEATVL')                                  MD054346
+     D PLibrary        S             10A                                                    MD054346
+     D PIDName         S            100A                                                    MD054346
+     D PPass1          S            600A                                                    MD054346
+     D PPass2          S            600A                                                    MD054346
+     D PDescr          S           1000A                                                    MD054346
+      * Action codes.                                                                       MD054346
+     D Insert          C                   CONST('A')                                       MD054346
+     D Modify          C                   CONST('M')                                       MD054346
+     D Reset           C                   CONST('R')                                       MD054346
+     D Delete          C                   CONST('D')                                       MD054346
+     D Find            C                   CONST('F')                                       MD054346
       *
       /EJECT
       *****************************************************************
@@ -203,11 +221,22 @@
      C**********         UNLOCK    SCSARDL0                                                 MD055681
      C                   ENDIF
       *
-     C     Feat(I)       CHAIN     SCPASSPD
-     C                   IF        NOT%FOUND(SCPASSPD)
+     C*****Feat(I)       CHAIN     SCPASSPD                                                 MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Find          PAction                                    MD054346
+     C                   PARM                    PValidList                                 MD054346
+     C                   PARM                    PLibrary                                   MD054346
+     C                   PARM      XXFeat        PIDName                                    MD054346
+     C                   PARM      *Blanks       PPass1                                     MD054346
+     C                   PARM      *Blanks       PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
+     C**********         IF        NOT%FOUND(SCPASSPD)                                      MD054346
+     C     PReturnCode   IFNE      *Blanks                                                  MD054346
      C                   EXSR      SrWritePass
      C                   ELSE
-     C                   UNLOCK    SCPASSPD
+     C**********         UNLOCK    SCPASSPD                                                 MD054346
      C                   ENDIF
       *
      C                   ENDSR
@@ -299,11 +328,21 @@
       *****************************************************************
      C     SrWritePass   BEGSR
       *
-     C                   CLEAR                   SCPASSD0
+     C**********         CLEAR                   SCPASSD0                                   MD054346
      C                   EVAL      PASS = PWord(I)
      C                   EVAL      P@SARN = Feat(I)
-     C                   EVAL      WriteFlag = 'Y'
-     C                   WRITE(E)  SCPASSD0
+     C**********         EVAL      WriteFlag = 'Y'                                          MD054346
+     C**********         WRITE(E)  SCPASSD0                                                 MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Insert        PAction                                    MD054346
+     C                   PARM                    PValidList                                 MD054346
+     C                   PARM                    PLibrary                                   MD054346
+     C                   PARM      P@SARN        PIDName                                    MD054346
+     C                   PARM      PASS          PPass1                                     MD054346
+     C                   PARM      PASS          PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
       *
      C                   IF        %ERROR
      C                   EVAL      Msg = 'Write to SCPASSPD ended in error.'

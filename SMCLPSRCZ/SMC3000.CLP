@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD054346           Date 18Jul21              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR936709           Date 19Mar12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27240           Date 12Mar10              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054346 - Switchable Features Password Encryption          */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR936709 - Make sure that CBMGFLA is populated.             */
@@ -118,8 +120,8 @@ VALIDATE:                                                                       
              OVRMSGF    MSGF(CBUSRMSG) TOMSGF(GBCBUSRMSG)
              OVRDBF     FILE(SMSARDPD) TOFILE(SMSARDPD) MBR(&MBR) +
                           OVRSCOPE(*JOB)
-             OVRDBF     FILE(SMPASSPD) TOFILE(SMPASSPD) MBR(&MBR) +
-                          OVRSCOPE(*JOB)
+/**********  OVRDBF     FILE(SMPASSPD) TOFILE(SMPASSPD) MBR(&MBR) +
+                          OVRSCOPE(*JOB) */                                             /*MD054346*/
 
 /* SDLENOPD and SDFCTLPA need to be journaled. */
              STRJRNPF   FILE(SDLENOPD) JRN(ICJRN)

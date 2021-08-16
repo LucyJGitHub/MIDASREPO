@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055891             Date 01Sep20             *
-      *  Prev Amend No. MD058443             Date 12Jul21             *
+      *  Last Amend No. MD054346             Date 18Jul21             *
+      *  Prev Amend No. MD055891             Date 01Sep20             *
+      *                 MD058443             Date 12Jul21             *
       *                 MD058177             Date 27May21             *
       *                 MD056565             Date 21Jan21             *
       *                 MD056751             Date 20Sep20             *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD058443 - Remove record from SDSCOBTD as it was made        *
       *             redundant                                         *
@@ -378,6 +380,11 @@
      C+ close GetFieldsB
      C/end-exec
 
+      * for GPSECCTD migration, the bespoke record will come from GPNSECPD                  MD054346
+     C                   if        EXTINDEX = 'GPSECBTD'                                    MD054346
+     C                   eval      OLDFILE = 'GPNSECPD'                                     MD054346
+     C                   endif                                                              MD054346
+                                                                                            MD054346
      C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +
      C                             ' (select ' +
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +

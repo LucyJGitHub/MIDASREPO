@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054346           Date 18Jul21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054346 - Switchable Features Password Encryption           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -68,6 +70,27 @@
      D* Copyright array
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)              Copyright array
+     D TAB1            S              6    DIM(19) CTDATA PERRCD(1)                         MD054346
+     D TAB2            S             16    DIM(19) ALT(TAB1)                                MD054346
+                                                                                            MD054346
+      * Entry parameters.                                                                   MD054346
+     D PValidList      S             10A                                                    MD054346
+     D PLibrary        S             10A                                                    MD054346
+     D Error           S             10A                                                    MD054346
+                                                                                            MD054346
+      * UT00033 parameters.                                                                 MD054346
+     D PReturnCode     S              7A                                                    MD054346
+     D PAction         S              1A                                                    MD054346
+     D PID             S            100A                                                    MD054346
+     D PPass1          S            600A                                                    MD054346
+     D PPass2          S            600A                                                    MD054346
+     D PDescr          S           1000A                                                    MD054346
+     D Insert          C                   CONST('A')                                       MD054346
+     D Modify          C                   CONST('M')                                       MD054346
+     D Reset           C                   CONST('R')                                       MD054346
+     D Delete          C                   CONST('D')                                       MD054346
+     D Find            C                   CONST('F')                                       MD054346
+                                                                                            MD054346
      D RUNDAT          DS
      D  MRDT                   1      7
      D  RDNB                   8     10P 0
@@ -228,6 +251,26 @@
       * Write error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
+      * insert password into validation list                                                MD054346
+     C     ABSARN        lookup    TAB1          TAB2                     99                MD054346
+     C                   IF        *IN99 = *ON                                              MD054346
+      * No error (ID successfully insert must be displayed).                                MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Insert        PAction                                    MD054346
+     C                   PARM      'SCFEATVL'    PValidList                                 MD054346
+     C                   PARM      '*LIBL'       PLibrary                                   MD054346
+     C                   PARM      TAB1          PID                                        MD054346
+     C                   PARM      TAB2          PPass1                                     MD054346
+     C                   PARM      TAB2          PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
+     C                   IF        PReturnCode <> *BLANKS                                   MD054346
+     C                             and PReturnCode <> 'CPF226A'                             MD054346
+     C                   EVAL      W0RTN = '*ERROR'                                         MD054346
+     C                   exsr      *PSSR                                                    MD054346
+     C                   Endif                                                              MD054346
+     C                   Endif                                                              MD054346
      C                   END
       *================================================================
      CSR   SAEXIT        ENDSR
@@ -290,6 +333,24 @@
      C                   IF        SQLCODE <> 0                                             MD055681
       * Delete error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
+     C                   ELSE
+      * remove password into validation list                                                MD054346
+      * No error (ID successfully insert must be displayed).                                MD054346
+     C                   CALL      'UT000033'                                               MD054346
+     C                   PARM      *Blanks       PReturnCode                                MD054346
+     C                   PARM      Delete        PAction                                    MD054346
+     C                   PARM      'SCFEATVL'    PValidList                                 MD054346
+     C                   PARM      '*LIBL'       PLibrary                                   MD054346
+     C                   PARM      ABSARN        PID                                        MD054346
+     C                   PARM      *Blanks       PPass1                                     MD054346
+     C                   PARM      *Blanks       PPass2                                     MD054346
+     C                   PARM      *Blanks       PDescr                                     MD054346
+                                                                                            MD054346
+     C                   IF        PReturnCode <> *BLANKS                                   MD054346
+     C                             and PReturnCode <> 'CPF226A'                             MD054346
+     C                   EVAL      W0RTN = '*ERROR'                                         MD054346
+     C                   exsr      *PSSR                                                    MD054346
+     C                   Endif                                                              MD054346
      C                   END
       *================================================================
      CSR   SBEXIT        ENDSR
@@ -440,3 +501,23 @@
       *================================================================
 **CTDATA CPY@
 (c) Finastra International Limited 2001
+**CTDATA TAB1
+CTI004MACARTHUR
+CLE003SURREY QUAYS
+CLE105MOLENWERT
+S01465CAMDEN TOWN
+S01518WEST BYFLEET
+CLE003SURREY QUAYS
+CLE004NORTH WOOLWICH
+CLE005LEICESTER SQUARE
+CLE007CHADWELL HEATH
+CLE009NEWPORT CENTRAL
+CLE011CLINTON
+CLE014ALCANTARA
+CLE023PANTEONES
+CLE105MOLENWERT
+CLE002WEST FINCHLEY
+S01465CAMDEN TOWN
+S01518WEST BYFLEET
+CLE008SHEUNG WAN
+CSD004CASTLE BAR PARK

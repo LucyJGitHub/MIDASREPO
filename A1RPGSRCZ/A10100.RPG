@@ -59,12 +59,14 @@
      E                    ZYDY    4   4  4 0             ZDATE1 YEAR
      E                    ZMDY   13  13  3 0             ZDATE1 MONTH
      E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
-     E**
+     E*
      I            DS
      I                                        1  150WORK15
      I                                        1  150ZS1
      ISPOOL       DS
-      * P1 printer file information data structure
+      *
+      ** P1 printer file information data structure
+      *
      I                                       83  92 SFILE
      I                                    B 123 1240SFNUM
      I                                    B 152 1530SFLIN
@@ -204,7 +206,7 @@
      ISDBANK    E DSSDBANKPD
       *
       *****************************************************************
-      *                    MAIN PROCESSING                            *
+      *                     MAIN PROCESSING                           *
       *****************************************************************
       *
      C                     EXSR INIT
@@ -215,25 +217,24 @@
      C                     READ BKPHDDF                  73
      C           *IN73     DOWEQ'0'
       *
-      * GET SECURITY DETAILS
+      ** Get Security Details
       *
      C           BHSC      CHAINSECTYDF              70
       *
-      * PROCESS ONLY FOUND LIVE SECURITY
+      ** Process only found live security
       *
      C           *IN70     IFEQ '0'
      C           RECI      IFEQ 'D'
      C           SYBS      ANDNE*BLANK
       *
-      *
-      * SET NOMINAL CURRENCY DECIMAL PLACES
+      ** Set nominal currency decimal places
       *
      C           NMCY      IFEQ 'JPY'
      C           NMCY      OREQ 'ITL'
      C                     Z-ADD0         CDP
      C                     END
       *
-      * GET INVESTMENT TYPE DETAILS
+      ** Get investment type details
       *
      C           INVTPK    KLIST
      C                     KFLD           NMCY
@@ -241,7 +242,7 @@
      C           INVTPK    CHAININVTPDF              71
      C           *IN71     IFEQ '0'
       *
-      * ONLY PROCESS IS PROCESSING TYPE IS NOT 2 4 OR 6
+      ** Only process if processing type is not 2, 4 or 6
       *
      C           PROT      IFNE '2'
      C           PROT      ANDNE'4'
@@ -254,7 +255,7 @@
      C                     Z-ADD2         NMDP
      C                     END
       *
-      * SET DAY/MONTH ARRAYS FOR SCREEN DISPLAY
+      ** Set day/month arrays for screen display
       *
      C                     MOVEL*BLANK    ##CD
      C                     Z-ADD1         X       30
@@ -267,7 +268,7 @@
       *
      C                     MOVE CR        ##CR
       *
-      * SET TRADE/YIELD BASIS & DAY/DIVISOR BASIS
+      ** Set trade/yield basis & day/divisor basis
       *
      C           SYBS      IFNE *BLANK
      C           STBS      ANDNE'Y'
@@ -280,16 +281,17 @@
      C                     MOVELDVBS      ##DVBS
      C                     MOVEL'Y'       YP
       *
-      * SET Price
+      ** Set price
       *
      C                     Z-ADDLAVP      PRIC
      C                     Z-ADD0         TPDY
      C                     Z-ADD0         PUPP
      C                     Z-ADD0         NOML
       *
-      * SET value date
+      ** Set value date
+      **
+      ** Get book code
       *
-      * GET Book Code
      C           BHBK      CHAINSDBOOKL0             74
      C           *IN74     IFEQ *OFF
       *
@@ -303,14 +305,14 @@
      C                     Z-ADDBJRDNB    TDVD
      C                     ENDIF
       *
-      * CALCULATE YIELD/PRICE AND INTEREST
+      ** Calculate yield/price and interest
       *
      C                     OUT  LDAX
      C                     CALL 'A10101'
      C           *LOCK     IN   LDAX
      C                     Z-ADDLPSD      TDVD
       *
-      * FORMAT and output EIR in A1BPPNPD
+      ** Format and output EIR in A1BPPNPD
       *
      C           BKPE      KLIST
      C                     KFLD           BHSC
@@ -322,13 +324,17 @@
      C                     WRITEHEADP1
      C                     SETOF                     09
      C                     END
-      * Update if found Write if not found
+      *
+      ** Update if found, write if not found
+      *
      C           BKPE      CHAINA1BPPNDF             72
      C           *IN72     IFEQ '0'
-      * If change today
-      *  LAVP <> to PRIC
-      * or LEIR <> TPDY
-      * or LPSD <> TDVD
+      *
+      ** If change today
+      **      LAVP <> PRIC
+      **      or LEIR <> TPDY
+      **      or LPSD <> TDVD
+      *
      C           LAVP      IFNE PRIC
      C           LEIR      ORNE TPDY
      C           LPSD      ORNE TDVD
@@ -353,11 +359,15 @@
      C                     WRITEA1BPPNDF
      C                     MOVE 'Y'       REPT    1
      C                     END
-      * End of fOUND INVETMENT TYPE WITH VALID prot
+      *
+      ** End of found investment type with valid prot
+      *
      C                     END
      C                     END
      C                     END
-      * End of fOUND live security with Yield basis defined
+      *
+      ** End of found live security with yield basis defined
+      *
      C                     END
      C                     END
      C                     READ BKPHDDF                  73
@@ -369,39 +379,42 @@
       *
      C                     EXSR TERM
       *
-      ********************************************************************
+      *****************************************************************
       *                                                               *
       *   INIT      - Initilisation Subroutine                        *
       *                                                               *
       *   CALLED BY - MAIN PROCESSING                                 *
       *                                                               *
       *****************************************************************
+      *
      C           INIT      BEGSR
       *
      C                     SETOF                     2098
      C           *NAMVAR   DEFN           LDAX
      C           *LOCK     IN   LDAX
       *
-      **   ACCESS BANK DETAILS
-     C                     CALL 'AOBANKR0'                 Bank details
+      ** Access Bank details
+      *
+     C                     CALL 'AOBANKR0'
      C                     PARM '*MSG   ' @RTCD   7
      C                     PARM '*FIRST ' @OPTN   7
      C           SDBANK    PARM SDBANK    DSFDY
       *
-     C           @RTCD     IFNE *BLANKS                    ***************
-     C                     MOVEL'001'     DBASE            *             *
-     C                     MOVEL'SDBANKPD'DBFILE           * DB ERR  001 *
-     C                     MOVE *BLANKS   DBKEY            *             *
-     C                     EXSR *PSSR                      ***************
+     C           @RTCD     IFNE *BLANKS                    ************
+     C                     MOVEL'001'     DBASE            *          *
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001*
+     C                     MOVE *BLANKS   DBKEY            *          *
+     C                     EXSR *PSSR                      ************
      C                     ENDIF
       *
-     C                     MOVE 'N'       UPSSR   1        *PSSR Control
+     C                     MOVE 'N'       UPSSR   1
      C                     Z-ADD0         PAGE
      C                     MOVE BJMRDT    MRDT
      C                     MOVELBJURPT    TITL
      C                     WRITEHEADP1
       *
      C                     ENDSR
+      *
       *****************************************************************
       *                                                               *
       *   *PSSR     - File error handler                              *
@@ -416,24 +429,24 @@
       *
       ** Prevent recursive call
       *
-     C           UPSSR     IFEQ 'N'                        Recursive call
+     C           UPSSR     IFEQ 'N'
       *
-     C                     MOVE 'Y'       UPSSR            *PSSR Executed
+     C                     MOVE 'Y'       UPSSR
       *
       ** Update local data area
       *
-     C                     MOVEL'A10100'  DBPGM     P      Set program id
+     C                     MOVEL'A10100'  DBPGM     P
       *
      C           *NAMVAR   DEFN LDA       WLDA
      C           *LOCK     IN   WLDA
      C                     MOVELDBERR     DBINF
      C                     OUT  WLDA
       *
-     C                     MOVE *ON       *INU7            Database error
-     C                     MOVE *ON       *INU8            Database error
-     C                     DUMP                            Dump system var
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     DUMP
       *
-     C                     EXSR TERM                       Stop run
+     C                     EXSR TERM
       *
      C                     ENDIF
       *
@@ -449,9 +462,10 @@
       *
      C           #NUL      BEGSR
       *
-     C                     WRITEP1NULL                     Null report
+     C                     WRITEP1NULL
       *
      C                     ENDSR
+      *
       *****************************************************************
       *                                                               *
       *    #TERM  Program termination                                 *
@@ -462,10 +476,10 @@
       *
      C           TERM      BEGSR
       *
-     C                     WRITEP1FOOT                     Footer
+     C                     WRITEP1FOOT
       *
-     C                     MOVE *ON       *INLR            Last record
-     C                     RETRN                           Return control
+     C                     MOVE *ON       *INLR
+     C                     RETRN
       *
      C                     ENDSR
       *

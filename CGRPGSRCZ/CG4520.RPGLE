@@ -410,6 +410,8 @@
      D  PACCD                  1     10  0                                                    CER038
       *                                                                                       CER038
      D  PACSQ                 11     12  0                                                    CER038
+     D*COPY*CGCPYSRC,SRERRI                                                                 MD056543
+      *
      D/COPY WNCPYSRC,CG4510I001
       *                                                                                       LLE060
      D ULACD         E DS                  EXTNAME(SDACODPD)                                  LLE060
@@ -419,8 +421,6 @@
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  LLE060
       **  EXTERNAL DS FOR MODULE DETAILS                                                      LLE060
       *                                                                                       LLE060
-     I*COPY*CGCPYSRC,SRERRI                                                                 MD056543
-      *
      C/SPACE 5
       *****************************************************************
       *                                                               *

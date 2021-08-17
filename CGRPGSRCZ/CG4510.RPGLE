@@ -309,8 +309,10 @@
      D**********          ##GRP   1  75 10   ##RDEA 22                                  CFT004CER038
      D**********          ##GRP   1  95 10   ##RDEA 22                               CER038 BUG24460
      D**********          ##GRP   1  97 10   ##RDEA 22                               BUG24460 CRE073
-     D********** ##GRP           S             10    DIM(106) CTDATA PERRCD(1)         CRE073 LLE089
-     D********** ##RDEA          S             22    DIM(106) ALT(##GRP)               CRE073 LLE089
+     D********** ##GRP           S             10    DIM(106) CTDATA PERRCD(1)         CRE073 LLE060
+     D********** ##RDEA          S             22    DIM(106) ALT(##GRP)               CRE073 LLE060
+     D********** ##GRP           S             10    DIM(109) CTDATA PERRCD(1)         LLE060 LLE089
+     D********** ##RDEA          S             22    DIM(109) ALT(##GRP)               LLE060 LLE089
      D ##GRP           S             10    DIM(165) CTDATA PERRCD(1)                          LLE089
      D ##RDEA          S             22    DIM(165) ALT(##GRP)                                LLE089
       * ARRAY FOR 'COMPRESSING' TWO NARRATIVES                                                LLE060

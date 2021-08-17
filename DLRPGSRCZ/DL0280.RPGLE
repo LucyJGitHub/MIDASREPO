@@ -13,9 +13,7 @@
       *                                                               *
       *                                                               *
       *****************************************************************
-      *  Last Amend No. LLE028             Date 24Feb20               *
-      *  LLE028   - Store FX Revaluation Amounts and Rates            *
-      *** Code Stripped ***                                           **
+      *** Code Stripped ***                                           *
       /COPY DLCPYSRC,DL0280FHD5                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD3                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD1

@@ -2,7 +2,8 @@
      H ALWNULL(*INPUTONLY)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas GP Report ML Exposure by Mturity Bucket')        *
+/********TEXT('Midas GP Report ML Exposure by Mturity Bucket')        *                      DAI103B
+/*EXI *  TEXT('Midas GP Report ML Exposure by Maturity Bucket')       *                      DAI103B
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,11 +12,13 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103             Date 25Jun19               *
-      *  Prev Amend No. NADC01  *CREATE    Date 17Nov09               *
+      *  Last Amend No. DAI103B            Date 26Oct19               *
+      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01 ML Extracts to FB 2.1     *
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *

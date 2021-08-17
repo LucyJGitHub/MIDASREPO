@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103             Date 25Jun19               *
-      *  Prev Amend No. NADC01  *CREATE    Date 17Nov09               *
+      *  Last Amend No. DAI103B            Date 26Oct19               *
+      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01 ML Extracts to FB 2.1     *
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *
@@ -60,6 +62,13 @@
      C                   Z-ADD     1             #I
      C     InstGroup     LOOKUP    INGRPID(#I)                            99
      C                   MOVEL     INSTR(#I)     Instrument       10
+                                                                                             DAI103B
+      * Spot FX uses settlement limit. Forward FX uses credit limit                          DAI103B
+                                                                                             DAI103B
+     C                   IF        (Instrument = 'GLOBFX' and LITYPE <> 'S') OR              DAI103B
+     C                             (Instrument = 'GLOBFW' and LITYPE <> 'C')                 DAI103B
+     C                   GOTO      BYPASS                                                    DAI103B
+     C                   ENDIF                                                               DAI103B
  
       * Total Cpty Exposure in USD
       * Total Cpty Inst Exp in USD
@@ -225,7 +234,8 @@
      C                   WRITE     GPMLXCD0
      C                   ENDIF
       *
-     C                   ENDSR
+     C     BYPASS        ENDSR                                                               DAI103B
+     C*********          ENDSR                                                               DAI103B
       *****************************************************************
      C     CALC_DIFS     BEGSR
      C     MECEXPUSD     SUB       METPEXUSD     METDI1USD

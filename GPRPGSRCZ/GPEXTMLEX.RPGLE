@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103             Date 25Jun19               *
-      *  Prev Amend No. NADC02             Date 12Jun12               *
+      *  Last Amend No. DAI103B            Date 26Oct19               *
+      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *                 NADC02             Date 12Jun12               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01 and NADC02 ML Extracts    *
       *           to FB 2.1                                           *
       *  NADC02 - ML REPORTING TO INCLUDE IRS                         *
@@ -503,11 +505,14 @@
      C                   PARM      T_TRTP        I#TRTP            5            TYPE
      C                   PARM      T_TRST        I#TRST            5            SUB-TYPE
      C                   PARM      *BLANK        MEGLCAT
-     C                   IF        T_SDAT >= BJRDNB
+     C*********          IF        T_SDAT >= BJRDNB                                          DAI103B
+     C                   IF        T_SDAT >= BJRDNB AND T_SMOD = 'LDNI'                      DAI103B
      C                   EVAL      MEGLCAT = '4 FWD'
      C                   ENDIF
      C                   ENDIF
-     C                   IF        T_SMOD = 'FXDL' OR T_SMOD = 'MT  '
+     C*********          IF        T_SMOD = 'FXDL' OR T_SMOD = 'MT  '                        DAI103B
+     C                   IF        (T_SMOD = 'FXDL' AND MEINST = 'GLOBFW')                   DAI103B
+     C                                             OR T_SMOD = 'MT  '                        DAI103B
      C                                             OR T_SMOD = 'FRAS'                         NADC02
      C                                             OR T_SMOD = 'SIRS'                         NADC02
      C                                             OR T_SMOD = 'CIRS'                         NADC02

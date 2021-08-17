@@ -9,14 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra Systems Technology, Inc. 2019                  */
 /*                                                                   */
-/*       Last Amend No. DAI103A            Date 10Jul19              */
-/*       Prev Amend No. DAI103             Date 25Jun19              */
+/*       Last Amend No. DAI103B            Date 26Oct19              */
+/*       Prev Amend No. DAI103A            Date 10Jul19              */
+/*                      DAI103             Date 25Jun19              */
 /*                      FRAIMP             Date 16Apr13              */
 /*                      NADC02             Date 12Jun12              */
 /*                      NADC01  *CREATE    Date 17Nov09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       DAI103B - ML Reporting to include Nostros & Forward FX      */
 /*       DAI103A - Changed reference to file attributes              */
 /*       DAI103 - Upgraded MPlus 121 NADC01, NADC02, FRAIMP ML       */
 /*                Extracts to FB 2.1                                 */
@@ -52,13 +54,22 @@
              CHGVAR     VAR(&DIR) VALUE('MLREPORTS/' *CAT &BJMRDT)
              CALL       PGM(GPMAKDIR) PARM(&DIR)
  
-             IF         COND(&SPLF = 'GPRPTMLCP1'       +
-                         *OR &SPLF = 'GPRPTMLPP1'       +
-                         *OR &SPLF = 'GPRPTMLIP1'       +
-                         *OR &SPLF = 'GPRPTMZBP1')      THEN(DO)
+/************IF         COND(&SPLF = 'GPRPTMLCP1'       +        **/                     /*DAI103B*/
+/************            *OR &SPLF = 'GPRPTMLPP1'       +        **/                     /*DAI103B*/
+/************            *OR &SPLF = 'GPRPTMLIP1'       +        **/                     /*DAI103B*/
+/************            *OR &SPLF = 'GPRPTMZBP1')      THEN(DO) **/                     /*DAI103B*/
 /************CRTPF      FILE(QTEMP/NAD) RCDLEN(136) MAXMBRS(2) ***/  /*NADC02*/
 /************CRTPF      FILE(QTEMP/NAD) RCDLEN(149) MAXMBRS(2) ***/  /*NADC02 FRAIMP*/
-             CRTPF      FILE(QTEMP/NAD) RCDLEN(162) MAXMBRS(2)       /*FRAIMP*/
+/************CRTPF      FILE(QTEMP/NAD) RCDLEN(162) MAXMBRS(2)       /*FRAIMP*/          /*DAI103B*/
+                                                                                         /*DAI103B*/
+             IF         COND(&SPLF = 'GPRPTMZBP1')      THEN(DO)                         /*DAI103B*/
+             CRTPF      FILE(QTEMP/NAD) RCDLEN(136) MAXMBRS(2)                           /*DAI103B*/
+             MONMSG     MSGID(CPF0000)                                                   /*DAI103B*/
+             ENDDO                                                                       /*DAI103B*/
+             IF         COND(&SPLF = 'GPRPTMLCP1'       +
+                         *OR &SPLF = 'GPRPTMLPP1'       +
+                         *OR &SPLF = 'GPRPTMLIP1')      THEN(DO)                         /*DAI103B*/
+             CRTPF      FILE(QTEMP/NAD) RCDLEN(206) MAXMBRS(2)                           /*DAI103B*/
              MONMSG     MSGID(CPF0000)
              ENDDO
              IF         COND(&SPLF = 'GPRPTMXCP1'       +
@@ -67,7 +78,8 @@
                          *OR &SPLF = 'GPRPTMZIP1')      THEN(DO)
 /************CRTPF      FILE(QTEMP/NAD) RCDLEN(250) MAXMBRS(2) ***/  /*NADC02*/
 /************CRTPF      FILE(QTEMP/NAD) RCDLEN(265) MAXMBRS(2) ***/  /*NADC02 FRAIMP*/
-             CRTPF      FILE(QTEMP/NAD) RCDLEN(280) MAXMBRS(2)       /*FRAIMP*/
+/************CRTPF      FILE(QTEMP/NAD) RCDLEN(280) MAXMBRS(2) ***/  /*FRAIMP*/          /*DAI103B*/
+             CRTPF      FILE(QTEMP/NAD) RCDLEN(310) MAXMBRS(2)                           /*DAI103B*/
              MONMSG     MSGID(CPF0000)
              ENDDO
              IF         COND(&SPLF = 'GPRPTMZCP1'       +
@@ -75,7 +87,8 @@
                          *OR &SPLF = 'GPRPTMZSP1')      THEN(DO)
 /************CRTPF      FILE(QTEMP/NAD) RCDLEN(352) MAXMBRS(2) ***/  /*NADC02*/
 /************CRTPF      FILE(QTEMP/NAD) RCDLEN(382) MAXMBRS(2) ***/  /*NADC02 FRAIMP*/
-             CRTPF      FILE(QTEMP/NAD) RCDLEN(412) MAXMBRS(2)       /*FRAIMP*/
+/************CRTPF      FILE(QTEMP/NAD) RCDLEN(412) MAXMBRS(2) ***/  /*FRAIMP*/          /*DAI103B*/
+             CRTPF      FILE(QTEMP/NAD) RCDLEN(382) MAXMBRS(2)                           /*DAI103B*/
              MONMSG     MSGID(CPF0000)
              ENDDO
  

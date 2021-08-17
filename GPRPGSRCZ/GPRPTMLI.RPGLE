@@ -2,22 +2,26 @@
      H ALWNULL(*INPUTONLY)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas GP Report ML Counterparty Exposure')             *
+/********TEXT('Midas GP Report ML Counterparty Exposure')             *                      DAI103B
+/*EXI *  TEXT('Midas GP Report ML Instrument Exposure')               *                      DAI103B
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
       *                                                               *
-      *  GPRPTMLI  - Report ML Counterparty Exposure                  *
+      ***GPRPTMLI**-*Report*ML*Counterparty*Exposure                  *                      DAI103B
+      *  GPRPTMLI  - Report ML Instrument Exposure                    *                      DAI103B
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103             Date 25Jun19               *
-      *  Prev Amend No. FRAIMP             Date 17Apr13               *
+      *  Last Amend No. DAI103B            Date 26Oct19               *
+      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *                 FRAIMP             Date 17Apr13               *
       *                 NADC02             Date 12Jun12               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01, NADC02 and FRAIMP ML     *
       *           Extracts to FB 2.1                                  *
       *  FRAIMP - ML Reporting to include FRA                         *
@@ -32,7 +36,8 @@
      FGPCTRYL0  IF   E           K DISK
      F*PRPTMLIP1O****F  132        PRINTER                                                    NADC02
      F**GPRPTMLIP1O    F  145        PRINTER                                           NADC02 FRAIMP
-     FGPRPTMLIP1O    F  158        PRINTER                                                    FRAIMP
+     F**GPRPTMLIP1O    F  158        PRINTER                                          FRAIMP DAI103B
+     FGPRPTMLIP1O    F  202        PRINTER                                                   DAI103B
      F                                     INFDS(SPOOLU)
  
       ** File Information Data Structure for GPRPTMLIP1
@@ -121,6 +126,8 @@
      C     #I            COMP      6                                      26
      C     #I            COMP      7                                      27                  NADC02
      C     #I            COMP      8                                      28                  FRAIMP
+     C     #I            COMP      9                                      29                 DAI103B
+     C     #I            COMP      10                                     30                 DAI103B
  
      C                   ENDSR
       *****************************************************************
@@ -141,6 +148,10 @@
      C     pEXP(7)       COMP      0                                  2727                    NADC02
                                                                                               FRAIMP
      C     pEXP(8)       COMP      0                                  2828                    FRAIMP
+                                                                                             DAI103B
+     C     pEXP(9)       COMP      0                                  2929                   DAI103B
+                                                                                             DAI103B
+     C     pEXP(10)      COMP      0                                  3030                   DAI103B
  
      C                   Z-ADD(H)  pEXP          poEXP
      C                   XFOOT     poEXP         TOTEXP
@@ -211,12 +222,21 @@
      C     *IN99         DOWEQ     *OFF
      C                   IF        NLPARENT  <> 0
      C                             AND NLINSTCODE <> 'GLOBRE'
+     C                             AND NLINSTCODE <> 'GLOBFW'                                DAI103B
+     C                             AND NLINSTCODE <> 'GLOBNO'                                DAI103B
+     C                             AND NLINSTCODE <> 'GLOBFX'                                DAI103B
      C                   ADD       1             #I
      C                   EVAL      INSTR(#I)   = NLINSTCODE
      C                   ENDIF
      C                   READ      T_GRINSTLF                             99
      C                   ENDDO
      C                   SORTA     INSTR
+     C                   ADD       1             #I                                          DAI103B
+     C                   EVAL      INSTR(#I)   = 'GLOBFW'                                    DAI103B
+     C                   ADD       1             #I                                          DAI103B
+     C                   EVAL      INSTR(#I)   = 'GLOBNO'                                    DAI103B
+     C                   ADD       1             #I                                          DAI103B
+     C                   EVAL      INSTR(#I)   = 'GLOBFX'                                    DAI103B
  
      C                   Z-ADD     99            LINENO            3 0
      C                   Z-ADD     0             PAGNUM            5 0
@@ -235,17 +255,28 @@
      O          E            PAGEHEAD    1
      O                                           12 'COUNTERPARTY'
      O                                           22 '/REFERENCE'
-     O                       INSTR(1)            54
-     O                       INSTR(2)            67
-     O                       INSTR(3)            80
-     O                       INSTR(4)            93
-     O                       INSTR(5)           106
-     O                       INSTR(6)           119
+     O                       INSTR(1)            53                                          DAI103B
+     O                       INSTR(2)            68                                          DAI103B
+     O                       INSTR(3)            83                                          DAI103B
+     O                       INSTR(4)            98                                          DAI103B
+     O                       INSTR(5)           113                                          DAI103B
+     O                       INSTR(6)           128                                          DAI103B
+     O                       INSTR(7)           143                                          DAI103B
+     O                       INSTR(8)           158                                          DAI103B
+     O                       INSTR(9)           173                                          DAI103B
+     O                       INSTR(10)          188                                          DAI103B
+     O                                          201 'T O T A L'                              DAI103B
+     O*********              INSTR(1)            54                                          DAI103B
+     O*********              INSTR(2)            67                                          DAI103B
+     O*********              INSTR(3)            80                                          DAI103B
+     O*********              INSTR(4)            93                                          DAI103B
+     O*********              INSTR(5)           106                                          DAI103B
+     O*********              INSTR(6)           119                                          DAI103B
      O***********************                   132 'T O T A L  '                             NADC02
-     O                       INSTR(7)           132                                           NADC02
+     O*********              INSTR(7)           132                                   NADC02 DAI103B
      C*********                                 145 'T O T A L  '                      NADC02 FRAIMP
-     O                       INSTR(8)           145                                           FRAIMP
-     O                                          158 'T O T A L  '                             FRAIMP
+     O*********              INSTR(8)           145                                   FRAIMP DAI103B
+     O*********                                 158 'T O T A L  '                     FRAIMP DAI103B
      O          E            PAGEHEAD    1
      O                                           26 '=========================='
      O                                           52 '=========================='
@@ -254,6 +285,8 @@
      O                                          130 '=========================='
      O                                          145 '==============='                         NADC02
      O                                          158 '==============='                         FRAIMP
+     O                                          184 '=========================='             DAI103B
+     O                                          202 '=================='                     DAI103B
      O          E            PAGEHEAD    1
      O                       MECNCDNAM           33
      O          E            PAGEHEAD    1
@@ -264,6 +297,8 @@
      O                                          130 '=========================='
      O                                          145 '==============='                         NADC02
      O                                          158 '==============='                         FRAIMP
+     O                                          184 '=========================='             DAI103B
+     O                                          202 '=================='                     DAI103B
      O          E            CUSHEAD     1
      O                                           26 '--------------------------'
      O                                           52 '--------------------------'
@@ -272,35 +307,55 @@
      O                                          130 '--------------------------'
      O                                          145 '---------------'                         NADC02
      O                                          158 '---------------'                         FRAIMP
+     O                                          184 '--------------------------'             DAI103B
+     O                                          202 '------------------'                     DAI103B
      O          E            CUSHEAD     1
      O                       MECUSTNAME          28
      O***********************                   118 '|'                                       NADC02
      O*********                                 131 '|'                                NADC02 FRAIMP
-     O                                          144 '|'                                       FRAIMP
+     O*********                                 144 '|'                               FRAIMP DAI103B
+     O                                           37 '|'                                      DAI103B
+     O                                          188 '|'                                      DAI103B
      O          E            CUSHEAD     1
      O                                            6 '======'
      O***********************                   118 '|'                                       NADC02
      O*********                                 131 '|'                                NADC02 FRAIMP
-     O                                          144 '|'                                       FRAIMP
+     O*********                                 144 '|'                               FRAIMP DAI103B
+     O                                           37 '|'                                      DAI103B
+     O                                          188 '|'                                      DAI103B
      O          E            INST        1
      O                       MESNAM              50
+     O                       TOTEXP             202 '   ,   ,   ,   , 0 -'                   DAI103B
+     O                                          188 '|'                                      DAI103B
+     O                     30EXP                187 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     29EXP                172 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     28EXP                157 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     27EXP                142 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     26EXP                127 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     25EXP                112 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     24EXP                 97 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     23EXP                 82 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     22EXP                 67 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     21EXP                 52 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                                           37 '|'                                      DAI103B
+     O                       MESMOD              36                                          DAI103B
      O***********************TOTEXP             132 '   ,   ,   ,   , 0 -'                    NADC02
      O***********************                   118 '|'                                       NADC02
      O*********************26EXP                117 '   ,   ,   ,   , 0 -'                    NADC02
      O*********              TOTEXP             145 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
      O*********                                 131 '|'                                NADC02 FRAIMP
      O*********            27EXP                130 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
-     O                       TOTEXP             158 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                                          144 '|'                                       FRAIMP
-     O                     28EXP                143 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                     27EXP                129 '   ,   ,   ,   , 0 '                     FRAIMP
-     O                     26EXP                116 '   ,   ,   ,   , 0 '                     NADC02
-     O                     25EXP                103 '   ,   ,   ,   , 0 '
-     O                     24EXP                 90 '   ,   ,   ,   , 0 '
-     O                     23EXP                 77 '   ,   ,   ,   , 0 '
-     O                     22EXP                 64 '   ,   ,   ,   , 0 '
-     O                     21EXP                 51 '   ,   ,   ,   , 0 '
-     O                       MESMOD              39
+     O*********              TOTEXP             158 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********                                 144 '|'                               FRAIMP DAI103B
+     O*********            28EXP                143 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********            27EXP                129 '   ,   ,   ,   , 0 '             FRAIMP DAI103B
+     O*********            26EXP                116 '   ,   ,   ,   , 0 '             NADC02 DAI103B
+     O*********            25EXP                103 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            24EXP                 90 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            23EXP                 77 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            22EXP                 64 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            21EXP                 51 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              MESMOD              39                                          DAI103B
      O          E            CUSTOTAL    1
      O                                           26 '--------------------------'
      O                                           52 '--------------------------'
@@ -309,24 +364,38 @@
      O                                          130 '--------------------------'
      O                                          145 '---------------'                         NADC02
      O                                          158 '---------------'                         FRAIMP
+     O                                          184 '--------------------------'             DAI103B
+     O                                          202 '------------------'                     DAI103B
      O          E            CUSTOTAL    1
      O                       MECUSTNAME          28
+     O                       TOTEXP             202 '   ,   ,   ,   , 0 -'                   DAI103B
+     O                                          188 '|'                                      DAI103B
+     O                     30poEXP(10)          187 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     29poEXP(9)           172 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     28poEXP(8)           157 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     27poEXP(7)           142 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     26poEXP(6)           127 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     25poEXP(5)           112 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     24poEXP(4)            97 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     23poEXP(3)            82 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     22poEXP(2)            67 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                     21poEXP(1)            52 '   ,   ,   ,   ,  0-'                   DAI103B
      O***********************TOTEXP             132 '   ,   ,   ,   , 0 -'                    NADC02
      O***********************                   118 '|'                                       NADC02
      O*********************26poEXP(6)           117 '   ,   ,   ,   , 0 -'                    NADC02
      O*********              TOTEXP             145 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
      O*********                                 131 '|'                                NADC02 FRAIMP
      O*********            27poEXP(7)           130 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
-     O                       TOTEXP             158 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                                          144 '|'                                       FRAIMP
-     O                     28poEXP(8)           143 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                     27poEXP(7)           129 '   ,   ,   ,   , 0 '                     FRAIMP
-     O                     26poEXP(6)           116 '   ,   ,   ,   , 0 '                     NADC02
-     O                     25poEXP(5)           103 '   ,   ,   ,   , 0 '
-     O                     24poEXP(4)            90 '   ,   ,   ,   , 0 '
-     O                     23poEXP(3)            77 '   ,   ,   ,   , 0 '
-     O                     22poEXP(2)            64 '   ,   ,   ,   , 0 '
-     O                     21poEXP(1)            51 '   ,   ,   ,   , 0 '
+     O*********              TOTEXP             158 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********                                 144 '|'                               FRAIMP DAI103B
+     O*********            28poEXP(8)           143 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********            27poEXP(7)           129 '   ,   ,   ,   , 0 '             FRAIMP DAI103B
+     O*********            26poEXP(6)           116 '   ,   ,   ,   , 0 '             NADC02 DAI103B
+     O*********            25poEXP(5)           103 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            24poEXP(4)            90 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            23poEXP(3)            77 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            22poEXP(2)            64 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********            21poEXP(1)            51 '   ,   ,   ,   , 0 '                    DAI103B
      O          E            CTYTOTAL    1
      O                                           26 '=========================='
      O                                           52 '=========================='
@@ -334,25 +403,40 @@
      O                                          104 '=========================='
      O                                          130 '=========================='
      O                                          145 '==============='                         NADC02
-     O                                          145 '==============='                         FRAIMP
+     O*********                                 145 '==============='                 FRAIMP DAI103B
+     O                                          158 '==============='                        DAI103B
+     O                                          184 '=========================='             DAI103B
+     O                                          202 '=================='                     DAI103B
      O          E            CTYTOTAL    1
      O                       MECNCDNAM           33
+     O                       TOTEXP             202 '   ,   ,   ,   , 0 -'                   DAI103B
+     O                                          188 '|'                                      DAI103B
+     O                       coEXP(10)          187 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(9)           172 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(8)           157 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(7)           142 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(6)           127 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(5)           112 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(4)            97 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(3)            82 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(2)            67 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       coEXP(1)            52 '   ,   ,   ,   ,  0-'                   DAI103B
      O***********************TOTEXP             132 '   ,   ,   ,   , 0 -'                    NADC02
      O***********************                   118 '|'                                       NADC02
      O***********************coEXP(6)           117 '   ,   ,   ,   , 0 -'                    NADC02
      O*********              TOTEXP             145 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
      O*********                                 131 '|'                                NADC02 FRAIMP
      O*********              coEXP(7)           130 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
-     O                       TOTEXP             158 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                                          144 '|'                                       FRAIMP
-     O                       coEXP(8)           143 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                       coEXP(7)           129 '   ,   ,   ,   , 0 '                     FRAIMP
-     O                       coEXP(6)           116 '   ,   ,   ,   , 0 '                     NADC02
-     O                       coEXP(5)           103 '   ,   ,   ,   , 0 '
-     O                       coEXP(4)            90 '   ,   ,   ,   , 0 '
-     O                       coEXP(3)            77 '   ,   ,   ,   , 0 '
-     O                       coEXP(2)            64 '   ,   ,   ,   , 0 '
-     O                       coEXP(1)            51 '   ,   ,   ,   , 0 '
+     O*********              TOTEXP             158 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********                                 144 '|'                               FRAIMP DAI103B
+     O*********              coEXP(8)           143 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********              coEXP(7)           129 '   ,   ,   ,   , 0 '             FRAIMP DAI103B
+     O*********              coEXP(6)           116 '   ,   ,   ,   , 0 '             NADC02 DAI103B
+     O*********              coEXP(5)           103 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              coEXP(4)            90 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              coEXP(3)            77 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              coEXP(2)            64 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              coEXP(1)            51 '   ,   ,   ,   , 0 '                    DAI103B
      O          E            CTYTOTAL    1
      O                                           26 '=========================='
      O                                           52 '=========================='
@@ -361,30 +445,48 @@
      O                                          130 '=========================='
      O                                          145 '==============='                         NADC02
      O                                          158 '==============='                         FRAIMP
+     O                                          184 '=========================='             DAI103B
+     O                                          202 '=================='                     DAI103B
      O          E            FINTOTAL    1
      O                                           26 '--------------------------'
      O                                           52 '--------------------------'
      O                                           78 '--------------------------'
      O                                          104 '--------------------------'
      O                                          130 '--------------------------'
+     O                                          145 '---------------'                        DAI103B
+     O                                          158 '---------------'                        DAI103B
+     O                                          184 '--------------------------'             DAI103B
+     O                                          202 '------------------'                     DAI103B
      O          E            FINTOTAL    1
      O                                           22 'G R A N D   T O T A L '
+     O                       TOTEXP             202 '   ,   ,   ,   , 0 -'                   DAI103B
+     O                                          188 '|'                                      DAI103B
+     O                       toEXP(10)          187 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(9)           172 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(8)           157 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(7)           142 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(6)           127 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(5)           112 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(4)            97 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(3)            82 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(2)            67 '   ,   ,   ,   ,  0-'                   DAI103B
+     O                       toEXP(1)            52 '   ,   ,   ,   ,  0-'                   DAI103B
      O***********************TOTEXP             132 '   ,   ,   ,   , 0 -'                    NADC02
      O***********************                   118 '|'                                       NADC02
      O***********************toEXP(6)           117 '   ,   ,   ,   , 0 -'                    NADC02
      O*********              TOTEXP             145 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
      O*********                                 131 '|'                                NADC02 FRAIMP
      O*********              toEXP(7)           130 '   ,   ,   ,   , 0 -'             NADC02 FRAIMP
-     O                       TOTEXP             158 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                                          144 '|'                                       FRAIMP
-     O                       toEXP(8)           143 '   ,   ,   ,   , 0 -'                    FRAIMP
-     O                       toEXP(7)           129 '   ,   ,   ,   , 0 '                     FRAIMP
-     O                       toEXP(6)           116 '   ,   ,   ,   , 0 '                     NADC02
-     O                       toEXP(5)           103 '   ,   ,   ,   , 0 '
-     O                       toEXP(4)            90 '   ,   ,   ,   , 0 '
-     O                       toEXP(3)            77 '   ,   ,   ,   , 0 '
-     O                       toEXP(2)            64 '   ,   ,   ,   , 0 '
-     O                       toEXP(1)            51 '   ,   ,   ,   , 0 '
+     O*********              TOTEXP             158 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********                                 144 '|'                               FRAIMP DAI103B
+     O*********              toEXP(8)           143 '   ,   ,   ,   , 0 -'            FRAIMP DAI103B
+     O*********              toEXP(7)           129 '   ,   ,   ,   , 0 '             FRAIMP DAI103B
+     O*********              toEXP(6)           116 '   ,   ,   ,   , 0 '             NADC02 DAI103B
+     O*********              toEXP(5)           103 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              toEXP(4)            90 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              toEXP(3)            77 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              toEXP(2)            64 '   ,   ,   ,   , 0 '                    DAI103B
+     O*********              toEXP(1)            51 '   ,   ,   ,   , 0 '                    DAI103B
      O          E            FINTOTAL    1
      O                                           26 '--------------------------'
      O                                           52 '--------------------------'
@@ -393,3 +495,5 @@
      O                                          130 '--------------------------'
      O                                          145 '---------------'                         NADC02
      O                                          158 '---------------'                         FRAIMP
+     O                                          184 '--------------------------'             DAI103B
+     O                                          202 '------------------'                     DAI103B

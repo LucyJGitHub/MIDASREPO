@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049609           Date 21Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LLE028             Date 24Feb20               *
+      *  Prev Amend No. MD049609           Date 21Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 135952             Date 11May16               *
       *                 MD036289A          Date 11May16               *
@@ -173,6 +174,7 @@
       *             switched on.  Any changes made to this program    *
       *             should be duplicated in DL0411.                   *
       *                                                               *
+      *  LLE028   - Store FX Revaluation Amounts and Rates            *
       *  MD049609 - Adjustment of forward day and rate array          *
       *             (entries per table)                               *      
       *  MD046248 - Finastra Rebranding                               *
@@ -535,6 +537,9 @@
 0015 FSDBRCHL1IF  E           K        DISK                               S01194
      F*                                                                   S01408
      F/COPY WNCPYSRC,DL0410FFPG                                           S01408
+      *                                                                                       LLE028
+      ** FX forward revaluations amounts & rates extension file                               LLE028
+     FDEALSBX1UF  E           K        DISK                      A    U1                      LLE028
       *                                                                                       CAS001
      FDLNPVLPDO   E                    DISK                                                   CAS001
       * Revalued Forward Commitments File                                                     CAS001
@@ -614,6 +619,9 @@
 0048 F*       U1      GEFR TO BE CREATED
      E*                                                                   S01408
      E/COPY WNCPYSRC,DL0410EEPG                                           S01408
+      *                                                                                       LLE028
+      ** FX events only                                                                       LLE028
+     E                    LTBFX   1  12  4                                                    LLE028
      E*                                                                   S01408
      E/COPY ZSRSRC,ZHOLE                                                  129805
      E                    CPY@    1   1 80
@@ -1515,6 +1523,27 @@
      C                     Z-ADDBKAPDT    EVCD                                                CAS008
      C                     ENDIF                                                              CAS008
       *                                                                                       CAS008
+      ** Call access pgm AOSARDR0 to check if LLE028 is ON                                    LLE028
+      *                                                                                       LLE028
+     C                     MOVEL'N'       LLE028  1                                           LLE028
+     C                     CALL 'AOSARDR0'                                                    LLE028
+     C                     PARM *BLANKS   PRTCD                                               LLE028
+     C                     PARM '*VERIFY' POPTN                                               LLE028
+     C                     PARM 'LLE028'  PSARD                                               LLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               LLE028
+      *                                                                                       LLE028
+     C           PRTCD     IFNE *BLANKS                                                       LLE028
+     C           PRTCD     ANDNE'*NRF'                                                        LLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              LLE028
+     C                     MOVEL'23'      DBASE                                               LLE028
+     C                     MOVEL'LLE028'  DBKEY                                               LLE028
+     C                     GOTO ERROR                                                         LLE028
+     C                     ENDIF                                                              LLE028
+      *                                                                                       LLE028
+     C           PRTCD     IFEQ *BLANKS                                                       LLE028
+     C                     MOVEL'Y'       LLE028                                              LLE028
+     C                     ENDIF                                                              LLE028
+      *                                                                                       LLE028
      C/COPY WNCPYSRC,DL0410C085
       *                                                                   CEU011
       ** Retrieve general ledger details                                  CEU011
@@ -2627,6 +2656,122 @@
       *                                                                   CEU011
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0410CCP4                                           S01408
+      *                                                                                       LLE028
+      ** If processing an event for a revalued deal                                           LLE028
+      *                                                                                       LLE028
+     C           LLE028    IFEQ 'Y'                                                           LLE028
+     C           *IN37     IFEQ *ON                        B1                                 LLE028
+     C           *IN21     ANDEQ*ON                         1                                 LLE028
+     C           *INU1     ANDEQ*ON                         1                                 LLE028
+      *                                                                                       LLE028
+      ** Is this event on new FX table ?                                                      LLE028
+      *                                                                                       LLE028
+     C           ETYP      LOKUPLTBFX                    34 1                                 LLE028
+     C           *IN34     IFEQ *ON                        B2                                 LLE028
+      *                                                                                       LLE028
+      ** Access FX Forward revaluation amounts                                                LLE028
+      *                                                                                       LLE028
+     C           EDLNO     CHAINDEALSBX1             34     2                                 LLE028
+      *                                                                                       LLE028
+      ** If details found then update file                                                    LLE028
+      *                                                                                       LLE028
+     C           *IN34     IFEQ *OFF                       B3                                 LLE028
+      *                                                                                       LLE028
+      ** Buy currency                                                                         LLE028
+      *                                                                                       LLE028
+     C           *IN22     IFEQ *ON                        B4                                 LLE028
+      *                                                                                       LLE028
+      ** If this is not the first update of record on Pf/Dealsbx1                             LLE028
+      *                                                                                       LLE028
+     C           BJRDNB    IFNE LFDAT                      B5                                 LLE028
+     C                     Z-ADDLCBRA     LLBRA            Last amt                           LLE028
+     C  N55                Z-ADDREVA      LCBRA            Current amt                        LLE028
+     C   55                Z-ADDREVAS     LCBRA            Current amt                        LLE028
+     C                     Z-ADDLCBRR     LLBRR            Last rate                          LLE028
+     C   55                Z-ADDRATES     LCBRR            Current rate                       LLE028
+     C  N55                Z-ADDRATE      LCBRR            Current rate                       LLE028
+      *                                                                                       LLE028
+      ** Sell side was only set up today. Set up Buy side                                     LLE028
+      *                                                                                       LLE028
+     C                     ELSE                            X5                                 LLE028
+     C   55                Z-ADDREVAS     LCBRA            Current amt                        LLE028
+     C  N55                Z-ADDREVA      LCBRA            Current amt                        LLE028
+     C                     Z-ADD0         LLBRA            Last amt                           LLE028
+     C                     Z-ADDLCBRA     LFBRA            First amt                          LLE028
+     C   55                Z-ADDRATES     LCBRR            Current rate                       LLE028
+     C  N55                Z-ADDRATE      LCBRR            Current rate                       LLE028
+     C                     Z-ADD0         LLBRR            Last rate                          LLE028
+     C                     Z-ADDLCBRR     LFBRR            First rate                         LLE028
+     C                     ENDIF                           E5                                 LLE028
+     C                     ELSE                            X4                                 LLE028
+     C*                                                                                       LLE028
+     C** Sell currency                                                                        LLE028
+     C*                                                                                       LLE028
+     C*                                                                                       LLE028
+     C** If this is not the first update of record on Pf/Dealsbx1                             LLE028
+     C*                                                                                       LLE028
+     C           BJRDNB    IFNE LFDAT                      B5                                 LLE028
+     C                     Z-ADDLCSRA     LLSRA            Last amt                           LLE028
+     C   55                Z-ADDREVAS     LCSRA            Current amt                        LLE028
+     C  N55                Z-ADDREVA      LCSRA            Current amt                        LLE028
+     C                     Z-ADDLCSRR     LLSRR            Last rate                          LLE028
+     C   55                Z-ADDRATES     LCSRR            Current rate                       LLE028
+     C  N55                Z-ADDRATE      LCSRR            Current rate                       LLE028
+     C                     ELSE                            X5                                 LLE028
+      *                                                                                       LLE028
+      ** Buy side was only set up today. Set up Sell side                                     LLE028
+      *                                                                                       LLE028
+     C   55                Z-ADDREVAS     LCSRA            Current amt                        LLE028
+     C  N55                Z-ADDREVA      LCSRA            Current amt                        LLE028
+     C                     Z-ADD0         LLSRA            Last amt                           LLE028
+     C                     Z-ADDLCSRA     LFSRA            First amt                          LLE028
+     C   55                Z-ADDRATES     LCSRR            Current rate                       LLE028
+     C  N55                Z-ADDRATE      LCSRR            Current rate                       LLE028
+     C                     Z-ADD0         LLSRR            Last rate                          LLE028
+     C                     Z-ADDLCSRR     LFSRR            First rate                         LLE028
+     C                     ENDIF                           E5                                 LLE028
+     C                     ENDIF                           E4                                 LLE028
+     C                     UPDATDEALSBD1                    3                                 LLE028
+      *                                                                                       LLE028
+      ** Else new record                                                                      LLE028
+      *                                                                                       LLE028
+     C                     ELSE                            X3                                 LLE028
+      *                                                                                       LLE028
+      ** Buy currency                                                                         LLE028
+      *                                                                                       LLE028
+     C           *IN22     IFEQ *ON                        B4                                 LLE028
+     C   55                Z-ADDREVAS     LCBRA            Current amt                        LLE028
+     C  N55                Z-ADDREVA      LCBRA            Current amt                        LLE028
+     C                     Z-ADD0         LLBRA            Last amt                           LLE028
+     C                     Z-ADDLCBRA     LFBRA            First amt                          LLE028
+     C   55                Z-ADDRATES     LCBRR            Current rate                       LLE028
+     C  N55                Z-ADDRATE      LCBRR            Current rate                       LLE028
+     C                     Z-ADD0         LLBRR            Last rate                          LLE028
+     C                     Z-ADDLCBRR     LFBRR            First rate                         LLE028
+      *                                                                                       LLE028
+      ** Sell currency                                                                        LLE028
+      *                                                                                       LLE028
+     C                     ELSE                            X4                                 LLE028
+     C   55                Z-ADDREVAS     LCSRA            Current amt                        LLE028
+     C  N55                Z-ADDREVA      LCSRA            Current amt                        LLE028
+     C                     Z-ADD0         LLSRA            Last amt                           LLE028
+     C                     Z-ADDLCSRA     LFSRA            First amt                          LLE028
+     C   55                Z-ADDRATES     LCSRR            Current rate                       LLE028
+     C  N55                Z-ADDRATE      LCSRR            Current rate                       LLE028
+     C                     Z-ADD0         LLSRR            Last rate                          LLE028
+     C                     Z-ADDLCSRR     LFSRR            First rate                         LLE028
+     C                     ENDIF                           E4                                 LLE028
+      *                                                                                       LLE028
+      ** Common fields                                                                        LLE028
+      *                                                                                       LLE028
+     C                     Z-ADDEDLNO     LDLNO            Deal nos                           LLE028
+     C                     Z-ADDEDAT      LVDAT            Event date                         LLE028
+     C                     Z-ADDBJRDNB    LFDAT            First reval                        LLE028
+     C                     WRITEDEALSBD1                    3                                 LLE028
+     C                     ENDIF                           E3                                 LLE028
+     C                     ENDIF                           E2                                 LLE028
+     C                     ENDIF                           E1                                 LLE028
+     C                     ENDIF                                                              LLE028
      C*                                                                   S01408
      C***RESTORE*CODING*TO*PREVIOUS*STATE*******************              S01119
      C***22      TEAMT     ADD  EAMT      TEAMT  130                      S01119
@@ -3871,6 +4016,12 @@
 0650 C**********   21      EDAT      COMP RUND                 21  21     S01194
 0650 C   21      EDAT      COMP BJRDNB               21  21               S01194
      C/COPY WNCPYSRC,DL0410C018
+      *                                                                                       LLE028
+     C           LLE028    IFEQ 'Y'                                                           LLE028
+      * Exclude INTERBRANCH events also found on FPVNTDD                                      LLE028
+     C   21 12   IBRE      COMP 'Y'                  2121                                     LLE028
+     C                     ENDIF                                                              LLE028
+      *                                                                                       LLE028
 0651 *******OT INCL. IF EVENT FOR BASE CCY.
 0652 C**   INCL. IF EVENT FOR BASE CCY.
 0653 C**********   21      ECCY      COMP BCCY                     47     S01194
@@ -7038,6 +7189,19 @@
      O/COPY WNCPYSRC,DL0410OOPG                                           S01408
      O*                                                                   S01408
      X/COPY WNCPYSRC,DL0410X001
+**   LTBFX - FX event type                                                                    LLE028
+11V1                                                                                          LLE028
+11V2                                                                                          LLE028
+12V1                                                                                          LLE028
+12V2                                                                                          LLE028
+13V1                                                                                          LLE028
+13V2                                                                                          LLE028
+14V3                                                                                          LLE028
+14V4                                                                                          LLE028
+20V1                                                                                          LLE028
+20V2                                                                                          LLE028
+20V7                                                                                          LLE028
+20V8                                                                                          LLE028
 ** CPY@   **      OBJECT COPYRIGHT
 (c) Finastra International Limited 2001
 **   POWER - POWERS OF 10 FOR CURRENCY CONVERSIONS

@@ -13,7 +13,9 @@
       *                                                               *
       *                                                               *
       *****************************************************************
-      *** Code Stripped ***                                           *
+      *  Last Amend No. LLE028             Date 24Feb20               *
+      *  LLE028   - Store FX Revaluation Amounts and Rates            *
+      *** Code Stripped ***                                           **
       /COPY DLCPYSRC,DL0280FHD5                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD3                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD1
@@ -69,6 +71,7 @@
      F                                     OFLIND(*INOA)
      F*                                                                   S01408
      F/COPY WNCPYSRC,DL0280FFP3                                           S01408
+     FDEALSBX1  UF   E           K DISK                                                       LLE028
      F*                                                                   S01408
      F***DLBHISPDO   F    1249            DISK                      A                  CAS001 CAS005
      F*DLBHISPD* O  A F 1291        DISK                                                      CDL038
@@ -2729,6 +2732,18 @@
      C                   ELSE                                                                 233277
      C                   MOVE      'N'           CGL032                                       233277
      C                   ENDIF                                                                233277
+      *                                                                                       LLE028
+      ** Check for LLE028                                                                     LLE028
+     C                   CALL      'AOSARDR0'                                                 LLE028
+     C                   PARM      *BLANKS       PRTCD                                        LLE028
+     C                   PARM      '*VERIFY'     POPTN                                        LLE028
+     C                   PARM      'LLE028'      PSARD                                        LLE028
+     C     SCSARD        PARM      SCSARD        DSFDY                                        LLE028
+     C     PRTCD         IFEQ      *BLANKS                                                    LLE028
+     C                   MOVE      'Y'           LLE028            1                          LLE028
+     C                   ELSE                                                                 LLE028
+     C                   MOVE      'N'           LLE028                                       LLE028
+     C                   ENDIF                                                                LLE028
       *                                                                                    BUG23009A
       ** Access AOSARDR0 and check if CER048 is installed                                  BUG23009A
       *                                                                                    BUG23009A
@@ -7961,6 +7976,18 @@
       *                                                                   CPB001
      C                   ENDIF                                                  End REPLIC     CPB00
      C/COPY WNCPYSRC,DL0280C026
+     C     LLE028        IFEQ      'Y'                                                        LLE028
+     C     *INU1         IFEQ      *ON                                                        LLE028
+     C     DLNO          CHAIN     DEALSBX1                           53                      LLE028
+     C     *IN53         IFEQ      '0'                                                        LLE028
+     C                   Z-ADD     0             LCBRR                                        LLE028
+     C                   Z-ADD     0             LCSRR                                        LLE028
+     C                   Z-ADD     0             LCBRA                                        LLE028
+     C                   Z-ADD     0             LCSRA                                        LLE028
+     C                   UPDATE    DEALSBD1                                                   LLE028
+     C                   END                                                                  LLE028
+     C                   ENDIF                                                                LLE028
+     C                   ENDIF                                                                LLE028
 1706 C                   GOTO      EOJ
 1707 C*
 1708 C*****    FXOPMT IS A    ROUTINE TO HANDLE THE OPTION MATURITY
@@ -8014,6 +8041,19 @@
       *                                                                   CPB001
      C                   ENDIF                                                  End REPLIC     CPB00
      C/COPY WNCPYSRC,DL0280C027
+      *                                                                                       LLE028
+     C     LLE028        IFEQ      'Y'                                                        LLE028
+     C     *INU1         IFEQ      *ON                                                        LLE028
+     C     DLNO          CHAIN     DEALSBX1                           53                      LLE028
+     C     *IN53         IFEQ      '0'                                                        LLE028
+     C                   Z-ADD     0             LCBRR                                        LLE028
+     C                   Z-ADD     0             LCSRR                                        LLE028
+     C                   Z-ADD     0             LCBRA                                        LLE028
+     C                   Z-ADD     0             LCSRA                                        LLE028
+     C                   UPDATE    DEALSBD1                                                   LLE028
+     C                   END                                                                  LLE028
+     C                   ENDIF                                                                LLE028
+     C                   ENDIF                                                                LLE028
 1728 C                   GOTO      EOJ
 1729 C*
 1730 C********************************************************************
@@ -8243,6 +8283,21 @@
       *                                                                   CPB001
      C                   ENDIF                                                  End REPLIC     CPB00
      C/COPY WNCPYSRC,DL0280C028
+      *                                                                                       LLE028
+     C     LLE028        IFEQ      'Y'                                                        LLE028
+     C     *INU1         IFEQ      *ON                                                        LLE028
+     C     *IN47         IFEQ      '0'                                                        LLE028
+     C     DLNO          CHAIN     DEALSBX1                           53                      LLE028
+     C     *IN53         IFEQ      '0'                                                        LLE028
+     C                   Z-ADD     0             LCBRR                                        LLE028
+     C                   Z-ADD     0             LCSRR                                        LLE028
+     C                   Z-ADD     0             LCBRA                                        LLE028
+     C                   Z-ADD     0             LCSRA                                        LLE028
+     C                   UPDATE    DEALSBD1                                                   LLE028
+     C                   END                                                                  LLE028
+     C                   END                                                                  LLE028
+     C                   ENDIF                                                                LLE028
+     C                   ENDIF                                                                LLE028
 1797 C  N47              MOVE      'E'           RECR
      C  N47              MOVE      '1'           *IN84                                         E1075
      C*     UPDATE FILE CONTROLS                                          E10165
@@ -8429,6 +8484,23 @@
      C  N47
      CAN 53              MOVE      '1'           *IN15                                         S0109
      C/COPY WNCPYSRC,DL0280C488
+      *                                                                                       LLE028
+     C     LLE028        IFEQ      'Y'                                                        LLE028
+     C     *INU1         IFEQ      *ON                                                        LLE028
+     C     *IN47         IFEQ      '0'                                                        LLE028
+     C     *IN53         ANDEQ     '1'                                                        LLE028
+     C     DLNO          CHAIN     DEALSBX1                           53                      LLE028
+     C     *IN53         IFEQ      '0'                                                        LLE028
+     C                   Z-ADD     0             LCBRR                                        LLE028
+     C                   Z-ADD     0             LCSRR                                        LLE028
+     C                   Z-ADD     0             LCBRA                                        LLE028
+     C                   Z-ADD     0             LCSRA                                        LLE028
+     C                   UPDATE    DEALSBD1                                                   LLE028
+     C                   END                                                                  LLE028
+     C                   MOVE      '1'           *IN53                                        LLE028
+     C                   END                                                                  LLE028
+     C                   ENDIF                                                                LLE028
+     C                   ENDIF                                                                LLE028
      C  N47
 1822 CAN 53              GOTO      EOJ
 1823 C     FSLI          COMP      2                                      53

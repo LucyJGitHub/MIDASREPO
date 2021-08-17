@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR918361           Date 02Apr12               *
-      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *  Last Amend No. CLE155             Date 03Dec12               *
+      *  Prev Amend No. AR918361           Date 02Apr12               *
+      *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
@@ -171,6 +172,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE155 - Facility Approval Date                              *
       *  AR918361 - No error message for rollover frequency when not  *
       *             defined in facility rollover types. Validate the  *
       *             rollover frequency properly against the facility  *
@@ -4293,6 +4295,10 @@ B001 C     ZERR          IFNE      *BLANKS
      C     *IN83         IFEQ      '0'
      C     DDFCUSOK      ANDNE     'N'
      C     WSVVD         IFLT      DTAPF
+     C     CLE155        ANDEQ     'N'                                                        CLE155
+     C     WSVVD         ORLT      DTAPF                                                      CLE155
+     C     CLE155        ANDEQ     'Y'                                                        CLE155
+     C     DDACTN        ANDEQ     'I'                                                        CLE155
      C                   MOVE      'N'           DDVDATOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDVDAT'      FldNamXAr(Idx)
@@ -4302,6 +4308,10 @@ B001 C     ZERR          IFNE      *BLANKS
       ***  Must be on or later than 'date committed' of facility
       *
      C     WSVVD         IFLT      COMDF
+     C     CLE155        ANDEQ     'N'                                                        CLE155
+     C     WSVVD         ORLT      COMDF                                                      CLE155
+     C     CLE155        ANDEQ     'Y'                                                        CLE155
+     C     DDACTN        ANDEQ     'I'                                                        CLE155
      C                   MOVE      'N'           DDVDATOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDVDAT'      FldNamXAr(Idx)
@@ -9982,6 +9992,25 @@ E004 C                   ENDIF
      C                   EVAL      CLE158 = 'Y'                                               CLE158
      C                   ENDIF                                                                CLE158
                                                                                               CLE158
+      ** Determine if CLE155 is switched on                                                   CLE155
+                                                                                              CLE155
+     C                   MOVE      'N'           CLE155            1                          CLE155
+     C                   CALLB     'AOSARDR0'                                                 CLE155
+     C                   PARM      *BLANKS       PRTCD                                        CLE155
+     C                   PARM      '*VERIFY'     POPTN                                        CLE155
+     C                   PARM      'CLE155'      PSARD                                        CLE155
+                                                                                              CLE155
+     C                   IF        PRTCD <> *BLANKS and                                       CLE155
+     C                             PRTCD <> '*NRF   '                                         CLE155
+     C                   MOVEL     PSARD         DBKEY                                        CLE155
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE155
+     C                   Z-ADD     21            DBASE                                        CLE155
+     C                   EXSR      *PSSR                                                      CLE155
+     C                   ENDIF                                                                CLE155
+                                                                                              CLE155
+     C                   IF        PRTCD = *BLANKS                                            CLE155
+     C                   MOVE      'Y'           CLE155                                       CLE155
+     C                   ENDIF                                                                CLE155
       *                                                                                       CER050
       ** Determine if CER050 feature is enabled                                               CER050
      C                   EVAL      CER050 = 'N'                                               CER050

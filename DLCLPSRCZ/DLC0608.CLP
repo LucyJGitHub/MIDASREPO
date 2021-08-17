@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LLE028             Date 24Feb20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 242842             Date 11Oct06              */
+/*                      242842             Date 11Oct06              */
 /*                      240553             Date 28Jun06              */
 /*                      CDL048             Date 26Jun06              */
 /*                      237367             Date 02Mar06              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LLE028 - Store FX Revaluation Amounts and Rates             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       242842 - Avoid DB error in CB0180.                          */
 /*                Apply fix 240553.                                  */
@@ -92,6 +94,7 @@
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                    /*CAS004*/
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CAS004*/
              DCL        VAR(&CDL048) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL048*/
+             DCL        VAR(&LLE028) TYPE(*CHAR) LEN(1) VALUE('N')                        /*LLE028*/
  
              SNDMSG     MSG('FORWARD REVALUATION')  TOMSGQ(MRUNQ)
              CHGJOB     SWS(00000000)
@@ -158,6 +161,23 @@
                                                                                           /*CAS005*/
              IF         COND(&PRTCD *EQ '      ') THEN(CHGVAR +
                           VAR(&CAS005) VALUE('Y'))                                        /*CAS005*/
+                                                                                          /*LLE028*/
+/** Check if LLE028 is installed **/                                                      /*LLE028*/
+                                                                                          /*LLE028*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*LLE028*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                      /*LLE028*/
+             CHGVAR     VAR(&PSARD) VALUE('LLE028')                                       /*LLE028*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)                  /*LLE028*/
+                                                                                          /*LLE028*/
+             IF         COND(&PRTCD *NE '       ' *AND &PRTCD *NE +
+                          '*NRF   ') THEN(DO)                                             /*LLE028*/
+               SNDPGMMSG  MSG('AOSARDR0 - PROGRAM ERROR') +
+                 TOMSGQ(MOPERQ)                                                           /*LLE028*/
+               GOTO   CMDLBL(ABNOR)                                                       /*LLE028*/
+             ENDDO                                                                        /*LLE028*/
+                                                                                          /*LLE028*/
+             IF         COND(&PRTCD *EQ '      ') THEN(CHGVAR +
+                          VAR(&LLE028) VALUE('Y'))                                        /*LLE028*/
                                                                                           /*CAS004*/
 /** Restart/Recovery Processing **/                                                       /*CAS004*/
                                                                                           /*CAS004*/
@@ -215,6 +235,11 @@
 /*********** CALL       PGM(DL0410)                                   /*S01117*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,DLC0608MP1                                           /*S01408*/
+             IF         COND(&LLE028 *EQ 'Y') THEN(DO)                                    /*LLE028*/
+             CPYF       FROMFILE(DEALSBX1) TOFILE(&DPLIB/XDEALSBX1) +
+                          CRTFILE(*YES)                                                   /*LLE028*/
+             MONMSG     MSGID(CPC2957)                                                    /*LLE028*/
+             ENDDO                                                                        /*LLE028*/
 /**/                                                                  /*S01408*/
 /**/                                                                  /*CAC002*/
 /**  If Analytical Accounting module is present, call program      */ /*CAC002*/
@@ -251,6 +276,18 @@
 /*********** DLTOVR     FILE(TABLE)                                   /*S01194*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,DLC0608MP2                                           /*S01408*/
+/* Restore input file when error */                                                       /*LLE028*/
+             IF         COND(&LLE028 *EQ 'Y') THEN(DO)                                    /*LLE028*/
+             IF         COND(%SUBSTRING(&SWS 8 1) = '1') THEN(DO)                         /*LLE028*/
+               CPYF       FROMFILE(XDEALSBX1) TOFILE(DEALSBX1) +
+                          MBROPT(*REPLACE)                                                /*LLE028*/
+/* Empty file */                                                                          /*LLE028*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(DEALSBX1))                                                 /*LLE028*/
+             ENDDO                                                                        /*LLE028*/
+             DLTF       FILE(XDEALSBX1)                                                   /*LLE028*/
+             MONMSG     MSGID(CPF0000)                                                    /*LLE028*/
+             ENDDO                                                                        /*LLE028*/
 /**/                                                                  /*S01408*/
 /**/
              IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(SNDMSG +

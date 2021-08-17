@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD027065           Date 22Sep20               *      
-      *  Prev Amend No. MD053093           Date 03Sep19               *
+      *  Last Amend No. LLE086             Date 02May12               *
+      *  Prev Amend No. MD027065           Date 22Sep20               *      
+      *                 MD053093           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
       *                 MD039655           Date 03Sep19               *
       *                 MD054782           Date 04Dec19               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LLE086 - Country of Risk in Facilities                       *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
       *             TR facility attached to it. Pattern after 239194. *      
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
@@ -1553,6 +1555,11 @@
      C                   ELSE
      C                   MOVE      BBCNCZ        DDCRSK
      C/COPY WNCPYSRC,LEH01207
+      *                                                                                       LLE086
+      ** If LLE086 is ON default to Country of Domicile                                       LLE086
+     C     LLE086        IFEQ      'Y'                                                        LLE086
+     C                   MOVE      BBCOLC        DDCRSK                                       LLE086
+     C                   ENDIF                                                                LLE086
      C                   ENDIF
       *
      C                   ELSE
@@ -3526,6 +3533,18 @@ E4   C                   ENDIF
      C                   MOVEL     PCurSet01     DftCRInd                                     CLE160
       *                                                                                       CLE160
      C/COPY WNCPYSRC,LEH01208
+      *                                                                                       LLE086
+      ** Check if LLE086 is installed                                                         LLE086
+      *                                                                                       LLE086
+     C                   CALLB     'AOSARDR0'                                                 LLE086
+     C                   PARM      *BLANK        @RTCD                                        LLE086
+     C                   PARM      '*VERIFY'     @OPTN                                        LLE086
+     C                   PARM      'LLE086'      @SARD                                        LLE086
+      *                                                                                       LLE086
+     C                   MOVE      'N'           LLE086            1                          LLE086
+     C     @RTCD         IFEQ      *BLANKS                                                    LLE086
+     C                   MOVE      'Y'           LLE086                                       LLE086
+     C                   ENDIF                                                                LLE086
       *                                                                                       CER020
       ** Key list for facility                                                                CER020
       *                                                                                       CER020

@@ -88,7 +88,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       LLE028 - Store FX Revaluation Amounts and Rates             */
+/*       LLE028 - Store FX Revaluation Amounts and Rates.            */
 /*       CER050 - Annualised Percentage Rate                         */
 /*       MD020934 - COB component LERC135 failed due to CDL045.      */
 /*                  Amend length of field &EXTLIB from 8 to 10 to    */

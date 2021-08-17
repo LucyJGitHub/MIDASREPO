@@ -13,7 +13,7 @@
       *                                                               *
       *  Last Amend No. CLE155             Date 20Feb20               *
       *  Prev Amend No. AR918343           Date 25Apr12               *
-      *                 MD027517           Date 08Jul14               *      
+      *                 MD027517           Date 08Jul14               *
       *               . MD053093           Date 03Sep19               *
       *                 MD048074           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
@@ -77,13 +77,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE155 - Facility Approval Date                              *
+      *  CLE155 - Facility Approval Date.                             *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
       *             Defaulting of drawing types should only occured   *
       *             during insert and at the start (Child: AR918344)  *
       *  MD027517 - Also validate Last Availability of CA against TR. *
-      *             Extend validation of 244684.                      *      
+      *             Extend validation of 244684.                      *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM.                                   *
       *           - Applied for MD052591.                             *

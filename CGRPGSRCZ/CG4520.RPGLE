@@ -67,7 +67,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  LLE089 - Tiered and Threshold Interest Details on Statement  *
-      *  LLE060 - Additional UDC fields                               *
+      *  LLE060 - Additional UDC fields.                              *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *

@@ -172,7 +172,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE155 - Facility Approval Date                              *
+      *  CLE155 - Facility Approval Date.                             *
       *  AR918361 - No error message for rollover frequency when not  *
       *             defined in facility rollover types. Validate the  *
       *             rollover frequency properly against the facility  *
@@ -8564,7 +8564,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714

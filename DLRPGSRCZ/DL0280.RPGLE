@@ -2731,7 +2731,7 @@
      C                   MOVE      'N'           CGL032                                       233277
      C                   ENDIF                                                                233277
       *                                                                                       LLE028
-      ** Check for LLE028                                                                     LLE028
+      ** Check for LLE028.                                                                    LLE028
      C                   CALL      'AOSARDR0'                                                 LLE028
      C                   PARM      *BLANKS       PRTCD                                        LLE028
      C                   PARM      '*VERIFY'     POPTN                                        LLE028

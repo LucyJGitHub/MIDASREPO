@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD052046           Date 05Nov18               *
+      *  Last Amend No. MD056340           Date 17Sep20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD052046           Date 05Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041443           Date 19Sep16               *
       *                 CSC054             Date 23Feb12               *
@@ -52,6 +53,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD056340 - Run retail extract at end of month to update EPCB *
+      *             and EPLB.                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD052046  - Activity from prev month is used instead of      *
@@ -223,6 +226,14 @@
      I                                        1   20ZDAY
      I                                        3   40ZMTH
      I                                        5   60ZYEAR
+      *                                                                                     MD056340
+      ** Data Structure for Date Format MM/DD/YY                                            MD056340
+      *                                                                                     MD056340
+     I            DS                                                                        MD056340
+     I                                        1   60RESULX                                  MD056340
+     I                                        1   20ZMTHX                                   MD056340
+     I                                        3   40ZDAYX                                   MD056340
+     I                                        5   60ZYEARX                                  MD056340
      I           IDS
      I                                        1  150PSTA0
      I                                        1  151PSTA1
@@ -431,6 +442,8 @@
      C           *LIKE     DEFN DACO      ACCCB
      C           *LIKE     DEFN RUND      ELAC                            081266
      C           *LIKE     DEFN RUND      ECAC                            081266
+     C           *LIKE     DEFN RUND      FDMON                                             MD056340
+     C           *LIKE     DEFN RUND      LDMON                                             MD056340
      C*
      C           *NAMVAR   DEFN           RUNDAT
      C                     IN   RUNDAT
@@ -463,14 +476,17 @@
       ** Ignore accounts opened after start of current month                                  CCB016
       *                                                                                       CCB016
      C           DACO      IFLT CURSOM                                                        CCB016
+     C           DNWD      ORGT LDMON                                                       MD056340
       *                                                                                       CCB016
       ** Access start month balances file and overwrite values from SSRACJL                   CCB016
       *                                                                                       CCB016
+     C           EOMFLG    IFNE 'Y'                                                         MD056340
      C                     Z-ADD0         LDBL                                                CCB016
      C                     Z-ADD0         CLBL                                                CCB016
      C           ACKEY1    CHAINREACBMPP             52                                       CCB016
      C                     Z-ADDLDBL      GRBL                                                CCB016
      C                     Z-ADDCLBL      NETBL                                               CCB016
+     C                     ENDIF                                                            MD056340
      C*
      C** MULTIBRANCHING PROCESSING
      C*
@@ -707,6 +723,11 @@
      C***********ELAC      IFEQ *ZERO                      - B1           081266
      C***********ECAC      SUB  400       ELAC                            081266
      C***********          END                                            081266
+      *                                                                                     MD056340
+      ** Check rundate if EOM                                                               MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDBJRDNB    ZDAYNO                                            MD056340
+     C                     EXSR CHKEOM                                                      MD056340
      C*
      C** GET START AND END DATES FOR RETAIL ACTIVITY REPORT               081266
      C*                                                                   081266
@@ -1702,6 +1723,46 @@
       ** Set End of Current Activity Period to Current Start of Month minus                   CCB016
       *  one                                                                                  CCB016
      C********** CURSOM    SUB  1         ECAC                                       CCB016 MD052046
+      *                                                                                     MD056340
+     C           EOMFLG    IFEQ 'Y'                                                         MD056340
+      *                                                                                     MD056340
+      ** Calculate End of Last Month                                                        MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDRUND      ZDAYNO                                            MD056340
+     C                     EXSR ZDATE2                                                      MD056340
+     C           *IN98     IFEQ '0'                                                         MD056340
+     C                     MOVEL'01'      ZDATE                                             MD056340
+     C                     END                                                              MD056340
+     C           *IN98     IFEQ '1'                                                         MD056340
+     C                     MOVELZDATE     ZWORK   40                                        MD056340
+     C                     MOVE '01'      ZWORK                                             MD056340
+     C                     MOVELZWORK     ZDATE                                             MD056340
+     C                     END                                                              MD056340
+     C                     EXSR ZDATE1                                                      MD056340
+     C                     MOVE ZDAYNO    ELAC                                              MD056340
+     C           ELAC      SUB  1         ELAC                                              MD056340
+      *                                                                                     MD056340
+      ** Calculate End of Current Month                                                     MD056340
+      *                                                                                     MD056340
+     C           RUND      SUB  31        ZDAYNO                                            MD056340
+     C           ZDAYNO    DOWLTRUND                                                        MD056340
+     C                     MOVE 'L'       ZFREQ                                             MD056340
+     C                     Z-ADD31        ZMDAY                                             MD056340
+     C                     EXSR ZFRQA                                                       MD056340
+     C                     ENDDO                                                            MD056340
+     C                     MOVE ZDAYNO    ECAC                                              MD056340
+      *                                                                                     MD056340
+     C                     ELSE                                                             MD056340
+      *                                                                                     MD056340
+      ** Set End of Last Activity Period to Previous Start of Month                         MD056340
+      ** minus one.                                                                         MD056340
+      *                                                                                     MD056340
+     C           PRVSOM    SUB  1         ELAC                                              MD056340
+      *                                                                                     MD056340
+      ** Set End of Current Activity Period to Current Start of Month                       MD056340
+      ** minus one.                                                                         MD056340
+      *                                                                                     MD056340
+     C           CURSOM    SUB  1         ECAC                                              MD056340
       *                                                                                       CCB016
       ** Set RUND to last working day of previous month                                       CCB016
       *                                                                                       CCB016
@@ -1713,7 +1774,8 @@
      C                     PARM BJSLCD    ZLOC    3                                           CCB016
       *                                                                                       CCB016
      C**********           Z-ADDZDYNBR    RUND                                       CCB016 MD052046
-     C                     Z-ADDZDYNBR    ELAC                                              MD052046
+     C**********           Z-ADDZDYNBR    ELAC                                     MD052046 MD056340
+     C                     Z-ADDZDYNBR    RUND                                              MD056340
       *                                                                                       CCB016
       ** Set DNWD to first working day of current month                                       CCB016
       *                                                                                       CCB016
@@ -1725,12 +1787,123 @@
      C                     PARM BJSLCD    ZLOC                                                CCB016
       *                                                                                       CCB016
      C**********           Z-ADDZDYNBR    DNWD                                       CCB016 MD052046
-     C                     Z-ADDZDYNBR    ECAC                                              MD052046
+     C**********           Z-ADDZDYNBR    ECAC                                     MD052046 MD056340
+     C                     Z-ADDZDYNBR    DNWD                                              MD056340
+     C                     ENDIF                                                            MD056340
      C*                                                                   081266
      C                     ENDSR                                          081266
      C*                                                                   081266
      C********************************************************************081266
      C/EJECT                                                              081266
+     C********************************************************************
+      *****************************************************************                     MD056340
+      *                                                               *                     MD056340
+      *  CHKEOM - subroutine to check if rundate is end of month      *                     MD056340
+      *                                                               *                     MD056340
+      *      Called by       FIRST                                    *                     MD056340
+      *      Calls           *PSSR                                    *                     MD056340
+      *                                                               *                     MD056340
+      *****************************************************************                     MD056340
+     C           CHKEOM    BEGSR                                                            MD056340
+      *                                                                                     MD056340
+      ** Work fields initialization                                                         MD056340
+      *                                                                                     MD056340
+     C                     Z-ADD*ZEROS    FDMON                                             MD056340
+     C                     Z-ADD*ZEROS    LDMON                                             MD056340
+      *                                                                                     MD056340
+      ** Calculating date from rundate                                                      MD056340
+      *                                                                                     MD056340
+      ** *IN99 set off as ZDATE2Z2 does not reset.                                          MD056340
+      *                                                                                     MD056340
+     C                     SETOF                     99                                     MD056340
+     C                     EXSR ZDATE2                                                      MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDZYEAR     YRSAVE  20                                        MD056340
+      *                                                                                     MD056340
+      ** Verify if error                                                                    MD056340
+      *                                                                                     MD056340
+     C           *IN99     IFEQ '1'                                                         MD056340
+     C           *LOCK     IN   LDA                                                         MD056340
+     C                     Z-ADD13        DBASE                                             MD056340
+     C                     MOVE 'ZDATE2'  DBFILE                                            MD056340
+     C                     MOVE *BLANKS   DBKEY                                             MD056340
+     C                     OUT  LDA                                                         MD056340
+     C                     EXSR *PSSR                                                       MD056340
+     C                     ENDIF                                                            MD056340
+      *                                                                                     MD056340
+      ** Calculating the first day                                                          MD056340
+      *                                                                                     MD056340
+     C           *IN98     IFEQ '0'                                                         MD056340
+     C                     Z-ADDZDATE     RESULT                                            MD056340
+     C                     Z-ADD1         ZDAY                                              MD056340
+     C                     Z-ADDRESULT    ZDATE                                             MD056340
+     C                     ELSE                                                             MD056340
+     C                     Z-ADDZDATE     RESULX                                            MD056340
+     C                     Z-ADD1         ZDAYX                                             MD056340
+     C                     Z-ADDRESULX    ZDATE                                             MD056340
+     C                     END                                                              MD056340
+     C                     EXSR ZDATE1                                                      MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDYRSAVE    ZYEAR                                             MD056340
+      *                                                                                     MD056340
+      ** Verify if error                                                                    MD056340
+      *                                                                                     MD056340
+     C           *IN99     IFEQ '1'                                                         MD056340
+     C           *LOCK     IN   LDA                                                         MD056340
+     C                     Z-ADD14        DBASE                                             MD056340
+     C                     MOVE 'ZDATE1'  DBFILE                                            MD056340
+     C                     MOVE *BLANKS   DBKEY                                             MD056340
+     C                     OUT  LDA                                                         MD056340
+     C                     EXSR *PSSR                                                       MD056340
+     C                     ENDIF                                                            MD056340
+      *                                                                                     MD056340
+      ** Calculating first and last day of the current month                                MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDZDAYNO    FDMON                                             MD056340
+      *                                                                                     MD056340
+     C           *IN98     IFEQ '0'                                                         MD056340
+     C           ZMTH      IFEQ 12                                                          MD056340
+     C                     Z-ADD1         ZMTH                                              MD056340
+     C                     ADD  1         ZYEAR                                             MD056340
+     C                     ELSE                                                             MD056340
+     C                     ADD  1         ZMTH                                              MD056340
+     C                     ENDIF                                                            MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDRESULT    ZDATE                                             MD056340
+     C                     ELSE                                                             MD056340
+     C           ZMTHX     IFEQ 12                                                          MD056340
+     C                     Z-ADD1         ZMTHX                                             MD056340
+     C                     ADD  1         ZYEARX                                            MD056340
+     C                     ELSE                                                             MD056340
+     C                     ADD  1         ZMTHX                                             MD056340
+     C                     ENDIF                                                            MD056340
+     C*                                                                                     MD056340
+     C                     Z-ADDRESULX    ZDATE                                             MD056340
+     C                     ENDIF                                                            MD056340
+     C                     EXSR ZDATE1                                                      MD056340
+      *                                                                                     MD056340
+     C                     Z-ADDYRSAVE    ZYEAR                                             MD056340
+      *                                                                                     MD056340
+      ** Verify if error                                                                    MD056340
+      *                                                                                     MD056340
+     C           *IN99     IFEQ '1'                                                         MD056340
+     C           *LOCK     IN   LDA                                                         MD056340
+     C                     Z-ADD15        DBASE                                             MD056340
+     C                     MOVE 'ZDATE1'  DBFILE                                            MD056340
+     C                     MOVE *BLANKS   DBKEY                                             MD056340
+     C                     OUT  LDA                                                         MD056340
+     C                     EXSR *PSSR                                                       MD056340
+     C                     ENDIF                                                            MD056340
+      *                                                                                     MD056340
+     C           ZDAYNO    SUB  1         LDMON                                             MD056340
+      *                                                                                     MD056340
+     C           DNWD      IFGT LDMON                                                       MD056340
+     C                     MOVE 'Y'       EOMFLG  1                                         MD056340
+     C                     ENDIF                                                            MD056340
+      *                                                                                     MD056340
+     C                     ENDSR                                                            MD056340
+     C********************************************************************
+     C/EJECT
      C********************************************************************
      C**
      C** *PSSR subroutine for database error handling

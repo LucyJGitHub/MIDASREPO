@@ -9,13 +9,12 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CDL086             Date 04May21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*                      242842             Date 11Oct06              */
+/*       Prev Amend No. 242842             Date 11Oct06              */
 /*                      240553             Date 28Jun06              */
 /*                      CDL048             Date 26Jun06              */
 /*                      237367             Date 02Mar06              */
@@ -35,10 +34,6 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CDL086 - Portuguese FX Revaluation Extensions               */
-/*                Upgrade to FM 2.1 2021.A                           */
-/*                Upgrade with fix AR1030567.                        */
-/*         AR1030567 - Call DL0410 if CDL086 is ON (Child: AR1030568)*/
 /*       MD046248 - Finastra Rebranding                              */
 /*       242842 - Avoid DB error in CB0180.                          */
 /*                Apply fix 240553.                                  */
@@ -75,9 +70,6 @@
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
              DCL        VAR(&FREVAL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)               /*CAC002*/
-/**/                                                                                   /*AR1030567*/
-             DCL        VAR(&CDL086) TYPE(*CHAR) LEN(1) VALUE('N')                     /*AR1030567*/
-/**/                                                                                   /*AR1030567*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -241,18 +233,8 @@
              ENDDO                                                                        /*211357*/
              ELSE       CMD(DO)                                       /*CAC002*/
 /*/COPY WNCPYSRC,DLC0608001                                          */
-/**/                                                                                   /*AR1030567*/
-             CHGVAR     VAR(&PRTCD) VALUE('       ')                                   /*AR1030567*/
-             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                   /*AR1030567*/
-             CHGVAR     VAR(&PSARD) VALUE('CDL086')                                    /*AR1030567*/
-             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)               /*AR1030567*/
-             IF         COND(&PRTCD *EQ '       ') THEN(CHGVAR +
-                          VAR(&CDL086) VALUE('Y'))                                     /*AR1030567*/
-/*********** IF         COND(&CDL048 = 'Y') THEN(+
-                          CALL       PGM(DL0412) PARM(&RSEQ &RENT))  */         /*CDL048 AR1030567*/
-             IF         COND(&CDL048 *EQ 'Y' *AND &CDL086 *NE 'Y') +
-                          THEN(CALL PGM(DL0412) PARM(&RSEQ &RENT))                     /*AR1030567*/
-/**/                                                                                   /*AR1030567*/
+             IF         COND(&CDL048 = 'Y') THEN(+
+                          CALL       PGM(DL0412) PARM(&RSEQ &RENT))                       /*CDL048*/
              ELSE       CMD(DO)                                                           /*CDL048*/
              IF         COND(&CAS001 *NE 'Y') THEN(OVRDBF +
                           FILE(DLEVNPL1) TOFILE(DLEVNAL1))                                /*211357*/

@@ -12,8 +12,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0010 F*                                                               *
-      *  Last Amend No. CDL086             Date 04May21               *
-      *  Prev Amend No. AR1014698          Date 04May21               *
+      *  Last Amend No. MD056831           Date 18AUG21               *
+      *  Prev Amend No. CDL086             Date 04May21               *
+      *                 AR1014698          Date 04May21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034502           Date 25May15               *
       *                 CGL049             Date 17Feb15               *
@@ -68,6 +69,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD056831 - Cannot compile because last line                    *
+      *           "X/COPY WNCPYSRC,GL0400X001" not indented properly  *
       *  CDL086 - Portuguese FX Revaluation Extensions                *
       *           Upgrade to FM 2.1 20201.A with AR1014698.           *
       *    AR1014698 - Reconciliation issues with Midas R4 system     *
@@ -1983,4 +1986,4 @@ AFTER END OF PERIOD
 STAMP TAX POST                                                                                CER049
 TRANSFER F/C INCOME AND EXPENSE                                                               CGL049
 SPOT DATE ACCOUNT POST                                                                     AR1014698
-X/COPY WNCPYSRC,GL0400X001
+     X/COPY WNCPYSRC,GL0400X001

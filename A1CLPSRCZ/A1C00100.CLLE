@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Securities Trading Module                           */
+/*                                                                   */
+/*       A1C00100 - Store EIR for SE Book Positions                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. BA1007  *CREATE    Date 01Jun21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BA1007 - Store EIR for SE Book Positions                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra Internation+
+                          al Limited 2021')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('A1C00100  ')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        (&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT)  TYPE(*CHAR)  LEN(256)
+             DCL        (&BA1007) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        (&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             MONMSG     MSGID(CPF2817)
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+
+             SNDPGMMSG  MSG('A1C00100 - Store EIR for SE Book Position') TOMSGQ(MRUNQ)
+
+/* Access switchable features file to see if BA1007  present */
+
+             CALL       (AOSARDR0) PARM(&PRTCD '*VERIFY' 'BA1007')
+             IF         (&PRTCD *EQ ' ') (CHGVAR (&BA1007) VALUE('Y'))
+
+/* If the BA1007 feature is present */
+
+             IF         (&BA1007 *EQ 'Y') THEN(DO)
+
+/* Check for component restart */
+
+                CHGVAR     VAR(&BUSY) VALUE(' ')
+                CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+
+/* If restart, disable access paths */
+
+                IF         COND(&BUSY = 'Y') THEN(DO)
+
+/* And copy files */
+
+                   CPYF       FROMFILE(XA1BPPNPD) TOFILE(A1BPPNPD) MBROPT(*REPLACE) FMTOPT(*NONE)
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM A1BPPNPD)
+
+                   CHGVAR     VAR(&BUSY) VALUE('N')
+                   CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)
+
+                ENDDO
+
+/* Delete copy files */
+
+                DLTF       FILE(XA1BPPNPD)
+                MONMSG     MSGID(CPF0000)
+
+                CPYF       FROMFILE(A1BPPNPD) TOFILE(&TOLIB/XA1BPPNPD) MBROPT(*REPLACE) +
+                             CRTFILE(*YES) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XA1BPPNPD))
+
+                CHGVAR     VAR(&BUSY) VALUE('Y')
+                CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)
+
+/* Call A10100 which will calculate LEIR and output to report */
+                CALL       PGM(A10100)
+
+                DLTF       FILE(XA1BPPNPD)
+                MONMSG     MSGID(CPF0000)
+
+/* Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program A1C00100 ended abnormally +
+                          - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2021')
+
+             ENDPGM

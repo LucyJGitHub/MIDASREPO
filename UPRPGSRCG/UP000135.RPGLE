@@ -14,16 +14,18 @@
       *                                                               *
       *  Called By: UPC000135                                         *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058600           Date 17Aug21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK022             Date 29Jul05               *
+      *                 CPK022             Date 29Jul05               *
       *                 CUP029 *C *CREATE  Date 22Sep04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058600 - Some modules with no pgm are not reported         *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  CUP029 - Utility to cross check module and program sources   *
@@ -50,7 +52,7 @@
       *****************************************************************
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D***/COPY*ZACPYSRC,PSDS*                                                                 CPK022
      D/COPY GPCPYSRCG,PSDS                                                                    CPK022
       *
@@ -66,12 +68,12 @@
      D  ODOBNM                 1     10
      D  SrcPrefix              1      2
      D  SrcName                3     10
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
       * MAIN PROCEDURE                                                *
@@ -123,10 +125,11 @@
      C     GetGlobalSrc  BEGSR
       *
      C                   SELECT
- 
+
      C                   WHEN      SrcName = 'RPGSRCG '  OR
      C                             SrcName = 'RPGCTRG '  OR
      C                             SrcName = 'CLPSRCG '  OR
+     C                             SrcName = 'GENSRCG '  OR                                 MD058600
      C                             SrcName = 'CLPCTRG '
      C                   EVAL      SRTYPE  = 'M'
      C                   EVAL      SRFILE  = ODOBNM
@@ -160,10 +163,11 @@
      C     GetZoneSRc    BEGSR
       *
      C                   SELECT
- 
+
      C                   WHEN      SrcName = 'RPGSRCZ '  OR
      C                             SrcName = 'RPGCTRZ '  OR
      C                             SrcName = 'CLPSRCZ '  OR
+     C                             SrcName = 'GENSRCZ '  OR                                 MD058600
      C                             SrcName = 'CLPCTRZ '
      C                   EVAL      SRTYPE  = 'M'
      C                   EVAL      SRFILE  = ODOBNM
@@ -197,7 +201,7 @@
      C     GetNoLayerSrc BEGSR
       *
      C                   SELECT
- 
+
      C                   WHEN      SrcName = 'RPGSRC  '  OR
      C                             SrcName = 'RPGCTR  '  OR
      C                             SrcName = 'CLSRC   '  OR

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR574704           Date 01Jun20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058466           Date 09Aug21               *
+      *  Prev Amend No. AR574704           Date 01Jun20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056412           Date 11Aug20               *
       *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -98,6 +99,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058466 - Batch item processed before Batch header          *
+      *             Delay and check again before issuing error msg.   *
       *  AR574704 - Cannot delete item if account is invalid. Neglect *
       *             validation for action code Delete.                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -244,6 +247,7 @@
      FGLJENSL1  IF   E           K DISK    INFSR(*PSSR)                                    AR1081387
      F/COPY WNCPYSRC,GLH00742
       *
+     FMSRPRQL3  IF   E           K DISK    INFSR(*PSSR)                                     MD058466
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -619,6 +623,25 @@
      C     *IN31         IFEQ      *ON                                                     AR1092119
      C     DDBTNB        ANDEQ     *BLANKS                                                 AR1092119
      C     DDBTNB        OREQ      *ZEROS                                                  AR1092119
+      *                                                                                     MD058466
+      ** If Header record not found, delay and then try again as in a 2-node                MD058466
+      ** front end set-up the header may be processed slower than the first                 MD058466
+      ** batch item                                                                         MD058466
+      ** But before delaying, check details haven't already been written to                 MD058466
+      ** repair. If on repair no need to delay and re-check.                                MD058466
+      *                                                                                     MD058466
+     C     APFOTRANID    CHAIN     MSRPRQL3                           31                    MD058466
+     C     *IN31         IFEQ      *ON                                                      MD058466
+      *                                                                                     MD058466
+     C                   CALLB     'ZACDELAY'                                               MD058466
+     C     APFOTRANID    CHAIN     GLJENHL3                           31                    MD058466
+     C     *IN31         IFEQ      *OFF                                                     MD058466
+     C                   EVAL      HeaderFound = 'Y'                                        MD058466
+     C                   MOVE      BRBTNB        DDBTNB                                     MD058466
+     C                   GOTO      HeaderFnd                                                MD058466
+     C                   ENDIF                                                              MD058466
+      *                                                                                     MD058466
+     C                   ENDIF                                                              MD058466
      C                   MOVEL     'DDBTNB'      FldNameArr(1)                             AR1092119
      C                   MOVEL     '5016871'     MsgIdArr(1)                               AR1092119
      C                   ELSE                                                              AR1092119
@@ -627,6 +650,9 @@
      C                   EVAL      HeaderFound = 'Y'                                        MD043023
      C                   MOVE      BRBTNB        DDBTNB                                     MD056412
      C                   ENDIF                                                              MD043023
+      *                                                                                     MD058466
+     C     HeaderFnd     TAG                                                                MD058466
+      *                                                                                     MD058466
       ** Retrieve original batch item details                                                 249585
       *                                                                                       249585
      C                   EVAL      WBTNB = DDBTNB                                             249585

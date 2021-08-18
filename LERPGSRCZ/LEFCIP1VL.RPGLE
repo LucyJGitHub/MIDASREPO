@@ -1131,10 +1131,10 @@
      C                             AND DDFAMTOK <> 'N'                                      MD058307
      C                   EVAL(H)   WK_DAMT = W#FAMT * (Wk_OVPC + 100) / 100                 MD058307
      C                   IF        WK_DAMT > WK_MaxAmt                                      MD058307
-     C                   Move      'W'           DDOVPCOK                                   MD058307
+     C                   MOVE      'W'           DDOVPCOK                                   MD058307
      C                   ADD       1             WId                                        MD058307
-     C                   Movel     'DDOVPC'      WFldNmXAr(WId)                             MD058307
-     C                   Movel     'LEF0614'     WMsgIdXAr(WId)                             MD058307
+     C                   MOVEL     'DDOVPC'      WFldNmXAr(WId)                             MD058307
+     C                   MOVEL     '5049513'     WMsgIdXAr(WId)                             MD058307
      C                   ENDIF                                                              MD058307
      C                   ENDIF                                                              MD058307
       *                                                                                     MD058307

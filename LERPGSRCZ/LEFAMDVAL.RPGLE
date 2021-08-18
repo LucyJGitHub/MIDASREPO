@@ -131,11 +131,6 @@
      F                                     PREFIX(SQ)                                       AR693564
       ** Logical file for  LEVFAMDPD                                                        AR693564
       *                                                                                     AR693564
-     FFCLTYL3   IF   E           K DISK    INFSR(*PSSR)                                     MD058307
-     F                                     RENAME(FCLTYFMF:FCLTYF3)                         MD058307
-     F                                     PREFIX(FM_)                                      MD058307
-      ** Logical file for  FCLTYFM                                                          MD058307
-      *                                                                                     MD058307
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -627,14 +622,14 @@
      C                   MOVEL     S#CSSN        K#CNUM3                                    MD058307
      C                   MOVEL     S#FACT        K#FACT3                                    MD058307
      C                   MOVEL     S#FCNO        K#FCNO3                                    MD058307
-     C     FCFAC3        CHAIN     FCLTYF3                                                  MD058307
-     C                   EVAL(H)   WK_DAMT = W#AAMT + FM_FAMT                               MD058307
-     C                   EVAL(H)   WK_DAMT = WK_DAMT * (FM_OVPC + 100) / 100                MD058307
+     C     FCFAC3        CHAIN     FCLTYFLK                                                 MD058307
+     C                   EVAL(H)   WK_DAMT = W#AAMT + FC_FAMT                               MD058307
+     C                   EVAL(H)   WK_DAMT = WK_DAMT * (FC_OVPC + 100) / 100                MD058307
      C                   IF        WK_DAMT > WK_MaxAmt                                      MD058307
-     C                   Move      'W'           S#AAMTok                                   MD058307
+     C                   MOVE      'W'           S#AAMTok                                   MD058307
      C                   ADD       1             Wx                                         MD058307
-     C                   Movel     'DDOVPC'      WFldNamArr(Wx)                             MD058307
-     C                   Movel     'LEF0615'     WMsgIDArr(Wx)                              MD058307
+     C                   MOVEL     'S#AAMT'      WFldNamArr(Wx)                             MD058307
+     C                   MOVEL     '5049514'     WMsgIDArr(Wx)                              MD058307
      C                   ENDIF                                                              MD058307
      C                   ENDIF                                                              MD058307
  

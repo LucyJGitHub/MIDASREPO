@@ -607,8 +607,8 @@
      D CLE158          S              1A                                                      CLE158
      D NDayFwd         S              2S 0 INZ(0)                                             CLE158
      D @VDAYNO         S              5S 0                                                    CLE158
-     D WK_FAMT         S             14S 0                                                  MD058307
-     D WKC_FAMT        S             14S 0                                                  MD058307
+     D WK_FAMT         S             14  0                                                  MD058307
+     D WKC_FAMT        S             14  0                                                  MD058307
 
       /COPY WNCPYSRC,LELOAMV002
 

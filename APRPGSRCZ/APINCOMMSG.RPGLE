@@ -677,7 +677,6 @@
      D RPIFLn          S              4P 0                                                    CSW213
      D CU13Ln          S              4S 0                                                    CSW213
      D O_BUFFER        S          32000                                                     MD039105
-
                                                                                             MD041126
       ** MQ Parameters                                                                      MD041126
      D QMNAME          S             48A                                                    MD041126
@@ -963,15 +962,6 @@
       *                                                                                     MD041126
      C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
      C                                     HIN : OCODE : REASON )                           MD041126
-
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
 
       ** Error processing
      C     REASON        IFNE      RCNONE

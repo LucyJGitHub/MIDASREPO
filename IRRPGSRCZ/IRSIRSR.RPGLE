@@ -13,9 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049387           Date 19Jan18               *
-      *  Prev Amend No. MD047859           Date 19Sep17               *
-      *                 AR933170           Date 19Jun13               *      
+      *  Last Amend No. MD058556           Date 16Aug21               *
+      *  Prev Amend No. MD049387           Date 19Jan18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 19Jun13               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
       *                 MD054906           Date 15Jan20               *
@@ -69,11 +70,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
+      *             behavior.                                         *
+      *           - Recompile all objects affected by AR933170.       *
       *  MD049387 - Principal Change Schedule values not accepted     *
       *  MD047859 - Correct buffer conflict of AR933171 fix           *
       *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
       *             DDFOID as parameters. (Child: AR933171)           *
-      *           - Partially applied by MD047859.                    *      
+      *           - Partially applied by MD047859.                    *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
       *             Reversed MD044553                                 *
       *  MD044553 - Corrected buffer position for WIP timestamp       *

@@ -6,15 +6,16 @@
       *                                                               *
       *  Midas - Message Management Module                            *
       *                                                               *
-      *  ME001740 - Midas ME Outgoing Message Field Management        *
+      *  ME001750 - Midas ME Outgoing Message Field Management        *
       *                                                               *
       *  Function:  This program maintains the Outgoing Message Field *
       *             Management                                        *
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 256909             Date 26Jul21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034562           Date 02Jun15               *
       *                 CSW215             Date 06Apr15               *
       *                 CSW213             Date 03Jun13               *
@@ -36,6 +37,8 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  256909 - Error message "Field should not be blanks"          *
+      *         - Applied for MD-58472                                *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034562 - ACOUNTLINE and ACOUNTIBAN must be accepted for    *
@@ -804,19 +807,23 @@
      C                   EXSR      ZASNMS                                                     CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
+     C                   MOVEL     'Y'           WError1           1                          256909
      C                   DOW       NOT %EOF                                                   CSW207
                                                                                               CSW207
       * Display error message - format is blanks                                              CSW207
      C                   IF        SO50F <> *Blanks                                           CSW207
+     C                   EVAL      WError1 = 'N'                                              256909
      C                   EXSR      SRVREC4                                                    CSW207
      C                   ELSE                                                                 CSW207
-     C                   EVAL      WERROR  = 'Y'                                              CSW207
-     C                   EVAL      WTERR   = 'Y'                                              CSW207
-     C                   EXSR      SRCLR                                                      CSW207
-     C                   EVAL      ZAMSID = 'ME00163'                                         CSW207
-     C                   EVAL      ZAMSGF = 'MEMSG'                                           CSW207
-     C                   EXSR      ZASNMS                                                     CSW207
-     C                   LEAVE                                                                CSW207
+     C                   READC     RSFLRC4                                                    256909
+     C                   ITER                                                                 256909
+     C**********         EVAL      WERROR  = 'Y'                                       CSW207 256909
+     C**********         EVAL      WTERR   = 'Y'                                       CSW207 256909
+     C**********         EXSR      SRCLR                                               CSW207 256909
+     C**********         EVAL      ZAMSID = 'ME00163'                                  CSW207 256909
+     C**********         EVAL      ZAMSGF = 'MEMSG'                                    CSW207 256909
+     C**********         EXSR      ZASNMS                                              CSW207 256909
+     C**********         LEAVE                                                         CSW207 256909
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
      C                   IF        *IN55 = *ON                                                CSW207
@@ -832,6 +839,15 @@
      C                   MOVEA     '00000'       *IN(55)                                      CSW207
      C                   READC     RSFLRC4                                                    CSW207
      C                   ENDDO                                                                CSW207
+      ** Check if fields are blank                                                            256909
+     C                   IF        WError1 = 'Y'                                              256909
+     C                   EVAL      WERROR  = 'Y'                                              256909
+     C                   EVAL      WTERR   = 'Y'                                              256909
+     C                   EXSR      SRCLR                                                      256909
+     C                   EVAL      ZAMSID = 'ME00163'                                         256909
+     C                   EVAL      ZAMSGF = 'MEMSG'                                           256909
+     C                   EXSR      ZASNMS                                                     256909
+     C                   ENDIF                                                                256909
                                                                                               CSW207
      C                   IF        WTERR  = 'N'                                               CSW207
                                                                                               CSW207
@@ -1045,7 +1061,9 @@
      C                   EVAL      ERRSWC  = 0                                                CSW207
      C                   READC     RSFLRC4                                                    CSW207
      C                   DOW       NOT %EOF                                                   CSW207
+     C                   IF        SO50F <> *Blanks                                           256909
      C                   EXSR      SRVREC4                                                    CSW207
+     C                   ENDIF                                                                256909
                                                                                               CSW207
      C                   IF        *IN55 = *ON                                                CSW207
      C                   EVAL      UPDATEC = 'Y'                                              CSW207

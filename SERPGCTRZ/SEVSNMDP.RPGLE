@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 250665             Date 01Jun20               *
+      *  Last Amend No. MD033789           Date 21May15               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 250665             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
@@ -45,6 +46,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033789 - Securities with processing type 7 when amended    *
+      *             defaults the nominal decimal place field to 4     *
+      *             even if there is already an existing decimal place*
+      *             not equal to 4 which causes the nominal position  *
+      *             to be incorrect.                                  *
+      *             Fix is to default only NMDP for Insert action.    *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  250665 - Nominal Decimal Places in Securities Input.         *
       *           Allow input of NMDP for securities with processing  *
@@ -191,7 +198,9 @@
       *
       ** Validate nominal decimal places if feature CEU018 is present.
       *
-     C                   IF        CEU018 = 'Y'
+     C**********         IF        CEU018 = 'Y'                                             MD033789
+     C                   IF        CEU018 = 'Y' and                                         MD033789
+     C                             DDACTN = 'I'                                             MD033789
      C                   EXSR      SRValNMDP
      C                   ENDIF
       *
@@ -202,7 +211,9 @@
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
 
-     C                   IF        OKNMDP <> 'N'
+     C**********         IF        OKNMDP <> 'N'                                            MD033789
+     C                   IF        OKNMDP <> 'N' and                                        MD033789
+     C                             DDACTN = 'I'                                             MD033789
 
      C                   IF        CEU018 = 'Y' AND                                           250665
      C                             DDNMDP <> *BLANKS                                          250665

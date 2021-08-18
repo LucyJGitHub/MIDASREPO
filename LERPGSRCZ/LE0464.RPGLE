@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR637337           Date 13Sep11               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR756564           Date 17May11               *
       *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR637337 - Component LEC0464 failed due to dbase error 002.  *
+      *             Set decimal place to 0 if facility not in FCLTY,  *
+      *             PEFCLFL1 and TFACHISH. Apply fix AR637338.        *
+      *             (Child: AR823183)                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -86,6 +91,9 @@
       ** Midas LE Customer lending facility file
      FFCLTY     IF   E           K DISK    INFSR(*PSSR) PREFIX(X)
 
+     FTFACHISH  IF   E           K DISK    INFSR(*PSSR) RENAME(FACHISHF:TFACHI)             AR637337
+      ** Midas LE Temporary Facility History File                                           AR637337
+      *                                                                                     AR637337
       ** Dropped Participant Contribution History
      FLE0464P1  O    E             PRINTER INFDS(SPOOL1) INFSR(*PSSR)
      F                                     USROPN
@@ -477,9 +485,16 @@
      C                   EVAL      PCCY = YFCCY                                             AR756564
      C                   EXSR      AOCURR                                                   AR756564
      C                   EVAL      ZDECS = A6NBDP                                           AR756564
+     C                   ELSE                                                               AR637337
+     C     PTFACHI       CHAIN     TFACHISH                           91                    AR637337
+     C     *IN91         IFEQ      '0'                                                      AR637337
+     C                   EVAL      PCCY = FHFCCY                                            AR637337
+     C                   EXSR      AOCURR                                                   AR637337
+     C                   EVAL      ZDECS = A6NBDP                                           AR637337
      C                   ELSE                                                               AR756564
      C                   EVAL      ZDECS = 0                                                AR756564
      C                   ENDIF                                                              AR756564
+     C                   ENDIF                                                              AR637337
 
      C                   ENDSR
       *****************************************************************
@@ -569,6 +584,11 @@
      C                   KFLD                    PMFT
      C                   KFLD                    PMFN
 
+     C     PTFACHI       KLIST                                                              AR637337
+     C                   KFLD                    PTBR                                       AR637337
+     C                   KFLD                    PTFC                                       AR637337
+     C                   KFLD                    PTFT                                       AR637337
+                                                                                            AR637337
       ** Get Bank ICD
 
      C                   CALL      'AOBANKR0'

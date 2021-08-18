@@ -1,6 +1,6 @@
 /********************************************************************/
 /*STD    CLPBASE                                                    */
-/*EXI    TEXT('Midas TI Midas/TI interface cob control job (1st)')   */
+/*EXI    TEXT('Midas TI Midas/TI interface cob control job (1st)')  */
 /********************************************************************/
 /*                                                                  */
 /*       Midas/Trade Innovation Interface Module                    */
@@ -20,26 +20,28 @@
 /*                                                                  */
 /*       Calls :                                                    */
 /*                                                                  */
-/*       (c) Finastra International Limited 2001                     */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030956           Date 09Oct14              */
-/*                      MD029775B          Date 26Aug14              */
+/*       Last Amend No. MD035627           Date 14Jan16             */
+/*       Prev Amend No. MD046248           Date 27Oct17             */
+/*                      MD030956           Date 09Oct14             */
+/*                      MD029775B          Date 26Aug14             */
 /*                      MD029775           Date 19Aug14             */
-/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Bank Fusion Midas 1.4 Base --------------------------------------*/
+/* Midas Plus 1.4 Base 04 ------------------------------------------*/
+/* Midas Plus 1.4 Base ---------------------------------------------*/
 /*                      235616             Date 12Feb07             */
-/* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/* Midas Release 4.01.02 --------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ----------------------------*/
+/* Midas Release 4.01.02 -------------------------------------------*/
 /*                      211144             Date 25Oct02             */
-/* Midas Release 4 --------------- Base -----------------------------*/
-/* Midas DBA 3.05 ---------------------------------------------------*/
+/* Midas Release 4 --------------- Base ----------------------------*/
+/* Midas DBA 3.05 --------------------------------------------------*/
 /*                      CTI003 *CREATE     Date 04Sep00             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD035627 - Removed part of fix 235616. Applied fix ABE801. */
+/*       MD046248 - Finastra Rebranding                             */
 /*       MD030956 - Additional changes to BFM-TI enhancement.       */
 /*                  No longer necessary as CTI006/7 is not dependent*/
 /*                  on TI Module.                                   */
@@ -659,11 +661,11 @@
  
  
  END:
-/**/                                                                                      /*235616*/
-/* Check and update the filename of the TI Backup.  */                                    /*235616*/
-/**/                                                                                      /*235616*/
+/**********/                                                                     /*235616 MD035627*/
+/**Check*and*update*the*filename*of*the*TI*Backup.****/                          /*235616 MD035627*/
+/**********/                                                                     /*235616 MD035627*/
 /*/COPY WNCPYSRC,TIH00017                                            */
-             CALL       PGM(TIC1710B) PARM('TIBACKUPS')                                   /*235616*/
+/**********  CALL       PGM(TIC1710B) PARM('TIBACKUPS') */                       /*235616 MD035627*/
              CHGVAR     VAR(&JOBD) VALUE('          ')
  
 /* If this job has run, update the data area to show it is not */

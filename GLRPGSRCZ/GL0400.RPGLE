@@ -12,7 +12,7 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0010 F*                                                               *
-      *  Last Amend No. FIX999             Date 16AUG21               *
+      *  Last Amend No. MD056831           Date 18AUG21               *
       *  Prev Amend No. CDL086             Date 04May21               *
       *                 AR1014698          Date 04May21               *
       *                 MD046248           Date 27Oct17               *
@@ -69,7 +69,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
-      *  FIX999 - Cannot compile because last line                    *
+      *  MD056831 - Cannot compile because last line                    *
       *           "X/COPY WNCPYSRC,GL0400X001" not indented properly  *
       *  CDL086 - Portuguese FX Revaluation Extensions                *
       *           Upgrade to FM 2.1 20201.A with AR1014698.           *

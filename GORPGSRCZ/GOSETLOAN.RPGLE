@@ -82,7 +82,7 @@
      D/COPY ZACPYSRC,STD_D_SPEC
 
 
-     D/COPY WNCPYSRC,EMP100_001                                                          EMP100
+     D/COPY WNCPYSRC,EMP100_001                                                               EMP100
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
 
 
@@ -94,7 +94,7 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                MD035257
      D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD035257
-     D/COPY WNCPYSRC,EMP100_002                                                          EMP100
+     D/COPY WNCPYSRC,EMP100_002                                                               EMP100
 
 
       * ENTRY PARAMETERS
@@ -274,7 +274,7 @@
      C                   Z-ADD     CL_MDAT       T_EDAT
      C                   ENDIF                                                              MD035257
      C                   ENDIF                                                              MD035257
-      /COPY WNCPYSRC,EMP100_004                                                          EMP100
+      /COPY WNCPYSRC,EMP100_004                                                               EMP100
       * Recourse ind
      C                   MOVEL     CL_RCSI       T_RCSI
       * Customer branch

@@ -11,11 +11,13 @@
       *                                                               *
       *  (C) Copyright Finastra International Limited 2016            *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050  *Create    Date 16Jun19               *
+      *  Last Amend No. MD058598           Date 17Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058598 - Correct access to SCSARDPD                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (APR)                    *
@@ -41,7 +43,8 @@
       *
      D DAMBR         E DS                  EXTNAME(DAMBRDI)
       *
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)
+     D*SCSARD***     E DS                  EXTNAME(SCSARDPD)                                MD058598
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD058598
      D  LCDSAR       E                     EXTFLD(LCD)
       *
       *****************************************************************
@@ -58,7 +61,8 @@
      C/exec SQL
      C+ select *
      C+ into :SCSARD
-     C+ from SCSARDPD
+     C**from*SCSARDPD                                                                       MD058598
+     C+ from SCSRDJW0                                                                       MD058598
      C+ where SARN = 'CER050'
      C/end-exec
 

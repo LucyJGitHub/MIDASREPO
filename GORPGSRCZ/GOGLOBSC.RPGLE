@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056555           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046901           Date 21Jul17               *
       *                 MD023043A          Date 27Nov13               *
       *                 CGP017             Date 06Aug12               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046901 - Batch details listview is not loading in the      *
@@ -103,8 +105,14 @@
      C     PFLNAME       CASEQ     'SCSRDBTD  '  GLOB_SCSARDPD                              MD055681
      C     PFLNAME       CASEQ     'SCSRDXTD  '  GLOB_SCSARDPD                              MD055681
      C*****PFLNAME       CASEQ     'SCSAREPD  '  GLOB_SCSAREPD                              MD055681
-     C     PFLNAME       CASEQ     'SCSARIPD  '  GLOB_SCSARIPD
-     C     PFLNAME       CASEQ     'SCSARWPD  '  GLOB_SCSARWPD
+     C*****PFLNAME       CASEQ     'SCSARIPD  '  GLOB_SCSARIPD                              MD056555
+     C     PFLNAME       CASEQ     'SCSRICTD  '  GLOB_SCSARIPD                              MD056555
+     C     PFLNAME       CASEQ     'SCSRIBTD  '  GLOB_SCSARIPD                              MD056555
+     C     PFLNAME       CASEQ     'SCSRIXTD  '  GLOB_SCSARIPD                              MD056555
+     C*****PFLNAME       CASEQ     'SCSARWPD  '  GLOB_SCSARWPD                              MD056555
+     C     PFLNAME       CASEQ     'SCSRWCTD  '  GLOB_SCSARIPD                              MD056555
+     C     PFLNAME       CASEQ     'SCSRWBTD  '  GLOB_SCSARIPD                              MD056555
+     C     PFLNAME       CASEQ     'SCSRWXTD  '  GLOB_SCSARIPD                              MD056555
      C     PFLNAME       CASEQ     'SCOEAPTD  '  GLOB_SCOEAPTD                              MD046901
      C                   ENDCS
      C                   ENDIF

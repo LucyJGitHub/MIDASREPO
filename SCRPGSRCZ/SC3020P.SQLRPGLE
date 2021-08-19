@@ -1,7 +1,7 @@
      H DATEDIT(*YMD)
       *****************************************************************
-/**** *  RPGBASE                                                      *                     MD055891
-/*STD *  RPGSQLBND                                                    *                     MD055891
+/**** *  RPGBASE                                                      *                     MD056555
+/*STD *  RPGSQLBND                                                    *                     MD056555
 /*EXI *  TEXT('Midas SC Switchable f by COB compnt report')
      H/TITLE Midas SC Switchable f by COB compnt report
      F* CRTRPGPGM
@@ -24,7 +24,8 @@
      F*****************************************************************
      F*                                                                  *
       *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,12 +38,13 @@
      F********************************************************************
      F*                                                                  *
       *  MD055891 - Deliverable Data Split for COB                    *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
      F*     S01407 - SWITCHABILITY ENHANCEMENTS                          *
      F*                                                                  *
      F********************************************************************
-     FSCSARCL1  IF   E           K DISK
+     F*SCSARCL1* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - COB components
       *
      FSC3020P1  O    E             PRINTER OFLIND(*IN97)
@@ -100,6 +102,7 @@
      D P2PARM          DS
       * I : RST Description
      D  P2SARD                 1     50
+     D SCSARC        E DS                  EXTNAME(SCSRCJW0)                                MD056555
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -153,7 +156,18 @@
       * Move fields to key list
      C                   MOVEL     P1SARN        WQKA01                         Switchable Feat
       * Establish starting position
-     C     KRSA          SETLL     @SARCL1                                      *
+     C*****KRSA*         SETLL     @SARCL1                                      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare ACursor insensitive scroll cursor for                                       MD056555
+     C+ select * from SCSRCJW0                                                              MD056555
+     C+ where ACSARN = :WQKA01                                                              MD056555
+     C+ order by ACSARN, ACCOTT, ACCSEQ                                                     MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open ACursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      A3READ
      C     W0EOFA        IFNE      '0'                                          IF
@@ -238,7 +252,15 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFA        OREQ      '1'
-     C     KRSA          READE     @SARCL1                                90    *
+     C*****KRSA*         READE     @SARCL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ACursor into :SCSARC                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       90                    MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   Endif                                                              MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
      C                   MOVEL     *IN90         W0EOFA            1
       * Quit if no record read
@@ -506,6 +528,9 @@
       *================================================================
       * Exit program: Direct
       *================================================================
+     C/EXEC SQL                                                                             MD056555
+     C+ close ACursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
       * Terminate program
      C                   SETON                                        LR
       *

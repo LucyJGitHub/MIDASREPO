@@ -12,13 +12,15 @@
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. MD054346           Date 18Jul21               *
-      *  Prev Amend No. MD055682           Date 31Jul20               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD055682           Date 31Jul20               *
       *                 MD055681           Date 31Jul20               *
       *                 CUP040 *CREATE      Date 08Aug13              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054346 - Switchable Features Password Encryption           *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - New utility to remove Switchable Feature data.      *
@@ -36,13 +38,15 @@
       *
      D*FeatureData     S             20    DIM(18) CTDATA PERRCD(1)                         MD055682
      D*FeatureData     S             20    DIM(19) CTDATA PERRCD(1)                MD055682 MD054346
-     D FeatureData     S             20    DIM(17) CTDATA PERRCD(1)                         MD054346
+     D*FeatureData     S             20    DIM(17) CTDATA PERRCD(1)                MD054346 MD056555
+     D FeatureData     S             20    DIM(28) CTDATA PERRCD(1)                         MD056555
       *
      C     *ENTRY        PLIST
      C                   PARM                    PFeature
       *
      C**********         DO        18                                                       MD055682
-     C                   DO        19                                                       MD055682
+     C**********         DO        19                                              MD055682 MD056555
+     C                   DO        28                                                       MD056555
       *
      C                   EVAL      SQLString = 'delete from ' +
      C                             %TRIMR(%SUBST(FeatureData(x):1:10)) +
@@ -82,22 +86,39 @@
       * add SCSRDXTD                                                                        MD055681
       * replace SCSARTPD by SCSRTCTD                                                        MD055682
       * add SCSRTXTD                                                                        MD055682
+      * replace SCSAROPD by SCSROCTD, SCSARBTD by SCSRBCTD, SCSARCPD by SCSRCCTD,           MD056555
+      * SCSARIPD by SCSRICTD, SCSARMPD by SCSRMCTD, SCSARPPD by SCSRPCTD,                   MD056555
+      * SCSARRPD by SCSRRCTD, SCSARVPD by SCSRVCTD, SCSARWPD by SCSRWCTD                    MD056555
+      * SCSARXPD by SCSRXCTD                                                                MD056555
+      * add SCSROXTD, SCSRBXTD, SCSRCXTD, SCSRIXTD, SCSRMXTD, SCSRPXTD,                     MD056555
+      * SCSRRXTD, SCSRVXTD, SCSRWXTD, SCSRXXTD                                              MD056555
       * remove SCPASSPD, GPCSECPD                                                           MD054346
 ** FeatureData
-SCSARBPD  GBSARN
-SCSARCPD  ACSARN
+SCSRBCTD  GBSARN
+SCSRBXTD  GBSARN
+SCSRCCTD  ACSARN
+SCSRCXTD  ACSARN
 SCSRDCTD  SARN
 SCSRDXTD  SARN
-SCSARIPD  ADSARN
-SCSARMPD  AESARN
-SCSAROPD  AFSARN
-SCSARPPD  AKSARN
-SCSARRPD  AHSARN
+SCSRICTD  ADSARN
+SCSRIXTD  ADSARN
+SCSRMCTD  AESARN
+SCSRMXTD  AESARN
+SCSROCTD  AFSARN
+SCSROXTD  AFSARN
+SCSRPCTD  AKSARN
+SCSRPXTD  AKSARN
+SCSRRCTD  AHSARN
+SCSRRXTD  AHSARN
 SCSRSCTD  AXSARN
 SCSRSXTD  AXSARN
 SCSRTCTD  GUSARN
 SCSRTXTD  GUSARN
-SCSARVPD  GSSARN
-SCSARWPD  GTSARN
-SCSARXPD  DSON
-SCSARXPD  DDON
+SCSRVCTD  GSSARN
+SCSRVXTD  GSSARN
+SCSRWCTD  GTSARN
+SCSRWXTD  GTSARN
+SCSRXCTD  DSON
+SCSRXCTD  DDON
+SCSRXXTD  DSON
+SCSRXXTD  DDON

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056555           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -69,9 +71,9 @@
       * RTV : Midas SC Switchable features in system retrieval
       *
      F***SCSARIL0UF**E         K        DISK                      A    UC                     CSF002
-     FSCSARIL4  UF A E           K DISK    USROPN
-     F                                     INFDS(ID0002)
-     F                                     INFSR(*PSSR)
+     F*SCSARIL4* UF A E           K DISK    USROPN                                          MD056555
+     F**********                           INFDS(ID0002)                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       * UPD : Midas SC Switchable menu items update
       *
      FGPZONEL2  IF   E           K DISK    USROPN
@@ -111,7 +113,10 @@
       * File information data structure
       *
      D***@1DBRC****E DSSCSARIL0                                                               CSF002
-     D @1DBRC        E DS                  EXTNAME(SCSARIL4)
+     D*@1DBRC***     E DS                  EXTNAME(SCSARIL4)                                MD056555
+     D X1DBRC        E DS                  EXTNAME(SCSRIJW0)                                MD056555
+     D                                     PREFIX(@)                                        MD056555
+     D  @1DBRC                 1     64                                                     MD056555
       * UPD : Midas SC Switchable menu items update
       * Current/previous master file format fields for change control
       *
@@ -167,6 +172,7 @@
       * Avail if feature present?
      D  ZA0004                 1      1
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
+     D SCSARI        E DS                  EXTNAME(SCSRIJW0)                                MD056555
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -265,7 +271,18 @@
      C                   TESTN                   WZONE                38                    MD055681
      C                   MOVE      MIINDX        KINDX
      C                   MOVE      #2SARN        KSARN
-     C     KRST          CHAIN     SCSARIL4                           36
+     C*****KRST*         CHAIN     SCSARIL4                           36                    MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARI                                                                        MD056555
+     C+ from SCSRIJW0                                                                       MD056555
+     C+ where ADSARN = :KSARN and ADINDX = :KINDX                                           MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       36                    MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        36                    MD056555
+     C                   Endif                                                              MD056555
+                                                                                            MD056555
      C                   ENDDO
       *                                                                                       CSF002
      C                   ELSE
@@ -389,15 +406,27 @@
      C     *IN36         ANDEQ     *ON
      C                   READ      GPMTXTL3                               82
      C     2             SUBST     MIINDX:1      WZONE             2
-     C                   MOVEL     WZONE         WZONEN            3 0
-     C                   MOVEL     WZONEN        WZONEA            2
+     C**********         MOVEL     WZONE         WZONEN            3 0                      MD056555
+     C**********         MOVEL     WZONEN        WZONEA            2                        MD056555
      C                   MOVE      *OFF          *IN38
-     C     WZONE         IFEQ      WZONEA
-     C                   MOVE      *ON           *IN38
-     C                   ENDIF
+     C*****WZONE         IFEQ      WZONEA                                                   MD056555
+     C**********         MOVE      *ON           *IN38                                      MD056555
+     C**********         ENDIF                                                              MD056555
+     C                   TESTN                   WZONE                38                    MD056555
      C                   MOVE      MIINDX        KINDX
      C                   MOVE      #2SARN        KSARN
-     C     KRST          CHAIN     SCSARIL4                           36
+     C*****KRST*         CHAIN     SCSARIL4                           36                    MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARI                                                                        MD056555
+     C+ from SCSRIJW0                                                                       MD056555
+     C+ where ADSARN = :KSARN and ADINDX = :KINDX                                           MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       36                    MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        36                    MD056555
+     C                   Endif                                                              MD056555
+                                                                                            MD056555
      C                   ENDDO
       *                                                                                       CSF002
      C                   END
@@ -1031,6 +1060,7 @@
      C                   MOVEL     ADAVAL        #1AVAL                         Avail if featur
      C                   MOVEL     ADINAR        #1INAR                         Menu Item Narra
       * Hold current record image for change detection
+     C                   eval      @1DBRC = SCSARI                                          MD056555
      C                   MOVEL     @1DBRC        #1DBRC
       *================================================================
      CSR   MBEXIT        ENDSR
@@ -1072,7 +1102,17 @@
      C                   KFLD                    ADINDX
       * Check for duplicate primary key
      C********** KLCRSA    SETLL@SARIL0                  90*                                  CSF002
-     C     KLCRSA        SETLL     SCSARID0                               90    *
+     C*****KLCRSA        SETLL     SCSARID0                               90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARI                                                                        MD056555
+     C+ from SCSRIJW0                                                                       MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       90                    MD056555
+     C                   IF        SQLCODE = 0                                              MD056555
+     C                   SETON                                        90                    MD056555
+     C                   ENDIF                                                              MD056555
      C     *IN90         IFEQ      '1'
      C                   MOVEL     'CBM0009'     W0RTN             7
       * Send message 'Switchable F - Menu It EX'
@@ -1082,7 +1122,53 @@
      C                   END
       *
      C**********           WRITE@SARIL0                91  *                                  CSF002
-     C                   WRITE     SCSARID0                             91      *
+     C**********         WRITE     SCSARID0                             91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ insert into SCSRIBTD                                                                MD056555
+     C+ (                                                                                   MD056555
+     C+   ADSARN                                                                            MD056555
+     C+ , ADMGRP                                                                            MD056555
+     C+ , ADICDE                                                                            MD056555
+     C+ , ADRECI                                                                            MD056555
+     C+ , ADAVAL                                                                            MD056555
+     C+ , ADINAR                                                                            MD056555
+     C+ , ADLCD                                                                             MD056555
+     C+ , ADTYLC                                                                            MD056555
+     C+ , ADINDX                                                                            MD056555
+     C+ , ADZONE                                                                            MD056555
+     C+ , ADMODE                                                                            MD056555
+     C+ )                                                                                   MD056555
+     C+ Values                                                                              MD056555
+     C+ (                                                                                   MD056555
+     C+   :ADSARN                                                                           MD056555
+     C+ , :ADMGRP                                                                           MD056555
+     C+ , :ADICDE                                                                           MD056555
+     C+ , :ADRECI                                                                           MD056555
+     C+ , :ADAVAL                                                                           MD056555
+     C+ , :ADINAR                                                                           MD056555
+     C+ , :ADLCD                                                                            MD056555
+     C+ , :ADTYLC                                                                           MD056555
+     C+ , :ADINDX                                                                           MD056555
+     C+ , ' '                                                                               MD056555
+     C+ , 'B'                                                                               MD056555
+     C+ )                                                                                   MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ insert into SCSRIXTD                                                                MD056555
+     C+ (                                                                                   MD056555
+     C+   ADSARN                                                                            MD056555
+     C+ , ADINDX                                                                            MD056555
+     C+ , ADAVAL                                                                            MD056555
+     C+ , ADMODE                                                                            MD056555
+     C+ )                                                                                   MD056555
+     C+ Values                                                                              MD056555
+     C+ (                                                                                   MD056555
+     C+   :ADSARN                                                                           MD056555
+     C+ , :ADINDX                                                                           MD056555
+     C+ , :ADAVAL                                                                           MD056555
+     C+ , 'B'                                                                               MD056555
+     C+ )                                                                                   MD056555
+     C/END-EXEC                                                                             MD056555
       *
      C     *IN91         IFEQ      '1'
       * Write error detected
@@ -1110,7 +1196,30 @@
      C**********           KFLD           ADICDE           Menu Item Short                    CSF002
      C                   KFLD                    ADINDX
      C********** KLDLSB    CHAIN@SARIL0              9091  *                                  CSF002
-     C     KLDLSB        CHAIN     SCSARID0                           9091      *
+     C*****KLDLSB        CHAIN     SCSARID0                           9091      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARI                                                                        MD056555
+     C+ from SCSRIJW0                                                                       MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
+     C     ADMODE        IFEQ      'C'                                                      MD056555
+      * Record already deleted                                                              MD056555
+     C                   MOVEL     'USR0541'     W0RTN             7                        MD056555
+     C                   MOVEL     'USR0541'     ZAMSID                                     MD056555
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                     MD056555
+     C                   EXSR      ZASNMS                                                   MD056555
+     C                   GOTO      SBEXIT                                                   MD056555
+     C                   END                                                                MD056555
+                                                                                            MD056555
+     C                   SETOFF                                       9091                  MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   ENDIF                                                              MD056555
+     C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD056555
+     C                   SETON                                        91                    MD056555
+     C                   ENDIF                                                              MD056555
+                                                                                            MD056555
      C     *IN90         IFEQ      '1'
       * Record already deleted
      C                   MOVEL     'Y2U0009'     W0RTN             7
@@ -1132,6 +1241,7 @@
      C                   END
       *
       * Check for changed record
+     C                   eval      @1DBRC = SCSARI                                          MD056555
      C     #1DBRC        IFNE      @1DBRC                                       IF
      C                   MOVEL     'Y2U0007'     W0RTN             7
       * Send message '*Update not accepted'
@@ -1140,13 +1250,22 @@
      C                   EXSR      ZASNMS
       * Release record lock
      C********** KLDLSB    SETLL@SARIL0              9091  *                                  CSF002
-     C     KLDLSB        SETLL     SCSARID0                           9091      *
+     C*****KLDLSB        SETLL     SCSARID0                           9091      *           MD056555
      C                   GOTO      SBEXIT
      C                   END                                                    FI #1DBRC
       *................................................................
      C**********           DELET@SARIL0                91  *                                  CSF002
-     C                   DELETE    SCSARID0                             91      *
-     C     *IN91         IFEQ      '1'
+     C**********         DELETE    SCSARID0                             91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ delete SCSRIBTD                                                                     MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ delete SCSRIXTD                                                                     MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
+     C******IN91         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Delete error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   END
@@ -1174,7 +1293,30 @@
      C**********           KFLD           ADICDE           Menu Item Short                    CSF002
      C                   KFLD                    ADINDX
      C********** KLCHSC    CHAIN@SARIL0              9091  *                                  CSF002
-     C     KLCHSC        CHAIN     SCSARID0                           9091      *
+     C*****KLCHSC        CHAIN     SCSARID0                           9091      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARI                                                                        MD056555
+     C+ from SCSRIJW0                                                                       MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
+     C     ADMODE        IFEQ      'C'                                                      MD056555
+      * Record already deleted                                                              MD056555
+     C                   MOVEL     'USR0541'     W0RTN             7                        MD056555
+     C                   MOVEL     'USR0541'     ZAMSID                                     MD056555
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                     MD056555
+     C                   EXSR      ZASNMS                                                   MD056555
+     C                   GOTO      SCEXIT                                                   MD056555
+     C                   END                                                                MD056555
+                                                                                            MD056555
+     C                   SETOFF                                       9091                  MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   ENDIF                                                              MD056555
+     C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD056555
+     C                   SETON                                        91                    MD056555
+     C                   ENDIF                                                              MD056555
+                                                                                            MD056555
       *
      C     *IN90         IFEQ      '1'
       * Record not found
@@ -1193,6 +1335,7 @@
      C                   END
       *
       * Check for changed record
+     C                   eval      @1DBRC = SCSARI                                          MD056555
      C     #1DBRC        IFNE      @1DBRC                                       IF
      C                   MOVEL     'Y2U0007'     W0RTN             7
       * Send message '*Update not accepted'
@@ -1201,7 +1344,7 @@
      C                   EXSR      ZASNMS
       * Release record lock
      C**********           UNLCKSCSARIL0               91  *                                  CSF002
-     C                   UNLOCK    SCSARIL4                             91      *
+     C**********         UNLOCK    SCSARIL4                             91      *           MD056555
      C                   GOTO      SCEXIT
      C                   END                                                    FI #1DBRC
       * Store record data for null update check
@@ -1213,6 +1356,11 @@
      C                   MOVEL     #1INAR        ADINAR                         Menu Item Narra
      C                   Z-ADD     WUAKTX        ADLCD                          Last change dat
      C                   MOVEL     'A'           ADTYLC                         Type of the Las
+     C                   MOVEL     #1RECI        @ADRECI                                    MD056555
+     C                   MOVEL     #1AVAL        @ADAVAL                                    MD056555
+     C                   MOVEL     #1INAR        @ADINAR                                    MD056555
+     C                   Z-ADD     WUAKTX        @ADLCD                                     MD056555
+     C                   MOVEL     'A'           @ADTYLC                                    MD056555
       *
       * Set PGM.*Record Data Changed flag
      C     @1DBRC        IFNE      YARDCS
@@ -1221,11 +1369,22 @@
       * If changed update record otherwise release record
      C     YARDC         IFEQ      'Y'
      C**********           UPDAT@SARIL0                91  *                                  CSF002
-     C                   UPDATE    SCSARID0                             91      *
+     C**********         UPDATE    SCSARID0                             91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ update SCSRIBTD                                                                     MD056555
+     C+ set ADRECI = :ADRECI, ADAVAL = :ADAVAL, ADINAR = :ADINAR,                           MD056555
+     C+     ADLCD  = :ADLCD , ADTYLC = :ADTYLC                                              MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ update SCSRIXTD                                                                     MD056555
+     C+ set                   ADAVAL = :ADAVAL                                              MD056555
+     C+ where ADSARN = :ADSARN and ADINDX = :ADINDX                                         MD056555
+     C/END-EXEC                                                                             MD056555
      C                   ELSE
       * Release record lock
      C**********           UNLCKSCSARIL0               91  *                                  CSF002
-     C                   UNLOCK    SCSARIL4                             91      *
+     C**********         UNLOCK    SCSARIL4                             91      *           MD056555
      C                   END
      C     *IN91         IFEQ      '1'
       * Change error detected
@@ -1464,7 +1623,7 @@
      C*********************OPEN SCSARDL1                                        CSC007
      C**********         OPEN      SCSARSL1                                                 MD055681
      C**********           OPEN SCSARIL0                                                      CSF002
-     C                   OPEN      SCSARIL4
+     C**********         OPEN      SCSARIL4                                                 MD056555
      C                   OPEN      GPZONEL2
      C                   MOVEL     'N'           W0PMT             1
       *

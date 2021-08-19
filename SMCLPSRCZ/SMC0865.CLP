@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056555           Date 31Aug20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUP034             Date 24Jan07              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056555 - Deliverable Data Split for SAR group             */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library.             */
@@ -52,6 +54,7 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD056555*/
 
 /**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
              DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
@@ -68,6 +71,17 @@
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
+                                                                                        /*MD056555*/
+/* Set up file for SQL statements. */                                                   /*MD056555*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             DLTF       FILE(QTEMP/RUNSQL)                                              /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTC000001')                                          /*MD056555*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                /*MD056555*/
 
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
 /**COPY*UPCPYSRC,UPSVALCAL3*                                         */ /*  */ /*CSM003*/ /*CUP033*/
@@ -131,10 +145,10 @@ VALIDATE:                                                                       
              CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                     /*CSM003*/
              CHGVAR     VAR(&SCMPLIB) VALUE(&SBSID *TCAT 'DVLIB')                         /*CSM003*/
 
-             CHKOBJ     OBJ(&FDTALIB/SCSARPL1) OBJTYPE(*FILE)
-             MONMSG     MSGID(CPF9801) EXEC(DO)
-                CHGVAR     VAR(&FWHICHLIB) VALUE('DV ')
-             ENDDO
+/**********  CHKOBJ     OBJ(&FDTALIB/SCSARPL1) OBJTYPE(*FILE) */                        /*MD056555*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO) */                                      /*MD056555*/
+/**********     CHGVAR     VAR(&FWHICHLIB) VALUE('DV ') */                              /*MD056555*/
+/**********  ENDDO */                                                                   /*MD056555*/
 
              IF         COND(&FWHICHLIB *EQ 'DV ') THEN(DO)
 /**********     CHGVAR     VAR(&FCMPLIB) VALUE(&SBSID *TCAT 'DVLIB')                   */ /*CSM003*/
@@ -146,11 +160,57 @@ VALIDATE:                                                                       
              ENDDO
 
 /* Override files before call to update 'new' SCSARPPD. */
-             OVRDBF     FILE(SARP1) TOFILE(&FCMPLIB/SCSARPL1)
-             OVRDBF     FILE(SARP2) TOFILE(&SCMPLIB/SCSARPL1)
+/**********  OVRDBF     FILE(SARP1) TOFILE(&FCMPLIB/SCSARPL1) */                        /*MD056555*/
+/**********  OVRDBF     FILE(SARP2) TOFILE(&SCMPLIB/SCSARPL1) */                        /*MD056555*/
 
-             CALL       PGM(SM0865)
+/**********  CALL       PGM(SM0865) */                                                  /*MD056555*/
 
+/* is SDSRPXTD present in the old system? */                                            /*MD056555*/
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DMLIB')                    /*MD056555*/
+             CHKOBJ     OBJ(&FDTALIB/SCSRPXTD) OBJTYPE(*FILE)                           /*MD056555*/
+/* if no */                                                                             /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD056555*/
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                   /*MD056555*/
+                CHGVAR     VAR(&FCMPLIB) VALUE(&SBSID *TCAT 'DMLIB')                    /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &FCMPLIB +
+                        *TCAT '/SCSRPXTD a set a.akprvc = ')                            /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE('(select b.akprvc  +
+                        from '  *CAT &FDTALIB *TCAT '/SCSARPPD b where ')               /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' a.aksarn  +
+                         = b.aksarn and a.akpnam = b.akpnam)')                          /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' where exists ( +
+                         select * from ' *CAT &FDTALIB *TCAT '/SCSARPPD b ')            /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' where   +
+                         a.aksarn = b.aksarn and a.akpnam = b.akpnam)')                 /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)                 /*MD056555*/
+             GOTO       CMDLBL(END)                                                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+/* if yes */                                                                            /*MD056555*/
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DMLIB')                    /*MD056555*/
+             CHGVAR     VAR(&FCMPLIB) VALUE(&SBSID *TCAT 'DMLIB')                       /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &FCMPLIB +
+                        *TCAT '/SCSRPXTD a set a.akprvc = ')                            /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE('(select b.akprvc  +
+                        from '  *CAT &FDTALIB *TCAT '/SCSRPXTD b where ')               /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' a.aksarn  +
+                         = b.aksarn and a.akpnam = b.akpnam)')                          /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' where exists ( +
+                         select * from ' *CAT &FDTALIB *TCAT '/SCSRPXTD b ')            /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' where   +
+                         a.aksarn = b.aksarn and a.akpnam = b.akpnam)')                 /*MD056555*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056555*/
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)                 /*MD056555*/
+             GOTO       CMDLBL(END)                                                     /*MD056555*/
+                                                                                        /*MD056555*/
              DLTOVR     FILE(*ALL)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)

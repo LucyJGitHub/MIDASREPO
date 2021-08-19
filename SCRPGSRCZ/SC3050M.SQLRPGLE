@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,7 @@
       *-------------------------------------------------------------- *
       *                                                               *
       *  MD055891 - Deliverable Data Split for COB                    *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -51,9 +53,9 @@
      F                                     INFSR(*PSSR)
       * DSP: Midas SC Switchable features by report component
       *
-     FSCSARML1  IF   E           K DISK    USROPN
-     F                                     INFDS(INFDS1)
-     F                                     INFSR(*PSSR)
+     F*SCSARML1* IF   E           K DISK    USROPN                                          MD056555
+     F**********                           INFDS(INFDS1)                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       * RTV : Midas SC Switchable features - report comp retriev
       *
      F*SCSARDL1IF**E***********K        DISK                           UC      CSC007
@@ -62,9 +64,9 @@
      F**********                           INFSR(*PSSR)                                     MD055681
       * RTV : Midas SC Switchable features in system retrieval
       *
-     FSCSARML0  UF A E           K DISK    USROPN
-     F                                     INFDS(ID0002)
-     F                                     INFSR(*PSSR)
+     F*SCSARML0* UF A E           K DISK    USROPN                                          MD056555
+     F**********                           INFDS(ID0002)                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       * UPD : Midas SC Switchable features - report comp update
       *
      D* Description     : Copyright notice for inclusion in all programs
@@ -98,7 +100,10 @@
      D INFDS1        E DS                  EXTNAME(Y2I1DSP)
       * File information data structure
       *
-     D @1DBRC        E DS                  EXTNAME(SCSARML0)
+     D*@1DBRC***     E DS                  EXTNAME(SCSARML0)                                MD056555
+     D X1DBRC        E DS                  EXTNAME(SCSRMJW0)                                MD056555
+     D                                     PREFIX(@)                                        MD056555
+     D  @1DBRC                 1     35                                                     MD056555
       * UPD : Midas SC Switchable features - report comp update
       * Current/previous master file format fields for change control
       *
@@ -106,7 +111,7 @@
      D P@CMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
       *
      D*P@RCOM*** E DSFCRCOMPD                                                               MD055265
-     D P@RCOM        E DS                  EXTNAME(FCRCOCTD)                                      MD
+     D P@RCOM        E DS                  EXTNAME(FCRCOCTD)                                MD055265
       *
      D YARDCS          DS            36
      D A@CPY           DS
@@ -153,6 +158,7 @@
       * Avail if feature present?
      D  ZA0005                 1      1
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
+     D SCSARM        E DS                  EXTNAME(SCSRMJW0)                                MD056555
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -217,13 +223,36 @@
      C                   MOVEL     #2COTT        AECOTT                         Component Name
      C                   MOVEL     #2CSEQ        AECSEQ                         Component Seque
       * 82=EOF
-     C     KPOS          SETLL     @SARML1                            82        *
+     C*****KPOS*         SETLL     @SARML1                            82        *           MD056555
       * 82=EOF
      C     KRST          KLIST
      C                   KFLD                    AESARN                         Switchable Feat
       * Setup key
      C                   MOVEL     #2SARN        AESARN                         Switchable Feat
-     C  N82KRST          READE     @SARML1                              9182    *
+     C**N82KRST*         READE     @SARML1                              9182    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare ACursor insensitive scroll cursor for                                       MD056555
+     C+ select * from SCSRMJW0                                                              MD056555
+     C+ where AESARN = :#2SARN                                                              MD056555
+     C+ order by AESARN, AERNAM, AECOTT, AECSEQ                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close ACursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open ACursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ACursor into :SCSARM                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C                   SETOFF                                       82                    MD056555
+     C                   If        SQLCODE = 100                                            MD056555
+     C                   SETON                                        82                    MD056555
+     C                   Endif                                                              MD056555
      C                   ELSE
      C                   SETOFF                                       82        *
      C                   END
@@ -257,8 +286,16 @@
      C                   SETOFF                                       84        No SFLNXTCHG
       * Re-establish fields in read-ahead record
      C   27W0PMD         IFNE      'ADD'
-     C  N82              READP     @SARML1                                90    *
-     C  N82              READ      @SARML1                                90    *
+     C**N82*****         READP     @SARML1                                90    *           MD056555
+     C**N82*****         READ      @SARML1                                90    *           MD056555
+     C     *IN82         IFEQ      '0'                                                      MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch prior from ACursor into :SCSARM                                               MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ACursor into :SCSARM                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   ENDIF                                                              MD056555
      C                   END
       *
       * Setof record error indicators
@@ -345,7 +382,14 @@
      C     BB020         TAG
      C     W0PMD         IFNE      'ADD'
       * 82=EOF
-     C     KRST          READE     @SARML1                                82    *
+     C*****KRST*         READE     @SARML1                                82    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ACursor into :SCSARM                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       82                    MD056555
+     C                   If        SQLCODE = 100                                            MD056555
+     C                   SETON                                        82                    MD056555
+     C                   Endif                                                              MD056555
      C                   END
      C  N82              END
       *................................................................
@@ -1000,6 +1044,7 @@
      C                   MOVEL     AECSEQ        #1CSEQ                         Component Seque
      C                   MOVEL     AEAVAL        #1AVAL                         Avail if featur
       * Hold current record image for change detection
+     C                   eval      @1DBRC = SCSARM                                          MD056555
      C                   MOVEL     @1DBRC        #1DBRC
       *================================================================
      CSR   MBEXIT        ENDSR
@@ -1038,7 +1083,18 @@
      C                   KFLD                    AECOTT                         Component Name
      C                   KFLD                    AECSEQ                         Component Seque
       * Check for duplicate primary key
-     C     KLCRSA        SETLL     @SARML0                                90    *
+     C*****KLCRSA        SETLL     @SARML0                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARM                                                                        MD056555
+     C+ from SCSRMJW0                                                                       MD056555
+     C+ where AESARN = :AESARN and AERNAM = :AERNAM and AECOTT = :AECOTT                    MD056555
+     C+  and AECSEQ = :AECSEQ                                                               MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       90                    MD056555
+     C                   IF        SQLCODE = 0                                              MD056555
+     C                   SETON                                        90                    MD056555
+     C                   ENDIF                                                              MD056555
      C     *IN90         IFEQ      '1'
      C                   MOVEL     'CBM0011'     W0RTN             7
       * Send message 'Switchable F - Rep Com EX'
@@ -1047,9 +1103,54 @@
      C                   GOTO      SAEXIT
      C                   END
       *
-     C                   WRITE     @SARML0                              91      *
+     C**********         WRITE     @SARML0                              91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ insert into SCSRMBTD                                                                MD056555
+     C+ (                                                                                   MD056555
+     C+   AESARN                                                                            MD056555
+     C+ , AERNAM                                                                            MD056555
+     C+ , AECOTT                                                                            MD056555
+     C+ , AECSEQ                                                                            MD056555
+     C+ , AEAVAL                                                                            MD056555
+     C+ , AELCD                                                                             MD056555
+     C+ , AETYLC                                                                            MD056555
+     C+ , AEMODE                                                                            MD056555
+     C+ )                                                                                   MD056555
+     C+ Values                                                                              MD056555
+     C+ (                                                                                   MD056555
+     C+   :AESARN                                                                           MD056555
+     C+ , :AERNAM                                                                           MD056555
+     C+ , :AECOTT                                                                           MD056555
+     C+ , :AECSEQ                                                                           MD056555
+     C+ , :AEAVAL                                                                           MD056555
+     C+ , :AELCD                                                                            MD056555
+     C+ , :AETYLC                                                                           MD056555
+     C+ , 'B'                                                                               MD056555
+     C+ )                                                                                   MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ insert into SCSRMXTD                                                                MD056555
+     C+ (                                                                                   MD056555
+     C+   AESARN                                                                            MD056555
+     C+ , AERNAM                                                                            MD056555
+     C+ , AECOTT                                                                            MD056555
+     C+ , AECSEQ                                                                            MD056555
+     C+ , AEAVAL                                                                            MD056555
+     C+ , AEMODE                                                                            MD056555
+     C+ )                                                                                   MD056555
+     C+ Values                                                                              MD056555
+     C+ (                                                                                   MD056555
+     C+   :AESARN                                                                           MD056555
+     C+ , :AERNAM                                                                           MD056555
+     C+ , :AECOTT                                                                           MD056555
+     C+ , :AECSEQ                                                                           MD056555
+     C+ , :AEAVAL                                                                           MD056555
+     C+ , 'B'                                                                               MD056555
+     C+ )                                                                                   MD056555
+     C/END-EXEC                                                                             MD056555
       *
-     C     *IN91         IFEQ      '1'
+     C******IN91         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Write error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
@@ -1073,7 +1174,31 @@
      C                   KFLD                    AERNAM                         Report Name
      C                   KFLD                    AECOTT                         Component Name
      C                   KFLD                    AECSEQ                         Component Seque
-     C     KLDLSB        CHAIN     @SARML0                            9091      *
+     C*****KLDLSB        CHAIN     @SARML0                            9091      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARM                                                                        MD056555
+     C+ from SCSRMJW0                                                                       MD056555
+     C+ where AESARN = :AESARN and AERNAM = :AERNAM and AECOTT = :AECOTT                    MD056555
+     C+  and AECSEQ = AECSEQ                                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C     AEMODE        IFEQ      'C'                                                      MD056555
+      * Record already deleted                                                              MD056555
+     C                   MOVEL     'USR0541'     W0RTN             7                        MD056555
+     C                   MOVEL     'USR0541'     ZAMSID                                     MD056555
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                     MD056555
+     C                   EXSR      ZASNMS                                                   MD056555
+     C                   GOTO      SBEXIT                                                   MD056555
+     C                   END                                                                MD056555
+                                                                                            MD056555
+     C                   SETOFF                                       9091                  MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   ENDIF                                                              MD056555
+     C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD056555
+     C                   SETON                                        91                    MD056555
+     C                   ENDIF                                                              MD056555
+                                                                                            MD056555
      C     *IN90         IFEQ      '1'
       * Record already deleted
      C                   MOVEL     'Y2U0009'     W0RTN             7
@@ -1095,6 +1220,7 @@
      C                   END
       *
       * Check for changed record
+     C                   eval      @1DBRC = SCSARM                                          MD056555
      C     #1DBRC        IFNE      @1DBRC                                       IF
      C                   MOVEL     'Y2U0007'     W0RTN             7
       * Send message '*Update not accepted'
@@ -1102,12 +1228,23 @@
      C                   MOVEL     'Y2USRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
       * Release record lock
-     C     KLDLSB        SETLL     @SARML0                            9091      *
+     C*****KLDLSB        SETLL     @SARML0                            9091      *           MD056555
      C                   GOTO      SBEXIT
      C                   END                                                    FI #1DBRC
       *................................................................
-     C                   DELETE    @SARML0                              91      *
-     C     *IN91         IFEQ      '1'
+     C***********        DELETE    @SARML0                              91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ delete SCSRMBTD                                                                     MD056555
+     C+ where AESARN = :AESARN and AERNAM = :AERNAM and AECOTT = :AECOTT                    MD056555
+     C+  and AECSEQ = AECSEQ                                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ delete SCSRMXTD                                                                     MD056555
+     C+ where AESARN = :AESARN and AERNAM = :AERNAM and AECOTT = :AECOTT                    MD056555
+     C+  and AECSEQ = AECSEQ                                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C******IN91         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Delete error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   END
@@ -1133,7 +1270,31 @@
      C                   KFLD                    AERNAM                         Report Name
      C                   KFLD                    AECOTT                         Component Name
      C                   KFLD                    AECSEQ                         Component Seque
-     C     KLCHSC        CHAIN     @SARML0                            9091      *
+     C*****KLCHSC        CHAIN     @SARML0                            9091      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARM                                                                        MD056555
+     C+ from SCSRMJW0                                                                       MD056555
+     C+ where AESARN = :AESARN and AERNAM = :AERNAM and AECOTT = :AECOTT                    MD056555
+     C+  and AECSEQ = AECSEQ                                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C     AEMODE        IFEQ      'C'                                                      MD056555
+      * Record already deleted                                                              MD056555
+     C                   MOVEL     'USR0541'     W0RTN             7                        MD056555
+     C                   MOVEL     'USR0541'     ZAMSID                                     MD056555
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                     MD056555
+     C                   EXSR      ZASNMS                                                   MD056555
+     C                   GOTO      SCEXIT                                                   MD056555
+     C                   END                                                                MD056555
+                                                                                            MD056555
+     C                   SETOFF                                       9091                  MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   ENDIF                                                              MD056555
+     C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD056555
+     C                   SETON                                        91                    MD056555
+     C                   ENDIF                                                              MD056555
+                                                                                            MD056555
       *
      C     *IN90         IFEQ      '1'
       * Record not found
@@ -1152,6 +1313,7 @@
      C                   END
       *
       * Check for changed record
+     C                   eval      @1DBRC = SCSARM                                          MD056555
      C     #1DBRC        IFNE      @1DBRC                                       IF
      C                   MOVEL     'Y2U0007'     W0RTN             7
       * Send message '*Update not accepted'
@@ -1159,7 +1321,7 @@
      C                   MOVEL     'Y2USRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
       * Release record lock
-     C                   UNLOCK    SCSARML0                             91      *
+     C**********         UNLOCK    SCSARML0                             91      *           MD056555
      C                   GOTO      SCEXIT
      C                   END                                                    FI #1DBRC
       * Store record data for null update check
@@ -1168,6 +1330,9 @@
      C                   MOVEL     #1AVAL        AEAVAL                         Avail if featur
      C                   Z-ADD     WUAKTX        AELCD                          Last change dat
      C                   MOVEL     'A'           AETYLC                         Type of the Las
+     C                   MOVEL     #1AVAL        @AEAVAL                                    MD056555
+     C                   Z-ADD     WUAKTX        @AELCD                                     MD056555
+     C                   MOVEL     'A'           @AETYLC                                    MD056555
       *
       * Set PGM.*Record Data Changed flag
      C     @1DBRC        IFNE      YARDCS
@@ -1175,12 +1340,19 @@
      C                   END
       * If changed update record otherwise release record
      C     YARDC         IFEQ      'Y'
-     C                   UPDATE    @SARML0                              91      *
+     C**********         UPDATE    @SARML0                              91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ update SCSRMXTD                                                                     MD056555
+     C+ set AEAVAL = :AEAVAL                                                                MD056555
+     C+ where AESARN = :AESARN and AERNAM = :AERNAM and AECOTT = :AECOTT                    MD056555
+     C+  and AECSEQ = AECSEQ                                                                MD056555
+     C/END-EXEC                                                                             MD056555
      C                   ELSE
       * Release record lock
-     C                   UNLOCK    SCSARML0                             91      *
+     C**********         UNLOCK    SCSARML0                             91      *           MD056555
      C                   END
-     C     *IN91         IFEQ      '1'
+     C******IN91         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056655
       * Change error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
@@ -1412,10 +1584,10 @@
      C                   PARM                    ZZFQL            21            LIBRARY/FILE
       * Open files
      C                   OPEN      SC3050M#
-     C                   OPEN      SCSARML1
+     C**********         OPEN      SCSARML1                                                 MD056555
      C*********************OPEN SCSARDL1                                        CSC007
      C**********         OPEN      SCSARSL1                                                 MD055681
-     C                   OPEN      SCSARML0
+     C**********         OPEN      SCSARML0                                                 MD056555
      C                   MOVEL     'N'           W0PMT             1
       *
      C                   Z-ADD     03            ##SFPG            3 0          SFLPAG

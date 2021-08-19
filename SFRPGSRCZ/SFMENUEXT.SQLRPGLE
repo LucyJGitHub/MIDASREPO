@@ -17,14 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056555           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG13587 *CREATE   Date 20Apr07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG13587 - Zone file built over file in global layer         *
@@ -37,8 +39,8 @@
 
       *
       * SC Switchable Feature Menu Items
-     FSCSARIPD  IF   E             DISK
-     F                                     INFSR(*PSSR)
+     F*SCSARIPD* IF   E             DISK                                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       *
       * SC Switchable Feature Description
      F*SCSARDL0* IF   E           K DISK                                                    MD055681
@@ -119,6 +121,7 @@
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
       ** EXTERNAL DS FOR SAR DETAILS
+     D SCSARI        E DS                  EXTNAME(SCSRIJW0)                                MD056555
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
@@ -127,15 +130,30 @@
       ** Mainline Processing
       *---------------------------------------------------------------
       *
-     C                   READ      SCSARIPD
+     C*********          READ      SCSARIPD                                                 MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare ACursor insensitive scroll cursor for                                       MD056555
+     C+ select * from SCSRIJW0                                                              MD056555
+     C+ order by ADSARN                                                                     MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open ACursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ACursor into :SCSARI                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       *
       * Read the SARI file for the Switchable Feature until end of file
       *
-     C                   DOW       Not %EOF(SCSARIPD)
+     C**********         DOW       Not %EOF(SCSARIPD)                                       MD056555
+     C                   DOW       SQLCODE = 0                                              MD056555
       *
-     C                   IF        %EOF(SCSARIPD)
-     C                   LEAVE
-     C                   ENDIF
+     C**********         IF        %EOF(SCSARIPD)                                           MD056555
+     C**********         LEAVE                                                              MD056555
+     C**********         ENDIF                                                              MD056555
       *
       * Check whether the Switchable Feature is valid or not
       *
@@ -181,12 +199,19 @@
       *
      C                   ENDIF
       *
-     C                   READ      SCSARIPD
+     C**********         READ      SCSARIPD                                                 MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ACursor into :SCSARI                                                MD056555
+     C/END-EXEC                                                                             MD056555
       *
      C                   ENDDO
       *
      C                   CLOSE     SFMNUEXPD
 
+     C/EXEC SQL                                                                             MD056555
+     C+ close ACursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN

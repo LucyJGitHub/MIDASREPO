@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055681           Date 31Jul20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056555           Date 31Aug20              */
+/*       Prev Amend No. MD055681           Date 31Jul20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR316373           Date 03Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056555 - Deliverable Data Split for SAR group             */
 /*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
@@ -236,18 +238,48 @@
              MONMSG     MSGID(CPF7030)                                                  /*MD055681*/
              STRJRNPF   FILE(SCSRDXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD055681*/
              MONMSG     MSGID(CPF7030)                                                  /*MD055681*/
-             STRJRNPF   FILE(SCSARCPD) JRN(ICJRN) IMAGES(*BOTH)
+/**********  STRJRNPF   FILE(SCSARCPD) JRN(ICJRN) IMAGES(*BOTH) */                      /*MD056555*/
+             STRJRNPF   FILE(SCSRCCTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
              MONMSG     MSGID(CPF7030)
-             STRJRNPF   FILE(SCSARIPD) JRN(ICJRN) IMAGES(*BOTH)
+             STRJRNPF   FILE(SCSRCBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+             STRJRNPF   FILE(SCSRCXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+/**********  STRJRNPF   FILE(SCSARIPD) JRN(ICJRN) IMAGES(*BOTH) */                      /*MD056555*/
+             STRJRNPF   FILE(SCSRICTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
              MONMSG     MSGID(CPF7030)
-             STRJRNPF   FILE(SCSARMPD) JRN(ICJRN) IMAGES(*BOTH)
+             STRJRNPF   FILE(SCSRIBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+             STRJRNPF   FILE(SCSRIXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+/**********  STRJRNPF   FILE(SCSARMPD) JRN(ICJRN) IMAGES(*BOTH) */                      /*MD056555*/
+             STRJRNPF   FILE(SCSRMCTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
              MONMSG     MSGID(CPF7030)
-             STRJRNPF   FILE(SCSAROPD) JRN(ICJRN) IMAGES(*BOTH)
+             STRJRNPF   FILE(SCSRMBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+             STRJRNPF   FILE(SCSRMXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+/**********  STRJRNPF   FILE(SCSAROPD) JRN(ICJRN) IMAGES(*BOTH) */                      /*MD056555*/
+             STRJRNPF   FILE(SCSROCTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
              MONMSG     MSGID(CPF7030)
-             STRJRNPF   FILE(SCSARRPD) JRN(ICJRN) IMAGES(*BOTH)
+             STRJRNPF   FILE(SCSROBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+             STRJRNPF   FILE(SCSROXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+/**********  STRJRNPF   FILE(SCSARRPD) JRN(ICJRN) IMAGES(*BOTH) */                      /*MD056555*/
+             STRJRNPF   FILE(SCSRRCTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
              MONMSG     MSGID(CPF7030)
-             STRJRNPF   FILE(SCSARPPD) JRN(ICJRN) IMAGES(*BOTH)       /*S01430*/
+             STRJRNPF   FILE(SCSRRBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+             STRJRNPF   FILE(SCSRRXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+/**********  STRJRNPF   FILE(SCSARPPD) JRN(ICJRN) IMAGES(*BOTH) */    /*S01430*/        /*MD056555*/
+             STRJRNPF   FILE(SCSRPCTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
              MONMSG     MSGID(CPF7030)                                /*S01430*/
+             STRJRNPF   FILE(SCSRPBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
+             STRJRNPF   FILE(SCSRPXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD056555*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD056555*/
              ENDDO                                                    /*CCB009*/
 /**/
              CALL       PGM(SC3010M) PARM(&RTN)
@@ -263,19 +295,49 @@
              MONMSG     MSGID(CPF0000)                                                  /*MD055681*/
              ENDJRNPF   FILE(SCSRDXTD)                                                  /*MD055681*/
              MONMSG     MSGID(CPF0000)                                                  /*MD055681*/
-             ENDJRNPF   FILE(SCSARCPD)
+/**********  ENDJRNPF   FILE(SCSARCPD) */                                               /*MD056555*/
+             ENDJRNPF   FILE(SCSRCCTD)                                                  /*MD056555*/
              MONMSG     MSGID(CPF0000)
-             ENDJRNPF   FILE(SCSARIPD)
+             ENDJRNPF   FILE(SCSRCBTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ENDJRNPF   FILE(SCSRCXTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+/**********  ENDJRNPF   FILE(SCSARIPD) */                                               /*MD056555*/
+             ENDJRNPF   FILE(SCSRICTD)                                                  /*MD056555*/
              MONMSG     MSGID(CPF0000)
-             ENDJRNPF   FILE(SCSARMPD)
+             ENDJRNPF   FILE(SCSRIBTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ENDJRNPF   FILE(SCSRIXTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+/*********   ENDJRNPF   FILE(SCSARMPD) */                                               /*MD056555*/
+             ENDJRNPF   FILE(SCSRMCTD)                                                  /*MD056555*/
              MONMSG     MSGID(CPF0000)
-             ENDJRNPF   FILE(SCSAROPD)
+             ENDJRNPF   FILE(SCSRMBTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ENDJRNPF   FILE(SCSRMXTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+/*********   ENDJRNPF   FILE(SCSAROPD) */                                               /*MD056555*/
+             ENDJRNPF   FILE(SCSROCTD)                                                  /*MD056555*/
              MONMSG     MSGID(CPF0000)
-             ENDJRNPF   FILE(SCSARRPD)
+             ENDJRNPF   FILE(SCSROBTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ENDJRNPF   FILE(SCSROXTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+/**********  ENDJRNPF   FILE(SCSARRPD) */                                               /*MD056555*/
+             ENDJRNPF   FILE(SCSRRCTD)                                                  /*MD056555*/
              MONMSG     MSGID(CPF0000)
+             ENDJRNPF   FILE(SCSRRBTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ENDJRNPF   FILE(SCSRRXTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
                                                                       /*S01430*/
-             ENDJRNPF   FILE(SCSARPPD)                                /*S01430*/
+/**********  ENDJRNPF   FILE(SCSARPPD) */                             /*S01430*/        /*MD056555*/
+             ENDJRNPF   FILE(SCSRPCTD)                                                  /*MD056555*/
              MONMSG     MSGID(CPF0000)                                /*S01430*/
+             ENDJRNPF   FILE(SCSRPBTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ENDJRNPF   FILE(SCSRPXTD)                                                  /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
              ENDDO                                                    /*CCB009*/
                                                                       /*S01430*/
 /**/

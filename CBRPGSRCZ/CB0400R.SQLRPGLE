@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD050576           Date 26Apr18               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD050576           Date 26Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 CCB020C            Date 16May13               *
       *                 CCB020             Date 06Aug12               *
@@ -48,6 +49,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055891 - Deliverable Data Split for COB                    *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD050576 - Quote is not allowed in Text field.               *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020C - COB Restructure - Secondary COB Infrastructure     *
@@ -133,9 +135,9 @@
      F**********                           INFSR(*PSSR)                                     MD055891
       * RSQ : Midas CB Dependency relations for dep rel validn
       *
-     FSCSARCL2  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0007)
-     F                                     INFSR(*PSSR)
+     F*SCSARCL2* IF   E           K DISK    USROPN                                          MD056555
+     F**********                           INFDS(ID0007)                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       * RSQ : Midas SC Switchable f - COB components
       *
      F*CBCMPNL0* UF A E           K DISK    USROPN                                          MD055891
@@ -143,9 +145,9 @@
      F**********                           INFSR(*PSSR)                                     MD055891
       * UPD : Midas CB Components update
       *
-     FSCSARCL0  UF   E           K DISK    USROPN
-     F                                     INFDS(ID0009)
-     F                                     INFSR(*PSSR)
+     F*SCSARCL0* UF   E           K DISK    USROPN                                          MD056555
+     F**********                           INFDS(ID0009)                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       * UPD : Midas SC Switchable f - COB components
       *
      D* Description     : Copyright notice for inclusion in all programs
@@ -369,6 +371,7 @@
       * Component Sequence Number
      D  ZA0040                11     15
      D CBMDCN        E DS                  EXTNAME(CBMDCJW0)                                MD055891
+     D SCSARC        E DS                  EXTNAME(SCSRCJW0)                                MD056555
      I*@MEXCG8**                                                                            MD055891
       **Mutually Exclusive Compnt Rsq key                                                   MD055891
       **Renamed*input format fields                                                         MD055891
@@ -3709,9 +3712,24 @@
       * Move fields to key list
      C                   MOVEL     DHCOTT        WQSM01                         Component Name
      C                   MOVEL     DHCSEQ        WQSM02                         Component Seque
-     C     KRSSM         SETLL     @SARCL2                                      *
-     C     KRSSM         READE     @SARCL2                                90    *
-     C     *IN90         IFEQ      '1'
+     C*****KRSSM         SETLL     @SARCL2                                      *           MD056555
+     C*****KRSSM         READE     @SARCL2                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare C2Cursor insensitive scroll cursor for                                      MD056555
+     C+ select * from SCSRCJW0                                                              MD056555
+     C+ order by ACCOTT, ACCSEQ                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open C2Cursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from C2Cursor into :SCSARC                                               MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C******IN90         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
       * Data record not found
      C                   MOVEL     'CBM0006'     W0RTN             7
       * USER: Processing if Data record not found
@@ -3719,14 +3737,21 @@
      C                   GOTO      SMEXIT
      C                   END
       *
-     C     *IN90         DOWEQ     '0'
+     C******IN90         DOWEQ     '0'                                                      MD056555
+     C                   DOW       SQLCODE = 0                                              MD056555
       * USER: Process Data record
       * Delete all COB components with same component name and sequence n
       * Dlt    Switchable F - COB - Switchable F - COB Compnt  *
      C                   EXSR      SNDLRC
      C                   MOVEL     *BLANK        W0RTN                          *Return code
-     C     KRSSM         READE     @SARCL2                                90    *
+     C*****KRSSM         READE     @SARCL2                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from C2Cursor into :SCSARC                                               MD056555
+     C/END-EXEC                                                                             MD056555
      C                   END
+     C/EXEC SQL                                                                             MD056555
+     C+ close C2Cursor                                                                      MD056555
+     C/END-EXEC                                                                             MD056555
       * USER: Exit processing
      C                   MOVEL     *BLANK        W0RTN                          *Return code
       *================================================================
@@ -3745,9 +3770,16 @@
      C                   KFLD                    ACSARN                         Switchable Feat
      C                   KFLD                    ACCOTT                         Component Name
      C                   KFLD                    ACCSEQ                         Component Seque
-     C     KLDLSN        CHAIN     @SARCL0                            9091      *
+     C*****KLDLSN        CHAIN     @SARCL0                            9091      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ SELECT *                                                                            MD056555
+     C+ into :SCSARC                                                                        MD056555
+     C+ from SCSRCJW0                                                                       MD056555
+     C+ where ACSARN = :ACSARN and ACCOTT = :ACCOTT and ACCSEQ = ACCSEQ                     MD056555
+     C/END-EXEC                                                                             MD056555
+     C******IN90         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
       * Record already deleted
-     C     *IN90         IFEQ      '1'
      C                   MOVEL     'Y2U0009'     W0RTN             7
       * Send message '*Record no longer on file'
      C                   MOVEL     'Y2U0009'     ZAMSID
@@ -3756,7 +3788,8 @@
      C                   GOTO      SNEXIT
      C                   END
       *
-     C     *IN91         IFEQ      '1'
+     C******IN91         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Record locked
      C                   MOVEL     'Y2U0004'     W0RTN             7
       * Send message '*Database operation error'
@@ -3767,8 +3800,17 @@
      C                   END
       *
       *................................................................
-     C                   DELETE    @SARCL0                              91      *
-     C     *IN91         IFEQ      '1'
+     C**********         DELETE    @SARCL0                              91      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ delete from SCSRCBTD                                                                MD056555
+     C+ where ACSARN = :ACSARN and ACCOTT = :ACCOTT and ACCSEQ = ACCSEQ                     MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ delete from SCSRCXTD                                                                MD056555
+     C+ where ACSARN = :ACSARN and ACCOTT = :ACCOTT and ACCSEQ = ACCSEQ                     MD056555
+     C/END-EXEC                                                                             MD056555
+     C******IN91         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Delete error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   END
@@ -4457,9 +4499,9 @@
      C**********         OPEN      CBMEXCL2                                                 MD055891
      C**********         OPEN      CBDPRLL1                                                 MD055891
      C**********         OPEN      CBDPRLL2                                                 MD055891
-     C                   OPEN      SCSARCL2
+     C**********         OPEN      SCSARCL2                                                 MD056555
      C**********         OPEN      CBCMPNL0                                                 MD055891
-     C                   OPEN      SCSARCL0
+     C**********         OPEN      SCSARCL0                                                 MD056555
      C                   MOVEL     'N'           W0PMT             1
       * Select initial mode
      C     @1NROP        IFEQ      *ZERO

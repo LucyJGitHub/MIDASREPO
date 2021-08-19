@@ -26,8 +26,9 @@
       * Standard RPG Creation PAR - standard functions  *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD056040           Date 29Jun20               *
+      *  Last Amend No. MD056555           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD056040           Date 29Jun20               *
       *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -66,6 +67,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056040 - Make description protected.(Recompiled)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
@@ -145,13 +147,13 @@
      F*FCRSFXL0* UF   E           K DISK                                                    MD055265
       * UPD: Report Suffix             Update index
       *
-     FSCSARRL2  UF   E           K DISK                                         S01407
+     F*SCSARRL2* UF   E           K DISK                                         S01407     MD056555
       * UPD: Switchable Features Report Name                              S01407
       *                                                                   S01407
-     FSCSARML2  UF   E           K DISK                                         S01407
+     F*SCSARML2* UF   E           K DISK                                         S01407     MD056555
       * UPD: Switchable Features Report Component                         S01407
       *                                                                   S01407
-     FSCSAROL2  UF   E           K DISK                                         S01407
+     F*SCSAROL2* UF   E           K DISK                                         S01407     MD056555
       * UPD: Switchable Features Report Suffix                            S01407
       *                                                                   S01407
      D AENA            S             78    DIM(3) CTDATA PERRCD(1)
@@ -1659,14 +1661,22 @@
       * records from Switchable Features Report Name file                 S01407
       *                                                                   S01407
      C     AHSARN        IFNE      *BLANKS                                                     S0140
-     C     KSARR         SETLL     SCSARRL2                           8585                     S0140
-     C     KSARR         READE     SCSARRL2                               85                   S0140
-      *                                                                   S01407
-     C     *IN85         DOWEQ     '0'                                                         S0140
-     C                   DELETE    @SARRL2                                                     S0140
-     C     KSARR         READE     SCSARRL2                               85                   S0140
-     C                   END                                                                   S0140
-      *                                                                   S01407
+     C*****KSARR         SETLL     SCSARRL2                           8585            S0140 MD056555
+     C*****KSARR         READE     SCSARRL2                               85          S0140 MD056555
+      **********                                                          S01407            MD056555
+     C******IN85         DOWEQ     '0'                                                S0140 MD056555
+     C**********         DELETE    @SARRL2                                            S0140 MD056555
+     C*****KSARR         READE     SCSARRL2                               85          S0140 MD056555
+     C**********         END                                                          S0140 MD056555
+      **********                                                          S01407            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ DELETE from SCSRRBTD                                                                MD056555
+     C+ where AHRNAM = :KRNAM                                                               MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ DELETE from SCSRRXTD                                                                MD056555
+     C+ where AHRNAM = :KRNAM                                                               MD056555
+     C/END-EXEC                                                                             MD056555
      C                   END                                                                   S0140
       * USER: Processing after DBF update
       * retrieve component name - Report Components  *
@@ -1824,13 +1834,21 @@
       *                                                                   S01407
       * Delete records from Switchable Features Report Component file     S01407
       *                                                                   S01407
-     C     KSARM         SETLL     SCSARML2                           8585                     S0140
-     C     KSARM         READE     SCSARML2                               85                   S0140
-      *                                                                   S01407
-     C     *IN85         DOWEQ     '0'                                                         S0140
-     C                   DELETE    @SARML2                                                     S0140
-     C     KSARM         READE     SCSARML2                               85                   S0140
-     C                   END                                                                   S0140
+     C*****KSARM         SETLL     SCSARML2                           8585            S0140 MD056555
+     C*****KSARM         READE     SCSARML2                               85          S0140 MD056555
+      **********                                                          S01407            MD056555
+     C******IN85         DOWEQ     '0'                                                S0140 MD056555
+     C**********         DELETE    @SARML2                                            S0140 MD056555
+     C*****KSARM         READE     SCSARML2                               85          S0140 MD056555
+     C**********         END                                                          S0140 MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ DELETE from SCSRMBTD                                                                MD056555
+     C+ where AERNAM = :KRNAM and AECOTT = :KCOTT and AECSEQ = :KCSEQ                       MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ DELETE from SCSRMXTD                                                                MD056555
+     C+ where AERNAM = :KRNAM and AECOTT = :KCOTT and AECSEQ = :KCSEQ                       MD056555
+     C/END-EXEC                                                                             MD056555
       *                                                                   S01407
       * USER: Processing after DBF update
      C/COPY WNCPYSRC,FC0302RDAU
@@ -1984,13 +2002,21 @@
       *                                                                   S01407
       * Delete records from Switchable Features Report Suffix file        S01407
       *                                                                   S01407
-     C     KSARO         SETLL     SCSAROL2                           8585                     S0140
-     C     KSARO         READE     SCSAROL2                               85                   S0140
-      *                                                                   S01407
-     C     *IN85         DOWEQ     '0'                                                         S0140
-     C                   DELETE    @SAROL2                                                     S0140
-     C     KSARO         READE     SCSAROL2                               85                   S0140
-     C                   END                                                                   S0140
+     C*****KSARO         SETLL     SCSAROL2                           8585            S0140 MD056555
+     C*****KSARO         READE     SCSAROL2                               85          S0140 MD056555
+      **********                                                          S01407            MD056555
+     C******IN85         DOWEQ     '0'                                                S0140 MD056555
+     C**********         DELETE    @SAROL2                                            S0140 MD056555
+     C*****KSARO         READE     SCSAROL2                               85          S0140 MD056555
+     C**********         END                                                          S0140 MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ DELETE from SCSROBTD                                                                MD056555
+     C+ where AFOBNM = :KOBNM  and AFOBTP = :KOBTP                                          MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ DELETE from SCSROXTD                                                                MD056555
+     C+ where AFOBNM = :KOBNM  and AFOBTP = :KOBTP                                          MD056555
+     C/END-EXEC                                                                             MD056555
       *                                                                   S01407
       * USER: Processing after DBF update
       * 00/copy member XX0301MDAU - Report Suffix  *

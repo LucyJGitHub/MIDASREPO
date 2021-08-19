@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056555           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR754826           Date 13May11               *
       *                 CUP007             Date 12Apr06               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR754826 - UTMENU should check for corresponding Global      *
@@ -90,9 +92,9 @@
      F**********                           INFSR(*PSSR)                                     MD055681
       * RTV : Midas SC Switchable features description
       *
-     FSCSARPL1  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0001)
-     F                                     INFSR(*PSSR)
+     F*SCSARPL1* IF   E           K DISK    USROPN                                          MD056555
+     F**********                           INFDS(ID0001)                                    MD056555
+     F**********                           INFSR(*PSSR)                                     MD056555
       * RTV : Midas SC Switchable f - initialisation pgm
       *
      F*CSARDL0UF**E***********K        DISK                      A    UC  CSC010
@@ -204,6 +206,7 @@
      D  ZA0012                 7      9                                                           AR
       ** Assign Midas GP Global switchable features access object to constant               AR754826
      D GPAOSA          C                   CONST('GPAOSARDR0')                                    AR
+     D SCSARP        E DS                  EXTNAME(SCSRPJW0)                                MD056555
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -1524,9 +1527,24 @@
      C                   KFLD                    WQSA01                         Switchable Feat
       * Move fields to key list
      C                   MOVEL     #1SARN        WQSA01                         Switchable Feat
-     C     KRSSA         SETLL     @SARPL1                                      *
-     C     KRSSA         READE     @SARPL1                                90    *
-     C     *IN90         IFEQ      '1'
+     C*****KRSSA         SETLL     @SARPL1                                      *           MD056555
+     C*****KRSSA         READE     @SARPL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare PCursor insensitive scroll cursor for                                       MD056555
+     C+ select * from SCSRPJW0                                                              MD056555
+     C+ where AKSARN = :WQSA01                                                              MD056555
+     C+ order by AKSARN, AKPNAM                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open PCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from PCursor into :SCSARP                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C******IN90         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Data record not found
      C                   MOVEL     'CBM0056'     W0RTN             7
       * USER: Processing if Data record not found
@@ -1538,14 +1556,17 @@
      C                   GOTO      SAEXIT
      C                   END
       *
-     C     *IN90         DOWEQ     '0'
+     C******IN90         DOWEQ     '0'                                                      MD056555
       * USER: Process Data record
       * If at least one initialisation program exists for the switchable
       * feature, the program return code is normal
      C                   MOVEL     *BLANK        W0RTN                          *Return code
+     C/EXEC SQL                                                                             MD056555
+     C+ close PCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
      C                   GOTO      SAEXIT                                       *QUIT
-     C     KRSSA         READE     @SARPL1                                90    *
-     C                   END
+     C*****KRSSA         READE     @SARPL1                                90    *           MD056555
+     C**********         END                                                                MD056555
       *================================================================
      CSR   SAEXIT        ENDSR
       /EJECT
@@ -1962,9 +1983,24 @@
      C                   KFLD                    WQSD01                         Switchable Feat
       * Move fields to key list
      C                   MOVEL     #1SARN        WQSD01                         Switchable Feat
-     C     KRSSD         SETLL     @SARPL1                                      *
-     C     KRSSD         READE     @SARPL1                                90    *
-     C     *IN90         IFEQ      '1'
+     C*****KRSSD         SETLL     @SARPL1                                      *           MD056555
+     C*****KRSSD         READE     @SARPL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare XCursor insensitive scroll cursor for                                       MD056555
+     C+ select * from SCSRPJW0                                                              MD056555
+     C+ where AKSARN = :WQSD01                                                              MD056555
+     C+ order by AKSARN, AKPNAM                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open XCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from XCursor into :SCSARP                                                MD056555
+     C/END-EXEC                                                                             MD056555
+     C******IN90         IFEQ      '1'                                                      MD056555
+     C                   IF        SQLCODE <> 0                                             MD056555
       * Data record not found
      C                   MOVEL     'CBM0056'     W0RTN             7
       * USER: Processing if Data record not found
@@ -1975,7 +2011,8 @@
      C                   GOTO      SDEXIT
      C                   END
       *
-     C     *IN90         DOWEQ     '0'
+     C******IN90         DOWEQ     '0'                                                      MD056555
+     C     SQLCODE       DOWEQ     0                                                        MD056555
       * USER: Process Data record
       * Call Initialisation program when deleting a switchable feature;
       * the mode of the Initialisation program is Delete mode
@@ -2023,8 +2060,14 @@
      C                   MOVEL     *BLANK        W0RTN                          *Return code
      C                   MOVEL     '*ERROR'      W0RTN                          *Return code
      C                   END                                                    *FI
-     C     KRSSD         READE     @SARPL1                                90    *
+     C*****KRSSD         READE     @SARPL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from XCursor into :SCSARP                                                MD056555
+     C/END-EXEC                                                                             MD056555
      C                   END
+     C/EXEC SQL                                                                             MD056555
+     C+ close XCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
       *================================================================
      CSR   SDEXIT        ENDSR
       /EJECT
@@ -2330,7 +2373,7 @@
      C                   OPEN      SC3010M#
      C******               OPEN SCSARDL1                                  CSC010
      C**********         OPEN      SCSAREL1                                           CSC01 MD055681
-     C                   OPEN      SCSARPL1
+     C**********         OPEN      SCSARPL1                                                 MD056555
      C******               OPEN SCSARDL0                                  CSC010
      C**********         OPEN      SCSAREL0                                           CSC01 MD055681
      C                   MOVEL     'N'           W0PMT             1

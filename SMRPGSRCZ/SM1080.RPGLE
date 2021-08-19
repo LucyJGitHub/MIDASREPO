@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR936709           Date 19Mar12               *
+      *  Last Amend No. MD056555           Date 31Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR936709           Date 19Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR936709 - Replacement file for UPSARIPD.                    *
       *  CPK019 - Post-implementation changes.                        *
@@ -102,7 +104,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDMMIDL2  IF   E           K DISK    INFSR(*PSSR)
      FSMITEMPD  IF   E           K DISK    INFSR(*PSSR)                         by MGRP, ICDE unique
      FSMITEML0  IF   E           K DISK    INFSR(*PSSR)                         by PCMD PARA
@@ -111,9 +113,9 @@
      FSMSFCVL2  IF   E           K DISK    INFSR(*PSSR)                         by PCMD PARA
                                                                                    MGRP ICDE unique
      F***UPSARIL1**IF   E           K DISK    INFSR(*PSSR)                      by PCMD PAR AR936709
-     FSMSARIPD  IF   E           K DISK    INFSR(*PSSR)                                     AR936709
-     F                                     RENAME(SCSARID0:SARIF)                           AR936709
- 
+     F*SMSARIPD* IF   E           K DISK    INFSR(*PSSR)                           AR936709 MD056555
+     F**********                           RENAME(SCSARID0:SARIF)                  AR936709 MD056555
+
      F*SFMENUPD*O****E             DISK    INFSR(*PSSR)                                       CPK019
      F*GPMTXTPD*O****E             DISK    INFSR(*PSSR)                                       CPK019
      F*SMSFCVPD*O****E             DISK    INFSR(*PSSR)                                       CPK019
@@ -121,20 +123,20 @@
      FSFMENUPD  O    E             DISK    INFSR(*PSSR) USROPN                                CPK019
      FGPMTXTPD  O    E             DISK    INFSR(*PSSR) USROPN                                CPK019
      FSMSFCVPD  O    E             DISK    INFSR(*PSSR) USROPN                                CPK019
-     FSCSARIPD  O    E             DISK    INFSR(*PSSR) USROPN                                CPK019
- 
+     F*SCSARIPD* O    E             DISK    INFSR(*PSSR) USROP                       CPK019 MD056555
+
      FSMDPGMPD  O    E             DISK    INFSR(*PSSR)
      FSMMIGIPD  O    E             DISK    INFSR(*PSSR)                                       CPK019
      FSM1080P1  O    E             PRINTER INFSR(*PSSR)
      FSM1080P2  O    E             PRINTER INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -151,16 +153,16 @@
       ** SD Data Area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
      D  Prefix                 6      7
- 
+
      D MGRPICDE        DS
      D  MGRP                   1      4S 0
      D  MGRPA                  1      4
      D  ICDE                   5      8
- 
+
      D Counter         DS
      D  NextNumber             1      8S 0 INZ(00000001)
      D  NextNumberA            1      8
- 
+
      D MitemACList     DS
      D  AAC1                   1      1
      D  AAC2                   2      2
@@ -189,7 +191,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D @Idx            S              3S 0
      D LineCount       S              2S 0                                      for SM1080P1
@@ -206,7 +208,7 @@
      D LastPARA        S                   LIKE(PARA)                           Last PARA processed
      D NextRecFound    S              1                                         Y=next valid rec fnd
      D IgnoredCmd      S              1                                         Cmd ignored in corv
- 
+
       * Rename field with the same name in SMITEML0.
      IITEML0F
      I              MIACOB                      ACOB
@@ -220,7 +222,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -234,7 +236,7 @@
      C                   CLOSE     SFMENUPD                                                   CPK019
      C                   CLOSE     GPMTXTPD                                                   CPK019
      C                   CLOSE     SMSFCVPD                                                   CPK019
-     C                   CLOSE     SCSARIPD                                                   CPK019
+     C**********         CLOSE     SCSARIPD                                          CPK019 MD056555
      C                   ENDIF                                                                CPK019
       *
      C                   SETON                                        LR
@@ -661,7 +663,7 @@
      C                   EVAL      MIINDX  = Prefix + NextNumberA
      C                   EVAL      MISECL  = SECL
      C                   EVAL      MIMODC  = MODC
- 
+
       * Get Modules Shortname from array @ShortNames:
       * Set up array index to search from 1
      C                   EVAL      @Idx    = 1
@@ -738,19 +740,19 @@
      C     WrtSFRecs     BEGSR
       *
      C*****SARIKey       CHAIN     UPSARIL1                           29        Rec not fou AR936709
-     C     SARIKey       CHAIN     SMSARIPD                           29                    AR936709
+     C*****SARIKey       CHAIN     SMSARIPD                           29           AR936709 MD056555
       *
       **Copy*to*SCSARIPD*if*records*with*same*MGRP*and*ICDE*found*in*UPSARIL1*              AR936709
       * Copy to SCSARIPD if records with same MGRP and ICDE found in SMSARIPD.              AR936709
-     C                   DOW       *IN29   = '0'
+     C**********         DOW       *IN29   = '0'                                            MD056555
       *
-     C                   EVAL      ADINDX  = MIINDX
-     C                   EVAL      ADZONE  = *BLANK
-     C                   WRITE     SCSARID0
+     C**********         EVAL      ADINDX  = MIINDX                                         MD056555
+     C**********         EVAL      ADZONE  = *BLANK                                         MD056555
+     C**********         WRITE     SCSARID0                                                 MD056555
       *
      C*****SARIKey       READE     UPSARIL1                               29    not match   AR936709
-     C     SARIKey       READE     SMSARIPD                               29                AR936709
-     C                   ENDDO                                                  ODW *IN29 = '0'
+     C*****SARIKey       READE     SMSARIPD                               29       AR936709 MD056555
+     C**********         ENDDO                                              ODW *IN29 = '0' MD056555
       *
      C     WrtSFRecsE    ENDSR
       *
@@ -765,7 +767,7 @@
       * Calls: LoadModSName                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       * Entry parameters                                                                      CPK019
@@ -802,7 +804,7 @@
      C                   OPEN      SFMENUPD                                                   CPK019
      C                   OPEN      GPMTXTPD                                                   CPK019
      C                   OPEN      SMSFCVPD                                                   CPK019
-     C                   OPEN      SCSARIPD                                                   CPK019
+     C**********         OPEN      SCSARIPD                                          CPK019 MD056555
      C                   ENDIF                                                                CPK019
       *
      C                   ENDSR

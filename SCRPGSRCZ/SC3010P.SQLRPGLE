@@ -29,7 +29,8 @@
      F********************************************************************
      F*                                                                  *
       *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,6 +45,7 @@
      F********************************************************************
      F*                                                                  *
       *  MD055891 - Deliverable Data Split for COB                    *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF002 - Global Processing SPF changes                       *
@@ -56,26 +58,26 @@
      F*SCSARDL1* IF   E           K DISK                                                    MD055681
       * RTV : Midas SC Switchable features description
       *
-     FSCSARCL1  IF   E           K DISK
+     F*SCSARCL1* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - COB components
       *
-     FSCSAROL3  IF   E           K DISK
+     F*SCSAROL3* IF   E           K DISK                                                    MD056555
       * RSQ : Midas SC Switchable f - object name (PF)
       *
      F*SCSARIL1IF**E*          K        DISK                                                  CSF002
-     FSCSARIL4  IF   E           K DISK
+     F*SCSARIL4* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - menu items
       *
-     FSCSARRL1  IF   E           K DISK
+     F*SCSARRL1* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - report name
       *
-     FSCSARML1  IF   E           K DISK
+     F*SCSARML1* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - report components
       *
-     FSCSAROL4  IF   E           K DISK
+     F*SCSAROL4* IF   E           K DISK                                                    MD056555
       * RSQ : Midas SC Switchable f - object name (PRFT)
       *
-     FSCSARPL1  IF   E           K DISK
+     F*SCSARPL1* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - initialisation pgm
       *
      FGPMTXTL0  IF   E           K DISK
@@ -127,20 +129,36 @@
      D P@CMPN        E DS                  EXTNAME(CBCMPJW0)                                MD055891
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
+     D SCSARO        E DS                  EXTNAME(SCSROJW0)                                MD056555
+     D SCSAROW       E DS                  EXTNAME(SCSROJW0)                                MD056555
+     D  WASARN       E                     EXTFLD(AFSARN)                                   MD056555
+     D  WAOBNM       E                     EXTFLD(AFOBNM)                                   MD056555
+     D  WAOBTP       E                     EXTFLD(AFOBTP)                                   MD056555
+     D  WAOBAT       E                     EXTFLD(AFOBAT)                                   MD056555
+     D  WAAVAL       E                     EXTFLD(AFAVAL)                                   MD056555
+     D  WAOBTX       E                     EXTFLD(AFOBTX)                                   MD056555
+     D  WALCD        E                     EXTFLD(AFLCD)                                    MD056555
+     D  WATYLC       E                     EXTFLD(AFTYLC)                                   MD056555
+     D  WAMODE       E                     EXTFLD(AFMODE)                                   MD056555
+     D SCSARC        E DS                  EXTNAME(SCSRCJW0)                                MD056555
+     D SCSARI        E DS                  EXTNAME(SCSRIJW0)                                MD056555
+     D SCSARM        E DS                  EXTNAME(SCSRMJW0)                                MD056555
+     D SCSARP        E DS                  EXTNAME(SCSRPJW0)                                MD056555
+     D SCSARR        E DS                  EXTNAME(SCSRRJW0)                                MD056555
      I*
      I* Description     : Copyright notice for inclusion in all programs
      I*
       * Renamed input format fields
-     I@SAROL4
-      *  Midas - SC Switchable f - object name (PRFT)                 *
-     I              AFSARN                      WASARN
-     I              AFOBNM                      WAOBNM
-     I              AFOBTP                      WAOBTP
-     I              AFOBAT                      WAOBAT
-     I              AFAVAL                      WAAVAL
-     I              AFOBTX                      WAOBTX
-     I              AFLCD                       WALCD
-     I              AFTYLC                      WATYLC
+     I*@SAROL4**                                                                            MD056555
+      ***Midas*- SC Switchable f - object name (PRFT)                 *                     MD056555
+     I**********    AFSARN                      WASARN                                      MD056555
+     I**********    AFOBNM                      WAOBNM                                      MD056555
+     I**********    AFOBTP                      WAOBTP                                      MD056555
+     I**********    AFOBAT                      WAOBAT                                      MD056555
+     I**********    AFAVAL                      WAAVAL                                      MD056555
+     I**********    AFOBTX                      WAOBTX                                      MD056555
+     I**********    AFLCD                       WALCD                                       MD056555
+     I**********    AFTYLC                      WATYLC                                      MD056555
      I
       *
       /EJECT
@@ -304,7 +322,18 @@
       * Move fields to key list
      C                   MOVEL     $BSARN        WQKB01                         Switchable Feat
       * Establish starting position
-     C     KRSB          SETLL     @SARCL1                                      *
+     C*****KRSB*         SETLL     @SARCL1                                      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare CCursor insensitive scroll cursor for                                       MD055699
+     C+ select * from SCSRCJW0                                                              MD056555
+     C+ where ACSARN = :WQKB01                                                              MD056555
+     C+ order by ACSARN, ACCOTT, ACCSEQ                                                     MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open CCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      B3READ
      C     W0EOFB        IFNE      '0'                                          IF
@@ -389,9 +418,17 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFB        OREQ      '1'
-     C     KRSB          READE     @SARCL1                                90    *
+     C*****KRSB          READE     @SARCL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from CCursor into :SCSARC                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
-     C                   MOVEL     *IN90         W0EOFB            1
+     C**********         MOVEL     *IN90         W0EOFB            1                        MD056555
+     C                   MOVEL     '0'           W0EOFB            1                        MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   MOVEL     '1'           W0EOFB                                     MD056555
+     C                   ENDIF                                                              MD056555
       * Quit if no record read
      C     W0EOFB        IFNE      '1'                                          IF
       * Select record unless user action states otherwise
@@ -489,7 +526,18 @@
       * Move fields to key list
      C                   MOVEL     $BSARN        WQKC01                         Switchable Feat
       * Establish starting position
-     C     KRSC          SETLL     @SAROL3                                      *
+     C*****KRSC*         SETLL     @SAROL3                                      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare L3Cursor insensitive scroll cursor for                                      MD056555
+     C+ select * from SCSROJW0                                                              MD056555
+     C+ where AFSARN = :WQKC01                                                              MD056555
+     C+ order by AFSARN, AFOBNM                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open L3Cursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      C3READ
      C     W0EOFC        IFNE      '0'                                          IF
@@ -577,6 +625,14 @@
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFC        OREQ      '1'
      C*****KRSC*         READE     @SAROL3                                90    *
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from L3Cursor into :SCSARO                                               MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       90                    MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   Endif                                                              MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
      C                   MOVEL     *IN90         W0EOFC            1
       * Quit if no record read
@@ -653,7 +709,18 @@
      C                   MOVEL     $BSARN        WQKD01                         Switchable Feat
       * Establish starting position
      C********** KRSD      SETLL@SARIL1                    *                                  CSF002
-     C     KRSD          SETLL     SCSARID0
+     C*****KRSD*         SETLL     SCSARID0                                                 MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare ICursor insensitive scroll cursor for                                       MD055699
+     C+ select * from SCSRIJW0                                                              MD056555
+     C+ where ADSARN = :WQKD01                                                              MD056555
+     C+ order by ADSARN, ADINDX                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open ICursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      D3READ
      C     W0EOFD        IFNE      '0'                                          IF
@@ -742,10 +809,18 @@
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFD        OREQ      '1'
      C********** KRSD      READE@SARIL1                  90*                                  CSF002
-     C     KRSD          READE     SCSARID0                               90
+     C*****KRSD*         READE     SCSARID0                               90                MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from ICursor into :SCSARI                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
      C     ADINDX        CHAIN     GPMTXTL0                           11
       * Transfer error indicator to EOF flag
-     C                   MOVEL     *IN90         W0EOFD            1
+     C**********         MOVEL     *IN90         W0EOFD            1                        MD056555
+     C                   MOVEL     '0'           W0EOFD            1                        MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   MOVEL     '1'           W0EOFD                                     MD056555
+     C                   ENDIF                                                              MD056555
       * Quit if no record read
      C     W0EOFD        IFNE      '1'                                          IF
       * Select record unless user action states otherwise
@@ -828,6 +903,17 @@
      C                   MOVEL     $BSARN        WQKE01                         Switchable Feat
       * Establish starting position
      C*****KRSE*         SETLL     @SARRL1                                      *
+     C/EXEC SQL                                                                             MD056555
+     C+ declare RCursor insensitive scroll cursor for                                       MD055699
+     C+ select * from SCSRRJW0                                                              MD056555
+     C+ where AHSARN = :WQKE01                                                              MD056555
+     C+ order by AHSARN, AHRNAM                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open RCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      E3READ
      C     W0EOFE        IFNE      '0'                                          IF
@@ -904,9 +990,17 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFE        OREQ      '1'
-     C     KRSE          READE     @SARRL1                                90    *
+     C*****KRSE*         READE     @SARRL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from RCursor into :SCSARR                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
-     C                   MOVEL     *IN90         W0EOFE            1
+     C**********         MOVEL     *IN90         W0EOFE            1                        MD056555
+     C                   MOVEL     '0'           W0EOFE            1                        MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   MOVEL     '1'           W0EOFE                                     MD056555
+     C                   ENDIF                                                              MD056555
       * Quit if no record read
      C     W0EOFE        IFNE      '1'                                          IF
       * Select record unless user action states otherwise
@@ -968,7 +1062,18 @@
       * Move fields to key list
      C                   MOVEL     $BSARN        WQKF01                         Switchable Feat
       * Establish starting position
-     C     KRSF          SETLL     @SARML1                                      *
+     C*****KRSF*         SETLL     @SARML1                                      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare MCursor insensitive scroll cursor for                                       MD055699
+     C+ select * from SCSRMJW0                                                              MD056555
+     C+ where AESARN = :WQKF01                                                              MD056555
+     C+ order by AESARN, AERNAM, AECOTT, AECSEQ                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open MCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      F3READ
      C     W0EOFF        IFNE      '0'                                          IF
@@ -1063,9 +1168,17 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFF        OREQ      '1'
-     C     KRSF          READE     @SARML1                                90    *
+     C*****KRSF*         READE     @SARML1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from MCursor into :SCSARM                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
-     C                   MOVEL     *IN90         W0EOFF            1
+     C**********         MOVEL     *IN90         W0EOFF            1                        MD056555
+     C                   MOVEL     '0'           W0EOFF            1                        MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   MOVEL     '1'           W0EOFF                                     MD056555
+     C                   ENDIF                                                              MD056555
       * Quit if no record read
      C     W0EOFF        IFNE      '1'                                          IF
       * Select record unless user action states otherwise
@@ -1176,6 +1289,17 @@
      C                   MOVEL     $BSARN        WQKG01                         Switchable Feat
       * Establish starting position
      C*****KRSG*         SETLL     @SAROL4                                      *
+     C/EXEC SQL                                                                             MD056555
+     C+ declare L4Cursor insensitive scroll cursor for                                      MD056555
+     C+ select * from SCSROJW0                                                              MD056555
+     C+ where AFSARN = :WQKG01                                                              MD056555
+     C+ order by AFSARN, AFOBNM                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open L4Cursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      G3READ
      C     W0EOFG        IFNE      '0'                                          IF
@@ -1262,7 +1386,15 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFG        OREQ      '1'
-     C     KRSG          READE     @SAROL4                                90    *
+     C*****KRSG*         READE     @SAROL4                                90    *
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from L4Cursor into :SCSAROW                                              MD056555
+     C/END-EXEC                                                                             MD056555
+     C                   SETOFF                                       90                    MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   SETON                                        90                    MD056555
+     C                   Endif                                                              MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
      C                   MOVEL     *IN90         W0EOFG            1
       * Quit if no record read
@@ -1338,7 +1470,18 @@
       * Move fields to key list
      C                   MOVEL     $BSARN        WQKH01                         Switchable Feat
       * Establish starting position
-     C     KRSH          SETLL     @SARPL1                                      *
+     C*****KRSH*         SETLL     @SARPL1                                      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare PCursor insensitive scroll cursor for                                       MD056555
+     C+ select * from SCSRPJW0                                                              MD056555
+     C+ where AKSARN = :WQKH01                                                              MD056555
+     C+ order by AKSARN, AKPNAM                                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open PCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      H3READ
      C     W0EOFH        IFNE      '0'                                          IF
@@ -1413,9 +1556,17 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFH        OREQ      '1'
-     C     KRSH          READE     @SARPL1                                90    *
+     C*****KRSH*         READE     @SARPL1                                90    *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from PCursor into :SCSARP                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
-     C                   MOVEL     *IN90         W0EOFH            1
+     C**********         MOVEL     *IN90         W0EOFH            1                        MD056555
+     C                   MOVEL     '0'           W0EOFH            1                        MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   MOVEL     '1'           W0EOFH                                     MD056555
+     C                   ENDIF                                                              MD056555
       * Quit if no record read
      C     W0EOFH        IFNE      '1'                                          IF
       * Select record unless user action states otherwise
@@ -2477,6 +2628,27 @@
      C/EXEC SQL                                                                             MD055681
      C+ close ACursor                                                                       MD055681
      C/END-EXEC                                                                             MD055681
+     C/EXEC SQL                                                                             MD056555
+     C+ close CCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close L3Cursor                                                                      MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close L4Cursor                                                                      MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close ICursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close MCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close PCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ close RCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
       * Terminate program
      C                   SETON                                        LR
       *

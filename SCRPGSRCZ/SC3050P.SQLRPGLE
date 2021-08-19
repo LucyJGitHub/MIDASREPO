@@ -1,7 +1,7 @@
      H DATEDIT(*YMD)
       *****************************************************************
-/**** *  RPGBASE                                                      *                     MD055891
-/*STD *  RPGSQLBND                                                    *                     MD055891
+/**** *  RPGBASE                                                      *                     MD056555
+/*STD *  RPGSQLBND                                                    *                     MD056555
 /*EXI *  TEXT('Midas SC Switchable f by rep compnt report')
      H/TITLE Midas SC Switchable f by rep compnt report
      F* CRTRPGPGM
@@ -23,7 +23,8 @@
      F*****************************************************************
      F*                                                                  *
       *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,12 +37,13 @@
      F********************************************************************
      F*                                                                  *
       *  MD055891 - Deliverable Data Split for COB                    *
+      *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
      F*     S01407 - SWITCHABILITY ENHANCEMENTS                          *
      F*                                                                  *
      F********************************************************************
-     FSCSARML1  IF   E           K DISK
+     F*SCSARML1* IF   E           K DISK                                                    MD056555
       * RTV : Midas SC Switchable f - report components
       *
      FSC3050P1  O    E             PRINTER OFLIND(*IN97)
@@ -99,6 +101,7 @@
      D P2PARM          DS
       * I : RST Description
      D  P2SARD                 1     50
+     D SCSARM        E DS                  EXTNAME(SCSRMJW0)                                MD056555
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -152,7 +155,18 @@
       * Move fields to key list
      C                   MOVEL     P1SARN        WQKA01                         Switchable Feat
       * Establish starting position
-     C     KRSA          SETLL     @SARML1                                      *
+     C*****KRSA*         SETLL     @SARML1                                      *           MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ declare MCursor insensitive scroll cursor for                                       MD055699
+     C+ select * from SCSRMJW0                                                              MD056555
+     C+ where AESARN = :WQKA01                                                              MD056555
+     C+ order by AESARN, AERNAM, AECOTT, AECSEQ                                             MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
+     C/EXEC SQL                                                                             MD056555
+     C+ open MCursor                                                                        MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Read first record with user selection
      C                   EXSR      A3READ
      C     W0EOFA        IFNE      '0'                                          IF
@@ -246,9 +260,17 @@
       * Read next record
      C     W0RSL         DOUEQ     'Y'                                          DOU
      C     W0EOFA        OREQ      '1'
-     C     KRSA          READE     @SARML1                                90    *
+     C*****KRSA*         READE     @SARML1                                90    *
+     C/EXEC SQL                                                                             MD056555
+     C+ fetch next from MCursor into :SCSARM                                                MD056555
+     C/END-EXEC                                                                             MD056555
+                                                                                            MD056555
       * Transfer error indicator to EOF flag
-     C                   MOVEL     *IN90         W0EOFA            1
+     C**********         MOVEL     *IN90         W0EOFA            1                        MD056555
+     C                   MOVEL     '0'           W0EOFA            1                        MD056555
+     C                   IF        SQLCODE = 100                                            MD056555
+     C                   MOVEL     '1'           W0EOFA                                     MD056555
+     C                   ENDIF                                                              MD056555
       * Quit if no record read
      C     W0EOFA        IFNE      '1'                                          IF
       * Select record unless user action states otherwise
@@ -542,6 +564,9 @@
       *================================================================
       * Exit program: Direct
       *================================================================
+     C/EXEC SQL                                                                             MD056555
+     C+ close MCursor                                                                       MD056555
+     C/END-EXEC                                                                             MD056555
       * Terminate program
      C                   SETON                                        LR
       *

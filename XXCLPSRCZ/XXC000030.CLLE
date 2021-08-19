@@ -1,0 +1,91 @@
+/*********************************************************************/
+/**TD****CLPBASE**************************************************** */             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********GLCM030*-*FERAT Extract**************************************/             /*LUC109*/
+/*       XXC000030 - Midas XX HOR FERAT Extract                      */             /*LUC109*/
+/*                                                                   */
+/********(C)*COPYRIGHT*MKI*LIMITED*1998*******************************/             /*LUC109*/
+/*       (C) Copyright Finastra International Limited 2016           */             /*LUC109*/
+/*                                                                   */
+/*       THIS SRC MUST BE COMPILED WITH xxINTFLIB at BOTTOM of LIBL  */             /*LUC109*/
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 13Sep16              */
+/*       Prev Amend No.         *CREATE    DATE 15Dec98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                                                                   */
+/*********************************************************************/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*   Declare variables                                            */
+/**/
+/************DCL VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                 COPYRIGHT MKI LIMITED 1998')                     */                /*LUC109*/
+             DCL VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                 Copyright Finastra International Limited 2016')                    /*LUC109*/
+             DCL VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DATJOB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+
+/**/
+/*   Create Local Data Area                                       */
+/**/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area')
+             MONMSG     MSGID(CPF0000)
+
+/*                                                                   */
+/* Retrieve 'Last Acct date' (month and day) from SDGELRPP           */
+/*                                                                   */
+/************CALL*******GLCM049*PARM(&MMDD)***************************/             /*LUC109*/
+             CALL       XXC000049 PARM(&MMDD)                                       /*LUC109*/
+
+/*                                                                   */
+/* Clear working file FERATDPP for new extraction                    */
+/*                                                                   */
+             CLRPFM     FILE(FERATDPP)
+
+/*                                                                   */
+/* Dealing Module Extract                                            */
+/*                                                                   */
+/************CALL*******PGM(GLM030A)**********************************/             /*LUC109*/
+             CALL       PGM(XX00030A)                                               /*LUC109*/
+
+/*                                                                   */
+/* Customer Lending Module Extract                                   */
+/*                                                                   */
+/************CALL*******PGM(GLM030B)**********************************/             /*LUC109*/
+             CALL       PGM(XX00030B)                                               /*LUC109*/
+
+/*                                                                   */
+/* Creating file name RATxxyy (where xx=month, yy=day)               */
+/* RATxxyy - File Formatting from FERATDPP                           */
+/*                                                                   */
+             CHGVAR     VAR(&FILENAME) VALUE('RAT' *TCAT &MMDD)
+             RTVOBJD    OBJ(RAT) OBJTYPE(*FILE) RTNLIB(&LIB)
+
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RAT) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*NO)
+
+             OVRDBF     FILE(RAT) TOFILE(&LIB/&FILENAME)
+/************CALL*******PGM(GLM030D)**********************************/             /*LUC109*/
+             CALL       PGM(XX00030D)                                               /*LUC109*/
+             DLTOVR     FILE(RAT)
+
+             ENDPGM
+
+/************CHGVAR*&CPY*'(C)*COPYRIGHT*MKI*LIMITED*1998'*************/             /*LUC109*/
+             CHGVAR &CPY '(C) Copyright Finastra International Limited 2016'        /*LUC109*/

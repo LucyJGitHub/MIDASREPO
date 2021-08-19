@@ -9,9 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CDL086             Date 04May21              */
-/*       Prev Amend No. AR1014698          Date 04May21              */
-/*                      MD046248           Date 27Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -40,12 +38,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*   CDL086 - Portuguese FX Revaluation Extensions                   */
-/*            Upgrade to FM 2.1 2021.A                               */
-/*            Upgrade with fix AR1014698.                            */
-/*     AR1014698 - Reconciliation issues with Midas R4 system        */
-/*                 (Child: AR1014700). Upgrade LBM001 as part of     */
-/*                 CDL086.                                           */
 /*   MD046248 - Finastra Rebranding                                  */
 /*   193885 - Trap message CPF7301 generated when trying to remove   */
 /*            a member from an empty HISTEAA file so that the        */
@@ -93,21 +85,6 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SCCLRDLMPS                                           /*S01408*/
                                                                       /*S01408*/
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) +
-                        VALUE('       ')                              /*AR1014698*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
-                        VALUE('*VERIFY')                              /*AR1014698*/
-             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) +
-                        VALUE('CDL086')                               /*AR1014698*/
-             DCL        VAR(&SARD) TYPE(*CHAR) LEN(200)               /*AR1014698*/
-             DCL        VAR(&CDL086) TYPE(*CHAR) LEN(6) +
-                        VALUE('N')                                    /*AR1014698*/
-                                                                      /*AR1014698*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SARD)    /*AR1014698*/
-                                                                      /*AR1014698*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*AR1014698*/
-                        CHGVAR VAR(&CDL086) VALUE('Y')                /*AR1014698*/
-             ENDDO                                                    /*AR1014698*/
 /*                                                                            */
 /* CLEAR DEALING DAILY FILES                                                  */
              SNDPGMMSG  TOMSGQ(MRUNQ) MSG('Clear Dealing Daily Files')
@@ -209,16 +186,6 @@
              CLRPFM     FILE(DLCDAUPD)                                /*CCM002*/
              CLRPFM     FILE(DLOLACPD)                                /*CSW005*/
              CLRPFM     FILE(DLOLCFPD)                                /*CSW005*/
-                                                                      /*AR1014698*/
-             IF         COND(&CDL086 *EQ 'Y') THEN(DO)                /*AR1014698*/
-                        CLRPFM     FILE(DLSPKYPH)                     /*AR1014698*/
-                        CLRPFM     FILE(DLSPKYPP)                     /*AR1014698*/
-                        CLRPFM     FILE(DLSPKYPT)                     /*AR1014698*/
-                        CLRPFM     FILE(GLGESPPH)                     /*AR1014698*/
-                        CLRPFM     FILE(GLGESPPP)                     /*AR1014698*/
-                        CLRPFM     FILE(GLGESPPT)                     /*AR1014698*/
-             ENDDO                                                    /*AR1014698*/
-                                                                      /*AR1014698*/
              CLRPFM     FILE(DEFAAKPD)                                /*CDE002*/
                                                                       /*073175*/
 /*** Remove added enquiry members from interest history          ***/ /*073175*/

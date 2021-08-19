@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 CLE148             Date 23Jul12               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *

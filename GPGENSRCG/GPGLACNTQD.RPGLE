@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050190           Date 04Apr18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD050190           Date 04Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 MD022923B          Date 30Sep13               *
@@ -39,8 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD050190 - Low performance of GOCACTS components.            *
-      *           - Conditioned processing of ABC file GPACNTTD.      *            
+      *           - Conditioned processing of ABC file GPACNTTD.      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -70,7 +73,7 @@
       *  CLE025 - Credit Lines                                        *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZGLACNTL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZGLACNTQDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -93,9 +96,9 @@ O    D G_GPACNTTD    E DS                  EXTNAME(GPACNTTD) PREFIX(G1)         
      D CmdArray        S             80A   DIM(2) CTDATA PERRCD(1)                         MD020656A
      D Cmd             S             80A                                                   MD020656A
      D Len             S             15P 5                                                 MD020656A
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -179,9 +182,9 @@ O    C                   ENDIF
      C                   IF        CAP205 = 'Y'                                             MD050190
      C                   EXSR      SRDelOvr                                                MD020656A
      C                   ENDIF                                                              MD050190
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -219,7 +222,7 @@ O    C                   KFLD                    F1CCY
 O    C                   KFLD                    F1ACOD
 O    C                   KFLD                    F1ACSQ
 O    C                   KFLD                    F1BRCA
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5                                                                              MD020656
@@ -298,15 +301,15 @@ O    C                   KFLD                    F1BRCA
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -321,11 +324,11 @@ O    C                   KFLD                    F1BRCA
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
 ** CmdArray                                                                                MD020656A

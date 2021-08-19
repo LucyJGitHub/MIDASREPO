@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 AR899028           Date 25Jan12               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -35,41 +38,41 @@
       *             to Midas Plus 1.4                                 *
       *                                                               *
       *****************************************************************
- 
+
      FSMUGF11PD IF   E             DISK
       ** Template file for ACCNTBX3
      FGLACNTL3  UF A E           K DISK
       ** Midas GL Account Master Extension File
      FSMBRCCVTL1IF   E           K DISK
       ** Midas SM Branches to be converted
- 
+
      D BrConvFlag      S              1
      D Recursive       S              1
      D KBRCA           S              3
- 
+
      D                 DS
      D Z3CNUM                  1      6  0
      D Z3CNUMA                 1      6
- 
+
      C                   IF        BrConvFlag = 'Y'
      C                   EXSR      ProcBr_Conv
      C                   ELSE
      C                   EXSR      ProcBr_NoConv
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       * ProcBr_Conv - Process with Branch Conversion                  *
       *                                                               *
       *****************************************************************
      C     ProcBr_Conv   BEGSR
- 
+
      C     1             SETLL     SMUGF11D0
      C                   READ      SMUGF11D0
- 
+
      C                   DOW       NOT %EOF
      C     Z3BRCA        CHAIN     SMBRCCVTD0
      C                   IF        %FOUND
@@ -85,22 +88,22 @@
      C                   EXSR      UpdateFields
      C                   WRITE     GLACNTD0
      C                   ENDIF
- 
+
      C                   READ      SMUGF11D0
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * ProcBr_NoConv - Process Branch with No Conversion             *
       *                                                               *
       *****************************************************************
      C     ProcBr_NoConv BEGSR
- 
+
      C     1             SETLL     SMUGF11D0
      C                   READ      SMUGF11D0
- 
+
      C                   DOW       NOT %EOF
      C                   EVAL      KBRCA = Z3BRCA
      C     GLACNKY       CHAIN     GLACNTL3
@@ -111,26 +114,26 @@
      C                   EXSR      UpdateFields
      C                   WRITE     GLACNTD0
      C                   ENDIF
- 
+
      C                   READ      SMUGF11D0
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * UpdateFields - Move fields to GLACNTQD file                   *
       *                                                               *
       *****************************************************************
      C     UpdateFields  BEGSR
- 
+
      C                   EVAL      F1BRCA = KBRCA
      C                   EVAL      F1CCY  = Z3CCY
      C                   EVAL      F1ACSQ = Z3ACSQ
      C                   EVAL      F1ZINS = Z3ZINS
      C                   EVAL      F1ACOD = Z3ACOD
      C                   MOVEL     Z3CNUMA       F1CNUM
- 
+
      C                   Z-ADD     0             F1FCHD
      C                   Z-ADD     0             F1LFCD
      C                   Z-ADD     0             F1ACBL
@@ -148,7 +151,7 @@
      C                   Z-ADD     0             F1DAT7
      C                   Z-ADD     0             F1DAT8
      C                   Z-ADD     0             F1DAT9
- 
+
      C                   Z-ADD     0             F1BAV0
      C                   Z-ADD     0             F1BAV1
      C                   Z-ADD     0             F1BAV2
@@ -169,7 +172,7 @@
      C                   Z-ADD     0             F1AVA7
      C                   Z-ADD     0             F1AVA8
      C                   Z-ADD     0             F1AVA9
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -180,23 +183,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     GLACNKY       KLIST
      C                   KFLD                    Z3CNUMA
      C                   KFLD                    Z3CCY
      C                   KFLD                    Z3ACOD
      C                   KFLD                    Z3ACSQ
      C                   KFLD                    KBRCA
- 
+
      C                   EVAL      BrConvFlag = 'N'
      C     *LOVAL        SETLL     SMBRCCVTD0
      C                   READ      SMBRCCVTD0
      C                   IF        NOT %EOF
      C                   EVAL      BrConvFlag = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -209,7 +212,7 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C                   IF        Recursive = *blanks
      C                   EVAL      Recursive = 'Y'
      C                   EVAL      *INU7 = *ON
@@ -217,5 +220,5 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR

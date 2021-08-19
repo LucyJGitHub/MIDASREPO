@@ -60,7 +60,7 @@
 /*       S01117  -  MULTIBRANCHING                                  */
 /********************************************************************/
 /*********** PGM        PARM(&FREVAL)                                 /*S01117*/
-
+ 
 /* &RLEV IS A STANDARD RCF PARAMETER, IT IS NOT USED BY THIS PROGRAM */
 /*/COPY WNCPYSRC,DLC0608004                                          */
 /**********  PGM PARM(&FREVAL &RSEQ &RLEV &RENT)                               /*S01117*/ /*CAS004*/
@@ -92,7 +92,7 @@
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                    /*CAS004*/
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CAS004*/
              DCL        VAR(&CDL048) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL048*/
-
+ 
              SNDMSG     MSG('FORWARD REVALUATION')  TOMSGQ(MRUNQ)
              CHGJOB     SWS(00000000)
              IF         COND(&FREVAL = Y) THEN(CHGJOB  SWS(10000000))

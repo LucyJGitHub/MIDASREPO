@@ -10,20 +10,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. CDL086             Date 04May21              */
-/*       Prev Amend No. AR1014698          Date 04May21              */
-/*                      MD046248           Date 27Oct17              */
-/*                      MD037383           Date 25May16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD037383           Date 25May16              */
 /*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       CDL086 - Portuguese FX Revaluation Extensions               */
-/*                Upgrade to FM 2.1 2021.A with AR1014698            */
-/*                Restructure component to be 'Task Split' compliant.*/
-/*       AR1014698 - Reconciliation issues with Midas R4 system      */
-/*                  (Child: AR1014700). Upgrade LBM001 as part       */
-/*                  of CDL086.                                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
 /*                  Stamp Tax (CER049) processing.                   */
@@ -33,9 +25,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&POSTNUM &CNAM &CSEQ)
-
+ 
 /* Declare file and variables                                      */
-
+ 
              DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
@@ -43,68 +35,67 @@
              DCL        VAR(&CURN) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(257)
              DCL        VAR(&POST) TYPE(*DEC) LEN(2 0)
-/*****       DCL        VAR(&ACJND) TYPE(*CHAR) LEN(6)   *****/ /*AR1014698*/
-             DCL        VAR(&ACJND) TYPE(*CHAR) LEN(8)          /*AR1014698*/
-
+             DCL        VAR(&ACJND) TYPE(*CHAR) LEN(6)
+ 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2012')
-
+ 
 /* Global monitor message                                          */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
 /* Send message to MRUNQ                                           */
-
+ 
              SNDPGMMSG  MSG('GLC33202 - Balance Statements - ABEXAGE') +
                           TOMSGQ(MRUNQ)
-
+ 
 /* Set Job switches                                                */
-
+ 
              CHGJOB     SWS(00000000)
-
+ 
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF8351)
-
+ 
 /* Clear work file                                                 */
-
+ 
              CLRPFM     FILE(ABEXAGE)
-
+ 
 /* Determine sequence number from the task split sequence which    */
 /* has 0100x where X is task #                                     */
-
+ 
              CHGVAR     VAR(&WKSEQ) VALUE(&CSEQ)
-
+ 
              RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURN)
              IF         COND(&POSTNUM = '3' *AND &CURN = 0) THEN(DO)
              GOTO       CMDLBL(END)
              ENDDO
-
+ 
 /* Check if post is blank: COB Seq 00001,01000x,02000x             */
 /* Daily or Acruals                                                */
-
+ 
 /**********  IF         COND(&POSTNUM *EQ ' ') THEN(DO) */                              /*MD037383*/
              IF         COND((&POSTNUM *EQ ' ') *OR (&CSEQ = 00010)) THEN(DO)           /*MD037383*/
-
+ 
 /* COB 00001,01000x,02000x: Daily or Acruals:                      */
 /* Check if Sequence is 01 (daily)                                 */
-
-             IF         COND((%SST(&WKSEQ 1 2) *EQ '01') *OR (&CSEQ +
+ 
+                IF         COND((%SST(&WKSEQ 1 2) *EQ '01') *OR (&CSEQ +
                              = 00001) *OR (&CSEQ = 00010)) THEN(DO)                     /*MD037383*/
 /**********                  = 00001)) THEN(DO) */                                      /*MD037383*/
-
+ 
 /* Sequence is 00001 (daily): Call Acc bal GL daily normal day     */
-
+ 
                 OVRDBF     FILE(ABEXAGE) OVRSCOPE(*JOB) SEQONLY(*YES 100)
                 CALL       PGM(GL33202) PARM('1')
                 DLTOVR     FILE(ABEXAGE) LVL(*JOB)
                 ENDDO
-
+ 
                 ELSE       CMD(DO)
-
+ 
 /* Sequence is 00002: Acrruals Next working day is a NWD:          */
 /* Call Acc bal GL daily                                           */
-
+ 
                 OVRDBF     FILE(ABEXAGE) OVRSCOPE(*JOB) SEQONLY(*YES 100)
                 OVRDBF     FILE(GLACBTL1) TOFILE(ACBRC) OVRSCOPE(*JOB) +
                              SHARE(*YES) SEQONLY(*YES 500)
@@ -115,44 +106,39 @@
                 DLTOVR     FILE(ABEXAGE) LVL(*JOB)
                 ENDDO
              ENDDO
-
+ 
              ELSE       CMD(DO)
-
+ 
 /* Sequence is 00003,00004,00005,00006,00007:                      */
 /* Call Acc bal GL daily with the POST number 1-5                  */
-
+ 
                 OVRDBF     FILE(ABEXAGE) OVRSCOPE(*JOB) SEQONLY(*YES 100)
-             IF         COND(&POSTNUM *NE '8') THEN(DO)                               /*AR1014698*/
                 CHGVAR     VAR(&ACJND) VALUE('ACJND' *CAT &POSTNUM)
-             ENDDO       /*AR1014698*/
-             ELSE CMD(DO)                                                             /*AR1014698*/
-             CHGVAR     VAR(&ACJND) VALUE('GLGESPV0')                                 /*AR1014698*/
-             ENDDO       /*AR1014698*/
                 OVRDBF     FILE(ACJND4) TOFILE(&ACJND) OVRSCOPE(*JOB) +
                              SHARE(*YES) SEQONLY(*YES 500)
                 CALL       PGM(GL33203) PARM(&POSTNUM)
                 DLTOVR     FILE(ACJND4) LVL(*JOB)
                 DLTOVR     FILE(ABEXAGE) LVL(*JOB)
              ENDDO
-
+ 
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              COMMIT
              GOTO       CMDLBL(END)
              ENDDO
-
+ 
              GOTO       CMDLBL(END)
-
+ 
  ABNOR:
              ROLLBACK
              SNDPGMMSG  MSG('Program GLC33202 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
-
+ 
  END:
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)

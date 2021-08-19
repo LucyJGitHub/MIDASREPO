@@ -14,8 +14,9 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. MD027372           Date 06Nov19               *
-      *  Prev Amend No. MD052297           Date 14Nov19               *
+      *  Last Amend No. MD021425           Date 01Jul21               *
+      *  Prev Amend No. MD027372           Date 06Nov19               *
+      *                 MD052297           Date 14Nov19               *
       *                 MD052425           Date 22Aug19               *
       *                 MD050457           Date 06Mar19               *
       *                 MD046248           Date 05Feb18               *
@@ -70,6 +71,12 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  MD021425 - Prevent blank error message when closing a        *
+      *             Customer. Added specific error messages when      *
+      *             closing Customers. Partially applied AR856728     *
+      *             as some of the lines were already coded by 230356 *
+      *             and 227751. Also applied fix AR887297 but changed *
+      *             RETRN to GOTO PRETRN as per fix AR897319.         *
       *  MD027372 - Allow customer to be closed if the only remaining *
       *             GTEES records are expired ones.                   *
       *  MD052297 - Meaningless error message displayed when closing  *
@@ -209,6 +216,7 @@
      ISTRNG1      DS                            200                                           246639
      I                                        1 200 WUCDS1                                    246639
      I                                        6   6 WUD006                                    246639
+     I                                       42  42 WUD042                                    230356
      I                                       44  44 WUD044                                  MD052297
      I                                       45  45 WUD045                                  MD052297
      ISTRNG2      DS                            200                       063444
@@ -263,6 +271,7 @@
      I                                       48  48 WUD248                063444
      I                                       49  49 WUD249                063444
      I                                       50  50 WUD250                063444
+     I                                       51  51 WUD251                                  MD021425
       *                                                                   063444
      ISTRNG3      DS                            200                       063444
      I                                        1 200 WUCDS3                063444
@@ -293,7 +302,8 @@
       * Indicators:                                                   *   063444
       **99*-*End*of*processing*for*FACIL*******************************                063444 CPK014
       * 89 - End of processing for LEFEEDL1                           *                     MD050457
-      * 98 - End of processing for FCLTY                              *   063444
+      **98*-*End*of*processing*for*FCLTY*******************************              063444 MD021425
+      * 98 - End of processing for ACCNT                              *                     MD021425
       * 97 - End of processing for ACCNT                              *   063444
       * 96 - End of processing for LEREF                              *   063444
       * 95 - End of processing for CUSDL                              *   063444
@@ -353,6 +363,27 @@
      C                     RETRN                                          077335
      C                     END                                            077335
      C                     END                                            077335
+      *                                                                                     MD021425
+      ** If Quit is equal to 'L', call SD0341U with the same                                MD021425
+      ** value, set on LR and return.                                                       MD021425
+      ** Because when the program runs during the close of business                         MD021425
+      ** the value of QUIT is 'Y' and LR is not set ON, this causes                         MD021425
+      ** SDC0013 to fall over while ending journalling.                                     MD021425
+      *                                                                                     MD021425
+     C           QUIT      IFEQ 'L'                                                         MD021425
+     C           BGFDTR    IFEQ 'Y'                                                         MD021425
+      *                                                                                     MD021425
+     C                     CALL 'SD0341U'                                                   MD021425
+     C                     PARM PCNUM     WQ0001  6                                         MD021425
+     C           W0RTN     PARM W0RTN     WQ0002  7                                         MD021425
+     C           WUCDS2    PARM *BLANK    WQ0003200                                         MD021425
+     C           WUCDS3    PARM *BLANK    WQ0004200                                         MD021425
+     C                     PARM QUIT      WQ0005  1                                         MD021425
+      *                                                                                     MD021425
+     C                     SETON                         LR                                 MD021425
+     C                     RETRN                                                            MD021425
+     C                     ENDIF                                                            MD021425
+     C                     ENDIF                                                            MD021425
       *                                                                                     MD052297
       ** Access SCSARDPD to check if CLE004 is installed                                    MD052297
       *                                                                                     MD052297
@@ -974,6 +1005,7 @@
      C           PACTN     IFEQ 'C'                                       CSD007
      C           ATYP      ANDEQ'R'                                       CSD007
      C           CSD023    ANDEQ'N'                                       CSD023
+     C           ACST      ANDNE'C'                                                         MD021425
      C           PACTN     OREQ 'C'                                       CSD023
      C           ATYP      ANDEQ'R'                                       CSD023
      C           LDBL      ANDNE0                                         CSD023
@@ -989,7 +1021,31 @@
      C**********           RETRN                                                     077335 AR897319
      C                     GOTO PRETRN                                                      AR897319
      C                     END                                            077335
+     C                     GOTO ESC99                                                       MD021425
      C                     ENDIF                                          CSD007
+      *                                                                                     MD021425
+     C           PACTN     IFEQ 'C'                                                         MD021425
+     C           ATYP      ANDNE'R'                                                         MD021425
+     C           ACST      ANDEQ' '                                                         MD021425
+     C           PACTN     ORNE 'C'                                                         MD021425
+     C                     MOVEL'REJECT'  W0RTN                                             MD021425
+     C                     MOVE 'F'       WUD232                                            MD021425
+     C           QUIT      IFEQ 'Y'                                                         MD021425
+     C                     GOTO PRETRN                                                      MD021425
+     C                     ENDIF                                                            MD021425
+     C                     GOTO ESC99                                                       MD021425
+     C                     ENDIF                                                            MD021425
+      *                                                                                     MD021425
+     C           PACTN     IFEQ 'C'                                                         MD021425
+     C           LDBL      ANDNE0                                                           MD021425
+     C           PACTN     ORNE 'C'                                                         MD021425
+     C                     MOVEL'REJECT'  W0RTN                                             MD021425
+     C                     MOVE 'F'       WUD233                                            MD021425
+     C           QUIT      IFEQ 'Y'                                                         MD021425
+     C                     GOTO PRETRN                                                      MD021425
+     C                     ENDIF                                                            MD021425
+     C                     GOTO ESC99                                                       MD021425
+     C                     ENDIF                                                            MD021425
       *                                                                   CSD023
       ** If the Retail account exists, balances are 0 and not closed,     CSD023
       ** check for outstanding transations                                CSD023
@@ -1089,6 +1145,8 @@
       *                                                                   077335
      C                     MOVE WUD201    SAVFLD  1                       077335
      C                     MOVE WUD211    SVFLD2  1                                         MD052297
+     C                     MOVE WUD233    SVFLD3  1                                         MD021425
+     C                     MOVE WUD232    SVFLD4  1                                         MD021425
      C                     MOVELW0RTN     SAVRTN  7                       143481
       *                                                                   077335
       ** Check references in the securities files by calling SD0340U.     077335
@@ -1122,11 +1180,42 @@
       *                                                                   077335
      C                     END                                            077335
       *                                                                   077335
+     C           WQ0002    IFNE 'REJECT'                                                    MD021425
+      *                                                                                     MD021425
+      ** Check references in the Fund Transfer files by                                     MD021425
+      ** calling SD0341U.                                                                   MD021425
+      *                                                                                     MD021425
+     C           BGFDTR    IFEQ 'Y'                                                         MD021425
+      *                                                                                     MD021425
+     C                     CALL 'SD0341U'                                                   MD021425
+     C                     PARM PCNUM     WQ0001  6                                         MD021425
+     C           W0RTN     PARM W0RTN     WQ0002  7                                         MD021425
+     C           WUCDS2    PARM *BLANK    WQ0003200                                         MD021425
+     C           WUCDS3    PARM *BLANK    WQ0004200                                         MD021425
+     C                     PARM QUIT      WQ0005  1                                         MD021425
+      *                                                                                     MD021425
+      ** If the return code is not blank and the program is running                         MD021425
+      ** in close of business, return to the calling program.                               MD021425
+      *                                                                                     MD021425
+     C           W0RTN     IFEQ 'REJECT'                                                    MD021425
+     C           QUIT      IFEQ 'Y'                                                         MD021425
+     C                     GOTO PRETRN                                                      MD021425
+     C                     ENDIF                                                            MD021425
+     C                     ENDIF                                                            MD021425
+      *                                                                                     MD021425
+     C                     ENDIF                                                            MD021425
+      *                                                                                     MD021425
+     C                     ENDIF                                                            MD021425
+      *                                                                                     MD021425
       ***Move*the*'saved*value'*of*WUD201*back*into*WUD201.******* 077335 143481
-      ** Move back the 'saved values' of WUD201 and W0RTN.                143481
+      ***Move*back*the*'saved*values'*of*WUD201*and*W0RTN.*************              143481 MD021425
+      ** Move back the 'saved values' of WUD201, WUD211, WUD233                             MD021425
+      ** and W0RTN.                                                                         MD021425
       *                                                                   077335
      C                     MOVE SAVFLD    WUD201                          077335
      C                     MOVE SVFLD2    WUD211                                            MD052297
+     C                     MOVE SVFLD3    WUD233                                            MD021425
+     C                     MOVE SVFLD4    WUD232                                            MD021425
       *                                                                   143481
      C           SAVRTN    IFNE *BLANKS                                   143481
      C                     MOVELSAVRTN    W0RTN                           143481
@@ -1440,6 +1529,8 @@
       *                                                                   099934
       * Also check issuer customer number on DEALSDC                      099934
       *                                                                   099934
+     C           PACTN     IFNE 'C'                                                         MD021425
+      *                                                                                     MD021425
      C           NCNUM     SETLLDEALDCL1             9393                 099934
      C  N93      NCNUM     READEDEALDCL1                 93               099934
       *                                                                   099934
@@ -1455,6 +1546,8 @@
       *                                                                   099934
      C                     ENDIF                                          099934
       *                                                                   099934
+     C                     ENDIF                                                            MD021425
+      *                                                                                     MD021425
      C           ESC93     TAG                                            077335
       *                                                                   077335
      C/COPY WNCPYSRC,SD0010UD02                                           077335

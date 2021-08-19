@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 262263             Date 18Dec09               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. 262263             Date 18Dec09               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045010           Date 05Apr17               *
       *                 CRE095             Date 25Apr14               *
@@ -85,6 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
       *           Initialised the fields to zero for ATYP <> R.       *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *

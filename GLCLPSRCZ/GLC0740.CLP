@@ -10,15 +10,14 @@
 /*                   a/c level                                      */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CDL087             Date 04May21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*                      CEU011             Date 11Mar98              */
+/*       Prev Amend No. CEU011             Date 11Mar98              */
 /*                      S01408             Date 04Aug95              */
 /*                      E42846             Date 16Jul92              */
 /*                      E40440         DATE  22MAY92                */
@@ -27,8 +26,6 @@
 /*                      LN0529         DATE  10AUG90                */
 /*                                                                  */
 /********************************************************************/
-/*       CDL087 - Multi Base CCY Spot and Forward Revaluation        */
-/*                Upgrade to FM 2.1 2021.A                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CEU011 - EMU Position/Risk Reporting                        */
 /*       S01408 - Core hook added, GLC0740INT                       */
@@ -141,15 +138,6 @@
 /*************       THEN(CALL PGM(GLC59) PARM(&RSEQ &RENT))     E40440 E42846*/
              ENDDO
 /*/COPY WNCPYSRC,GLC0740002                                          */
-/*                                                                   */                   /*CDL087*/
-/* Call GLC8701 or GLC8702 for Local Base Ccy reports                                     /*CDL087*/
-/*                                                                                        /*CDL087*/
-             IF  COND(%SST(&RPARM 1 1) *EQ 'O') THEN(DO)                                  /*CDL087*/
-                IF  COND(&RLEV *EQ 'C') THEN(CALL PGM(GLC8701) +
-                    PARM(&RUNTYPE &RSEQ &RENT))                                           /*CDL087*/
-                IF  COND(&RLEV *EQ 'B') THEN(CALL PGM(GLC8702) +
-                    PARM(&RUNTYPE &RSEQ &RENT))                                           /*CDL087*/
-             ENDDO                                                                        /*CDL087*/
 /*                                                                   */
 /* Call GLC66-68 for Head office ccy reports                         */
 /*                                                                   */

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD057038           Date 11Nov20               *
-      *  Prev Amend No. MD055518           Date 22Apr20               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD057038           Date 11Nov20               *
+      *                 MD055518           Date 22Apr20               *
       *                 MD051765           Date 18Jul19               *
       *                 MD043945A          Date 20Feb17               *
       *                 MD043945           Date 07Feb17               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD057308 - Amend ASOC values for transaction accounts.       *
       *  MD055518 - Profit Centre assigned to TI postings is different*
       *             between MidasPlus and FBMidas. Profit Centre of   *

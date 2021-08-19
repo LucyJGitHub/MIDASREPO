@@ -9,8 +9,7 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CDL087             Date 04May21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,13 +18,11 @@
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*                      CEU011             Date 11Mar98              */
+/*       Prev Amend No. CEU011             Date 11Mar98              */
 /*                      000000             Date DDMmmYY              */
 /*                                                                  */
 /*-------------------------------------------------------------------*/
 /*                                                                    */
-/*       CDL087 - Multi Base CCY Spot and Forward Revaluation        */
-/*                Upgrade to FM 2.1 2021.A                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CEU011 - EMU Position/Risk Reporting                         */
 /*                                                                    */
@@ -54,8 +51,6 @@
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                 /*CEU011*/
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)              /*CEU011*/
 /*/COPY WNCPYSRC,GLCBALSP05                                          */
-             DCL        VAR(&IN06) TYPE(*LGL) LEN(1)                                      /*CDL087*/
-             DCL        VAR(&CDL087) TYPE(*CHAR) LEN(7) VALUE('N')                        /*CDL087*/
 /**/
              DCLF       FILE(GLCBALSDF) RCDFMT(GLCBALS)
 /*/COPY WNCPYSRC,GLCBALSP06                                          */
@@ -89,19 +84,6 @@
                GOTO       CMDLBL(ENDLBL)                              /*CEU011*/
              ENDDO                                                    /*CEU011*/
                                                                       /*CEU011*/
-/**/                                                                                      /*CDL087*/
-/** Check if SAR CDL087 is installed */                                                   /*CDL087*/
-/**/                                                                                      /*CDL087*/
-             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CDL087*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CDL087*/
-             CHGVAR     VAR(&SARD) VALUE('CDL087')                                        /*CDL087*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                      /*CDL087*/
-/**/                                                                                      /*CDL087*/
-/** If CDL087 is installed */                                                             /*CDL087*/
-/**/                                                                                      /*CDL087*/
-             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
-                          VAR(&CDL087) VALUE('Y'))                                        /*CDL087*/
-/**/                                                                                      /*CDL087*/
              IF         COND(&RACT *EQ 'A' *OR &RACT *EQ 'E' *OR +
                           &RACT *EQ 'D') THEN(CHGVAR VAR(&CCY) +
                           VALUE(%SST(&RPARM 1 1)))
@@ -114,7 +96,6 @@ ERROR:
              SNDRCVF    RCDFMT(GLCBALS)
              CHGVAR     VAR(&IN10) VALUE('0')
 /*/COPY WNCPYSRC,GLCBALSP01                                          */
-             CHGVAR     VAR(&IN06) VALUE('0')                                             /*CDL087*/
 /* IF F3, RETURN TO RCF WITH ACTION CODE = END  */
              IF         COND(&IN01 *EQ '1') THEN(DO)
              CHGVAR     VAR(&RCMD) VALUE('E')
@@ -139,8 +120,6 @@ ERROR:
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,GLCBALSP02                                          */
-/**/                                                                                      /*CDL087*/
-             IF        COND(&CDL087 *NE 'Y') THEN(DO)                                     /*CDL087*/
 /* CCY MUST BE ONE OF 'B', 'H' OR 'L' */
              IF         COND(&CCY *NE 'B' *AND &CCY +
                           *NE 'H' *AND &CCY *NE 'L') THEN(DO)
@@ -167,7 +146,6 @@ ERROR:
                ENDDO                                                  /*CEU011*/
 /*/COPY WNCPYSRC,GLCBALSP11                                          */
              ENDDO
-             ENDDO                                                                        /*CDL087*/
 /*/COPY WNCPYSRC,GLCBALSP03                                          */
 /**/
              ENDDO

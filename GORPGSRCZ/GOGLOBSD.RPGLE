@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL087             Date 04May21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 MD053583           Date 10Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -85,8 +84,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
-      *           Upgrade to FM 2.1 2021.A (Recompile)                *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *

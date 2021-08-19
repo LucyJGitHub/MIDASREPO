@@ -10,10 +10,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CDL086             Date 04May21              */
-/*       Prev Amend No. AR1014698          Date 04May21              */
-/*                      CER050             Date 16Jun19              */
-/*                      MD046248           Date 27Oct17              */
+/*       Last Amend No. CER050             Date 16Jun19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      CDL098             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -66,11 +64,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       CDL086 - Portuguese FX Revaluation Extensions               */
-/*                Upgrade to FM 2.1 2021.A                           */
-/*                Upgrade with fix AR1014698.                        */
-/*         AR1014698 - Reconciliation issues (Child: AR1014700).     */
-/*                     Upgrade LBM001 as part of CDL086              */
 /*       CER050 - Annualised Percentage Rate                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CDL098 - Cancelled Deal Numbers                             */
@@ -203,11 +196,6 @@
              DCL        VAR(&STEXT) TYPE(*CHAR) LEN(50)                                   /*CSC020*/
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,DLC1201008                                          /*S01408*/
-                                                                      /*AR1014698*/
-             DCL        VAR(&SAR   ) TYPE(*CHAR) LEN(6)               /*AR1014698*/
-             DCL        VAR(&CDL086) TYPE(*CHAR) LEN(6) +
-                        VALUE('N')                                    /*AR1014698*/
-                                                                      /*AR1014698*/
 /*                                                                   /*S01408*/
 /**/                                                                  /*048933*/
 
@@ -281,12 +269,6 @@
              CHGVAR     VAR(&TOLIB) VALUE(&SYSID *TCAT 'DPLIB')      /*059223*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,DLC1201MP2                                          */
-                                                                      /*AR1014698*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SARD)    /*AR1014698*/
-                                                                      /*AR1014698*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*AR1014698*/
-                        CHGVAR VAR(&CDL086) VALUE('Y')                /*AR1014698*/
-             ENDDO                                                    /*AR1014698*/
                                                                       /*S01408*/
 /**/
 /*      INTEREST THIS MONTH                                         */
@@ -788,25 +770,6 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,DLC1201009                                           /*S01408*/
 /**/                                                                  /*S01408*/
-                                                                      /*AR1014698*/
-/*   Spot Date Deal Extension File Drop                                 AR1014698*/
-                                                                      /*AR1014698*/
-          IF     COND(&CDL086 *EQ 'Y') THEN(DO)                       /*AR1014698*/
-                 CALL       PGM(DL8602)                               /*AR1014698*/
-                                                                      /*AR1014698*/
-                 RTVJOBA   SWS(&SWS)                                  /*AR1014698*/
-                                                                      /*AR1014698*/
-                 IF       COND(%SUBSTRING(&SWS 7 1) *EQ '1') THEN(DO) /*AR1014698*/
-                           SNDMSG     MSG(&MSG1)  TOMSGQ(MOPERQ)      /*AR1014698*/
-                           GOTO       END                             /*AR1014698*/
-                 ENDDO                                                /*AR1014698*/
-                                                                      /*AR1014698*/
-                 IF       COND(%SUBSTRING(&SWS 8 1) *EQ '1') THEN(DO) /*AR1014698*/
-                           SNDMSG     MSG(&MSG2) TOMSGQ(MOPERQ)       /*AR1014698*/
-                           GOTO       END                             /*AR1014698*/
-                 ENDDO                                                /*AR1014698*/
-          ENDDO                                                       /*AR1014698*/
-                                                                      /*AR1014698*/
              GOTO       CMDLBL(END)                                   /*074471*/
 /*ABNOR:***                                                      */               /*074471 BUG7956*/
 /**********  CHGJOB     SWS(XXXXXX11)                            */               /*074471 BUG7956*/

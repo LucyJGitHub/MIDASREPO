@@ -1,52 +1,52 @@
-000100210721/*********************************************************************/
-000200210721/*STD    CLPBASE                                                     */
-000300210721/*EXI    TEXT('Midas FN Takeon Trades for Consolidated brch 2 & 3')  */
-000400210721/*********************************************************************/
-000500210721/*                                                                   */
-000600210721/*       Midas - Private Banking Module                              */
-000700210721/*                                                                   */
-000800210721/*       A1C008008 - Midas FN Takeon Trades for Consolidated brch    */
-000900210721/*                     Brch 2 & 3                                    */
-001000210721/*                                                                   */
-001100210721/*       (c) Finastra International Limited 2001                     */
-001200210721/*                                                                   */
-001300210721/*       Last Amend No. BA1008  *CREATE    Date 01Jun21              */
-001400210721/*                                                                   */
-001500210721/*********************************************************************/
-001600210721/*                                                                   */
-001700210721/*       BA1008 - Replication of Trades to consolidated branches     */
-001800210721/*                                                                   */
-001900210721/*********************************************************************/
-002000210721             PGM
-002100210721
-002200210721/*-------------------------------------------------------------------*/
-002300210721/*  Parameters declaration.                                          */
-002400210721/*-------------------------------------------------------------------*/
-002500210721             DCL        (&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
-002600210721             DCL        (&BA1008) TYPE(*CHAR) LEN(1) VALUE(' ')
-002700210721
-002800210721/*-------------------------------------------------------------------*/
-002900210721/*  Variables declaration.                                           */
-003000210721/*-------------------------------------------------------------------*/
-003100210721             CHGJOB     SWS(00000000)
-003200210721
-003300210721             STRCMTCTL  LCKLVL(*ALL)
-003400210721
-003500210721
-003600210721             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
-003700210721
-003800210721/***  Access Switchable Features file to see if BA1008  present  ***/
-003900210721
-004000210721             CALL       (AOSARDR0) PARM(&PRTCD '*VERIFY' 'BA1008')
-004100210721             IF         (&PRTCD *EQ ' ') (CHGVAR (&BA1008) VALUE('Y'))
-004200210721
-004300210721/***  If the BA1008 Feature is present                   ***/
-004400210721
-004500210721             IF         (&BA1008 *EQ 'Y') THEN(DO)
-004600210721                   CALL       PGM(A1008008)
-004700210721
-004800210721             ENDDO
-004900210721
-005000210721             ENDCMTCTL
-005100210721             DLTDTAARA  DTAARA(LDA)
-005200210721             ENDPGM
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('Midas FN Takeon Trades for Consolidated brch 2 & 3')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       A1C008008 - Midas FN Takeon Trades for Consolidated brch    */
+/*                     Brch 2 & 3                                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. BA1008  *CREATE    Date 01Jun21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BA1008 - Replication of Trades to consolidated branches     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+/*-------------------------------------------------------------------*/
+/*  Parameters declaration.                                          */
+/*-------------------------------------------------------------------*/
+             DCL        (&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        (&BA1008) TYPE(*CHAR) LEN(1) VALUE(' ')
+
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+             CHGJOB     SWS(00000000)
+
+             STRCMTCTL  LCKLVL(*ALL)
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+
+/* Access Switchable Features file to see if BA1008  present */
+
+             CALL       (AOSARDR0) PARM(&PRTCD '*VERIFY' 'BA1008')
+             IF         (&PRTCD *EQ ' ') (CHGVAR (&BA1008) VALUE('Y'))
+
+/* If the BA1008 Feature is present */
+
+             IF         (&BA1008 *EQ 'Y') THEN(DO)
+                   CALL       PGM(A1008008)
+
+             ENDDO
+
+             ENDCMTCTL
+             DLTDTAARA  DTAARA(LDA)
+
+             ENDPGM

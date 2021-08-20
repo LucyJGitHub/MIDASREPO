@@ -1683,7 +1683,7 @@
       *
      C                   If        ReturnCode   <> *blank                              iReturnCode
      C     *Lock         In        Lda
-     C                   Move      'XX08009   '  DBpgm
+     C                   Move      'A1008009  '  DBpgm
      C                   Out       Lda
      C                   Exsr      Repair
       *

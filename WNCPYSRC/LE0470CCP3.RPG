@@ -1,0 +1,579 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0470 - Loan and Facility generated A/C posting             *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 22Apr21               *
+      *                 189897             Date 20Apr01               *
+      *                 MMI063             Date 26Oct99               *
+      *                 UIT021             Date 25feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  189897 - Array index error in subroutine OUT02.              *
+      *  UIT021 - BOI Monthly reporting (Italy)                       *
+      *                                                               *
+      *****************************************************************
+      *  OUT01 - Output to additional BOI reporting file              *
+      *                                                               *
+      *  Called by : Main to prepare IRAPOSPD output                  *
+      *  Calls     :                                                  *
+      *                                                               *
+      *****************************************************************
+     C           OUT01     BEGSR                                          UIT021
+      *                                                                   UIT021
+      ***  Causale Code decision table Key                                UIT021
+      *                                                                   UIT021
+     C           CAKEY     KLIST                                          UIT021
+     C                     KFLD           WIAKEY                          UIT021
+     C                     KFLD           WIPLBL                          UIT021
+     C                     KFLD           WIRESD                          UIT021
+     C                     KFLD           WILNLF                          UIT021
+      *                                                                   UIT021
+     C                     MOVE *BLANKS   WIAKEY 20                       UIT021
+     C                     MOVE *BLANKS   WIPLBL  2                       UIT021
+     C                     MOVE *BLANKS   WIRESD  1                       UIT021
+     C                     MOVE *BLANKS   WILNLF  1                       UIT021
+      *                                                                   UIT021
+      ***  Retrieve the counterparty                                      UIT021
+      *                                                                   UIT021
+     C                     MOVE CNUM      WWCNUM  6                       UIT021
+      *                                                                   UIT021
+      *** depending loan type, customer may be original borrower ....     UIT021
+      *** (Participation purchased or sold)                               UIT021
+      *                                                                   UIT021
+     C           *IN02     IFEQ '1'                                       UIT021
+      *                                                                   UIT021
+      ***  For participation sold, retrieve the customer of the original  UIT021
+      ***  loan (OLNO = the original loan number)                         UIT021
+      *                                                                   UIT021
+     C           AYLNPT    IFEQ 66                                        UIT021
+     C           AYLNPT    OREQ 67                                        UIT021
+     C                     MOVE OLNO      WWLNRF  6                       UIT021
+     C           WWLNRF    CHAINIRLOANL0             99                   UIT021
+     C           *IN99     IFEQ *OFF                       Found          UIT021
+     C                     MOVE IRCNUM    WWCNUM                          UIT021
+     C                     ENDIF                                          UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+      ***  For participation purchased, retrieve the original customer    UIT021
+      ***  (OLNO = the original customer)                                 UIT021
+      *                                                                   UIT021
+     C           AYLNPT    IFEQ 64                                        UIT021
+     C           AYLNPT    OREQ 65                                        UIT021
+     C                     MOVE OLNO      WWCNUM                          UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+      ***  Account key                                                    UIT021
+      *                                                                   UIT021
+     C                     MOVELAKEY      WIAKEY                          UIT021
+      *                                                                   UIT021
+      ***  Posting Account Label                                          UIT021
+      *                                                                   UIT021
+     C                     MOVE PLBL,N    WIPLBL                          UIT021
+      *                                                                   UIT021
+      ***  Lira / non Lira flag                                           UIT021
+      *                                                                   UIT021
+     C           ECCY      IFEQ BJLCCY                                    UIT021
+     C                     MOVE 'L'       WILNLF                          UIT021
+     C                     ELSE                                           UIT021
+     C                     MOVE 'F'       WILNLF                          UIT021
+     C                     END                                            UIT021
+      *                                                                   UIT021
+      ***  Resident / non resident  : WWCNUM : do check before            UIT021
+      *                                                                   UIT021
+     C                     MOVELWWCNUM    CKEY                            UIT021
+     C                     CALL 'AOCUSTR0'PLIST4                          UIT021
+     C           @RTCD     IFNE *BLANKS                                   UIT021
+     C                     SETON                     U7U8LR               UIT021
+     C                     Z-ADD20        DBASE            ************** UIT021
+     C                     MOVELCKEY      DBKEY            * DBERROR 20 * UIT021
+     C                     MOVEL'SDCUSTPD'DBFILE           ************** UIT021
+     C                     GOTO ENDO1                                     UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           BBCOLC    IFEQ BJCNCD                                    UIT021
+      *                                                                   UIT021
+      ***  Bank country location                                          UIT021
+      *                                                                   UIT021
+     C                     MOVE 'R'       WIRESD                          UIT021
+     C                     ELSE                                           UIT021
+     C                     MOVE 'N'       WIRESD                          UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+      *** Get uic causale code and relative line item                     UIT021
+     C           CAKEY     CHAINIRCCDTL1             99                   UIT021
+     C*                                                                   MMI063
+     C* Causale 9999 = key not found on decision table                    MMI063
+     C*                                                                   MMI063
+     C           *IN99     IFEQ '1'                                       MMI063
+     C                     Z-ADD9999      N7CAUC                          MMI063
+     C                     Z-ADD*ZEROS    N7RBNB                          MMI063
+     C                     Z-ADD*ZEROS    N7CPNB                          MMI063
+     C                     MOVE *OFF      *IN99                           MMI063
+     C                     END                                            MMI063
+     C*                                                                   MMI063
+     C* Causale 9997 = reversal                                           MMI063
+     C*                                                                   MMI063
+     C           *IN19     IFEQ '0'                                       MMI063
+     C                     Z-ADD9997      N7CAUC                          MMI063
+     C                     END                                            MMI063
+     C*                                                                   MMI063
+     C           *IN99     IFEQ '0'                                       UIT021
+     C           N7CAUC    ANDNE*ZEROS                                    UIT021
+      *                                                                   UIT021
+     C           *IN81     IFEQ *ON                                       UIT021
+     C           *IN29     ANDEQ*ON                                       UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE BBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE COMS      IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR1    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD*ZEROS    IBDRCR                          UIT021
+     C   30                Z-ADD1         IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE BRCA      IBBRCA                          UIT021
+     C                     MOVE RINDS     IBRIND                          UIT021
+     C                     MOVE ATYPS     IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE ACSCS     IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     MOVELLNRF2     IBOTRF                          UIT021
+     C                     MOVELOTST      IBOTST                          UIT021
+     C                     MOVELOTTP      IBOTTP                          UIT021
+     C                     MOVE BOKC      IBBOKC                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           *IN81     IFEQ *ON                                       UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE ACCNM     IBCNUM                          UIT021
+     C                     MOVE ACCCY     IBCCY                           UIT021
+     C                     MOVE ACACD     IBACOD                          UIT021
+     C                     Z-ADDACACS     IBACSQ                          UIT021
+     C   26 17             MOVE RACNM     IBCNUM                          UIT021
+     C   26 17             MOVE RAACD     IBACOD                          UIT021
+     C   26 17             Z-ADDRAACS     IBACSQ                          UIT021
+     C   82                MOVE *ALL'0'   IBCNUM                          UIT021
+     C   82                MOVE *ALL'0'   IBCCY                           UIT021
+     C   82                MOVE *ALL'0'   IBACOD                          UIT021
+     C   82                Z-ADD*ZEROS    IBACSQ                          UIT021
+     C   43                MOVE OLNO      IBCNUM                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C   80                Z-ADDRUND      IBVALD                          UIT021
+     C                     MOVE O#PNR3    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C   80                Z-ADDACRLSM    IBPSTA                          UIT021
+     C                     Z-ADD*ZEROS    IBDRCR                          UIT021
+     C   30                Z-ADD1         IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE ACBRCD    IBBRCA                          UIT021
+     C   26                MOVE OSBR      IBBRCA                          UIT021
+     C                     MOVE RINDA     IBRIND                          UIT021
+     C   85 29 82          MOVE '0'       IBRIND                          UIT021
+     C   17 29             MOVE '1'       IBRIND                          UIT021
+     C                     MOVE ATYP      IBATYP                          UIT021
+     C   85 29 82          MOVE ' '       IBATYP                          UIT021
+     C   17 29             MOVE 'R'       IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE ACSC      IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     MOVELLNRF2     IBOTRF                          UIT021
+     C                     MOVE ADVINF    IBOTRF                          UIT021
+     C                     MOVELOTST      IBOTST                          UIT021
+     C                     MOVELOTTP      IBOTTP                          UIT021
+     C                     MOVE BOKC      IBBOKC                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           *IN81     IFEQ *ON                                       UIT021
+     C           *IN77     ANDEQ*ON                                       UIT021
+     C           *IN26     ANDEQ*ON                                       UIT021
+     C           *IN70     ANDEQ*ON                                       UIT021
+     C           *IN78     ANDEQ*OFF                                      UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE OBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE BADTO     IBACOD                          UIT021
+     C   30                MOVE BADFR     IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR4    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD*ZEROS    IBDRCR                          UIT021
+     C   30                Z-ADD1         IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE BRCA      IBBRCA                          UIT021
+     C                     MOVE BRINTO    IBRIND                          UIT021
+     C   30                MOVE BRINFR    IBRIND                          UIT021
+     C                     MOVE BTYPFR    IBATYP                          UIT021
+     C   30                MOVE BTYPTO    IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE BSECTO    IBACSC                          UIT021
+     C   30                MOVE BSECFR    IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     MOVELLNRF2     IBOTRF                          UIT021
+     C                     MOVELOTST      IBOTST                          UIT021
+     C                     MOVELOTTP      IBOTTP                          UIT021
+     C                     MOVE BOKC      IBBOKC                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE BBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE OADFR     IBACOD                          UIT021
+     C   30                MOVE OADTO     IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR4    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD1         IBDRCR                          UIT021
+     C   30                Z-ADD*ZEROS    IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE OSBR      IBBRCA                          UIT021
+     C                     MOVE ORINFR    IBRIND                          UIT021
+     C   30                MOVE ORINTO    IBRIND                          UIT021
+     C                     MOVE OTYPFR    IBATYP                          UIT021
+     C   30                MOVE OTYPTO    IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE OSECFR    IBACSC                          UIT021
+     C   30                MOVE OSECTO    IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     MOVELLNRF2     IBOTRF                          UIT021
+     C                     MOVELOTST      IBOTST                          UIT021
+     C                     MOVELOTTP      IBOTTP                          UIT021
+     C                     MOVE BOKC      IBBOKC                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           *IN81     IFEQ *ON                                       UIT021
+     C           *IN77     ANDEQ*ON                                       UIT021
+     C           *IN26     ANDEQ*ON                                       UIT021
+     C           *IN70     ANDEQ*ON                                       UIT021
+     C           *IN78     ANDEQ*ON                                       UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE MBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE BADTO     IBACOD                          UIT021
+     C   30                MOVE BADFR     IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR4    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD*ZEROS    IBDRCR                          UIT021
+     C   30                Z-ADD1         IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE BRCA      IBBRCA                          UIT021
+     C                     MOVE BRINTO    IBRIND                          UIT021
+     C   30                MOVE BRINFR    IBRIND                          UIT021
+     C                     MOVE BTYPTO    IBATYP                          UIT021
+     C   30                MOVE BTYPFR    IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE BSECTO    IBACSC                          UIT021
+     C   30                MOVE BSECFR    IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE MBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE OADFR     IBACOD                          UIT021
+     C   30                MOVE OADTO     IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR4    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD1         IBDRCR                          UIT021
+     C   30                Z-ADD*ZEROS    IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE OSBR      IBBRCA                          UIT021
+     C                     MOVE ORINFR    IBRIND                          UIT021
+     C   30                MOVE ORINTO    IBRIND                          UIT021
+     C                     MOVE OTYPFR    IBATYP                          UIT021
+     C   30                MOVE OTYPTO    IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE OSECFR    IBACSC                          UIT021
+     C   30                MOVE OSECTO    IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE OBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE MADTO     IBACOD                          UIT021
+     C   30                MOVE MADFR     IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR4    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD*ZEROS    IBDRCR                          UIT021
+     C   30                Z-ADD1         IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE MBCH      IBBRCA                          UIT021
+     C                     MOVE MRINTO    IBRIND                          UIT021
+     C   30                MOVE MRINFR    IBRIND                          UIT021
+     C                     MOVE MTYPTO    IBATYP                          UIT021
+     C   30                MOVE MTYPFR    IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE MSECTO    IBACSC                          UIT021
+     C   30                MOVE MSECFR    IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE BBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE MADFR     IBACOD                          UIT021
+     C   30                MOVE MADTO     IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDEDAT      IBVALD                          UIT021
+     C                     MOVE O#PNR4    IBPNAR                          UIT021
+     C                     Z-ADDEAMT      IBPSTA                          UIT021
+     C                     Z-ADD1         IBDRCR                          UIT021
+     C   30                Z-ADD*ZEROS    IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE MBCH      IBBRCA                          UIT021
+     C                     MOVE MRINFR    IBRIND                          UIT021
+     C   30                MOVE MRINTO    IBRIND                          UIT021
+     C                     MOVE MTYPFR    IBATYP                          UIT021
+     C   30                MOVE MTYPTO    IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE MSECFR    IBACSC                          UIT021
+     C   30                MOVE MSECTO    IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           ENDO1     ENDSR                                          UIT021
+      *                                                                   UIT021
+      *                                                                   UIT021
+      *                                                                   UIT021
+     C           OUT02     BEGSR                                          UIT021
+      *                                                                   UIT021
+     C                     MOVE *BLANKS   WIAKEY 20                       UIT021
+     C                     MOVE *BLANKS   WIPLBL  2                       UIT021
+     C                     MOVE *BLANKS   WIRESD  1                       UIT021
+     C                     MOVE *BLANKS   WILNLF  1                       UIT021
+      *                                                                   UIT021
+      ***  Retrieve the counterparty                                      UIT021
+      *                                                                   UIT021
+     C                     MOVE CNUM      WWCNUM  6                       UIT021
+      *                                                                   UIT021
+      *** depending loan type, customer may be original borrower ....     UIT021
+      *** (Participation purchased or sold)                               UIT021
+      *                                                                   UIT021
+     C           *IN02     IFEQ '1'                                       UIT021
+      *                                                                   UIT021
+      ***  For participation sold, retrieve the customer of the original  UIT021
+      ***  loan (OLNO = the original loan number)                         UIT021
+      *                                                                   UIT021
+     C           AYLNPT    IFEQ 66                                        UIT021
+     C           AYLNPT    OREQ 67                                        UIT021
+     C                     MOVE OLNO      WWLNRF                          UIT021
+     C           WWLNRF    CHAINIRLOANL0             99                   UIT021
+     C           *IN99     IFEQ *OFF                       Found          UIT021
+     C                     MOVE IRCNUM    WWCNUM                          UIT021
+     C                     ENDIF                                          UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+      ***  For participation purchased, retrieve the original customer    UIT021
+      ***  (OLNO = the original customer)                                 UIT021
+      *                                                                   UIT021
+     C           AYLNPT    IFEQ 64                                        UIT021
+     C           AYLNPT    OREQ 65                                        UIT021
+     C                     MOVE OLNO      WWCNUM                          UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+      ***  Account key                                                    UIT021
+      *                                                                   UIT021
+     C                     MOVELAKEY      WIAKEY                          UIT021
+      *                                                                   UIT021
+      ***  Posting Account Label                                          UIT021
+      *                                                                   UIT021
+     C           N         IFLE 6                                         189897
+     C                     MOVE PLBL,N    WIPLBL                          UIT021
+     C                     END                                            189897
+      *                                                                   UIT021
+      ***  Lira / non Lira flag                                           UIT021
+      *                                                                   UIT021
+     C           ECCY      IFEQ BJLCCY                                    UIT021
+     C                     MOVE 'L'       WILNLF                          UIT021
+     C                     ELSE                                           UIT021
+     C                     MOVE 'F'       WILNLF                          UIT021
+     C                     END                                            UIT021
+      *                                                                   UIT021
+      ***  Resident / non resident  : WWCNUM : do check before            UIT021
+      *                                                                   UIT021
+     C                     MOVELWWCNUM    CKEY                            UIT021
+     C                     CALL 'AOCUSTR0'PLIST4                          UIT021
+     C           @RTCD     IFNE *BLANKS                                   UIT021
+     C                     SETON                     U7U8LR               UIT021
+     C                     Z-ADD20        DBASE            ************** UIT021
+     C                     MOVELCKEY      DBKEY            * DBERROR 20 * UIT021
+     C                     MOVEL'SDCUSTPD'DBFILE           ************** UIT021
+     C                     GOTO ENDO2                                     UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           BBCOLC    IFEQ BJCNCD                                    UIT021
+      *                                                                   UIT021
+      ***  Bank country location                                          UIT021
+      *                                                                   UIT021
+     C                     MOVE 'R'       WIRESD                          UIT021
+     C                     ELSE                                           UIT021
+     C                     MOVE 'N'       WIRESD                          UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+      *** Get uic causale code and relative line item                     UIT021
+     C           CAKEY     CHAINIRCCDTL1             99                   UIT021
+     C           *IN99     IFEQ '0'                                       UIT021
+     C           N7CAUC    ANDNE*ZEROS                                    UIT021
+      *                                                                   UIT021
+     C                     CLEARIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     MOVE BBICN     IBCNUM                          UIT021
+     C                     MOVE ECCY      IBCCY                           UIT021
+     C                     MOVE COMS      IBACOD                          UIT021
+     C                     Z-ADD01        IBACSQ                          UIT021
+     C                     Z-ADDRUND      IBPSTD                          UIT021
+     C                     Z-ADDRUND      IBVALD                          UIT021
+     C                     MOVE O#PNR2    IBPNAR                          UIT021
+     C                     Z-ADDBALSUS    IBPSTA                          UIT021
+     C                     Z-ADD*ZEROS    IBDRCR                          UIT021
+     C   30                Z-ADD1         IBDRCR                          UIT021
+     C                     MOVE '  GE-LE' IBSPOS                          UIT021
+     C                     MOVE BRCA      IBBRCA                          UIT021
+     C                     MOVE RINDS     IBRIND                          UIT021
+     C                     MOVE ATYPS     IBATYP                          UIT021
+     C                     MOVE PRIN      IBPRIN                          UIT021
+     C                     MOVE PRFC      IBPRFC                          UIT021
+     C                     MOVE ACSCS     IBACSC                          UIT021
+     C                     MOVE DLREF     IBDLRF                          UIT021
+     C                     MOVELLNRF2     IBOTRF                          UIT021
+     C                     MOVELOTST      IBOTST                          UIT021
+     C                     MOVELOTTP      IBOTTP                          UIT021
+     C                     MOVE BOKC      IBBOKC                          UIT021
+     C                     Z-ADDEXRT      IBSPRT                          UIT021
+     C                     MOVE WIAKEY    IBAKEY                          UIT021
+     C                     MOVE WILNLF    IBLRNL                          UIT021
+     C                     MOVE WIRESD    IBRENR                          UIT021
+     C                     MOVE N7CAUC    IBCAUC                          UIT021
+     C                     MOVE N7RBNB    IBRBNB                          UIT021
+     C                     MOVE N7CPNB    IBCPNB                          UIT021
+      *                                                                   UIT021
+     C                     WRITEIRAPOSD0                                  UIT021
+      *                                                                   UIT021
+     C                     ENDIF                                          UIT021
+      *                                                                   UIT021
+     C           ENDO2     ENDSR                                          UIT021
+      *                                                                   UIT021

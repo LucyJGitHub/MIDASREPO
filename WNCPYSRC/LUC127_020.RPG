@@ -1,0 +1,174 @@
+      *****************************************************************
+      *  Start of /COPY LUC127_020                                    *
+      *****************************************************************
+      *                                                               *
+      *  LUC127_020 - LER310 - Sr MK2WRT                              *
+      *                                                               *
+      *  Last Amend No. LUC127   *Create   Date 25Jun19               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC127 - Output PRFC in all cases (Upgrade LUC127 to FM2.1)  *
+      *                                                               *
+      *****************************************************************
+      *                                                                   LUC127
+      ***  MK2WRT SUBROUTINE TO WRITE PROFIT CENTER XFER A/C KEYS.        LUC127
+      *                                                                   LUC127
+      ***  CALLED FROM: MAIN PROCESSING,L1SR                              LUC127
+      *                                                                   LUC127
+      ***  CALLS: HASHSR                                                  LUC127
+      *                                                                   LUC127
+      *****************************************************************   LUC127
+      *                                                                   LUC127
+     C           MK2WRT    BEGSR                                          LUC127
+      *                                                                   LUC127
+      ** Find the book code that goes with the loan profit center         LUC127
+      *                                                                   LUC127
+     C                     MOVELLPRFC     PRFC                            LUC127
+     C                     MOVE BRCA      DWBRCD                          LUC127
+     C                     MOVE '**'      DWACOC                          LUC127
+     C                     MOVE *BLANKS   BOKC                            LUC127
+      *                                                                   LUC127
+     C           PRFKY     KLIST                                          LUC127                    
+     C                     KFLD           PRFC                            LUC127
+     C                     KFLD           DWBRCD                          LUC127
+     C                     KFLD           DWACOC                          LUC127
+      *                                                                   LUC127
+     C           PRFKY     CHAINXXPRFML3             16                   LUC127
+      *                                                                   LUC127
+     C           *IN16     IFEQ *ON                                       LUC127
+     C                     MOVE '***'     DWBRCD                          LUC127
+     C           PRFKY     CHAINXXPRFML3             16                   LUC127
+     C                     ENDIF                                          LUC127
+     C           *IN16     IFEQ *OFF                                      LUC127
+     C                     MOVE DWBKCD    BOKC                            LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+      ** Set up fields for output                                         LUC127
+      *                                                                   LUC127
+     C**********           MOVE 'N'       AKEY                            LUC127
+     C                     MOVE 'N'       ATYPE                           LUC127
+     C                     MOVE LNRF      LNNO                            LUC127
+     C                     Z-ADDMARG      INTR                            LUC127
+      *                                                                   LUC127
+     C                     WRITELKEY1DPF                                  LUC127
+      *                                                                   LUC127
+     C                     ADD  1         NORE                            LUC127
+     C                     MOVE 'Y'       MGN                             LUC127
+      *                                                                   LUC127
+      * ADD EVENT AMOUNT TO HASH TOTAL FOR TRAILER                        LUC127
+      *                                                                   LUC127
+     C           EAMT      DIV  1000      GPAMT                           LUC127
+     C                     EXSR HASHSR                                    LUC127
+      *                                                                   LUC127
+      * SET UP AMOUNT FIELD FOR REPORT FOR NO. OF DEC.PLACES.             LUC127
+      * & SET INDICATOR FOR NARRATIVE FIELD.                              LUC127
+      *                                                                   LUC127
+     C                     MOVEA'0000'    *IN,30                          LUC127
+     C           A6NBDP    ADD  30        DP      20                      LUC127
+     C                     MOVE '1'       *IN,DP                          LUC127
+     C   30                MOVE EAMT      EAMT0  130                      LUC127
+     C   31                MOVE EAMT      EAMT1  131                      LUC127
+     C   32                MOVE EAMT      EAMT2  132                      LUC127
+     C   33                MOVE EAMT      EAMT3  133                      LUC127
+     C                     MOVEA'00'      *IN,40                          LUC127
+     C           RECI      IFEQ 'G'                                       LUC127
+     C           SSEQ      IFEQ 3                                         LUC127
+     C                     MOVE '1'       *IN40                           LUC127
+     C                     ENDIF                                          LUC127
+     C           SSEQ      IFEQ 4                                         LUC127
+     C                     MOVE '1'       *IN41                           LUC127
+     C                     ENDIF                                          LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+      * WRITE HEADINGS IF O/FLOW OR 1ST.DETAIL WRITTEN.                   LUC127
+      * WRITE DETAIL LINE TO REPORT                                       LUC127
+      *                                                                   LUC127
+     C           *IN80     IFEQ '1'                                       LUC127
+     C           NORE      OREQ 1                                         LUC127
+     C           MBIN      OREQ 'Y'                                       LUC127
+     C           SAVBR     ANDNEBRCA                                      LUC127
+      *                                                                   LUC127
+      *** IF 1ST DETAIL, ENSURE RCF USED                                  LUC127
+      *                                                                   LUC127
+     C           NORE      IFEQ 1                                         LUC127
+     C           MBIN      OREQ 'Y'                                       LUC127
+     C           SAVBR     ANDNEBRCA                                      LUC127
+      *                                                                   LUC127
+     C           MBIN      IFEQ 'Y'                                       LUC127
+      *                                                                   LUC127
+      ** Output no. of records for each branch and the narrative          LUC127
+      ** 'END OF BRANCH REPORT'                                           LUC127
+      *                                                                   LUC127
+     C           SAVBR     IFNE '   '                                     LUC127
+     C                     WRITELER310T1                                  LUC127
+     C                     WRITELER310T2                                  LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+      ** Save branch for comparison (detect branch change)                LUC127
+      *                                                                   LUC127
+     C                     MOVE BRCA      SAVBR                           LUC127
+      *                                                                   LUC127
+      ** Search branch code in branch file                                LUC127
+      *                                                                   LUC127
+     C           BRCA      CHAIN@A8REB1              71                   LUC127
+      *                                                                   LUC127
+      ** If chain fails - DB error                                        LUC127
+      *                                                                   LUC127
+     C           *IN71     IFEQ '1'                                       LUC127
+     C           *LOCK     IN   LDA                                       LUC127
+     C                     MOVELBRCA      DBKEY            ************   LUC127
+     C                     Z-ADD900       DBASE            * DBERR 900    LUC127
+     C                     MOVEL'SDBRCHL0'DBFILE           ************   LUC127
+     C                     MOVEL'LER310'  DBPGM                           LUC127
+     C                     OUT  LDA                                       LUC127
+     C                     EXSR *PSSR                                     LUC127
+     C                     EXSR DBERR                                     LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+     C                     Z-ADD0         SNORE                           LUC127
+      *                                                                   LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+     C                     CLOSELER310P1                                  LUC127
+     C                     OPEN LER310P1                                  LUC127
+     C                     Z-ADD0         PAGE1                           LUC127
+      *                                                                   LUC127
+      ***  Ensure report spool file recorded by RCF                       LUC127
+      *                                                                   LUC127
+     C                     Z-ADDSFNUM     ZSNUM                           LUC127
+      *                                                                   LUC127
+     C                     CALL 'ZSFILE'                                  LUC127
+     C                     PARM           SEQ     5                       LUC127
+     C                     PARM *BLANKS   SENTY   3                       LUC127
+     C                     PARM           SFILE                           LUC127
+     C                     PARM           ZSNUM   60                      LUC127
+     C                     PARM           ZSERR   1                       LUC127
+      *                                                                   LUC127
+      ** If error during ZSFILE processing, return to calling program     LUC127
+     C           ZSERR     IFEQ 'Y'                                       LUC127
+     C                     SETON                     U7U8LR               LUC127
+     C                     RETRN                                          LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+     C                     WRITELER310H1                                  LUC127
+     C                     WRITELER310H2                                  LUC127
+      *                                                                   LUC127
+     C                     MOVE '0'       *IN80                           LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+     C                     WRITELER310D1                                  LUC127
+      *                                                                   LUC127
+     C           *IN70     IFEQ '1'                                       LUC127
+     C                     ADD  1         SNORE                           LUC127
+     C                     ENDIF                                          LUC127
+      *                                                                   LUC127
+     C                     ENDSR                                          LUC127
+      *                                                                   LUC127
+     C/EJECT                                                              LUC127
+      *                                                                   LUC127
+      *****************************************************************   LUC127
+      * End of /COPY LUC127_020                                       *   LUC127
+      *****************************************************************   LUC127

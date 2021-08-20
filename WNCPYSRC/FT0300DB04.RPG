@@ -1,0 +1,109 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 EEE058   *Create   Date 11Feb2003             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Test to see if FTPEXTP0 needs to be written to
+      *
+     C           EEE058    IFEQ *BLANKS
+      *
+      *  Test for Mt910 processing active
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'EEE058'  @SARD
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  EEE058 processing active
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVEL'EEE058'  EEE058  6
+     C                     OPEN FTPEXTP0
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  If EEE058 get extension data
+      *
+     C           EEE058    IFEQ 'EEE058'
+      * get data
+     C                     CALL 'FTP960'
+     C                     PARM *BLANKS   P9RTN
+     C                     PARM           P9PEXT
+      * set commission amount if fixed commission
+     C           PXCOMA    IFNE 0
+      *
+      * Set amount correctly
+      *
+      *
+      **  Get settlement currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY    'P@OPTN
+     C                     PARM BJCYCD    WCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           *LIKE     DEFN D#FAMT    U#FAMT
+     C                     SELEC
+     C           A6NBDP    WHEQ 0
+     C                     Z-ADDPXCOMA    U#FAMT
+     C           A6NBDP    WHEQ 1
+     C           PXCOMA    MULT 10        U#FAMT
+     C           A6NBDP    WHEQ 2
+     C           PXCOMA    MULT 100       U#FAMT
+     C           A6NBDP    WHEQ 3
+     C           PXCOMA    MULT 1000      U#FAMT
+     C                     ENDSL
+      *
+      * Check if amount needs to be converted
+      *
+     C           BJCYCD    IFNE V#CCCY
+      *
+     C                     CLEARD#DTA
+     C                     Z-ADDU#FAMT    D#FAMT
+     C                     MOVELBJCYCD    D#FCCY
+     C                     MOVELV#CCCY    D#TCCY
+      *
+     C                     CALL 'AOCCYCV0'             9090
+     C                     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*SPT'U#ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C                     ELSE
+     C                     Z-ADDU#FAMT    D#TAMT
+     C                     ENDIF
+      *
+      * Format for screen
+      *
+      *
+      **  Get settlement currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY    'P@OPTN
+     C                     PARM V#CCCY    WCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     MOVEL*BLANKS   S7TRCD
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE D#TAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S7TRCD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *****************************************************************
+      * End of FT0300DB04                                             *
+      *****************************************************************

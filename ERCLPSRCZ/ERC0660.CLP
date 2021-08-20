@@ -9,12 +9,14 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC139             Date 04Jan21              */
+/*       Prev Amend No. UIT201             Date 03APR97              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      187689             Date 19Dec00              */
 /*                      CAD016 PT          Date 11Sep98              */
 /*                    ULX004             DATE 18OCT94               */
@@ -26,6 +28,9 @@
 /*                    ERL300 AF          DATE   19JAN93             */
 /*                    ER0117             DATE  10DEC92              */
 /*********************************************************************/
+/*                                                                  */
+/*     LUC139 - Upgrade UCI Italian Returns                          */
+/*     UIT021 - BOI Monthly Reporting                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     187689 - "GRD" CURRENCY IN EMU                                */
@@ -45,10 +50,21 @@
              PGM
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(80)
  
+             DCL        VAR(&RTC) TYPE(*CHAR) LEN(7)                  /*UIT021*/
+             DCL        VAR(&OPT) TYPE(*CHAR) LEN(7) VALUE('*VERIFY') /*UIT021*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) VALUE('UIT021')  /*UIT021*/
+             DCL        VAR(&UIT021) TYPE(*CHAR) LEN(1) VALUE('N')    /*UIT021*/
  
 /* Reset External Switches */
              CHGJOB     SWS(00000000)
  
+/***  Check Feature UIT021 : Bank of Italy Monthly reporting.  ***/   /*UIT021*/
+                                                                      /*UIT021*/
+             CHGVAR     VAR(&RTC) VALUE('       ')                    /*UIT021*/
+             CALL       PGM(AOSARDR0) PARM(&RTC &OPT &SAR)            /*UIT021*/
+             IF         COND(&RTC *EQ '       ')  +
+                  THEN(CHGVAR VAR(&UIT021) VALUE('Y'))                /*UIT021*/
+
 /*  Download of Country table                                        */
  
              CLRPFM     FILE(ERCTRYPD)
@@ -138,6 +154,11 @@
                           FILE(ERBRCHPD))
 /*** ERL355 END ***/
  
+                                                                      /*UIT021*/
+/*** When UIT021 is *ON, this means process for Italian Returns. ***/ /*UIT021*/
+                                                                      /*UIT021*/
+             IF         COND(&UIT021 *NE 'Y') THEN(DO)                /*UIT021*/
+                                                                      /*UIT021*/
 /* ERL300 START */
 /*  Set up of Guarantor Report Name                                  */
  
@@ -190,6 +211,9 @@
              GOTO       ABNORMAL
              ENDDO
 /* ERL421 END */
+                                                                      /*UIT021*/
+             ENDDO                                                    /*UIT021*/
+                                                                      /*UIT021*/
 /*  Normal Termination                                               */
              GOTO       FILEND
  

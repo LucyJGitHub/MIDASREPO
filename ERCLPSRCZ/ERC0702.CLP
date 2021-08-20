@@ -10,12 +10,21 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*     Last Amend No. MD058100           Date  20May21              */
+/*     Prev Amend No. LUC139             Date  08Jan21              */
+/*                    MMI135             Date  01Dec08              */
+/*                    MMI110             Date  06Oct03              */
+/*                    MMI098             Date  02Apr02              */
+/*                    MMI089             Date  08Oct01              */
+/*                    MMI033             Date  08APR99              */
+/*                    142714             Date  13AUG98              */
+/*                    UIT021             Date  02Apr97              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      ULX047             Date 17Dec02              */
 /*                      ULX046             Date  31Oct02             */
 /*                    ULX040             Date  20Feb01              */
@@ -30,6 +39,16 @@
 /*                    ERL414 PT          DATE  26JUL94              */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     MD058100 - Rollup of additional BoI onsite fixes at FbMidas  */
+/*     LUC139 - Upgrade UCI Italian Returns                         */
+/*     MMI135 - Fidi Plurimi.                                       */
+/*     MMI110 - Rewrite numbers calculation.                        */
+/*     MMI098 - Rewritten - now specific for Italy                  */
+/*     MMI089 - Call ERIT94 without parameters                      */
+/*     MMI033 - Midas Italy Puma/2 Extract Change 3                 */
+/*              Stop process if errors found.                       */
+/*     142714 - WRONG ELSE STATEMENT IN UIT021                      */
+/*     UIT021 - BOI Monthly Reporting                               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     ULX047 - CSSF Market Values Calculation                      */
@@ -49,11 +68,11 @@
 /*              THE RECLAIM RESOURCE COMMAND                        */
 /*                                                                  */
 /*********************************************************************/
- 
+
 /***         PGM        PARM(&ERPGM &BJMRDT &BJURPT &VDICNA &RETURN)    ULX040*/
              PGM        PARM(&ERPGM &BJMRDT &BJURPT &VDICNA &RETURN +
                           &PREFIX)                                    /*ULX040*/
- 
+
              DCL        VAR(&ERPGM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BJMRDT) TYPE(*CHAR) LEN(7) /* MIDAS +
                           report date */
@@ -77,16 +96,16 @@
              DCL        VAR(&ERRFLAG) TYPE(*CHAR) LEN(1) VALUE('N')   /*ULX040*/
              DCL        VAR(&ULX046)  TYPE(*CHAR) LEN(1) VALUE('N')   /*ULX046*/
 /**********  DCL        VAR(&XXCADLIB) TYPE(*CHAR) LEN(10)                */       /*ULX047 CER001*/
- 
+
   /*  LMI I.C.D. file */
- 
+
 /**********  DCLF       FILE(ERLUICPD) RCDFMT(ERLUICD0)                   */       /*ULX004 CER001*/
              DCLF       FILE(ERLICXPD) RCDFMT(ERLUICD0)                                   /*CER001*/
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
- 
+
 /************OVRDBF     FILE(EREXTRL0) SEQONLY(*YES)                  ERL438 */
- 
+
       /* Send 'started' message                               */
  /*          SNDPGMMSG  MSG('ERC0702 -' *BCAT &VDICNA *TCAT ' +
                           Reporting Interface to FRS starts') +
@@ -97,14 +116,14 @@
              SNDPGMMSG  MSG('ERC0702 -' *BCAT &VDICNA *TCAT ' +
                           Reporting Interface to FRS starts') +
                           TOMSGQ(MOPERQ)                                                  /*CER001*/
- 
+
 /*********   CHGVAR     VAR(&XXCADLIB) VALUE(&PREFIX *CAT 'CADLIB')       */       /*ULX047 CER001*/
- 
+
              CALL       PGM(AOSARDR0) PARM(&RETCOD '*VERIFY'   +
                           'ULX046' &FMT200)                         /*ULX046*/
              IF         COND(&RETCOD = '      ') THEN(CHGVAR +
                           VAR(&ULX046) VALUE('Y'))                  /*ULX046*/
- 
+
 /* SPECIFIC PROCESSING:                                           */
 /************SNDPGMMSG  MSG(&ERPGM *BCAT '- MAIN COMPONENT') +
                           TOMSGQ(ERMSGQ) MSGTYPE(*INFO)               ERL438 */
@@ -112,9 +131,9 @@
 /************SNDPGMMSG  MSG(&ERPGM *BCAT '- Main Component Without +
                           Customer Positions') TOMSGQ(ERMSGQ) +
                           MSGTYPE(*INFO)                     /* ERL438 ULX004*/
- 
+
              IF         COND(&ULX046 = 'N') THEN(DO)                /*ULX046*/
- 
+
 /**********  SNDPGMMSG  MSG(&ERPGM *BCAT '- Main Component Without +
                           Customer Positions') TOMSGQ(CADMSGQ) +
                           MSGTYPE(*INFO)                                  */       /*ULX004 CER001*/
@@ -126,30 +145,56 @@
                           SEQONLY(*YES)                                   */       /*ERL438 CER001*/
              OVRDBF     FILE(EREXTXL0) TOFILE(EREXTXL3) +
                           SEQONLY(*YES)                                                   /*CER001*/
- 
+
              ENDDO                                                  /*ULX046*/
- 
+
              IF         COND(&ULX046 = 'Y') THEN(DO)                /*ULX046*/
- 
+
 /**********  SNDPGMMSG  MSG(&ERPGM *BCAT '- Main Component') +
                           TOMSGQ(CADMSGQ) MSGTYPE(*INFO)                  */       /*ULX046 CER001*/
              SNDPGMMSG  MSG(&ERPGM *BCAT '- Main Component') +
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)                                   /*CER001*/
- 
+
              ENDDO                                                  /*ULX046*/
- 
+
+                                                                      /*MMI135*/
+/* Fidi Plurimi - assign RIPA codes               */                  /*MMI135*/
+                                                                      /*MMI135*/
+             SNDPGMMSG  MSG('ERIT57 - Assign RIPA Codes') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)               /*MMI135*/
+             CALL       PGM(ERIT57)                                   /*MMI135*/
+                                                                      /*MMI110*/
+/* Numbers calculation                            */                  /*MMI110*/
+                                                                      /*MMI110*/
+             CLRPFM     FILE(ERNUMEPD)                                /*MMI110*/
+             SNDPGMMSG  MSG('ERIT58 - Loan Numbers Calculation') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)               /*MMI110*/
+             CALL       PGM(ERIT58)                                   /*MMI110*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(DBERROR))                            /*MMI110*/
+                                                                      /*MMI110*/
+             SNDPGMMSG  MSG('ERIT59 - Account Numbers calculation') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)               /*MMI110*/
+             CALL       PGM(ERIT59)                                   /*MMI110*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(DBERROR))                            /*MMI110*/
+
+/* Main extract                                           */
+
+             SNDPGMMSG  MSG('ERIT60 - Main Extract') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)               /*MMI110*/
              CALL       PGM(&ERPGM) PARM(&BJMRDT &BJURPT &LASTSQ)
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
              CHGVAR     VAR(&PGM) VALUE(&ERPGM)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              IF         COND(&ULX046 = 'N') THEN(DO)                /*ULX046*/
- 
+
 /*           If the feature is On,                                         ULX046*/
 /*           The S1.4 Report 'Customer Positions' is no more consolidated  ULX046*/
- 
+
 /*     2. With customer positions                                     ERL438 */
              IF         COND(%SWITCH(XXXXXX0X)) THEN(DO)           /* ERL438 */
              RCLRSC     LVL(*)                                     /* ERL438 */
@@ -201,7 +246,7 @@
              GOTO       CMDLBL(ERROR)                              /* ERL438 */
              ENDDO                                                 /* ERL438 */
              ENDDO                                                 /* ERL438 */
- 
+
              ENDDO                                                  /*ULX046*/
                                                                     /*ULX046*/
              IF         COND(&ULX046 = 'Y') THEN(DO)                /*ULX046*/
@@ -242,7 +287,7 @@
              ENDDO                                                  /*ULX046*/
                                                                     /*ULX046*/
              ENDDO                                                  /*ULX046*/
- 
+
 /* IML 1.1/2.5 Dicretionary customer assets generation             /* ERL436 */
              IF         COND(%SWITCH(XXXXXX0X)) THEN(DO)           /* ERL436 */
              RCLRSC     LVL(*)                                     /* ERL436 */
@@ -275,7 +320,7 @@
 /**********  GOTO       CMDLBL(ERROR)                                 ULX004 */
 /**********  ENDDO                                                    ULX004 */
 /**********  ENDDO                                                    ULX004 */
- 
+
 /**IML*1.4*PROCESSING**/                                           /* ULX004 */
 /**********  IF         COND(%SWITCH(XXXXXX0X)) THEN(DO)              ULX004 */
 /**********  RCLRSC     LVL(*)                                        ULX004 */
@@ -288,7 +333,7 @@
 /**********  GOTO       CMDLBL(ERROR)                                 ULX004 */
 /**********  ENDDO                                                    ULX004 */
 /**********  ENDDO                                                    ULX004 */
- 
+
 /* GUARANTEES GENERATION / PROVISIONS UPDATE */                    /* ULX004 */
              IF         COND(%SWITCH(XXXXXX0X)) THEN(DO)           /* ULX004 */
              RCLRSC     LVL(*)                                     /* ULX004 */
@@ -302,13 +347,13 @@
                           Provision update') TOMSGQ(MOPERQ) +
                           MSGTYPE(*INFO)                                                  /*CER001*/
              CALL       PGM(ERLU75) PARM(&LASTSQ)                  /* ULX004 */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)    /* ULX004 */
              CHGVAR     VAR(&PGM) VALUE('ERLU75')                  /* ULX004 */
              GOTO       CMDLBL(ERROR)                              /* ULX004 */
              ENDDO                                                 /* ULX004 */
              ENDDO                                                 /* ULX004 */
- 
+
 /* LMI CAD Allocation                                              /* ULX004 */
              RCVF       RCDFMT(ERLUICD0)                           /* ULX004 */
              IF         COND(&VPIM14 *EQ 'Y') THEN(DO)             /* ULX004 */
@@ -319,13 +364,13 @@
              SNDPGMMSG  MSG('ERLUCA - LMI CAD Allocation') +
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)                                   /*CER001*/
              CALL       PGM(ERLUCA) PARM(&BJMRDT &BJURPT &LASTCA)  /* ULX004 */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)    /* ULX004 */
              CHGVAR     VAR(&PGM) VALUE('ERLUCA')                  /* ULX004 */
              GOTO       CMDLBL(ERROR)                              /* ULX004 */
              ENDDO                                                 /* ULX004 */
              ENDDO                                                 /* ULX004 */
- 
+
              IF         COND(%SWITCH(XXXXXX0X)) THEN(DO)           /* ULX047 */
 /**********  CRTDUPOBJ  OBJ(ERLUCAPD) FROMLIB(&XXCADLIB) +
                           OBJTYPE(*FILE) NEWOBJ(WERLUCAPD) DATA(*YES)     */       /*ULX047 CER001*/
@@ -346,7 +391,7 @@
 /**********  DLTF       FILE(&XXCADLIB/WERLUCAPD)                         */       /*ULX047 CER001*/
              DLTF       FILE(WERLCAXPD)                                                   /*CER001*/
              ENDDO                                                 /* ULX047 */
- 
+
              ENDDO                                                 /* ULX004 */
                                                                    /* 182312 */
 /* BCL 1.2 Interest to accrue generation (column INA)              /* 182312 */
@@ -365,7 +410,7 @@
              GOTO       CMDLBL(ERROR)                              /* 182312 */
              ENDDO                                                 /* 182312 */
              ENDDO                                                 /* 182312 */
- 
+
                                                                       /*ULX040*/
 /***  Check whether feature ULX040 is Present.  ***/                  /*ULX040*/
              CALL       PGM(AOSARDR0) PARM(&RETCOD '*VERIFY'   +
@@ -391,7 +436,7 @@
 /** don't stop , manual i/C Menu                         **/          /*ULX040*/
                           CHGJOB     SWS(XXXXXX0X)
                       ENDDO                                           /*ULX040*/
- 
+
 /**********       SNDPGMMSG  MSG('ERC0702 - Call ERC0710 - RT30 +
                              Generation in Midas Failure ') TOMSGQ(CADMSGQ) +
                              MSGTYPE(*INFO)                               */       /*ULX040 CER001*/
@@ -400,7 +445,7 @@
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)                                   /*CER001*/
                   ENDDO                                               /*ULX040*/
              ENDDO            /* ULX040 present */                    /*ULX040*/
- 
+
 /* IML 1.2 - COLUMN 13 PROCESSING */
              IF         COND(%SWITCH(XXXXXX0X)) THEN(DO)
              RCLRSC     LVL(*)
@@ -413,13 +458,13 @@
              SNDPGMMSG  MSG('ERC0121 - Exchange Rates Extract') +
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)                                   /*CER001*/
              CALL       PGM(ERC0121)
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
              CHGVAR     VAR(&PGM) VALUE('ERC0121')
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (132 52)) RTNVAR(&MSGDTA)
 /*********** SNDPGMMSG  MSGID(DBM0001) MSGF(CEUSRMSG) +
@@ -432,9 +477,41 @@
                           MSGDTA(&MSGDTA) TOMSGQ(MOPERQ)                                  /*CER001*/
              CHGVAR     VAR(&RETURN) VALUE('Y')
              ENDDO
- 
+
+/* GUARANTEES GENERATION - PROVISIONS UPDATE      */
+
+             SNDPGMMSG  MSG('ERIT75 - Guarantees generation') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)
+             RCLRSC     LVL(*)
+             CALL       PGM(ERIT75)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(DBERROR))
+
+/* LENDING REPAYMENTS                             */
+
+             SNDPGMMSG  MSG('ERIT79 - Lending Repayments') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)
+             RCLRSC     LVL(*)
+             CALL       PGM(ERIT79)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(DBERROR))
+
+/* BASE DATI W                                    */
+
+             SNDPGMMSG  MSG('ERIT94 - Base Dati W') TOMSGQ(ERMSGQ) +
+                          MSGTYPE(*INFO)
+             RCLRSC     LVL(*)
+             CALL       PGM(ERIT94)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(DBERROR))
+
+
              GOTO       CMDLBL(EOJ)
- 
+ DBERROR:
+             RTVDTAARA  DTAARA(LDA (132 52)) RTNVAR(&MSGDTA)
+             SNDPGMMSG  MSGID(DBM0001) MSGF(DRSMM) +
+                          MSGDTA(&MSGDTA) TOMSGQ(ERMSGQ)
+
  ERROR: /****SNDPGMMSG  MSGID(DBM0004) MSGF(CEUSRMSG) MSGDTA(&PGM +
                           *CAT '001') TOMSGQ(ERMSGQ)                   ER_R10 */
 /************SNDPGMMSG  MSGID(DBM0004) MSGF(ERUSRMSG) MSGDTA(&PGM +
@@ -445,7 +522,7 @@
                           *CAT '001') TOMSGQ(MOPERQ)                                      /*CER001*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)              /*ULX004*/
              CHGVAR     VAR(&RETURN) VALUE('Y')
- 
+
  EOJ:        RCLRSC     LVL(*)
              RCLACTGRP  ACTGRP(*ELIGIBLE)                           /*ULX046*/
              DLTOVR     FILE(*ALL)                                 /* ERL438 */

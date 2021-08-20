@@ -1,0 +1,139 @@
+      *****************************************************************   ESL036
+      *  Last Amend No. MD031937           Date 23Jan15               *   ESL036
+      *  Prev Amend No. AR856737           Date 13Sep11               *   ESL036
+      *                 ESL036             Date 08Dec04               *   ESL036
+      *                 ESL038             Date 08Dec04               *   ESL036
+      *                 ESL036/CHG002      Date 04Jun04               *   ESL036
+      *                 ESL036             Date 15Apr04               *   ESL036
+      *---------------------------------------------------------------*   ESL036
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *   ESL036
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *   ESL036
+      *  ESL036 - EBA Step 1                                          *   ESL036
+      *           Amendment due to conflict with ESL038               *   ESL036
+      *  ESL038 - Funds Transfer STP Changes                          *   ESL036
+      *           Add authorisation processing for EBB013             *   ESL036
+      *  ESL036 - Change Request 2                                    *   ESL036
+      *           Pass destination to SDE165                          *   ESL036
+      *  ESL036 - EBA Step 1                                          *   ESL036
+      *****************************************************************   ESL036
+      *                                                                   EBB013
+      **  Check authorisation cut-off time if local clearing payment      EBB013
+     C           ##LCLR    IFEQ 'Y'                                       EBB013
+      *
+     C           KLCSD1    KLIST
+     C*****                KFLD           LCCYCD                          MK0541
+     C*****                KFLD           LCSETM                          MK0541
+     C                     KFLD           PCCY                            MK0541
+     C                     KFLD           CLSETM                          MK0541
+      *                                                                   EBB013
+      **  Get local clearing system details                               EBB013
+     C*********  CLSETM    CHAINSDLCSDL1             90                   EBB013
+     C           KLCSD1    CHAINSDLCSDL1             90                   EBB013
+      *                                                                   EBB013
+      **  Database error if not found                                     EBB013
+     C           *IN90     IFEQ *ON                                       EBB013
+     C                     MOVE '901'     DBASE                           EBB013
+     C                     MOVELCLSETM    DBKEY                           EBB013
+     C                     MOVEL'SDLCSDPD'DBFILE                          EBB013
+     C                     OUT  DLDA                                      EBB013
+     C                     SETON                     U7U8LR               EBB013
+     C                     DUMP                                           EBB013
+     C                     EXSR DALLOC                                    EBB013
+     C                     RETRN                                          EBB013
+     C                     ENDIF                                          EBB013
+      *                                                                   EBB013
+      **  Only validate if authorisation cut-off time entered             EBB013
+     C           LCAUCT    IFNE *ZEROS                                    EBB013
+      *                                                                   EBB013
+      **  Get time now                                                    EBB013
+     C                     TIME           ##TIME  60                      EBB013
+      *                                                                   EBB013
+      **  Determine cut-off date                                          EBB013
+     C                     Z-ADDBJDNWD    ##COFD  50                      EBB013
+     C           LCAUCD    IFNE 0                                         EBB013
+     C                     ADD  LCAUCD    ##COFD                          EBB013
+     C                     ENDIF                                          EBB013
+      *                                                                   EBB013
+      **  Set cut-off time                                                EBB013
+     C                     MOVELLCAUCT    ##COFT  60                      EBB013
+      *                                                                   EBB013
+      **  Determine if payment after cut-off time if before cutoff date   EBB013
+     C           PVDT      IFLT ##COFD                                    EBB013
+     C           ##TIME    ANDGT##COFT                                    EBB013
+     C                     MOVEL'PR21014' FTMSID                          EBB013
+     C                     SETON                     2089                 EBB013
+     C                     ADD  1         Z                               EBB013
+     C                     EXSR FTSNMS                                    EBB013
+     C                     ENDIF                                          EBB013
+      *                                                                   EBB013
+     C                     ENDIF                                          EBB013
+      *                                                                   EBB013
+     C                     ENDIF                                          ESL036
+      *                                                                   ESL036
+      **  Determine if payment is for EBA settlement                      ESL036
+     C           ESL036    IFEQ 'Y'                                       ESL036
+     C           PYTP      ANDEQ'OP'                                      ESL036
+     C           PCCY      ANDEQ'EUR'                                     ESL036
+      *                                                                   ESL036
+      **  Following conditioning added due to conflict with ESL038        ESL036
+     C           ##LCLR    ANDNE'Y'                                       ESL036
+     C           ESL038    ANDNE'Y'                                       ESL036
+      *                                                                   ESL036
+      **  Set up parameters for call of SDE165                            ESL036
+     C                     MOVELDST1      @SNCO                           ESL036
+     C                     MOVELDSTT      @SNCT                           ESL036
+     C                     MOVELDST1      @DEST                           CHG002
+     C                     MOVELDSTT      @DSTT                           CHG002
+     C                     MOVELSNCO      @SNCO                           ESL036
+     C                     MOVELSNCT      @SNCT                           ESL036
+     C                     MOVE PYDT      ZDATE                           SFFIXB
+     C                     EXSR ZDATE1                                    SFFIXB
+     C                     Z-ADDZDAYNO    @PVDT                           SFFIXB
+      *                                                                   ESL036
+      ** Verify if payment was inserted with EBA settlement               ESL036
+     C                     CALL 'SDE165'                                  ESL036
+     C                     PARM           @RTCD                           ESL036
+     C                     PARM 'V'       @ACTN   1                       ESL036
+     C                     PARM 'FT'      @MODI   2                       ESL036
+     C                     PARM           @DEST  35                       ESL036
+     C                     PARM           @DSTT   1                       ESL036
+     C                     PARM           @SNCO  10                       ESL036
+     C                     PARM           @SNCT   1                       ESL036
+     C                     PARM           @EBA    1                       ESL036
+     C                     PARM           @EBARF 10                       ESL036
+     C                     PARM           @EF53A  3                       ESL036
+     C                     PARM           @PVDT   50                      SFFIXB
+      *                                                                   ESL036
+      **  If payment is for EBA settlement then check it can be           ESL036
+      **  authorised for EBA settlement                                   ESL036
+     C           @EBA      IFEQ 'Y'                                       ESL036
+     C                     MOVE *BLANKS   @EBA                            ESL036
+     C                     CALL 'SDE165'                                  ESL036
+     C                     PARM           @RTCD                           ESL036
+     C                     PARM 'X'       @ACTN   1                       ESL036
+     C                     PARM 'FT'      @MODI   2                       ESL036
+     C                     PARM           @DEST  35                       ESL036
+     C                     PARM           @DSTT   1                       ESL036
+     C                     PARM           @SNCO  10                       ESL036
+     C                     PARM           @SNCT   1                       ESL036
+     C                     PARM           @EBA    1                       ESL036
+     C                     PARM           @EBARF 10                       ESL036
+     C                     PARM           @EF53A  3                       ESL036
+     C                     PARM           @PVDT   50                      SFFIXB
+      *                                                                   ESL036
+      **  If payment can not be authorised for EBA settlement             ESL036
+      **  send error message to user to prevent authorisation             ESL036
+     C           @EBA      IFNE 'Y'                                       ESL036
+     C                     MOVEL'XXX2002' FTMSID                          ESL036
+     C                     SETON                     2089                 ESL036
+     C                     ADD  1         Z                               ESL036
+     C                     MOVELFTMSGF    SVMSGF 10                       ESL036
+     C                     MOVEL'XXUSRMSG'FTMSGF 10                       ESL036
+     C                     EXSR FTSNMS                                    ESL036
+     C                     MOVELSVMSGF    FTMSGF 10                       ESL036
+     C                     ENDIF                                          ESL036
+      *                                                                   ESL036
+     C                     ENDIF                                          ESL036
+      *                                                                   ESL036
+     C                     ENDIF                                          ESL036
+      *                                                                   ESL036

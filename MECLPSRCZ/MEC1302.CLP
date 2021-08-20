@@ -9,8 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR918980           Date 15Mar12              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD031937           Date 13Jan15              */
+/*       Prev Amend No. AR856737           Date 13Sep11              */
+/*                      MM0001            Date 11Jan2005             */
+/*                      AR918980           Date 15Mar12              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR545296           Date 19Aug14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +28,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*                - CALL to MEC1027 ends in error - MEMSG not found  */
+/*       MM0001 - Remove  DLYJOB                                     */
 /*       AR918980 - When STP job restarted, incorrect data queue     */
 /*                  allocation. Correct data queue name on clear.    */
 /*                  Need to deallocate MEFTIMM *DTAQ.                */
@@ -197,7 +204,7 @@ RDTAQ:                                                                          
 /* Delay job by wait time (first time only) */
 /**/
              IF         COND(&WAIT *GE 0) THEN(DO)
-             DLYJOB     DLY(&DELAY_TIME)
+/*           DLYJOB     DLY(&DELAY_TIME)              */                      /* MM0001 */
              ENDDO
 /**/
 /* If no information from prior read of data queue */
@@ -288,9 +295,12 @@ RDTAQ:                                                                          
              RTVJOBA    TYPE(&TYPE)
              IF         COND(&TYPE *EQ '1') THEN(DO)
              CHGVAR     VAR(&MSGDTA) VALUE(' ')
-             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0220' +
+/* *******   CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0220' +
                           'MEMSG    ' &MSGDTA '          ' ' ' +
-                          'MEC1302' 'Y')
+                          'MEC1302' 'Y')                                   ****** */   /*AR856737*/
+             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0220' +
+                          'GBMEMSG   ' &MSGDTA '          ' ' ' +
+                          'MEC1302' 'Y')                                               /*AR856737*/
              ENDDO
 /**/
 /* Try to allocate data queue *EXCL */
@@ -333,9 +343,12 @@ ALCOBJ:                                                                         
              CHGVAR     VAR(&MSGDTA) VALUE(' ')
              CHGVAR     VAR(&MSGDTA) VALUE(&JOB *CAT &USER *CAT +
                           &JOBNBR)
-             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0221' +
+/* *****     CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0221' +
                           'MEMSG    ' &MSGDTA '          ' ' ' +
-                          'MEC1302' 'Y')
+                          'MEC1302' 'Y')                                     ***** */ /*/*AR856737*/
+             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0221' +
+                          'GBMEMSG   ' &MSGDTA '          ' ' ' +
+                          'MEC1302' 'Y')                                                /*AR856737*/
              ENDDO
 /**/
 /* If jobq then *IMMED */

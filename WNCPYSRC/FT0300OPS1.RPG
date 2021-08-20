@@ -1,0 +1,57 @@
+      **********************************************************************
+      *  Last Amend No. MD031937           Date 13Jan15                    *
+      *  Prev Amend No. AR856737           Date 13Sep11                    *
+      *                 STPIII             Date 23Aug06                    *
+      *                 STP500             Date 04May05                    *
+      *--------------------------------------------------------------------*
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level           *
+      *  STPIII - NordLB STP Phase III                                     *
+      *  STP500 - Validation changes.                                      *
+      **********************************************************************
+      **                                                                                      STP500
+      **  Determine if payment is a local clearing payment                                    STP500
+      *                                                                                       STP500
+     C           KLCSD1    KLIST                                                              STP500
+     C                     KFLD           LCCYCD                                              STP500
+     C                     KFLD           LCSETM                                              STP500
+      *                                                                                       STP500
+     C           S4PCCY    IFEQ *BLANKS                                                       STP500
+     C                     MOVELS4SMCY    LCCYCD                                              STP500
+     C                     ELSE                                                               STP500
+     C                     MOVELS4PCCY    LCCYCD                                              STP500
+     C                     ENDIF                                                              STP500
+      *
+     C                     Z-ADD2         DTQLEN                                              STPIII
+     C                     Z-ADD0         DTQWAI                                              STPIII
+     C                     MOVE *BLANKS   DTQDTA                                              STPIII
+      *                                                                                       STPIII
+     C                     CALL 'QRCVDTAQ'                                                    STPIII
+     C                     PARM 'SORBNET' DTQNAM 10                                           STPIII
+     C                     PARM '*LIBL'   DTQLIB 10                                           STPIII
+     C                     PARM           DTQLEN  50                                          STPIII
+     C                     PARM           DTQDTA  2                                           STPIII
+     C                     PARM           DTQWAI  50                                          STPIII
+      *                                                                                       STP500
+     C           DTQDTA    IFEQ 'PS'                                                          STPIII
+     C                     MOVEL'PS'      LCSETM                                              STPIII
+     C                     MOVEL'PS'      S4STMT                                              STPIII
+     C                     MOVEL'N'       S4SNMT
+     C                     ELSE                                                               STPIII
+     C                     MOVELMOSETT    LCSETM                                              STP500
+     C                     ENDIF                                                              STPIII
+      *                                                                                       STP500
+     C           ##ROUT    IFEQ 'Y'                                                           STP500
+     C           DTQDTA    OREQ 'PS'                                                          STPIII
+     C           KLCSD1    CHAINSDLCSDL1             90                                       STP500
+      *                                                                                       STP500
+      **  Set local clearing payment indicator                                                STP500
+      *                                                                                       STP500
+     C           *IN90     IFEQ *OFF                                                          STP500
+      *                                                                                       STP500
+      **  Set flag to indicate payment is a local clearing payment                            STP500
+      *                                                                                       STP500
+     C                     MOVE 'Y'       @@LCLR  1                                           STP500
+     C                     MOVE LCCLID    @@CLID 10                                           STP500
+     C                     ENDIF                                                              STP500
+     C                     ENDIF                                                              STP500

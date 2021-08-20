@@ -9,18 +9,22 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC139             Date 04Jan21              */
+/*       Prev Amend No. UIT021             Date 06MAY97               */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      132400             Date 18Mar98              */
 /*                      IMI001             Date 24May97              */
 /*                    ER0356 PT          DATE 11AUG93               */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     LUC139 - Upgrade UCI Italian Returns                          */
+/*     UIT021 - XXDLIB DO NOT EXIST, MUST BE XXDPLIB                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     132400 - EMERGENCY FIX TO INCREASE THE LENGHT OF &LIB1       */
@@ -60,4 +64,24 @@ DCL        VAR(&LIBID) TYPE(*CHAR) LEN(2)
                           FILE(EREXTRPD))
 /* ER0356 END */
        DLTF       FILE(EREXTRXX)
+       
+       OVRDBF     FILE(EIEXTRPD) SHARE(*YES)
+       OPNQRYF    FILE((EIEXTRPD *FIRST EIEXTRF0)) OPTION(*ALL) +
+                  QRYSLT('EXLOTD *NE "' *CAT &PARM1 *CAT '" *AND +
+                          EXLOTD *NE "' *CAT &PARM2 *CAT '" *AND +
+                          EXLOTD *NE "' *CAT &PARM3 *CAT '" *AND +
+                          EXLOTD *NE "' *CAT &PARM4 *CAT '" *AND +
+                          EXLOTD *NE "' *CAT &PARM5 *CAT '"') +
+                          ALWCPYDTA(*YES)
+       CPYFRMQRYF FROMOPNID(EIEXTRPD) TOFILE(&LIB1/EIEXTRXX) +
+                  MBROPT(*REPLACE) CRTFILE(*YES)
+       DLTOVR     FILE(EIEXTRPD)
+       CLOF       OPNID(EIEXTRPD)
+       CPYF       FROMFILE(EIEXTRXX) TOFILE(EIEXTRPD) MBROPT(*REPLACE)
+/* ER0356 START */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(EIEXTRPD))
+/* ER0356 END */
+       DLTF       FILE(EIEXTRXX)
+       
 ENDPGM

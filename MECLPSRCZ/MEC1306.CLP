@@ -9,18 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD031937           Date 13Jan15              */
+/*       Prev Amend No. AR856737           Date 13Sep11              */
+/*                      MKCAR9             Date 22Mar06              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK024             Date 12Apr06              */
+/*                      CPK024             Date 12Apr06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CCB001 *C *CREATE  Date 01Mar95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by   */
 /*                UTC0012.                                           */
@@ -35,6 +40,7 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+             DCL        VAR(&NEW_STAT) TYPE(*CHAR) LEN(5)                                 /*MKCAR9*/
  
 /* Global monitor message */
  
@@ -50,6 +56,8 @@
  
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(MESTPSTAT (1 5)) VALUE('STOP ')                            /*MKCAR9*/
  
 /***COPY*MECPYSRC,MEC1306MPE*                                        */                   /*CPK024*/
 /*/COPY WNCPYSRC,MEC1306MPE                                          */                   /*CPK024*/

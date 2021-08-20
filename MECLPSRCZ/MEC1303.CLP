@@ -9,8 +9,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD043618           Date 07Dec17              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD31937A           Date 30Sept15             */
+/*       Prev Amend No. MD031937           Date 13Jan15              */
+/*                      AR856737           Date 13Sep11              */
+/*                      MKCAR9            Date 22Mar06               */
+/*                      MD043618           Date 07Dec17              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD027770           Date 27Jun14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -26,6 +30,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD31937A - Submit job using the system owner profile        */
+/*                  rather than Users profile                        */
+/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       MKCAR9 - New dataarea for storing STP status.               */
 /*       MD043618 - Job ME_FT_IMM when started manually it is        */
 /*                  submitted  with user’s profile and not system    */
 /*                  owner profile -Formalization of onsite fix.      */
@@ -64,6 +73,7 @@
              DCL        VAR(&USER1) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JOBNBR1) TYPE(*CHAR) LEN(6)
              DCL        VAR(&THIS_JOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&STPSTAT) TYPE(*CHAR) LEN(5)                                  /*MKCAR9*/
 /* */
 /* Global Monitor Message */
 /* */
@@ -98,6 +108,9 @@
              RTVJOBA    JOB(&JOB1) USER(&USER1) NBR(&JOBNBR1)
              CHGVAR     VAR(&THIS_JOB) VALUE(&JOB1 *CAT &USER1 *CAT +
                           &JOBNBR1)
+             RTVDTAARA  DTAARA(MESTPSTAT (1 5)) RTNVAR(&STPSTAT)                          /*MKCAR9*/
+             IF         COND(&STPSTAT *NE 'START') THEN(GOTO +
+                          CMDLBL(ENDCLPGM))                                               /*MKCAR9*/
              RTVDTAARA  DTAARA(MEDTA  (191 10)) RTNVAR(&TEMP)
              CHGVAR     VAR(%SST(&JOB 1 10)) VALUE(&TEMP)
              RTVDTAARA  DTAARA(MEDTA  (201 10)) RTNVAR(&TEMP)

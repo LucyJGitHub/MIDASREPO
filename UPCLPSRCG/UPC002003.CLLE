@@ -1,0 +1,152 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC002003 - Shell to drop and create stored procedures      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2021           */
+/*                                                                   */
+/*       Last Amend No. MD058620 *CREATE   Date 20Aug21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058620 - New program for UTMENU option PROC for the Global*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &GPFXSVAL &BRGSVAL &SRCSVAL)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SRCSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&COMPARE) TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&GXPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2021')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create data area /MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &SRCSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PTFSRC) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(VALIDATE)
+
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC002003' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* Save library list. */
+             SAVLIBL    SAVDTL(UPC002003)
+
+/* Set up global layer library list. */
+             CALL       PGM(GPC000016) PARM(&GPSBSID)
+
+/* Delete the driving file in QTEMP if it already exists. */
+             DLTF       FILE(QTEMP/UPDLVC*)
+             MONMSG     MSGID(CPF0000)
+
+             RMVLIBLE   LIB(&PTFUPG)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&PTFUPG) POSITION(*FIRST)
+
+             CHGVAR     VAR(&GXPLIB) VALUE(&GPSBSID *TCAT 'GXPLIB')
+             CHGVAR     VAR(&COMPARE) VALUE('SQLSRCG ')
+
+
+             IF         COND(&MODE *EQ '*IMP') THEN(DO)
+/* Call program to build driving file for SQL procedures. */
+                CALL       PGM(UPC000002) PARM(&PTFSRC &COMPARE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                OVRDBF     FILE(UPDLVCPD) TOFILE(QTEMP/UPDLVCPD) +
+                             OVRSCOPE(*JOB)
+             ENDDO
+
+/* Call program to drop and create procedures. */
+             CALL       PGM(UPC000001) PARM(&GXPLIB &PTFSRC &COMPARE)
+             DLTOVR     FILE(UPDLVCPD) LVL(*JOB)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC002003') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC002003' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+
+ENDPGM:
+/* Restore original library list. */
+             RSTLIBL    SAVEDLIBL(UPC002003)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

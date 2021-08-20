@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 254407             Date 07Nov16               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254407 - Use SECEO5 instead of SECEO to avoid CPF5157.       *
+      *           Applied fix 233155. Applied for MD042108            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -58,7 +61,8 @@
       ** +--------------------------------------+
  
       ** Security Diary Events
-     FSECEO     IF   E           K DISK    INFSR(*PSSR)
+     F*****SECEO     IF   E           K DISK    INFSR(*PSSR)                                  254407
+     FSECEO5    IF   E           K DISK    INFSR(*PSSR)                                       254407
      F                                     PREFIX(SE_)
  
       * Hook to enable non-core files to be included

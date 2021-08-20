@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GO Notify Management Limits in CoB')
+/*EXI *  TEXT('Midas GO Notify Management Limits in CoB')             *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing                                    *

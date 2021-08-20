@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055785           Date 20May20               *
+      *  Last Amend No. AR686094           Date 21Jun19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
@@ -193,6 +194,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR686094 - Non retail account opened by system with default  *
+      *             account frequency 'Y' for yearly has a next       *
+      *             statement date not equal to end of year date.Amend*
+      *             program such that system generated accounts will  *
+      *             always have next statement date equal to end of   *
+      *             year date if the default frequency is equal to 'Y'*
+      *             Apply fix 196061 (Child: AR686095)                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
@@ -1820,7 +1828,13 @@
      C                   EXSR      ZFREQS
      C                   Z-ADD     ZDAYNO        NSTD
      C                   ENDIF
-
+      *                                                                                     AR686094
+      ** If BKDSFC is 'Y',set NSTD to End of Year Date                                      AR686094
+      *                                                                                     AR686094
+     C     BKDSFC        IFEQ      'Y'                                                      AR686094
+     C                   Z-ADD     BJEYD         NSTD                                       AR686094
+     C                   ENDIF                                                              AR686094
+      *                                                                                     AR686094
      C/COPY WNCPYSRC,GL0600CP18
 
      C                   BITOFF    '01234567'    GLBT

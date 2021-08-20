@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD026861           Date 14May14               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 06Dec10               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026861 - Instrument mandatory only when Private Banking is *
+      *           enabled.                                            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -476,7 +479,8 @@
 
       /COPY WNCPYSRC,SESEC3V030
                                                                                               CGL014
-     C                   IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                             CGL014
+     C**********         IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                    CGL014 MD026861
+     C                   IF        BGN4ST = 'Y'                                             MD026861
       *
       ** PB Instrument Type.
       *

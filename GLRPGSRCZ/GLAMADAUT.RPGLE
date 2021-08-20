@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR629716A          Date 01Jul19               *
+      *  Prev Amend No. AR629716           Date 01Jul19               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE101             Date 27Aug14               *
@@ -55,6 +57,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR629716A - Related to AR629717, when a TI account amended   *
+      *              but TI details not changed, duplicate TI details *
+      *              error message is issued in SDA. Fix is to issue  *
+      *              error message only if duplicate exists.          *
+      *              (Child: AR798992)                                *
+      *            - Applied for AR629716 (Child: AR954074)           *
+      *  AR629716 - Duplicate TI account number. Ensure to check file *
+      *             GLACSHPD to check accounts not yet authorised via *
+      *             SDA. (Child: AR629717)                            *
+      *            - Applied for AR629716 (Child: AR954074)           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -980,10 +992,23 @@
      C                   EVAL      *IN82 = *OFF                                              BUG5340
      C                   IF        BGN3ST = 'Y' AND #ACA5TIAC = 'Y'                          BUG5340
      C                             AND ALACTN = 'I'                                          BUG5340
+     C                             OR BGN3ST = 'Y' AND #ACA5TIAC = 'Y'                      AR629716
+     C                             AND ALACTN = 'A'                                         AR629716
      C                   IF        #ACA5TIAN <> *BLANKS                                      BUG5340
      C                             AND #ACA5TIAS <> *BLANKS                                  BUG5340
-     C     WACCNT        CHAIN     ACCNTTI                                                   BUG5340
-     C                   IF        %FOUND                                                    BUG5340
+     C*****WACCNT        CHAIN     ACCNTTI                                          BUG5340 AR629716
+     C     WACCNT        CHAIN     ACCNTTI                            79                    AR629716
+     C**********         IF        %FOUND                                           BUG5340 AR629716
+      *                                                                                     AR629716
+     C     TI_BRCA       IFEQ      AC_BRCA                                                 AR629716A
+     C     TI_CNUM       ANDEQ     AC_CNUM                                                  AR629716
+     C     TI_ACOD       ANDEQ     AC_ACOD                                                  AR629716
+     C     TI_CCY        ANDEQ     AC_CCY                                                   AR629716
+     C     TI_ACSQ       ANDEQ     AC_ACSQ                                                  AR629716
+     C     ALACTN        ANDEQ     'A'                                                      AR629716
+     C                   MOVE      *ON           *IN79                                      AR629716
+     C                   ENDIF                                                              AR629716
+     C     *IN79         IFEQ      *OFF                                                     AR629716
      C                   EVAL      *IN82 = *ON                                               BUG5340
      C                   MOVEL     'RE71060'     ERRMSG                                      BUG5340
      C                   EXSR      SREnd                                                     BUG5340

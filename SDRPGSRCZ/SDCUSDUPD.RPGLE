@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 249440             Date 03Dec12               *
+      *  Prev Amend No. 252069             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -158,6 +159,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249440 - Trailer of SDTICSPD is not properly udpated         *
+      *           the count on SDCUSTPD is being carried over to      *
+      *           SDTICSPD count, causing the figure to be bloated.   *
+      *           Clear the work variable for the trailer count.      *
+      *           Applied for AR997295 (Child: AR1063641).            *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -6526,6 +6532,13 @@
      C**********         MOVEL     '023'         DBASE                  * DBERR 023* BUG3362 BG12238
      C**********         EXSR      SRERR                                ************ BUG3362 BG12238
      C**********         ELSE                                                        BUG3362 BG12238
+      *                                                                                       249440
+      ** Clear work fields.                                                                   249440
+      *                                                                                       249440
+     C                   Z-ADD     *ZERO         WUNORC                         No of records 249440
+     C                   Z-ADD     *ZERO         WUNOAM                         No of Amend   249440
+     C                   Z-ADD     *ZERO         WUNOIN                         No of delete  249440
+     C                   Z-ADD     *ZERO         WUNODL                         No of Insert  249440
       *                                                                                      BUG3362
       ** if valid                                                                            BUG3362
       *                                                                                      BUG3362

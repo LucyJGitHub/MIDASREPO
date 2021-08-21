@@ -28,8 +28,9 @@
       ***(C)*COPYRIGHT*Misys*2004**************************************                       LUC109
       *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109             Date 20Sep16               *
-      *  Prev Amend No. MD024836           Date 07Feb14               *
+      *  Last Amend No. MD058643           Date 20Aug21               *
+      *  Prev Amend No. LUC109             Date 20Sep16               *
+      *                 MD024836           Date 07Feb14               *
       *                 LUC013             Date 15May08               *
       *                 237990             Date 01Dec04               *
       *                 230946             Date 01Dec04               *
@@ -38,7 +39,8 @@
       *                 MUI011   *Create   Date 07May04               *
       *                                                               *
       *****************************************************************
-      *                                                               *
+      *  MD058643 - Compilation failed on XX000048 due to field BRTT  *                             
+      *             definition                                        *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
       *  MD024736 - Loans with no Rollover Date are not being         *
       *             extracted.                                        *
@@ -166,6 +168,7 @@
      I              ROCN                        XXROCN                                        LUC109
      I              POBN                        XXPOBN                                        LUC109
      I              POCN                        XXPOCN                                        LUC109
+     I              BRTT                        XXBRTT                                      MD058643
      I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
       *
       **********************************************************************
@@ -408,7 +411,8 @@
      C                   ENDIF
       *
      C     AMTP          IFEQ      'SC'
-     C                   MOVE      BRTT          HBRTT
+     C**********         MOVE      BRTT          HBRTT                                      MD058643
+     C                   MOVE      XXBRTT        HBRTT                                      MD058643
      C                   Z-ADD     *ZERO         HFRFD
      C**********           Z-ADD*ZERO     HINFD                           230946
      C                   MOVE      *BLANKS       HICFR

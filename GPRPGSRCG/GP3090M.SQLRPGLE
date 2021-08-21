@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056555 *CREATE   Date 31Aug20               *
+      *  Last Amend No. MD058642           Date 21Aug21               *
+      *  Prev Amend No. MD056555 *CREATE   Date 31Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058642- Compilation error                                  *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *                                                               *
       *****************************************************************
@@ -92,7 +94,8 @@
      D WQ0003          S              6  0
      D ZDate           S              7
       *
-     D GPSARP        E DS                  EXTNAME(GPSARPPD)
+     D*GPSARP***     E DS                  EXTNAME(GPSARPPD)                                MD058642
+     D GPSARP        E DS                  EXTNAME(GPSRPJW0)                                MD058642
       *
      C*exec SQL
      C* set option
@@ -246,7 +249,8 @@
      C                   UPDATE    GP3090MS0
      C                   If        WURTCD = *blank
      C/EXEC SQL
-     C+ update GPSARPPD
+     C**update*GPSARPPD                                                                     MD058642
+     C+ update GPSRPXTD                                                                     MD058642
      C+ set AKPRVC = 'Y'
      C+ where AKSARN = :AKSARN and AKPNAM = :AKPNAM
      C/END-EXEC
@@ -382,7 +386,8 @@
       **  the 'Go to' field; if it is blank all records are selected.
      C/exec SQL
      C+ declare GCursor insensitive scroll cursor for
-     C+ select * from GPSARPPD
+     C**select** from GPSARPPD                                                              MD058642
+     C+ select * from GPSRPJW0                                                              MD058642
      C+ where AKSARN = :SARN
      C+ order by AKPNAM
      C/end-exec

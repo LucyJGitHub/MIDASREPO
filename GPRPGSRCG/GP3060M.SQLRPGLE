@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056555 *CREATE   Date 31Aug20               *
+      *  Last Amend No. MD058642           Date 21Aug21               *
+      *  Prev Amend No. MD056555 *CREATE   Date 31Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058642- Compilation error                                  *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *                                                               *
       *****************************************************************
@@ -90,7 +92,8 @@
      D WQ0003          S              6  0
      D ZDate           S              7
       *
-     D GPSARI        E DS                  EXTNAME(GPSARIPD)
+     D*GPSARI***     E DS                  EXTNAME(GPSARIPD)                                MD058642
+     D GPSARI        E DS                  EXTNAME(GPSRIJW0)                                MD058642
       *
      C*exec SQL
      C* set option
@@ -350,7 +353,8 @@
       **  the 'Go to' field; if it is blank all records are selected.
      C/exec SQL
      C+ declare GCursor insensitive scroll cursor for
-     C+ select * from GPSARIPD
+     C**select** from GPSARIPD                                                              MD058642
+     C+ select * from GPSRIJW0                                                              MD058642
      C+ where ADSARN = :SARN
      C+ order by ADINDX
      C/end-exec

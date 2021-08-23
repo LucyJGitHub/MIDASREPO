@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058404           Date 06Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058623           Date 23Aug21               *
+      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
       *                 MD057930           Date 26Apr21               *
       *                 MD057934           Date 23Apr21               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058623 - Added validation for API DEAM                     *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -711,7 +713,9 @@
                                                                                               CLE172
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   EVAL      WNumBADJ = DLBADJ                                          CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL                                                                CLE172
      C                   ENDIF                                                                CLE172
@@ -964,7 +968,9 @@
                                                                                               CLE172
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   MOVE      DLLBDY        WDAY                                         CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL                                                                CLE172
 
@@ -1065,7 +1071,9 @@
                                                                                               CLE172
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   MOVE      DLLODY        WDAY                                         CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL                                                                CLE172
 
@@ -1293,7 +1301,9 @@
                                                                                               CDL102
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   MOVE      DLRRDP        WDAY                                         CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL
 

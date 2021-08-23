@@ -22,13 +22,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1055588 *CREATE  Date 08Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -55,7 +58,7 @@
       *
      FRP1423AU  O    E             PRINTER Infds(SpoolU)
      F                                     Infsr(*Pssr)
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -100,37 +103,37 @@
       *  *inzsr  - Program Initialization routine.                    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /Eject
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Array containing Copyright statement.
      D Cpy@            S             80    Dim(1) Ctdata Perrcd(1)
       *
@@ -176,12 +179,12 @@
       **  Data structure for access programs, long data structure.
       *
      D Dssdy         E DS                  Extname(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** --------- Start of fields used by access programs ----------**
       *
       **  Return code.
@@ -215,19 +218,19 @@
       **  Work Field used to produce only one dump.
       *
      D W_RunBefore     S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C     Start         Tag
- 
+
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -263,14 +266,14 @@
       **  Print Retail Account informations on report.
       *
      C                   Exsr      #Report
- 
+
      C                   Endif                                                  End *inu1
      C                   Eval      RCOUNT = RCOUNT + 1
       *
       **  Read next Available Balance
       *
      C                   Read      RPACNTQD                               81
- 
+
      C                   Enddo                                                  End DO_W_81
       *
       **  If printing of reports required.
@@ -289,7 +292,7 @@
      C                   Eval      Difln1 = Oflln1 - Prtln1
      C     Difln1        Ifle      Rqdln1                                       Begin Difln1
      C                   Write     HEADP1
- 
+
      C                   Endif                                                  End Difln1
       *
       **  Write out Trailer Format.
@@ -299,9 +302,9 @@
       **  Close Retail Accounts COB changes Report printer file.
       *
      C                   Close     RP1423P1
- 
+
      C                   Endif                                                  End RCOUNT
- 
+
      C                   Endif                                                  End *inu1
       *
       **  Print Audit Report.
@@ -335,7 +338,7 @@
       **  Force header format printing.
       *
      C                   Eval      Prtln1 =  Oflln1
- 
+
      C                   Endif                                                  End W_OpenP1
       *
       **  Set up report printer file fields.
@@ -364,7 +367,7 @@
      C                   Eval      Dbkey  = F1CCY                               ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
       *
       **  Format Today's available balance.
@@ -372,23 +375,23 @@
      C                   Eval      Zfld15 = F1AVA0
      C                   Eval      Zdecs  = A6NBDP
      C                   Eval      Zecode = 'J'
- 
+
      C                   Callb     'ZSEDIT'
      C                   Parm                    Zfld15           15 0          I:Numeric field
      C                   Parm                    Zdecs             1 0          I:No of decimals
      C                   Parm                    Zecode            1            I:Edit code
      C                   Parm                    Zout21           21            O:Function field
- 
+
      C                   Eval      ARR_Amount = *blanks
       *
       **  See to it that amounts would be aligned on decimal point.
       *
      C     Zdecs         Ifeq      0                                            Begin Zdecs
      C                   Eval      A = 1
- 
+
      C                   Else                                                   Else Zdecs
      C     Zdecs         Add       2             A                 1 0
- 
+
      C                   Endif                                                  End Zdecs
      C                   Movea     Zout21        ARR_Amount(A)
      C                   Movea     ARR_Amount(1) P1AVA0                         Cleared balance
@@ -403,13 +406,13 @@
       **  If end of page, print relevant record format.
       *
      C     RCOUNT        Ifgt      0                                            Begin RCOUNT
- 
+
      C                   Write     ENDPAG1
- 
+
      C                   Endif                                                  End RCOUNT
- 
+
      C                   Write     HEADP1
- 
+
      C                   Endif                                                  End Difln1
       *
       ** Write record details.
@@ -435,10 +438,10 @@
       *
       **  Ensure Report Spool File recorded by RCF.
       *
- 
+
      C                   Eval      Zsnum1 = Sfnum1
      C                   Move      Sfnum1        Zsnum1
- 
+
      C                   Call      'ZSFILE'
      C                   Parm      *Blanks       Seq               5
      C                   Parm                    Senty             3
@@ -477,7 +480,7 @@
       **  Ensure Audit Spool File recorded by RCF.
       *
      C                   move      Sfnumu        Zsnumu
- 
+
      C                   Call      'ZSFILE'
      C                   Parm      *Blanks       Seq               5
      C                   Parm      *Blanks       Senty             3
@@ -526,22 +529,22 @@
       *
      C     *inu7         Ifeq      *on                                          Begin *inu7
      C                   Write     DBERROR
- 
+
      C                   Else                                                   Else *inu7
       *
       **  Or, if no records read, output "No Details" message.
       *
      C     RCOUNT        Ifeq      0                                            Begin RCOUNT
      C                   Write     NODTLS
- 
+
      C                   Endif                                                  End RCOUNT
- 
+
      C                   Endif                                                  End *inu7
- 
+
      C                   Endsr
       *
       /Eject
- 
+
       /Eject
       *****************************************************************
       /Title SR/*Pssr
@@ -559,23 +562,23 @@
       *****************************************************************
       *
      C     *Pssr         Begsr                                                  ** *Pssr SR **
- 
+
      C     W_RunBefore   Ifne      'Y'                                          Begin W_RunBefore
      C                   Eval      W_RunBefore = 'Y'
- 
+
      C                   Eval      *inu7 = True
      C                   Eval      *inu8 = True
- 
+
      C                   Dump
- 
+
       **  Ouput Audit Report.
      C                   Exsr      #Audit
- 
+
      C                   Endif                                                  End W_RunBefore
- 
+
      C                   Eval      *inlr = True
      C                   Return
- 
+
      C                   Endsr
       *
       /Eject
@@ -610,23 +613,23 @@
      C                   Eval      Dbkey  = '*first'                            ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
       *
       **  Set on indicator to print appropriate audit report header.
       *
      C     *inu1         Ifeq      True                                         Begin *inu1
      C                   Eval      *in30 = True
- 
+
      C                   Endif                                                  End *inu1
       *
       **  Set on indicator to print appropriate audit report header.
       *
      C     *inu1         Ifeq      True                                         Begin *inu1
      C                   Eval      *in30 = True
- 
+
      C                   Endif                                                  End *inu1
- 
+
      C                   Endsr
      C/Eject
       *****************************************************************

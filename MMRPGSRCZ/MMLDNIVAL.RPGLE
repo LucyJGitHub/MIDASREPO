@@ -159,7 +159,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  LUC104 - KondorPlus Details on Deals                         *
-      *           Use hooks: MMLDNIV001, MMLDNIV092                   *
+      *           Use hooks: MMLDNIV001, MMLDNIV092.                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *

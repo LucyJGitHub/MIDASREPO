@@ -726,6 +726,7 @@
 
      C/COPY ZACPYSRC,DBFIELDS
 
+     C/COPY WNCPYSRC,GLH01010                                                             LUC103
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

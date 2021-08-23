@@ -1872,6 +1872,9 @@
      C     *LIKE         DEFINE    KYOSTL        WYOSTL
      C     *LIKE         DEFINE    KYSTBR        WYSTBR
      C     *LIKE         DEFINE    RECI          FSROLI
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_008                                                               LUC113
+      *                                                                                       LUC113
      C     PMPOKY        KLIST                                                                 S0148
      C                   KFLD                    ##CNUM                                        CPM00
      C                   KFLD                    PTFR                                          S0148
@@ -2074,6 +2077,9 @@
      C                   ELSE
      C                   MOVE      'N'           WBCPL
      C                   ENDIF
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_009                                                               LUC113
+      *                                                                                       LUC113
      C***/COPY*WNCPYSRC,DL0280C655***                                                         CFC006
      C/COPY WNCPYSRC,DL0280C655                                                             MD020563
       *****************************************************************           AR1097176 MD020563
@@ -2524,6 +2530,9 @@
      C                   ELSE
      C                   MOVE      'N'           CAS006
      C                   ENDIF
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_010                                                               LUC113
+      *                                                                                       LUC113
       ** Check if Interest Statement for Call/Time Deposit feature is ON                      CDL012
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
@@ -3450,6 +3459,9 @@
 0678 C*             PROCESSING.
 0679 C*
 0680 C     BEGIN         TAG                                                    ** BEGIN TAG **LN071
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_011                                                               LUC113
+      *                                                                                       LUC113
      C                   If        CDL013 = '1'                                             MD053762
      C                   MOVE      IPDS          IPDSX             1                        MD053762
      C                   MOVE      IMET          IMETX             2 0                      MD053762
@@ -3941,6 +3953,9 @@
 0804 C*
 0805 C*    DETERMINE IF TAX PAYABLE
 0806 C   03TAXI          COMP      'Y'                                    23
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_012                                                               LUC113
+      *                                                                                       LUC113
      C***03*****                                                                  BUG26576 BUG26576A
      C*ANN23TAXI         COMP      'T'                                    23      BUG26576 BUG26576A
      C     CDL013        IFEQ      '1'                                                        CDL013

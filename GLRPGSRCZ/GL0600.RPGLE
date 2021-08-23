@@ -201,7 +201,7 @@
       *           Use of core hook GL0600IIP2                         *
       *           Use of core hook GL0600OOP5                         *
       *           Addition of hook LUC110_082                         *
-      *           Addition of hook LUC110_083                         *
+      *           Addition of hook LUC110_083.                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *

@@ -14,8 +14,15 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR1088283          Date 20Mar13               *
+      *  Last Amend No. MD055507           Date 16Jun20               *
+      *  Prev Amend No. MD055823           Date 27May20               *
+      *                 MD054505           Date 30Sep19               *
+      *                 LUC133             Date 30Jul19               *
+      *                 LUC110             Date 23Jan19               *
+      *                 LUC108             DATE 19Apr16               *
+      *                 LUC107             Date 21Dec15               *
+      *                 CSD103             Date 10Aug20               *
+      *                 AR1088283          Date 20Mar13               *
       *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
       *                 BUG25122A          Date 02Sep09               *
@@ -165,6 +172,59 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055507 - GLC43 component failed due to undefined record    *
+      *             type is found in file APOST                       *
+      *           - Amendments to copy source GL0420IP11, commented   *
+      *             out APOSTVB in I-spec                             *
+      *           - Introduced new copy source GL0420IIP8, that adds  *
+      *             complete record identifying codes for file APOSTVB*
+      *  MD055823 - Spa NY Monthly statement issue.                   *
+      *             Amend GL0420OOP1 to Remove FICHEK from DS -       *
+      *             intrusive.                                        *
+      *  MD054505 - Running Balance not shown in GL0420P2 (LUC133)    *
+      *             /Copy amended: GL0420OOP1                         *
+      *  LUC133 - Amendments to Statement of Account feature SpA      *
+      *           /copies used:                                       *
+      *           GL04204C45, GL0420C078, GL0420C085, GL0420CP86,     *
+      *           GL0420C089, GL0420CP35, GL0420CP44, GL0420CP45,     *
+      *           GL0420CP47, GL0420CP50, GL0420CP51, GL0420CP52,     *
+      *           GL0420CP53, GL0420CP54, GL0420CP55, GL0420CP56,     *
+      *           GL0420CP57, GL0420FFPG, GL0420IP11, GL0420OOP1,     *
+      *           GLH00438                                            *
+      *  LUC110 - Extended Narratives (Upgrade to FBM 2.1)            *
+      *           Use of core hook GL0420CCP5                         *
+      *           Use of core hook GL0420CCP7                         *
+      *           Use of core hook GL0420CP15                         *
+      *           Use of core hook GL0420CP35                         *
+      *           Use of core hook GL0420CP59                         *
+      *           Use of core hook GL0420FFPG                         *
+      *           Use of core hook GL0420I002                         *
+      *           Use of core hook GL0420I017                         *
+      *  LUC108 - Statement of Accounts                               *
+      *         - Upgrade of LUC108 from Dba3.04 to FusionMidas       *
+      *         - Carried Forward balance overprinting                *
+      *           (incl New York CAR ISAR11)                          *
+      *           /Copies used:                                       *
+      *           GL0420C012,GL0420C029,GL0420C031,                   *
+      *           GL0420C032,GL0420C041,GL0420C074,                   *
+      *           GL0420C078,GL0420C081,GL0420C086,                   *
+      *           GL0420CBOY,GL0420CP20,GL0420CP21,                   *
+      *           GL0420CP26,GL0420CP32,GL0420CP35,                   *
+      *           GL0420CP44,GL0420CP45,GL0420CP47,                   *
+      *           GL0420FFPG,GL0420I002,GL0420I003,                   *
+      *           GL0420IIP7,GL0420OOP1,GL0420OP10,                   *
+      *           LUC108_001,LUC108_002,LUC108_003,                   *
+      *           LUC108_004,LUC108_005,LUC108_006,                   *
+      *           LUC108_007,LUC108_008,LUC108_009,                   *
+      *           LUC108_010,LUC108_011                               *
+      *         - Set GL0420P4 size to 132                            *
+      *  LUC107 - The statement page number on ACCNTAB should only be *
+      *           updated per statement and not per page generated by *
+      *           Midas.                                              *
+      *           /Copies used:                                       *
+      *           GL0420C031,GL0420C081,GL0420CP18,                   *
+      *           GL0420CP20,GL0420CP39,GL0420CY34,                   *
+      *           LUC108_010                                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR1088283 - Group Account narrative appears unconditionally. *
@@ -594,7 +654,8 @@
      F                                     USROPN
      F/COPY WNCPYSRC,GL0420F003
 0025 F***GL0420P4  O    F  132        PRINTER INFDS(SPOOL4)                          S01117 MD037536
-0025 FGL0420P4  O    F  100        PRINTER INFDS(SPOOL4)                                    MD037536
+0025 F***GL0420P4  O    F  100        PRINTER INFDS(SPOOL4)                          MD037536 LUC108
+     FGL0420P4  O    F  132        PRINTER INFDS(SPOOL4)                                      LUC108
      F                                     OFLIND(*INOB)
      F                                     USROPN
      F/COPY WNCPYSRC,GL0420F001
@@ -662,7 +723,9 @@
 0038 F*       13      STATEMENTS TRAILER
 0039 F***     14      POSTING TRAILER                                     S01091
      F*       15      NO MORE POSTINGS FOR ACCOUNT
+     F/COPY WNCPYSRC,LUC108_001                                                               LUC108
 0040 F*       16      DATABASE ERROR-NO TRAILER ON STMTS FILE
+     F/COPY WNCPYSRC,LUC108_002                                                               LUC108
 0042 F*    17         CARRIED FORWARD CLEARED BALANCE IS DEBIT.
 0043 F*    18         PRINT HEADINGS IN TOTAL TIME FOR FORMAT 5.
 0044 F*    19         PRINT LINE FOR CLEARINGS AFTER LAST POST.
@@ -696,7 +759,9 @@
 0068 F*       43                   - '3'
 0069 F*       44                   - '4'
 0070 F*       45      LAST  LINE OF NEW PAGE OF STATEMENT
+     F/COPY WNCPYSRC,LUC108_003                                                               LUC108
 0071 F*       46      FIRST PAGE OF STATEMENT
+     F/COPY WNCPYSRC,LUC108_004                                                               LUC108
 0072 F*       47      THE PRESENT POSTING BALANCE IS POSITIVE
 0073 F*       48      FIRST PAGE INDICATOR
 0074 F*       49      INDICATES MOVEMENT ON THIS POSTING DATE
@@ -809,7 +874,7 @@
      D                 DS                                                       S01146
      D  FICHE                  1     16                                         S01146
      D  MFFQ                   1      1                                         S01146
-     D  FICHEK                 2     16                                         S01146
+     D**FICHEK*****************2     16                                              S01146 MD055823
      D**   GLAPSTGA fields                                                216937
      D                 DS                                                       216937
      D**********                              1  18 SRCGL                              216937 CGL029
@@ -986,6 +1051,7 @@
      D*                                                                   S01377
      D**   SARS INSTALLED FILE                                            S01377
      D*                                                                   S01377
+     C/COPY WNCPYSRC,LUC108_005                                                               LUC108
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    S01377
      D*                                                                   S01194
      D**   RETAIL DETAILS                                                 S01194
@@ -2418,6 +2484,7 @@
       *
      C/COPY WNCPYSRC,GL0420C029
      C   03RECI          COMP      'C'                                    79
+     C/COPY WNCPYSRC,LUC108_011                                                               LUC108
      C***03                EXCPT                                          S01091
      C***                  SETOF                     03                   S01091
      C***03                EXCPT                                   S01161 E16854
@@ -2853,6 +2920,7 @@
      C     CONT          TAG                                                                  LN0012
 0558 C*
 0559 C*    SETON INDICATORS FOR INITIAL PRINT
+     C/COPY WNCPYSRC,LUC108_006                                                               LUC108
 0560 C                   SETON                                        5046
      C/COPY WNCPYSRC,GL0420C041
 0561 C*
@@ -3224,6 +3292,7 @@
 0747 C*    CHECK FOR FULL PAGE                                            S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP19                                           S01408
+     C/COPY WNCPYSRC,LUC108_007                                                               LUC108
      C*                                                                   S01408
 0749 C   41                                                                                   S01091
 0750 C*R*43******LINCNT    COMP 43                       45        S01091 216937
@@ -3240,6 +3309,7 @@
      C*
 0753 C***44******LINCNT    COMP 30                       45        S01091 216937
 0753 C   44LINCNT        COMP      30                                 45  45                  216937
+     C/COPY WNCPYSRC,LUC108_008                                                               LUC108
 0754 C*                                                                   S01091
 0755 C*                                                                   S01091
 0756 C*    IF END OF PAGE INCREMENT LSTP AND ZEROISE LINE COUNTER         S01091
@@ -3655,6 +3725,7 @@
      C/COPY WNCPYSRC,GL0420C079
 0715 C*                                                                   S01091
 0716 C*    DETERMINE IF NEW PAGE NEEDED FOR STATEMENT                     S01091
+     C/COPY WNCPYSRC,LUC108_009                                                               LUC108
 0717 C     STPA          COMP      LSTPX                                  48                  S01091
      C/COPY WNCPYSRC,GL0420C074
 0718 C     LINCNT        ADD       1             LINCNT                                       S01091
@@ -3841,6 +3912,7 @@
      C/COPY WNCPYSRC,GL0420C076
 0830 C**   CONDITION DR/CR ON PAGE/STMT. TOTAL.
 0831 C   18CLBAL         COMP      0                                  37
+     C/COPY WNCPYSRC,LUC108_010                                                               LUC108
 0832 C   18              Z-ADD     STPA          STPFF             4 0
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP25                                           S01408

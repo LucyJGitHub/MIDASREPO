@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD057323           Date 09Dec20               *
@@ -125,6 +126,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Issue error message if facility is blocked.         *
+      *           Amendment of core hook LELERIV001                   *
+      *           Amendment of core hook LELERIV002                   *
+      *           Amendment of core hook LELERIV010                   *
+      *           Amendment of core hook LELERIV058                   *
+      *           Amendment of core hook LELERIV069                   *  
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

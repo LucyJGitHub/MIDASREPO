@@ -19,7 +19,7 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. LUC123             Date 18Jun19               *
-      *  Prec Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD055515           Date 13Apr20               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *

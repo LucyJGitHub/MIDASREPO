@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050190           Date 04Apr18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD050190           Date 04Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 MD022923B          Date 30Sep13               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD050190 - Low performance of GOCACTS components.            *
       *           - Conditioned processing of ABC file GPACNTTD.      *            
       *  MD046248 - Finastra Rebranding                               *

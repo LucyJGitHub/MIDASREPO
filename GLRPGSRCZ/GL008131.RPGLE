@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD040278           Date 18Aug16               *
       *                 MD037319           Date 16Feb16               *
       *                 CRE095             Date 25Apr14               *
@@ -42,6 +43,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split. *

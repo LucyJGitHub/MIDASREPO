@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD048980           Date 15Dec17               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD048980           Date 15Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042411           Date 18Nov16               *
       *                 MD033583           Date 03Jun15               *
@@ -86,6 +87,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD048980 - Dumps in GLC3320                                  *
       *  MD046248 - Finastra Rebranding                               *

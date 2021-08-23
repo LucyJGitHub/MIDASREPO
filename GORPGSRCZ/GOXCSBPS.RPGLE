@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036598           Date 07Jan16               *
+      *  Last Amend No. 263192             Date 01Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036598           Date 07Jan16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263192 - Computation of backvalue will now be runday -1.     *
+      *         - Applied for MD021307.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036598 - Component GOC0020 failed                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -43,7 +46,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(BH_)
      FBKPOS     IF   E           K DISK    INFSR(*PSSR)
@@ -56,24 +59,24 @@
      F                                     RENAME(HSTTRDF:HSTTRDF_T)
      FTRDMTH    IF   E           K DISK    RENAME(TRADSDF:TRADSDF_V)INFSR(*PSSR)
      F                                     RENAME(HSTTRDF:HSTTRDF_V)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D BKPHDX        E DS                  EXTNAME(BKPHDD) PREFIX(BH_)
      D BKPOSX        E DS                  EXTNAME(BKPOSD) PREFIX(BP_)
      D SECTYX        E DS                  EXTNAME(SECTYD) PREFIX(SE_)
      D INVTPX        E DS                  EXTNAME(INVTPD) PREFIX(IN_)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
- 
+
+
+
      C     *ENTRY        PLIST
       /COPY GOCPYSRC,GOXCEPARM
       *
@@ -100,15 +103,15 @@
       * Whilst positions can be found
       *
      C     *IN99         DOWEQ     '0'
- 
+
       * If the position is a trade date position
- 
+
      C     BH_BHTV       IFEQ      'T'
- 
+
       * Access security details
       * Extract trade date position
       * Extract value date position
- 
+
      C                   EXSR      ACS_SECURITY
      C     Extract_POSN  IFEQ      'Y'
      C                   MOVEL     'V'           Trade_Value
@@ -130,20 +133,20 @@
       * EXTRACT A SINGLE SECURITY BOOK POSITION
       ********************************************************************
      C     EXTSIN        BEGSR
- 
+
       * Access trade date position
- 
+
      C                   MOVEL     'T'           Trade_Value
      C     BKPHDK        CHAIN     BKPHDDF                            99        *
- 
+
       * If the position is found
- 
+
      C     *IN99         IFEQ      '0'
- 
+
       * Access security details
       * Extract trade date position
       * Extract value date position
- 
+
      C                   EXSR      ACS_SECURITY
      C     Extract_POSN  IFEQ      'Y'
      C                   MOVEL     'V'           Trade_Value
@@ -165,7 +168,7 @@
       *
      C                   CLEAR                   BKPOSX
      C                   Z-ADD     BVDate        BP_BPPD
- 
+
      C     BKPOSK        SETGT     BKPOS
      C     BKPOSP        READPE    BKPOS                                  99
       *
@@ -181,13 +184,13 @@
       *  (If no trades, set the position date to today)
       *
      C     *IN99         IFEQ      '1'
- 
+
      C     Trade_Value   IFEQ      'T'
      C     TRADK         SETLL     TRDMTHT
      C                   ELSE
      C     TRADK         SETLL     TRDMTH
      C                   ENDIF
- 
+
      C     *IN99         DOUEQ     '1'
      C     RECI          ORNE      '*'
      C     RECI          ANDNE     'C'
@@ -198,7 +201,7 @@
      C     TRADK         READE     TRDMTH                                 99
      C                   ENDIF
      C                   ENDDO
- 
+
      C     *IN99         IFEQ      '1'
      C                   Z-ADD     I#RDNB        BH_LPSD
      C                   ELSE
@@ -208,7 +211,7 @@
      C     TDVD          SUB       1             BH_LPSD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   CALLB     'GOXTSBPS'
@@ -217,7 +220,7 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
- 
+
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
@@ -226,9 +229,9 @@
      C                   PARM                    BKPOSX
      C                   PARM                    SECTYX
      C                   PARM                    INVTPX
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = 'SBPS' + I#EXTT + I#BRCA
@@ -246,35 +249,35 @@
       * Access security details
       ********************************************************************
      C     ACS_SECURITY  BEGSR
- 
+
       * Extract position
- 
+
      C                   MOVEL     'Y'           Extract_POSN      1
- 
+
       * Get security details
- 
+
      C     BH_BHSC       CHAIN     SECTYDF                            99        *
- 
+
       * Do not extract position if security not found or if deleted
- 
+
      C     *IN99         IFEQ      '1'
      C     SE_RECI       OREQ      '*'
      C     SE_RECI       OREQ      'C'                                                      MD036598
      C                   MOVEL     'N'           Extract_POSN
      C                   ELSE
- 
+
       * Get investment type details
- 
+
      C     INVTPK        CHAIN     INVTPDF                            99        *
- 
+
       * Do not extract position if investment type not found or if deleted
- 
+
      C     *IN99         IFEQ      '1'
      C     IN_RECI       OREQ      '*'
      C                   MOVEL     'N'           Extract_POSN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -282,40 +285,41 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Extract control information
- 
+
       /COPY GOCPYSRC,GOGETEXCT
- 
+
       *  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Securities Trading details
- 
+
      C                   CALLB     'AOSTRDR0'
      C                   PARM      '*DBERR  '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDSTRD        PARM      SDSTRD        DSSDY
- 
-     C     I#RDNB        SUB       BVBVP         BVDate            5 0
- 
+
+     C*****I#RDNB        SUB       BVBVP         BVDate            5 0                        263192
+     C     I#RDNB        SUB       1             BVDate            5 0                        263192
+
       * Key lists
- 
+
      C     BKPHDK        KLIST
      C                   KFLD                    I#SESN
      C                   KFLD                    I#BRCA
      C                   KFLD                    I#BOOK
      C                   KFLD                    I#MKTI
      C                   KFLD                    Trade_Value       1
- 
+
      C     INVTPK        KLIST
      C                   KFLD                    SE_NMCY
      C                   KFLD                    SE_SITP
- 
+
      C     BKPOSK        KLIST
      C                   KFLD                    BH_BHSC
      C                   KFLD                    BH_BHBA
@@ -323,20 +327,20 @@
      C                   KFLD                    BH_BHMK
      C                   KFLD                    Trade_Value
      C                   KFLD                    BP_BPPD
- 
+
      C     BKPOSP        KLIST
      C                   KFLD                    BH_BHSC
      C                   KFLD                    BH_BHBA
      C                   KFLD                    BH_BHBK
      C                   KFLD                    BH_BHMK
      C                   KFLD                    Trade_Value
- 
+
      C     TRADK         KLIST
      C                   KFLD                    BH_BHBA
      C                   KFLD                    BH_BHBK
      C                   KFLD                    BH_BHSC
      C                   KFLD                    BH_BHMK
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

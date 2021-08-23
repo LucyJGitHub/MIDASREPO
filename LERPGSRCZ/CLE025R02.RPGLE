@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 AR899028           Date 25Jan12               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts                         *
       *  CRE090 - Delay Capitalisation of Interest                    *
@@ -46,18 +49,18 @@
       *           with amendment of Account by (AMAD) in MidasPlus    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** | F-specs                              |
       ** | =======                              |
       ** +--------------------------------------+
- 
+
       ** Accounts Master Extension file
      FGLACNTL3  UF A E           K DISK    PREFIX(AX_)
- 
+
       ** Accounts Master File
      FACCNTAB   IF   E             DISK    PREFIX(AC_)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -65,32 +68,32 @@
       ** | D-specs                              |
       ** | =======                              |
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** | Named constants                      |
       ** | ===============                      |
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
       ** | ==========================           |
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** | Declared variables                   |
       ** | ==================                   |
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -104,29 +107,29 @@
       ** | executed at program activation.                                |
       ** |                                                                |
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise the Accounts Extension File
- 
+
      C                   EXSR      SRInitACEX
- 
+
       ** End program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       *  SrInitAMEX - Initialise the Account Master Extension File    *
       *****************************************************************
      C     SrInitACEX    BEGSR
- 
+
       ** Read records then update the Accounts extension file
- 
+
      C                   READ      ACCNTAB                                81
- 
+
      C                   DOW       *IN81 = *OFF
- 
+
      C                   EVAL      AX_F1CNUM = AC_CNUM
      C                   EVAL      AX_F1CCY  = AC_CCY
      C                   EVAL      AX_F1ACOD = AC_ACOD
@@ -145,15 +148,15 @@
      C                   EVAL      AX_F1CRFD = *ZERO                                          CRE095
      C                   EVAL      AX_F1CNFD = *ZERO                                          CRE095
      C                   EVAL      AX_F1CNFM = *ZERO                                          CRE095
- 
+
      C     ACKEY         CHAIN     GLACNTL3                           99
      C                   IF        *IN99 = '1'
      C                   WRITE     GLACNTD0
      C                   ENDIF
      C                   READ      ACCNTAB                                81
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -161,16 +164,16 @@
       * *INZSR - Subroutine for Initial First Cycle processing        *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     CPY@          BIS@             80
- 
+
      C     ACKEY         KLIST
      C                   KFLD                    AC_CNUM
      C                   KFLD                    AC_CCY
      C                   KFLD                    AC_ACOD
      C                   KFLD                    AC_ACSQ
      C                   KFLD                    AC_BRCA
- 
+
      C                   ENDSR
       *****************************************************************
 ** CPY@

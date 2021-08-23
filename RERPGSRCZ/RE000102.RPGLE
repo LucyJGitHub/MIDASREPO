@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD022132C          Date 09Mar18               *
-      *  Prev Amend No. MD022132           Date 09Mar18               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD022132C          Date 09Mar18               *
+      *                 MD022132           Date 09Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD022132C- Process all retail accounts.                      *
       *           - Applied for MD-35969.                             *
       *  MD022132 - Triggers don't pick up Rollback deletes of ABC    *

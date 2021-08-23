@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD023554           Date 19Nov13               *
-      *  Prev Amend No. MD023412           Date 14Nov13               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD023554           Date 19Nov13               *
+      *                 MD023412           Date 14Nov13               *
       *                 MD021158           Date 30Sep13               *
       *                 MD019039           Date 30Sep13               *
       *                 AR1083172          Date 30Sep13               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD023554 - Unable to proceed with the transaction            *
       *             (withdrawal) as it already hanged                 *
       *  MD023412 - DBERRCTL appears when making a withdrawal upon    *

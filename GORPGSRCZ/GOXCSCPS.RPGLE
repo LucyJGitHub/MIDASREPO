@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045155           Date 17May17               *
+      *  Last Amend No. 263192             Date 01Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045155           Date 17May17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263192 - Computation of backvalue will now be runday -1.     *
+      *         - Applied for MD021307.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045155 - Remove the initialization of CP_CSNT and CP_CSNV  *
       *             to make sure that the nominal on CPOSND is equal  *
@@ -49,7 +52,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FCPOSN     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CP_)
      FCPOSH     IF   E           K DISK    INFSR(*PSSR)
@@ -69,22 +72,22 @@
      F                                     RENAME(DPTMVDF:DPTMVDF_V)
      F                                     RENAME(DPTMVTF:DPTMVTF_V)
      F                                     IGNORE(SEDVPRD0)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D CPOSNX        E DS                  EXTNAME(CPOSND) PREFIX(CP_)
      D SECTYX        E DS                  EXTNAME(SECTYD) PREFIX(SE_)
      D INVTPX        E DS                  EXTNAME(INVTPD) PREFIX(IN_)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      IDPTMVDF_T
      I              DPRN                        TDRF
      I              DPNA                        NOML
@@ -109,8 +112,8 @@
      I              DPDO                        TDVD
      I              DPMV                        TDTP
      I              DMTD                        TDDT
- 
- 
+
+
      C     *ENTRY        PLIST
       /COPY GOCPYSRC,GOXCEPARM
       *
@@ -137,11 +140,11 @@
       * Whilst positions can be found
       *
      C     *IN99         DOWEQ     '0'
- 
+
       * Access security details
       * Extract trade date position
       * Extract value date position
- 
+
      C                   EXSR      ACS_SECURITY
      C     Extract_POSN  IFEQ      'Y'
      C                   MOVEL     'V'           Trade_Value       1
@@ -162,19 +165,19 @@
       * EXTRACT A SINGLE SECURITY CUSTOMER POSITION
       ********************************************************************
      C     EXTSIN        BEGSR
- 
+
       * Access latest position
- 
+
      C     CPOSNK        CHAIN     CPOSNDF                            99        *
- 
+
       * If the position is found
- 
+
      C     *IN99         IFEQ      '0'
- 
+
       * Access security details
       * Extract trade date position
       * Extract value date position
- 
+
      C                   EXSR      ACS_SECURITY
      C     Extract_POSN  IFEQ      'Y'
      C                   MOVEL     'V'           Trade_Value
@@ -197,7 +200,7 @@
      C                   Z-ADD     BVDate        CP_CSDA
      C**********         Z-ADD     0             CP_CSNT                                    MD045155
      C**********         Z-ADD     0             CP_CSNV                                    MD045155
- 
+
      C     CPOSHK        SETGT     CPOSH
      C     CPOSHP        READPE    CPOSH                                  99
       *
@@ -215,13 +218,13 @@
       *  movement present (If none present, set the position date to today)
       *
      C     *IN99         IFEQ      '1'
- 
+
      C     Trade_Value   IFEQ      'T'
      C     TRADK         SETLL     TDPBT
      C                   ELSE
      C     TRADK         SETLL     TDPBV
      C                   ENDIF
- 
+
      C     *IN99         DOUEQ     '1'
      C     RECI          ORNE      '*'
      C     RECI          ANDNE     'C'
@@ -235,7 +238,7 @@
      C                   Z-ADD     TDVD          TDDT
      C                   ENDIF
      C                   ENDDO
- 
+
      C     *IN99         IFEQ      '1'
      C                   Z-ADD     I#RDNB        CP_CSDA
      C                   ELSE
@@ -245,7 +248,7 @@
      C     TDVD          SUB       1             CP_CSDA
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   CALLB     'GOXTSCPS'
@@ -254,7 +257,7 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
- 
+
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
@@ -262,9 +265,9 @@
      C                   PARM                    CPOSNX
      C                   PARM                    SECTYX
      C                   PARM                    INVTPX
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   MOVEL     I#CNUM        W#CNUM            6
@@ -283,34 +286,34 @@
       * Access security details
       ********************************************************************
      C     ACS_SECURITY  BEGSR
- 
+
       * Extract position
- 
+
      C                   MOVEL     'Y'           Extract_POSN      1
- 
+
       * Get security details
- 
+
      C     CP_CSSC       CHAIN     SECTYDF                            99        *
- 
+
       * Do not extract position if security not found or if deleted
- 
+
      C     *IN99         IFEQ      '1'
      C     SE_RECI       OREQ      '*'
      C                   MOVEL     'N'           Extract_POSN
      C                   ELSE
- 
+
       * Get investment type details
- 
+
      C     INVTPK        CHAIN     INVTPDF                            99        *
- 
+
       * Do not extract position if investment type not found or if deleted
- 
+
      C     *IN99         IFEQ      '1'
      C     IN_RECI       OREQ      '*'
      C                   MOVEL     'N'           Extract_POSN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -318,55 +321,56 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Extract control information
- 
+
       /COPY GOCPYSRC,GOGETEXCT
- 
+
       *  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Securities Trading details
- 
+
      C                   CALLB     'AOSTRDR0'
      C                   PARM      '*DBERR  '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDSTRD        PARM      SDSTRD        DSSDY
- 
-     C     I#RDNB        SUB       BVBVP         BVDate            5 0
- 
+
+     C*****I#RDNB        SUB       BVBVP         BVDate            5 0                        263192
+     C     I#RDNB        SUB       1             BVDate            5 0                        263192
+
       * Key lists
- 
+
      C     CPOSNK        KLIST
      C                   KFLD                    I#BRCA
      C                   KFLD                    I#SESN
      C                   KFLD                    I#CNUM
- 
+
      C     INVTPK        KLIST
      C                   KFLD                    SE_NMCY
      C                   KFLD                    SE_SITP
- 
+
      C     CPOSHK        KLIST
      C                   KFLD                    CP_CSBA
      C                   KFLD                    CP_CSSC
      C                   KFLD                    CP_CSCN
      C                   KFLD                    CP_CSDA
- 
+
      C     CPOSHP        KLIST
      C                   KFLD                    CP_CSBA
      C                   KFLD                    CP_CSSC
      C                   KFLD                    CP_CSCN
- 
+
      C     TRADK         KLIST
      C                   KFLD                    CP_CSBA
      C                   KFLD                    CP_CSCN
      C                   KFLD                    CP_CSSC
      C                   KFLD                    CP_CSDA
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

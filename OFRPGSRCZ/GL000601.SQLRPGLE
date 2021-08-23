@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD032099           Date 27Jan15               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032099           Date 27Jan15               *
       *                 MD031997           Date 22Jan15               *
       *                 CGL153             Date 05Feb14               *
       *                 MD024157           Date 19Dec13               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032099 - Auto-authorise forecasts with negative amount     *
       *             not included in Forecast Balance Calculation.     *

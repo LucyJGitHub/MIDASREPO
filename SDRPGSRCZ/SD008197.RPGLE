@@ -11,8 +11,9 @@
       *                                                               *
       *  (C) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR899028           Date 25Jan12               *
       *                 AR847269           Date 09Nov11               *
@@ -20,6 +21,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
+      *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -35,56 +38,56 @@
       *  *PSSR     - Error processing                                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas GL Accounts master
      FACCNT     IF   E           K DISK    IGNORE(ACCNTAAF:ACCNTACF)
      F                                     INFSR(*PSSR)
- 
+
      FGLACNTL3  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1A
      D @CUST           S              6A
- 
+
       **---------------------------------------------------------------
       ** Standard D-specs
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       ** External DS for RUNDAT DataArea Layout file
      D RUNDTA        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
- 
+
+
      C                   DOU       %EOF(ACCNT)
      C                   READ      ACCNT
- 
+
      C                   MOVE      CNUM          @CUST
      C                   IF        NOT(%EOF(ACCNT))
      C                   IF        ATYP = 'R' And
      C                             @CUST <> BJCUST
- 
+
      C**********         EVAL      F1BRCA = BRCA                                            AR847269
      C**********         EVAL      F1CNUM = CNUM                                            AR847269
      C**********         EVAL      F1CCY  = CCY                                             AR847269
@@ -97,7 +100,7 @@
      C**********         EVAL      F1CDTE = DACO                                            AR847269
      C**********         EVAL      F1TAX  = 'Y'                                             AR847269
      C**********         EVAL      F1AVBL = 'Y'                                             AR847269
- 
+
      C     KGLACNTQD     CHAIN     GLACNTL3
      C                   EVAL      F1TAX  = 'Y'                                             AR847269
      C                   EVAL      F1CLOS = 'N'                                             AR847269
@@ -129,13 +132,13 @@
      C**********         WRITE     GLACNTD0                                                 AR847269
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -149,20 +152,20 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     KGLACNTQD     KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    BRCA
- 
+
       ** Access Bank Details
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        @RTCD <> *BLANK
      C                   MOVEL     @OPTN         DBKEY

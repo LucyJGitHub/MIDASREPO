@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD056297           Date 16Jul20               *
-      *  Prev Amend No. MD032170           Date 19Jul19               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. MD056297           Date 16Jul20               *
+      *                 MD032170           Date 19Jul19               *
       *                 MD022132C          Date 09Mar18               *
       *                 MD022132           Date 09Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
       *  MD056297 - Ensure GLACNTQD will be updated with SO projection*
       *  MD032170 - Ensure that GLACNTQD will be updated with the     *
       *             correct balance.                                  *
@@ -227,8 +229,11 @@
      D  F1DAT7                22     24P 0
      D  F1DAT8                25     27P 0
      D  F1DAT9                28     30P 0
-     D  F1DATS                 1     30P 0
-     D                                     DIM(10) ASCEND
+     D***F1DATS*                1     30P 0                                                AR1068513
+     D**********                           DIM(10) ASCEND                                  AR1068513
+     D  F1DA10                31     33P 0                                                 AR1068513
+     D  F1DATS                 1     33P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
 
      D                 DS
       *** Data structure of Base Available Balance
@@ -242,8 +247,11 @@
      D  F1BAB7                57     64P 0                                                 BUG27719A
      D  F1BAB8                65     72P 0                                                 BUG27719A
      D  F1BAB9                73     80P 0                                                 BUG27719A
-     D  F1BAVS                 1     80P 0                                                 BUG27719A
-     D                                     DIM(10) ASCEND                                  BUG27719A
+     D***F1BAVS*                1     80P 0                                      BUG27719A AR1068513
+     D**********                           DIM(10) ASCEND                        BUG27719A AR1068513
+     D  F1BB10                81     88P 0                                                 AR1068513
+     D  F1BAVS                 1     88P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
                                                                                            BUG27719A
      D                 DS                                                                  BUG27719A
       **  Data structure of Account Balance                                                BUG27719A
@@ -258,8 +266,11 @@
      D  F1BAV8                65     72P 0
      D  F1BAV9                73     80P 0
      D**F1BAVS**               1     80P 0                                                 BUG27719A
-     D  F1ACBS                 1     80P 0                                                 BUG27719A
-     D                                     DIM(10) ASCEND
+     D***F1ACBS*                1     80P 0                                      BUG27719A AR1068513
+     D**********                           DIM(10) ASCEND                        BUG27719A AR1068513
+     D  F1BA10                81     88P 0                                                 AR1068513
+     D  F1ACBS                 1     88P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
 
      D                 DS
       *** Data structure of Available Balance
@@ -273,8 +284,11 @@
      D  F1AVA7                57     64P 0
      D  F1AVA8                65     72P 0
      D  F1AVA9                73     80P 0
-     D  F1AVAS                 1     80P 0
-     D                                     DIM(10) ASCEND
+     D***F1AVAS*                1     80P 0                                                AR1068513
+     D**********                           DIM(10) ASCEND                                  AR1068513
+     D  F1AV10                81     88P 0                                                 AR1068513
+     D  F1AVAS                 1     88P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
 
      D                 DS
       *** Data structure of Blocked Collateral
@@ -288,8 +302,11 @@
      D  F1CBC7                57     64P 0
      D  F1CBC8                65     72P 0
      D  F1CBC9                73     80P 0
-     D  F1CBCS                 1     80P 0
-     D                                     DIM(10) ASCEND
+     D***F1CBCS*                1     80P 0                                                AR1068513
+     D**********                           DIM(10) ASCEND                                  AR1068513
+     D  F1CB10                81     88P 0                                                 AR1068513
+     D  F1CBCS                 1     88P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
 
      D                 DS
       *** Data structure of Held Items
@@ -303,8 +320,11 @@
      D  F1HIT7                57     64P 0
      D  F1HIT8                65     72P 0
      D  F1HIT9                73     80P 0
-     D  F1HITS                 1     80P 0
-     D                                     DIM(10) ASCEND
+     D***F1HITS*                1     80P 0                                                AR1068513
+     D**********                           DIM(10) ASCEND                                  AR1068513
+     D  F1HI10                81     88P 0                                                 AR1068513
+     D  F1HITS                 1     88P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
      D                 DS                                                                  AR1055588
       *                                                                                    AR1055588
       ** Data structure of Previous Available Balance's values                             AR1055588
@@ -319,11 +339,15 @@
      D  P_F1AVA7              57     64P 0                                                 AR1055588
      D  P_F1AVA8              65     72P 0                                                 AR1055588
      D  P_F1AVA9              73     80P 0                                                 AR1055588
-     D  P_F1AVAS               1     80P 0                                                 AR1055588
-     D                                     DIM(10) ASCEND                                  AR1055588
+     D***P_F1AVAS               1     80P 0                                      AR1055588 AR1068513
+     D**********                           DIM(10) ASCEND                        AR1055588 AR1068513
+     D  P_F1AV10              81     88P 0                                                 AR1068513
+     D  P_F1AVAS               1     88P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
      D/COPY WNCPYSRC,REH00065
       *** Data structure of Held Items
-     D  HELDS          S              1    DIM(10)
+     D***HELDS**        S              1    DIM(10)                                        AR1068513
+     D  HELDS          S              1    DIM(11)                                         AR1068513
 
       *** Work variables
      D WDATEIN         S              5  0
@@ -488,16 +512,16 @@
                                                                                            AR1055588
       ** Send ONLY records to TOF which have effectively changes of available balances     AR1055588
                                                                                            AR1055588
-     C                   IF        F1AVA0 <> P_F1AVA0 OR                                   AR1055588
-     C                             F1AVA1 <> P_F1AVA1 OR                                   AR1055588
-     C                             F1AVA2 <> P_F1AVA2 OR                                   AR1055588
-     C                             F1AVA3 <> P_F1AVA3 OR                                   AR1055588
-     C                             F1AVA4 <> P_F1AVA4 OR                                   AR1055588
-     C                             F1AVA5 <> P_F1AVA5 OR                                   AR1055588
-     C                             F1AVA6 <> P_F1AVA6 OR                                   AR1055588
-     C                             F1AVA7 <> P_F1AVA7 OR                                   AR1055588
-     C                             F1AVA8 <> P_F1AVA8 OR                                   AR1055588
-     C                             F1AVA9 <> P_F1AVA9                                      AR1055588
+     C**********         IF        F1AVA0 <> P_F1AVA0 OR                         AR1055588 AR1068513
+     C**********                   F1AVA1 <> P_F1AVA1 OR                         AR1055588 AR1068513
+     C**********                   F1AVA2 <> P_F1AVA2 OR                         AR1055588 AR1068513
+     C**********                   F1AVA3 <> P_F1AVA3 OR                         AR1055588 AR1068513
+     C**********                   F1AVA4 <> P_F1AVA4 OR                         AR1055588 AR1068513
+     C**********                   F1AVA5 <> P_F1AVA5 OR                         AR1055588 AR1068513
+     C**********                   F1AVA6 <> P_F1AVA6 OR                         AR1055588 AR1068513
+     C**********                   F1AVA7 <> P_F1AVA7 OR                         AR1055588 AR1068513
+     C**********                   F1AVA8 <> P_F1AVA8 OR                         AR1055588 AR1068513
+     C**********                   F1AVA9 <> P_F1AVA9                            AR1055588 AR1068513
                                                                                            AR1055588
      C                   IF        F1CNUM <> WKCNUM                                        AR1055588
      C                   EXSR      SRGetPBInd                                              AR1055588
@@ -510,7 +534,7 @@
      C                   WRITE     RPACNTD0                                                AR1055588
      C                   ENDIF                                                             AR1055588
                                                                                            AR1055588
-     C                   ENDIF                                                             AR1055588
+     C**********         ENDIF                                                   AR1055588 AR1068513
                                                                                            AR1055588
      C                   ENDIF                                                             AR1055588
                                                                                            AR1055588
@@ -536,7 +560,8 @@
       *****************************************************************
      C     SRWorkDay     BEGSR
 
-     C                   EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 1
+     C**********         EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 1                   AR1068513
+     C                   EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 2                   AR1068513
       *
       ** Initialize variables
       *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1034683          Date 07Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1068513          Date 31May21               *
+      *  Prev Amend No. AR1034683          Date 07Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
       *                 CRE095             Date 25Apr14               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068513 - Projected available balance day10 fix            *
       *  AR1034683 - Available Bal not updated with Cr Movements      *
       *             Allow update of GLACNTQD for accounts with        *
       *             attached facilities. Applied for CLE169.          *
@@ -243,8 +245,11 @@
      D  F2DAT7                22     24P 0                                                  AR958145
      D  F2DAT8                25     27P 0                                                  AR958145
      D  F2DAT9                28     30P 0                                                  AR958145
-     D  F2DATS                 1     30P 0                                                  AR958145
-     D                                     DIM(10) ASCEND                                   AR958145
+     D  F2DAT10               31     33P 0                                                 AR1068513
+     D***F2DATS*                1     30P 0                                       AR958145 AR1068513
+     D**********                           DIM(10) ASCEND                         AR958145 AR1068513
+     D  F2DATS                 1     33P 0                                                 AR1068513
+     D                                     DIM(11) ASCEND                                  AR1068513
      D AVAIL_DATES     DS
      D  F1DAT0
      D  F1DAT1
@@ -256,7 +261,9 @@
      D  F1DAT7
      D  F1DAT8
      D  F1DAT9
-     D AvailDatesArr                       LIKE(F1DAT0) DIM(10)
+     D  F1DA10                                                                             AR1068513
+     D***AvailDatesArr                       LIKE(F1DAT0) DIM(10)                          AR1068513
+     D AvailDatesArr                       LIKE(F1DAT0) DIM(11)                            AR1068513
      D                                     OVERLAY(AVAIL_DATES)
 
      D***BASE_BAL        DS                                                                BUG27719A
@@ -284,7 +291,9 @@
      D  F1AVA7
      D  F1AVA8
      D  F1AVA9
-     D AvailBalArr                         LIKE(F1AVA0) DIM(10)
+     D  F1AV10                                                                             AR1068513
+     D***AvailBalArr                         LIKE(F1AVA0) DIM(10)                          AR1068513
+     D AvailBalArr                         LIKE(F1AVA0) DIM(11)                            AR1068513
      D                                     OVERLAY(AVAIL_BAL)
      D/COPY WNCPYSRC,REH00092
      D/COPY ZSRSRC,ZHOLILE                                                                  AR958145
@@ -330,8 +339,8 @@
      D***BaseAvailBal    S             15P 0 DIM(10)                                       BUG27719A
      D***BlockedColl     S             15P 0 DIM(10)                                       AR1089341
      D***BlockCollPrev   S             15P 0 DIM(10)                                       AR1089341
-     D AvailBalance    S             15P 0 DIM(10)
-     D AcctBalance     S             15P 0 DIM(10)                                         BUG27719A
+     D***AvailBalance    S             15P 0 DIM(10)                                       AR1068513
+     D***AcctBalance     S             15P 0 DIM(10)                             BUG27719A AR1068513
      D OvrdraftLine    S             11P 0 DIM(11)                                         AR1089341
      D CurSoftHeld     S             13P 0 DIM(11)                                         AR1089341
      D PrvSoftHeld     S             13P 0 DIM(11)                                         AR1089341
@@ -341,10 +350,13 @@
      D HardHeld        S             13P 0 DIM(11)                                         AR1089341
      D BlockedColl     S             15P 0 DIM(11)                                         AR1089341
      D BlockCollPrev   S             15P 0 DIM(11)                                         AR1089341
+     D AvailBalance    S             15P 0 DIM(11)                                         AR1068513
+     D AcctBalance     S             15P 0 DIM(11)                                         AR1068513
      D***OvrdraftLine    S             11P 0 DIM(10)                                       AR1089341
      D/COPY WNCPYSRC,REH00093
 
-     D Rundate         S              5P 0 DIM(10)
+     D***Rundate         S              5P 0 DIM(10)                                       AR1068513
+     D Rundate         S              5P 0 DIM(11)                                         AR1068513
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1506,6 +1518,7 @@
      C                   EVAL      Rundate(8)  = F1DAT7
      C                   EVAL      Rundate(9)  = F1DAT8
      C                   EVAL      Rundate(10) = F1DAT9
+     C                   EVAL      Rundate(11) = F1DA10                                    AR1068513
 
       ** Load Available Balances 1 to 10 into AvailBalance array
 
@@ -1519,6 +1532,7 @@
      C                   Eval      AvailBalance(8)  = F1AVA7
      C                   Eval      AvailBalance(9)  = F1AVA8
      C                   Eval      AvailBalance(10) = F1AVA9
+     C                   Eval      AvailBalance(11) = F1AV10                               AR1068513
      C/COPY WNCPYSRC,REH00115
 
       ** Load Account Balances 1 to 10 into AccountBalance array                           BUG27719A
@@ -1533,6 +1547,7 @@
      C                   Eval      AcctBalance(8) = F1BAV7                                 BUG27719A
      C                   Eval      AcctBalance(9) = F1BAV8                                 BUG27719A
      C                   Eval      AcctBalance(10) = F1BAV9                                BUG27719A
+     C                   Eval      AcctBalance(11) = F1BA10                                AR1068513
      C/COPY WNCPYSRC,REH00116
                                                                                            BUG27719A
       ** When Event Type is Held Transaction
@@ -2022,6 +2037,7 @@
      C                   EVAL      F1AVA7 = AvailBalance(8)
      C                   EVAL      F1AVA8 = AvailBalance(9)
      C                   EVAL      F1AVA9 = AvailBalance(10)
+     C                   EVAL      F1AV10 = AvailBalance(11)                               AR1068513
 
      C                   EVAL      F1BAV0 = AcctBalance(1)                                 BUG27719A
      C                   EVAL      F1BAV1 = AcctBalance(2)                                 BUG27719A
@@ -2033,6 +2049,7 @@
      C                   EVAL      F1BAV7 = AcctBalance(8)                                 BUG27719A
      C                   EVAL      F1BAV8 = AcctBalance(9)                                 BUG27719A
      C                   EVAL      F1BAV9 = AcctBalance(10)                                BUG27719A
+     C                   EVAL      F1BA10 = AcctBalance(11)                                AR1068513
                                                                                            BUG27719A
       ***Held*Items*transaction****************************************                    BUG27719A
       ***or*Account*Maintenance*amendments*****************************                    BUG27719A
@@ -2370,7 +2387,8 @@
      C     SrLoadDates   BEGSR                                                              AR958145
                                                                                             AR958145
      C                   EVAL      WKSysNoDays = PCurSet(1)                                 AR958145
-     C                   EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 1                    AR958145
+     C**********         EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 1                    AR958145
+     C                   EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 2                   AR1068513
                                                                                             AR958145
       ** Initialize variables                                                               AR958145
                                                                                             AR958145
@@ -2462,6 +2480,7 @@
      C                   EVAL      F1DAT7 = F2DAT7                                          AR958145
      C                   EVAL      F1DAT8 = F2DAT8                                          AR958145
      C                   EVAL      F1DAT9 = F2DAT9                                          AR958145
+     C                   EVAL      F1DA10 = F2DAT10                                        AR1068513
                                                                                             AR958145
      C                   EVAL      RunDate = AvailDatesArr                                  AR978497
      C                   ENDSR                                                              AR958145
@@ -2555,7 +2574,8 @@
 
      C                   READ      SDABCIPD                               60
 
-     C                   EVAL      WNdyf = ABNDYF + 1
+     C**********         EVAL      WNdyf = ABNDYF + 1                                      AR1068513
+     C                   EVAL      WNdyf = ABNDYF + 2                                      AR1068513
 
       ** Check if Switchable Feature CRE001 is installed.
 

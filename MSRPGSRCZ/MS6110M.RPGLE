@@ -84,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058137 - Midas is not generating unique MQ MessageID if    *
+      *             via MGOREF message generation                     *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055270.                             *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
@@ -726,7 +728,7 @@
      C/COPY WNCPYSRC,MS6110MC03
 
       ** Send message
-     C                   Z-ADD     PMNMID        PMOPT                                      MD058137 
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C**********         Z-ADD     MQPUT         CID                                        MD041126
      C**********         CALL      'QMQM'                                                   MD041126
      C**********         PARM                    CID               9 0                      MD041126

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR921987           Date 23Mar12               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Last Amend No. BUG7555            Date 16Feb21               *
+      *  Prev Amend No. AR921987           Date 23Mar12               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -106,6 +107,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG7555 - When an incoming message is routed to incoming     *
+      *            payment, default payment value date to the date    *
+      *            on field 32A.                                      *
+      *          - Applied for MD-57425.                              *
       *  AR921987 - If Sender's Correspondent is decoded it must be   *
       *             placed in Receiver's Correspondent for IN (if     *
       *             Receiver's Correspondent is blank and Sender's    *
@@ -9415,15 +9420,19 @@
       *
       ** MMDDYY format display.
       *
+      ** Also default pay value date with the date on field 32A.                             BUG7555
+      *                                                                                      BUG7555
      C     BJDFIN        IFEQ      'M'
       *
      C                   EVAL      ODDSLDT = WD2 + WD3 + WD1
+     C                   EVAL      ODDPYDT = WD2 + WD3 + WD1                                 BUG7555
       *
      C                   ELSE
       *
       ** DDMMYY format display.
       *
      C                   EVAL      ODDSLDT = WD3 + WD2 + WD1
+     C                   EVAL      ODDPYDT = WD3 + WD2 + WD1                                 BUG7555
       *
      C                   ENDIF
       *

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CER050             Date 16Jun19              */
-/*       Prev Amend No. MD020934           Date 11May19              */
+/*       Last Amend No. MD058555           Date 12Aug21              */
+/*       Prev Amend No. CER050             Date 16Jun19              */
+/*                      MD020934           Date 11May19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CRE105             Date 03Mar15              */
 /*                      MD034346           Date 08May15              */
@@ -87,6 +88,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058555 - Accrual amount is wrong                          */
 /*       CER050 - Annualised Percentage Rate                         */
 /*       MD020934 - COB component LERC135 failed due to CDL045.      */
 /*                  Amend length of field &EXTLIB from 8 to 10 to    */
@@ -253,6 +255,7 @@
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL045*/
              DCL        VAR(&CDL034) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD027681*/
+             DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD058555*/
                                                                                           /*CDL045*/
 /* Define parameters used in AOSVALR0 to retrieve system value                            /*CDL045*/
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CDL045*/
@@ -394,6 +397,15 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CDL034) VALUE('Y'))                                      /*MD027681*/
 /**/                                                                                    /*MD027681*/
+/**/                                                                                    /*MD058555*/
+/** Check for Switchable feature CDL102                            */                   /*MD058555*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058555*/
+             CHGVAR     VAR(&SARD) VALUE('CDL102')                                      /*MD058555*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                                           &FMT)                                        /*MD058555*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CDL102) VALUE('Y'))                                      /*MD058555*/
+/**/                                                                                    /*MD058555*/
 /** Check for Switchable feature CER069                            */                     /*CER069*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER069*/
              CHGVAR     VAR(&SARD) VALUE('CER069')                                        /*CER069*/
@@ -1410,6 +1422,9 @@
                MONMSG     MSGID(CPF0000)                                                  /*CDL013*/
              ENDDO                                                                        /*CDL013*/
           ENDDO                                                                           /*CDL013*/
+          IF         COND(&CDL102 *EQ 'Y' *AND %SWITCH(XXXXXX00)) THEN(DO)              /*MD058555*/
+             CLRPFM FILE(DLLIBEPD)                                                      /*MD058555*/
+          ENDDO                                                                         /*MD058555*/
                                                                                           /*CER050*/
           IF         COND(&CER050 *EQ 'Y') THEN(DO)                                       /*CER050*/
              CALL       PGM(DL6011)                                                       /*CER050*/

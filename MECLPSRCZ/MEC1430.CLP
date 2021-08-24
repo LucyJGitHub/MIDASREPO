@@ -33,25 +33,25 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /* Copyright statement                                               */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /* Global Monitor Message                                            */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ENDCLPGM)
- 
+
              CLRPFM     FILE(MEBICIPD)
- 
+
 /* Call the BIC Plus search index creation program                  */
              CALL       PGM(ME1430) PARM('       ')
-/*/COPY WNCPYSRC,MEC1430DB1                                          */
- 
+/*/COPY WNCPYSRC,MEC1430DB1                                          */                   /*DJBF10*/
+
  ENDCLPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDPGM

@@ -70,12 +70,12 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /* Copyright statement                                               */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&REL_DAT) TYPE(*CHAR) LEN(8)
              DCL        VAR(&RET_COD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CFT035*/
@@ -85,10 +85,10 @@
              DCL        VAR(&CFT035) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CFT035*/
              DCL        VAR(&CFT040) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CFT040*/
              DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(1) VALUE('0')                        /*CFT040*/
- 
- 
+
+
              DCLF       FILE(ME1420DF)
- 
+
 /* Global Monitor Message                                            */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNOR)                                               /*CFT035*/
@@ -96,7 +96,7 @@
              CHGJOB     SWS(00000000)                                                     /*CFT035*/
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                            /*CFT040*/
              MONMSG     MSGID(CPF1023)                                                    /*CFT040*/
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*CFT035*/
              MONMSG     MSGID(CPF8351)                                                    /*CFT035*/
                                                                                           /*CFT035*/
@@ -106,7 +106,7 @@
 /* Set up general screen fields                                      */                   /*CFT035*/
              RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&##MRDT)                              /*CFT035*/
              RTVJOBA    JOB(&##JOB)  USER(&##USR)                                         /*CFT035*/
- 
+
 /* Check whether CFT035 is switched on                                                    /*CFT035*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CFT035*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CFT035*/
@@ -202,15 +202,15 @@
  /***********RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&##MRDT)         */                   /*CFT035*/
  /***********RTVJOBA    JOB(&##JOB)  USER(&##USR)                    */                   /*CFT035*/
 /************CHGVAR     VAR(&#1DATE) VALUE(&REL_DAT)                 */                   /*CFT035*/
- 
+
              IF         COND(&REL_DAT *EQ ' ') THEN(DO)
     /* No Data has been read from the S.W.I.F.T release date table   */
- 
+
              SNDF       RCDFMT(#TEXT1)
  LOOP:
              RCVF       RCDFMT(#TEXT1)
              IF         COND(&IN03 *EQ '0') THEN(GOTO CMDLBL(LOOP))
- 
+
              ENDDO
              ELSE       CMD(DO)
              CHGVAR     VAR(&#1ANSW) VALUE('Y')
@@ -315,7 +315,7 @@
              CHGVAR     VAR(&IN52) VALUE('0')
              CHGVAR     VAR(&IN53) VALUE('1')
              SNDF       RCDFMT(#TEXT2)
- 
+
              CLRPFM     FILE(MEBICIPD)
              IF         COND((&#1UBIC *EQ 'Y') *OR (&#1UBIC +
                         *EQ 'y')) THEN(DO)                                                /*CFT040*/
@@ -351,7 +351,7 @@
              CHGVAR     VAR(&IN54) VALUE('0')
              ENDDO
 /* Clear temporary files                                             */
-/*/COPY WNCPYSRC,MEC1420DB1                                          */
+/*/COPY WNCPYSRC,MEC1420DB1                                          */                   /*DJBF10*/
              CLRPFM     METICPPD
              CLRPFM     METICCPD
              CLRPFM     METICVPD
@@ -387,6 +387,6 @@
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
- 
+
+
              ENDPGM

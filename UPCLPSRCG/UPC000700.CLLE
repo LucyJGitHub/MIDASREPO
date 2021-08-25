@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD057707           Date 21Jan21              */
-/*       Prev Amend No. MD057599           Date 21Jan21              */
+/*       Last Amend No. MD058672           Date 25Aug21              */
+/*       Prev Amend No. MD057707           Date 21Jan21              */
+/*                      MD057599           Date 21Jan21              */
 /*                      MD056612           Date 12Sep20              */
 /*                      MD056557           Date 31Aug20              */
 /*                      MD056565           Date 21Jan21              */
@@ -54,6 +55,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058672 - Issue with Validation List files due to CCSID    */
 /*       MD057707 - Deliverable Data Split for SDOREFPD              */
 /*       MD057599 - Deliverable Data Split for Bridge and Util files */
 /*       MD056612 - Deliverable Data Split for MX group              */
@@ -108,6 +110,8 @@
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)                                /*MD054955*/
+             DCL        VAR(&XFILE) TYPE(*CHAR) LEN(10)                                 /*MD058672*/
+             DCL        VAR(&BFILE) TYPE(*CHAR) LEN(10)                                 /*MD058672*/
 
 /* Parameters passed to UP008010. */
              DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE('UPC000700')
@@ -151,9 +155,35 @@
                           TOFILE(&OLDLIB/&FILE) MBROPT(*REPLACE) +
                           FMTOPT(*NOCHK)
 
+/* For validation list files, call new pgm to perform synch */                          /*MD058672*/
+             IF         COND(%SUBSTRING(&FILE 3 6) *EQ 'VLLCTD') +
+                          THEN(DO)                                                      /*MD058672*/
+             CLRPFM     FILE(UPVLCZTD)                                                  /*MD058672*/
+             CLRPFM     FILE(UPVLBZTD)                                                  /*MD058672*/
+             CLRPFM     FILE(UPVLXZTD)                                                  /*MD058672*/
+             CLRPFM     FILE(UPVLOZTD)                                                  /*MD058672*/
+             CPYF       FROMFILE(&OLDLIB/&FILE) TOFILE(UPVLCZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             CHGVAR     VAR(&XFILE) VALUE(%SUBSTRING(&FILE 1 2) +
+                                                  *TCAT 'VLLXTD')                       /*MD058672*/
+             CPYF       FROMFILE(&XFILE) TOFILE(UPVLXZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
+             CALL       PGM(UP000705) PARM(&ERROR &FILE &OLDLIB)                        /*MD058672*/
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)                  /*MD058672*/
+                                                                                        /*MD058672*/
+/* Copy back updated XTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLXZTD) TOFILE(&XFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+                                                                                        /*MD058672*/
+             ENDDO                                                                      /*MD058672*/
+                                                                                        /*MD058672*/
+             ELSE       CMD(DO)                                                         /*MD058672*/
 /* Run synchronization program. */
              CALL       PGM(UP000701) PARM(&ERROR &FILE &OLDLIB)
              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO                                                                      /*MD058672*/
 
 /* Migration is needed when file has no record */                                       /*MD054955*/
              IF         COND(&NBRCURRCD *EQ 0) THEN(DO)                                 /*MD054955*/
@@ -784,9 +814,32 @@
              RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
              MONMSG     MSGID(CPF0000)                                                  /*MD056567*/
              ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
-             CALL       PGM(UP000703) PARM(&ERROR &FILE +
-                          &OLDLIB 'CBVLLSP')                                            /*MD056567*/
+/**********  CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBVLLSP') */                               /*MD056567**MD058672*/
+             CHGVAR     VAR(&BFILE) VALUE(%SUBSTRING(&FILE 1 2) +
+                                                  *TCAT 'VLLBTD')                       /*MD058672*/
+             CPYF       FROMFILE(&BFILE) TOFILE(UPVLBZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+             CPYF       FROMFILE(&XFILE) TOFILE(UPVLXZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+/* and copy the old file into work file OZTD */                                         /*MD058672*/
+             CPYF       FROMFILE(&LIBMOV/CBVLLSP) TOFILE(UPVLOZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
+             CALL       PGM(UP000706) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBVLLSP')                                            /*MD058672*/
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056567*/
+/* Copy back updated XTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLXZTD) TOFILE(&XFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+/* Copy back updated BTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLBZTD) TOFILE(&BFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
              ENDDO                                                                      /*MD056567*/
                                                                                         /*MD056567*/
 /* FCVLLCTD */                                                                          /*MD056567*/
@@ -798,9 +851,32 @@
              RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
              MONMSG     MSGID(CPF0000)                                                  /*MD056567*/
              ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
-             CALL       PGM(UP000703) PARM(&ERROR &FILE +
-                          &OLDLIB 'FCVLLSP')                                            /*MD056567*/
+/**********  CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'FCVLLSP')                                  /*MD056567**MD058672*/
+             CHGVAR     VAR(&BFILE) VALUE(%SUBSTRING(&FILE 1 2) +
+                                                  *TCAT 'VLLBTD')                       /*MD058672*/
+             CPYF       FROMFILE(&BFILE) TOFILE(UPVLBZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+             CPYF       FROMFILE(&XFILE) TOFILE(UPVLXZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+/* and copy the old file into work file OZTD */                                         /*MD058672*/
+             CPYF       FROMFILE(&LIBMOV/FCVLLSP) TOFILE(UPVLOZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
+             CALL       PGM(UP000706) PARM(&ERROR &FILE +
+                          &OLDLIB 'FCVLLSP')                                            /*MD058672*/
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056567*/
+/* Copy back updated XTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLXZTD) TOFILE(&XFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+/* Copy back updated BTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLBZTD) TOFILE(&BFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
              ENDDO                                                                      /*MD056567*/
                                                                                         /*MD056567*/
 /* MIVLLCTD */                                                                          /*MD056567*/
@@ -812,9 +888,32 @@
              RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
              MONMSG     MSGID(CPF0000)                                                  /*MD056567*/
              ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
-             CALL       PGM(UP000703) PARM(&ERROR &FILE +
-                          &OLDLIB 'MIVLLSP')                                            /*MD056567*/
+/**********  CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'MIVLLSP')                                  /*MD056567**MD058672*/
+             CHGVAR     VAR(&BFILE) VALUE(%SUBSTRING(&FILE 1 2) +
+                                                  *TCAT 'VLLBTD')                       /*MD058672*/
+             CPYF       FROMFILE(&BFILE) TOFILE(UPVLBZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+             CPYF       FROMFILE(&XFILE) TOFILE(UPVLXZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+/* and copy the old file into work file OZTD */                                         /*MD058672*/
+             CPYF       FROMFILE(&LIBMOV/MIVLLSP) TOFILE(UPVLOZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
+             CALL       PGM(UP000706) PARM(&ERROR &FILE +
+                          &OLDLIB 'MIVLLSP')                                            /*MD058672*/
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056567*/
+/* Copy back updated XTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLXZTD) TOFILE(&XFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+/* Copy back updated BTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLBZTD) TOFILE(&BFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
              ENDDO                                                                      /*MD056567*/
                                                                                         /*MD056567*/
 /* Y2VLLCTD */                                                                          /*MD056567*/
@@ -826,9 +925,32 @@
              RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
              MONMSG     MSGID(CPF0000)                                                  /*MD056567*/
              ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056567*/
-             CALL       PGM(UP000703) PARM(&ERROR &FILE +
-                          &OLDLIB 'Y2VLLSP')                                            /*MD056567*/
+/**********  CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'Y2VLLSP')                                  /*MD056567**MD058672*/
+             CHGVAR     VAR(&BFILE) VALUE(%SUBSTRING(&FILE 1 2) +
+                                                  *TCAT 'VLLBTD')                       /*MD058672*/
+             CPYF       FROMFILE(&BFILE) TOFILE(UPVLBZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+             CPYF       FROMFILE(&XFILE) TOFILE(UPVLXZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+/* and copy the old file into work file OZTD */                                         /*MD058672*/
+             CPYF       FROMFILE(&LIBMOV/Y2VLLSP) TOFILE(UPVLOZTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
+             CALL       PGM(UP000706) PARM(&ERROR &FILE +
+                          &OLDLIB 'Y2VLLSP')                                            /*MD058672*/
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056567*/
+/* Copy back updated XTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLXZTD) TOFILE(&XFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+/* Copy back updated BTD file */                                                        /*MD058672*/
+             CPYF       FROMFILE(UPVLBZTD) TOFILE(&BFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*MD058672*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD058672*/
+                                                                                        /*MD058672*/
              ENDDO                                                                      /*MD056567*/
                                                                                         /*MD056567*/
 /* GPAUACTD */                                                                          /*MD056611*/

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055785           Date 20May20               *
+      *  Last Amend No. LUC110             Date 24Jan19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
@@ -193,6 +194,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
+      *           Use of core hook GL0600CCP3                         *
+      *           Use of core hook GL0600CP22                         *
+      *           Use of core hook GL0600FFP1                         *
+      *           Use of core hook GL0600IIP2                         *
+      *           Use of core hook GL0600OOP5                         *
+      *           Addition of hook LUC110_082                         *
+      *           Addition of hook LUC110_083.                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
@@ -1294,6 +1303,7 @@
      I                                 81   81 0DRCR
      I                                 96  102  SPOS
      I                                103  105  BRCDP             05
+     I/COPY WNCPYSRC,LUC110_082                                                     LUC110
      I**********                      106  106 0RIND                               MD037555 MD045515
      I                                124  124  ATYPP
      I                                128  128  PRIN
@@ -1445,6 +1455,7 @@
       ** Catchall
      I          NS
      I                                  1    1  RECI
+     I/COPY WNCPYSRC,LUC110_083                                                          LUC110
 
      IGLSYSOXF
      I              NORE1                       NORESY

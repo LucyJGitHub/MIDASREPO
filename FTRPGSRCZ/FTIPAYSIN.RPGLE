@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. BUG7555            Date 16Feb21               *
+      *  Last Amend No. CFT162             Date 08Sep17               * 
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 BUG7555            Date 16Feb21               *
       *                 AR921987           Date 23Mar12               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -108,6 +109,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  BUG7555 - When an incoming message is routed to incoming     *

@@ -77,7 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE155 - Facility Approval Date.                             *
+      *  CLE155 - Facility Approval Date                              *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
       *             Defaulting of drawing types should only occured   *

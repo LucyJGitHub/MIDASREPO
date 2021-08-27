@@ -84,7 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  LLE086 - Country of Risk in Facilities.                      *
+      *  LLE086 - Country of Risk in Facilities                       *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
       *             TR facility attached to it. Pattern after 239194. *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *

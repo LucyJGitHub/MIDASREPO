@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058652           Date 27Aug21               *
+      *  Prev Amend No. MD058626           Date 24Aug21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031713           Date 23Jun15               *
       *                 CGL165             Date 17Feb15               *
@@ -92,6 +94,9 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                               *
+      *  MD058652 - Incorrect rate details and interest after BC event*
+      *  MD058626 - Backward looking deal incorrectly flagged         *
+      *             as INVESTIGATE                                    *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -821,6 +826,7 @@
      I              RDFD                            RDFDDM                                 MD031123A
      I              ORED                            OREDDM                                  MD031713
      I              BLRT                            BLRTDM                                    CDL102
+     I              CALM                            CALMDM                                  MD058652
 0315 I*                                                                   S01194
      ISPOOL       DS                                                      S01117
      I** FILE INFORMATION DATA STRUCTURE                                  S01117
@@ -1258,10 +1264,17 @@
 0449 C  N10N15             GOTO END                                       S01119
      C                     MOVE ' '       DBLRT                                               CDL102
      C           CDL102    IFEQ 'Y'                                                           CDL102
+     C                     Z-ADD0         WZDAYN  50                                        MD058652
+     C                     MOVE '  '      WBRTT   2                                         MD058652
       *                                                                                       CDL102
       ** Access Deals Amendment File for BC Type                                              CDL102
       *                                                                                       CDL102
-     C           KDEAMS    SETLLDEAMSDIF                                                      CDL102
+     C                     Z-ADD1         WNUM    50                                        MD058652
+     C           KDEAM2    KLIST                                                            MD058652
+     C                     KFLD           DLNO                                              MD058652
+     C                     KFLD           WNUM                                              MD058652
+     C********** KDEAMS    SETLLDEAMSDIF                                             CDL102 MD058652
+     C           KDEAM2    SETLLDEAMSDIF                                                    MD058652
      C           DLNO      READEDEAMS                    42                                   CDL102
       *                                                                                       CDL102
      C           *IN42     DOWEQ'0'                                                           CDL102
@@ -1271,6 +1284,11 @@
      C           BRTTDM    ANDNE*BLANKS                                                       CDL102
      C                     MOVE BLRTDM    BLRT                                                CDL102
      C                     MOVE BLRTDM    DBLRT   1                                           CDL102
+     C                     MOVE BRTTDM    WBRTT                                             MD058652
+     C           CALMDM    IFEQ 'CCR'                                                       MD058652
+     C           CALMDM    OREQ 'SAVG'                                                      MD058652
+     C                     MOVE VDATDM    WZDAYN                                            MD058652
+     C                     ENDIF                                                            MD058652
      C                     ENDIF                                                              CDL102
       *                                                                                       CDL102
      C           DLNO      READEDEAMS                    42                                   CDL102
@@ -2845,10 +2863,19 @@
      C           *IN88     ANDEQ'0'                                                           CDL102
       *                                                                                       CDL102
      C                     Z-ADDLDCART    G0CBSR                                              CDL102
+     C           WZDAYN    IFEQ *ZERO                                                       MD058652
      C                     Z-ADDLDVDAT    ZDAYNO                                              CDL102
+     C                     ELSE                                                             MD058652
+     C                     Z-ADDWZDAYN    ZDAYNO                                            MD058652
+     C                     ENDIF                                                            MD058652
       *                                                                                       CDL102
      C                     EXSR ZDATE2                                                        CDL102
      C                     MOVE ZADATE    VDATA                                               CDL102
+     C                     SETOF                     36                                     MD058626
+      ** Update with new base rate code from BC if not blanks                               MD058652
+     C           WBRTT     IFNE *BLANKS                                                     MD058652
+     C                     MOVE WBRTT     BRTT                                              MD058652
+     C                     ENDIF                                                            MD058652
       *                                                                                       CDL102
       ** Output to DAMBRDI and report.                                                        CDL102
       *                                                                                       CDL102

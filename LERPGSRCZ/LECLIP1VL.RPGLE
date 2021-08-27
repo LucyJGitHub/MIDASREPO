@@ -172,7 +172,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE155 - Facility Approval Date.                             *
+      *  CLE155 - Facility Approval Date                              *
       *  AR918361 - No error message for rollover frequency when not  *
       *             defined in facility rollover types. Validate the  *
       *             rollover frequency properly against the facility  *

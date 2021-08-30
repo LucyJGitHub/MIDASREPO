@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG27790 *CREATE   Date 29Jun10               *
+      *  Last Amend No. CUT017             Date 17Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG27790 *CREATE   Date 29Jun10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CUT017 - Adaptive Database Upgrade                           *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
       *                                                               *
@@ -86,9 +88,12 @@
      D OTP             S              1    DIM(240)
      D OTW             S              1    DIM(240)
      D                 DS
-     D  SRCDTA                 1     80
-     D  S                      1     80
-     D                                     DIM(80) ASCEND
+     D**SRCDTA**               1     80                                                       CUT017
+     D**S*******               1     80                                                       CUT017
+     D**********                           DIM(80) ASCEND                                     CUT017
+     D  SRCDTA                 1    100                                                       CUT017
+     D  S                      1    100                                                       CUT017
+     D                                     DIM(100) ASCEND                                    CUT017
      D                 DS
      D  SSDATA                 1     41
      D  DAT                    1     41
@@ -288,7 +293,8 @@
      C                   MOVEL     *BLANK        S
      C                   MOVEA     FDRPGN        S(1)
      C                   MOVEA     FDDESC        S(8)
-     C                   MOVEA     DAT           S(40)
+     C**********         MOVEA     DAT           S(40)                                        CUT017
+     C                   MOVEA     DAT           S(60)                                        CUT017
      C                   END
       *
      C                   WRITE     SUBFLREC

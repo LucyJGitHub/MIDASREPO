@@ -2330,10 +2330,10 @@
      C                   PARM                    DDCCY
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    BNDCSP
-      ** Action code                                                                 MD058540 CDL033
-     C*                  PARM                    DDACTN                              MD058540 CDL033
-      ** Called from confirmation screen?                                            MD058540 CDL033
-     C*                  PARM                    PCONF                               MD058540 CDL033
+      ***Action*code                                                                 MD058540 CDL033
+     C**********         PARM                    DDACTN                              MD058540 CDL033
+      ***Called*from confirmation screen?                                            MD058540 CDL033
+     C**********         PARM                    PCONF                               MD058540 CDL033
 
       /COPY WNCPYSRC,MMLDNIV038
 

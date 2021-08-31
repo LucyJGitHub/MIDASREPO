@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058404           Date 06Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058547           Date 10Aug21               *
+      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031119           Date 18Feb15               *
@@ -45,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058547 - User cannot amend a call notice deposit taken     *
+      *             because of error 45049507. Add BADJ to INTR/WAIR  *
+      *             only if deal is a backward looking rate and       *
+      *             action type is I (Insert).                        *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -389,9 +394,14 @@
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
                                                                                              BUG5169
      C     WkBaseRate    ADD       IKSPRD        IKINTR
-     C                   EVAL      IKINTR = IKINTR + wBADJ                                    CDL102
+     C**********         EVAL      IKINTR = IKINTR + wBADJ                           CDL102 MD058547
      C     WkBaseRate    ADD       IKSPRD        WAIR             11 7
+     C     CDL102        IFEQ      'Y'                                                      MD058547
+     C     DDBLRT        ANDEQ     'Y'                                                      MD058547
+     C     DDACTN        ANDEQ     'I'                                                      MD058547
+     C                   EVAL      IKINTR = IKINTR + wBADJ                                  MD058547
      C                   EVAL      WAIR = WAIR + wBADJ                                        CDL102
+     C                   ENDIF                                                              MD058547
      C                   Z-ADD     0             PAmtIn
      C                   MOVE      WAIR          PAmtIn
      C                   Z-ADD     7             PNoOfDecPl
@@ -408,6 +418,7 @@
      C**********         MOVE      PAmtOutS      DDAIR                             AR891660 MD031119
      C                   IF        (wSAVAIR  <> WAIR) AND                                     CDL102
      C                             (wSAVAIR <> 0) AND DDBLRT = 'Y'                            CDL102
+     C                             AND DDACTN = 'I'                                         MD058547
      C                   MOVE      'Y'           ErrorFound                                   CDL102
      C**********         MOVEL     '5049499'     Msgid1                              CDL102 MD058404
      C                   MOVEL     '5049507'     Msgid1                                     MD058404
@@ -500,6 +511,7 @@
      C                   PARM                    IKINTR
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102            1                          CDL102
+     C                   PARM                    DDACTN            1                        MD058547
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

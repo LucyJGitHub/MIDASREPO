@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1088819          Date 15Jan20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055030.                            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -785,6 +789,7 @@
       *                                                                                       258907
      C     IGLACT        IFEQ      'I'                                                        258907
      C     PSJobName     ANDNE     'QZDASOINIT'                                               259421
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
       *                                                                                       258907
      C                   MOVEL     IGBRCA        DHC_DIBRCA                                   258907
      C                   Z-ADD     IGDA38        DHC_DIDLNO                                   258907

@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD025056           Date 06Nov19               *
-      *  Prev Amend No. MD052425           Date 19Sep19               *
+      *  Last Amend No. AR1088819          Date 15Jan20               *
+      *  Prev Amend No. MD025056           Date 06Nov19               *
+      *                 MD052425           Date 19Sep19               *
       *                 MD050457           Date 06Mar19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD041527           Date 22Sep16               *
@@ -147,6 +148,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055030.                            *
       *  MD025056 - Prevent blank error message when closing a        *
       *             Customer. Added specific error messages when      *
       *             closing Customers. Patterned after AR856728.      *
@@ -2397,6 +2401,7 @@
                                                                                             BUG27866
      C                   IF        WJOBTP = 'I' AND                                         BUG27866
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
+     C                             AND WWJOB <> 'QZDASSINIT'                               AR1088819
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
       *

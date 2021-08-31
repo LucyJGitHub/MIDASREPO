@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1088819          Date 15Jan20               *
+      *  Prev Amend No. MD020135           Date 15Jan20 
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037804           Date 25May16               *
       *                 AR924677           Date 03Nov14               *
       *                 MD030940           Date 08Oct14               *
@@ -92,6 +94,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055030.                            *
+      *  MD020135 - Duplicate records in INPAYDQD. Write to INPAYDQD  *
+      *             file only if not from Java screen.                *
+      *            - Applied for MD055030.                            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037804 - Unnecessary DUMP produced by FTIPAYUPD module     *
@@ -840,6 +848,7 @@
      C     IPCHTP        IFEQ      'I'                                          193883
      C     PSJobName     ANDNE     'QZDASOINIT'                                               CAP084
      C     PSJobName     ANDNE     'QSQSRVR'                                                  247277
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
      C                   MOVE      '*FRONT'      PModeX
      C                   ELSE
      C                   MOVE      *BLANKS       PModeX
@@ -1164,6 +1173,9 @@
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      IPFRID = IPFRNT                                            257487
      C                   WRITE     INPAYQD0                             99                    257487
       *                                                                                       257487
@@ -1173,6 +1185,7 @@
      C                   Z-ADD     031           DBase                                        257487
      C                   EXSR      *PSSR                                                      257487
      C                   ENDIF                                                                257487
+     C                   ENDIF                                                              MD020135
       *****************************************************************               BUG4776 260326
       ****If*new*record*was*successfully*writen*to*INPAYDD,*add*new*record*to         BUG4776 260326
       ****FT*Payment*Reference*Control*file*-*FTPREFPD*****************               BUG4776 260326

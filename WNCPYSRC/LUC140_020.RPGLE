@@ -14,8 +14,8 @@
       *                                                               *
       *****************************************************************
       *
-     FGESDGLZZ  IS   F  160     1AIDISK    KEYLOC(1)
-     FGESDREZZ  IS   F  160     1AIDISK    KEYLOC(1)
+     FGESDGLZZ  IS   F  160     1AIDISK    KEYLOC(1)                                          LUC140
+     FGESDREZZ  IS   F  160     1AIDISK    KEYLOC(1)                                          LUC140
       *
       *****************************************************************
       * End of /COPY LUC140_020                                       *

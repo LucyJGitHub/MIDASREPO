@@ -14,17 +14,17 @@
       *                                                              *
       ****************************************************************
       ** Check if LUC013 is enabled in System
-     C                   CALLB     'AOSARDR0'
-     C                   PARM      *BLANKS       @RTCD             7
-     C                   PARM      '*VERIFY'     @OPTN             7
-     C                   PARM      'LUC103'      @SARD             6
-     C     SCSARD        PARM      SCSARD        DSSDY
-      *
-     C                   IF        @RTCD = *BLANK
-     C                   MOVEL     'Y'           LUC103            1
-     C                   ELSE
-     C                   MOVEL     'N'           LUC103
-     C                   ENDIF
+     C                   CALLB     'AOSARDR0'                                                 LUC103
+     C                   PARM      *BLANKS       @RTCD             7                          LUC103
+     C                   PARM      '*VERIFY'     @OPTN             7                          LUC103
+     C                   PARM      'LUC103'      @SARD             6                          LUC103
+     C     SCSARD        PARM      SCSARD        DSSDY                                        LUC103
+      *                                                                                       LUC103
+     C                   IF        @RTCD = *BLANK                                             LUC103
+     C                   MOVEL     'Y'           LUC103            1                          LUC103
+     C                   ELSE                                                                 LUC103
+     C                   MOVEL     'N'           LUC103                                       LUC103
+     C                   ENDIF                                                                LUC103
       ****************************************************************
       *    End of /COPY GLH01010                                     *
       ****************************************************************

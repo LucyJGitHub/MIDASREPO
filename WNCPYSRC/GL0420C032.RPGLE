@@ -14,9 +14,9 @@
       *                                                               *
       *****************************************************************
       *
-     C     LUC108        IFEQ      'Y'
-     C                   MOVE      ZADATE        LSTDN             7
-     C                   ENDIF
+     C     LUC108        IFEQ      'Y'                                                        LUC108
+     C                   MOVE      ZADATE        LSTDN             7                          LUC108
+     C                   ENDIF                                                                LUC108
       *
       *****************************************************************
       * End of /COPY GL0420C032                                       *

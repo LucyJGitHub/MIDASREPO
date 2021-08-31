@@ -13,9 +13,9 @@
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
-     C     LUC108        IFEQ      'Y'
-     C                   SETON                                        50
-     C                   ELSE
+     C     LUC108        IFEQ      'Y'                                                        LUC108
+     C                   SETON                                        50                      LUC108
+     C                   ELSE                                                                 LUC108
       *
       *****************************************************************
       * End of /COPY LUC108_006                                       *

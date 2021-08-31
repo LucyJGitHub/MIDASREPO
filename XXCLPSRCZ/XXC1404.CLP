@@ -56,7 +56,7 @@
 
 /* Send program message Stamp Duty Code Report is running */
              SNDPGMMSG  MSG('XXC1404 - Stamp Duty Code Report') TOMSGQ(MRUNQ)
-             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB) /*LUC140*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*LUC140*/
 
 /* Get input cycle or close of business from data area */
                 RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS)
@@ -95,24 +95,24 @@
              CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
 
 /* Obtain value of restart flag &STAT */
-/*           CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)      */ /*LUC140*/
+/*           CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)      */                       /*LUC140*/
 
 /* If it is not a restart , copy master file to backup file ,*/
 /* change status to restart , else , copy backup files to    */
 /* master files */
-/*           IF         COND(&STAT *EQ 'N') THEN(DO)         */  /*LUC140*/
+/*           IF         COND(&STAT *EQ 'N') THEN(DO)         */                           /*LUC140*/
 /************CPYF       FROMFILE(SDMSTDX0) TOFILE(&DPLIB/XSDMSTDX0) +
                           MBROPT(*ADD) CRTFILE(*YES) */               /*145668*/
 /*           CPYF       FROMFILE(XXMSTDX0) TOFILE(&DPLIB/XXXMSTDX0) +
-                          MBROPT(*REPLACE) CRTFILE(*YES) */ /*145668    LUC140*/
-/*           CHGVAR     VAR(&STAT) VALUE('Y')             */ /*LUC140*/
-/*                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)     */  /*LUC140*/
-/*           ENDDO                 */  /*LUC140*/
-/*           ELSE       CMD(DO)    */  /*LUC140*/
+                          MBROPT(*REPLACE) CRTFILE(*YES) */                        /*145668 LUC140*/
+/*           CHGVAR     VAR(&STAT) VALUE('Y')             */                              /*LUC140*/
+/*                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)     */                  /*LUC140*/
+/*           ENDDO                 */                                                     /*LUC140*/
+/*           ELSE       CMD(DO)    */                                                     /*LUC140*/
 /*         CPYF       FROMFILE(&DPLIB/XXXMSTDX0) TOFILE(XXMSTDX0) MBROPT(*REPLACE) +
-             CRTFILE(*NO)                        */  /*LUC140*/
-/*              MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM XXMSTDX0)    */ /*LUC140*/
-/*           ENDDO                                                            */ /*LUC140*/
+             CRTFILE(*NO)                        */                                       /*LUC140*/
+/*              MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM XXMSTDX0)    */          /*LUC140*/
+/*           ENDDO                                                            */          /*LUC140*/
 
 /* Get month number from rundate */
 
@@ -146,19 +146,19 @@
                    CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
 /* Delete back-up files */
-/*                 DLTF       FILE(XXXMSTDX0)           */  /*LUC140*/
+/*                 DLTF       FILE(XXXMSTDX0)           */                                /*LUC140*/
 
              ENDDO
 
 /*  End of close of business processing */
 
 /* Normal Completion */
-             COMMIT     /*LUC140*/
+             COMMIT                                                                       /*LUC140*/
              GOTO       CMDLBL(END)
 
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
-             ROLLBACK   /*LUC140*/
+             ROLLBACK                                                                     /*LUC140*/
 
 /* Abnormal termination  */
 
@@ -175,6 +175,6 @@
 
  END:        CHGVAR     VAR(&CPYFLD) VALUE('Copyright Midas-Kapiti +
                           International Ltd 1998.')
-             ENDCMTCTL  /*LUC140*/
+             ENDCMTCTL                                                                    /*LUC140*/
 
              ENDPGM

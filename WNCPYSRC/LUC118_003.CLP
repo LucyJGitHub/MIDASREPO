@@ -15,20 +15,20 @@
 /*                                                                  */
 /********************************************************************/
 
-/*  Determine if LUC118 switched on and if so replace               */
-/*  account references with alternative ones from BVINTBR           */
-
-             CHGVAR     VAR(&RTCD) VALUE('       ')
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
-             CHGVAR     VAR(&SAR) VALUE('LUC118')
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
-             IF         COND(&RTCD *EQ '       ') THEN(DO)
-
-/*  Replace interbranch accounts with equivalents from BVINTBR      */
-
-             CALL       PGM(XXC000100) PARM('GEICPD')
-
-             ENDDO
+/*  Determine if LUC118 switched on and if so replace               */                    /*LUC118*/
+/*  account references with alternative ones from BVINTBR           */                    /*LUC118*/
+                                                                                          /*LUC118*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*LUC118*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*LUC118*/
+             CHGVAR     VAR(&SAR) VALUE('LUC118')                                         /*LUC118*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*LUC118*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*LUC118*/
+                                                                                          /*LUC118*/
+/*  Replace interbranch accounts with equivalents from BVINTBR      */                    /*LUC118*/
+                                                                                          /*LUC118*/
+             CALL       PGM(XXC000100) PARM('GEICPD')                                     /*LUC118*/
+                                                                                          /*LUC118*/
+             ENDDO                                                                        /*LUC118*/
 
 /********************************************************************/
 /* End of LUC118_003                                                */

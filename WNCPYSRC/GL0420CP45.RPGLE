@@ -14,11 +14,11 @@
       *                                                               *
       *****************************************************************
       *
-     C     LUC108        IFEQ      'Y'
-     C   41
-     CAN 22
-     CANN04PSCR          ADD       PSTA          PSCR
-     C                   ENDIF
+     C     LUC108        IFEQ      'Y'                                                        LUC108
+     C   41                                                                                   LUC108
+     CAN 22                                                                                   LUC108
+     CANN04PSCR          ADD       PSTA          PSCR                                         LUC108
+     C                   ENDIF                                                                LUC108
       *
       *****************************************************************
       * End of /COPY GL0420CP45                                       *

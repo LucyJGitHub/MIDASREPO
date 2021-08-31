@@ -14,13 +14,13 @@
       *                                                               *
       *****************************************************************
       *
-     C     LUC108        IFEQ      'Y'
-0749 C   41
-     COR 43LINCNT        COMP      22                                 45
-     C   40LINCNT        COMP      22                                 45
-     C   42LINCNT        COMP      22                                 45
-     C   44LINCNT        COMP      22                                 45
-     C                   ELSE
+     C     LUC108        IFEQ      'Y'                                                        LUC108
+0749 C   41                                                                                   LUC108
+     COR 43LINCNT        COMP      22                                 45                      LUC108
+     C   40LINCNT        COMP      22                                 45                      LUC108
+     C   42LINCNT        COMP      22                                 45                      LUC108
+     C   44LINCNT        COMP      22                                 45                      LUC108
+     C                   ELSE                                                                 LUC108
       *
       *****************************************************************
       * End of /COPY LUC108_007                                       *

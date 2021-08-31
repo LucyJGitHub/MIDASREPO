@@ -11,8 +11,8 @@
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
-      */OMITEND
-      *       46      IMPSAR - CLEARED BAL NOT EQ LEDGER BAL
+      */OMITEND                                                                               LUC108
+      *       46      IMPSAR - CLEARED BAL NOT EQ LEDGER BAL                                  LUC108
       *
       *****************************************************************
       * End of /COPY LUC108_004                                       *

@@ -13,8 +13,8 @@
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
-     D SDRETR        E DS                  EXTNAME(SDRETRPD)
-     D**   Retail Transaction Types
+     D SDRETR        E DS                  EXTNAME(SDRETRPD)                                  LUC108
+     D**   Retail Transaction Types                                                           LUC108
       *
       *****************************************************************
       * End of /COPY LUC108_005                                       *

@@ -14,8 +14,8 @@
       *                                                               *
       *****************************************************************
       *
-     FGESDGLPP  IS   F  620     1AIDISK    KEYLOC(1)
-     FGESDREPP  IS   F  620     1AIDISK    KEYLOC(1)
+     FGESDGLPP  IS   F  620     1AIDISK    KEYLOC(1)                                          LUC140
+     FGESDREPP  IS   F  620     1AIDISK    KEYLOC(1)                                          LUC140
       *
       *****************************************************************
       * End of /COPY LUC140_019                                       *

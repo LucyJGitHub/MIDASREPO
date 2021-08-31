@@ -14,14 +14,14 @@
 /*                                                                  */
 /********************************************************************/
 
-             DCL        VAR(&LUC137) TYPE(*CHAR) LEN(1)
-
-/* Access switchable features file to see if feature LUC137     */
-/* is installed  */
-             CHGVAR     VAR(&SARD) VALUE('LUC137')
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)
+             DCL        VAR(&LUC137) TYPE(*CHAR) LEN(1)                                   /*LUC137*/
+                                                                                          /*LUC137*/
+/* Access switchable features file to see if feature LUC137     */                        /*LUC137*/
+/* is installed  */                                                                       /*LUC137*/
+             CHGVAR     VAR(&SARD) VALUE('LUC137')                                        /*LUC137*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*LUC137*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
-                          VAR(&LUC137) VALUE('Y'))
+                          VAR(&LUC137) VALUE('Y'))                                        /*LUC137*/
 
 /********************************************************************/
 /* End of GLC0802C07                                                */

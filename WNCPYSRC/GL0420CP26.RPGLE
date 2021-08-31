@@ -14,10 +14,10 @@
       *                                                               *
       *****************************************************************
       *
-     C                   ELSE
-     C   18              Z-ADD     STPP          STPFF             4 0
-     C   18STPP          ADD       1             STPP
-     C                   ENDIF
+     C                   ELSE                                                                 LUC108
+     C   18              Z-ADD     STPP          STPFF             4 0                        LUC108
+     C   18STPP          ADD       1             STPP                                         LUC108
+     C                   ENDIF                                                                LUC108
       *
       *****************************************************************
       * End of /COPY GL0420CP26                                       *

@@ -15,8 +15,8 @@
       * MMI013  - Increase size of arrays for Stamp Duty Postings     *
       *                                                               *
       *****************************************************************
-      *                                                                         LUC140
-      */OMITEND                                                                 LUC140
+      *                                                                                       LUC140
+      */OMITEND                                                                               LUC140
      C*R******** X         IFGT 25                                  MMI018MMI013
      CLR   X             IFGT      27                                                         LUC140
       *****************************************************************

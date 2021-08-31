@@ -16,12 +16,12 @@
 /********************************************************************/
 
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) +
-                          VALUE('       ')
+                          VALUE('       ')                                                /*LUC118*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
-                          VALUE('*VERIFY')
+                          VALUE('*VERIFY')                                                /*LUC118*/
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)  +
-                          VALUE('      ')
-             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+                          VALUE('      ')                                                 /*LUC118*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*LUC118*/
 
 /********************************************************************/
 /* End of REC7A002                                                  */

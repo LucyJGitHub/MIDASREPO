@@ -51,7 +51,7 @@
 
              SNDPGMMSG  MSG('XXC1405 - Retail Stamp Duty postings Component') +
                           TOMSGQ(MRUNQ)
-             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB) /*LUC140*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*LUC140*/
 
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
@@ -83,13 +83,13 @@
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
-             COMMIT     /*LUC140*/
+             COMMIT                                                                       /*LUC140*/
              GOTO       CMDLBL(END)
 
  ABNOR:
 
              CHGJOB     SWS(XXXXXX11)
-             ROLLBACK   /*LUC140*/
+             ROLLBACK                                                                     /*LUC140*/
 
 /* Abnormal termination - batch job */
 
@@ -102,5 +102,5 @@
 
  END:        CHGVAR     VAR(&CPYFLD) VALUE('Copyright Midas-Kapiti +
                           International Ltd.')
-             ENDCMTCTL  /*LUC140*/
+             ENDCMTCTL                                                                    /*LUC140*/
              ENDPGM

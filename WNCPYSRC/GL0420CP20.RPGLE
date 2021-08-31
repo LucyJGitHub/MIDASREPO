@@ -16,10 +16,10 @@
       *                                                               *
       *****************************************************************
       *
-     C     LUC108        IFEQ      'Y'
-     C     LUC107        OREQ      'Y'
-     C   45STPP          ADD       1             STPP
-     C                   ELSE
+     C     LUC108        IFEQ      'Y'                                                        LUC108
+     C     LUC107        OREQ      'Y'                                                        LUC107
+     C   45STPP          ADD       1             STPP                                         LUC107
+     C                   ELSE                                                                 LUC107
       *
       *****************************************************************
       * End of /COPY GL0420CP20                                       *

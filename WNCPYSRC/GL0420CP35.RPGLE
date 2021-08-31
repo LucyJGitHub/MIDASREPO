@@ -16,36 +16,36 @@
       *                                                               *
       *****************************************************************
       *
-      **  Access SAR details file to see if LUC108 is installed.
+      **  Access SAR details file to see if LUC108 is installed.                              LUC108
+      *                                                                                       LUC108
+     C                   CALL      'AOSARDR0'                                                 LUC108
+     C                   PARM      *BLANKS       PRTCD                                        LUC108
+     C                   PARM      '*VERIFY'     POPTN                                        LUC108
+     C                   PARM      'LUC108'      PSARD                                        LUC108
+     C     SCSARD        PARM      SCSARD        DSSDY                                        LUC108
+      *                                                                                       LUC108
+     C                   MOVE      'N'           LUC108                                       LUC108
+     C                   MOVE      *OFF          *IN79                                        LUC108
+     C     PRTCD         IFEQ      *BLANKS                                                    LUC108
+     C                   OPEN      SDBSRTL1                                                   LUC108
+     C                   MOVE      'Y'           LUC108            1                          LUC108
+     C                   MOVE      *ON           *IN79                                        LUC108
+     C                   ENDIF                                                                LUC108
       *
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       PRTCD
-     C                   PARM      '*VERIFY'     POPTN
-     C                   PARM      'LUC108'      PSARD
-     C     SCSARD        PARM      SCSARD        DSSDY
-      *
-     C                   MOVE      'N'           LUC108
-     C                   MOVE      *OFF          *IN79
-     C     PRTCD         IFEQ      *BLANKS
-     C                   OPEN      SDBSRTL1
-     C                   MOVE      'Y'           LUC108            1
-     C                   MOVE      *ON           *IN79
-     C                   ENDIF
-      *
-      **  Access SAR details file to see if LUC132 is installed.                LUC132
-      *                                                                         LUC132
-     C                   CALL      'AOSARDR0'                                   LUC132
-     C                   PARM      *BLANKS       PRTCD                          LUC132
-     C                   PARM      '*VERIFY'     POPTN                          LUC132
-     C                   PARM      'LUC132'      PSARD                          LUC132
-     C     SCSARD        PARM      SCSARD        DSSDY                          LUC132
-      *                                                                         LUC132
-     C                   MOVE      'N'           LUC132                         LUC132
-     C                   MOVE      *OFF          *IN86                          LUC132
-     C     PRTCD         IFEQ      *BLANKS                                      LUC132
-     C                   MOVE      'Y'           LUC132            1            LUC132
-     C                   MOVE      *ON           *IN86                          LUC132
-     C                   ENDIF                                                  LUC132
+      **  Access SAR details file to see if LUC132 is installed.                              LUC132
+      *                                                                                       LUC132
+     C                   CALL      'AOSARDR0'                                                 LUC132
+     C                   PARM      *BLANKS       PRTCD                                        LUC132
+     C                   PARM      '*VERIFY'     POPTN                                        LUC132
+     C                   PARM      'LUC132'      PSARD                                        LUC132
+     C     SCSARD        PARM      SCSARD        DSSDY                                        LUC132
+      *                                                                                       LUC132
+     C                   MOVE      'N'           LUC132                                       LUC132
+     C                   MOVE      *OFF          *IN86                                        LUC132
+     C     PRTCD         IFEQ      *BLANKS                                                    LUC132
+     C                   MOVE      'Y'           LUC132            1                          LUC132
+     C                   MOVE      *ON           *IN86                                        LUC132
+     C                   ENDIF                                                                LUC132
       *****************************************************************
       * End of /COPY GL0420CP35                                       *
       *****************************************************************

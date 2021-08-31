@@ -15,10 +15,10 @@
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
-     FSDBSRTL1  IF   E           K DISK    USROPN
-      *
-     F**APOSTVB   IF   F  331    18AIDISK    KEYLOC(2)                            LUC132
-     FAPOSTVB   IF   F  620    24AIDISK    KEYLOC(2)                              LUC132
+     FSDBSRTL1  IF   E           K DISK    USROPN                                             LUC108
+      *                                                                                       LUC108
+     F**APOSTVB   IF   F  331    18AIDISK    KEYLOC(2)                                        LUC132
+     FAPOSTVB   IF   F  620    24AIDISK    KEYLOC(2)                                          LUC132
      F
       *****************************************************************
       * End of /COPY GL0420FFPG                                       *

@@ -32,12 +32,12 @@
              DCLF       FILE(SDLANGPD)
 /**/
 /*           SNDPGMMSG  MSG('RECM3763 - Summary retail interest +
-                          statements') TOMSGQ(MRUNQ)         */   /*LUC141*/
+                          statements') TOMSGQ(MRUNQ)         */                           /*LUC141*/
              SNDPGMMSG  MSG('XXC3763 - Summary retail interest statements') +
-                          TOMSGQ(MRUNQ) /*LUC141*/
+                          TOMSGQ(MRUNQ)                                                   /*LUC141*/
 /**/
-       /*    CALL       PGM(REM010)        */      /*LUC141*/
-             CALL       PGM(XX0010)                /*LUC141*/
+       /*    CALL       PGM(REM010)        */                                             /*LUC141*/
+             CALL       PGM(XX0010)                                                       /*LUC141*/
 /**/
              OVRDBF     FILE(ACCRACJ) TOFILE(EACCRACJ)
              OVRDBF     FILE(ACCNT) TOFILE(EACCNT)

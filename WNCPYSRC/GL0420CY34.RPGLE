@@ -7,9 +7,9 @@
       *  LUC107 - Statement Page Number Enhancement                   *
       *                                                               *
       *****************************************************************
-     C     LUC107        IFEQ      'Y'
-     C                   Z-ADD     1             STPP              3 0
-     C                   ENDIF
+     C     LUC107        IFEQ      'Y'                                                        LUC107
+     C                   Z-ADD     1             STPP              3 0                        LUC107
+     C                   ENDIF                                                                LUC107
       *
       *****************************************************************
       * End of /COPY GL0420CY34                                       *

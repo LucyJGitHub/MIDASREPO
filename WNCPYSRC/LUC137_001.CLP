@@ -15,9 +15,9 @@
 /*  LUC137 - Include Non-Auto Settle Loans events on GL0580         */
 /*                                                                  */
 /********************************************************************/
-             IF         COND(&LUC137 = 'Y') THEN(DO)
-             OVRDBF FILE(EVNTM1) TOFILE(XXEVNTM1)
-             ENDDO
+             IF         COND(&LUC137 = 'Y') THEN(DO)                                      /*LUC137*/
+             OVRDBF FILE(EVNTM1) TOFILE(XXEVNTM1)                                         /*LUC137*/
+             ENDDO                                                                        /*LUC137*/
 
 /********************************************************************/
 /* End of LUC137_001                                                */

@@ -16,8 +16,8 @@
       *                                                               *
       *****************************************************************
       *
-     FXXMSTDY0  UF   E           K DISK
-      **  Stamp Duty details for MMI013
+     FXXMSTDY0  UF   E           K DISK                                                       MMI013
+      **  Stamp Duty details for MMI013                                                       MMI013
       *
       *****************************************************************
       * End of /COPY GL3320FFPG                                       *

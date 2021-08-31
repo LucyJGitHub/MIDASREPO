@@ -14,11 +14,11 @@
       *                                                               *
       *****************************************************************
       *
-     C     LUC107        IFEQ      'Y'
-     C     *IN03         ANDEQ     *ON
-     C                   Z-ADD     STPA          W0STPA
-     C                   Z-ADD     LSTPX         STPA
-     C                   ENDIF
+     C     LUC107        IFEQ      'Y'                                                        LUC107
+     C     *IN03         ANDEQ     *ON                                                        LUC107
+     C                   Z-ADD     STPA          W0STPA                                       LUC107
+     C                   Z-ADD     LSTPX         STPA                                         LUC107
+     C                   ENDIF                                                                LUC107
       *
       *****************************************************************
       * End of /COPY GL0420C031                                       *

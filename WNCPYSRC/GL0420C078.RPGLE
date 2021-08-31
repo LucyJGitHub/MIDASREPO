@@ -17,18 +17,18 @@
       *****************************************************************
       *
      C     LUC108        IFEQ      'Y'
-     C                   Z-ADD     1             STPP              3 0
-     C                   Z-ADD     CFSB          PSTAVL           15 0
-     C     CLBL          IFGT      *ZERO
-     C                   Z-ADD     CLBL          CLBL1            15 0
-     C                   ELSE
-     C                   Z-SUB     CLBL          CLBL1            15 0
-     C                   ENDIF
-     C                   ENDIF
+     C                   Z-ADD     1             STPP              3 0                        LUC108
+     C                   Z-ADD     CFSB          PSTAVL           15 0                        LUC108
+     C     CLBL          IFGT      *ZERO                                                      LUC108
+     C                   Z-ADD     CLBL          CLBL1            15 0                        LUC108
+     C                   ELSE                                                                 LUC108
+     C                   Z-SUB     CLBL          CLBL1            15 0                        LUC108
+     C                   ENDIF                                                                LUC108
+     C                   ENDIF                                                                LUC108
       *
-     C     LUC132        IFEQ      'Y'                                          LUC132
-     C                   Z-ADD     CFSB          RUNBAL                         LUC132
-     C                   ENDIF                                                  LUC132
+     C     LUC132        IFEQ      'Y'                                                        LUC132
+     C                   Z-ADD     CFSB          RUNBAL                                       LUC132
+     C                   ENDIF                                                                LUC132
       *
       *****************************************************************
       * End of /COPY GL0420C078                                     *

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 250161             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058540           Date 24Aug21               *
+      *  Prev Amend No. 250161             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 MD056313           Date 21Sep20               *
       *                 MD054028           Date 05Sep19               *
@@ -141,6 +142,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  250161 - Ensure that maturity date and value date of deals   *
       *           is validated against DACO of ACCNTAB.               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2531,6 +2533,8 @@
      C                   PARM                    ValidDeal
      C*******************PARM      'N'           RepoFlag          1                          CAP087
      C                   PARM                    RepoFlag          1                          CAP087
+      ** Called from confirmation screen?                                                   MD058540
+     C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMLDNIXC04
       *                                                                                       CDL016
       * If errors bypass Screen 2 validation                                                  CDL016

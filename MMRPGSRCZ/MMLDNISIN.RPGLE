@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058540           Date 24Aug21               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 MD036070           Date 19Oct15               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -978,6 +980,7 @@
      C                   PARM                    NwDlFilFmt
      C/COPY WNCPYSRC,MMLDNISC57
      C                   PARM      'N'           RepoFlag          1            CSE006
+     C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMLDNISC34
       *
       * If errors returned
@@ -2592,6 +2595,7 @@
      C                   PARM                    NwDlFilFmt
      C/COPY WNCPYSRC,MMLDNISC64
      C                   PARM      'N'           RepoFlag          1            CSE006
+     C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMLDNISC38
       *                                                                                       CDL016
       * Validate second screen if feature is on and Fixed Deposit Deal                        CDL016

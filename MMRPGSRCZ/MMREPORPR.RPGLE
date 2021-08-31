@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031031           Date 24Feb15               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD058540           Date 24Aug21               *
+      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -1173,6 +1175,7 @@
      C                   PARM                    WIdx
      C                   PARM                    NwDlFilFmt
      C                   PARM      'Y'           RepoFlag
+     C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMREPORC01
       *
       * If errors returned

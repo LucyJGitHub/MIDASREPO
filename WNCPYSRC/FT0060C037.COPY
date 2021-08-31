@@ -6,11 +6,14 @@
       *                                                               *                       UUC101
       *  (c) Finastra Ltd 2020                                        *                       UUC101
       *                                                               *                       UUC101
-      *  Last Amend No. MD027774           Date 07Oct20               *                       UUC101
-      *  Prev Amend No. UUC101  *CREATE    Date 07Oct20               *                       UUC101
+      *  Last Amend No. MD058591           Date 27Aug21               *                       UUC101
+      *  Prev Amend No. MD027774           Date 07Oct20               *                       UUC101
+      *                 UUC101  *CREATE    Date 07Oct20               *                       UUC101
       *                                                               *                       UUC101
       *****************************************************************                       UUC101
       *                                                               *                       UUC101
+      *  MD058591 - FT Cover Check validating incorrect account.      *
+      *           Amended hook FT0060C037.                            *
       *  MD027774 - No warning for retail account OD                  *                       UUC101
       *             Recompile due to changes on WNCPYSRC/FT0060C037   *                       UUC101
       *             Upgraded with UUC101                              *                       UUC101
@@ -39,14 +42,22 @@
       **  Retrieve Account Number to check if funds are enough                              MD027774
       **    If OPAY = Check Ordering Customer Retail Account Number                         MD027774
       **    If IPAY = Check Sender  Retail Account Number                                   MD027774
-     C           *IN60     IFEQ *ON                                                         MD027774
+      **    Ensure ACNO and related fields are blanked if non-Retail account                MD058591
+     C********** *IN60     IFEQ *ON                                                MD027774 MD058591
+     C                     SELEC                                                            MD058591
+     C           *IN60     WHEQ *ON                                                         MD058591
      C           ORCT      ANDEQ'R'                                                         MD027774
      C                     MOVELORC1      ACNO                                              MD027774
-     C                     END                                                              MD027774
-     C           *IN60     IFEQ *OFF                                                        MD027774
+     C**********           END                                                     MD027774 MD058591
+     C********** *IN60     IFEQ *OFF                                               MD027774 MD058591
+     C           *IN60     WHEQ *OFF                                                        MD058591
      C           SNTP      ANDEQ'R'                                                         MD027774
      C                     MOVELSND1      ACNO                                              MD027774
-     C                     END                                                              MD027774
+     C                     OTHER                                                            MD058591
+     C                     Z-ADD*ZEROS    ACNO                                              MD058591
+     C                     MOVEL*BLANKS   FGLNO                                             MD058591
+     C**********           END                                                     MD027774 MD058591
+     C                     ENDSL                                                            MD058591
       *                                                                                     MD027774
      C           ACNO      CHAINACNUMAF              80                                     MD027774
      C                     MOVELBRCA      CFACO1  9                                         MD027774

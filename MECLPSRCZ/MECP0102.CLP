@@ -19,7 +19,7 @@
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
-/*                      HVB019  *CREATE    Date 02Dec11              */
+/*                      HVB019   *CREATE   Date 02Dec11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
@@ -39,24 +39,24 @@
 /* */
              DCL        VAR(&HOL_STAT) TYPE(*CHAR) LEN(7) +
                           VALUE('       ')
- 
+
              DCL        VAR(&STP_STAT) TYPE(*CHAR) LEN(5)
 /* */
 /* Global Monitor Message */
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              RTVDTAARA  DTAARA(MESTPSTAT) RTNVAR(&STP_STAT)
- 
- 
+
+
              CHGVAR     VAR(&HOL_STAT) VALUE('       ')
              CALL MEP0102 PARM(&HOL_STAT)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
- 
+
 /*  If today is not a Bank Holiday (bank is open then allow STP to start  */
 /*  Restart after disable                                                 */
              IF         COND(&HOL_STAT = '*OPEN  ' *AND &STP_STAT = +
@@ -64,12 +64,12 @@
              CHGDTAARA  DTAARA(MESTPSTAT) VALUE('STOP')
              GOTO       ENDCLPGM
              ENDDO
- 
+
 /*  Normal                                                                */
              IF         COND(&HOL_STAT = '*OPEN  ') THEN(DO)
              GOTO       ENDCLPGM
              ENDDO
- 
+
 /*  If today is Bank Holiday (bank is closed) then DISABLE the STP        */
              IF         COND(&HOL_STAT = '*CLOSED') THEN(DO)
 /*  End STP if it is running                                              */
@@ -77,14 +77,14 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGDTAARA  DTAARA(MESTPSTAT) VALUE('DSBLD')
              ENDDO
- 
+
              GOTO       ENDCLPGM
- 
+
 ABNORMAL:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDPGM

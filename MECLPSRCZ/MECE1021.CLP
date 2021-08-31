@@ -5,14 +5,14 @@
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
-/*       MECE1021  - EE ME IMM Extraction Control - Batch process    */
+/*       MECE1021 - EE ME IMM Extraction Control - Batch process     */
 /*                                                                   */
 /*       (C) COPYRIGHT MKI LIMITED 1999.                             */
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
 /*                      ESL038             Date 01Oct2004            */
-/*                      EAH080             Date 17May99              */
+/*                      EAH080   *CREATE   Date 17May99              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                                                                   */
 /*********************************************************************/

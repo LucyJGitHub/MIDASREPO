@@ -12,7 +12,7 @@
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
 /*                      HVB019             Date 05Dec11              */
-/*                      MKCAR9            Date 22Mar06               */
+/*                      MKCAR9   *CREATE  Date 22Mar06               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
@@ -41,7 +41,7 @@
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
- 
+
 /* Check if STP is DISABLED due to bank holiday. If DISABLED then do not start STP */   /*HVB019  */
              RTVDTAARA  DTAARA(MESTPSTAT) RTNVAR(&STP_STAT)                             /*HVB019  */
              IF         COND(&STP_STAT = 'DSBLD') THEN(DO)
@@ -50,30 +50,30 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                  /*HVB019  */
              GOTO       CMDLBL(ENDCLPGM)                                                  /*E00045*/
              ENDDO                                                                        /*E00045*/
- 
+
              IF         COND(&NEW_STAT *EQ 'START') THEN(DO)
                CHGDTAARA DTAARA(MESTPSTAT (1 5)) VALUE('START')
                CALL MEC1304 ('' '' '')
                IF  COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                         CMDLBL(ABNORMAL))
              ENDDO
- 
+
              IF         COND(&NEW_STAT *EQ 'STOP ') THEN(DO)
 /*  Close Down FT IMM Job  */
- 
+
                CALL       PGM(MEC1302) PARM('' 'End' ' ')
                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNORMAL))
                CHGDTAARA DTAARA(MESTPSTAT (1 5)) VALUE('STOP ')
- 
+
              ENDDO
              GOTO       ENDCLPGM
- 
+
 ABNORMAL:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDPGM

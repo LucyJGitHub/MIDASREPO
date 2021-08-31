@@ -12,7 +12,7 @@
 /*       Last Amend No. MD031937            Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
 /*                      ESL038             Date 30Nov2004            */
-/*                      EEE065             Date 16Nov2004            */
+/*                      EEE065   *CREATE   Date 16Nov2004            */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                                                                   */
 /*********************************************************************/

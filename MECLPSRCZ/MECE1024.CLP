@@ -5,14 +5,14 @@
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
-/*       MECE1024  - Send Prompt to EE ME IMM Extraction Job         */
+/*       MECE1024 - Send Prompt to EE ME IMM Extraction Job          */
 /*                                                                   */
 /*       (C) COPYRIGHT MKI LIMITED 1999.                             */
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
 /*                      ESL038             Date 01Oct2004            */
-/*                      EAH080             Date 17May99              */
+/*                      EAH080   *CREATE   Date 17May99              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                                                                   */
 /*********************************************************************/

@@ -9,7 +9,7 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No.  LUC131           Date 05Aug19              */
+/*       Last Amend No. LUC131             Date 05Aug19              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -51,10 +51,10 @@
 /* Global monitor message                                                    */
 /*                                                                           */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
- 
+
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
 /**/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /***********RTVDTAARA  DTAARA(MSSTAT)  RTNVAR(&MSSTAT)                 *E40395*/
@@ -95,7 +95,7 @@
              ENDDO
 /**/
              GOTO       CMDLBL(ENDPGM)
- 
+
  ABNOR:         ROLLBACK
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
                 SNDPGMMSG MSG('Transaction failed. Re-input +
@@ -103,5 +103,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     INQMSGRPY(*RQD) SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 ENDPGM:      ENDPGM

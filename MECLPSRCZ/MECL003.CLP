@@ -3,23 +3,23 @@
 /*EXI *  TEXT('Midas ME Download SWIFT BIC Dir from Optical CD')     */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     - Message Management Module                       */
+/*       Midas - Message Management Module                           */
 /*                                                                   */
-/*       MECL003  - Download SWIFT BIC Directory from Optical CD     */
+/*       MECL003 - Download SWIFT BIC Directory from Optical CD      */
 /*                                                                   */
 /*       (C) Copyright Misys International Banking Systems Ltd.      */
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
 /*                      LFT001             Date 25JUL2002            */
-/*                      djbemg  *Create    Date 22Feb2002            */
+/*                      DJBEMG   *CREATE   Date 22Feb2002            */
 /*                                                                   */
 /*********************************************************************/
-/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
-/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*      MD031937 - Upgrade STP enhancements to BF Midas 2.1          */
+/*      AR856737 - Upgrade STP enhancements to Midas Plus level      */
 /*      LFT001 - New BIC Directory load                              */
 /*      EMEFIX - CPYFROMCD using the correct quater.                 */
-/*      djbemg - Download of data SWIFT Dos CD                       */
+/*      DJBEMG - Download of data SWIFT Dos CD                       */
 /*               Replaces MECL001                                    */
 /*                                                                   */
 /*********************************************************************/
@@ -44,7 +44,7 @@
              DCL        VAR(&SOPTN) TYPE(*CHAR) LEN(7)                                   /*DJB001*/
              DCL        VAR(&SSARD) TYPE(*CHAR) LEN(6)                                   /*DJB001*/
              DCL        VAR(&SSCSARD) TYPE(*CHAR) LEN(200)                               /*DJB001*/
- 
+
 /* */
 /* Declare file for Optical Analysis */
 /* */

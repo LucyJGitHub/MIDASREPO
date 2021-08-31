@@ -5,13 +5,13 @@
 /*                                                                   */
 /*       Midas¦ABS - Message Management Module                       */
 /*                                                                   */
-/*     MEHC036 -  Auto Generation Criteria Table Listing             */
+/*       MEHC036 - Auto Generation Criteria Table Listing            */
 /*                                                                   */
 /*       (C) COPYRIGHT Midas/Kapiti International 1996               */
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
-/*                      S01482             DATE 01MAY96              */
+/*                      S01482   *CREATE   DATE 01MAY96              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */

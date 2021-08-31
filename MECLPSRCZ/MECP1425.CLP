@@ -5,14 +5,13 @@
 /*                                                                   */
 /*       Midas - Message Management                                  */
 /*                                                                   */
-/*       MECP1425 -  BIC Plus loader  COB                            */
-/*                                                                   */
+/*       MECP1425 - BIC Plus loader  COB                             */
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
-/*                      ESL044             Date 01Feb2005            */
+/*                      ESL044   *CREATE   Date 01Feb2005            */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                                                                   */
 /*********************************************************************/
@@ -23,7 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&COMP_NAME &COMP_SEQ)
- 
+
 /* Copyright statement                                               */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
@@ -36,17 +35,17 @@
              DCL        VAR(&COMP_SEQ) TYPE(*DEC) LEN(5)
              DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
- 
+
              DCL        VAR(&REL_DAT) TYPE(*CHAR) LEN(8)
              DCL        VAR(&RET_COD) TYPE(*CHAR) LEN(7)
- 
+
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DBPREFIX) TYPE(*CHAR) LEN(2)
- 
+
 /*/COPY WNCPYSRC,MEC1425DB3                                          */
- 
+
 /* Global Monitor Message                                            */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ENDCLPGM)
@@ -109,47 +108,47 @@
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF8351)
- 
+
 /*/COPY WNCPYSRC,MEC1425DB2                                         */
 /* Call the BIC version reader                                       */
              CALL       PGM(MEC1421) PARM(&REL_DAT)
- 
+
              IF         COND(&REL_DAT *EQ ' ') THEN(DO)
     /* No Data has been read from the S.W.I.F.T release date table   */
- 
+
              SNDPGMMSG  MSG('No data to extract for SWIFT BIC load') +
                           TOMSGQ(MOPERQ MRUNQ)
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              GOTO       CMDLBL(ENDCLPGM)
- 
+
              ENDDO
- 
+
 /* Update BIC Database Plus table                                    */
              CPYF       FROMFILE(METICPPD) TOFILE(MEBICPPD) +
                           MBROPT(*REPLACE) INCREL((*IF BIFLAG *NE 'D'))
- 
+
 /* Update BIC Country table                                          */
              CPYF       FROMFILE(METICCPD) TOFILE(MEBICCPD) +
                           MBROPT(*REPLACE)
- 
+
 /* Update BIC Database Plus Search Index                             */
- 
+
              CLRPFM     FILE(MEBICIPD)
- 
+
 /*    Call the BIC Plus search index creation program                */
              CALL       PGM(ME1430) PARM(&RET_COD)
- 
+
 /* Update BIC Directory                                              */
- 
+
              CLRPFM     FILE(MEBICDPD)
 /*    Call the BIC Directory update program                          */
              CALL       ME1440
- 
+
 /* Clear temporary files                                             */
 /*/COPY WNCPYSRC,MEC1425DB1                                          */
- 
+
 /* */
 /* Update status to Not Active - component finished */
 /* */
@@ -158,7 +157,7 @@
              CLRPFM     METICPPD
              CLRPFM     METICCPD
              CLRPFM     METICVPD
- 
+
 /**/
              GOTO       CMDLBL(ENDCLPGM)
 /* */
@@ -189,6 +188,6 @@ ABNORMAL:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
- 
+
+
              ENDPGM

@@ -11,14 +11,14 @@
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
-/*                      EEE065             Date 22Sep2004            */
+/*                      EEE065   *CREATE   Date 22Sep2004            */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
 /*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
-/*  AR856737 - Upgrade STP enhancements to Midas Plus level          */
-/*  On-Call Details - Restore from save file and by-pass             */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       On-Call Details - Restore from save file and by-pass        */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */

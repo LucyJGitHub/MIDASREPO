@@ -5,7 +5,7 @@
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
-/*       MECE1025  - Create data queue EEMEIMM                       */
+/*       MECE1025 - Create data queue EEMEIMM                        */
 /*                                                                   */
 /*       (C) COPYRIGHT MKI LIMITED 1999.                             */
 /*                                                                   */
@@ -13,7 +13,7 @@
 /*       Prev Amend No. AR856737           Date 13Sep11              */
 /*                      ESL038             Date 01Oct2004            */
 /*                      EEE058             Date 05Feb2003            */
-/*                      EAH080             Date 17May99              */
+/*                      EAH080   *CREATE   Date 17May99              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                                                                   */
 /*********************************************************************/

@@ -16,7 +16,7 @@
 /*                                                                   */
 /*       Last Amend No. MD031937           Date 13Jan15              */
 /*       Prev Amend No. AR856737           Date 13Sep11              */
-/*                      HVB019  *CREATE    Date 02Dec11              */
+/*                      HVB019   *CREATE   Date 02Dec11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
@@ -35,24 +35,24 @@
 /* Declare variables */
 /* */
              DCL        VAR(&STATUS) TYPE(*CHAR) LEN(7)
- 
+
              DCL        VAR(&STP_STAT) TYPE(*CHAR) LEN(5)
 /* */
 /* Global Monitor Message */
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              RTVDTAARA  DTAARA(MESTPSTAT) RTNVAR(&STP_STAT)
- 
+
 /*  ENABLE STP                                                            */
              IF         COND(&STATUS = 'ENABLE ') THEN(DO)
              CHGDTAARA  DTAARA(MESTPSTAT) VALUE('     ')
              GOTO       ENDCLPGM
              ENDDO
- 
+
 /*  DISABLE STP                                                           */
              IF         COND(&STATUS = 'DISABLE') THEN(DO)
 /*  End STP if it is running                                              */
@@ -61,14 +61,14 @@
              CHGDTAARA  DTAARA(MESTPSTAT) VALUE('DSBLD')
              GOTO       ENDCLPGM
              ENDDO
- 
+
              GOTO       ENDCLPGM
- 
+
 ABNORMAL:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDPGM

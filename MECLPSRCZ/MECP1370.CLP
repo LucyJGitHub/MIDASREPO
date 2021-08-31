@@ -3,9 +3,9 @@
 /*EXI *  TEXT('Midas ME Prompt Request for FT Transaction')          */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     - Message Management Module                       */
+/*       Midas - Message Management Module                           */
 /*                                                                   */
-/*       MEC1370  - Prompt Request for FT Transaction                */
+/*       MEC1370 - Prompt Request for FT Transaction                 */
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
@@ -14,7 +14,7 @@
 /*                      ESL038             Date 01Oct2004            */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*                      S01435             DATE 13OCT93              */
+/*                      S01435   *CREATE   DATE 13OCT93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */

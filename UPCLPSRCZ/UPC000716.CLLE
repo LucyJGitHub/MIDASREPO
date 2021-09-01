@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD057231           Date 18Nov20              */
-/*       Prev Amend No. MD056103 *CREATE   Date 18Jun20              */
+/*       Last Amend No. MD058629           Date 20Aug21              */
+/*       Prev Amend No. MD057231           Date 18Nov20              */
+/*                      MD056103 *CREATE   Date 18Jun20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058629 - &OLDLIB gets corrupted after update              */
 /*       MD057231 - Allow selected to be migrated                    */
 /*                  Move OVRDBF into the RCVF loop                   */
 /*       MD056193 - Deliverable Data Split migration                 */
@@ -23,6 +25,7 @@
 
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDLIBS) TYPE(*CHAR) LEN(10)                               /*MD058629*/
              DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MBROVR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&KEYFILE) TYPE(*CHAR) LEN(10)
@@ -187,6 +190,7 @@ UPDNEXT:
              GOTO       CMDLBL(UPDNEXT)
              ENDDO
 
+             CHGVAR     VAR(&OLDLIBS) VALUE(&OLDLIB)                                    /*MD058629*/
 /* If Special Instructions */
              IF         COND(&DDSSPI *NE ' ') THEN(DO)
              CALL       PGM(&DDSSPI) PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
@@ -194,6 +198,7 @@ UPDNEXT:
              ELSE CMD(DO)
              CALL       PGM(UP000710) PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
              ENDDO
+             CHGVAR     VAR(&OLDLIB) VALUE(&OLDLIBS)                                    /*MD058629*/
 
              IF         COND(&ERROR *NE ' ') THEN(DO)                                   /*MD057231*/
                 SNDPGMMSG  MSG('Error updating file ' *CAT &DDSNWF +

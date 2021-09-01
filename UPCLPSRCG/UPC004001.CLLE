@@ -1,0 +1,258 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU copy and copy back file')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC004001 - ADBU copy and copyback file                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT017 - Adapptive Database Upgrade                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &FILEN &LIBN &OPTION &ERROR)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FILEN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(10)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+
+/* Set up variables for the program. */
+             CHGVAR     VAR(&PFX) VALUE(%SUBSTRING(&LIBN 1 2))
+             CHGVAR     VAR(&OWNER) VALUE(&PFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'DATABASE')
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PFX *TCAT +
+                             'DMLIB')
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PFX *TCAT +
+                             'GMLIB')
+             ENDDO
+
+/* Handle the creation / management of the library where data is moved into. */
+             CALLSUBR   SUBR(MOVELIB)
+
+/* If *COPY */
+             IF         COND(&OPTION *EQ '*COPY') THEN(DO)
+                DLTF       FILE(&LIBMOV/&FILEN)
+                MONMSG MSGID(CPF2105)
+                CPYF       FROMFILE(&LIBN/&FILEN) +
+                             TOFILE(&LIBMOV/&FILEN) FROMMBR(*ALL) +
+                             TOMBR(*FROMMBR) CRTFILE(*YES)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* If *COPYBACK */
+             IF         COND(&OPTION *EQ '*COPYBACK') THEN(DO)
+                CLRPFM     FILE(&LIBN/&FILEN)
+             CPYF       FROMFILE(&LIBMOV/&FILEN) +
+                          TOFILE(&LIBN/&FILEN) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*NONE)
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 1        */
+/*                                                                   */
+/* First category of monitored messages are critical errors and will */
+/* be flagged as failed without attempting other types of CPYF as    */
+/* they would also fail.                                             */
+/*********************************************************************/
+/* If either from-file or to-file does not exist. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2861) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If there is insufficient authority to either the from-file or to-file. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2864) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2862) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If the from-file has more fields than the to-file then treat as error. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2965) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If from-file or to-file is locked, or to-file is in use */
+             MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If the to-file has an insufficient allowed number of members. */
+             MONMSG     MSGID(CPF2888) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 2        */
+/*                                                                   */
+/* Second category of monitored messages are non-critical errors and */
+/* will be flagged as completed without attempting other types of    */
+/* as they would also fail.                                          */
+/*********************************************************************/
+/* If the from-file has no members or its only member is empty. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 3        */
+/*                                                                   */
+/* Third category of monitored messages are for possibly critical    */
+/* errors but further CPYFs should be attempted.                     */
+/*********************************************************************/
+/* If a different FMTOPT is required. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2969) EXEC(DO)
+                GOTO       CMDLBL(MAPDROP)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                GOTO       CMDLBL(MAPDROP)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(DO)
+                GOTO       CMDLBL(MAPDROP)
+             ENDDO
+
+/* If the CPYF worked then end the program. */
+             GOTO       CMDLBL(ENDPGM)
+
+MAPDROP:
+             CPYF       FROMFILE(&LIBMOV/&FILEN) +
+                          TOFILE(&LIBN/&FILEN) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 1   */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the first */
+/* CPYF was received first; therefore, some category 1 errors must   */
+/* be monitored for again.                                           */
+/*********************************************************************/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                GOTO       CMDLBL(NOCHK)
+             ENDDO
+/* If the from-file or to-file is locked, or the to-file is in use. */
+             MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If the to-file has an insufficient allowed number of members. */
+             MONMSG     MSGID(CPF2888) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 2   */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the first */
+/* CPYF was received first; therefore, some category 2 errors must   */
+/* be monitored for again.                                           */
+/*********************************************************************/
+/* If the from-file has no members or its only member is empty. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 3   */
+/*                                                                   */
+/* Third category of monitored messages are for possibly critical    */
+/* errors but further CPYFs should be attempted.                     */
+/*********************************************************************/
+/* If a different FMTOPT is required. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+NOCHK:
+             CPYF       FROMFILE(&LIBMOV/&FILEN) +
+                          TOFILE(&LIBN/&FILEN) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NOCHK) - Category 1       */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the       */
+/* second CPYF was received first; therefore, some category 1 errors */
+/* be monitored for again.                                           */
+/*********************************************************************/
+/* If the from-file or to-file is locked or the to-file is in use. */
+             MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If the to-file has an insufficient allowed number of members. */
+             MONMSG     MSGID(CPF2888) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NOCHK) - Category 2       */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the       */
+/* second CPYF was received first; therefore, some category 2 errors */
+/* be monitored for again.                                           */
+/*********************************************************************/
+/* If from-file has no members or its only member is empty */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* If the CPYF worked then end the program. */
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+ERROR:
+             CHGVAR     VAR(&ERROR) VALUE('*Error')
+             DMPCLPGM
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to handle creation / management of library containing moved     */
+/*  files.                                                                    */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(MOVELIB)
+
+             CHKOBJ     OBJ(&LIBMOV) OBJTYPE(*LIB)
+/* If library does not exist then create it; check if user has authority to */
+/*  the CRTLIB command.                                                     */
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTLIB     LIB(&LIBMOV) TEXT('Temporary for Bridge')
+                ENDDO
+
+             ENDSUBR
+
+ENDPGM:
+             ENDPGM

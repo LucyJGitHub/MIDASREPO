@@ -1,0 +1,84 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15      5        *
+      *  Prev Amend No. AR856737           Date 13Sep11      5        *
+      *                  ESL044                 Date 01Mar2005        *
+      *                  EEE065 *Create         Date 26May2004        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  ESL044 - Domestice Clearing                                  *
+      *  EEE065 - FT Payment Routing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Access SAR details file to determine if EEE065 is switched ON
+     C           EEE065    IFEQ *BLANKS
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'EEE065'  @SARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+      ** If feature is switched ON, set a variable field to condition the
+      ** rest of the processing.
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVE 'Y'       EEE065  1
+     C                     ELSE
+     C                     MOVE 'N'       EEE065
+      *
+      ** Else, database error (return code other than *NRF)
+     C           P@RTCD    IFNE '*NRF   '
+     C                     MOVEL'AOSARDR0'W0FILE           ************
+     C                     MOVEL'*CALL'   W0KEY            * DBERR 999*
+     C                     Z-ADD999       W0ERNB           ************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERRA                     *ABORT PGM*
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If FT Payment Routing present
+     C           EEE065    IFEQ 'Y'
+      *
+      * If extension record found & routing required
+     C           GEAPPR    IFEQ 'Y'
+      *
+     C           KMROT     KLIST
+     C                     KFLD           PHMSGR
+     C                     KFLD           PHPART
+      *
+      ** Access Live payment routing data
+     C           KMROT     CHAINFTMROTV1             61
+      *
+      * If routing data found then process
+     C           *IN61     IFEQ *OFF
+     C                     MOVE 'Y'       ##ROUT  1                                           ESL044
+     C                     EXSR SRROUT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                       STP016
+      ** Access SAR details file to determine if EAH090 is switched ON                        STP016
+     C                     CALL 'AOSARDR0'                                                    STP016
+     C                     PARM *BLANKS   P@RTCD                                              STP016
+     C                     PARM '*VERIFY' P@OPTN                                              STP016
+     C                     PARM 'EAH090'  @SARD                                               STP016
+     C           SCSARD    PARM SCSARD    DSFDY                                               STP016
+      *                                                                                       STP016
+      ** If feature is switched ON, set a variable field to condition the                     STP016
+      ** rest of the processing.                                                              STP016
+     C           P@RTCD    IFEQ *BLANKS                                                       STP016
+     C                     MOVE 'Y'       EAH090  1                                           STP016
+     C                     ELSE                                                               STP016
+     C                     MOVE 'N'       EAH090                                              STP016
+     C                     ENDIF                                                              STP016
+      *
+      *****************************************************************
+      * End of FT0300C093                                             *
+      *****************************************************************

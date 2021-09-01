@@ -1,0 +1,277 @@
+      **********************************************************************
+      *  Last Amend No. MD031937           Date 13Jan15                    *
+      *  Prev Amend No. AR856737           Date 13Sep11                   *
+      *                 EBB013             Date 27Oct04                    *
+      *--------------------------------------------------------------------*
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level           *
+      *  EBB013 -  Local Clearing Interface                                *
+      **********************************************************************
+      *
+      ** For local clearing ordering customer must be valid account
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELS4ORC     ADDRSS
+      *
+      *  If first 10 Characters are numeric but rest is blank
+      *  validate as a retail account
+      *
+     C           ADACNO    IFNE *BLANKS
+     C           ADEXAC    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+      *
+      *  Check first 10 characters are numeric and rest is blank
+      *
+     C                     MOVEL*BLANKS   I#FLD
+     C                     MOVELS4ORC1    I#FLD  35
+     C           DIGITS    CHECKI#FLD     Y#      30     90
+      *
+      *  10 digits allowed
+      *
+     C           *IN90     IFEQ '1'
+     C           Y#        ANDEQ11
+      *
+      *  Check that retail account numbers are allowed
+      *
+     C           V#RANR    IFEQ 'N'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2245' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+     C                     END
+      *
+      * Store in occurrance data structure 2 any information
+      *
+     C           2         OCUR OACCNT
+      *
+      *  Check account is on ACCNTAB
+      *
+     C                     MOVELADACNO    ACNO
+     C           ACNO      CHAINACNUMAF              90
+      *
+     C           *IN90     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2246' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+     C                     END
+      *
+      * If Ordering Bank is blank currency must equal settle currency
+      *
+     C           S4ORBK    IFEQ *BLANK
+     C           CCY       ANDNES4SMCY
+     C                     MOVEL'Y'       E#MSGS
+     C           S4SMCY    CAT  S4ORC1    FTMSDT    P
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2247' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+     C                     END
+      *
+      *  Retail Account found mark as Retail
+      *
+     C                     MOVEL'R'       F4ORCT
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *  If 15 char have been entered and multi branched , or
+      *  12 characters and single branch , must be a partial account.
+      *
+      *  Only validate if F4ORCT is blank
+      *
+     C           ADCHK1    IFNE *BLANKS
+     C           ADEXPA    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           F4ORCT    ANDEQ*BLANKS
+     C           WUMBIN    ANDEQ'Y'
+     C           ADCHK1    ORNE *BLANKS
+     C           ADEXP1    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           F4ORCT    ANDEQ*BLANKS
+     C           WUMBIN    ANDEQ'N'
+      *
+      *  Customer number, account code and account sequence must be
+      *  numeric
+      *
+     C                     MOVELADPCNM    PTCNUM
+     C                     MOVELADPACD    PTACOD
+     C                     MOVELADPASQ    PTACSQ
+      *
+      *  Check first 12 characters are numeric
+      *
+     C                     MOVEL*BLANKS   I#FLD
+     C                     MOVELPTACCT    I#FLD  35
+     C           DIGITS    CHECKI#FLD     Y#      30     90
+      *
+      *  12 digits allowed
+      *
+     C           *IN90     IFEQ '1'
+     C           Y#        ANDNE13
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2248' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+     C                     END
+      *
+      * Store in occurrance data structure 2 any information
+      *
+     C           2         OCUR OACCNT
+      *
+      *  Set up key for chain
+      *
+     C                     MOVELADPCNM    CNUM
+     C                     MOVELS4SMCY    CCY
+     C                     MOVELADPACD    ACOD
+     C                     MOVELADPASQ    ACSQ
+      *
+      *  Set up branch depending on multibranching
+      *
+     C                     SELEC
+     C           WUMBIN    WHNE 'Y'
+     C                     MOVE V#SBRC    BRCA
+     C           ADPBRC    WHEQ *BLANKS
+     C                     MOVELDBRN      BRCA
+     C                     OTHER
+     C                     MOVELADPBRC    BRCA
+     C                     ENDSL
+      *
+     C           AKEY      CHAINACCNTABF             90
+      *
+     C           *IN90     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2249' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+     C                     END
+      *
+      *  GL Account found mark as Partial Account
+      *
+     C                     MOVEL'P'       F4ORCT
+     C           WUMBIN    IFEQ 'Y'
+     C           ADPBRC    ANDEQ*BLANKS
+     C                     MOVELBRCA      ADPBRC
+     C                     END
+     C                     MOVELADCHK1    S4ORC1
+      *
+     C                     END
+      *
+      ** Error if account does not have an IBAN
+      *
+     C           F4ORCT    IFEQ 'P'
+     C           F4ORCT    OREQ 'R'
+     C           IBAN      ANDEQ*BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'XXX1008' FTMSID
+     C                     MOVEL'XXUSRMSG'FTMSGF
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+     C                     ENDIF
+      *
+      ** Validate ordering customer as IBAN
+      *
+     C           F4ORCT    IFEQ *BLANKS
+     C           ##STMT    ANDEQ'EL'                                                          EMRFX1
+     C           F4ORCT    OREQ *BLANKS                                                       EMRFX1
+     C           ##STMT    ANDEQ'EK'                                                          EMRFX1
+     C                     MOVELS4ORC1    ##SLSH  1                       MK0550
+     C           ##SLSH    IFEQ '/'                                       MK0550
+     C                     MOVEL*BLANKS   ##ORC1 34                       MK0550
+     C                     MOVE S4ORC1    ##ORC1                          MK0550
+     C                     MOVEL##ORC1    P@IBN                           MK0550
+     C                     ELSE                                           MK0550
+     C                     MOVELS4ORC1    P@IBN
+     C                     ENDIF                                          MK0550
+     C                     MOVE *BLANKS   DSSDY                           CFT004
+     C                     MOVELP@IBN     ##ISPL  2
+      * Validate Country
+     C                     MOVEL##ISPL    WCNCD
+     C*****                MOVE 'O'       WACCS                                               EMRFX1
+     C*****                EXSR SRACCS                                                        EMRFX1
+     C                     CALL 'AOCTRYR0'             9090                                   EMRFX1
+     C                     PARM *BLANKS   WRTRN                                               EMRFX1
+     C                     PARM '*KEY   ' WOPTN                                               EMRFX1
+     C                     PARM WCNCD     WCTCD   2                                           EMRFX1
+     C           SDCTRY    PARM SDCTRY    DSFDY                                               EMRFX1
+      *                                                                                       EMRFX1
+     C           WRTRN     IFEQ *BLANK                                                        EMRFX1
+     C           *IN90     ANDEQ*OFF                                                          EMRFX1
+     C                     MOVE 'Y'       WACOK                                               EMRFX1
+     C                     ELSE                                                               EMRFX1
+     C                     MOVE 'N'       WACOK                                               EMRFX1
+     C                     ENDIF                                                              EMRFX1
+      * If Country not found use PL
+     C           WACOK     IFNE 'Y'
+      *
+     C                     MOVE *BLANKS   W@IBAN
+     C           'PL'      CAT  P@IBN:0   W@IBAN 36 P
+     C                     MOVE *BLANKS   P@IBN
+     C                     MOVELW@IBAN    P@IBN
+     C                     ENDIF
+      *
+     C*****                CALL 'AOIBANR4'                          CFT004MK0550
+     C                     CALL 'AOIBANR5'                                MK0550
+     C                     PARM *BLANKS   P@RTCD  7                       CFT004
+     C*****                PARM '*KEY   ' P@OPTN  7                 CFT004MK0550
+     C                     PARM           P@IBN  34                       CFT004
+     C*****      P@ACCN    PARM           DSSDY                     CFT004MK0550
+      *
+     C           P@RTCD    IFNE *BLANKS
+      ***        ##ISPL    ORNE 'PL'                                      MK0550
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'PR10398' FTMSID
+     C                     MOVEL'FTUSRMSG'FTMSGF
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXORC
+      *
+     C                     MOVE *BLANKS   S4ORC1
+     C           '/'       CAT  P@IBN:0   S4ORC1
+      *
+      ** Mark account as retail or partial
+      *
+     C*****                ELSE                                           MK0550
+     C*****      P@ACNO    IFNE *ZEROS                                    MK0550
+     C*****                MOVEL'R'       F4ORCT                          MK0550
+     C*****                ELSE                                           MK0550
+     C*****                MOVEL'P'       F4ORCT                          MK0550
+     C*****                ENDIF                                          MK0550
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *  End F4ORCT = blanks
+     C                     ENDIF
+      *  End ##LCLR = Y
+      *--------------------------------------------------------------------*
+      *  END of FT0342C002                                                 *
+      **********************************************************************

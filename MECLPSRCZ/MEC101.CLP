@@ -9,18 +9,21 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC131             Date 05Aug19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 064773             Date 28Feb94              */
+/*                      064773             Date 28Feb94              */
 /*                      E40395             Date 19May92              */
 /*                       E38492           DATE 15APR92              */
 /*                                                                  */
 /********************************************************************/
+/*       LUC131 - Midas CARs Interface AG (Upgrade to FM2.1)        */
+/*                Amendment of core hook MEC101002                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       064773 - Condition the call to sdretlpd on retail being    */
 /*                present.                                          */
@@ -48,10 +51,10 @@
 /* Global monitor message                                                    */
 /*                                                                           */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
- 
+
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
 /**/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /***********RTVDTAARA  DTAARA(MSSTAT)  RTNVAR(&MSSTAT)                 *E40395*/
@@ -92,7 +95,7 @@
              ENDDO
 /**/
              GOTO       CMDLBL(ENDPGM)
- 
+
  ABNOR:         ROLLBACK
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
                 SNDPGMMSG MSG('Transaction failed. Re-input +
@@ -100,5 +103,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     INQMSGRPY(*RQD) SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 ENDPGM:      ENDPGM

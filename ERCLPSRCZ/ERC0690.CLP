@@ -11,18 +11,24 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058100           Date 20May21              */
+/*       Prev Amend No. LUC139             Date 10May21              */
+/*                      LUC139             Date 27Jan21              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      ULX004             Date 30Apr97              */
 /*                      82577  SL          Date 03Feb95              */
 /*                     ERL406 PT         DATE   14JUL94             */
 /*                     ER0125 ADs        DATE   17DEC92             */
 /*********************************************************************/
 /*                                                                  */
+/*     MD058100 - Rollup of additional BoI onsite fixes at FbMidas  */
+/*     LUC139 - Download xxMGFLA data areas                         */
+/*     LUC139 - Upgrade UCI Italian Returns                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     ULX004 - Capital Adequacy                                    */
@@ -33,7 +39,12 @@
 /*********************************************************************/
 /**/
              PGM
+             DCL        VAR(&RTC) TYPE(*CHAR) LEN(7)                  /*UIT021*/
+             DCL        VAR(&OPT) TYPE(*CHAR) LEN(7) VALUE('*VERIFY') /*UIT021*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) VALUE('UIT021')  /*UIT021*/
+             DCL        VAR(&UIT021) TYPE(*CHAR) LEN(1) VALUE('N')    /*UIT021*/
              DCL        VAR(&@XXLIB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&@ERDLIB) TYPE(*CHAR) LEN(10)                                 /*LUC139*/
 /************DCL        VAR(&@ERDLIB) TYPE(*CHAR) LEN(10)             ULX004*/
 /**********  DCL        VAR(&@CADLIB) TYPE(*CHAR) LEN(10)                 */       /*ULX004 CER001*/
              DCL        VAR(&@DMLIB) TYPE(*CHAR) LEN(10)
@@ -48,8 +59,15 @@
              ALCOBJ     OBJ((ER0690PD *FILE *EXCL)) WAIT(30)          /*E19747*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
  
+/***  Check Feature UIT021 : Bank of Italy Monthly reporting.  ***/   /*UIT021*/
+                                                                      /*UIT021*/
+             CHGVAR     VAR(&RTC) VALUE('       ')                    /*UIT021*/
+             CALL       PGM(AOSARDR0) PARM(&RTC &OPT &SAR)            /*UIT021*/
+             IF         COND(&RTC *EQ '       ')  +
+                  THEN(CHGVAR VAR(&UIT021) VALUE('Y'))                /*UIT021*/
 /* Get the library prefix */
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&@XXLIB)
+             CHGVAR     VAR(&@ERDLIB) VALUE(&@XXLIB *CAT 'ERDLIB')                        /*LUC139*/
  /***********CHGVAR     VAR(&@ERDLIB) VALUE(&@XXLIB *CAT 'ERDLIB')    ULX004*/
 /**********  CHGVAR     VAR(&@CADLIB) VALUE(&@XXLIB *CAT 'CADLIB')        */       /*ULX004 CER001*/
              CHGVAR     VAR(&@DMLIB) VALUE(&@XXLIB *CAT 'DMLIB')
@@ -70,15 +88,19 @@ PHYSICALS:             RCVF                                         /*ULX004*/
 /**********            CPYF       FROMFILE(&VTFNAM) TOFILE(&@CADLIB/&VTFNAM) +
                                   MBROPT(*REPLACE) CRTFILE(*YES) +
                                   FMTOPT(*MAP *DROP)                      */       /*ULX004 CER001*/
-                       CPYF       FROMFILE(&VTFNAM) TOFILE(&VTDNAM) +
+/**********            CPYF       FROMFILE(&VTFNAM) TOFILE(&VTDNAM) +
                                   MBROPT(*REPLACE) CRTFILE(*YES) +
-                                  FMTOPT(*MAP *DROP)                                      /*CER001*/
+                                  FMTOPT(*MAP *DROP)                                *CER001 LUC139*/
 /**********************MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                                 FILE(&@ERDLIB/&VTFNAM))                 ULX004*/
 /**********            MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                                 FILE(&@CADLIB/&VTFNAM))                   /*       /*ULX004 CER001*/
-                       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
-                                FILE(&VTDNAM))                                            /*CER001*/
+/**********            MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                                FILE(&VTDNAM))                                       CER001 LUC139*/
+                       CPYF       FROMFILE(&VTFNAM) TOFILE(&@ERDLIB/&VTDNAM) +
+                                MBROPT(*REPLACE) FMTOPT(*NONE)                            /*LUC139*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(&@ERDLIB/&VTDNAM)) /*LUC139*/
                                                                       /*82577*/
                        MONMSG     MSGID(CPF2952) EXEC(DO)             /*82577*/
                        DLYJOB     DLY(100)                            /*82577*/
@@ -96,6 +118,43 @@ ENDLOOP:     DLCOBJ     OBJ((ER0690PD *FILE *EXCL))
  /* ER0125   MONMSG     MSGID(CPF2105)                             */
  /* ER0125   CRTDUPOBJ  OBJ(ERCTLD) FROMLIB(&@DMLIB) +             */
  /* ER0125                OBJTYPE(*DTAARA) TOLIB(&@ERDLIB)         */
+             IF         COND(&UIT021 *EQ 'Y') THEN(DO) /*142718*/
+                                                                      /*UIT021*/
+             DLTDTAARA  DTAARA(&@ERDLIB/IRSTAT)                       /*UIT021*/
+             MONMSG     MSGID(CPF2105)                                /*UIT021*/
+             CRTDUPOBJ  OBJ(IRSTAT) FROMLIB(&@DMLIB) +
+                          OBJTYPE(*DTAARA) TOLIB(&@ERDLIB)            /*UIT021*/
+                                                                      /*UIT021*/
+             DLTDTAARA  DTAARA(&@ERDLIB/ERCTLD)                       /*142718*/
+             MONMSG     MSGID(CPF2105)                                /*142718*/
+             CRTDUPOBJ  OBJ(ERCTLD) FROMLIB(&@DMLIB) +
+                          OBJTYPE(*DTAARA) TOLIB(&@ERDLIB)            /*142718*/
+
+             DLTDTAARA  DTAARA(&@ERDLIB/RUNDAT)                       /*DBA3FX*/
+             MONMSG     MSGID(CPF2105)                                /*DBA3FX*/
+             CRTDUPOBJ  OBJ(RUNDAT) FROMLIB(&@DMLIB) +
+                          OBJTYPE(*DTAARA) TOLIB(&@ERDLIB)            /*DBA3FX*/
+
+             DLTDTAARA  DTAARA(&@ERDLIB/SDSTAT)                       /*MMI087*/
+             MONMSG     MSGID(CPF2105)                                /*MMI087*/
+             CRTDUPOBJ  OBJ(SDSTAT) FROMLIB(&@DMLIB) +
+                          OBJTYPE(*DTAARA) TOLIB(&@ERDLIB)            /*MMI087*/
+                                                                      /*LUC139*/
+             DLTDTAARA  DTAARA(&@ERDLIB/CBMGFLA)                      /*LUC139*/
+             MONMSG     MSGID(CPF2105)                                /*LUC139*/
+             CRTDUPOBJ  OBJ(CBMGFLA) FROMLIB(*LIBL) OBJTYPE(*DTAARA) +
+                          TOLIB(&@ERDLIB)                             /*LUC139*/
+                                                                      /*LUC139*/
+             DLTDTAARA  DTAARA(&@ERDLIB/MIMGFLA)                      /*LUC139*/
+             MONMSG     MSGID(CPF2105)                                /*LUC139*/
+             CRTDUPOBJ  OBJ(MIMGFLA) FROMLIB(*LIBL) OBJTYPE(*DTAARA) +
+                          TOLIB(&@ERDLIB)                             /*LUC139*/
+                                                                      /*LUC139*/
+             DLTDTAARA  DTAARA(&@ERDLIB/Y2MGFLA)                      /*LUC139*/
+             MONMSG     MSGID(CPF2105)                                /*LUC139*/
+             CRTDUPOBJ  OBJ(Y2MGFLA) FROMLIB(*LIBL) OBJTYPE(*DTAARA) +
+                          TOLIB(&@ERDLIB)                             /*LUC139*/
+             ENDDO                                                    /*UIT021*/
  
              RETURN
  

@@ -1,0 +1,600 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 HVB014             Date 07Nov11               *
+      *                 EEE065             Date 26May2004             *
+      *                 STP008             Date 23Nov2004             *
+      *                 EEE065             Date 26May2004             *
+      *                 EEE065             Date 26Aug03               *
+      *                 EEE019   *CREATE   DATE 05JUL99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  HVB014 -   Sort Code entered in first line of 57A is lost    *
+      *             when the message us STPed                         *
+      *         -   Added changes to /COPY FT0300DCPG so that         *
+      *             if first line of S5ACB starts with '/' then       *
+      *             replace second line of S5ACB with routing info.   *
+      *  STP008 - Add procces for field tag 80                        *
+      *  EEE065 - FT Payment Routing                                  *
+      *  EEE065 - Polish Features Upgrade R4                          *
+      *           Add Impact of CGL009 and CFT014                     *
+      *  EEE019 - Amendment to MT100 Interface with MultiCash:        *
+      *           Ensure amounts and dates are mapped to pay side not *
+      *           settle. Map decoded account currency to settle side *
+      *           and leave settle date blank to default the date.    *
+      *                                                               *
+      *****************************************************************
+      *                                                                                       EEE065
+     C           SRROUT    BEGSR                                                              EEE065
+      *===================================================================                    EEE065
+      * PAYMENT ROUTING                                                                       EEE065
+      *                                                                                       EEE065
+      * Settlement Method                                                                     EEE065
+      *                                                                                       EEE065
+     C           MOSETT    IFNE *BLANKS                                                       EEE065
+     C                     MOVELMOSETT    S4STMT                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+      *                                                                                       EEE065
+      * Receiver's Correspondent                                                              EEE065
+      * Override route                                                                        EEE065
+     C                     SELEC                                                              EEE065
+     C           MORCCO    WHNE *BLANKS                                                       EEE065
+     C           MORCCO    IFEQ '*'                                                           EEE065
+     C                     MOVEL*BLANKS   S5RCO                                               EEE065
+     C                     ELSE                                                               EEE065
+     C                     MOVEL*BLANKS   S5RCO                                               EEE065
+     C                     MOVELMORCCO    S5RCO1                                              EEE065
+     C                     ENDIF                                                              EEE065
+      * Else route                                                                            EEE065
+     C           MORCCR    WHNE *BLANKS                                                       EEE065
+     C           MORCCD    IFEQ *BLANKS                                                       ESL038
+     C                     MOVEL*BLANKS   S5RCO                                               EEE065
+     C                     MOVELMORCCR    S5RCO1                                              EEE065
+     C                     ELSE                                                               ESL038
+     C                     MOVEL*BLANKS   S5RCO                                               EEE065
+     C                     MOVELMORCCD    S5RCO1                                              EEE065
+     C                     MOVELMORCCR    S5RCO2                                              EEE065
+     C                     ENDIF                                                              ESL038
+     C                     ENDSL                                                              EEE065
+      *                                                                                       EEE065
+      * Destination/Receiver                                                                  EEE065
+      * Override route                                                                        EEE065
+     C                     SELEC                                                              EEE065
+     C           MODMAO    WHNE *BLANKS                                                       EEE065
+     C                     MOVEL*BLANKS   S4DST                                               EEE065
+     C                     MOVELMODMAO    S4DST1                                              EEE065
+     C           MODSTO    WHNE *BLANKS                                                       EEE065
+     C                     MOVEL*BLANKS   S4DST                                               EEE065
+     C                     MOVELMODSTO    S4DST1                                              EEE065
+      * Else route                                                                            EEE065
+     C           MODMAC    WHNE *BLANKS                                                       EEE065
+     C                     MOVEL*BLANKS   S4DST                                               EEE065
+     C                     MOVELMODMAC    S4DST1                                              EEE065
+     C           MODSTR    WHNE *BLANKS                                                       EEE065
+     C                     MOVEL*BLANKS   S4DST                                               EEE065
+     C                     MOVELMODSTR    S4DST1                                              EEE065
+     C                     ENDSL                                                              EEE065
+      *                                                                                       EEE065
+      * Intermediary                                                                          EEE065
+      * Override route                                                                        EEE065
+     C                     SELEC                                                              EEE065
+     C           MOINTO    WHNE *BLANKS                                                       EEE065
+     C           MOINTO    IFEQ '*'                                                           EEE065
+     C                     MOVEL*BLANKS   S5IBK                                               EEE065
+     C                     ELSE                                                               EEE065
+     C                     MOVEL*BLANKS   S5IBK                                               EEE065
+     C                     MOVELMOINTO    S5IBK1                                              EEE065
+     C                     ENDIF                                                              EEE065
+      * Else route                                                                            EEE065
+     C           MOINTR    WHNE *BLANKS                                                       EEE065
+     C                     MOVEL*BLANKS   S5IBK                                               EEE065
+     C                     MOVELMOINTR    S5IBK1                                              EEE065
+     C                     ENDSL                                                              EEE065
+      *                                                                                       EEE065
+      * A/C With Institution                                                                  EEE065
+      * Override route                                                                        EEE065
+      ** Check if Sort Code is entered on first line                                          HVB014
+     C                     MOVELS5ACB1    W#ACB1  1                                           HVB014
+     C                     SELEC                                                              EEE065
+     C           MOACBO    WHNE *BLANKS                                                       EEE065
+     C           W#ACB1    ANDNE'/'                                                           HVB014
+     C                     MOVEL*BLANKS   S5ACB                                               EEE065
+     C                     MOVELMOACBO    S5ACB1                                              EEE065
+     C           MOACBO    WHNE *BLANKS                                                       HVB014
+     C           W#ACB1    ANDEQ'/'                                                           HVB014
+     C                     MOVEL*BLANKS   S5ACB2                                              HVB014
+     C                     MOVELMOACBO    S5ACB2                                              HVB014
+      * Else route                                                                            EEE065
+     C           MOACBR    WHNE *BLANKS                                                       EEE065
+     C           W#ACB1    ANDNE'/'                                                           HVB014
+     C                     MOVEL*BLANKS   S5ACB                                               EEE065
+     C                     MOVELMOACBR    S5ACB1                                              EEE065
+     C           MOACBR    WHNE *BLANKS                                                       HVB014
+     C           W#ACB1    ANDEQ'/'                                                           HVB014
+     C                     MOVEL*BLANKS   S5ACB2                                              HVB014
+     C                     MOVELMOACBR    S5ACB2                                              HVB014
+      * Else route                                                                            EEE065
+     C           MOBENB    WHNE *BLANKS                                                       EEE065
+      * Format for BIC                                                                        EEE065
+     C                     CALL 'FTP0712'                                                     EEE065
+     C                     PARM *BLANKS   FTRTN   7                                           EEE065
+     C                     PARM 'BICPLUS' FTOPT   7                                           EEE065
+     C                     PARM MOPCCY    FTPCCY  3                                           EEE065
+     C                     PARM S5ACB     FT2PRM256                                           EEE065
+     C                     PARM *BLANKS   FT3PRM256                                           EEE065
+      * Only change if not blank                                                              EEE065
+     C           FT3PRM    IFNE *BLANKS                                                       EEE065
+     C                     MOVELFT3PRM    S5ACB                                               EEE065
+     C                     ENDIF                                                              EEE065
+     C                     ENDSL                                                              EEE065
+      *                                                                                       EEE065
+      * Cover MT202                                                                           EEE065
+      * Override route                                                                        EEE065
+     C                     SELEC                                                              EEE065
+     C           MOCVRO    WHNE *BLANKS                                                       EEE065
+     C                     MOVELMOCVRO    S4SNMT                                              EEE065
+      * Else route                                                                            EEE065
+     C           MOCVRR    WHNE *BLANKS                                                       EEE065
+     C                     MOVELMOCVRR    S4SNMT                                              EEE065
+     C                     ENDSL                                                              EEE065
+      *                                                                                       EEE065
+      * Sender's Correspondent                                                                EEE065
+      * Override route                                                                        EEE065
+     C                     SELEC                                                              EEE065
+     C           MOCTHO    WHNE *BLANKS                                                       EEE065
+     C                     TESTN          MOCTHO     01                                       EEE065
+      * If numeric -> Retail account number else -> nostro code                               EEE065
+     C           *IN01     IFEQ *ON                                                           EEE065
+     C                     MOVELMOCTHO    S4SNCO                                              EEE065
+     C                     ELSE                                                               EEE065
+     C                     MOVEL*BLANKS   S4SNCO                                              EEE065
+     C           2         SUBSTMOCTHO:4  S4SNCO                                              EEE065
+     C                     ENDIF                                                              EEE065
+      * Else route                                                                            EEE065
+     C           MOCTHR    WHNE *BLANKS                                                       EEE065
+     C                     TESTN          MOCTHR     01                                       EEE065
+      * If numeric -> Retail account number else -> nostro code                               EEE065
+     C           *IN01     IFEQ *ON                                                           EEE065
+     C                     MOVELMOCTHR    S4SNCO                                              EEE065
+     C                     ELSE                                                               EEE065
+     C                     MOVEL*BLANKS   S4SNCO                                              EEE065
+     C           2         SUBSTMOCTHR:4  S4SNCO                                              EEE065
+     C                     ENDIF                                                              EEE065
+     C                     ENDSL                                                              EEE065
+      *                                                                                       EEE065
+      * Map Sender to Receiver                                                                EEE065
+     C                     MOVELMOBTBI    S6BTB                                               EEE065
+      *                                                                                       EEE065
+      * If hidden charge and charges then adjust settlement amount                            EEE065
+     C           MOHDNC    IFEQ 'Y'                                                           EEE065
+     C           MOSTDA    ANDNE0                                                             EEE065
+     C           MOPYAM    ADD  MOSTDA    MOSMAM                                              EEE065
+      *                                                                                       EEE065
+      **  Get the numeric value of SSMAM.                                                     EEE065
+      *                                                                                       EEE065
+     C                     CALL 'AOCURRR0'                                                    EEE065
+     C                     PARM *BLANKS   P@RTCD                                              EEE065
+     C                     PARM '*KEY    'P@OPTN                                              EEE065
+     C                     PARM SMCY      FTCCY   3                                           EEE065
+     C           SDCURR    PARM SDCURR    DSSDY                                               EEE065
+      *                                                                                       EEE065
+     C                     CLEARZFIELD                                                        EEE065
+     C                     MOVE MOSMAM    ZFIELD                                              EEE065
+     C                     Z-ADDA6NBDP    ZADEC                                               EEE065
+     C                     EXSR ZEDIT                                                         EEE065
+     C                     MOVE ZFIELD    S4SMAM                                              EEE065
+      *                                                                                       EEE065
+      *                                                                                       EEE065
+     C                     ENDIF                                                              EEE065
+     C           #EXTRN    IFEQ 'Y'                                                           MK0512
+     C                     MOVELSDCA      DSTRAN                          CGL009
+     C           DSTRAN    IFNE *BLANKS                                                       EEE065
+     C           TVCCY     ANDNE*BLANKS                                                       EEE065
+     C           S4SMCY    ANDNE*BLANKS                                                       EEE065
+     C           S4PYAM    ANDEQ*BLANKS                                                       EEE065
+     C           S4SMAM    ANDNE*BLANKS                                                       EEE065
+     C           *LIKE     DEFN S4PCCY    S#PCCY                                              EEE065
+     C*****                MOVELTVCCY     S#PCCY                                        EEE065MK0512
+     C*****                MOVELS4SMCY    S4PCCY                                        EEE065MK0512
+     C*****                MOVELS4SMAM    S4PYAM                                        EEE065MK0512
+     C*****                MOVELS#PCCY    S4SMCY                                        EEE065MK0512
+     C                     MOVELW32CY     S#PCCY                                              MK0512
+     C                     MOVELW32CY     S4PCCY                                              MK0512
+     C                     MOVELW32AM     S4PYAM                                              MK0512
+     C                     MOVELTVCCY     S4SMCY                                              MK0512
+     C                     MOVEL*BLANKS   S4SMAM                                              EEE065
+     C                     ENDIF                                                              EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C           *NAMVAR   DEFN *LDA      DSLDA                                               EEE065
+     C                     IN   DSLDA                                                         EEE065
+      *                                                                                       EEE065
+      * Update for preferential correspondent                                                 EEE065
+     C           H2PCOR    IFEQ 'Y'                                                           EEE065
+     C           H2PLBE    OREQ 'Y'                                                           EEE065
+     C           H2PLSH    OREQ 'Y'                                                           EEE065
+     C           H2PLOU    OREQ 'Y'                                                           EEE065
+      * Define keys                                                                           EEE065
+     C           KMSCCV    KLIST                                                              EEE065
+     C                     KFLD           MCBICC                                              EEE065
+     C                     KFLD           MCBICB                                              EEE065
+     C                     KFLD           MCPCCY                                              EEE065
+      * Set and get data                                                                      EEE065
+     C                     MOVELH2BICC    MCBICC                                              EEE065
+     C                     MOVELH2BICB    MCBICB                                              EEE065
+     C                     MOVELH2PCCY    MCPCCY                                              EEE065
+     C           KMSCCV    CHAIN@MSCCV0              90                                       EEE065
+     C           *IN90     IFEQ *OFF                                                          EEE065
+     C                     SELEC                                                              EEE065
+      * Low value preferential Ben                                                            EEE065
+     C           H2PLBE    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MCSPBN                                              EEE065
+      * Low value preferential Sha                                                            EEE065
+     C           H2PLSH    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MCSPSN                                              EEE065
+      * Low value preferential Our                                                            EEE065
+     C           H2PLOU    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MCSPON                                              EEE065
+      * Preferential LVP                                                                      EEE065
+     C           H2PLVP    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MCPLNB                                              EEE065
+      * Preferential Regulated                                                                EEE065
+     C           H2PREG    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MCPRNB                                              EEE065
+     C                     OTHER                                                              EEE065
+      * Preferential Routing                                                                  EEE065
+     C                     ADD  1         MCPNBR                                              EEE065
+     C                     ENDSL                                                              EEE065
+     C                     UPDAT@MSCCV0                                                       EEE065
+     C                     ENDIF                                                              EEE065
+      * Full key                                                                              EEE065
+     C           KMSCPV    KLIST                                                              EEE065
+     C                     KFLD           MPBICC                                              EEE065
+     C                     KFLD           MPBICB                                              EEE065
+     C                     KFLD           MPPCCY                                              EEE065
+     C                     KFLD           MPCBIC                                              EEE065
+     C                     KFLD           MPCBIB                                              EEE065
+      * Set and get data                                                                      EEE065
+     C                     MOVELH2BICC    MPBICC                                              EEE065
+     C                     MOVELH2BICB    MPBICB                                              EEE065
+     C                     MOVELH2PCCY    MPPCCY                                              EEE065
+     C                     MOVELH2CBIC    MPCBIC                                              EEE065
+     C                     MOVELH2CBIB    MPCBIB                                              EEE065
+     C           KMSCPV    CHAIN@MSCPV0              90                                       EEE065
+     C           *IN90     IFEQ *OFF                                                          EEE065
+     C                     SELEC                                                              EEE065
+      * Low value preferential Ben                                                            EEE065
+     C           H2PLBE    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MPPBNB                                              EEE065
+      * Low value preferential Sha                                                            EEE065
+     C           H2PLSH    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MPPSNB                                              EEE065
+      * Low value preferential Our                                                            EEE065
+     C           H2PLOU    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MPPONB                                              EEE065
+      * Preferential LVP                                                                      EEE065
+     C           H2PLVP    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MPPLNB                                              EEE065
+      * Preferential Regulated                                                                EEE065
+     C           H2PREG    WHEQ 'Y'                                                           EEE065
+     C                     ADD  1         MPPRNB                                              EEE065
+      * Preferential Routing                                                                  EEE065
+     C                     OTHER                                                              EEE065
+     C                     ADD  1         MPPNBR                                              EEE065
+     C                     ENDSL                                                              EEE065
+     C                     UPDAT@MSCPV0                                                       EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     ENDIF                                                              EEE065
+      *                                                                                       EEE065
+     C                     ENDSR                                                              EEE065
+      *****************************************************************
+      *                                                                   EEE019
+      *================================================================   EEE019
+      *  Map translated data for Outgoing BOJ messages                    EEE019
+      *================================================================   EEE019
+      *                                                                   EEE019
+     C           SRMCLR    BEGSR                                          EEE019
+      *                                                                   EEE019
+      *  Set up subroutine stack name                                     EEE019
+      *                                                                   EEE019
+     C                     ADD  1         Q                               EEE019
+     C                     MOVEL'SRMCLR'  @STK,Q                          EEE019
+      *                                                                   EEE019
+      * Set up the detail screen fields from the message.                 EEE019
+      *                                                                   EEE019
+      * Destination                                                       EEE019
+      *                                                                   EEE019
+      * If no Intermediary Bank then copy over P57 to Account with        EEE019
+      * bank                                                              EEE019
+      *                                                                   EEE019
+     C           P56       IFEQ *BLANKS                                   EEE019
+     C           P57       ANDNE*BLANKS                                   EEE019
+     C                     MOVELP57       DSTRAN                          EEE019
+     C                     MOVELTMLIN     S5ACB                           EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+      * If Intermediary Bank then copy over P56 to Intermediary           EEE019
+      * bank                                                              EEE019
+      *                                                                   EEE019
+     C           P56       IFNE *BLANKS                                   EEE019
+     C                     MOVELP56       DSTRAN                          EEE019
+     C*********************MOVELTMLIN     S6IBK                    CFT014 EEE065
+     C                     MOVELTMLIN     S5IBK                    CFT014 EEE065
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+      * Intermediary Bank                                                 EEE019
+      *                                                                   EEE019
+     C           P56       IFNE *BLANKS                                   EEE019
+     C                     MOVELP56       DSTRAN                          EEE019
+     C           TRCODE    IFNE *BLANKS                                   EEE019
+     C                     MOVE TRCODE    TRCDE2                          EEE019
+     C                     MOVELTMLIN1    INBCH1  1                       EEE019
+     C           INBCH1    IFEQ '/'                                       EEE019
+     C******************** MOVE *BLANKS   S6IBK1                   CFT014 EEE065
+     C*******************  MOVELTMLIN1    S6IBK1                   CFT014 EEE065
+     C*******************  MOVE *BLANKS   S6IBK2                   CFT014 EEE065
+     C******************** MOVELTRCNUM    S6IBK2                   CFT014 EEE065
+     C                     MOVE *BLANKS   S5IBK1                   CFT014 EEE065
+     C                     MOVELTMLIN1    S5IBK1                   CFT014 EEE065
+     C                     MOVE *BLANKS   S5IBK2                   CFT014 EEE065
+     C                     MOVELTRCNUM    S5IBK2                   CFT014 EEE065
+     C                     ELSE                                           EEE019
+     C*******************  MOVE *BLANKS   S6IBK1                   CFT014 EEE065
+     C*********************MOVELTRCNUM    S6IBK1                   CFT014 EEE065
+     C*******************  MOVE *BLANKS   S6IBK2                   CFT014 EEE065
+     C                     MOVE *BLANKS   S5IBK1                   CFT014 EEE065
+     C                     MOVELTRCNUM    S5IBK1                   CFT014 EEE065
+     C                     MOVE *BLANKS   S5IBK2                   CFT014 EEE065
+     C                     END                                            EEE019
+     C******************   MOVE *BLANKS   S6IBK3                   CFT014 EEE065
+     C*******************  MOVE *BLANKS   S6IBK4                   CFT014 EEE065
+     C                     MOVE *BLANKS   S5IBK3                   CFT014 EEE065
+     C                     MOVE *BLANKS   S5IBK4                   CFT014 EEE065
+     C                     END                                            EEE019
+     C                     END                                            EEE019
+      *                                                                   EEE019
+      * Account with Bank - use A/C with bank if entered else use         EEE019
+      * Intermediary bank if entered else use Beneficiary                 EEE019
+      *                                                                   EEE019
+     C                     MOVE *BLANKS   DSTRAN                          EEE019
+     C                     SELEC                                          EEE019
+     C           P57       WHNE *BLANKS                                   EEE019
+     C                     MOVELP57       DSTRAN                          EEE019
+     C           P56       WHNE *BLANKS                                   EEE019
+     C                     MOVELP56       DSTRAN                          EEE019
+     C           P58       WHNE *BLANKS                                   EEE019
+     C                     MOVELP58       DSTRAN                          EEE019
+     C                     ENDSL                                          EEE019
+      *                                                                   EEE019
+     C           DSTRAN    IFNE *BLANKS                                   EEE019
+     C           TRCODE    ANDNE*BLANKS                                   EEE019
+     C                     MOVE TRCODE    TRCDE2                          EEE019
+     C                     MOVELTMLIN1    ACBCH1  1                       EEE019
+     C           ACBCH1    IFEQ '/'                                       EEE019
+     C                     MOVE *BLANKS   S5ACB1                          EEE019
+     C                     MOVELTMLIN1    S5ACB1                          EEE019
+     C                     MOVE *BLANKS   S5ACB2                          EEE019
+     C                     MOVELTRCNUM    S5ACB2                          EEE019
+     C                     ELSE                                           EEE019
+     C                     MOVE *BLANKS   S5ACB1                          EEE019
+     C                     MOVELTRCNUM    S5ACB1                          EEE019
+     C                     MOVE *BLANKS   S5ACB2                          EEE019
+     C                     ENDIF                                          EEE019
+     C                     MOVE *BLANK    S5ACB3                          EEE019
+     C                     MOVE *BLANK    S5ACB4                          EEE019
+     C                     MOVE *BLANK    S5ACB5                          EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+      * Ordering Customer                                                 EEE019
+      *                                                                   EEE019
+     C                     SELEC                                   CGL009 EEE065
+      *                                                            CGL009 EEE065
+     C           PNWRK     WHEQ 'FONTIS'                           CGL009 EEE065
+      ** Translation is not working for ordering customer          CGL009 EEE065
+      ** Use part translated of P53 to map S4ORC                   CGL009 EEE065
+     C                     OTHER                                   CGL009 EEE065
+     C           P50       IFNE *BLANKS                                   EEE019
+     C                     MOVELP50       DSTRAN                          EEE019
+     C                     MOVELTMLIN     S4ORC                           EEE019
+     C                     ELSE                                           EEE019
+     C           P52       IFNE *BLANKS                                   EEE019
+     C                     MOVELP52       DSTRAN                          EEE019
+     C                     MOVELTMLIN     S4ORC                           EEE019
+     C                     ENDIF                                          EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+      * If Interbank Payment use MT202 keyword                            EEE019
+      *                                                                   EEE019
+     C           PMTPY     IFEQ '200'                                     EEE019
+     C           PMTPY     OREQ '201'                                     EEE019
+     C           PMTPY     OREQ '202'                                     EEE019
+     C           PMTPY     OREQ '203'                                     EEE019
+     C           PMTPY     OREQ '204'                                     EEE019
+     C           PMTPY     OREQ '205'                                     EEE019
+     C           PMTPY     OREQ 'B22'                                     EEE019
+      *                                                                   EEE019
+     C                     MOVELS4ORC3    S4ORC4                          EEE019
+     C                     MOVELS4ORC2    S4ORC3                          EEE019
+     C                     MOVELS4ORC1    S4ORC2                          EEE019
+     C                     MOVE *BLANKS   S4ORC1                          EEE019
+     C                     MOVEL'MT202'   S4ORC1                          EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+     C                     ENDSL                                   CGL009 EEE065
+      *                                                            CGL009 EEE065
+      * Ordering Bank                                                     EEE019
+     C                     SELEC                                   CGL009 EEE065
+      ** Special case for FONTIS                                   CGL009 EEE065
+     C           PNWRK     WHEQ 'FONTIS'                           CGL009 EEE065
+      ** Ordering bank is never filled  in FONTIS                  CGL009 EEE065
+      *                                                            CGL009 EEE065
+      ** Other Networks                                            CGL009 EEE065
+     C                     OTHER                                   CGL009 EEE065
+      *                                                                   EEE019
+      * Process Ordering Bank                                             EEE019
+      *                                                                   EEE019
+     C           P52       IFNE *BLANKS                                   EEE019
+     C                     MOVE *BLANKS   S4SLDT                          EEE019
+     C                     MOVELP50       DSTRAN                          EEE019
+     C                     MOVE TRCODE    TRCDE2                          EEE019
+     C           TRCYCD    IFNE *BLANKS                                   EEE019
+      *                                                                   EEE019
+      * Translate to nostro and retail account numbers                    EEE019
+      *                                                                   EEE019
+     C                     EXSR SRTRAN                                    EEE019
+     C                     SELEC                                          EEE019
+      *                                                                   EEE019
+      * If Retail then use                                                EEE019
+      *                                                                   EEE019
+     C           ##ACNO    WHNE 0                                         EEE019
+     C                     MOVE *BLANKS   S4ORBK                          EEE019
+     C                     MOVE *BLANKS   S4ORBB                          EEE019
+     C                     MOVEL##ACNO    S4ORC1                          EEE019
+     C                     MOVEL*BLANKS   S4ORC2                          EEE019
+     C                     MOVEL*BLANKS   S4ORC3                          EEE019
+     C                     MOVEL*BLANKS   S4ORC4                          EEE019
+      *                                                                   EEE019
+      * If currency not the same as input currency swap to pay            EEE019
+      *                                                                   EEE019
+     C           TRCYCD    IFNE S4SMCY                                    EEE019
+     C                     MOVELS4SMAM    S4PYAM                          EEE019
+     C                     MOVEL*BLANKS   S4SMAM                          EEE019
+     C                     MOVELTRCYCD    S4SMCY                          EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+      * Use customer number                                               EEE019
+      *                                                                   EEE019
+     C                     OTHER                                          EEE019
+     C                     MOVE *BLANKS   S4ORBK                          EEE019
+     C                     MOVE *BLANKS   S4ORBB                          EEE019
+     C                     MOVE TRCODE    TRCDE2                          EEE019
+     C                     MOVELTRCNUM    S4ORBK                          EEE019
+     C                     ENDSL                                          EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+      * If recognised then continue                                       EEE019
+      *                                                                   EEE019
+     C           ##ACNO    IFNE 0                                         EEE019
+     C                     MOVELP52       DSTRAN                          EEE019
+      *                                                                   EEE019
+      * If line two not the same account then move to Charges field       EEE019
+      *                                                                   EEE019
+     C                     ENDIF                                          EEE019
+      *                                                                   EEE019
+     C                     ENDIF                                          EEE019
+      *                                                            CGL009 EEE065
+     C                     ENDSL                                   CGL009 EEE065
+      *                                                                   EEE019
+      * Bank to Bank Information                                          EEE019
+      *                                                                   EEE019
+      * If through payment, the bank to bank information has to be        EEE019
+      * carried forward to next outgoing message.                         EEE019
+      * (For Swift network only)                                          EEE019
+      *                                                                   EEE019
+     C                     MOVE *BLANK    W0BTOB  1                       EEE019
+     C           PNWRK     IFEQ 'SWIFT'                                   EEE019
+     C           PNWRK     OREQ 'FONTIS'                           CGL009 EEE065
+     C           PNWRK     OREQ 'MTCASH'                                  EEE019
+     C                     MOVE 'Y'       W0BTOB                          EEE019
+     C                     END                                            EEE019
+      *                                                                   EEE019
+     C           W0BTOB    IFEQ 'Y'                                       EEE019
+     C           P72       IFNE *BLANKS                                   EEE019
+      *                                                                   EEE019
+     C                     SELEC                                   CGL009 EEE065
+      ** Special rule for FONTIS                                   CGL009 EEE065
+     C           PNWRK     WHEQ 'FONTIS'                           CGL009 EEE065
+      *                                                            CGL009 EEE065
+     C                     EXSR ICCHK                              CGL009 EEE065
+      *                                                            CGL009 EEE065
+     C                     MOVELP72       DSFONT                   CGL009 EEE065
+      *                                                            CGL009 EEE065
+     C           FOUND     IFEQ 'Y'                                CGL009 EEE065
+     C                     MOVEL*BLANK    S6BTB6                   CFT014 EEE065
+     C                     MOVELFN72L2    S6BTB1                   CFT014 EEE065
+     C                     MOVELFN72L3    S6BTB2                   CFT014 EEE065
+     C                     MOVELFN72L4    S6BTB3                   CFT014 EEE065
+     C                     MOVELFN72L5    S6BTB4                   CFT014 EEE065
+     C                     MOVELFN72L6    S6BTB5                   CFT014 EEE065
+     C                     ELSE                                    CGL009 EEE065
+     C                     MOVELFN72L1    S6BTB1                   CFT014 EEE065
+     C                     MOVELFN72L2    S6BTB2                   CFT014 EEE065
+     C                     MOVELFN72L3    S6BTB3                   CFT014 EEE065
+     C                     MOVELFN72L4    S6BTB4                   CFT014 EEE065
+     C                     MOVELFN72L5    S6BTB5                   CFT014 EEE065
+     C                     MOVELFN72L6    S6BTB6                   CFT014 EEE065
+     C                     ENDIF                                   CGL009 EEE065
+      ** Other Networks                                            CGL009 EEE065
+     C                     OTHER                                   CGL009 EEE065
+     C                     MOVELP72       DSTRAN                          EEE019
+     C****************     MOVELTMLIN1    S5BTB1                   CFT014 EEE065
+     C*****************    MOVELTMLIN2    S5BTB2                   CFT014 EEE065
+     C*******************  MOVELTMLIN3    S5BTB3                   CFT014 EEE065
+     C*******************  MOVELTMLIN4    S5BTB4                   CFT014 EEE065
+     C******************** MOVELTMLIN5    S5BTB5                   CFT014 EEE065
+     C******************   MOVELTMLIN6    S5BTB6                   CFT014 EEE065
+     C                     MOVELTMLIN1    S6BTB1                   CFT014 EEE065
+     C                     MOVELTMLIN2    S6BTB2                   CFT014 EEE065
+     C                     MOVELTMLIN3    S6BTB3                   CFT014 EEE065
+     C                     MOVELTMLIN4    S6BTB4                   CFT014 EEE065
+     C                     MOVELTMLIN5    S6BTB5                   CFT014 EEE065
+     C                     MOVELTMLIN6    S6BTB6                   CFT014 EEE065
+      *                                                            CGL009 EEE065
+     C                     ENDSL                                   CGL009 EEE065
+      *                                                                   EEE019
+     C                     END                                            EEE019
+     C                     END                                            EEE019
+      *                                                                   EEE019
+      * Payment Details (Multicash only)                                  EEE019
+      *                                                                   EEE019
+     C           P70       IFNE *BLANKS                                   EEE019
+     C           PNWRK     ANDEQ'MTCASH'                                  EEE019
+      *                                                                   EEE019
+     C                     MOVELP70       DSTRAN                          EEE019
+     C*******************  MOVELTMLIN1    S5PAY1                   CFT014 EEE065
+     C******************** MOVELTMLIN2    S5PAY2                   CFT014 EEE065
+     C*******************  MOVELTMLIN3    S5PAY3                   CFT014 EEE065
+     C******************   MOVELTMLIN4    S5PAY4                   CFT014 EEE065
+     C                     MOVELTMLIN1    S6PAY1                   CFT014 EEE065
+     C                     MOVELTMLIN2    S6PAY2                   CFT014 EEE065
+     C                     MOVELTMLIN3    S6PAY3                   CFT014 EEE065
+     C                     MOVELTMLIN4    S6PAY4                   CFT014 EEE065
+      *                                                                   EEE019
+     C                     END                                            EEE019
+      *                                                            STP008 EEE019
+      * Field 80 Details(Multicash only)                           STP008 EEE019
+      *                                                            STP008 EEE019
+     C           P80       IFNE *BLANKS                            STP008 EEE019
+     C           PNWRK     ANDEQ'MTCASH'                           STP008 EEE019
+      *                                                            STP008 EEE019
+     C                     MOVELP80       DSTRAN                   STP008 EEE019
+     C                     MOVELTMLIN1    S6CBKR                   STP008 EEE065
+      *                                                            STP008 EEE019
+     C                     END                                     STP008 EEE019
+      *                                                                   EEE019
+      * Clear ordering bank internal fields                               EEE019
+      *                                                                   EEE019
+     C                     MOVEL*BLANKS   OPORBT                          EEE019
+     C                     MOVEL*BLANKS   OPORB1                          EEE019
+     C                     MOVEL*BLANKS   OPORB2                          EEE019
+     C                     MOVEL*BLANKS   OPORB3                          EEE019
+     C                     MOVEL*BLANKS   OPORB4                          EEE019
+     C                     MOVEL*BLANKS   OPORB5                          EEE019
+      *                                                                   EEE019
+      *                                                                   EEE019
+      *  Unwind subroutine stack name                                     EEE019
+      *                                                                   EEE019
+     C           EXMCLR    TAG                                            EEE019
+     C                     MOVEA*BLANKS   @STK,Q                          EEE019
+     C                     SUB  1         Q                               EEE019
+      *                                                                   EEE019
+     C                     ENDSR                                          EEE019
+      *================================================================   EEE019
+      * End of FT0300DCPG                                             *
+      *****************************************************************

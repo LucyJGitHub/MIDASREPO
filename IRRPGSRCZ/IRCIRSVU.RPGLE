@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058492           Date 06Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058398           Date 20Aug21               *
+      *  Prev Amend No. MD058492           Date 06Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
@@ -110,6 +111,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058398 - Value Date Settelment error on Our Nostro Receipt *
+      *             and Payment fields when data is defaulted from    *
+      *             Extended Settlement details setup.                *
       *  MD058492 - Condition fix MD-57437 so as it will be executed  *
       *             if action is not Reject.                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -7848,6 +7852,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      PPCcy = STCUCY
      C                   EVAL      PCalp = 'CXSV'
      C                   EXSR      SrDftExS
+     C                   EVAL      PRCcy = SUCUCY                                           MD058398
+     C                   EVAL      PPCcy = STCUCY                                           MD058398
      C                   EXSR      SrValExS
      C                   EVAL      InRecStmtV = InRecStmtE
      C                   EVAL      InPayStmtV = InPayStmtE
